@@ -26,6 +26,7 @@ public class LineChartParameters {
     public boolean	daily;
     public boolean	average30;
     public boolean	average120;
+    public boolean	average365;
     
     // Type of the graph (for the time, SALDO or MOUVEMENT)
     public int type = SALDO_ABSOLUT;
@@ -107,5 +108,11 @@ public class LineChartParameters {
      */
     public void setWithSubaccounts(boolean withSubaccounts) {
         this.withSubaccounts = withSubaccounts;
+    }
+    /**
+     * @param average365 The average365 to set.
+     */
+    public void setAverage365(boolean average365) {
+        this.average365 = average365;
     }
 }
