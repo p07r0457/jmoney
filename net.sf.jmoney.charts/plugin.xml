@@ -32,13 +32,19 @@
             id="net.sf.jmoney.charts">
          <menu
                label="%MainFrame.charts"
-               id="chartsMenu"/>
+               id="chartsMenu">
+            <separator name="net.sf.jmoney.charts.separator2"/>
+         </menu>
          <action
                label="%MainFrame.charts"
-               class="net.sf.jmoney.charts.actions.Action"
                tooltip="Draw charts"
+               class="net.sf.jmoney.charts.actions.Action"
                menubarPath="file/chartsGroup"
                id="net.sf.jmoney.charts.actions.Action"/>
+         <action
+               label="LineCharts"
+               class="net.sf.jmoney.charts.actions.ActionLineGraph"
+               id="net.sf.jmoney.charts.action1"/>
       </actionSet>
    </extension>
 

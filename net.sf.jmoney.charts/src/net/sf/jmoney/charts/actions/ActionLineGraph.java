@@ -46,13 +46,13 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
  * 
  * @see IWorkbenchWindowActionDelegate
  */
-public class Action implements IWorkbenchWindowActionDelegate {
+public class ActionLineGraph implements IWorkbenchWindowActionDelegate {
     private IWorkbenchWindow window;
 
     /**
      * The constructor.
      */
-    public Action() {
+    public ActionLineGraph() {
     }
 
     /**
@@ -82,8 +82,8 @@ public class Action implements IWorkbenchWindowActionDelegate {
                 return;
             }
 
-            (new ExpensePieChart("Chart", session)).run();
             
+            (new ActivLineChart("Chart", session)).run();
 
         } catch (Exception e) {
             System.err.println(e.getStackTrace());
