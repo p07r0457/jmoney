@@ -61,15 +61,12 @@ import net.sf.jmoney.Constants;
 import net.sf.jmoney.IBookkeepingPageListener;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.categoriespanel.CategoriesPanelPlugin;
-import net.sf.jmoney.model2.AccountAddedEvent;
-import net.sf.jmoney.model2.AccountDeletedEvent;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
-import net.sf.jmoney.model2.SessionReplacedEvent;
 import net.sf.jmoney.views.FolderView;
 
 /**
@@ -170,7 +167,7 @@ public class CategoryPage implements IBookkeepingPageListener {
 						Object selectedObject = iterator.next();
 						if (selectedObject instanceof IncomeExpenseAccount) {
 							selectedAccount = (IncomeExpenseAccount)selectedObject;
-							// TODO: We should really get the mutable account object
+							// TODO: We should really get a lock on the account object
 							// now.  This ensures we have an edit lock on the account
 							// before the user edits the field.  The field should be
 							// disabled if someone else has the account locked for edit.
@@ -227,7 +224,7 @@ public class CategoryPage implements IBookkeepingPageListener {
 		
 //		try {
 			((IncomeExpenseAccountImpl)selectedAccount).setName(nameField.getText());
-			JMoneyPlugin.getChangeManager().applyChanges("rename category");
+			session.getChangeManager().applyChanges("rename category");
 //			} catch (ObjectLockedForEditException e) {
 			// The edit could not be made because someone else is editing
 			// the properties of this category.
@@ -266,7 +263,7 @@ private void makeActions() {
 	        
 	        IncomeExpenseAccountImpl account = (IncomeExpenseAccountImpl)session.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
 	        account.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-			JMoneyPlugin.getChangeManager().applyChanges("add new category");
+			session.getChangeManager().applyChanges("add new category");
 	        
 	        // Having added the new account, set it as the selected
 	        // account in the tree viewer.
@@ -291,7 +288,7 @@ private void makeActions() {
 			if (account != null) {
 				IncomeExpenseAccountImpl subAccount = (IncomeExpenseAccountImpl)((IncomeExpenseAccountImpl)account).createSubAccount();
 				subAccount.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-				JMoneyPlugin.getChangeManager().applyChanges("add new category");
+				session.getChangeManager().applyChanges("add new category");
 				
 				// Having added the new account, set it as the selected
 				// account in the tree viewer.
@@ -416,13 +413,13 @@ private void makeActions() {
 	
 	private SessionChangeListener listener =
 		new SessionChangeAdapter() {
-		public void sessionReplaced( SessionReplacedEvent event ) {
+		public void sessionReplaced(Session oldSession, Session newSession) {
 			// When the session is replaced, this view will be disposed
 			// and possibly re-built, so do nothing here.
 		}
-		public void accountAdded(AccountAddedEvent event) {
-			if (event.getNewAccount() instanceof IncomeExpenseAccount) {
-				Account parent = event.getNewAccount().getParent();
+		public void accountAdded(Account newAccount) {
+			if (newAccount instanceof IncomeExpenseAccount) {
+				Account parent = newAccount.getParent();
 				if (parent == null) {
 					viewer.refresh(session, false);
 				} else {
@@ -430,9 +427,9 @@ private void makeActions() {
 				}
 			}
 		}
-		public void accountDeleted(AccountDeletedEvent event) {
-			if (event.getOldAccount() instanceof IncomeExpenseAccount) {
-				Account parent = event.getOldAccount().getParent();
+		public void accountDeleted(Account oldAccount) {
+			if (oldAccount instanceof IncomeExpenseAccount) {
+				Account parent = oldAccount.getParent();
 				if (parent == null) {
 					viewer.refresh(session, false);
 				} else {

@@ -83,11 +83,6 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Trans
         return entries.iterator();
     }
     
-    // TODO: Ensure no mutable interface on this object already.
-    public MutableTransaction createMutableTransaction(Session session) throws ObjectLockedForEditException {
-        return new MutableTransactionImpl(session, this);
-    }
-
     /**
      *DISREGARD ALL THIS
      * This method returns true if two objects represent the same transaction.

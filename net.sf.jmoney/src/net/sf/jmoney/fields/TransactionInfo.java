@@ -25,12 +25,9 @@ package net.sf.jmoney.fields;
 import org.eclipse.swt.widgets.Composite;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.CurrencyImpl;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.MutableTransaction;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;

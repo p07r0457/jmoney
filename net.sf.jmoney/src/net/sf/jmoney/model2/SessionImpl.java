@@ -266,12 +266,6 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
         return null;
     }
 */
-
-    public MutableTransaction createNewTransaction() {
-        return new MutableTransactionImpl(this);
-    }
-
-
     
     public boolean removeCommodity(Commodity commodity) {
         return commodities.remove(commodity);

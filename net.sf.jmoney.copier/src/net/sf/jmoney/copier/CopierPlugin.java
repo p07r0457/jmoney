@@ -8,8 +8,6 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ISessionManagement;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
-import net.sf.jmoney.model2.MutableEntryImpl;
-import net.sf.jmoney.model2.MutableTransaction;
 import net.sf.jmoney.model2.ObjectLockedForEditException;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
@@ -123,13 +121,13 @@ public class CopierPlugin extends AbstractUIPlugin {
         for (Iterator iter = oldSession.getTransactionIterator(); iter.hasNext(); ) {
             Transaction oldTransaction = (Transaction)iter.next();
             
-            MutableTransaction trans = newSession.createNewTransaction();
+            Transaction trans = newSession.createTransaction();
             trans.setDate(oldTransaction.getDate());
             
             for (Iterator entryIter = oldTransaction.getEntryIterator(); entryIter.hasNext(); ) {
                 Entry oldEntry = (Entry)entryIter.next();
                 
-                MutableEntryImpl newEntry = trans.createEntry();
+                Entry newEntry = trans.createEntry();
                 newEntry.setAmount(oldEntry.getAmount());
                 newEntry.setAccount((Account)categoryMap.get(oldEntry.getAccount()));
                 newEntry.setCheck(oldEntry.getCheck());
@@ -152,7 +150,6 @@ public class CopierPlugin extends AbstractUIPlugin {
                 }
 */                
             }
-            trans.commit();
         }
     }
     

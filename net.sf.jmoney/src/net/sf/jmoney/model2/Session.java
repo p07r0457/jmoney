@@ -55,8 +55,6 @@ public interface Session extends IExtendableObject {
 
     Transaction createTransaction();
 
-    MutableTransaction createNewTransaction();
-
     boolean removeCommodity(Commodity commodity);
     
     boolean removeAccount(Account account);
