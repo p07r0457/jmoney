@@ -25,7 +25,6 @@ package net.sf.jmoney.views;
 import java.util.Vector;
 
 import net.sf.jmoney.IBookkeepingPage;
-import net.sf.jmoney.IBookkeepingPageListener;
 import net.sf.jmoney.JMoneyPlugin;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -49,7 +48,6 @@ public class NodeEditor extends FormEditor {
      * @see org.eclipse.ui.forms.editor.FormEditor#addPages()
      */
     protected void addPages() {
-
         try {
         	for (int i = 0; i < pageListeners.size(); i++) {
         		if (pageListeners.get(i) instanceof IBookkeepingPage) {
@@ -57,24 +55,6 @@ public class NodeEditor extends FormEditor {
                     IBookkeepingPage pageListener = (IBookkeepingPage)pageListeners.get(i);
 
                     addPage(pageListener.createFormPage(this));
-        		} else if (pageListeners.get(i) instanceof IBookkeepingPageListener) {
-        			// The extension listener is an old style control originally
-        			// designed to be created in the 'folder' view.
-        			// We use an IFormPage implementation that wraps these old
-        			// style controls.
-                    IBookkeepingPageListener pageListener = (IBookkeepingPageListener)pageListeners.get(i);
-
-                    // TODO: We can remove all this if we convert over to the 'new style' pages.
-                	String name;
-                    if (pageListener.getClass().getName().equals("net.sf.jmoney.accountentriespanel.EntryListPage")) {
-                        name = "Old Style Entries";
-                    } else if (pageListener.getClass().getName().equals("net.sf.jmoney.bookkeepingPages.AccountPropertiesPages")) {
-                        name = "Properties";
-                    } else {
-                        name = "Old Style Page Contents";
-                    }
-                	
-                    addPage(new SectionlessPageWrapper(this, pageListener, name));
         		}    
         	}
         } catch (PartInitException e) {

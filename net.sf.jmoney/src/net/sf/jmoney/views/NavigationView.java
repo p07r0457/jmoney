@@ -50,7 +50,6 @@ import org.eclipse.core.runtime.Platform;
 
 import net.sf.jmoney.Constants;
 import net.sf.jmoney.IBookkeepingPage;
-import net.sf.jmoney.IBookkeepingPageListener;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CapitalAccountInfo;
@@ -457,50 +456,7 @@ private Map idToNodeMap = new HashMap();
 				if (elements[j].getName().equals("pages")) {
 					try {
 						Object listener = elements[j].createExecutableExtension("class");
-						if (listener instanceof IBookkeepingPageListener) {
-							IBookkeepingPageListener pageListener = (IBookkeepingPageListener)listener;
-
-    	 					IMemento pageMemento = null; 
-    	 					if (memento != null) {
-    	 						pageMemento = memento.getChild(pageListener.getClass().getName());
-    	 					}
-    	 					pageListener.init(pageMemento);
-
-							String nodeId = elements[j].getAttribute("node");
-							if (nodeId != null && nodeId.length() != 0) {
-								pageListenerAndNodeIdMap.put(pageListener, nodeId);
-							} else {
-								// No 'node' attribute so see if we have
-								// an 'extendable-property-set' attribute.
-								// (This means the page should be supplied if
-								// the node represents an object that contains
-								// the given property set).
-								String propertySetId = elements[j].getAttribute("extendable-property-set");
-								if (propertySetId != null) {
-									try {
-										PropertySet pagePropertySet = PropertySet.getPropertySet(propertySetId);
-
-										for (Iterator iter = pagePropertySet.getDerivedPropertySetIterator(); iter.hasNext(); ) {
-											PropertySet derivedPropertySet = (PropertySet)iter.next();
-											Vector pageList = (Vector)objectToPagesMap.get(derivedPropertySet);
-											if (pageList == null) {
-												pageList = new Vector();
-												objectToPagesMap.put(derivedPropertySet, pageList);
-											}
-											
-											pageList.add(pageListener);
-										}
-									} catch (PropertySetNotFoundException e1) {
-										// This is a plug-in error.
-										// TODO implement properly.
-										e1.printStackTrace();
-									}
-								}
-							}
-						}
-						// Now add the 'new style' pages
-						if (listener instanceof IBookkeepingPage) {
-							IBookkeepingPage pageListener = (IBookkeepingPage)listener;
+						IBookkeepingPage pageListener = (IBookkeepingPage)listener;
 /* not sure about this code
     	 					IMemento pageMemento = null; 
     	 					if (memento != null) {
@@ -508,35 +464,34 @@ private Map idToNodeMap = new HashMap();
     	 					}
     	 					pageListener.init(pageMemento);
 */
-							String nodeId = elements[j].getAttribute("node");
-							if (nodeId != null && nodeId.length() != 0) {
-								pageListenerAndNodeIdMap.put(pageListener, nodeId);
-							} else {
-								// No 'node' attribute so see if we have
-								// an 'extendable-property-set' attribute.
-								// (This means the page should be supplied if
-								// the node represents an object that contains
-								// the given property set).
-								String propertySetId = elements[j].getAttribute("extendable-property-set");
-								if (propertySetId != null) {
-									try {
-										PropertySet pagePropertySet = PropertySet.getPropertySet(propertySetId);
-
-										for (Iterator iter = pagePropertySet.getDerivedPropertySetIterator(); iter.hasNext(); ) {
-											PropertySet derivedPropertySet = (PropertySet)iter.next();
-											Vector pageList = (Vector)objectToPagesMap.get(derivedPropertySet);
-											if (pageList == null) {
-												pageList = new Vector();
-												objectToPagesMap.put(derivedPropertySet, pageList);
-											}
-											
-											pageList.add(pageListener);
+						String nodeId = elements[j].getAttribute("node");
+						if (nodeId != null && nodeId.length() != 0) {
+							pageListenerAndNodeIdMap.put(pageListener, nodeId);
+						} else {
+							// No 'node' attribute so see if we have
+							// an 'extendable-property-set' attribute.
+							// (This means the page should be supplied if
+							// the node represents an object that contains
+							// the given property set).
+							String propertySetId = elements[j].getAttribute("extendable-property-set");
+							if (propertySetId != null) {
+								try {
+									PropertySet pagePropertySet = PropertySet.getPropertySet(propertySetId);
+									
+									for (Iterator iter = pagePropertySet.getDerivedPropertySetIterator(); iter.hasNext(); ) {
+										PropertySet derivedPropertySet = (PropertySet)iter.next();
+										Vector pageList = (Vector)objectToPagesMap.get(derivedPropertySet);
+										if (pageList == null) {
+											pageList = new Vector();
+											objectToPagesMap.put(derivedPropertySet, pageList);
 										}
-									} catch (PropertySetNotFoundException e1) {
-										// This is a plug-in error.
-										// TODO implement properly.
-										e1.printStackTrace();
+										
+										pageList.add(pageListener);
 									}
+								} catch (PropertySetNotFoundException e1) {
+									// This is a plug-in error.
+									// TODO implement properly.
+									e1.printStackTrace();
 								}
 							}
 						}
@@ -587,11 +542,8 @@ private Map idToNodeMap = new HashMap();
 			String nodeId = (String)mapEntry.getValue();
 			TreeNode node = (TreeNode)idToNodeMap.get(nodeId);
 			if (node != null) {
-				// TODO: delete this 'if' test. nrwnrw
-				if (mapEntry.getKey() instanceof IBookkeepingPage) {
 				IBookkeepingPage pageListener = (IBookkeepingPage)mapEntry.getKey();
 				node.addPageListener(pageListener);
-				}
 			} else {
 				// No node found with given id, so the
 				// page listener is dropped.

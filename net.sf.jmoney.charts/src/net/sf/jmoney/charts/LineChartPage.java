@@ -37,7 +37,6 @@ import org.jfree.xml.generator.SplittingModelWriter;
 import org.w3c.dom.events.MouseEvent;
 
 import net.sf.jmoney.IBookkeepingPage;
-import net.sf.jmoney.IBookkeepingPageListener;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.views.NodeEditor;

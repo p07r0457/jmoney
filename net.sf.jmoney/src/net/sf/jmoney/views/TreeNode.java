@@ -3,7 +3,7 @@ package net.sf.jmoney.views;
 import java.util.ArrayList;
 import java.util.Vector;
 
-import net.sf.jmoney.IBookkeepingPageListener;
+import net.sf.jmoney.IBookkeepingPage;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.swt.graphics.Image;
@@ -93,7 +93,7 @@ class TreeNode implements IAdaptable {
     /**
      * @param pageListener
      */
-    public void addPageListener(IBookkeepingPageListener pageListener) {
+    public void addPageListener(IBookkeepingPage pageListener) {
         pageListeners.add(pageListener);
     }
 
