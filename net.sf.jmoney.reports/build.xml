@@ -1,4 +1,10 @@
 <project name="JMoney reports" default="reports" basedir=".">
+
+<!-- eclipse.home must be set prior to calling this build script.
+	If this build script is run as an Eclipse build task then
+	this will be set by Eclipse.
+-->
+	
   <description>
     Ant build file (see http://jakarta.apache.org/ant).
   </description>
@@ -7,8 +13,7 @@
   <property name="src" location="src"/>
   <property name="build" location="bin"/>
   <property name="lib" location="lib"/>
-  <property name="eclipse" location="/eclipse-SDK-3.0-win32/eclipse"/>
-
+	
   <taskdef name="jrc" classname="net.sf.jasperreports.ant.JRAntCompileTask"> 
     <classpath>
       <fileset dir=".">
@@ -30,12 +35,12 @@
     <dirset dir="../net.sf.jmoney.reports">
       <include name="src"/>
     </dirset>
-    <fileset dir="${eclipse}/plugins">
-      <include name="org.eclipse.core.runtime_3.0.0/runtime.jar"/>
-      <include name="org.eclipse.swt.win32_3.0.0/ws/win32/swt.jar"/>
-      <include name="org.eclipse.ui.workbench_3.0.0/workbench.jar"/>
-      <include name="org.eclipse.jface_3.0.0/jface.jar"/>
-      <include name="org.eclipse.osgi_3.0.0/osgi.jar"/>
+    <fileset dir="${eclipse.home}/plugins">
+        <include name="org.eclipse.core.runtime_3.0.0/runtime.jar"/>
+        <include name="org.eclipse.ui.workbench_3.0.0/workbench.jar"/>
+        <include name="org.eclipse.swt.win32_3.0.0/ws/win32/swt.jar"/>
+        <include name="org.eclipse.jface_3.0.0/jface.jar"/>
+        <include name="org.eclipse.osgi_3.0.0/osgi.jar"/>
     </fileset>
     <fileset dir="${lib}">
       <include name="*.jar"/>
@@ -55,10 +60,5 @@
     </jrc>
 
   </target>
-
-
-
-
-
 
 </project>
