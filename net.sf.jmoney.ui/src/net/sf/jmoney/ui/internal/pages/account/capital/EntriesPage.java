@@ -34,6 +34,9 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.views.NodeEditor;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.ui.IMemento;
@@ -127,7 +130,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
     	ScrolledForm form = managedForm.getForm();
         GridLayout layout = new GridLayout();
         form.getBody().setLayout(layout);
-
+        
         fEntriesFilterSection = new EntriesFilterSection(this, form.getBody());
         fEntriesFilterSection.getSection().setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         managedForm.addPart(fEntriesFilterSection);
@@ -144,6 +147,26 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         fEntrySection.initialize(managedForm);
 
         form.setText("Accounting Entries");
+        
+        IToolBarManager toolBarManager = form.getToolBarManager();
+
+        toolBarManager.add(new Action("tree", IAction.AS_RADIO_BUTTON) {
+			public void run() {
+				if (isChecked()) {
+					fEntriesSection.setTreeView();
+				}
+			}
+        });
+
+        toolBarManager.add( new Action("table", IAction.AS_RADIO_BUTTON) {
+			public void run() {
+				if (isChecked()) {
+					fEntriesSection.setTableView();
+				}
+			}
+        });
+
+        toolBarManager.update(false);
     }
     
     public CurrencyAccount getAccount () {
