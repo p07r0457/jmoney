@@ -59,6 +59,12 @@ import org.xml.sax.helpers.DefaultHandler;
 public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 	
 	/**
+	 * The key from which this object can be fetched from
+	 * the datastore and a reference to this object obtained.
+	 */
+	IObjectKey objectKey;
+	
+	/**
 	 * Extendable objects may have extensions containing additional data
 	 * needed by the plugins.  Each plugin will have a different
 	 * extension.
@@ -85,8 +91,54 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 	protected abstract IExtendableObject getOriginalObject();
 	
 	protected abstract String getExtendablePropertySetId();
+
+	// TODO: We probably want to remove this constructor.
+	protected ExtendableObjectHelperImpl() {
+	}
 	
-	public ExtensionPropertySet getExtension(PropertySet propertySetKey) {
+	/**
+	 * @param extensions A map from PropertySet objects representing
+	 * 			extension property sets to the parameter lists from
+	 * 			which the extension property set objects can be
+	 * 			constructed.
+	 */
+	protected ExtendableObjectHelperImpl(IObjectKey objectKey, Map extensionParameters) {
+		this.objectKey = objectKey;
+		
+		if (extensionParameters != null) {
+			for (Iterator iter = extensionParameters.entrySet().iterator(); iter.hasNext(); ) {
+				Map.Entry entry = (Map.Entry)iter.next();
+				PropertySet propertySet = (PropertySet)entry.getKey();
+				Object[] constructorParameters = (Object[])entry.getValue();
+				
+				Constructor constructor = propertySet.getConstructor();
+				ExtensionObject extensionObject;
+				try {
+					extensionObject = (ExtensionObject)constructor.newInstance(constructorParameters);
+				} catch (IllegalArgumentException e) {
+					e.printStackTrace();
+					throw new RuntimeException("internal error");
+				} catch (InstantiationException e) {
+					e.printStackTrace();
+					throw new RuntimeException("internal error");
+				} catch (IllegalAccessException e) {
+					throw new MalformedPluginException("Constructor must be public.");
+				} catch (InvocationTargetException e) {
+					throw new MalformedPluginException("An exception occured within a constructor in a plug-in.");
+				}
+				
+				extensionObject.setBaseObject(this);
+				extensionObject.setPropertySet(propertySet);
+				extensions.put(propertySet, extensionObject);
+			}
+		}
+	}
+	
+	public IObjectKey getObjectKey() {
+		return objectKey;
+	}
+	
+	public ExtensionObject getExtension(PropertySet propertySetKey) {
 		// Perform any processing that must take place after an object
 		// has been loaded from the datastore but before the extensions
 		// can be accessed.
@@ -94,7 +146,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 		
 		Object extensionObject = extensions.get(propertySetKey);
 		
-		ExtensionPropertySet extension;
+		ExtensionObject extension;
 		
 		if (extensionObject == null) {
 			// Extension does not exist.
@@ -105,7 +157,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 				// for default values.
 				
 				try {
-					extension = (ExtensionPropertySet)
+					extension = (ExtensionObject)
 					propertySetKey.getInterfaceClass().newInstance();
 					// TODO: plugin error if null is returned
 				} catch (Exception e) {
@@ -127,7 +179,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 				
 				if (getOriginalObject() != null) {
 					
-					ExtensionPropertySet originalExtension = getOriginalObject().getExtension(propertySetKey);
+					ExtensionObject originalExtension = getOriginalObject().getExtension(propertySetKey);
 					
 					if (originalExtension != null) {
 						propertySetKey.copyProperties(originalExtension, extension);
@@ -150,7 +202,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 				String extensionString = (String) extensionObject;
 				
 				try {
-					extension = (ExtensionPropertySet)
+					extension = (ExtensionObject)
 					propertySetKey.getInterfaceClass().newInstance();
 					// TODO: plugin error if null is returned
 				} catch (Exception e) {
@@ -178,7 +230,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 				// Extension object is not a string so it must be
 				// an extension object in the de-serialized state.
 				// Return the extension as is.
-				extension = (ExtensionPropertySet)extensionObject;
+				extension = (ExtensionObject)extensionObject;
 			}
 		}
 		
@@ -307,6 +359,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 
 	// This method is used by datastore implementations to
 	// initialize the contents of a list property.
+/* method no longer required	
 	public void addPropertyValue(PropertyAccessor propertyAccessor, Object value) {
 		// The problem here is that the XML parser sets the properties directly in
 		// the object, without going through a mutable object.
@@ -324,13 +377,13 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 			throw new RuntimeException("An unexpected error occurred in ExtendableObjectHelperImpl.setPropertyValue");
 		}
 	}
-	
+*/	
 	
 	private Object getPropertySetInterface(PropertySet propertySet) {
 		if (!propertySet.isExtension()) {
 			return this;
 		} else {
-			ExtensionPropertySet extension = getExtension(propertySet);
+			ExtensionObject extension = getExtension(propertySet);
 			
 			// If there is no extension then we use a default extension
 			// obtained from the plugin object.  This extension object
@@ -492,7 +545,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 		} else {
 			// Because the 'alwaysReturnNonNullExtensions' flag is set,
 			// this method will always return  non-null extension.
-			ExtensionPropertySet extension = getExtension(propertySetKey);
+			ExtensionObject extension = getExtension(propertySetKey);
 			
 			stringToExtension(extensionString, extension);
 		}
@@ -548,7 +601,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 		return buffer.toString();
 	}
 	
-	protected static void stringToExtension(String s, ExtensionPropertySet extension) {
+	protected static void stringToExtension(String s, ExtensionObject extension) {
 		ByteArrayInputStream bin = new ByteArrayInputStream(s.getBytes());
 		
 		
@@ -578,13 +631,13 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 	
 	private static class HandlerForExtensions extends DefaultHandler {
 		
-		ExtensionPropertySet extension;
+		ExtensionObject extension;
 		
 		BeanInfo beanInfo;
 		
 		Method writeMethod = null;
 		
-		HandlerForExtensions(ExtensionPropertySet extension) {
+		HandlerForExtensions(ExtensionObject extension) {
 			this.extension = extension;
 			
 			try {

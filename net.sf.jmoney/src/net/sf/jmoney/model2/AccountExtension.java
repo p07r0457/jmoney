@@ -36,7 +36,7 @@ import java.util.Iterator;
  * and maintained at runtime.
  *
  */
-public abstract class AccountExtension extends ExtensionPropertySet implements Account, Serializable {
+public abstract class AccountExtension extends ExtensionObject implements Account, Serializable {
     
 	/**
 	 * following two are set by setBaseAccount
@@ -77,7 +77,7 @@ public abstract class AccountExtension extends ExtensionPropertySet implements A
             return account.getSubAccountIterator();
         }
 
-        public ExtensionPropertySet getExtension(PropertySet propertySet) {
+        public ExtensionObject getExtension(PropertySet propertySet) {
         	return account.getExtension(propertySet);
         }
         
@@ -127,7 +127,7 @@ public abstract class AccountExtension extends ExtensionPropertySet implements A
         	}
         }
 
-        // Required to be implemented in all classes derived from ExtensionPropertySet
+        // Required to be implemented in all classes derived from ExtensionObject
     	void setBaseObject(IExtendableObject baseObject) {
     		this.account = (Account)baseObject;
     	}

@@ -21,8 +21,9 @@
  *
  */
 
-package net.sf.jmoney.serializeddatastore;
+package net.sf.jmoney.model2;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.*;
 
 import java.beans.PropertyChangeListener;
@@ -32,6 +33,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Vector;
 import java.util.Iterator;
 
@@ -43,7 +45,7 @@ import java.util.Iterator;
 // and you would be right.  However, the setters are needed
 // when reading the data from the XML.  Until this whole data
 // storage mess is sorted out, we will leave this as is.
-public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCapitalAccount, Serializable {
+public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCapitalAccount {
 
 	/**
 	 * The entries are ordered by their creation.
@@ -93,19 +95,42 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
 	protected transient PropertyChangeSupport changeSupport =
 		new PropertyChangeSupport(this);
 
-        /**
-	 * Used by XMLEncoder.
-	 */
-	public CapitalAccountImpl() {
-	}
-
 	/**
-	 * Creates a new account with the provided name
-	 * @param aName the name of the account
+	 * The full constructor for a CapitalAccount object.  This constructor is called
+	 * only be the datastore when loading data from the datastore.  The properties
+	 * passed to this constructor must be valid because datastores should only pass back
+	 * values that were previously saved from a CapitalAccount object.  So, for example,
+	 * we can be sure that a non-null name and currency are passed to this constructor.
+	 * 
+	 * @param name the name of the account
 	 */
-	public CapitalAccountImpl(String aName, Currency defaultCurrency) {
-		name = aName;
-                currency = defaultCurrency;
+	public CapitalAccountImpl(
+			IObjectKey objectKey, 
+			Map extensions, 
+			String name,
+			IListManager subAccounts,
+			IObjectKey currency,
+			String bank,
+			String accountNumber,
+			long startBalance,
+			Long minBalance,
+			String abbreviation,
+			String comment) {
+		super(objectKey, extensions, subAccounts);
+		
+		this.name = name;
+
+		// This account is being loaded from the datastore and therefore a currency
+		// must be set.  We store internally the Currency object itself, not the 
+		// key used to fetch the Currency object.
+        this.currency = (Currency)currency.getObject();
+        
+        this.bank = bank;
+        this.accountNumber = accountNumber;
+        this.startBalance = startBalance;
+        this.minBalance = minBalance;
+        this.abbreviation = abbreviation;
+        this.comment = comment;
 	}
 
 	protected boolean isMutable() {
@@ -195,7 +220,12 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
 
 /* do not use these.  Add and remove transactions from the session.        
  */
-	void addEntry(Entry entry) {
+        // This method is used by the datastore to set the back references.
+    	// TODO: we should be able to do this in the initializers.
+    	// If so then the datastore no longer needs to do this
+    	// and we can remove this public method.
+        
+	public void addEntry(Entry entry) {
 		entries.addElement(entry);
 	}
 
@@ -370,7 +400,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
 	}
 
 	public String getFullAccountName() {
-		return SerializedDatastorePlugin.getResourceString("TransferCategory.name")
+		return JMoneyPlugin.getResourceString("TransferCategory.name")
 			+ ":"
 			+ getName();
 	}

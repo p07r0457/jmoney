@@ -15,6 +15,9 @@ import java.io.FileInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -119,15 +122,15 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	public void openDefaultSession(Properties defaultSessionProperties, IWorkbenchWindow window) {
 		String sessionFileName = defaultSessionProperties.getProperty("file");
 		File sessionFile = new File(sessionFileName);
-		SessionImpl session = readSession(sessionFile, window);
-		JMoneyPlugin.getDefault().setSession(session);
+		SessionManagementImpl sessionManager = readSession(sessionFile, window);
+		JMoneyPlugin.getDefault().setSessionManager(sessionManager);
 	}
 	
 	/**
 	 * Read session from file.
 	 */
-	public SessionImpl readSession(File sessionFile, IWorkbenchWindow window) {
-		SessionImpl result;
+	public SessionManagementImpl readSession(File sessionFile, IWorkbenchWindow window) {
+		SessionManagementImpl result;
 		
 		String title = JMoneyPlugin.getResourceString("Dialog.Wait.Title");
 		String message = SerializedDatastorePlugin.getResourceString("MainFrame.OpeningFile")
@@ -164,6 +167,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			progressBar.dispose();
 		} catch (Exception ex) {
 			//  		waitDialog.close();
+			ex.printStackTrace();
 			progressBar.dispose();
 			fileReadError(sessionFile, window);
 			result = null;
@@ -172,8 +176,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		return result;
 	}
 	
-	public SessionImpl readSessionQuietly(File sessionFile) throws FileNotFoundException, IOException, CoreException {
-		SessionImpl result;
+	public SessionManagementImpl readSessionQuietly(File sessionFile) throws FileNotFoundException, IOException, CoreException {
+		SessionManagementImpl result;
 		
 		FileInputStream fin = new FileInputStream(sessionFile);
 		// Patch to aid with testing.  If the extension is 'xml'
@@ -190,8 +194,6 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		// First attempt to read the XML as though it is in the
 		// current format.
 		
-		Object newSession;
-		
 		SAXParserFactory factory = SAXParserFactory.newInstance();
 		try {
 			idToCurrencyMap = new HashMap();
@@ -203,7 +205,9 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			SAXParser saxParser = factory.newSAXParser();
 			HandlerForObject handler = new HandlerForObject();
 			saxParser.parse(bin, handler); 
-			newSession = handler.getSession();
+			SessionImpl newSession = handler.getSession();
+			setRedundantReferences(newSession);
+			result = new SessionManagementImpl(sessionFile, newSession);
 		} 
 		catch (ParserConfigurationException e) {
 			throw new RuntimeException("Serious XML parser configuration error");
@@ -211,7 +215,9 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		catch (SAXException se) {
 			// This exception will be throw if the file is old format (0.4.5 or prior).
 			// Read as an old format file.
-			
+			System.out.println(se.toString());
+			System.out.println(se.getMessage());
+			se.printStackTrace();
 			// First close and re-open the file.
 			bin.close();
 			if (gin != null) gin.close();
@@ -234,9 +240,27 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
 			Thread.currentThread().setContextClassLoader(this.getDescriptor().getPluginClassLoader());
 			XMLDecoder dec = new XMLDecoder(bin);
-			newSession = dec.readObject();
+			Object newSession = dec.readObject();
 			dec.close();
 			Thread.currentThread().setContextClassLoader(originalClassLoader);            
+
+			if  (!(newSession instanceof net.sf.jmoney.model.Session)) {
+				throw new CoreException(
+						new Status(Status.ERROR, "net.sf.jmoney.serializeddatastore", Status.OK,
+								"session object deserialized, but the object was not a session!",
+								null));	
+			}
+			
+			SessionImpl newSessionNewFormat = new SessionImpl(
+				null,
+				null,
+				new SimpleListManager(),
+				new SimpleListManager(),
+				new SimpleListManager(),
+				null
+			);
+			convertModelOneFormat((net.sf.jmoney.model.Session)newSession, newSessionNewFormat);
+			result = new SessionManagementImpl(sessionFile, newSessionNewFormat);
 		}
 		catch (IOException ioe) { 
 			throw new RuntimeException("IO internal exception error");
@@ -246,21 +270,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			fin.close();
 		}
 		
-		if (newSession instanceof net.sf.jmoney.model2.Session) {
-			result = (SessionImpl)newSession;
-			setRedundantReferences(result);
-		} else if  (newSession instanceof net.sf.jmoney.model.Session) {
-			SessionImpl newSessionNewFormat = new SessionImpl();
-			convertModelOneFormat((net.sf.jmoney.model.Session)newSession, newSessionNewFormat);
-			result = newSessionNewFormat;
-		} else {
-			throw new CoreException(
-					new Status(Status.ERROR, "net.sf.jmoney.serializeddatastore", Status.OK,
-							"session object deserialized, but the object was not a session!",
-							null));	
-		}
-		
-		result.setFileA(sessionFile);
+		result.setFile(sessionFile);
 		
 		return result;
 	}
@@ -302,8 +312,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					"only element 'session' is allowed at top level");
 				}
 				
-				session = new SessionImpl();
-				currentSAXEventProcessor = new ObjectProcessor(null, session, "net.sf.jmoney.session");
+				currentSAXEventProcessor = new ObjectProcessor(null, "net.sf.jmoney.session");
 			} else {
 				currentSAXEventProcessor.startElement(uri, localName, attributes);
 			}
@@ -323,7 +332,15 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 */
 		public void endElement(String uri, String localName, String qName)
 		throws SAXException {
-			currentSAXEventProcessor = currentSAXEventProcessor.endElement();
+			SAXEventProcessor parent = currentSAXEventProcessor.endElement();
+			
+			if (parent == null) {
+				// We are back at the top level.
+				// Save this object because it is the session object.
+				session = (SessionImpl)currentSAXEventProcessor.getValue();
+			}
+			
+			currentSAXEventProcessor = parent;
 		}
 		
 		
@@ -421,6 +438,13 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			// method must be overridden.
 			throw new RuntimeException("Value passed back from inner element but no value expected.");
 		}
+
+		/**
+		 * @return
+		 */
+		// TODO: This method can be called instead of using elementCompleted.
+		// elementCompleted can then be removed.
+		public abstract Object getValue();
 	}
 
 	/**
@@ -436,9 +460,9 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		// In particular, this class supports the setPropertyValue
 		// method even though this method is not exposed through
 		// the interfaces for the non-mutable objects.
-		ExtendableObjectHelperImpl extendableObject;
+//		ExtendableObjectHelperImpl extendableObject;
 		
-		PropertySet propertySet;
+		private PropertySet propertySet;
 		
 		/**
 		 * If we have processed the start of an element representing
@@ -446,7 +470,35 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 * then this field is the property accessor.  Otherwise this
 		 * field is null.
 		 */
-		PropertyAccessor propertyAccessor = null;
+		private PropertyAccessor propertyAccessor = null;
+		
+		/**
+		 * Key to the object being parsed by this ObjectProcessor.
+		 */
+		SimpleObjectKey objectKey;
+		
+		/**
+		 * The list of parameters to be passed to the constructor
+		 * of this object.
+		 */
+		private Object[] constructorParameters;
+		
+		/**
+		 * Map of extension PropertySet objects to arrays of
+		 * constructor parameters that construct the extension
+		 * objects. 
+		 */
+		private Map extensionMap;
+		
+		/**
+		 * Saved id of objects that are Currency or Account objects.
+		 * This id is saved so that when the object is later created, it can
+		 * be added to a map.
+		 */
+		private Map map;
+		private String id;
+
+		private Object value;
 		
 		/**
 		 *
@@ -456,16 +508,41 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 *        found then this original event processor must be restored as
 		 *        the active event processor.
 		 */
-		ObjectProcessor(SAXEventProcessor parent, ExtendableObjectHelperImpl object, String propertySetId) {
+		ObjectProcessor(SAXEventProcessor parent, String propertySetId) {
 			super(parent);
 			
-			this.extendableObject = object;
-			
+			objectKey = new SimpleObjectKey();
+
 			try {
 				this.propertySet = PropertySet.getPropertySet(propertySetId);
 			} catch (PropertySetNotFoundException e) {
 				throw new RuntimeException("internal error");
 			}
+			
+			Vector constructorProperties = propertySet.getConstructorProperties();
+			int numberOfParameters = constructorProperties.size();
+			if (!propertySet.isExtension()) {
+				numberOfParameters += 2;
+			}
+			constructorParameters = new Object[numberOfParameters];
+			extensionMap = new HashMap();
+			constructorParameters[0] = objectKey;
+			constructorParameters[1] = extensionMap;
+			
+			// For all lists, set the Collection object to be a Vector.
+			// For all other parameters, the value is set when the property
+			// value is found.  We initialize to null here so a null value
+			// will be passed to the constructor if no value is found.
+			for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
+				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+				if (propertyAccessor.isList()) {
+					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = new SimpleListManager();
+				} else {
+					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = null;
+				}
+			}
+			
+			
 		}
 		
 		/**
@@ -533,6 +610,9 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			
 			Class propertyClass = propertyAccessor.getValueClass();
 
+			map = null;
+			id = null;
+			
 			// See if the 'idref' attribute is specified.
 			String idref = atts.getValue("idref");
 			if (idref != null) {
@@ -561,7 +641,10 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				
 				currentSAXEventProcessor = new IgnoreElementProcessor(this, value);
 			} else {
-				if (!propertyClass.isPrimitive() && propertyClass != String.class && propertyClass != Date.class) {
+				if (!propertyClass.isPrimitive() 
+						&& propertyClass != String.class
+						&& propertyClass != Long.class
+						&& propertyClass != Date.class) {
 					String propertySetId = atts.getValue("propertySet");
 					if (propertySetId == null) {
 						// TODO: following call is overkill, because
@@ -570,28 +653,20 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 						propertySetId = PropertySet.getPropertySet(propertyClass).getId();
 					}
 					
-					ExtendableObjectHelperImpl propertyValueObject = null;
+					// Save the id and appropriate map for this object so that the 
+					// object can be added to the map later when the object is created.
+					if (propertySetId.equals("net.sf.jmoney.currency")) {
+						map = idToCurrencyMap;
+						id = atts.getValue("id");
+					} else if (propertySetId.equals("net.sf.jmoney.capitalAccount")
+							|| propertySetId.equals("net.sf.jmoney.categoryAccount")) {
+						map = idToAccountMap;
+						id = atts.getValue("id");
+					}
 					
-					if (propertySetId.equals("net.sf.jmoney.session")) {
-						propertyValueObject = new SessionImpl();
-					} else if (propertySetId.equals("net.sf.jmoney.currency")) {
-						propertyValueObject = new CurrencyImpl();
-						idToCurrencyMap.put(atts.getValue("id"), propertyValueObject);
-					} else if (propertySetId.equals("net.sf.jmoney.capitalAccount")) {
-						propertyValueObject = new CapitalAccountImpl();
-						idToAccountMap.put(atts.getValue("id"), propertyValueObject);
-					} else if (propertySetId.equals("net.sf.jmoney.categoryAccount")) {
-						propertyValueObject = new IncomeExpenseAccountImpl();
-						idToAccountMap.put(atts.getValue("id"), propertyValueObject);
-					} else if (propertySetId.equals("net.sf.jmoney.transaction")) {
-						propertyValueObject = new TransaxionImpl();
-					} else if (propertySetId.equals("net.sf.jmoney.entry")) {
-						propertyValueObject = new EntryImpl();
-					} 
-					
-					currentSAXEventProcessor = new ObjectProcessor(this, propertyValueObject, propertySetId);
+					currentSAXEventProcessor = new ObjectProcessor(this, propertySetId);
 				} else {
-					// Property class is primative or Date
+					// Property class is primative or primative class
 					currentSAXEventProcessor = new PropertyProcessor(this, propertyClass);
 				}
 			}
@@ -616,10 +691,58 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 
 		public SAXEventProcessor endElement()
 		throws SAXException {
+			
+			// We can now create the object.
+			// The parameters to the constructor have been placed
+			// in the constructorParameters array so we need only
+			// to call the constructor.
+			
+			Constructor constructor = propertySet.getConstructor();
+			ExtendableObjectHelperImpl extendableObject;
+			try {
+				extendableObject = (ExtendableObjectHelperImpl)constructor.newInstance(constructorParameters);
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			} catch (IllegalAccessException e) {
+				throw new MalformedPluginException("Constructor must be public.");
+			} catch (InvocationTargetException e) {
+				throw new MalformedPluginException("An exception occured within a constructor in a plug-in.");
+			}
+			
+			/*			
+			if (propertySetId.equals("net.sf.jmoney.session")) {
+				this.extendableObject = new SessionImpl();
+			} else if (propertySetId.equals("net.sf.jmoney.currency")) {
+				this.extendableObject = new CurrencyImpl();
+				idToCurrencyMap.put(atts.getValue("id"), extendableObject);
+			} else if (propertySetId.equals("net.sf.jmoney.capitalAccount")) {
+				this.extendableObject = new CapitalAccountImpl();
+				idToAccountMap.put(atts.getValue("id"), extendableObject);
+			} else if (propertySetId.equals("net.sf.jmoney.categoryAccount")) {
+				this.extendableObject = new IncomeExpenseAccountImpl();
+				idToAccountMap.put(atts.getValue("id"), extendableObject);
+			} else if (propertySetId.equals("net.sf.jmoney.transaction")) {
+				this.extendableObject = new TransactionImpl();
+			} else if (propertySetId.equals("net.sf.jmoney.entry")) {
+				this.extendableObject = new EntryImpl();
+			} 
+*/			
+			objectKey.setObject(extendableObject);
+			
 			// Pass the value back up to the outer element processor.
 			if (parent != null) {
 				parent.elementCompleted(extendableObject);
 			}
+			
+			// Save the value so that getValue can return it.
+			// TODO: Change this method so it returns the value,
+			// and replace the getValue method with a getParent method.
+			// That would be a little cleaner.
+			value = extendableObject;
 			
 			return parent;
 		}
@@ -639,16 +762,68 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			if (propertyAccessor == null) {
 				throw new RuntimeException("internal error");
 			}
-
+			
 			// Set the value in our object.  If the property
 			// is a list property then the object is added to
 			// the list.
-			if (propertyAccessor.isScalar()) {
-				extendableObject.setPropertyValue(propertyAccessor, value);
+			if (!propertyAccessor.getPropertySet().isExtension()) {
+				int index = propertyAccessor.getIndexIntoConstructorParameters(); 
+				if (index != -1) {
+					if (propertyAccessor.isScalar()) {
+						if (propertyAccessor.getValueClass().isPrimitive()
+								|| propertyAccessor.getValueClass() == String.class
+								|| propertyAccessor.getValueClass() == Long.class
+								|| propertyAccessor.getValueClass() == Date.class) {
+							constructorParameters[index] = value;
+						} else {
+							constructorParameters[index] = ((IExtendableObject)value).getObjectKey();
+							//extendableObject.setPropertyValue(propertyAccessor, value);
+						}
+					} else {
+						// Must be an element in an array.
+						//extendableObject.addPropertyValue(propertyAccessor, value);
+						((Collection)constructorParameters[index]).add(value);
+						
+						// For Currency and Account objects, we also add to a map so that
+						// references can be resolved.
+						if (map != null) {
+							map.put(id, value);
+						}
+					}
+				}
 			} else {
-				// Must be an element in an array.
-				extendableObject.addPropertyValue(propertyAccessor, value);
+				// Property is in an extension.
+				PropertySet extensionPropertySet = propertyAccessor.getPropertySet();
+				Object[] extensionConstructorParameters = (Object[])extensionMap.get(extensionPropertySet);
+				if (extensionConstructorParameters == null) {
+					extensionConstructorParameters = new Object[extensionPropertySet.getConstructorProperties().size()];
+					extensionMap.put(extensionPropertySet, extensionConstructorParameters);
+				}
+
+				int index = propertyAccessor.getIndexIntoConstructorParameters(); 
+				if (index != -1) {
+					if (propertyAccessor.isScalar()) {
+						if (propertyAccessor.getValueClass().isPrimitive()
+								|| propertyAccessor.getValueClass() == String.class
+								|| propertyAccessor.getValueClass() == Long.class
+								|| propertyAccessor.getValueClass() == Date.class) {
+							extensionConstructorParameters[index] = value;
+						} else {
+							extensionConstructorParameters[index] = ((IExtendableObject)value).getObjectKey();
+						}
+					} else {
+						// Must be an element in an array.
+						((Collection)extensionConstructorParameters[index]).add(value);
+					}
+				}
 			}
+		}
+
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin.SAXEventProcessor#getValue()
+		 */
+		public Object getValue() {
+			return value;
 		}
 	}
 
@@ -751,6 +926,13 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			
 			return parent;
 		}
+
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin.SAXEventProcessor#getValue()
+		 */
+		public Object getValue() {
+			return value;
+		}
 	}
 
 
@@ -813,9 +995,16 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			
 			return parent;
 		}
+
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin.SAXEventProcessor#getValue()
+		 */
+		public Object getValue() {
+			return value;
+		}
 	}
 	
-	boolean requestSave(SessionImpl session, IWorkbenchWindow window) {
+	boolean requestSave(SessionManagementImpl session, IWorkbenchWindow window) {
 		String title = SerializedDatastorePlugin.getResourceString("MainFrame.saveOldSessionTitle");
 		String question =
 			SerializedDatastorePlugin.getResourceString("MainFrame.saveOldSessionQuestion");
@@ -846,16 +1035,17 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * Saves the session in the selected file.
 	 */
 	private void saveSession(IWorkbenchWindow window) {
-		SessionImpl session = (SessionImpl)JMoneyPlugin.getDefault().getSession();
-		if (session.getFile() == null) {
+		SessionManagementImpl sessionManager = (SessionManagementImpl)JMoneyPlugin.getDefault().getSession();
+		if (sessionManager.getFile() == null) {
 			File sessionFile = obtainFileName(window);
 			if (sessionFile != null) {
-				writeSession(session, sessionFile, window);
+				writeSession(sessionManager.getSession(), sessionFile, window);
+				sessionManager.setFile(sessionFile);
+				sessionManager.setModified(false);
 			}
 		} else {
-			// TODO: this is a bit funny, as file is changed but not changed.
-			// It works, though.
-			writeSession(session, session.getFile(), window);
+			writeSession(sessionManager.getSession(), sessionManager.getFile(), window);
+			sessionManager.setModified(false);
 		}
 	}
 	
@@ -905,11 +1095,11 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * Returns false if canceled by user or the save fails.
 	 */
 	public boolean saveOldSession(IWorkbenchWindow window) {
-		ISessionManagement previousSession = JMoneyPlugin.getDefault().getSession();
-		if (previousSession == null) {
+		ISessionManagement previousSessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		if (previousSessionManager == null) {
 			return true;
 		} else {
-			return previousSession.canClose(window);
+			return previousSessionManager.canClose(window);
 		}
 	}
 
@@ -934,7 +1124,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	/**
 	 * Write session to file.
 	 */
-	public void writeSession(SessionImpl session, File sessionFile, IWorkbenchWindow window)  {
+	public void writeSession(Session session, File sessionFile, IWorkbenchWindow window)  {
 		// If there is any modified data in the controls in any of the
 		// views, then commit these to the database now.
 		// TODO: How do we do this?  Should framework call first?
@@ -961,60 +1151,33 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				bout = new BufferedOutputStream(gout);
 			}
 			
-			if (false) {
-				// The XMLEncoder must use the same classpath that was used to load this class.
-				// The classpath set in this thread is the system class path, and if that
-				// is used then XMLEncoder will not be able to find the classes specified
-				// in the XML.  We must therefore temporarily replace the classpath.
-				ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
-				Thread.currentThread().setContextClassLoader(this.getDescriptor().getPluginClassLoader());
-				XMLEncoder enc = new XMLEncoder(bout);
-				enc.writeObject(session);
-				enc.close();
-				Thread.currentThread().setContextClassLoader(originalClassLoader);            
-			} else {
-				// The new way.
-				
-				namespaceMap = new HashMap();
-				accountId = 1;
-				accountIdMap = new HashMap();
-				
-				// At some point we must decide which of the two
-				// implementations to use.  Both work, as long as
-				// no characters requiring entitization occur in the data.
-				// (<, >, & etc.)  It really depends on what the
-				// performance difference is.
-				
-//				writeObjectFast(bout, session, "session", "net.sf.jmoney.session");
-
-				
-				try {
-					StreamResult streamResult = new StreamResult(bout);
-					SAXTransformerFactory tf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
-//					SAX2.0 ContentHandler.
-					TransformerHandler hd = tf.newTransformerHandler();
-					Transformer serializer = hd.getTransformer();
-					serializer.setOutputProperty(OutputKeys.ENCODING,"ISO-8859-1");
-//					serializer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM,"users.dtd");
-					serializer.setOutputProperty(OutputKeys.INDENT,"no");
-					hd.setResult(streamResult);
-					hd.startDocument();
-					writeObjectSafe(hd, session, "session", Session.class);
-					hd.endDocument();
-				} catch (SAXException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (TransformerConfigurationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+			namespaceMap = new HashMap();
+			accountId = 1;
+			accountIdMap = new HashMap();
+			
+			try {
+				StreamResult streamResult = new StreamResult(bout);
+				SAXTransformerFactory tf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
+				// SAX2.0 ContentHandler.
+				TransformerHandler hd = tf.newTransformerHandler();
+				Transformer serializer = hd.getTransformer();
+				serializer.setOutputProperty(OutputKeys.ENCODING,"ISO-8859-1");
+//				serializer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM,"users.dtd");
+				serializer.setOutputProperty(OutputKeys.INDENT,"no");
+				hd.setResult(streamResult);
+				hd.startDocument();
+				writeObject(hd, session, "session", Session.class);
+				hd.endDocument();
+			} catch (SAXException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (TransformerConfigurationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 			
 			bout.close();
 			fout.close();
-			
-			session.setModifiedA(false);
-			session.setFileA(sessionFile);
 			
 			//       waitDialog.close();
 		} catch (IOException ex) {
@@ -1036,7 +1199,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * 			type is determined by inspecting the adder and remover methods. 
 	 * @throws SAXException
 	 */
-	void writeObjectSafe(TransformerHandler hd, IExtendableObject object, String elementName, Class propertyType) throws SAXException {
+	void writeObject(TransformerHandler hd, IExtendableObject object, String elementName, Class propertyType) throws SAXException {
 		// Find the property set information for this object.
 		PropertySet propertySet = PropertySet.getPropertySet(object.getClass());
 
@@ -1120,7 +1283,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					String name = propertyAccessor.getLocalName();
 					for (Iterator elementIter = object.getPropertyIterator(propertyAccessor); elementIter.hasNext(); ) {
 						IExtendableObject listElement = (IExtendableObject)elementIter.next();
-						writeObjectSafe(hd, listElement, propertyAccessor.getLocalName(), propertyAccessor.getValueClass());
+						writeObject(hd, listElement, propertyAccessor.getLocalName(), propertyAccessor.getValueClass());
 					}
 				}
 			}
@@ -1180,193 +1343,6 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		hd.endElement("", "", elementName);
 	}
 	
-	void writeObjectFast(BufferedOutputStream bout, IExtendableObject object, String elementName, String typedPropertySetId) throws IOException {
-		// Find the property set information for this object.
-		PropertySet propertySet = PropertySet.getPropertySet(object.getClass());
-
-		bout.write(new String("<").getBytes());
-		bout.write(elementName.getBytes());
-		
-		// Generate and declare the namespace prefixes.
-		// All extension property sets have namespace prefixes.
-		// Properties in base and derived property sets must be
-		// unique within each object, so are all put in the
-		// default namespace.
-		if (typedPropertySetId.equals("net.sf.jmoney.session")) {
-			bout.write(new String(" xmlns=\"http://jmoney.sf.net\"").getBytes());
-
-			int suffix = 1;
-			for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
-				PropertySet extensionPropertySet = (PropertySet)iter.next();
-				
-				if (extensionPropertySet.isExtension()) {
-					// Put into our map.
-					String namespacePrefix = "ns" + new Integer(suffix++).toString();
-					namespaceMap.put(extensionPropertySet, namespacePrefix);
-					
-					bout.write(new String(" xmlns:").getBytes());
-					bout.write(namespacePrefix.getBytes());
-					bout.write(new String("=\"http://jmoney.sf.net/").getBytes());
-					bout.write(extensionPropertySet.getId().getBytes());
-					bout.write(new String("\"").getBytes());
-				}
-			}
-		}
-		
-		String id = null;
-		if (object instanceof Currency) {
-			id = ((Currency)object).getCode();
-		} else if (object instanceof Account) {
-			id = "account" + new Integer(accountId++).toString();
-			accountIdMap.put(object, id);
-		}
-		if (id != null) {
-			bout.write(new String(" id=\"").getBytes());
-			bout.write(id.getBytes());
-			bout.write(new String("\"").getBytes());
-		}
-
-		if (!propertySet.getId().equals(typedPropertySetId)) {
-			bout.write(new String(" propertySet=\"").getBytes());
-			bout.write(propertySet.getId().getBytes());
-			bout.write(new String("\"").getBytes());
-		}
-		bout.write(new String(">\n").getBytes());
-		
-		// Write all properties that have both getters and setters.
-		
-		// If the property is an object then we find the PropertyAccessor
-		// object for it and see if this object 'owns' the object.
-		// If it does then we output that object as a nested XML element. 
-		
-		// If we find the pattern for a list (add... method,
-		// remove... method, and a get...Iterator method)
-		// then we again look for the PropertyAccessor object
-		// and see if this object 'owns' the list.
-		// If it does then we output the list of objects
-		// as nested XML elements.
-		
-		// For derived property sets, information must be in
-		// the XML that allows the derived property set to be
-		// determined.  This is done by outputting the
-		// actual final property set id.  The property set id
-		// is specified as an attribute.
-		
-		// When an object is not owned, an id is specified.
-		// These are specified as 'id' and 'idref' attributes
-		// in the normal way.
-		
-		// Write the list properties.
-		// This is done before the properties because then, as it happens, we get
-		// no problems due to the single pass.
-		// TODO: we cannot rely on this mechanism to ensure all idref's are written
-		// before they are used.
-		if (propertySet.getId().equals("net.sf.jmoney.session")) {
-			Session session = (Session)object;
-			
-			for (Iterator iter = session.getCommodityIterator(); iter.hasNext(); ) {
-				Commodity commodity = (Commodity)iter.next();
-				writeObjectFast(bout, commodity, "commodity", "net.sf.jmoney.commodity");
-			}
-
-			// Write the accounts
-			for (Iterator iter = session.getCapitalAccountIterator(); iter.hasNext(); ) {
-				Account account = (Account)iter.next();
-				writeObjectFast(bout, account, "account", "net.sf.jmoney.account");
-				
-			}
-			for (Iterator iter = session.getIncomeExpenseAccountIterator(); iter.hasNext(); ) {
-				Account account = (Account)iter.next();
-				writeObjectFast(bout, account, "account", "net.sf.jmoney.account");
-			}
-			
-			for (Iterator iter = session.getTransaxionIterator(); iter.hasNext(); ) {
-				Transaxion transaction = (Transaxion)iter.next();
-				writeObjectFast(bout, transaction, "transaction", "net.sf.jmoney.transaction");
-			}
-		} else if (propertySet.getId().equals("net.sf.jmoney.capitalAccount")) {
-			Account account = (Account)object;
-			
-			for (Iterator iter = account.getSubAccountIterator(); iter.hasNext(); ) {
-				Account subAccount = (Account)iter.next();
-				writeObjectFast(bout, subAccount, "subAccount", "net.sf.jmoney.capitalAccount");
-			}
-		} else if (propertySet.getId().equals("net.sf.jmoney.categoryAccount")) {
-			Account account = (Account)object;
-			
-			for (Iterator iter = account.getSubAccountIterator(); iter.hasNext(); ) {
-				Account subAccount = (Account)iter.next();
-				writeObjectFast(bout, subAccount, "subAccount", "net.sf.jmoney.incomeExpenseAccount");
-			}
-		} else if (propertySet.getId().equals("net.sf.jmoney.transaction")) {
-			Transaxion transaction = (Transaxion)object;
-			
-			for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
-				Entry entry = (Entry)iter.next();
-				writeObjectFast(bout, entry, "entry", "net.sf.jmoney.entry");
-			}
-			
-		}
-
-		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			PropertySet propertySet2 = propertyAccessor.getPropertySet(); 
-			if (!propertySet2.isExtension()
-					|| object.getExtension(propertySet2) != null) {
-				String name = propertyAccessor.getLocalName();
-				Object value = object.getPropertyValue(propertyAccessor);
-				// No element means null value.
-				if (value != null) {
-					
-					bout.write(new String("<").getBytes());
-					if (propertySet2.isExtension()) {
-						String namespacePrefix = (String)namespaceMap.get(propertySet2); 
-						bout.write((namespacePrefix).getBytes());
-						bout.write(new String(":").getBytes());
-					}	
-					bout.write(name.getBytes());
-
-					String idref = null;
-					if (propertyAccessor.getValueClass() == Currency.class) {
-						idref = ((Currency)value).getCode();
-					} else if (value instanceof Account) {
-						idref = (String)accountIdMap.get(value);
-					}
-					if (idref != null) {
-						bout.write(new String(" idref=\"").getBytes());
-						bout.write(idref.toString().getBytes());
-						bout.write(new String("\"/>\n").getBytes());
-					} else {
-						bout.write(new String(">").getBytes());
-						if (value instanceof Date) {
-							Date date = (Date)value;
-//							bout.write(new Integer(date.get(Calendar.YEAR) + 1900).toString().getBytes());
-							bout.write(new Integer(date.getYear() + 1900).toString().getBytes());
-							bout.write(new String(".").getBytes());
-							bout.write(new Integer(date.getMonth()).toString().getBytes());
-							bout.write(new String(".").getBytes());
-							bout.write(new Integer(date.getDay()).toString().getBytes());
-						} else {
-							bout.write(value.toString().getBytes());
-						}
-						bout.write(new String("</").getBytes());
-						if (propertySet2.isExtension()) {
-							String namespacePrefix = (String)namespaceMap.get(propertySet2); 
-							bout.write((namespacePrefix).getBytes());
-							bout.write(new String(":").getBytes());
-						}	
-						bout.write(name.getBytes());
-						bout.write(new String(">\n").getBytes());
-					}
-				}
-			}
-		}
-		
-		bout.write(new String("</").getBytes());
-		bout.write(elementName.getBytes());
-		bout.write(new String(">\n").getBytes());
-	}
-	
 	/**
 	 * This method is used when reading a session.
 	 */
@@ -1412,13 +1388,12 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	private void setRedundantReferences(SessionImpl session) {
 		
 		// Add the back-references from sub-categories to the parent category
-		setParentAccountReferences(session.getIncomeExpenseAccountIterator(), null);
-		setParentAccountReferences(session.getCapitalAccountIterator(), null);
+		setParentAccountReferences(session.getAccountIterator(), null);
 		
 		// Add the back-references from entries to the transactions and also
 		// add each entry in an account to the list for that account.
-		for (Iterator iter = session.getTransaxionIterator(); iter.hasNext(); ) {
-			Transaxion transaction = (Transaxion)iter.next();
+		for (Iterator iter = session.getTransactionIterator(); iter.hasNext(); ) {
+			Transaction transaction = (Transaction)iter.next();
 			
 			for (Iterator entryIter = transaction.getEntryIterator(); entryIter.hasNext(); ) {
 				EntryImpl entry = (EntryImpl)entryIter.next();
@@ -1584,7 +1559,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					// other half of this entry and so we know the other half is not
 					// part of a split entry.
 					if (doubleEntriesPreviouslyFound.contains(de.getOther())) {
-						MutableTransaxion trans = newSession.createNewTransaxion();
+						MutableTransaction trans = newSession.createNewTransaction();
 						trans.setDate(de.getDate());
 						Entry entry1 = trans.createEntry();
 						Entry entry2 = trans.createEntry();
@@ -1603,7 +1578,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				} else if (oldEntry instanceof net.sf.jmoney.model.SplittedEntry) {
 					net.sf.jmoney.model.SplittedEntry se = (net.sf.jmoney.model.SplittedEntry)oldEntry;
 					
-					MutableTransaxion trans = newSession.createNewTransaxion();
+					MutableTransaction trans = newSession.createNewTransaction();
 					trans.setDate(oldEntry.getDate());
 					
 					// Add the entry for the account that was holding the split entry.
@@ -1625,7 +1600,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					
 					trans.commit();
 				} else {
-					MutableTransaxion trans = newSession.createNewTransaxion();
+					MutableTransaction trans = newSession.createNewTransaction();
 					trans.setDate(oldEntry.getDate());
 					Entry entry1 = trans.createEntry();
 					Entry entry2 = trans.createEntry();

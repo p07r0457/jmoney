@@ -25,7 +25,9 @@ package net.sf.jmoney.fields;
 import org.eclipse.swt.widgets.Composite;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.CapitalAccountImpl;
 import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.CurrencyImpl;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertyControl;
@@ -53,6 +55,10 @@ public class CurrencyInfo implements IExtensionPropertySetInfo {
     public CurrencyInfo() {
     }
 
+	public Class getImplementationClass() {
+		return CurrencyImpl.class;
+	}
+	
     public Class getInterfaceClass() {
         return Currency.class;
     }

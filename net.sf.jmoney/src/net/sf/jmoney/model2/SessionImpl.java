@@ -21,12 +21,14 @@
  *
  */
 
-package net.sf.jmoney.serializeddatastore;
+package net.sf.jmoney.model2;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 import java.util.Iterator;
 import java.util.Properties;
@@ -37,7 +39,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.File;
 
-import net.sf.jmoney.model2.*;
 import net.sf.jmoney.isocurrencies.IsoCurrenciesPlugin;
 
 import org.eclipse.ui.IMemento;
@@ -47,17 +48,15 @@ import org.eclipse.ui.IWorkbenchWindow;
 /**
  * Holds the fields that will be saved in a file.
  */
-public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionManagement, Serializable {
+public class SessionImpl extends ExtendableObjectHelperImpl implements Session, Serializable {
 
     protected Currency defaultCurrency;
     
-    protected File sessionFile = null;
+    protected IListManager commodities;
     
-    protected Vector accounts = new Vector();
+    protected IListManager accounts;
 
-    protected Vector categories = new Vector();
-
-    protected Vector transactions = new Vector();
+    protected IListManager transactions;
 
     protected static final ResourceBundle NAME =
     ResourceBundle.getBundle("net.sf.jmoney.isocurrencies.Currency");
@@ -73,16 +72,52 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
 
     
     /**
-     * Default constructor required by serialization.
+     * Constructor used by datastore plug-ins to create
+     * a session object.
      */
-    public SessionImpl() {
-//        this.serializerPlugin = serializerPlugin;
- //       this.userProperties = userProperties;
+    public SessionImpl(
+    		IObjectKey objectKey,
+    		Map extensions,
+    		IListManager commodities,
+			IListManager accounts,
+			IListManager transactions,
+			IObjectKey defaultCurrency) {
+    	super(objectKey, extensions);
 
-        initSystemCurrencies();
-        
-//      defaultCurrency = getCurrencyForCode(userProperties.getString("USD"));
-        defaultCurrency = getCurrencyForCode("USD");
+    	this.commodities = commodities;
+    	this.accounts = accounts;
+    	this.transactions = transactions;
+    	
+    	// If the list of commodities is empty then load
+    	// the full list of ISO currencies.
+    	if (commodities.isEmpty()) {
+    		initSystemCurrencies();
+    	}
+
+        // Set up a hash table that maps currency codes to
+        // the currency object.
+    	this.currencies = new Hashtable();
+    	for (Iterator iter = commodities.iterator(); iter.hasNext(); ) {
+    		Commodity commodity = (Commodity)iter.next();
+    		if (commodity instanceof Currency) {
+    			Currency currency = (Currency)commodity;
+    			this.currencies.put(currency.getCode(), currency);
+    		}
+    	}
+    	
+        // If the default currency is null then we look for
+        // a currency that has a code of "USD".  If no such
+        // currency exists then no default currency is set.
+        if (defaultCurrency != null) {
+        	this.defaultCurrency = (Currency)defaultCurrency.getObject();
+        } else {
+        	Currency dollarCurrency = getCurrencyForCode("USD");
+        	if (dollarCurrency != null) {
+        		this.defaultCurrency = dollarCurrency;
+        	} else {
+        		this.defaultCurrency = null;
+        	}
+        }
     }
 
     // TODO: decide how we implement saving of session properties.
@@ -102,7 +137,6 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
 	}
 	
     public Currency getDefaultCurrency() {
-//      return getCurrencyForCode(userProperties.getDefaultCurrency());
         return defaultCurrency;
     }
     
@@ -127,8 +161,6 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
 	 * @return the corresponding currency.
 	 */
 	public Currency getCurrencyForCode(String code) {
-		if (currencies == null)
-			initSystemCurrencies();
 		return (Currency) currencies.get(code);
 	}
 
@@ -137,44 +169,121 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
 		BufferedReader buffer = new BufferedReader(new InputStreamReader(in));
 		try {
 			String line = buffer.readLine();
-			String c;
-			byte d;
 			while (line != null) {
-				c = line.substring(0, 3);
-				d = 2;
+				final String code = line.substring(0, 3);
+				byte d;
 				try {
 					d = Byte.parseByte(line.substring(4, 5));
 				} catch (Exception ex) {
+					d = 2;
 				}
-                                
-                                String name = NAME.getString(c);
+				final byte decimals = d;
+				final String name = NAME.getString(code);
+				
+				PropertySet currencyPropertySet;
+				try {
+					currencyPropertySet = PropertySet.getPropertySet("net.sf.jmoney.currency");
+				} catch (PropertySetNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					throw new RuntimeException("internal error");
+				}
+				// TODO: Sort out what should really be in the Currency interface and remove
+				// most of the methods in the following implementation.
+				Currency newCurrency = (Currency)commodities.createNewElement(
+						currencyPropertySet, 
+						new Currency() {
 
-				currencies.put(c, new CurrencyImpl(name, c, d));
+							public String getCode() {
+								return code;
+							}
+
+							public void setCode(String code) {
+								// TODO Auto-generated method stub
+								
+							}
+
+							public int getDecimals() {
+								return decimals;
+							}
+
+							public void setDecimals(int decimals) {
+								// TODO Auto-generated method stub
+								
+							}
+
+							public String getName() {
+								return name;
+							}
+
+							public void setName(String name) {
+								// TODO Auto-generated method stub
+								
+							}
+
+							public long parse(String amountString) {
+								// TODO Auto-generated method stub
+								return 0;
+							}
+
+							public String format(long amount) {
+								// TODO Auto-generated method stub
+								return null;
+							}
+
+							public short getScaleFactor() {
+								// TODO Auto-generated method stub
+								return 0;
+							}
+
+							public ExtensionObject getExtension(PropertySet propertySetKey) {
+								// No extension properties are to be set.
+								return null;
+							}
+
+							public Object getPropertyValue(PropertyAccessor propertyAccessor) {
+								// TODO Auto-generated method stub
+								return null;
+							}
+
+							public int getIntegerPropertyValue(PropertyAccessor propertyAccessor) {
+								// TODO Auto-generated method stub
+								return 0;
+							}
+
+							public long getLongPropertyValue(PropertyAccessor propertyAccessor) {
+								// TODO Auto-generated method stub
+								return 0;
+							}
+
+							public String getStringPropertyValue(PropertyAccessor propertyAccessor) {
+								// TODO Auto-generated method stub
+								return null;
+							}
+
+							public Iterator getPropertyIterator(PropertyAccessor propertyAccessor) {
+								// TODO Auto-generated method stub
+								return null;
+							}
+
+							public String getPropertyValueAsString(PropertyAccessor propertyAccessor) {
+								// TODO Auto-generated method stub
+								return null;
+							}
+
+							public IObjectKey getObjectKey() {
+								// TODO Auto-generated method stub
+								return null;
+							}
+							
+						});
+
 				line = buffer.readLine();
 			}
 		} catch (IOException ioex) {
 		}
 	}
 
-    // TODO: how do I stop these being serialized???
-    // (For time being, 'A' added to cause property name mismatch).
-    public File getFile() {
-        return sessionFile;
-    }
-    
-    public void setFileA(File file) {
-        this.sessionFile = file;
-        
-        // The brief description of this session contains the file name, so we must
-        // fire a change so views that show this session description are updated.
-        fireEvent(
-        	new ISessionChangeFirer() {
-        		public void fire(SessionChangeListener listener) {
-        			listener.sessionPropertyChange("briefDescription", null, getBriefDescription());
-        		}
-       		});
-    }
-    
     public Iterator getCommodityIterator() {
 /*    	
 		if (sortedCurrencies == null) {
@@ -184,7 +293,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
 */		
 		return currencies.values().iterator();
     }
-   
+/*   
     public Iterator getAccountIterator() {
         return new Iterator() {
         	Iterator iter = accounts.iterator();
@@ -209,23 +318,61 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
 			}
         };
     }
-   
-    public Iterator getCapitalAccountIterator() {
+  */ 
+    public Iterator getAccountIterator() {
         return accounts.iterator();
     }
    
-    public Iterator getIncomeExpenseAccountIterator() {
-        return categories.iterator();
+    public Iterator getCapitalAccountIterator() {
+        return new Iterator() {
+        	Iterator iter = accounts.iterator();
+        	Object element;
+        	
+			public boolean hasNext() {
+				while (iter.hasNext()) {
+					element = iter.next();
+					if (element instanceof CapitalAccount) {
+						return true; 
+					}
+				}
+				return false;
+			}
+			public Object next() {
+				return element;
+			}
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+        };
     }
    
-    public Iterator getTransaxionIterator() {
-        return transactions.iterator();
+    public Iterator getIncomeExpenseAccountIterator() {
+        return new Iterator() {
+        	Iterator iter = accounts.iterator();
+        	Object element;
+        	
+			public boolean hasNext() {
+				while (iter.hasNext()) {
+					element = iter.next();
+					if (element instanceof IncomeExpenseAccount) {
+						return true; 
+					}
+				}
+				return false;
+			}
+			public Object next() {
+				return element;
+			}
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+        };
     }
    
     public Iterator getTransactionIterator() {
         return transactions.iterator();
     }
-   
+/*   
     // This is used when reading from the XML file only.
     // No other time.
     // TODO: why is addAccount different?
@@ -235,14 +382,16 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
     		currencies.put(((Currency)commodity).getCode(), commodity);
     	}
     }
-
+*/
+/*    
+    // Used by MutableCapitalAccountImpl and
+    // MutableIncomeExpenseAccountImpl.
+    // TODO: Remove this method and use instead the
+    // new method that gets the datastore to create
+    // new objects.
     public void addAccount(Account account) {
-        if (account instanceof CapitalAccount) {
-            accounts.add(account);
-        } else {
-            categories.add(account);
-        }
-        
+        accounts.add(account);
+              
         // Fire the event.
         final AccountAddedEvent event = new AccountAddedEvent(this, account);
         fireEvent(
@@ -252,6 +401,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
         		}
        		});
     }
+*/
 /* moved to MT940 code    
     public CapitalAccount getAccountByNumber(String accountNumber) {
         for (int i = 0; i < accounts.size(); i++) {
@@ -284,22 +434,23 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
         return new MutableCapitalAccountImpl(this);
     }
      
-    public MutableTransaxion createNewTransaxion() {
-        return new MutableTransaxionImpl(this);
+    public MutableTransaction createNewTransaction() {
+        return new MutableTransactionImpl(this);
     }
 
     // TODO: Ensure no mutable interface on this object already.
-    public MutableTransaxion createMutableTransaxion(Transaxion transaction) throws ObjectLockedForEditException {
-        if (transaction instanceof MutableTransaxion) {
+    public MutableTransaction createMutableTransaction(Transaction transaction) throws ObjectLockedForEditException {
+        if (transaction instanceof MutableTransaction) {
             throw new ObjectLockedForEditException();
         }
-        return new MutableTransaxionImpl(this, transaction);
+        return new MutableTransactionImpl(this, transaction);
     }
     
-    // Used by MutableTransaxionImpl.
+    // Used by MutableTransactionImpl.
     // Also this is the implementation of the addXxx pattern
     // required for list properties.
-    public void addTransaxion(Transaxion transaction) {
+/*    
+    public void addTransaxion(Transaction transaction) {
         transactions.add(transaction);
        
         // For efficiency, we keep a list of entries in each
@@ -315,11 +466,11 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
         modified();
     }
     
-    public void addTransaction(Transaxion transaction) {
+    public void addTransaction(Transaction transaction) {
     	addTransaxion(transaction);
     }
-    	
-   	public void removeTransaxion(Transaxion transaction) {
+*/    	
+   	public void removeTransaction(Transaction transaction) {
         transactions.remove(transaction);
 
         // For efficiency, we keep a list of entries in each
@@ -339,11 +490,14 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
     public void removeAccount(Account account) {
         Account parent = account.getParent();
         if (parent == null) {
-            if (account instanceof IncomeExpenseAccount) {
+/*
+        	if (account instanceof IncomeExpenseAccount) {
                 categories.remove(account);
             } else {
                 accounts.remove(account);
             }
+*/            
+            accounts.remove(account);
         } else {
             ((AbstractAccountImpl)parent).removeSubAccount(account);
         }
@@ -411,37 +565,9 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
         sessionChangeFirerListeners.remove(l);
     }
     
-    private void readObject(ObjectInputStream in)
-        throws IOException, ClassNotFoundException {
-        in.defaultReadObject();
-        modified = false;
-//        changeSupport = new PropertyChangeSupport(this);
-    }
-
-    public boolean canClose(IWorkbenchWindow window) {
-        if (isModified()) {
-            return SerializedDatastorePlugin.getDefault().requestSave(this, window);
-        } else {
-            return true;
-        }
-    }
-
-    public void close() {
-        // There is nothing to do here.  No files, connections or other resources
-        // are kept open so there is nothing to close.
-    }
-    
-    public String getBriefDescription() {
-        if (sessionFile == null) {
-            return null;
-        } else {
-            return sessionFile.getName();
-        }
-    }
-
     // The following methods are here only so that the object can be
     // serialized as a bean.
-    
+/*    
     public Vector getCommodities() {
         Vector result = new Vector();
     	for (Iterator iter = currencies.values().iterator(); iter.hasNext(); ) {
@@ -484,7 +610,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
     public void setTransactions(Vector transactions) {
         this.transactions = transactions;
     }
-
+*/
     /**
      * Passes an event on to all listeners who are listening for changes
      * to this session.
@@ -510,7 +636,8 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
      * workbench window then it should register with the JMoneyPlugin
      * object.
      */
-    void fireEvent(ISessionChangeFirer firer) {
+    // TODO: Change to package protection when interface is removed.
+    public void fireEvent(ISessionChangeFirer firer) {
     	// Notify listeners who are listening to us using the
     	// SessionChangeListener interface.
         if (!sessionChangeFirerListeners.isEmpty()) {
@@ -536,42 +663,112 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
         }
     }
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.ISessionManagement#getFactoryId()
+	/**
+	 * Create a new account.  Accounts are abstract, so
+	 * a property set derived from the account property
+	 * set must be passed to this method.  When an account
+	 * is created, various objects, such as the objects that manage collections within
+	 * the account, must be created.  The implementation of
+	 * these objects depends on the datastore and must be passed
+	 * to the constructor, so the actual construction of the object
+	 * is delegated to the collection object that will hold this
+	 * new account.  (The implementation of the collection object
+	 * is provided by the datastore plug-in, so this object knows
+	 * how to create an object in a way that is appropriate for
+	 * the datastore).
+	 * 
+	 * The collection object will get the properties for the new
+	 * object from the given interface.  Scalar properties are
+	 * simply set.  References to other objects are likewise set.
+	 * This means any referenced object must have been fetched by
+	 * the datastore.
+	 * 
+	 * @param accountPropertySet
+	 * @param account
+	 * @return
 	 */
-	public String getFactoryId() {
-		return "net.sf.jmoney.serializeddatastore.factoryid";
+	public Account createNewAccount(PropertySet propertySet, Account account) {
+		AbstractAccountImpl newAccount = (AbstractAccountImpl)accounts.createNewElement(propertySet, account);
+
+		newAccount.setParent(null);  // null indicates a top-level account
+
+		// Fire the event.
+        final AccountAddedEvent event = new AccountAddedEvent(this, newAccount);
+        fireEvent(
+        	new ISessionChangeFirer() {
+        		public void fire(SessionChangeListener listener) {
+        			listener.accountAdded(event);
+        		}
+       		});
+        
+        return newAccount;
 	}
 
-	private IPersistableElement persistableElement 
-	= new IPersistableElement() {
-		public String getFactoryId() {
-			return "net.sf.jmoney.serializeddatastore.factoryid";
-		}
-		public void saveState(IMemento memento) {
-			// The session must have been saved by now, because
-			// JMoney will not closed until the Session object says
-			// it is ok to close, and the Session object will not
-			// say it is ok to close unless it has available a file
-			// name to which the session can be saved.  (It will ask
-			// the user if the session was created using the New menu).
-			memento.putString("fileName", sessionFile.getPath());
-		}
-	};
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
+	/**
+	 * Create a new commodity.  Commodities are abstract, so
+	 * a property set derived from the commodity property
+	 * set must be passed to this method.  When an commodity
+	 * is created, various objects, such as the objects that manage collections within
+	 * the commodity, must be created.  The implementation of
+	 * these objects depends on the datastore and must be passed
+	 * to the constructor, so the actual construction of the object
+	 * is delegated to the collection object that will hold this
+	 * new commodity.  (The implementation of the collection object
+	 * is provided by the datastore plug-in, so this object knows
+	 * how to create an object in a way that is appropriate for
+	 * the datastore).
+	 * 
+	 * The collection object will get the properties for the new
+	 * object from the given interface.  Scalar properties are
+	 * simply set.  References to other objects are likewise set.
+	 * This means any referenced object must have been fetched by
+	 * the datastore.
+	 * 
+	 * @param commodityPropertySet
+	 * @param commodity
+	 * @return
 	 */
-	public Object getAdapter(Class adapter) {
-		if (adapter == IPersistableElement.class) {
-			return persistableElement;
+	public Commodity createNewCommodity(PropertySet propertySet, Commodity commodity) {
+		Commodity newCommodity = (Commodity)commodities.createNewElement(propertySet, commodity);
+
+		if (newCommodity instanceof Currency) {
+			Currency newCurrency = (Currency)newCommodity;
+			currencies.put(newCurrency.getCode(), newCurrency);
 		}
-		return null;
+/* TODO: implement this		
+		// Fire the event.
+        final CommodityAddedEvent event = new CommodityAddedEvent(this, newCommodity);
+        fireEvent(
+        	new ISessionChangeFirer() {
+        		public void fire(SessionChangeListener listener) {
+        			listener.commodityAdded(event);
+        		}
+       		});
+*/        
+        return newCommodity;
+	}
+
+	public Transaction createNewTransaction(PropertySet propertySet, Transaction transaction) {
+		TransactionImpl newTransaction = (TransactionImpl)transactions.createNewElement(propertySet, transaction);
+
+		// Fire the event.
+/* Do we need notification of new transactions, or are the notifications
+ * for addition and removal of each entry good enough?
+ 		
+        final AccountAddedEvent event = new AccountAddedEvent(this, newAccount);
+        fireEvent(
+        	new ISessionChangeFirer() {
+        		public void fire(SessionChangeListener listener) {
+        			listener.accountAdded(event);
+        		}
+       		});
+*/        
+        return newTransaction;
 	}
 
 /*
-    public TransaxionImpl[] getTransaxions() {
-        result = new TransaxionImpl[transa
+    public TransactionImpl[] getTransaxions() {
+        result = new TransactionImpl[transa
         return accounts;
     }
     

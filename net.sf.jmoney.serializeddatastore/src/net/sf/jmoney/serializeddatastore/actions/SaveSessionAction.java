@@ -25,11 +25,15 @@ package net.sf.jmoney.serializeddatastore.actions;
 import java.io.File;
 
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.ISessionManagement;
+import net.sf.jmoney.model2.SessionImpl;
 import net.sf.jmoney.serializeddatastore.*;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
 
@@ -56,17 +60,37 @@ public class SaveSessionAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-        SessionImpl session = (SessionImpl)JMoneyPlugin.getDefault().getSession();
-        if (session.getFile() == null) {
-            File sessionFile = SerializedDatastorePlugin.getDefault().obtainFileName(window);
-            if (sessionFile != null) {
-            	SerializedDatastorePlugin.getDefault().writeSession(session, sessionFile, window);
-            }
-        } else {
-            // TODO: this is a bit funny, as file is changed but not changed.
-            // It works, though.
-            SerializedDatastorePlugin.getDefault().writeSession(session, session.getFile(), window);
-        }
+		ISessionManagement sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		if (sessionManager instanceof SessionManagementImpl) {
+			SessionManagementImpl ourSessionManager = (SessionManagementImpl)sessionManager;
+			if (ourSessionManager.getFile() == null) {
+				File sessionFile = SerializedDatastorePlugin.getDefault().obtainFileName(window);
+				if (sessionFile != null) {
+					SerializedDatastorePlugin.getDefault().writeSession(ourSessionManager.getSession(), sessionFile, window);
+					ourSessionManager.setFile(sessionFile);
+					ourSessionManager.setModified(false);
+				}
+			} else {
+				SerializedDatastorePlugin.getDefault().writeSession(ourSessionManager.getSession(), ourSessionManager.getFile(), window);
+				ourSessionManager.setModified(false);
+			}
+		} else {
+			MessageDialog waitDialog =
+				new MessageDialog(
+						window.getShell(), 
+						"Menu item unavailable", 
+						null, // accept the default window icon
+						"This session cannot be saved using this 'save' action.  " +
+						"More than one plug-in is installed that provides a" +
+						"datastore implementation.  The current session was" +
+						"created using a different plug-in from the plug-in that" +
+						"created this 'save' action.  You can only use this 'save'" +
+						"action if the session was created using the corresponding" +
+						"'new' or 'open' action.", 
+						MessageDialog.ERROR, 
+						new String[] { IDialogConstants.OK_LABEL }, 0);
+			waitDialog.open();
+		}
 	}
 
 	/**

@@ -21,13 +21,11 @@
  *
  */
 
-package net.sf.jmoney.serializeddatastore;
+package net.sf.jmoney.model2;
 
 import net.sf.jmoney.model2.*;
 import net.sf.jmoney.JMoneyPlugin;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Date;
@@ -41,7 +39,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 	
     protected Entry originalEntry = null;
 	
-	protected Transaxion transaction = null;
+	protected Transaction transaction = null;
 	
 	protected long creation = Calendar.getInstance().getTime().getTime();
 	
@@ -57,25 +55,47 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 	
 	protected String memo = null;
 	
-	/**
-	 * Default constructor used for de-serialization
-	 */
-	public EntryImpl() {
+    /**
+     * Constructor used by datastore plug-ins to create
+     * an entry object.
+     */
+	public EntryImpl(
+				IObjectKey objectKey,
+	    		Map extensions,
+	    		String check,
+	    		String description,
+	    		IObjectKey account,
+	    		Date valuta,
+	    		String memo,
+	    		long amount,
+	    		long creation) {
+		super(objectKey, extensions);
+
+		this.creation = creation;
+		this.check = check;
+		this.valuta = valuta;
+		this.description = description;
+		this.account = (Account)account.getObject();
+		this.amount = amount;
+		this.memo = memo;
 	}
 	
 	/**
 	 * Creates a new entry in a transaction.
-	 * This constructor should be called from MutableTransaxion.createEntry() only.
+	 * This constructor should be called from MutableTransaction.createEntry() only.
 	 */
-	EntryImpl(Transaxion transaction) {
+	EntryImpl(Transaction transaction) {
+		super(null, null);
 		this.transaction = transaction;
 	}
 	
 	/**
 	 * Creates a mutable entry that can be used to modify an existing entry.
-	 * This constructor should be called from MutableTransaxion constructor only.
+	 * This constructor should be called from MutableTransaction constructor only.
 	 */
-	EntryImpl(MutableTransaxionImpl transaction, EntryImpl originalEntry) {
+	EntryImpl(MutableTransactionImpl transaction, EntryImpl originalEntry) {
+		super(null, null);  // TODO: I don't think this is correct.
+
 		this.transaction = transaction;
 		this.originalEntry = originalEntry;
 		
@@ -89,7 +109,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 	}
 
 	public boolean isMutable() {
-		return getTransaxion() instanceof MutableTransaxion;
+		return getTransaxion() instanceof MutableTransaction;
 	}
 
 	protected IExtendableObject getOriginalObject() {
@@ -129,7 +149,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 	/**
 	 * Returns the creation.
 	 */
-	public Transaxion getTransaxion() {
+	public Transaction getTransaxion() {
 		return transaction;
 	}
 	
@@ -143,7 +163,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 	 * the given mutable entry.
 	 */
 	void setOriginalEntry(EntryImpl originalEntry) {
-		if (!(transaction instanceof MutableTransaxion)) { 
+		if (!(transaction instanceof MutableTransaction)) { 
 			throw new RuntimeException("internal error");
 		}
 		if (this.originalEntry != null) { 
@@ -314,63 +334,17 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 	}
 	
 	
-	
-	private void readObject(ObjectInputStream in)
-	throws IOException, ClassNotFoundException {
-		in.defaultReadObject();
-	}
-	
 	/**
 	 * This method is used when setting the references that are not
 	 * serialized to file during serialization.
 	 */
-	void setTransaxion(Transaxion transaction) {
+	// TODO: we should be able to do this in the initializers.
+	// If so then the datastore no longer needs to do this
+	// and we can remove this public method.
+	public void setTransaxion(Transaction transaction) {
 		this.transaction = transaction;
 	}
 	
-	// These methods are used by the XMLEncoder to serialize the extensions.
-	// One of the characteristics of the data model is that all data is maintained
-	// even if the data was added by a plug-in (so only the plug-in knows how to
-	// interpret the data) and the plug-in is not installed.  In this case the data
-	// must be maintained, though it cannot be edited.
-	
-	// This is done by serializing the id of the property set and a serialization of
-	// the extension.  If, on de-serialization, the plug-in is not found then
-	// the data is added to the map by adding a string containing the data.
-	// If the plug-in is later installed then the appropriate extension object
-	// is built from the string.
-	
-	public SerializableExtension[] getExtensions() {
-		SerializableExtension result[] = new SerializableExtension[extensions.size()];
-		int i = 0;
-		
-		for (Iterator iter = extensions.entrySet().iterator(); iter.hasNext(); ) {
-			Map.Entry mapEntry = (Map.Entry)iter.next();
-			
-			PropertySet propertySetKey = (PropertySet)mapEntry.getKey();
-			String propertySetId = propertySetKey.getId();
-			
-			IExtendableObject extension = (IExtendableObject)mapEntry.getValue();
-			
-			// All extensions are beans and thus must be fully re-constructable through
-			// the properties that have both setters and getters.
-			result[i] = new SerializableExtension();
-			result[i].setPluginId(propertySetId);
-			result[i].setData(extensionToString(extension));
-			
-			i++;
-		}
-		
-		return result;
-	}
-	
-	public void setExtensions(SerializableExtension[] input) {
-		extensions.clear();  // not sure if really necessary
-		for (int i = 0; i < input.length; i++) {
-			importExtensionString(input[i].getPluginId(), input[i].getData());
-		}
-	}
-
 	protected void postLoad() {
 	}
 	

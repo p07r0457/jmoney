@@ -26,7 +26,7 @@ import java.io.File;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
-import net.sf.jmoney.serializeddatastore.SessionImpl;
+import net.sf.jmoney.model2.SessionImpl;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.ui.IElementFactory;
@@ -57,11 +57,11 @@ public class SessionFactory implements IElementFactory {
         if (fileName != null) {
             File sessionFile = new File(fileName);
             try {
-                SessionImpl session = SerializedDatastorePlugin.getDefault().readSessionQuietly(sessionFile);
-                if (session != null) {
-                    JMoneyPlugin.getDefault().setSession(session);
+                SessionManagementImpl sessionManager = SerializedDatastorePlugin.getDefault().readSessionQuietly(sessionFile);
+                if (sessionManager != null) {
+                    JMoneyPlugin.getDefault().setSessionManager(sessionManager);
                 }
-                return session;
+                return sessionManager;
             } catch (Exception ex) {
             	// If we could not read the session, we log the error
             	// but are silent to the user.

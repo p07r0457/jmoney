@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.qif;
 
+import net.sf.jmoney.model2.CurrencyImpl;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 
@@ -57,6 +58,10 @@ public class QIFEntryInfo implements IExtensionPropertySetInfo {
     public QIFEntryInfo() {
     }
 
+	public Class getImplementationClass() {
+		return QIFEntry.class;
+	}
+	
     public Class getInterfaceClass() {
         return QIFEntry.class;
     }

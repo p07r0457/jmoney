@@ -36,6 +36,10 @@ public class ReconciliationEntryInfo implements IExtensionPropertySetInfo {
     public ReconciliationEntryInfo() {
     }
 
+	public Class getImplementationClass() {
+		return ReconciliationEntry.class;
+	}
+	
     public Class getInterfaceClass() {
         return ReconciliationEntry.class;
     }

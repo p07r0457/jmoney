@@ -21,34 +21,53 @@
  *
  */
 
-package net.sf.jmoney.serializeddatastore;
+package net.sf.jmoney.model2;
 
 import net.sf.jmoney.model2.*;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Vector;
 
 /**
  *
  * @author  Nigel
  */
-//Kludge:  This implements MutableTransaxion.
-//You might think it should be implementing only Transaxion,
+//Kludge:  This implements MutableTransaction.
+//You might think it should be implementing only Transaction,
 //and you would be right.  However, the setters are needed
 //when reading the data from the XML.  Until this whole data
 //storage mess is sorted out, we will leave this as is.
-public class TransaxionImpl extends ExtendableObjectHelperImpl implements MutableTransaxion, Serializable {
+public class TransactionImpl extends ExtendableObjectHelperImpl implements MutableTransaction {
     
     protected Date date = null;
     
-    protected Vector entries = new Vector();
+    protected IListManager entries;
+    
+	public TransactionImpl(
+			IObjectKey objectKey,
+    		Map extensions,
+    		IListManager entries,
+    		Date date) {
+		super(objectKey, extensions);
+
+		this.entries = entries;
+		this.date = date;
+	}
     
     /** Creates a new instance of Transaction */
-    public TransaxionImpl() {
+	// TODO: We must remove this constructor.
+	// It will not work with most datastore plug-ins.
+/*
+	public TransactionImpl() {
+    	super(null, null);
+    	
+    	entries = null;
     }
-    
+*/    
 	protected boolean isMutable() {
 		return false;
 	}
@@ -78,16 +97,16 @@ public class TransaxionImpl extends ExtendableObjectHelperImpl implements Mutabl
     /**
      *DISREGARD ALL THIS
      * This method returns true if two objects represent the same transaction.
-     * There will only be one <code>Transaxion</code> object for each transaxion.
+     * There will only be one <code>Transaction</code> object for each transaxion.
      * However, if a transaxion is being edited then one or more 
-     * <code>MutableTransaxion</code> objects may exist.  These objects
-     * implement the <code>Transaxion</code> interface and represent the
+     * <code>MutableTransaction</code> objects may exist.  These objects
+     * implement the <code>Transaction</code> interface and represent the
      * same transaction.  Therefore they should be considered equal.
      * (For example, consider the situation where a transaction 
      * is being edited in a view, and the edited
      * transaction is to be included in a list view which is to show the
      * edited state, but the changes to the transaction
-     * has not yet been committed.  The <code>MutableTransaxion</code>
+     * has not yet been committed.  The <code>MutableTransaction</code>
      * object will thus appear in the list.  Items in this list may be
      * compared
      * 
@@ -95,7 +114,7 @@ public class TransaxionImpl extends ExtendableObjectHelperImpl implements Mutabl
      * are of typ
      * 
     public boolean equals(Object other) {
-        if (other instanceof MutableTransaxionImpl) {
+        if (other instanceof MutableTransactionImpl) {
             return other.equals(this);
         } else {
             return super.equals(other);
@@ -116,13 +135,13 @@ public class TransaxionImpl extends ExtendableObjectHelperImpl implements Mutabl
         if (entries.size() != 2) {
             throw new RuntimeException("Double entry error");
         }
-        if (entries.elementAt(0) == thisEntry) {
-            return (Entry)entries.elementAt(1);
-        } else if (entries.elementAt(1) == thisEntry) {
-            return (Entry)entries.elementAt(0);
-        } else {
-            throw new RuntimeException("Double entry error");
+        for (Iterator iter = entries.iterator(); iter.hasNext(); ) {
+        	Entry entry = (Entry)iter.next();
+        	if (entry != thisEntry) {
+        		return entry;
+        	}
         }
+        throw new RuntimeException("Double entry error");
     }
     
     // Used by the MutableTranxactionImpl and also for serialization:
@@ -174,8 +193,28 @@ public class TransaxionImpl extends ExtendableObjectHelperImpl implements Mutabl
                 newEntries.add(entry);
             }
         }
+        
+        // For efficiency, we keep a list of entries in each
+        // account/category.  We must update this list now.
+        for (Iterator iter = newEntries.iterator(); iter.hasNext(); ) {
+            Entry entry = (Entry)iter.next();
+            // TODO: at some time, keep these lists for categories too
+            Account category = entry.getAccount();
+            if (category instanceof CapitalAccount) {
+                ((CapitalAccountImpl)category).addEntry(entry);
+            }
+        }
+        for (Iterator iter = deletedEntries.iterator(); iter.hasNext(); ) {
+            Entry entry = (Entry)iter.next();
+            // TODO: at some time, keep these lists for categories too
+            Account category = entry.getAccount();
+            if (category instanceof CapitalAccount) {
+                ((CapitalAccountImpl)category).removeEntry(entry);
+            }
+        }
+        
     }
-    
+/*    
     // TODO remove these two methods
     public void setEntries(Vector entries) {
         this.entries = entries;
@@ -184,35 +223,35 @@ public class TransaxionImpl extends ExtendableObjectHelperImpl implements Mutabl
     public Vector getEntries() {
         return entries;
     }
-
+*/
     // Used by XML reader only
     public void addEntry(Entry entry) {
         entries.add(entry);
     }
-    
+  
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.model2.MutableIncomeExpenseAccount#commit()
 	 */
-	public Transaxion commit() {
+	public Transaction commit() {
 		throw new RuntimeException("should never be called");
 	}
 
 	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.MutableTransaxion#getOriginalTransaxion()
+	 * @see net.sf.jmoney.model2.MutableTransaction#getOriginalTransaxion()
 	 */
-	public Transaxion getOriginalTransaxion() {
+	public Transaction getOriginalTransaxion() {
 		throw new RuntimeException("should never be called");
 	}
 
 	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.MutableTransaxion#createEntry()
+	 * @see net.sf.jmoney.model2.MutableTransaction#createEntry()
 	 */
 	public Entry createEntry() {
 		throw new RuntimeException("should never be called");
 	}
 
 	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.MutableTransaxion#removeEntry(net.sf.jmoney.model2.Entry)
+	 * @see net.sf.jmoney.model2.MutableTransaction#removeEntry(net.sf.jmoney.model2.Entry)
 	 */
 	public void removeEntry(Entry e) {
 		throw new RuntimeException("should never be called");

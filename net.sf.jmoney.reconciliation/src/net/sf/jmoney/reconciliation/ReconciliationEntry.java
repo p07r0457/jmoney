@@ -56,10 +56,22 @@ public class ReconciliationEntry extends AbstractEntryExtension {
 	
 	protected int status = 0;
 	
-	/** Creates a new instance.
+	/**
 	 * A default constructor is mandatory for all extension objects.
+	 * The default constructor sets the extension properties to
+	 * appropriate default values.
 	 */
 	public ReconciliationEntry() {
+	}
+	
+	/**
+	 * A Full constructor is mandatory for all extension objects.
+	 * This constructor is called by the datastore to construct
+	 * the extension objects when loading data.
+	 * 
+	 */
+	public ReconciliationEntry(int status) {
+		this.status = status;
 	}
 	
 	/**

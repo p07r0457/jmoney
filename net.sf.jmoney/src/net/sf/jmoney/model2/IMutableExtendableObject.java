@@ -31,7 +31,7 @@ package net.sf.jmoney.model2;
  * <LI>Session</LI>
  * <LI>Commodity</LI>
  * <LI>Account</LI>
- * <LI>Transaxion</LI>
+ * <LI>Transaction</LI>
  * <LI>Entry</LI>
  * </UL>
  * <P>

@@ -26,14 +26,16 @@ import org.eclipse.swt.widgets.Composite;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CurrencyImpl;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.MutableTransaxion;
+import net.sf.jmoney.model2.MutableTransaction;
 import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.Transaxion;
+import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
+import net.sf.jmoney.model2.TransactionImpl;
 
 /**
  * @author Nigel
@@ -56,12 +58,16 @@ public class TransactionInfo implements IExtensionPropertySetInfo {
     public TransactionInfo() {
     }
 
+	public Class getImplementationClass() {
+		return TransactionImpl.class;
+	}
+	
     public Class getInterfaceClass() {
-        return Transaxion.class;
+        return Transaction.class;
     }
     
     public Class getMutableInterfaceClass() {
-        return MutableTransaxion.class;
+        return MutableTransaction.class;
     }
     
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
@@ -80,5 +86,4 @@ public class TransactionInfo implements IExtensionPropertySetInfo {
 
 		propertyRegistrar.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), 10.0, textControlFactory, null, null);
 	}
-
 }

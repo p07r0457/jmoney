@@ -21,7 +21,7 @@
  *
  */
 
-package net.sf.jmoney.serializeddatastore;
+package net.sf.jmoney.model2;
 
 import java.util.Iterator;
 
@@ -102,12 +102,22 @@ public class MutableIncomeExpenseAccountImpl  extends ExtendableObjectHelperImpl
         // The database must be in a valid state at all times, which
         // means updates and reads must be synchronized.
         if (account == null) {
-            account = new IncomeExpenseAccountImpl(name);
-            account.setParent(parent);
+			PropertySet incomeExpenseAccountPropertySet;
+			try {
+				incomeExpenseAccountPropertySet = PropertySet.getPropertySet("net.sf.jmoney.categoryAccount");
+			} catch (PropertySetNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			}
+
+			//account = new IncomeExpenseAccountImpl(null, null, name, null);
+
             if (parent == null) {
-                session.addAccount(account);
+    			account = (IncomeExpenseAccountImpl)session.createNewAccount(incomeExpenseAccountPropertySet, this);
             } else {
-                parent.addSubAccount(account);
+    			account = (IncomeExpenseAccountImpl)parent.createNewSubAccount(session, incomeExpenseAccountPropertySet, this);
+//              parent.addSubAccount(account);
             }
         } else {
         	String oldName = account.getName();

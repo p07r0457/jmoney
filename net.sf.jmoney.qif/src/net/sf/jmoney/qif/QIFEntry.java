@@ -31,34 +31,47 @@ import net.sf.jmoney.model2.AbstractEntryExtension;
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
 public class QIFEntry extends AbstractEntryExtension {
-		
-		protected char reconcilingState = ' ';
-
-		/** Creates a new instance.
-		 * A default constructor is mandatory for all extension objects.
-		 */
-		public QIFEntry() {
-		}
-		
-		/**
-		 * Returns the status.
-		 */
-		public char getReconcilingState() {
-			return reconcilingState;
-		}
-
-		/**
-		 * Sets the check. Either UNCLEARED, RECONCILING or CLEARED.
-	         *
-	         * At this point of time, any change to an extension causes a change notification
-	         * on the base entry object itself.  TODO: Most consumers will be aware of only 
-	         * one or a few extension types so it is not efficient to notify them when any
-	         * other extension is changed.  Think about whether it is worth bringing notifications
-	         * down to a finer granularity.
-		 */
-		public void setReconcilingState(char reconcilingState) {
-	                char oldReconcilingState = this.reconcilingState;
-			this.reconcilingState = reconcilingState;
-			firePropertyChange("reconcilingState", oldReconcilingState, reconcilingState);
-		}
+	
+	protected char reconcilingState = ' ';
+	
+	/**
+	 * A default constructor is mandatory for all extension objects.
+	 * The default constructor sets the extension properties to
+	 * appropriate default values.
+	 */
+	public QIFEntry() {
 	}
+	
+	/**
+	 * A Full constructor is mandatory for all extension objects.
+	 * This constructor is called by the datastore to construct
+	 * the extension objects when loading data.
+	 * 
+	 * @param reconcilingState
+	 */
+	public QIFEntry(char reconcilingState) {
+		this.reconcilingState = reconcilingState;
+	}
+	
+	/**
+	 * Returns the status.
+	 */
+	public char getReconcilingState() {
+		return reconcilingState;
+	}
+	
+	/**
+	 * Sets the check. Either UNCLEARED, RECONCILING or CLEARED.
+	 *
+	 * At this point of time, any change to an extension causes a change notification
+	 * on the base entry object itself.  TODO: Most consumers will be aware of only 
+	 * one or a few extension types so it is not efficient to notify them when any
+	 * other extension is changed.  Think about whether it is worth bringing notifications
+	 * down to a finer granularity.
+	 */
+	public void setReconcilingState(char reconcilingState) {
+		char oldReconcilingState = this.reconcilingState;
+		this.reconcilingState = reconcilingState;
+		firePropertyChange("reconcilingState", oldReconcilingState, reconcilingState);
+	}
+}

@@ -24,7 +24,6 @@ package net.sf.jmoney.model2;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.ui.IWorkbenchWindow;
-import java.util.Properties;
 
 /**
  * This interface must be implemented by all plug-ins that implement a
@@ -32,8 +31,16 @@ import java.util.Properties;
  * framework.  They should not be called directly by other plug-ins and thus
  * these methods are not in the Session interface.
  */
-public interface ISessionManagement extends Session, IAdaptable {
+public interface ISessionManagement extends IAdaptable {
 
+	/** Returns the session object.  The session object must be
+	 * non-null.  (If no session is set then no ISessionManagement
+	 * implementation should be set).
+	 * 
+	 * @return
+	 */
+	Session getSession();
+	
     /** Returns a brief description of the data in the session.
      * This description should be, for example, the file name or the name
      * of the database where the data either is stored or will be stored

@@ -27,13 +27,15 @@ import org.eclipse.swt.widgets.Composite;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.CurrencyImpl;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
-import net.sf.jmoney.model2.Transaxion;
+import net.sf.jmoney.model2.SessionImpl;
+import net.sf.jmoney.model2.Transaction;
 
 /**
  * @author Nigel
@@ -56,6 +58,10 @@ public class SessionInfo implements IExtensionPropertySetInfo {
     public SessionInfo() {
     }
 
+	public Class getImplementationClass() {
+		return SessionImpl.class;
+	}
+	
     public Class getInterfaceClass() {
         return Session.class;
     }
@@ -74,9 +80,8 @@ public class SessionInfo implements IExtensionPropertySetInfo {
 
 		propertyRegistrar.addPropertyList("commodity", JMoneyPlugin.getResourceString("<not used???>"), Commodity.class, null);
 		propertyRegistrar.addPropertyList("account", JMoneyPlugin.getResourceString("<not used???>"), Account.class, null);
-		propertyRegistrar.addPropertyList("transaction", JMoneyPlugin.getResourceString("<not used???>"), Transaxion.class, null);
+		propertyRegistrar.addPropertyList("transaction", JMoneyPlugin.getResourceString("<not used???>"), Transaction.class, null);
 		
 		propertyRegistrar.addProperty("defaultCurrency", JMoneyPlugin.getResourceString("Session.defaultCurrency"), 15.0, currencyControlFactory, null, null);
 	}
-
 }

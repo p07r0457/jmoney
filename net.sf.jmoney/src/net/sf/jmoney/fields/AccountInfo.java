@@ -54,6 +54,12 @@ public class AccountInfo implements IExtensionPropertySetInfo {
     public AccountInfo() {
     }
 
+	public Class getImplementationClass() {
+		// This is a derivable property set, therefore it has no
+		// implementation class.
+		return null;
+	}
+
     public Class getInterfaceClass() {
         return Account.class;
     }
@@ -73,5 +79,4 @@ public class AccountInfo implements IExtensionPropertySetInfo {
 		propertyRegistrar.addProperty("name", JMoneyPlugin.getResourceString("AccountPropertiesPanel.name"), 30.0, textControlFactory, null, null);
 		propertyRegistrar.setDerivableInfo();
 	}
-
 }

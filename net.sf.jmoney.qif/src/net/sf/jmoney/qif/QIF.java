@@ -176,7 +176,7 @@ public class QIF implements FileFormat {
         }
         
         while (true) {
-            MutableTransaxion transaction = session.createNewTransaxion();
+            MutableTransaction transaction = session.createNewTransaction();
             Entry entry = transaction.createEntry();
             QIFEntry ourEntry = (QIFEntry)entry.getExtension(qifPropertySet);
             
@@ -742,7 +742,7 @@ public class QIF implements FileFormat {
             if ((entry2 != newEntry)
             && (entry2.getAmount() == newEntry.getAmount())
             && (entry2.getTransaxion().equals(newEntry.getTransaxion()))) {
-                session.removeTransaxion(entry2.getTransaxion());
+                session.removeTransaction(entry2.getTransaxion());
             }
         }
     }

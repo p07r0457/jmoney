@@ -1,6 +1,7 @@
 /*
  *
  *  JMoney - A Personal Finance Manager
+ *  Copyright (c) 2002 Johann Gyger <johann.gyger@switzerland.org>
  *  Copyright (c) 2004 Nigel Westbury <westbury@users.sourceforge.net>
  *
  *
@@ -19,20 +20,34 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  */
+
 package net.sf.jmoney.model2;
 
+import java.util.Date;
+import java.util.Iterator;
+
 /**
- * @author Nigel
- *
- * This class is the base class from which all classes that implement
- * extension property sets should be derived.
+ * @version Nigel Westbury
  */
-public abstract class ExtensionPropertySet {
-	protected PropertySet propertySet;
-	
-	void setPropertySet(PropertySet propertySet) {
-		this.propertySet = propertySet;
-	}
-	
-	abstract void setBaseObject(IExtendableObject baseObject);
+public interface MutableTransaction extends Transaction, IMutableExtendableObject {
+    
+    void setDate(Date date);
+    
+    /**
+     * Get the original transaction which this mutable transaction is
+     * editing.  If this mutable transaction is a new transaction then
+     * this method will return null.
+     */
+    Transaction getOriginalTransaxion();
+    
+    Entry createEntry();
+    
+    void removeEntry(Entry e);
+    
+    Transaction commit();
+    
+    // This method is used by the datastore implementations.
+    // TODO: Should this be moved to a separate initialization interface?
+
+    void addEntry(Entry entry);
 }

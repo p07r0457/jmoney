@@ -30,6 +30,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.SessionImpl;
 import net.sf.jmoney.serializeddatastore.*;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
 
@@ -56,6 +57,7 @@ public class SaveSessionAsAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
+		// FIXME: finish this
         SessionImpl session = (SessionImpl)JMoneyPlugin.getDefault().getSession();
         File sessionFile = SerializedDatastorePlugin.getDefault().obtainFileName(window);
         if (sessionFile != null) {

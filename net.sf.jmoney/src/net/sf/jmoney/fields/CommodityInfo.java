@@ -53,6 +53,12 @@ public class CommodityInfo implements IExtensionPropertySetInfo {
     public CommodityInfo() {
     }
 
+	public Class getImplementationClass() {
+		// This is a derivable property set, therefore it has no
+		// implementation class.
+		return null;
+	}
+
     public Class getInterfaceClass() {
         return Commodity.class;
     }
@@ -72,5 +78,4 @@ public class CommodityInfo implements IExtensionPropertySetInfo {
 		propertyRegistrar.addProperty("name", JMoneyPlugin.getResourceString("Commodity.name"), 30.0, textControlFactory, null, null);
 		propertyRegistrar.setDerivableInfo("commodityType", "Commodity Type");
 	}
-
 }

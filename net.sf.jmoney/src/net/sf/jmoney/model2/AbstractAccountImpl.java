@@ -21,9 +21,10 @@
  *
  */
 
-package net.sf.jmoney.serializeddatastore;
+package net.sf.jmoney.model2;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.*;
@@ -35,7 +36,15 @@ public abstract class AbstractAccountImpl extends ExtendableObjectHelperImpl imp
 
         protected Account parent;
   
-        protected Vector subAccounts = null;
+        protected IListManager subAccounts;
+        
+        protected AbstractAccountImpl(
+        		IObjectKey objectKey, 
+				Map extensions, 
+				IListManager subAccounts) {
+        	super(objectKey, extensions);
+			this.subAccounts = subAccounts;
+        }
         
 	public String getFullAccountName() {
 		return getName();
@@ -44,9 +53,12 @@ public abstract class AbstractAccountImpl extends ExtendableObjectHelperImpl imp
         public Account getParent() {
             return parent;
         }
-        
-        // Package access only so this is not serialized.
-        void setParent(Account parent) {
+
+        // This method is used when setting the back references
+    	// TODO: we should be able to do this in the initializers.
+    	// If so then the datastore no longer needs to do this
+    	// and we can remove this public method.
+        public void setParent(Account parent) {
             this.parent = parent;
         }
         
@@ -55,9 +67,6 @@ public abstract class AbstractAccountImpl extends ExtendableObjectHelperImpl imp
          * and also by the datastore during object initialization.
          */
         public void addSubAccount(Account subAccount) {
-            if (subAccounts == null) {
-                subAccounts = new Vector();
-            }
             subAccounts.add(subAccount);
         }
         
@@ -79,14 +88,4 @@ public abstract class AbstractAccountImpl extends ExtendableObjectHelperImpl imp
     		Account c = (Account) o;
     		return getName().compareTo(c.getName());
     	}
-
-        // Methods required so these objects can be serialized as beans.
-        
-        public void setSubAccounts(Vector subAccounts) {
-            this.subAccounts = subAccounts;
-        }
-        
-        public Vector getSubAccounts() {
-            return subAccounts;
-        }
 }

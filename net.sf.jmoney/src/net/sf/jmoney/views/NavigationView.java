@@ -86,6 +86,10 @@ public class NavigationView extends ViewPart {
 	 * (like Task List, for example).
 	 */
 	 
+	
+	
+	
+	
 	class TreeNode implements IAdaptable {
 		private String name;
 		private Image image;
@@ -169,6 +173,9 @@ public class NavigationView extends ViewPart {
 		}
 	}
 
+	// TODO: Should the list of accounts be cached by the TreeNode object?
+	// Or should we change this code and send the request to the datastore each time the tree view requests
+	// a list of accounts or sub-accounts?
 	class AccountsNode extends TreeNode {
 		public AccountsNode(String name, Image image, TreeNode parent) {
 			super(name, image, parent);

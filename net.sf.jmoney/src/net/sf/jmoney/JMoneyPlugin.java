@@ -55,7 +55,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	//Resource bundle.
 	private ResourceBundle resourceBundle;
 	
-    ISessionManagement session;
+    ISessionManagement sessionManager;
 
     protected transient Vector sessionChangeListeners = new Vector();
     
@@ -185,8 +185,16 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 		return resourceBundle;
 	}
 	
-    public ISessionManagement getSession() {
-        return session;
+    public ISessionManagement getSessionManager() {
+        return sessionManager;
+    }
+    
+    // Helper method
+    // TODO: see if we really need this method.
+    public Session getSession() {
+        return sessionManager == null 
+			? null 
+			: sessionManager.getSession();
     }
     
     /**
@@ -211,14 +219,14 @@ public class JMoneyPlugin extends AbstractUIPlugin {
      * both canClose() and close() are called on the previous session.
      * This method will not close any previously set session.
      */
-    public void setSession(ISessionManagement newSession) {
+    public void setSessionManager(ISessionManagement newSessionManager) {
         // It is up to the caller to ensure that the previous session
         // has been closed.
 
-        if (session == newSession)
+        if (sessionManager == newSessionManager)
             return;
-        Session oldSession = session;
-        session = newSession;
+        ISessionManagement oldSessionManager = sessionManager;
+        sessionManager = newSessionManager;
         
         // It is possible, tho I can't think why, that a listener who
         // we tell of a change in the current session will modify either
@@ -250,7 +258,10 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         // restrictions we impose.
         
         if (!sessionChangeListeners.isEmpty()) {
-        	SessionReplacedEvent event = new SessionReplacedEvent(this, oldSession, newSession);
+        	SessionReplacedEvent event = new SessionReplacedEvent(
+        			this, 
+        			oldSessionManager == null ? null : oldSessionManager.getSession(), 
+					newSessionManager == null ? null : newSessionManager.getSession());
         
         	// Take a copy of the listener list.  By doing this we
         	// allow listeners to safely add or remove listeners.
@@ -263,11 +274,11 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         
         // Stop listening to the old session and start listening to the
         // new session for changes within the session.
-        if (oldSession != null) {
-        	oldSession.removeSessionChangeFirerListener(sessionChangeFirerListener);
+        if (oldSessionManager != null) {
+        	oldSessionManager.getSession().removeSessionChangeFirerListener(sessionChangeFirerListener);
         }
-        if (newSession != null) {
-        	newSession.addSessionChangeFirerListener(sessionChangeFirerListener);
+        if (newSessionManager != null) {
+        	newSessionManager.getSession().addSessionChangeFirerListener(sessionChangeFirerListener);
         }
     }
 /*	

@@ -31,6 +31,7 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.swt.widgets.FileDialog;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.SessionImpl;
 import net.sf.jmoney.serializeddatastore.*;
 
 /**
@@ -65,9 +66,9 @@ public class OpenSessionAction implements IWorkbenchWindowActionDelegate {
             
             if (fileName != null) {
                 File sessionFile = new File(fileName);
-                SessionImpl session = SerializedDatastorePlugin.getDefault().readSession(sessionFile, window);
-                if (session != null) {
-                    JMoneyPlugin.getDefault().setSession(session);
+                SessionManagementImpl sessionManager = SerializedDatastorePlugin.getDefault().readSession(sessionFile, window);
+                if (sessionManager != null) {
+                    JMoneyPlugin.getDefault().setSessionManager(sessionManager);
                 }
             }
         }

@@ -26,10 +26,12 @@ package net.sf.jmoney.model2;
 import java.beans.PropertyChangeListener;
 import java.util.Iterator;
 
+import org.eclipse.core.runtime.IAdaptable;
+
 /**
  * Holds the fields that will be saved in a file.
  */
-public interface Session {
+public interface Session extends IExtendableObject {
 
     Currency getDefaultCurrency();
     
@@ -43,21 +45,19 @@ public interface Session {
    
     Iterator getIncomeExpenseAccountIterator();
     
-    Iterator getTransaxionIterator();
- 
     Iterator getTransactionIterator();
     
     MutableIncomeExpenseAccount createNewIncomeExpenseAccount();
         
     MutableCapitalAccount createNewCapitalAccount();
 
-    MutableTransaxion createNewTransaxion();
+    MutableTransaction createNewTransaction();
 
-    MutableTransaxion createMutableTransaxion(Transaxion transaction) throws ObjectLockedForEditException;
+    MutableTransaction createMutableTransaction(Transaction transaction) throws ObjectLockedForEditException;
 
     void removeAccount(Account account);
     
-    void removeTransaxion(Transaxion transaction);
+    void removeTransaction(Transaction transaction);
 
 //  Object[] getAvailableCurrencies();
     Currency getCurrencyForCode(String code);
@@ -78,13 +78,9 @@ public interface Session {
     void addSessionChangeFirerListener(SessionChangeFirerListener listener);
     
     void removeSessionChangeFirerListener(SessionChangeFirerListener listener);
-    
-    // These methods are used by the datastore implementations.
-    // TODO: Should these be moved to a separate initialization interface?
 
-    void addCommodity(Commodity commodity);
-
-    void addAccount(Account account);
-    
-    void addTransaction(Transaxion transaction);
+    // This should have package protection.
+    // However, this interface should be merged with the implementation
+    // so this issue will then go away.
+    void fireEvent(ISessionChangeFirer firer);
 }

@@ -23,7 +23,9 @@
 package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.CurrencyImpl;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryImpl;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 
@@ -48,6 +50,10 @@ public class EntryInfo implements IExtensionPropertySetInfo {
     public EntryInfo() {
     }
 
+	public Class getImplementationClass() {
+		return EntryImpl.class;
+	}
+	
     public Class getInterfaceClass() {
         return Entry.class;
     }
@@ -63,11 +69,10 @@ public class EntryInfo implements IExtensionPropertySetInfo {
 		// For time being, we just pass null factories.
 		propertyRegistrar.addProperty("check", JMoneyPlugin.getResourceString("Entry.check"), 8.0, null, null, null);
 		propertyRegistrar.addProperty("description", JMoneyPlugin.getResourceString("Entry.description"), 30.0, null, null, null);
-		propertyRegistrar.addProperty("account", JMoneyPlugin.getResourceString("Entry.valuta"), 30.0, null, null, null);
+		propertyRegistrar.addProperty("account", JMoneyPlugin.getResourceString("Entry.category"), 30.0, null, null, null);
 		propertyRegistrar.addProperty("valuta", JMoneyPlugin.getResourceString("Entry.valuta"), 10.0, null, null, null);
 		propertyRegistrar.addProperty("memo", JMoneyPlugin.getResourceString("Entry.memo"), 30.0, null, null, null);
 		propertyRegistrar.addProperty("amount", JMoneyPlugin.getResourceString("Entry.amount"), 10.0, null, null, null);
 		propertyRegistrar.addProperty("creation", JMoneyPlugin.getResourceString("Entry.creation"), 10.0, null, null, null);
 	}
-
 }

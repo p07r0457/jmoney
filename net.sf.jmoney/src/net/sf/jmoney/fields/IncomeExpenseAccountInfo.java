@@ -24,9 +24,11 @@ package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CurrencyImpl;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
 import net.sf.jmoney.model2.MutableIncomeExpenseAccount;
 
 /**
@@ -50,6 +52,10 @@ public class IncomeExpenseAccountInfo implements IExtensionPropertySetInfo {
     public IncomeExpenseAccountInfo() {
     }
 
+	public Class getImplementationClass() {
+		return IncomeExpenseAccountImpl.class;
+	}
+	
     public Class getInterfaceClass() {
         return IncomeExpenseAccount.class;
     }
@@ -67,5 +73,4 @@ public class IncomeExpenseAccountInfo implements IExtensionPropertySetInfo {
 		// that is controlled by the derived class type.  This has no
 		// been designed yet, so for time being we have nothing to do.
 	}
-
 }

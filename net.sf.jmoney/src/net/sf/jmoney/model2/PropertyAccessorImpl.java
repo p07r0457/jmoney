@@ -69,13 +69,21 @@ public class PropertyAccessorImpl implements PropertyAccessor {
     private Method theSetMethod;
     
     // Applies only if list property
-    private Method theAddMethod;
+//  private Method theAddMethod;
     
 	/**
 	 * true if property is a list property, i.e. can contain
 	 * multiple values.  false otherwise.
 	 */
 	private boolean isList;
+	
+	/**
+	 * Index into the list of parameters passed to the constructor.
+	 * Zero indicates that this property is passed as the first
+	 * parameter to the constructor.
+	 * 
+	 */
+	private int indexIntoConstructorParameters = -1;
 	
     /**
      * List of listeners that are listening for changes to the value of this property
@@ -172,7 +180,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         
         // Use introspection on the interface to find the setter method.
         // This must be done on the mutable interface.
-   
+   /*
         Class mutableInterfaceClass = propertySet.getMutableInterfaceClass();
         
         String theAddMethodName	= "add"
@@ -189,7 +197,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         if (theAddMethod.getReturnType() != void.class) {
             throw new MalformedPluginException("Method '" + theAddMethodName + "' in '" + mutableInterfaceClass.getName() + "' must return void type .");
         }
-     
+*/     
         propertySupport = new PropertyChangeSupport(this);
 	}
 
@@ -228,11 +236,11 @@ public class PropertyAccessorImpl implements PropertyAccessor {
     public Method getTheSetMethod() {
         return theSetMethod;
     }
-    
+/*    
     public Method getTheAddMethod() {
         return theAddMethod;
     }
-    
+*/    
     public Class getValueClass() {
         return propertyClass;
     }
@@ -396,5 +404,22 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 		// control objects that edit the property.
 		// We call into that factory to create a control.
 		return propertyControlFactory.createPropertyControl(parent, this);
+	}
+
+	/**
+	 * @return the index into the constructor parameters, where
+	 * 		an index of zero indicates that the property is the
+	 * 		first parameter to the constructor.  An index of -1
+	 * 		indicates that the property is not passed to the
+	 * 		constructor (the property value is redundant and the
+	 * 		object can be fully re-constructed from the other
+	 * 		properties).
+	 */
+	public int getIndexIntoConstructorParameters() {
+		return indexIntoConstructorParameters;
+	}
+
+	public void setIndexIntoConstructorParameters(int indexIntoConstructorParameters) {
+		this.indexIntoConstructorParameters = indexIntoConstructorParameters;
 	}
 }

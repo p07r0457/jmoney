@@ -21,29 +21,29 @@
  *
  */
 
-package net.sf.jmoney.serializeddatastore;
+package net.sf.jmoney.model2;
+
+import java.util.Date;
+import java.util.Iterator;
 
 /**
  *
  * @author  Nigel
  */
-public class SerializableExtension {
-    private String pluginId;
-    private String data;
+public interface Transaction extends IExtendableObject {
     
-    public String getPluginId() {
-        return pluginId;
-    }
+    /**
+     * Returns the date.
+     */
+    Date getDate();
     
-    public void setPluginId(String pluginId) {
-        this.pluginId = pluginId;
-    }
+    Iterator getEntryIterator();
     
-    public String getData() {
-        return data;
-    }
+    // Helper methods:
     
-    public void setData(String data) {
-        this.data = data;
-    }
+    boolean hasTwoEntries();
+    
+    boolean hasMoreThanTwoEntries();
+    
+    Entry getOther(Entry thisEntry);
 }

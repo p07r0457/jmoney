@@ -21,7 +21,7 @@
  *
  */
 
-package net.sf.jmoney.serializeddatastore;
+package net.sf.jmoney.model2;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -232,11 +232,19 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 	
 	// Or perhaps this implementation is not going to be thread safe???
 	public CapitalAccount commit() {
-		// TODO: Ensure that the vector class is thread safe.
-		// The database must be in a valid state at all times, which
-		// means updates and reads must be synchronized.
+		// TODO: Ensure extension properties are set.
 		if (account == null) {
-			account = new CapitalAccountImpl();
+			PropertySet capitalAccountPropertySet;
+			try {
+				capitalAccountPropertySet = PropertySet.getPropertySet("net.sf.jmoney.capitalAccount");
+			} catch (PropertySetNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			}
+			account = (CapitalAccountImpl)session.createNewAccount(capitalAccountPropertySet, this);
+//			account = new CapitalAccountImpl(null);
+/* no longer needed because properties are set in the constructor			
 			account.setName(name);
 			account.setCurrency(currency);
 			account.setBank(bank);
@@ -250,6 +258,7 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 			// A single event
 			// will be fired which notifies listeners of the new account.
 			session.addAccount(account);
+*/			
 		} else {
 			// TODO: Figure out how we manage event firing for property
 			// changes.

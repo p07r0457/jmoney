@@ -39,9 +39,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public interface PropertyAccessor {
     /**
-     * Returns the object that acts as the key for the property set
-     * which contains this property.  If the property was created by
-     * the framework then null will be returned.
+     * Returns the property set which contains this property.
      */
     PropertySet getPropertySet();
     
@@ -49,7 +47,7 @@ public interface PropertyAccessor {
     
     Method getTheSetMethod();
     
-    Method getTheAddMethod();
+//  Method getTheAddMethod();
     
     /**
      * Returns the property class.
@@ -171,4 +169,22 @@ public interface PropertyAccessor {
 	 * @return An interface to a wrapper class.
 	 */
 	IPropertyControl createPropertyControl(Composite parent);
+
+	/**
+	 * @return the index into the constructor parameters, where
+	 * 		an index of zero indicates that the property is the
+	 * 		first parameter to the constructor.  An index of -1
+	 * 		indicates that the property is not passed to the
+	 * 		constructor (the property value is redundant and the
+	 * 		object can be fully re-constructed from the other
+	 * 		properties).
+	 */
+	int getIndexIntoConstructorParameters();
+
+	/**
+	 * 
+	 * @param indexIntoConstructorParameters
+	 */
+	// TODO: This method should be accessible only from within the package. 
+	void setIndexIntoConstructorParameters(int indexIntoConstructorParameters);
 }

@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
@@ -38,6 +40,7 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -68,7 +71,7 @@ public class PropertySet {
 	// because plugins have no need for it and can cause chaos if
 	// they alter it.  However it is useful for use inside the
 	// package.
-	private ExtensionPropertySet defaultExtension;  // defined only if an extension property set
+	private ExtensionObject defaultExtension;  // defined only if an extension property set
 
 	/**
 	 * true if further property sets must be derived from this property set,
@@ -95,6 +98,24 @@ public class PropertySet {
 	 * Set of property sets that are derived from this property set.
 	 */
 	private Vector derivedPropertySets = new Vector();
+
+	// Valid for all property sets except those that are
+	// extendable and must be derived from.
+	private Constructor implementationClassConstructor;
+	
+	/**
+	 * All properties in this and base property sets that are
+	 * passed to the constructor.  The order of properties in
+	 * this vector object is the same as the order in which the
+	 * properties are passed as parameters into the constructor. 
+	 * <P>
+	 * Note that constructors for extendable objects take a HashMap
+	 * object as the first parameter.  There is no element in this
+	 * Vector corresponding to the HashMap parameter.  Therefore the
+	 * indexes into this Vector will not correspond to the index into
+	 * the parameter list.
+	 */
+	Vector constructorProperties;
 	
 	/**
 	 * Loads the property sets.
@@ -216,7 +237,7 @@ public class PropertySet {
 			if (propertySetInfo != null) {
 				try {
 					if (propertySetInfo.getInterfaceClass() != null) {
-						defaultExtension = (ExtensionPropertySet)
+						defaultExtension = (ExtensionObject)
 						propertySetInfo.getInterfaceClass().newInstance();
 						// TODO: plugin error if null is returned
 					}
@@ -243,6 +264,7 @@ public class PropertySet {
 			// property.
 			// TODO: should we register properties from a base class
 			// here too?
+			
 			propertySetInfo.registerProperties(
 					new IPropertyRegistrar() {
 						
@@ -297,8 +319,100 @@ public class PropertySet {
 			}
 			classToPropertySetMap.put(interfaceClass, this);
 		}
+		
+		// First build the list of property accessor objects
+		// for the properties that are passed to the constructor.
+		constructorProperties = new Vector();
+
+		// The properties from any base property set come first in
+		// the constructor, so add those first.
+		int index;
+		if (isExtension) {
+			index = 0;
+		} else if (basePropertySet != null) {
+			Vector baseParameterAccessors = basePropertySet.getConstructorProperties();
+			constructorProperties.addAll(baseParameterAccessors);
+			index = 2 + baseParameterAccessors.size();
+		} else {
+			index = 2;
+		}
+		
+		// For the time being, we simply
+		// take all the properties in the same order in which
+		// they were defined.  However we may need to allow
+		// the plug-in developer more control.
+		for (Iterator iter = properties.iterator(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+			constructorProperties.add(propertyAccessor);
+			propertyAccessor.setIndexIntoConstructorParameters(index++);
+		}
+		
+		// Find the full constructor (unless this is a derivable
+		// property set, in which case no constructor is needed).
+		if (isExtension || !derivablePropertySet) {
+			// Build the list of properties that are passed to
+			// the constructor.
+			
+			// Build the list of types of the constructor parameters.
+			int i = 0;
+			int parameterCount = constructorProperties.size();
+			if (!isExtension) {
+				parameterCount += 2;
+			}
+			Class parameters[] = new Class[parameterCount];
+
+			// In the extendable objects, the first parameter is always
+			// a map of extensions.
+			if (!isExtension) {
+				parameters[i++] = IObjectKey.class;
+				parameters[i++] = Map.class;
+			}
+			
+			for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
+				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+				if (propertyAccessor.isScalar()) {
+					if (propertyAccessor.getValueClass().isPrimitive()
+					 || propertyAccessor.getValueClass() == String.class
+					 || propertyAccessor.getValueClass() == Long.class
+					 || propertyAccessor.getValueClass() == Date.class) {
+						parameters[i] = propertyAccessor.getValueClass();
+					} else {
+						parameters[i] = IObjectKey.class; 
+					}
+				} else {
+					parameters[i] = IListManager.class; 
+				}
+				i++;
+			}
+			
+			try {
+				implementationClassConstructor =
+					propertySetInfo.getImplementationClass().getConstructor(parameters);
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchMethodException e) {
+				String parameterText = "";
+				for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
+					if (paramIndex > 0) {
+						parameterText = parameterText + ", ";
+					}
+					parameterText = parameterText + parameters[paramIndex].getName();
+				}
+				throw new MalformedPluginException("The " + propertySetInfo.getImplementationClass().getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
+			}
+		}
 	}
+
 	
+	/**
+	 * @return
+	 */
+	public Vector getConstructorProperties() {
+		return constructorProperties;
+	}
+
+
 	/**
 	 * 
 	 * @param propertySetId
@@ -483,7 +597,7 @@ public class PropertySet {
 	/**
 	 * @return
 	 */
-	public ExtensionPropertySet getDefaultPropertyValues() {
+	public ExtensionObject getDefaultPropertyValues() {
 		return defaultExtension;
 	}
 	
@@ -806,6 +920,19 @@ public class PropertySet {
 	 */
 	PropertySet getBasePropertySet() {
 		return basePropertySet;
+	}
+
+
+	/**
+	 * This method should be used only by plug-ins that implement
+	 * a datastore.
+	 * 
+	 * @return The full constructor.  The full constructor takes
+	 * 		a set of parameters sufficient to fully construct the
+	 * 		object.
+	 */
+	public Constructor getConstructor() {
+		return implementationClassConstructor;
 	}
 	
 }

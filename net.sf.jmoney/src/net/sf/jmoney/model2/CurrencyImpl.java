@@ -20,10 +20,12 @@
  *
  */
 
-package net.sf.jmoney.serializeddatastore;
+package net.sf.jmoney.model2;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.Collection;
+import java.util.Map;
 
 import net.sf.jmoney.model2.*;
 
@@ -52,13 +54,18 @@ public class CurrencyImpl extends ExtendableObjectHelperImpl implements Currency
 		}
 	}
 	
-	/**
-	 * Default constructor required for bean decoding.
-	 */
-	public CurrencyImpl() {
-	}
-	
-	public CurrencyImpl(String name, String code, byte decimals) {
+    /**
+     * Constructor used by datastore plug-ins to create
+     * a currency object.
+     */
+	public CurrencyImpl(
+				IObjectKey objectKey,
+	    		Map extensions,
+				String name,
+				String code,
+				int decimals) {
+		super(objectKey, extensions);
+		
 		if (decimals < 0 || decimals > MAX_DECIMALS)
 			throw new IllegalArgumentException("Number of decimals not supported");
 		this.name = name;

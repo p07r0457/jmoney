@@ -37,7 +37,7 @@ import java.util.Iterator;
  * and maintained at runtime.
  *
  */
-public abstract class AbstractEntryExtension extends ExtensionPropertySet implements Entry, Serializable {
+public abstract class AbstractEntryExtension extends ExtensionObject implements Entry {
     
 	/**
 	 * This is set by setBaseEntry.
@@ -55,6 +55,13 @@ public abstract class AbstractEntryExtension extends ExtensionPropertySet implem
      * on to the base Entry object.
      */
     
+	/**
+	 * Returns the key to the object.
+	 */
+	public IObjectKey getObjectKey() {
+		return entry.getObjectKey();
+	}
+
 	/**
 	 * Returns the description.
 	 */
@@ -97,7 +104,7 @@ public abstract class AbstractEntryExtension extends ExtensionPropertySet implem
 		entry.setAmount(anAmount);
 	}
 
-	public Transaxion getTransaxion() {
+	public Transaction getTransaxion() {
             return entry.getTransaxion();
 	}
 
@@ -166,7 +173,7 @@ public abstract class AbstractEntryExtension extends ExtensionPropertySet implem
             return entry.getOriginalEntry();
         }
         
-        public ExtensionPropertySet getExtension(PropertySet propertySetKey) {
+        public ExtensionObject getExtension(PropertySet propertySetKey) {
         	return entry.getExtension(propertySetKey);
         }
         
@@ -220,7 +227,7 @@ public abstract class AbstractEntryExtension extends ExtensionPropertySet implem
             setPropertyValueFromString(propertyAccessor, value);
         }
 
-        // Required to be implemented in all classes derived from ExtensionPropertySet
+        // Required to be implemented in all classes derived from ExtensionObject
     	void setBaseObject(IExtendableObject baseObject) {
     		this.entry = (Entry)baseObject;
     	}

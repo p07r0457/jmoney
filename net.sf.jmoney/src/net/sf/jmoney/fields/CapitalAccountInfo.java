@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CapitalAccountImpl;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
@@ -56,6 +57,10 @@ public class CapitalAccountInfo implements IExtensionPropertySetInfo {
 
     public CapitalAccountInfo() {
     }
+
+	public Class getImplementationClass() {
+		return CapitalAccountImpl.class;
+	}
 
     public Class getInterfaceClass() {
         return CapitalAccount.class;
@@ -114,5 +119,4 @@ public class CapitalAccountInfo implements IExtensionPropertySetInfo {
 		propertyRegistrar.addProperty("abbreviation", JMoneyPlugin.getResourceString("AccountPropertiesPanel.abbrevation"), 30.0, textControlFactory, null, null);
 		propertyRegistrar.addProperty("comment", JMoneyPlugin.getResourceString("AccountPropertiesPanel.comment"), 30.0, commentControlFactory, null, null);
 	}
-
 }

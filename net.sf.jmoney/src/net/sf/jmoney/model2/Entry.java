@@ -33,7 +33,7 @@ public interface Entry extends IMutableExtendableObject {
 	/**
 	 * Returns the transaction.
 	 */
-	Transaxion getTransaxion();
+	Transaction getTransaxion();
 	
 	/**
 	 * Indicate is this entry object may be modified by

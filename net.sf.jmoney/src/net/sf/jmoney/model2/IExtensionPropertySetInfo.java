@@ -21,6 +21,8 @@
  */
 package net.sf.jmoney.model2;
 
+import java.lang.reflect.Constructor;
+
 /**
  * @author Nigel
  *
@@ -116,4 +118,9 @@ public interface IExtensionPropertySetInfo {
      * 		to register the properties.
      */
     void registerProperties(IPropertyRegistrar propertyRegistrar);
+
+	/**
+	 * @return The class that implements the property set.
+	 */
+	Class getImplementationClass();
 }

@@ -33,7 +33,7 @@ import java.util.Iterator;
  * <LI>Session</LI>
  * <LI>Commodity</LI>
  * <LI>Account</LI>
- * <LI>Transaxion</LI>
+ * <LI>Transaction</LI>
  * <LI>Entry</LI>
  * </UL>
  * <P>
@@ -45,7 +45,7 @@ public interface IExtendableObject {
 	 * Get the extension that implements the properties needed by
 	 * a given plug-in.
 	 */
-	ExtensionPropertySet getExtension(PropertySet propertySetKey);
+	ExtensionObject getExtension(PropertySet propertySetKey);
 	
 	Object getPropertyValue(PropertyAccessor propertyAccessor);
 	
@@ -67,5 +67,10 @@ public interface IExtendableObject {
 	
 	// TODO: check whether we need this method.
 	String getPropertyValueAsString(PropertyAccessor propertyAccessor);
+
+	/**
+	 * @return The key that fetches this object.
+	 */
+	IObjectKey getObjectKey();
 }
 

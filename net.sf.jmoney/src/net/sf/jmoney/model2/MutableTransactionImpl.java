@@ -21,7 +21,7 @@
  *
  */
 
-package net.sf.jmoney.serializeddatastore;
+package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.*;
@@ -34,9 +34,9 @@ import java.util.Vector;
  *
  * @author  Nigel
  */
-public class MutableTransaxionImpl extends ExtendableObjectHelperImpl implements MutableTransaxion {
+public class MutableTransactionImpl extends ExtendableObjectHelperImpl implements MutableTransaction {
     
-    private TransaxionImpl transaction;
+    private TransactionImpl transaction;
     
     private SessionImpl session;
     
@@ -45,20 +45,20 @@ public class MutableTransaxionImpl extends ExtendableObjectHelperImpl implements
     private Vector entries = new Vector();
     
     /** 
-     * Creates an instance of MutableTransaxion that is editing a new transaction.
+     * Creates an instance of MutableTransaction that is editing a new transaction.
      */
-    public MutableTransaxionImpl(Session session) {
+    public MutableTransactionImpl(Session session) {
         this.session = (SessionImpl)session;
         this.transaction = null;
     }
 
     /** 
-     * Creates an instance of MutableTransaxion that is editing a transaction
+     * Creates an instance of MutableTransaction that is editing a transaction
      * that has already been committed to the database.
      */
-    public MutableTransaxionImpl(Session session, Transaxion transaction) {
+    public MutableTransactionImpl(Session session, Transaction transaction) {
         this.session = (SessionImpl)session;
-        this.transaction = (TransaxionImpl)transaction;
+        this.transaction = (TransactionImpl)transaction;
         
         this.date = transaction.getDate();
         
@@ -102,14 +102,14 @@ public class MutableTransaxionImpl extends ExtendableObjectHelperImpl implements
         return entries.iterator();
     }
 
-    public Transaxion getOriginalTransaxion() {
+    public Transaction getOriginalTransaxion() {
         return transaction;
     }
     
-    public MutableTransaxion createMutableTransaxion(Session session)
+    public MutableTransaction createMutableTransaxion(Session session)
     throws ObjectLockedForEditException {
         // TODO: Ensure no mutable interface on this object already.
-        return new MutableTransaxionImpl(session, this);
+        return new MutableTransactionImpl(session, this);
     }
     
     public Entry createEntry() {
@@ -128,15 +128,24 @@ public class MutableTransaxionImpl extends ExtendableObjectHelperImpl implements
 	entries.removeElement(e);
     }
     
-    public Transaxion commit() {
+    public Transaction commit() {
         Vector newEntries = new Vector();
         Vector deletedEntries = new Vector();
         
         if (transaction == null) {
-            transaction = new TransaxionImpl();
-            transaction.setDate(date);
+			PropertySet transactionPropertySet;
+			try {
+				transactionPropertySet = PropertySet.getPropertySet("net.sf.jmoney.transaction");
+			} catch (PropertySetNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			}
+			transaction = (TransactionImpl)session.createNewTransaction(transactionPropertySet, this);
+//            transaction = new TransactionImpl();
+//            transaction.setDate(date);
             transaction.updateEntries(entries, newEntries, deletedEntries);
-            session.addTransaxion(transaction);
+//          session.addTransaxion(transaction);
         } else {
             transaction.setDate(date);
             transaction.updateEntries(entries, newEntries, deletedEntries);

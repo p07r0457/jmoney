@@ -21,7 +21,9 @@
  *
  */
 
-package net.sf.jmoney.serializeddatastore;
+package net.sf.jmoney.model2;
+
+import java.util.Map;
 
 import net.sf.jmoney.model2.*;
 
@@ -39,10 +41,12 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Mut
 
 	private String fullAccountName = null;
 
-	public IncomeExpenseAccountImpl() {
-	}
-
-	public IncomeExpenseAccountImpl(String accountName) {
+	public IncomeExpenseAccountImpl(
+			IObjectKey objectKey, 
+			Map extensions, 
+			String accountName,
+			IListManager subAccounts) {
+		super(objectKey, extensions, subAccounts);
 		setName(accountName);
 	}
 
@@ -79,6 +83,28 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Mut
 	public void setName(String accountName) {
 		this.accountName = accountName;
 		fullAccountName = null;
+	}
+
+	/**
+	 * 
+	 * @param accountPropertySet
+	 * @return
+	 */
+	public Account createNewSubAccount(Session session, PropertySet propertySet, IncomeExpenseAccount account) {
+		AbstractAccountImpl newAccount = (AbstractAccountImpl)subAccounts.createNewElement(propertySet, account);
+
+		newAccount.setParent(this);
+
+		// Fire the event.
+        final AccountAddedEvent event = new AccountAddedEvent(session, newAccount);
+        session.fireEvent(
+        	new ISessionChangeFirer() {
+        		public void fire(SessionChangeListener listener) {
+        			listener.accountAdded(event);
+        		}
+       		});
+        
+        return newAccount;
 	}
 
         // TODO: Ensure no mutable interface on this object already.
