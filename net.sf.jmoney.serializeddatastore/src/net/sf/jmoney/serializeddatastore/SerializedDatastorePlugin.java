@@ -360,12 +360,16 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		catch (ParserConfigurationException e) {
 			throw new RuntimeException("Serious XML parser configuration error");
 		} 
-//		catch (OldFormatJMoneyFileException se) {
 		catch (SAXException e) {
-			if (!(e.getException() instanceof OldFormatJMoneyFileException)) {
-				e.printStackTrace();
-				throw new RuntimeException("Fatal SAX parser error");
-			} else {
+			e.printStackTrace();
+			throw new RuntimeException("Fatal SAX parser error");
+		}
+		catch (OldFormatJMoneyFileException se) {
+//		catch (SAXException e) {
+//			if (!(e.getException() instanceof OldFormatJMoneyFileException)) {
+//				e.printStackTrace();
+//				throw new RuntimeException("Fatal SAX parser error");
+//			} else {
 			// This exception will be throw if the file is old format (0.4.5 or prior).
 			// Try reading as an old format file.
 			if (DEBUG) System.out.println("Now attempting to read file as old format (0.4.5 or prior).");
@@ -424,7 +428,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			sessionManager.setSession(newSessionNewFormat);
 			
 			convertModelOneFormat((net.sf.jmoney.model.Session)newSession, newSessionNewFormat);
-			}
+//			}
 		}
 		catch (IOException ioe) { 
 			throw new RuntimeException("IO internal exception error");
