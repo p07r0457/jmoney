@@ -51,7 +51,7 @@ public class GnucashXMLExport {
 	 * export of the GnuCash File
 	 * For the structure of the XML-File, @see GnucashXML
 	 */
-  public void export () {
+  public void export (String toFile) {
       
       // Prepare the tools
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -130,7 +130,7 @@ public class GnucashXMLExport {
       transformer.setOutputProperty(OutputProperties.S_KEY_INDENT_AMOUNT, "2"); 
       
       Source input = new DOMSource(doc);
-      Result output = new StreamResult(new File("D:\\Documents and Settings\\Administrateur\\Mes documents\\Mes comptes\\export.xml"));
+      Result output = new StreamResult(new File(toFile));
       try {
           transformer.transform(input, output);
       } catch (TransformerException e) {
@@ -238,7 +238,7 @@ public class GnucashXMLExport {
       e.appendChild(e2);
 
       e2 = doc.createElement("trn:description");
-      e2.appendChild(doc.createTextNode("none")); // TODO Faucheux - Change this
+      e2.appendChild(doc.createTextNode(getDescription(transaction)));
       e.appendChild(e2);
 
       e2 = doc.createElement("trn:splits");
@@ -301,10 +301,33 @@ public class GnucashXMLExport {
   }
 
   
-  void addDate (Element e, Date date) {
+  private void addDate (Element e, Date date) {
       Element d = doc.createElement("ts:date");
       d.appendChild(doc.createTextNode(gnucashDateFormat.format(date)));
       e.appendChild(d);
+  }
+  
+  /**
+   * Look the description of each Entry of the transaction to determine
+   * which description the transaction has to have.
+   * @param t the transaction
+   * @return a description
+   * @author Olivier Faucheux
+   */
+  private String getDescription (Transaction t) {
+      String s = null;
+      Iterator it = t.getEntryIterator();
+      while (it.hasNext()) {
+          Entry e = (Entry) it.next();
+          if (s == null)
+              s = e.getDescription();
+          else if (e.getDescription() != s) 
+              s = new String ("Splitted!");
+      }
+
+      if (s==null) s = new String ("No Entry");
+      
+      return s;
   }
 }
 

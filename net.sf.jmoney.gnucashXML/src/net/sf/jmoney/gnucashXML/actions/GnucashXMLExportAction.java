@@ -46,12 +46,12 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
  * delegated to it.
  * @see IWorkbenchWindowActionDelegate
  */
-public class GnucashXMLImportAction implements IWorkbenchWindowActionDelegate {
+public class GnucashXMLExportAction implements IWorkbenchWindowActionDelegate {
 	private IWorkbenchWindow window;
 	/**
 	 * The constructor.
 	 */
-	public GnucashXMLImportAction() {
+	public GnucashXMLExportAction() {
 	}
 
 	/**
@@ -63,7 +63,7 @@ public class GnucashXMLImportAction implements IWorkbenchWindowActionDelegate {
 	public void run(IAction action) {
 		Session session = JMoneyPlugin.getDefault().getSession(); 
 
-		// Original JMoney disabled the import menu items when no
+		// Original JMoney disabled the export menu items when no
 		// session was open.  I don't know how to do that in Eclipse,
 		// so we display a message instead.
 		if (session == null) {
@@ -72,7 +72,7 @@ public class GnucashXMLImportAction implements IWorkbenchWindowActionDelegate {
 						window.getShell(), 
 						"Disabled Action Selected", 
 						null, // accept the default window icon
-						"You cannot import data into an accounting session unless you have a session open.  You must first open a session or create a new session.", 
+						"You cannot export data unless you have a session open.  You must first open a session or create a new session.", 
 						MessageDialog.INFORMATION, 
 						new String[] { IDialogConstants.OK_LABEL }, 0);
 	        waitDialog.open();
@@ -81,7 +81,7 @@ public class GnucashXMLImportAction implements IWorkbenchWindowActionDelegate {
 		
 	    FileDialog xmlFileChooser = new FileDialog(window.getShell());
 		xmlFileChooser.setText(
-				GnucashXMLPlugin.getResourceString("MainFrame.import"));
+				GnucashXMLPlugin.getResourceString("MainFrame.export"));
 		xmlFileChooser.setFilterExtensions(new String[] { "*.xml;*.xac" });
 		xmlFileChooser.setFilterNames(new String[] { "XML Gnucash Files (*.xml; *.xac)" });
 		// TODO: Faucheux - delete Directory 
@@ -89,9 +89,8 @@ public class GnucashXMLImportAction implements IWorkbenchWindowActionDelegate {
 		String fileName = xmlFileChooser.open();
 
 	    if (fileName != null) {
-	        File qifFile = new File(fileName);
-	        GnucashXML gnucashXML = new GnucashXML(window);
-			gnucashXML.importFile(session, qifFile);
+	        GnucashXMLExport export = new GnucashXMLExport(session);
+	        export.export(fileName);
 		}
 	    
 	}

@@ -37,6 +37,13 @@
                icon="icons/Import16.gif"
                menubarPath="file/importExportGroup"
                id="net.sf.jmoney.gnucashXML.actions.gnucashXMLImport"/>
+         <action
+               label="%MainFrame.export"
+               class="net.sf.jmoney.gnucashXML.actions.GnucashXMLExportAction"
+               tooltip="Export Data into a GnuCash XML file"
+               icon="icons/Export16.gif"
+               menubarPath="file/importExportGroup"
+               id="net.sf.jmoney.gnucashXML.actions.gnucashXMLExport"/>
       </actionSet>
    </extension>
 
