@@ -179,10 +179,10 @@ public class EntriesSection extends SectionPart {
         	public void widgetSelected(SelectionEvent event) {
         		Entry selectedEntryInAccount = fEntriesControl.getSelectedEntryInAccount();
 				TransactionDialog dialog = new TransactionDialog(
-						container.getShell(), 
+						container.getShell(),
+						selectedEntryInAccount,
 						fPage.getAccount().getSession(), 
 						fPage.getAccount().getCurrency());
-				dialog.update(selectedEntryInAccount);
 				dialog.open();
         	}
         });

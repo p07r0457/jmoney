@@ -1,9 +1,25 @@
 /*
- * Created on Feb 18, 2005
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
+*
+*  JMoney - A Personal Finance Manager
+*  Copyright (c) 2004 Nigel Westbury <westbury@users.sourceforge.net>
+*
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with this program; if not, write to the Free Software
+*  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*
+*/
+
 package net.sf.jmoney.pages.entries;
 
 import java.util.Iterator;
@@ -41,10 +57,19 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 /**
- * @author Nigel
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
+ * This class manages the transaction dialog that appears when
+ * the 'details' button is pressed in the account entries list page.
+ * <P>
+ * The transaction dialog displays a single transaction.  The controls
+ * for each entry are on alternating yellow and green areas, providing
+ * a clear distinction between the properties for one entry and the
+ * properties for another entry even when more than one line of controls
+ * is needed for a single entry.  This dialog displays all the appropriate
+ * properties for each entry.  Thus, if the entries list table does not
+ * show a column for a property, the user can use this dialog to fill in
+ * the complete set of properties.
+ * 
+ * @author Nigel Westbury
  */
 public class TransactionDialog {
 
@@ -61,16 +86,14 @@ public class TransactionDialog {
             if (!display.readAndDispatch()) display.sleep();
         }
     }
-Session session;
-    Currency defaultCurrency;
     
-    protected Text fDescription;
+    private Session session;
+
+    private Currency defaultCurrency;
     
-    protected Entry currentEntry = null;
+    private Composite transactionArea;
     
-    Composite transactionArea;
-    
-    Composite entriesArea;
+    private Composite entriesArea;
     
     /**
      * Represents the set of controls for a single entry in the
@@ -94,15 +117,6 @@ Session session;
     	private Label creditLabel;
     	private Text creditText;
 
-    	/**
-    	 * Set of all controls in the composite1 area.
-    	 * element: Control (labels and property edit controls)
-    	 */
-//    	private Vector propertyControls = new Vector();
-    	
-        /** element: IPropertyControl */
-//      Vector entryControls = new Vector();
-    	
         /** element: LabelAndEditControlPair */
     	Vector entryPropertyControls = new Vector();
 
@@ -123,13 +137,6 @@ Session session;
         		label.dispose();
         		propertyControl.getControl().dispose();
         	}
-
-			/**
-			 * @param entry
-			 */
-			public void load(Entry entry) {
-				propertyControl.load(entry);
-			}
         }
         
         /**
@@ -139,12 +146,8 @@ Session session;
          */
         private Account account;
         
-        /** The object actually being edited.
-    	 * This will be null if no entry is selected in the table.
-    	 * Any controls will be disabled.
-    	 * The entry can only be null if this is the first entry
-    	 * because that is the only entry row that is displayed when
-    	 * no entry is selected.
+        /** 
+         * The entry object being displayed in the set of controls.
     	 */
     	private Entry entry;
     	
@@ -153,9 +156,9 @@ Session session;
     	 * editing of the properties for an Entry in the transaction.
     	 * Constructing this object also constructs the controls.
     	 */
-    	EntryControls(Color entryColor) {
+    	EntryControls(final Entry entry, Color entryColor) {
     		this.entryColor = entryColor;
-    		this.entry = null;
+    		this.entry = entry;
     		
             composite1 = new Composite(entriesArea, 0);
             composite2 = new Composite(entriesArea, 0);
@@ -163,7 +166,7 @@ Session session;
             composite4 = new Composite(entriesArea, 0);
             composite5 = new Composite(entriesArea, 0);
              
-            GridLayout layout1 = new GridLayout(10, false);
+            GridLayout layout1 = new GridLayout(8, false);
             composite1.setLayout(layout1);
 
             RowLayout layout2 = new RowLayout();
@@ -185,14 +188,13 @@ Session session;
     		composite5.setLayoutData(new GridData(GridData.FILL_BOTH));
             composite5.setBackground(entryColor);
 
-            // If no account is set yet in the entry then use the "Income"
-            // and "Expense" labels, because it is more likely that the account
-            // will be an income/expense account than a capital account.
+            // Create the debit and credit controls.  Note that the text for the
+            // labels are not set until later because the text depends on whether
+            // the account for the entry is a capital account or an income and
+            // expense account.
             debitLabel = new Label(composite2, 0);
-            debitLabel.setText("Income:");
             debitText = new Text(composite3, 0);
             creditLabel = new Label(composite4, 0);
-            creditLabel.setText("Expense:");
             creditText = new Text(composite5, 0);
 
             debitLabel.setBackground(entryColor);
@@ -282,102 +284,10 @@ Session session;
     					updateSetOfEntryControls();
     				}
     			}
-    		});
-    	}
+    		}, entriesArea);
 
-    	/**
-    	 * Create the set of controls that are appropriate for
-    	 * entries in the given account.  This method is to be
-    	 * called when controls are to be shown, but no entry is
-    	 * selected and the controls are to be disabled.
-    	 * <P>
-    	 * This method is used to create a view of the entry
-    	 * edit area when no entry is selected. 
-    	 * 
-		 * @param account The set of disabled controls are as
-		 * 			appropriate for entries in this account.
-		 * 			May be null in which case just the account
-		 * 			selection control is shown. 
-		 */
-		public void showDisabledControls(Account account) {
-			Account oldAccount = this.account;
-			this.account = account;
-			this.entry = null;
-
-			boolean isAccountSet = true;
-			
-			if ((account == null && oldAccount == null)
-					|| (account != null && account.equals(oldAccount))) {
-				// TODO: Clean this out.
-			} else {
-				((LabelAndEditControlPair)entryPropertyControls.get(0)).load(null);
+			addFurtherControls(entry.getAccount());
 				
-				// Remove all the old controls after the account.
-				for (int i=1; i < entryPropertyControls.size(); i++) {
-					LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
-					controlPair.dispose();
-				}
-				entryPropertyControls.setSize(1);
-				
-				addFurtherControls(account);
-				
-				creditLabel.setVisible(isAccountSet);
-				creditText.setVisible(isAccountSet);
-				debitLabel.setVisible(isAccountSet);
-				debitText.setVisible(isAccountSet);
-
-				debitText.setEnabled(false);
-	            creditText.setEnabled(false);
-			}
-			
-			// Clear and disable the controls.
-			for (Iterator iter = entryPropertyControls.iterator(); iter.hasNext();) {
-				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)iter.next();
-				controlPair.load(null);
-			}
-		}
-		
-    	/**
-		 * @param entry The entry to show.  Cannot be null - 
-		 * 			if no entry is selected then call the
-		 * 			showDisabledControls method.
-		 */
-		public void setEntry(final Entry entry) {
-			Entry oldEntry = this.entry;
-			this.entry = entry;
-
-			boolean isAccountSet = (entry.getAccount() != null);
-
-			// If the account is the same, we simply re-load.
-			if ((account == null && entry.getAccount() == null)
-					|| (account != null && account.equals(entry.getAccount()))) {
-				// TODO tidy up
-			} else {
-				// Remove all the old controls after the account.
-				for (int i = 1; i < entryPropertyControls.size(); i++) {
-					LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
-					controlPair.dispose();
-				}
-				entryPropertyControls.setSize(1);
-				
-				addFurtherControls(entry.getAccount());
-				
-				creditLabel.setVisible(isAccountSet);
-				creditText.setVisible(isAccountSet);
-				debitLabel.setVisible(isAccountSet);
-				debitText.setVisible(isAccountSet);
-			}
-
-			// Update the contents of the controls to the values from the entry
-			// and ensure the controls are enabled.
-			for (Iterator iter = entryPropertyControls.iterator(); iter.hasNext();) {
-				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)iter.next();
-				controlPair.load(entry);
-			}
-			
-			debitText.setEnabled(true);
-            creditText.setEnabled(true);
-			
 			// Set the amount in the credit and debit controls.
 			long amount = entry.getAmount();
 			
@@ -414,9 +324,7 @@ Session session;
     	 * method to either set the entry object or to disable the
     	 * control.
     	 * 
-    	 * @param composite1
     	 * @param propertyAccessor
-    	 * @param entry
     	 */
     	void addLabelAndEditControl(PropertyAccessor propertyAccessor) {
     		Label propertyLabel = new Label(composite1, 0);
@@ -431,6 +339,7 @@ Session session;
     				});
     		
     		LabelAndEditControlPair controlPair = new LabelAndEditControlPair(propertyLabel, propertyControl);
+			propertyControl.load(entry);
     		entryPropertyControls.add(controlPair);
     	}
 
@@ -487,6 +396,11 @@ Session session;
     		}
     		debitLabel.setText(debitText);
     		creditLabel.setText(creditText);
+
+    		// We must pack these or the labels will not show, though I
+    		// do not entirely understand why.
+    		debitLabel.pack();
+    		creditLabel.pack();
     	}
 
     	void updateSetOfEntryControls() {
@@ -500,13 +414,31 @@ Session session;
 			// Add the new controls
 			addFurtherControls(entry.getAccount());
 
-			// Set the further controls so they are editing
-			// this entry.
-			for (int i=1; i < entryPropertyControls.size(); i++) {
-				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
-				controlPair.load(entry);
-			}
+			shell.pack();
     	}
+
+		/**
+		 * Set the backgroud color of the controls for this entry. 
+		 * Although the color is passed to the constructor, the color may need to
+		 * be flipped when an entry is deleted.
+		 * 
+		 * @param color
+		 */
+		public void setColor(Color entryColor) {
+			this.entryColor = entryColor;
+			
+            composite1.setBackground(entryColor);
+            composite2.setBackground(entryColor);
+            composite3.setBackground(entryColor);
+            composite4.setBackground(entryColor);
+            composite5.setBackground(entryColor);
+            debitLabel.setBackground(entryColor);
+            creditLabel.setBackground(entryColor);
+			for (int i = 0; i < entryPropertyControls.size(); i++) {
+				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
+				controlPair.label.setBackground(entryColor);
+			}
+		}
     	
 		void dispose() {
         	composite1.dispose();
@@ -517,25 +449,22 @@ Session session;
 		}
     }
     
-    /** Controls for the selected entry (the first entry listed
-     *  in the transaction).
-     */
-    EntryControls selectedEntryControls;
-    
     /** Element: EntryControls */
     Vector entryControlsList = new Vector();
     
     /** element: IPropertyControl */
     Vector transactionControls = new Vector();
     
-    public TransactionDialog(Shell parent, Session session, Currency defaultCurrency) {
+    public TransactionDialog(Shell parent, Entry accountEntry, Session session, Currency defaultCurrency) {
     	this.session = session;
     	this.defaultCurrency = defaultCurrency;
     	
         this.display = parent.getDisplay();
         
+   		final Transaction transaction = accountEntry.getTransaction();
+   		
         shell = new Shell(parent, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.CLOSE);
-        shell.setLayout(new RowLayout());
+        shell.setText("Transaction Details");
     	
         GridLayout sectionLayout = new GridLayout();
         sectionLayout.numColumns = 1;
@@ -548,7 +477,7 @@ Session session;
 		transactionArea.setLayoutData(new GridData(GridData.FILL_BOTH));
 
 		GridLayout transactionAreaLayout = new GridLayout();
-		transactionAreaLayout.numColumns = 7;
+		transactionAreaLayout.numColumns = 10;
 		transactionArea.setLayout(transactionAreaLayout);
 
         // Create the entries area
@@ -574,15 +503,6 @@ Session session;
             }
         }
 
-        // Create the row of controls for the current entry
-        // (The entry from the transaction that was shown and
-        // selected in the account entries list).
-        // This row is initially shown with controls that are
-        // empty and disabled.
-		selectedEntryControls = new EntryControls(yellow);
-		// TODO: Remove this:
-//		selectedEntryControls.showDisabledControls(fPage.getAccount());
-		
     	// Create the button area
 		Composite buttonArea = new Composite(shell, 0);
 		
@@ -591,34 +511,33 @@ Session session;
 		layoutOfButtons.justify = true;
 		buttonArea.setLayout(layoutOfButtons);
 		
-        // Create the 'add entry' and 'delete entry' buttons.
+        // Create the 'add entry' button.
         Button addButton = new Button(buttonArea, SWT.PUSH);
         addButton.setText("Split off New Entry");
         addButton.addSelectionListener(new SelectionAdapter() {
            public void widgetSelected(SelectionEvent event) {
-           		Transaction transaction = currentEntry.getTransaction();
-           		
            		Entry newEntry = transaction.createEntry();
            		
            		// If all entries so far are in the same currency then set the
            		// amount of the new entry to be the amount that takes the balance
-           		// to zero.
-           		// FIXME Some lines are commented out because I don't know how to
-           		// determine the currency used in an income/expense category.
-           		//Commodity commodity = currentEntry.getCommodity();
+           		// to zero.  If we cannot determine the currency because the user
+           		// has not yet entered the necessary data, assume that the currencies
+           		// are all the same.
+           		Commodity commodity = null;
            		boolean mismatchedCommodities = false;
            		long totalAmount = 0;
                 for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
                 	Entry entry = (Entry)iter.next();
-                	/* We need to sort this out.  Can income and expense accounts
-                	 * contain entries of differing currencies?
-                	 * The following call fails on the income/expense entries.
-                	 
-                	if (!currentEntry.getCommodity().equals(entry.getCommodity())) {
-                		mismatchedCommodities = true;
-                		break;
+                	if (commodity == null) {
+                		// No commodity yet determined, so set to the commodity for
+                		// this entry, if any.
+                		commodity = entry.getCommodity(); 
+                	} else {
+                		if (!commodity.equals(entry.getCommodity())) {
+                			mismatchedCommodities = true;
+                			break;
+                		}
                 	}
-                	*/
                 	totalAmount += entry.getAmount();
                 }
                 
@@ -626,89 +545,74 @@ Session session;
                 	newEntry.setAmount(-totalAmount);
                 }
                 
-                createGroupForEntry(newEntry);
+        		Color entryColor = (entryControlsList.size() % 2) == 0
+        		? yellow
+        		: green;
 
-                entriesArea.pack(true);
+        		EntryControls newEntryControls = new EntryControls(newEntry, entryColor);
+        		entryControlsList.add(newEntryControls);
+
+                shell.pack(true);
            }
         });
 
+        // Create the 'delete entry' button.
         Button deleteButton = new Button(buttonArea, SWT.PUSH);
         deleteButton.setText("Delete Entries with Zero or Blank Amounts");
         deleteButton.addSelectionListener(new SelectionAdapter() {
-           public void widgetSelected(SelectionEvent event) {
-  /*         		
-            if (fViewer.getSelection() instanceof IStructuredSelection) {
-                IStructuredSelection s = (IStructuredSelection) fViewer.getSelection();
-                Object selectedObject = s.getFirstElement();
-                // The selected object cannot be null because the 'delete tranaction'
-                // button would be disabled if no entry were selected.
-               	if (selectedObject instanceof DisplayableEntry) {
-               		DisplayableEntry de = (DisplayableEntry) selectedObject;
-               		Transaction transaction = de.entry.getTransaction();
-               		transaction.getSession().deleteTransaction(transaction);
-               		transaction.getSession().registerUndoableChange("Delete Transaction");
-                }
-            }
-*/            
-           }
+        	public void widgetSelected(SelectionEvent event) {
+        		boolean alternate = false;
+        		for (Iterator iter = entryControlsList.iterator(); iter.hasNext(); ) {
+        			EntryControls entryControls = (EntryControls)iter.next();
+        			if (entryControls.entry.getAmount() == 0) {
+        				entryControls.dispose();
+        				transaction.deleteEntry(entryControls.entry);
+        				iter.remove();
+        			} else {
+        				entryControls.setColor(alternate ? green : yellow);
+        				alternate = !alternate;
+        			}
+        		}
+        		shell.pack();
+        	}
         });
-    }
 
-    /**
-     * Load the values from the given entry into the property controls.
-     *
-     * @param entry Entry whose editable properties are presented to the user
-     */
-    public void update(Entry newCurrentEntry) {
-    	currentEntry = newCurrentEntry;
-
-    	selectedEntryControls.setEntry(newCurrentEntry);
+        // Create the 'close' button
+        Button closeButton = new Button(buttonArea, SWT.PUSH);
+        closeButton.setText("Close");
+        closeButton.addSelectionListener(new SelectionAdapter() {
+        	public void widgetSelected(SelectionEvent event) {
+        		shell.close();
+        	}
+        });
 
     	// Update transaction property controls.
         for (Iterator iter = transactionControls.iterator(); iter.hasNext();) {
             IPropertyControl control = (IPropertyControl)iter.next();
-           	control.load(newCurrentEntry.getTransaction());
+           	control.load(transaction);
         }
         
-        // Create the groups for the remaining entries in the transaction.
-        Transaction transaction = currentEntry.getTransaction();
-        
-        // Dispose all old groups.
-        for (Iterator iter = entryControlsList.iterator(); iter.hasNext(); ) {
-        	EntryControls controls = (EntryControls)iter.next();
-        	controls.dispose();
-        }
-        entryControlsList.clear();
-        
-        
+		// Load the values from the given entry into the property controls.
+		entryControlsList.add(new EntryControls(accountEntry, yellow));
+		
         // Create and set the controls for the other entries in
         // the transaction.
         for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
         	Entry entry = (Entry)iter.next();
-        	if (!entry.equals(currentEntry)) {
-        		createGroupForEntry(entry);
+        	if (!entry.equals(accountEntry)) {
+
+        		Color entryColor = (entryControlsList.size() % 2) == 0
+        		? yellow 
+        		: green;
+
+        		entryControlsList.add(new EntryControls(entry, entryColor));
         	}
         }
         
-        entriesArea.pack(true);
+        shell.pack();
 	}
 	
 	
-	/**
-	 * @param entry
-	 */
-	private void createGroupForEntry(final Entry entry) {
-
-		final Color entryColor = (entryControlsList.size() % 2) == 0
-		? green 
-		: yellow;
-
-		final EntryControls entryControls = new EntryControls(entryColor);
-		entryControls.setEntry(entry);
-		
-		entryControlsList.add(entryControls);
-	}
-
 	abstract private class PropertyControlFocusListener extends FocusAdapter {
 
     	private PropertyAccessor propertyAccessor;
