@@ -29,9 +29,6 @@
     <dirset dir="../net.sf.jmoney">
       <include name="src"/>
     </dirset>
-    <dirset dir="../net.sf.jmoney.isocurrencies">
-      <include name="src"/>
-    </dirset>
     <dirset dir="../net.sf.jmoney.reports">
       <include name="src"/>
     </dirset>
