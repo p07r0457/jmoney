@@ -385,7 +385,7 @@ public abstract class CapitalAccount extends Account {
 	public void addEntriesFromSubAccounts(CapitalAccount a, Collection entriesList) {
 		for (Iterator it = a.getSubAccountIterator(); it.hasNext(); ) {
 			CapitalAccount subAccount = (CapitalAccount)it.next();
-			entriesList.add(subAccount.getEntries());
+			entriesList.addAll(subAccount.getEntries());
 			addEntriesFromSubAccounts(subAccount, entriesList);
 		}
 	}
