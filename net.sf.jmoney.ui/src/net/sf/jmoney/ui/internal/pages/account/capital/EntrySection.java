@@ -35,10 +35,8 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
-import net.sf.jmoney.model2.SessionChangeListener;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.ui.internal.JMoneyUIPlugin;
 
@@ -56,7 +54,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
@@ -167,9 +164,12 @@ public class EntrySection extends SectionPart {
     		composite5.setLayoutData(new GridData(GridData.FILL_BOTH));
             composite5.setBackground(entryColor);
 
-            debitLabel = toolkit.createLabel(composite2, "Debit:");
+            // If no account is set yet in the entry then use the "Income"
+            // and "Expense" labels, because it is more likely that the account
+            // will be an income/expense account than a capital account.
+            debitLabel = toolkit.createLabel(composite2, "Income:");
             debitText = toolkit.createText(composite3, "0.00");
-            creditLabel = toolkit.createLabel(composite4, "Credit:");
+            creditLabel = toolkit.createLabel(composite4, "Expense:");
             creditText = toolkit.createText(composite5, "0.00");
 
             debitLabel.setBackground(entryColor);
