@@ -469,9 +469,9 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 						if (propertyElement.getElementsByTagName("split").getLength() < 2) {
 							// TODO Faucheux
 						} else if (propertyElement.getElementsByTagName("split").getLength() == 2) {
-							treatSimpleTransaction(propertyElement, t);
+						    treatSplittedTransaction(propertyElement, t);
 						} else {
-							// TODO Faucheux
+						    treatSplittedTransaction(propertyElement, t);
 						}
 
 				}
@@ -491,5 +491,73 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
     private CapitalAccount getAccountFromGUID(String GUID) {
         return (CapitalAccount) accountsGUIDTable.get(GUID);
     }
+
+    
+    
+	/**
+	 * Add a splitted transaction.
+	 * A splitted transaction is a transaction with more than two entries 
+	 * 
+	 * @param transactionElement
+	 * @throws ParseException
+	 * @author Olivier Faucheux
+	 */
+	private void treatSplittedTransaction(Element propertyElement, MutableTransaction t)
+		throws ParseException {
+
+		String accountName = null;
+		String accountGUID = null;
+		String transactionDescription = null;
+		XMLElement transactionNode;
+		NodeList entriesNodes = null;
+		
+		transactionNode = (XMLElement) propertyElement.getParentNode();
+		
+		try {
+		transactionDescription = 
+		    transactionNode
+			.getElementsByTagName("description")
+			.item(0)
+			.getFirstChild()
+			.getNodeValue();
+		} catch (NullPointerException e) { /* No description */ }
+		
+		
+		entriesNodes = propertyElement.getElementsByTagName("split");
+		for (int i = 0; i<entriesNodes.getLength(); i++) {
+
+		    Element accountElement = (Element)entriesNodes.item(i);
+			accountGUID =
+				accountElement
+					.getElementsByTagName("account")
+					.item(0)
+					.getFirstChild()
+					.getNodeValue();
+			Account account = getAccountFromGUID(accountGUID);
+		    
+			if (account instanceof MutableAccount) account = ((MutableAccount) account).getRealAccount();
+
+			String value = accountElement
+				.getElementsByTagName("value")
+				.item(0)
+				.getFirstChild()
+				.getNodeValue();
+
+			if (getLong(value) != 0) {
+			    // Yes, I found entries with an amount = 0 and as accountGUID "0000000000000000000"
+			    // I have to protect against it --  Faucheux
+				Entry e = t.createEntry();
+				e.setAmount(getLong(value));
+				e.setAccount(account);
+				e.setDescription(transactionDescription);
+				
+			    assert(account != null);
+			    System.out.println("Added amount: " + getLong(value) + " for " + account.toString() + " for >" + transactionDescription + "<" );
+			}
+
+		}
+		
+		// TODO: Faucheux to check
+	}
 
 }
