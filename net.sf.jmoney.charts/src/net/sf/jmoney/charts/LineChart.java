@@ -3,6 +3,9 @@ package net.sf.jmoney.charts;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Frame;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
@@ -32,8 +35,7 @@ public abstract class LineChart extends JFrame {
     public Session session;
     public TimeSeriesCollection data;
     protected JFreeChart chart;
-    public Date fromDate;
-    public Date toDate;
+    public LineChartParameters params;
     
     /**
      * Default constructor.
@@ -42,21 +44,14 @@ public abstract class LineChart extends JFrame {
         super();
         this.title = title;
         this.session = session;
-        fromDate = new Date(0);
-        toDate = new Date();
         
 
         // init the parameters
         initParameters ();
         
      }
-    
-    public void setDates(Date fromDate, Date toDate) {
-        this.fromDate = fromDate;
-        this.toDate = toDate;
-    }
-    
-	protected abstract void createOrUpdateValues(/*String*/Vector accountsToShow);
+
+	protected abstract void createOrUpdateValues(LineChartParameters params);
 
     /**
      * Starting point for the panel.
@@ -88,9 +83,9 @@ public abstract class LineChart extends JFrame {
                                                        );
 
         // set the background color for the chart...
-        //  chart.setBackgroundPaint(Color.yellow);
-
+        chart.setBackgroundPaint(Color.yellow);
         
+
         // add the chart to a panel...
         ChartPanel chartPanel = new ChartPanel(chart);
         

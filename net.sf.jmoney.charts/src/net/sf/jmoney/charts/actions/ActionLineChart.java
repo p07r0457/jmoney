@@ -56,7 +56,8 @@ public class ActionLineChart extends Action {
      * have been made. 
      */
     public void doAction (Session session) {
-        (new ActivLineChart("Chart", session)).displayAsWindow();
+        // TODO - Faucheux - to clear
+        // (new ActivLineChart("Chart", session)).displayAsWindow();
     }
 
 }

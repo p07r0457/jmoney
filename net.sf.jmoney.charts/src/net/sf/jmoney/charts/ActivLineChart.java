@@ -40,16 +40,20 @@ public class ActivLineChart extends LineChart {
      * @param title
      * @param session
      */
-    public ActivLineChart(String title, Session session) {
+    public ActivLineChart(String title, Session session, LineChartParameters params) {
         super(title, session);
+        this.params = params;
     }
 
     
     /**
      * Calculate the values for the all account.
      */
-    protected void createOrUpdateValues(/*String*/Vector accountsToShow) {
+    protected void createOrUpdateValues(LineChartParameters param) {
 
+        // Read the parameters.
+        /*String*/Vector accountsToShow = param.accountList;
+        
         if (data == null)
             data = new TimeSeriesCollection();
         else
@@ -57,18 +61,25 @@ public class ActivLineChart extends LineChart {
         
         
         for (int i=0; i<accountsToShow.size(); i++) {
-            TimeSeries timeSeries = getTimeSerieForAccount((String)accountsToShow.get(i), session);
-            data.addSeries(timeSeries);
+            String accountFullName = (String)accountsToShow.get(i);
+            
+            TimeSeries timeSeries = getTimeSerieForAccount(accountFullName, session);
+            if (params.daily)
+                data.addSeries(timeSeries);
 
             // Moving averages
             TimeSeries mav;
             
-            mav = MovingAverage.createMovingAverage(
-                    timeSeries, "30 day moving average", 30, 30);
-            // data.addSeries(mav);
+            if (param.average30) {
+                mav = MovingAverage.createMovingAverage(timeSeries, accountFullName + " (30 days)", 30, 0);
+                data.addSeries(mav);
+            }
+
+            if (param.average120) {
+                mav = MovingAverage.createMovingAverage(timeSeries, accountFullName + " (120 days)", 120, 0);
+                data.addSeries(mav);
+            }
         }
-        
-        
     }
     
     
@@ -79,6 +90,7 @@ public class ActivLineChart extends LineChart {
      * @return
      */
     private TimeSeries getTimeSerieForAccount (String acccount, Session session) {
+        Date fromDateForThisAccount = params.fromDate;
         
         TimeSeries bts = new TimeSeries(acccount);
         
@@ -91,26 +103,32 @@ public class ActivLineChart extends LineChart {
         
         // If the first movement is after fromDate, set fromDate to this one
         e = (Entry)sortedEntries.get(0) ;
-        if ( e.getTransaction().getDate().after(fromDate) )
-            fromDate = e.getTransaction().getDate();
+        if ( e.getTransaction().getDate().after(params.fromDate) )
+            fromDateForThisAccount = e.getTransaction().getDate();
         
         Hashtable saldos = new Hashtable();
         Iterator it = sortedEntries.iterator();
         long saldo = 0; 
         while (it.hasNext()) {
             e = (Entry) it.next();
+            if (params.type == LineChartParameters.MOUVEMENT) 
+                saldo = 0;
             saldo = saldo + e.getAmount();
             Day date = new Day (e.getTransaction().getDate());
             saldos.put(date, new Long(saldo));
         }
         
         // Now, enter them in the table
-        Day date = new Day (fromDate);
+        Day date = new Day (fromDateForThisAccount);
         saldo = 0;
-        while ( ! date.getEnd().after(toDate)) {
+        while ( ! date.getEnd().after(params.toDate)) {
             if (saldos.containsKey(date)) {
                 saldo = ((Long) saldos.get(date)).longValue()  / 100;
+            } else if (params.type == LineChartParameters.MOUVEMENT){
+                saldo = 0;
             }
+            
+            
 
             System.out.println("Add to the graph: " + saldo + " at " + date);
             bts.add(date, new Double(saldo));
