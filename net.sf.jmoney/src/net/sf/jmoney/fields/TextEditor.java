@@ -22,94 +22,57 @@
 
 package net.sf.jmoney.fields;
 
-import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
 
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.Composite;
 
 /**
- * Note that this class has neither get/set methods for the value being edited
- * and no support for property change listeners.  This is
- * because objects of this class are tied to an CapitalAccount object.  
- * Changes to this
- * object are reflected by this object in the CapitalAccount class objects.  
- * Consumers who are interested in changes to the CapitalAccount class objects should
- * add themselves as listeners to the appropriate PropertyAccessor object.
- * <P>
+ * A property control to handle ordinary text input.
  * 
- * @author  Nigel
+ * @author Nigel Westbury
+ * @author Johann Gyger
  */
 public class TextEditor implements IPropertyControl {
-    
-    private CapitalAccount account = null;
-    
+
+    private ExtendableObject fExtendableObject;
+
     private PropertyAccessor propertyAccessor;
-    
+
     private Text propertyControl;
-    
+
     /** Creates new TextEditor */
     public TextEditor(Composite parent, PropertyAccessor propertyAccessor) {
-    	propertyControl = new Text(parent, 0);
-    	this.propertyAccessor = propertyAccessor;
+        propertyControl = new Text(parent, 0);
+        this.propertyAccessor = propertyAccessor;
     }
-    
+
     /** Creates new TextEditor */
     public TextEditor(Composite parent, int style, PropertyAccessor propertyAccessor) {
-    	propertyControl = new Text(parent, style);
-    	this.propertyAccessor = propertyAccessor;
+        propertyControl = new Text(parent, style);
+        this.propertyAccessor = propertyAccessor;
     }
-    
-    /**
-     * Load the control with the value from the given account.
-     */
-    public void load(Object object) {
-    	account = (CapitalAccount)object;
-    	
-		String text = account.getStringPropertyValue(propertyAccessor);
-		propertyControl.setText(text == null ? "" : text);
 
-		propertyControl.setEnabled(true);
+    public void load(ExtendableObject object) {
+        fExtendableObject = object;
+        String text = object.getStringPropertyValue(propertyAccessor);
+        propertyControl.setText(text == null ? "" : text);
     }
-    
-    /**
-     * Load the control with the value from the given account.
-     */
-    public void loadDisabled(Object object) {
-    	CapitalAccount nonMutableAccount = (CapitalAccount)object;
-    	account = null;
-    	
-		String text = account.getStringPropertyValue(propertyAccessor);
-		propertyControl.setText(text == null ? "" : text);
-		
-		propertyControl.setEnabled(false);
-    }
-    
-    /**
-     * Save the value from the control back into the account object.
-     *
-     * Editors may update the property on a regular basis, not just when
-     * the framework calls the <code>save</code> method.  However, the only time
-     * that editors must update the property is when the framework calls this method.
-     * <P>
-     * Null strings and empty strings appear the same to the user and
-     * are thus considered the same value.  We use null for empty text
-     * because it is more efficient and is what is generally used as default value
-     * by the datastore.
-     */
+
     public void save() {
-    	String text = propertyControl.getText();
-		account.setStringPropertyValue(
-				propertyAccessor, 
-				text.length() == 0 ? null : text);
+        String text = propertyControl.getText();
+        fExtendableObject.setStringPropertyValue(propertyAccessor, text.length() == 0 ? null : text);
     }
 
     /* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.IPropertyControl#getControl()
-	 */
-	public Control getControl() {
-		return propertyControl;
-	}
+     * @see net.sf.jmoney.model2.IPropertyControl#getControl()
+     */
+    public Control getControl() {
+        propertyControl.dispose();
+        return propertyControl;
+    }
+
 }

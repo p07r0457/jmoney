@@ -23,15 +23,15 @@
 package net.sf.jmoney.fields;
 
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CurrencyAccount;
-import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.SessionChangeAdapter;
 
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.Composite;
 
 /**
  * Editor class for account properties that
@@ -51,17 +51,22 @@ import org.eclipse.swt.widgets.Composite;
  * Consumers who are interested in changes to the CapitalAccount class objects should
  * add themselves as listeners to the Session object.
  * 
- * @author  Nigel
+ * @author Nigel Westbury
+ * @author Johann Gyger
  */
 public class AmountEditor implements IPropertyControl {
-    
-    private CurrencyAccount account = null;
+
+    private ExtendableObject fObject;
+
+    private Commodity fCommodity;
     
     private PropertyAccessor amountPropertyAccessor;
     
     private Text propertyControl;
 
-    /** Creates new CurrencyEditor */
+    /**
+     * Create a new amount editor.
+     */
     public AmountEditor(Composite parent, PropertyAccessor propertyAccessor) {
     	propertyControl = new Text(parent, 0);
     	this.amountPropertyAccessor = propertyAccessor;
@@ -70,82 +75,60 @@ public class AmountEditor implements IPropertyControl {
     /**
      * Load the control with the value from the given account.
      */
-    public void load(Object object) {
-    	account = (CurrencyAccount)object;
-    	
-		Currency currency = account.getCurrency();
+    public void load(ExtendableObject object) {
+        fObject = object;
+        if (object instanceof Account)
+            fCommodity = ((Account) object).getCommodity();
+    	else if (object instanceof Entry)
+    	    fCommodity = ((Entry) object).getCommodity();
+    	else
+    	    throw new IllegalArgumentException(object.toString());
 		
 		// Some amounts may be of type Long, not long, so that 
 		// they can be null, so we must get the property
 		// value as a Long.
-		Long amount = (Long)account.getPropertyValue(amountPropertyAccessor);
+		Long amount = (Long) fObject.getPropertyValue(amountPropertyAccessor);
 		if (amount == null) {
 			propertyControl.setText("");
 		} else {
-			propertyControl.setText(currency.format(amount.longValue()));
+			propertyControl.setText(fCommodity.format(amount.longValue()));
 		}
 
+		// TODO Find a generic way to handle currency changes.
 		// We must listen for changes to the currency so that
 		// we can change the format of the amount.
-		account.getSession().addSessionChangeListener(
-				new SessionChangeAdapter() {
-					public void accountChanged(Account changedAccount, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
-						if (changedAccount == AmountEditor.this.account
-								&& changedProperty == CurrencyAccountInfo.getCurrencyAccessor()) {
-							// Get the current text from the control and try to re-format
-							// it for the new currency.
-							// However, if the property can take null values and the control
-							// contains the empty string then set the amount to null.
-							// (The currency amount parser returns a zero amount for the
-							// empty string).
-							// Amounts can be represented by 'Long' or by 'long'.
-							// 'Long' values can be null, 'long' values cannot be null.
-							// If the text in the control now translates to a different long
-							// value as a result of the new currency, update the new long value
-							// in the datastore.
-
-							// It is probably not necessary for us to set the control text here,
-							// because this will be done by our listener if we are changing
-							// the amount.  However, to protect against a future possibility
-							// that a currency change may change the format without changing the amount,
-							// we set the control text ourselves first.
-							
-							String amountString = propertyControl.getText();
-							if (!amountString.equals("")) {
-								Currency newCurrency = (Currency)newValue;
-								long amount = newCurrency.parse(amountString);
-								propertyControl.setText(newCurrency.format(amount));
-								changedAccount.setLongPropertyValue(amountPropertyAccessor, amount);
-							}
-						}
-						
-					}
-				});
-
-		propertyControl.setEnabled(true);
-    }
-    
-    /**
-     * Load the control with the value from the given account.
-     */
-/* Disabled controls are going to infuriate users.
- * Perhaps it is better to remove this method.
- * If the same data can be edited from two different places
- * then we allow editing from both.  As focus is lost in one
- * place, the other is updated.  This does involve writing data
- * to the datastore when the focus is lost, which may not always
- * be possible due to constraints.....
- * TODO: think about locking etc.
- */    
-    public void loadDisabled(Object object) {
-    	CurrencyAccount nonMutableAccount = (CurrencyAccount)object;
-    	account = null;
-    	
-		Currency currency = nonMutableAccount.getCurrency();
-		long amount = nonMutableAccount.getLongPropertyValue(amountPropertyAccessor);
-		propertyControl.setText(currency.format(amount));
-		
-		propertyControl.setEnabled(false);
+		//account.getSession().addSessionChangeListener(new SessionChangeAdapter() {
+		//    public void accountChanged(Account changedAccount, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+		//        if (changedAccount == AmountEditor.this.account && changedProperty == CurrencyAccountInfo.getCurrencyAccessor()) {
+		//            // Get the current text from the control and try to re-format
+		//            // it for the new currency.
+		//            // However, if the property can take null values and the control
+		//            // contains the empty string then set the amount to null.
+		//            // (The currency amount parser returns a zero amount for the
+		//            // empty string).
+		//            // Amounts can be represented by 'Long' or by 'long'.
+		//            // 'Long' values can be null, 'long' values cannot be null.
+		//            // If the text in the control now translates to a different long
+		//            // value as a result of the new currency, update the new long value
+		//            // in the datastore.
+		//
+		//            // It is probably not necessary for us to set the control text here,
+		//            // because this will be done by our listener if we are changing
+		//            // the amount.  However, to protect against a future possibility
+		//            // that a currency change may change the format without changing the amount,
+		//            // we set the control text ourselves first.
+		//
+		//            String amountString = propertyControl.getText();
+		//            if (!amountString.equals("")) {
+		//                Currency newCurrency = (Currency) newValue;
+		//                long amount = newCurrency.parse(amountString);
+		//                propertyControl.setText(newCurrency.format(amount));
+		//                changedAccount.setLongPropertyValue(amountPropertyAccessor, amount);
+		//            }
+		//        }
+		//
+		//    }
+		//});
     }
     
     /**
@@ -159,18 +142,16 @@ public class AmountEditor implements IPropertyControl {
      * so we can assume that <code>account</code> is not null.
      */
     public void save() {
-    	String amountString = propertyControl.getText();
-    	if (amountString.length() == 0
-    			&& amountPropertyAccessor.getValueClass() == Long.class) {
-    		// The text box is empty and the property is Long
-    		// (not long) thus allowing nulls.  Therefore
-    		// we set the property value to be null.
-    		account.setPropertyValue(amountPropertyAccessor, null);
-    	} else {
-    		Currency currency = account.getCurrency();
-    		long amount = currency.parse(amountString);
-    		account.setLongPropertyValue(amountPropertyAccessor, amount);
-    	}
+        String amountString = propertyControl.getText();
+        if (amountString.length() == 0 && amountPropertyAccessor.getValueClass() == Long.class) {
+            // The text box is empty and the property is Long
+            // (not long) thus allowing nulls.  Therefore
+            // we set the property value to be null.
+            fObject.setPropertyValue(amountPropertyAccessor, null);
+        } else {
+            long amount = fCommodity.parse(amountString);
+            fObject.setLongPropertyValue(amountPropertyAccessor, amount);
+        }
     }
 
 	/**

@@ -22,22 +22,16 @@
 
 package net.sf.jmoney.fields;
 
-import org.eclipse.swt.widgets.Composite;
-
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
+import net.sf.jmoney.model2.IPropertyRegistrar;
+import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Transaction;
-import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.IPropertyRegistrar;
 
 /**
- * @author Nigel
- *
  * This class is a listener class to the net.sf.jmoney.fields
  * extension point.  It implements an extension.
  * <P>
@@ -50,6 +44,9 @@ import net.sf.jmoney.model2.IPropertyRegistrar;
  * follow the Eclipse paradigm (every one should be treated equal,
  * including oneself), these are registered through the same extension
  * point that plug-ins must also use to register their properties.
+ * 
+ * @author Nigel Westbury
+ * @author Johann Gyger
  */
 public class TransactionInfo implements IPropertySetInfo {
 
@@ -71,23 +68,9 @@ public class TransactionInfo implements IPropertySetInfo {
 		// For time being this does not matter because the transaction
 		// dates are all entered by the Swing panels, none by
 		// SWT panels.
-		IPropertyControlFactory textControlFactory =
-			new IPropertyControlFactory() {
-				public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
-					return new TextEditor(parent, propertyAccessor);
-				}
-
-				public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-					return "'" + extendableObject.getStringPropertyValue(propertyAccessor) + "'";
-				}
-
-				public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-					return extendableObject.getStringPropertyValue(propertyAccessor);
-				}
-		};
+		IPropertyControlFactory textControlFactory = new TextControlFactory();
 		
 		entriesAccessor = propertyRegistrar.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), Entry.class, null);
-
 		dateAccessor = propertyRegistrar.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), 10.0, textControlFactory, null, null);
 		
 		propertyRegistrar.setObjectDescription("Financial Transaction");

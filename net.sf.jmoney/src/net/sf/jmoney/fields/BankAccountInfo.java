@@ -22,22 +22,15 @@
 
 package net.sf.jmoney.fields;
 
-import org.eclipse.swt.widgets.Composite;
-
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.BankAccount;
-import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
+import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
- * @author Nigel
- *
  * This class is a listener class to the net.sf.jmoney.fields
  * extension point.  It implements an extension.
  * <P>
@@ -50,6 +43,9 @@ import net.sf.jmoney.model2.PropertySet;
  * follow the Eclipse paradigm (every one should be treated equal,
  * including oneself), these are registered through the same extension
  * point that plug-ins must also use to register their properties.
+ * 
+ * @author Nigel Westbury
+ * @author Johann Gyger
  */
 public class BankAccountInfo implements IPropertySetInfo {
 
@@ -68,52 +64,8 @@ public class BankAccountInfo implements IPropertySetInfo {
     public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
 		BankAccountInfo.propertySet = propertySet;
 		
-		IPropertyControlFactory textControlFactory =
-			new IPropertyControlFactory() {
-				public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
-					return new TextEditor(parent, 0, propertyAccessor);
-				}
-
-				public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-					String value = extendableObject.getStringPropertyValue(propertyAccessor);
-					if (value == null || value.length() == 0) {
-						return "empty";
-					} else {
-						return "'" + value + "'";
-					}
-				}
-
-				public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-					return extendableObject.getStringPropertyValue(propertyAccessor);
-				}
-		};
-
-		IPropertyControlFactory amountControlFactory =
-			new IPropertyControlFactory() {
-				public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
-					return new AmountEditor(parent, propertyAccessor);
-				}
-
-				public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-					Long amount = (Long)extendableObject.getPropertyValue(propertyAccessor);
-					if (amount == null) {
-						return "none"; 
-					} else {
-						Currency currency = ((BankAccount)extendableObject).getCurrency();
-						return currency.format(amount.longValue());
-					}
-				}
-
-				public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-					Long amount = (Long)extendableObject.getPropertyValue(propertyAccessor);
-					if (amount == null) {
-						return ""; 
-					} else {
-						Currency currency = ((BankAccount)extendableObject).getCurrency();
-						return currency.format(amount.longValue());
-					}
-				}
-		};
+		IPropertyControlFactory textControlFactory = new TextControlFactory();
+		IPropertyControlFactory amountControlFactory = new AmountControlFactory();
 		
 		bankAccessor = propertyRegistrar.addProperty("bank", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), 30.0, textControlFactory, null, null);
 		accountNumberAccessor = propertyRegistrar.addProperty("accountNumber", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), 15.0, textControlFactory, null, null);

@@ -24,14 +24,13 @@ package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
+import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
- * @author Nigel
- *
  * This class is a listener class to the net.sf.jmoney.fields
  * extension point.  It implements an extension.
  * <P>
@@ -44,6 +43,9 @@ import net.sf.jmoney.model2.PropertySet;
  * follow the Eclipse paradigm (every one should be treated equal,
  * including oneself), these are registered through the same extension
  * point that plug-ins must also use to register their properties.
+ * 
+ * @author Nigel Westbury
+ * @author Johann Gyger
  */
 public class EntryInfo implements IPropertySetInfo {
 
@@ -65,18 +67,17 @@ public class EntryInfo implements IPropertySetInfo {
 	
 	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
 		EntryInfo.propertySet = propertySet;
+		
+		IPropertyControlFactory textControlFactory = new TextControlFactory();
+		IPropertyControlFactory amountControlFactory = new AmountControlFactory();
 
-		// TODO: implement the SWT control factories here.
-		// This must be done before we can convert the account entries panel
-		// over to SWT with generalized property support.
-		// For time being, we just pass null factories.
-		checkAccessor       = propertyRegistrar.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),        8.0, null, null, null);
-		descriptionAccessor = propertyRegistrar.addProperty("description", JMoneyPlugin.getResourceString("Entry.description"), 30.0, null, null, null);
-		accountAccessor     = propertyRegistrar.addProperty("account",     JMoneyPlugin.getResourceString("Entry.category"),    30.0, null, null, null);
-		valutaAccessor      = propertyRegistrar.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      10.0, null, null, null);
-		memoAccessor        = propertyRegistrar.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        30.0, null, null, null);
-		amountAccessor      = propertyRegistrar.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      10.0, null, null, null);
-		creationAccessor    = propertyRegistrar.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    10.0, null, null, null);
+		checkAccessor       = propertyRegistrar.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),        8.0, textControlFactory, null, null);
+		descriptionAccessor = propertyRegistrar.addProperty("description", JMoneyPlugin.getResourceString("Entry.description"), 30.0, textControlFactory, null, null);
+		accountAccessor     = propertyRegistrar.addProperty("account",     JMoneyPlugin.getResourceString("Entry.account"),     30.0, null, null, null);  // TODO
+		valutaAccessor      = propertyRegistrar.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      10.0, null, null, null);  // TODO 
+		memoAccessor        = propertyRegistrar.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        30.0, textControlFactory, null, null);
+		amountAccessor      = propertyRegistrar.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      10.0, amountControlFactory, null, null);
+		creationAccessor    = propertyRegistrar.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    10.0, null, null, null);  // TODO
 		
 		propertyRegistrar.setObjectDescription("Accounting Entry");
 	}

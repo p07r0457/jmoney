@@ -25,7 +25,6 @@ package net.sf.jmoney.fields;
 import java.util.Iterator;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
@@ -49,84 +48,73 @@ import org.eclipse.swt.widgets.Control;
  * Consumers who are interested in changes to the CapitalAccount class objects should
  * add themselves as listeners to the appropriate PropertyAccessor object.
  *
- * @author  Nigel
+ * @author Nigel Westbury
+ * @author Johann Gyger
  */
 public class CurrencyEditor implements IPropertyControl {
-    
-    private ExtendableObject extendableObject = null;
+
+    private CurrencyAccount fAccount;
 
     private PropertyAccessor currencyPropertyAccessor;
-    
+
     private Combo propertyControl;
-    
+
     /** 
      * @param propertyAccessor the accessor for the property to be edited
      * 			by this control.  The property must be of type Currency.
      */
     public CurrencyEditor(Composite parent, PropertyAccessor propertyAccessor) {
-    	propertyControl = new Combo(parent, 0);
-    	this.currencyPropertyAccessor = propertyAccessor;
+        propertyControl = new Combo(parent, 0);
+        this.currencyPropertyAccessor = propertyAccessor;
 
-    	Session session = JMoneyPlugin.getDefault().getSession();
-    	
-		for (Iterator iter = session.getCommodityIterator(); iter.hasNext(); ) {
-			Commodity commodity = (Commodity)iter.next();
-			if (commodity instanceof Currency) {
-				propertyControl.add(commodity.getName());
-			}
-		}
+        Session session = JMoneyPlugin.getDefault().getSession();
 
-		// Selection changes are reflected immediately in the
-    	// mutable account object.  This allows other properties
-    	// such as money amounts to listen for changes to the
-    	// currency and change their format to be correct for
-    	// the newly selected currency.
-    	
-		propertyControl.addSelectionListener(new SelectionListener() {
-			public void widgetSelected(SelectionEvent e) {
-				save();
-			}
-			public void widgetDefaultSelected(SelectionEvent e) {
-				// Should this be here?
-				save();
-			}
-		});
+        for (Iterator iter = session.getCommodityIterator(); iter.hasNext();) {
+            Commodity commodity = (Commodity) iter.next();
+            if (commodity instanceof Currency) {
+                propertyControl.add(commodity.getName());
+            }
+        }
+
+        // Selection changes are reflected immediately in the
+        // mutable account object.  This allows other properties
+        // such as money amounts to listen for changes to the
+        // currency and change their format to be correct for
+        // the newly selected currency.
+
+        propertyControl.addSelectionListener(new SelectionListener() {
+            public void widgetSelected(SelectionEvent e) {
+                save();
+            }
+            public void widgetDefaultSelected(SelectionEvent e) {
+                // Should this be here?
+                save();
+            }
+        });
     }
-    
+
     /**
      * Load the control with the value from the given account.
      */
-    public void load(Object object) {
-    	extendableObject = (CapitalAccount)object;
-    	
-		Currency currency = (Currency)extendableObject.getPropertyValue(currencyPropertyAccessor);
-		propertyControl.setText(currency.getName() == null ? "" : currency.getName());
+    public void load(ExtendableObject object) {
+        fAccount = (CurrencyAccount) object;
 
-		// If the currency property being edited is the currency
-		// for a CurrencyAccount and the account has entries then the currency cannot
-		// be changed.  We therefore disable the control.
-		// It might be that at some future time we implement
-		// an extension point that allows plug-ins to veto
-		// changes.  If so then this may be better implemented
-		// using such an extension point.
-		if (currencyPropertyAccessor == CurrencyAccountInfo.getCurrencyAccessor()) {
-			CurrencyAccount currencyAccount = (CurrencyAccount)extendableObject;
-			propertyControl.setEnabled(!currencyAccount.hasEntries());
-		}
+        Currency currency = (Currency) fAccount.getPropertyValue(currencyPropertyAccessor);
+        propertyControl.setText(currency.getName() == null ? "" : currency.getName());
+
+        // If the currency property being edited is the currency
+        // for a CurrencyAccount and the account has entries then the currency cannot
+        // be changed.  We therefore disable the control.
+        // It might be that at some future time we implement
+        // an extension point that allows plug-ins to veto
+        // changes.  If so then this may be better implemented
+        // using such an extension point.
+        if (currencyPropertyAccessor == CurrencyAccountInfo.getCurrencyAccessor()) {
+            CurrencyAccount currencyAccount = (CurrencyAccount) fAccount;
+            propertyControl.setEnabled(!currencyAccount.hasEntries());
+        }
     }
-    
-    /**
-     * Load the control with the value from the given account.
-     */
-    public void loadDisabled(Object object) {
-    	CapitalAccount account = (CapitalAccount)object;
-    	
-		Currency currency = (Currency)account.getPropertyValue(currencyPropertyAccessor);
-		propertyControl.setText(currency.getName() == null ? "" : currency.getName());
-		
-		propertyControl.setEnabled(false);
-    }
-    
+
     /**
      * Save the value from the control back into the account object.
      *
@@ -142,20 +130,20 @@ public class CurrencyEditor implements IPropertyControl {
      * so we can assume that <code>account</code> is not null.
      */
     public void save() {
-		String currencyName = propertyControl.getText();
-		for (Iterator iter = JMoneyPlugin.getDefault().getSession().getCommodityIterator(); iter.hasNext(); ) {
-			Commodity commodity = (Commodity)iter.next();
-			if (commodity instanceof Currency
-					&& commodity.getName().equals(currencyName)) {
-				extendableObject.setPropertyValue(currencyPropertyAccessor, (Currency)commodity);
-			}
-		}
+        String currencyName = propertyControl.getText();
+        for (Iterator iter = JMoneyPlugin.getDefault().getSession().getCommodityIterator(); iter.hasNext();) {
+            Commodity commodity = (Commodity) iter.next();
+            if (commodity instanceof Currency && commodity.getName().equals(currencyName)) {
+                fAccount.setPropertyValue(currencyPropertyAccessor, (Currency) commodity);
+            }
+        }
     }
 
     /* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.IPropertyControl#getControl()
-	 */
-	public Control getControl() {
-		return propertyControl;
-	}
+     * @see net.sf.jmoney.model2.IPropertyControl#getControl()
+     */
+    public Control getControl() {
+        return propertyControl;
+    }
+
 }
