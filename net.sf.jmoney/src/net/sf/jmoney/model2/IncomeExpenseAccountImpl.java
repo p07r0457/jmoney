@@ -39,10 +39,10 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Inc
 			IObjectKey objectKey, 
 			Map extensions, 
 			IObjectKey parent,
-			String accountName,
+			String name,
 			IListManager subAccounts) {
 		super(objectKey, extensions, parent, subAccounts);
-		setName(accountName);
+		this.name = name;
 	}
 
 	protected boolean isMutable() {

@@ -97,6 +97,10 @@ public class MutableTransactionImpl extends ExtendableObjectHelperImpl implement
 			public Session getSession() {
     			throw new RuntimeException("internal error");
 			}
+
+			public ISessionManagement getSessionManager() {
+    			throw new RuntimeException("internal error");
+			}
     	};
 	}
 	
@@ -142,7 +146,11 @@ public class MutableTransactionImpl extends ExtendableObjectHelperImpl implement
 		throw new RuntimeException("object already mutable");
     }
     
-    public MutableEntryImpl createEntry() {
+    public Entry createEntry() {
+    	throw new RuntimeException("internal error");
+    }
+
+    public MutableEntryImpl createEntry2() {
         // Pass this mutable transaction object as the parent of the new entry.
         // This allows the entry to get access to properties from the transaction.
         // This is very useful when, say, sorting entries by date.
@@ -171,10 +179,10 @@ public class MutableTransactionImpl extends ExtendableObjectHelperImpl implement
         // Now the transaction has been added and can been seen by
         // others, fire the change events.
         for (Iterator iter = deletedEntries.iterator(); iter.hasNext(); ) {
-            JMoneyPlugin.getDefault().fireEntryDeletedEvent((Entry)iter.next());
+            session.objectAdded((Entry)iter.next());
         }
         for (Iterator iter = newEntries.iterator(); iter.hasNext(); ) {
-        	JMoneyPlugin.getDefault().fireEntryAddedEvent((Entry)iter.next());
+            session.objectDeleted((Entry)iter.next());
         }
                     
         

@@ -43,7 +43,7 @@ public interface SessionChangeListener extends EventListener {
 	 * The session has been replaced.  All views of session data
 	 * should be fully refreshed.
 	 */
-    void sessionReplaced(SessionReplacedEvent event);
+    void sessionReplaced(Session oldSession, Session newSession);
 	
 	/**
 	 * A scalar property in the session object has changed.
@@ -54,13 +54,13 @@ public interface SessionChangeListener extends EventListener {
 	 * An account has been added.  The account may be a top-level
 	 * account or a sub-account.
 	 */
-    void accountAdded(AccountAddedEvent event);
+    void accountAdded(Account newAccount);
 
     /**
 	 * An account has been deleted.  The account may be a top-level
 	 * account or a sub-account.
 	 */
-    void accountDeleted(AccountDeletedEvent event);
+    void accountDeleted(Account oldAccount);
 
     /**
 	 * The properties of an account have been changed.  
@@ -68,7 +68,7 @@ public interface SessionChangeListener extends EventListener {
 	 * and may be a capital account or a category
 	 * (income and expense) account.
 	 */
-    void accountChange(PropertyChangeEvent event);
+    void accountChanged(Account account, PropertyAccessor propertyAccessor, Object oldValue, Object newValue);
 
     /**
 	 * An entry has been added.  Either the entry has been added to
@@ -76,7 +76,7 @@ public interface SessionChangeListener extends EventListener {
 	 * If a new transaction is added then an entryAdded event is
 	 * fired for each entry in the transaction.
 	 */
-    void entryAdded(EntryAddedEvent event);
+    void entryAdded(Entry newEntry);
 
     /**
 	 * An entry has been deleted.  Either the entry has been deleted
@@ -84,5 +84,28 @@ public interface SessionChangeListener extends EventListener {
 	 * If a transaction is deleted then an entryDeleted event is
 	 * fired for each entry in the transaction.
 	 */
-    void entryDeleted(EntryDeletedEvent event);
+    void entryDeleted(Entry oldEntry);
+
+	/**
+	 * An extendable object has been added.
+	 * <P>
+	 * This method is called for all extendable objects added
+	 * to the datastore, even if one of the other methods
+	 * is also called.
+	 *
+	 * @param extendableObject
+	 */
+	void objectAdded(IExtendableObject extendableObject);
+
+	/**
+	 * An extendable object has been deleted.
+	 */
+    void objectDeleted(IExtendableObject extendableObject);
+
+    /**
+	 * A scalar property in an extendable object
+	 * has been changed.
+	 */
+    void objectChanged(IExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue);
+
 }

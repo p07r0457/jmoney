@@ -24,6 +24,7 @@ package net.sf.jmoney.reconciliation;
 
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
+import net.sf.jmoney.model2.PropertyAccessor;
 
 /**
  * @author Nigel
@@ -33,6 +34,8 @@ import net.sf.jmoney.model2.IPropertyRegistrar;
  */
 public class ReconciliationEntryInfo implements IExtensionPropertySetInfo {
 
+	private static PropertyAccessor statusAccessor;
+	
     public ReconciliationEntryInfo() {
     }
 
@@ -45,7 +48,13 @@ public class ReconciliationEntryInfo implements IExtensionPropertySetInfo {
     }
     
 	public void registerProperties(IPropertyRegistrar extensionRegistrar) {
-		extensionRegistrar.addProperty("status", ReconciliationPlugin.getResourceString("Entry.statusShort"), 2.0, null, StatusEditor.class, null);
+		statusAccessor = extensionRegistrar.addProperty("status", ReconciliationPlugin.getResourceString("Entry.statusShort"), 2.0, null, StatusEditor.class, null);
 	}
 
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getStatusAccessor() {
+		return statusAccessor;
+	}	
 }

@@ -49,7 +49,11 @@ public interface Session extends IExtendableObject {
     
     Iterator getTransactionIterator();
     
+    Commodity createCommodity(PropertySet actualPropertySet);
+
 	Account createAccount(PropertySet actualPropertySet);
+
+    Transaction createTransaction();
 
     MutableTransaction createNewTransaction();
 
@@ -70,10 +74,26 @@ public interface Session extends IExtendableObject {
     
     void removeSessionChangeFirerListener(SessionChangeFirerListener listener);
 
-    // This should have package protection.
+    // These should have package protection.
     // However, this interface should be merged with the implementation
     // so this issue will then go away.
     void fireEvent(ISessionChangeFirer firer);
+
+    /**
+	 * An extendable object has been added.
+	 */
+	void objectAdded(IExtendableObject extendableObject);
+	
+    /**
+	 * An extendable object has been deleted.
+	 */
+    void objectDeleted(IExtendableObject extendableObject);
+
+    /**
+	 * A scalar property in an extendable object
+	 * has been changed.
+	 */
+    void objectChanged(IExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue);
 
     /**
      * get all Accounts from level 0 (accounts without any parent) until the given level  
@@ -82,5 +102,10 @@ public interface Session extends IExtendableObject {
     Vector getAccountsUntilLevel (int level);
     
 	Account getAccountByFullName(String name);
+
+	/**
+	 * @return
+	 */
+	ChangeManager getChangeManager();
 
 }

@@ -161,23 +161,4 @@ public abstract class AbstractEntryExtension extends ExtensionObject implements 
 	public Entry getBaseObject() {
 		return (Entry)baseObject;
 	}
-	
-	protected void firePropertyChange(String propertyLocalName, Object oldValue, Object newValue) {
-		if (!newValue.equals(oldValue)) {
-			try {
-				propertySet.getProperty(propertyLocalName).firePropertyChange(
-						baseObject, oldValue, newValue);
-			} catch (PropertyNotFoundException e) {
-				throw new RuntimeException("no such property registered " + propertyLocalName);
-			}
-		}
-	}
-	
-	protected void firePropertyChange(String propertyLocalName, int oldValue, int newValue) {
-		firePropertyChange(propertyLocalName, new Integer(oldValue), new Integer(newValue));
-	}
-	
-	protected void firePropertyChange(String propertyLocalName, char oldValue, char newValue) {
-		firePropertyChange(propertyLocalName, new Character(oldValue), new Character(newValue));
-	}
 }

@@ -41,11 +41,17 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.osgi.framework.BundleContext;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 
+import net.sf.jmoney.isocurrencies.IsoCurrenciesPlugin;
 import net.sf.jmoney.model2.*;
+import net.sf.jmoney.model2.Currency;
 
 /**
  * The main plugin class to be used in the desktop.
@@ -56,11 +62,9 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	//Resource bundle.
 	private ResourceBundle resourceBundle;
 	
-    ISessionManagement sessionManager;
+    private ISessionManagement sessionManager = null;
 
-	private ChangeManager changeManager = new ChangeManager();
-
-    protected transient Vector sessionChangeListeners = new Vector();
+    private Vector sessionChangeListeners = new Vector();
     
     // Create a listener that listens for changes to the new session.
     private SessionChangeFirerListener sessionChangeFirerListener =
@@ -78,12 +82,13 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     			
     		}
     	};
-	static PropertySet commodityPropertySet = null;
-	static PropertySet currencyPropertySet = null;	
-	static PropertySet accountPropertySet = null;
-	static PropertySet capitalAccountPropertySet = null;
-	static PropertySet incomeExpenseAccountPropertySet = null;
-	static PropertySet transactionPropertySet = null;
+
+    private static PropertySet commodityPropertySet = null;
+    private static PropertySet currencyPropertySet = null;	
+	private static PropertySet accountPropertySet = null;
+	private static PropertySet capitalAccountPropertySet = null;
+	private static PropertySet incomeExpenseAccountPropertySet = null;
+	private static PropertySet transactionPropertySet = null;
 	private static PropertySet entryPropertySet = null;
     
     /**
@@ -244,6 +249,13 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         ISessionManagement oldSessionManager = sessionManager;
         sessionManager = newSessionManager;
         
+    	// If the list of commodities is empty then load
+    	// the full list of ISO currencies.
+    	if (!getSession().getCommodityIterator().hasNext()) {
+    		initSystemCurrencies(getSession());
+    		getSession().getChangeManager().applyChanges("add ISO currencies");
+    	}
+
         // It is possible, tho I can't think why, that a listener who
         // we tell of a change in the current session will modify either
         // the old or the new session.
@@ -274,17 +286,15 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         // restrictions we impose.
         
         if (!sessionChangeListeners.isEmpty()) {
-        	SessionReplacedEvent event = new SessionReplacedEvent(
-        			this, 
-        			oldSessionManager == null ? null : oldSessionManager.getSession(), 
-					newSessionManager == null ? null : newSessionManager.getSession());
-        
         	// Take a copy of the listener list.  By doing this we
         	// allow listeners to safely add or remove listeners.
         	SessionChangeListener listenerArray[] = new SessionChangeListener[sessionChangeListeners.size()];
         	sessionChangeListeners.copyInto(listenerArray);
         	for (int i = 0; i < listenerArray.length; i++) {
-        		listenerArray[i].sessionReplaced(event);
+        		listenerArray[i].sessionReplaced(
+        				oldSessionManager == null ? null : oldSessionManager.getSession(), 
+        				newSessionManager == null ? null : newSessionManager.getSession()
+        		);
         	}
         }
         
@@ -296,65 +306,47 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         if (newSessionManager != null) {
         	newSessionManager.getSession().addSessionChangeFirerListener(sessionChangeFirerListener);
         }
-    }
-/*	
-    public void fireAccountAddedEvent(CapitalAccount newAccount) {
-        if (!sessionChangeListeners.isEmpty()) {
-            AccountAddedEvent event = new AccountAddedEvent(this, newAccount);
-        
-        	// Take a copy of the listener list.  By doing this we
-        	// allow listeners to safely add or remove listeners.
-        	SessionChangeListener listenerArray[] = new SessionChangeListener[sessionChangeListeners.size()];
-        	sessionChangeListeners.copyInto(listenerArray);
-        	for (int i = 0; i < listenerArray.length; i++) {
-        		listenerArray[i].accountAdded(event);
-        	}
-        }
-    }
- 
-    public void fireAccountDeletedEvent(CapitalAccount oldAccount) {
-        if (!sessionChangeListeners.isEmpty()) {
-            AccountDeletedEvent event = new AccountDeletedEvent(this, oldAccount);
-        
-        	// Take a copy of the listener list.  By doing this we
-        	// allow listeners to safely add or remove listeners.
-        	SessionChangeListener listenerArray[] = new SessionChangeListener[sessionChangeListeners.size()];
-        	sessionChangeListeners.copyInto(listenerArray);
-        	for (int i = 0; i < listenerArray.length; i++) {
-        		listenerArray[i].accountDeleted(event);
-        	}
-        }
-    }
-*/ 
-    public void fireEntryAddedEvent(Entry newEntry) {
-        if (!sessionChangeListeners.isEmpty()) {
-            EntryAddedEvent event = new EntryAddedEvent(this, newEntry);
-        
-        	// Take a copy of the listener list.  By doing this we
-        	// allow listeners to safely add or remove listeners.
-        	SessionChangeListener listenerArray[] = new SessionChangeListener[sessionChangeListeners.size()];
-        	sessionChangeListeners.copyInto(listenerArray);
-        	for (int i = 0; i < listenerArray.length; i++) {
-        		listenerArray[i].entryAdded(event);
-        	}
-        }
-    }
- 
-    public void fireEntryDeletedEvent(Entry oldEntry) {
-        if (!sessionChangeListeners.isEmpty()) {
-            EntryDeletedEvent event = new EntryDeletedEvent(this, oldEntry);
-        
-        	// Take a copy of the listener list.  By doing this we
-        	// allow listeners to safely add or remove listeners.
-        	SessionChangeListener listenerArray[] = new SessionChangeListener[sessionChangeListeners.size()];
-        	sessionChangeListeners.copyInto(listenerArray);
-        	for (int i = 0; i < listenerArray.length; i++) {
-        		listenerArray[i].entryDeleted(event);
-        	}
-        }
-    }
- 
-    public void addSessionChangeListener(SessionChangeListener l) {
+	}
+
+	public static void initSystemCurrencies(Session session) {
+	    ResourceBundle NAME =
+	    	ResourceBundle.getBundle("net.sf.jmoney.isocurrencies.Currency");
+
+		InputStream in = IsoCurrenciesPlugin.class.getResourceAsStream("Currencies.txt");
+		BufferedReader buffer = new BufferedReader(new InputStreamReader(in));
+		try {
+			String line = buffer.readLine();
+			while (line != null) {
+				String code = line.substring(0, 3);
+				byte d;
+				try {
+					d = Byte.parseByte(line.substring(4, 5));
+				} catch (Exception ex) {
+					d = 2;
+				}
+				byte decimals = d;
+				String name = NAME.getString(code);
+				
+				Currency newCurrency = (Currency)session.createCommodity(
+						JMoneyPlugin.getCurrencyPropertySet());
+				
+				newCurrency.setName(name);
+				newCurrency.setCode(code);
+				newCurrency.setDecimals(decimals);
+
+		        // Set the default currency to "USD".
+				if (code.equals("USD")) {
+					session.setDefaultCurrency(newCurrency);
+				}
+				
+				line = buffer.readLine();
+			}
+			
+		} catch (IOException ioex) {
+		}
+	}
+
+	public void addSessionChangeListener(SessionChangeListener l) {
         sessionChangeListeners.add(l);
     }
     
@@ -561,14 +553,4 @@ public class JMoneyPlugin extends AbstractUIPlugin {
      * views, then commit these to the database now.
      */
 //    void commitRemainingUserChanges();
-    
-	
-	
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.Session#getChangeManager()
-	 */
-	public static ChangeManager getChangeManager() {
-		return getDefault().changeManager;
-	}
-
 }

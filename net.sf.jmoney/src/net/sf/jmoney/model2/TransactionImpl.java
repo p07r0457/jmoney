@@ -210,6 +210,7 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Trans
         
         // For efficiency, we keep a list of entries in each
         // account/category.  We must update this list now.
+/* no longer needed here because this is done in the setAccount method.        
         for (Iterator iter = newEntries.iterator(); iter.hasNext(); ) {
             Entry entry = (Entry)iter.next();
             // TODO: at some time, keep these lists for categories too
@@ -218,6 +219,8 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Trans
                 ((CapitalAccountImpl)category).addEntry(entry);
             }
         }
+*/
+        // TODO: This should be done in the methods that remove an entry.
         for (Iterator iter = deletedEntries.iterator(); iter.hasNext(); ) {
             Entry entry = (Entry)iter.next();
             // TODO: at some time, keep these lists for categories too
@@ -226,7 +229,6 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Trans
                 ((CapitalAccountImpl)category).removeEntry(entry);
             }
         }
-        
     }
 
     public Entry createEntry() {

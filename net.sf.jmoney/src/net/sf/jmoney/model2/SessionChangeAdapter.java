@@ -22,17 +22,11 @@
 
 package net.sf.jmoney.model2;
 
-import org.eclipse.jface.util.PropertyChangeEvent;
-
 /**
- * Listener interface for addition and deletion of <code>Entry</code>
- * objects.  Entry objects are added to a session when either a transaction
- * is added to the session or when an existing transaction has further
- * entries added to it.  In both cases, an <code>EntryAddedEvent</code>
- * will be fired.  Likewise, entry objects are deleted from a session when either a transaction
- * is deleted from the session or when an existing transaction has entries
- * deleted from it.  In both cases, an <code>EntryDeletedEvent</code>
- * will be fired.
+ * Empty implementation of the SessionChangeListener interface.
+ * Listeners implementing the SessionChangeListener interface may
+ * instead extend this class to avoid implementing empty methods
+ * for events on which no action is necessary.
  *
  * @author  Nigel Westbury
  */
@@ -41,7 +35,7 @@ public class SessionChangeAdapter implements SessionChangeListener {
 	 * The session has been replaced.  All views of session data
 	 * should be fully refreshed.
 	 */
-    public void sessionReplaced(SessionReplacedEvent event) {
+    public void sessionReplaced(Session oldSession, Session newSession) {
     }
 	
 	/**
@@ -54,14 +48,14 @@ public class SessionChangeAdapter implements SessionChangeListener {
 	 * An account has been added.  The account may be a top-level
 	 * account or a sub-account.
 	 */
-    public void accountAdded(AccountAddedEvent event) {
+    public void accountAdded(Account newAccount) {
     }
 
     /**
 	 * An account has been deleted.  The account may be a top-level
 	 * account or a sub-account.
 	 */
-    public void accountDeleted(AccountDeletedEvent event) {
+    public void accountDeleted(Account oldAccount) {
     }
 
     /**
@@ -70,8 +64,8 @@ public class SessionChangeAdapter implements SessionChangeListener {
 	 * and may be a capital account or a category
 	 * (income and expense) account.
 	 */
-    public void accountChange(PropertyChangeEvent event) {
-    }
+	public void accountChanged(Account account, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+	}
 
     /**
 	 * An entry has been added.  Either the entry has been added to
@@ -79,7 +73,7 @@ public class SessionChangeAdapter implements SessionChangeListener {
 	 * If a new transaction is added then an entryAdded event is
 	 * fired for each entry in the transaction.
 	 */
-    public void entryAdded(EntryAddedEvent event) {
+    public void entryAdded(Entry newEntry) {
     }
 
     /**
@@ -88,6 +82,15 @@ public class SessionChangeAdapter implements SessionChangeListener {
 	 * If a transaction is deleted then an entryDeleted event is
 	 * fired for each entry in the transaction.
 	 */
-    public void entryDeleted(EntryDeletedEvent event) {
+    public void entryDeleted(Entry oldEntry) {
     }
+
+	public void objectAdded(IExtendableObject extendableObject) {
+	}
+
+	public void objectDeleted(IExtendableObject extendableObject) {
+	}
+
+	public void objectChanged(IExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+	}
 }

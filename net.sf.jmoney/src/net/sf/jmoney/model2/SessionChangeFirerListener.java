@@ -24,16 +24,22 @@ package net.sf.jmoney.model2;
 
 import java.util.EventListener;
 
+import org.eclipse.jface.util.PropertyChangeEvent;
+
 /**
- * Listener interface for addition and deletion of <code>Entry</code>
- * objects.  Entry objects are added to a session when either a transaction
- * is added to the session or when an existing transaction has further
- * entries added to it.  In both cases, an <code>EntryAddedEvent</code>
- * will be fired.  Likewise, entry objects are deleted from a session when either a transaction
- * is deleted from the session or when an existing transaction has entries
- * deleted from it.  In both cases, an <code>EntryDeletedEvent</code>
- * will be fired.
- *
+ * Listener interface for changes to a session.
+ * <P>
+ * An event is fired for every object added, every object
+ * deleted, and every change made to the scalar properties
+ * of an object.
+ * <P>
+ * For each change, only one of the methods below will be
+ * called.  The <code>sessionChanged</code> method is for use
+ * in all situations where none of the other three methods
+ * apply.  There are currently no known situations where none
+ * of the other three methods apply so the <code>sessionChanged</code>
+ * method may need to be removed.
+ * 
  * @author  Nigel Westbury
  */
 public interface SessionChangeFirerListener extends EventListener {

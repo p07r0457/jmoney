@@ -68,7 +68,7 @@ public abstract class AbstractAccountImpl extends ExtendableObjectHelperImpl imp
 		name = newName;
 		
 		// Notify the change manager.
-		JMoneyPlugin.getChangeManager().setProperty(this, AccountInfo.getNameAccessor(), oldName, newName);
+		processPropertyChange(AccountInfo.getNameAccessor(), oldName, newName);
 	}
 
 	public String getFullAccountName() {
@@ -105,7 +105,7 @@ public abstract class AbstractAccountImpl extends ExtendableObjectHelperImpl imp
 
     public int getLevel () {
         int level;
-        if (parentKey == null || getParent() == null)
+        if (getParent() == null)
             level = 0;
         else 
             level = getParent().getLevel() + 1;

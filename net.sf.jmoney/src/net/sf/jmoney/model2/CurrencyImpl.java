@@ -108,7 +108,15 @@ public class CurrencyImpl extends ExtendableObjectHelperImpl implements Currency
 	}
 	
 	public void setCode(String code) {
+		String oldCode = this.code;
 		this.code = code;
+
+		if (oldCode != null) {
+			((SessionImpl)getObjectKey().getSession()).currencies.remove(oldCode);
+		}
+		if (code != null) {
+			((SessionImpl)getObjectKey().getSession()).currencies.put(code, this);
+		}
 	}
 	
 	public String toString() {

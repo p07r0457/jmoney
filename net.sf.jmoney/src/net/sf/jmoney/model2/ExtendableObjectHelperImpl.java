@@ -125,7 +125,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 					throw new MalformedPluginException("Constructor must be public.");
 				} catch (InvocationTargetException e) {
 					e.printStackTrace();
-					throw new MalformedPluginException("An exception occured within a constructor in a plug-in.");
+					throw new MalformedPluginException("An exception occured within a constructor in a plug-in.", e);
 				}
 				
 				extensionObject.setBaseObject(this);
@@ -168,6 +168,14 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 			return false;
 		}
 	}
+	
+	// Should allow default package access and protected access
+	// but not public access.  Unfortunately this cannot be done
+	// so for time being allow public access.
+	public void processPropertyChange(PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+		getObjectKey().getSession().getChangeManager().setProperty(this, propertyAccessor, oldValue, newValue);
+	}
+	
 	/**
 	 * This method may be called by the datastore plug-in immediately
 	 * after it has constructed this object.

@@ -24,6 +24,7 @@
 package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CapitalAccountInfo;
 import net.sf.jmoney.model2.*;
 
@@ -241,7 +242,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 				return;
 		
 		// Notify the change manager.
-		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getCurrencyAccessor(), this.currency, aCurrency);
+		processPropertyChange(CapitalAccountInfo.getCurrencyAccessor(), this.currency, aCurrency);
 
         Currency oldCurrency = currency;
 		currency = aCurrency;
@@ -257,7 +258,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 		this.bank = aBank;
 
 		// Notify the change manager.
-		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getBankAccessor(), oldBank, aBank);
+		processPropertyChange(CapitalAccountInfo.getBankAccessor(), oldBank, aBank);
 	}
 
 	/**
@@ -270,7 +271,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
         this.accountNumber = anAccountNumber;
 
 		// Notify the change manager.
-		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getAccountNumberAccessor(), oldAccountNumber, anAccountNumber);
+		processPropertyChange(CapitalAccountInfo.getAccountNumberAccessor(), oldAccountNumber, anAccountNumber);
 	}
 
 	/**
@@ -283,7 +284,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 		this.startBalance = s;
 
 		// Notify the change manager.
-		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getStartBalanceAccessor(), new Long(oldStartBalance), new Long(s));
+		processPropertyChange(CapitalAccountInfo.getStartBalanceAccessor(), new Long(oldStartBalance), new Long(s));
 	}
 
 	/**
@@ -295,7 +296,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 		this.minBalance = m;
 
 		// Notify the change manager.
-		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getMinBalanceAccessor(), oldMinBalance, m);
+		processPropertyChange(CapitalAccountInfo.getMinBalanceAccessor(), oldMinBalance, m);
 	}
 
 	/**
@@ -307,7 +308,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
         this.abbreviation = anAbbreviation;
 
 		// Notify the change manager.
-		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getAbbreviationAccessor(), oldAbbreviation, anAbbreviation);
+        processPropertyChange(CapitalAccountInfo.getAbbreviationAccessor(), oldAbbreviation, anAbbreviation);
 	}
 
 	/**
@@ -319,7 +320,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
         this.comment = aComment;
 
 		// Notify the change manager.
-		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getCommentAccessor(), oldComment, aComment);
+        processPropertyChange(CapitalAccountInfo.getCommentAccessor(), oldComment, aComment);
 	}
 
 	/**

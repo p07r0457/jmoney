@@ -46,17 +46,23 @@ public interface IBookkeepingPageListener {
 	void saveState(IMemento memento);	
 
 	/**
-	 * Given the object selected in the navigation view, determine
-	 * the list of TabItem objects to show in the folder view and
-	 * initialize them.
+	 * Given the object selected in the navigation view, return
+	 * the number of TabItem objects to show in the folder view.
 	 * 
 	 * @param selectedObject The object selected in the navigation view.
-	 * @param tabItemList A list of TabItem objects.  This method will
-	 * 		add TabItem objects to the list.
+	 * @return count
 	 */
-//	void appendPages(Object selectedObject, ArrayList tabItemList);
-
 	int getPageCount(Object selectedObject);
+
+	/**
+	 * Given the object selected in the navigation view, initialize
+	 * the list of TabItem objects to show in the folder view and
+	 * return a list of them.
+	 * 
+	 * @param selectedObject The object selected in the navigation view.
+	 * @param parent The parent composite control to which the control
+	 * 			objects are to be added.
+	 */
 	BookkeepingPage[] createPages(Object selectedObject, Session session, Composite parent);
 	
 	public class BookkeepingPage {

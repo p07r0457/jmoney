@@ -37,7 +37,11 @@ public interface Transaction extends IExtendableObject {
      */
     Date getDate();
     
+    void setDate(Date date);
+    
     Iterator getEntryIterator();
+    
+    Entry createEntry();
     
 	MutableTransaction createMutableTransaction(Session session) throws ObjectLockedForEditException;
 	

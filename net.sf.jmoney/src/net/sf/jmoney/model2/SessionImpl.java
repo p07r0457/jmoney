@@ -23,6 +23,7 @@
 
 package net.sf.jmoney.model2;
 
+import java.beans.PropertyChangeEvent;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -52,23 +53,22 @@ import org.eclipse.ui.IWorkbenchWindow;
  */
 public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
 
-    protected Currency defaultCurrency;
+    private Currency defaultCurrency;
     
-    protected IListManager commodities;
+    private IListManager commodities;
     
-    protected IListManager accounts;
+    private IListManager accounts;
 
-    protected IListManager transactions;
+    private IListManager transactions;
 
-    protected static final ResourceBundle NAME =
-    ResourceBundle.getBundle("net.sf.jmoney.isocurrencies.Currency");
-    protected Hashtable currencies = new Hashtable();
-    protected Object[] sortedCurrencies = null;
+    Hashtable currencies = new Hashtable();
+    private Object[] sortedCurrencies = null;
         
-    protected transient Vector sessionChangeListeners = new Vector();
-    protected transient Vector sessionChangeFirerListeners = new Vector();
+    private Vector sessionChangeListeners = new Vector();
+    private Vector sessionChangeFirerListeners = new Vector();
 
-    
+	private ChangeManager changeManager = null;
+
     /**
      * Constructor used by datastore plug-ins to create
      * a session object.
@@ -87,12 +87,6 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
     	this.accounts = accounts;
     	this.transactions = transactions;
     	
-    	// If the list of commodities is empty then load
-    	// the full list of ISO currencies.
-    	if (commodities.isEmpty()) {
-    		initSystemCurrencies();
-    	}
-
         // Set up a hash table that maps currency codes to
         // the currency object.
     	this.currencies = new Hashtable();
@@ -104,18 +98,10 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
     		}
     	}
     	
-        // If the default currency is null then we look for
-        // a currency that has a code of "USD".  If no such
-        // currency exists then no default currency is set.
         if (defaultCurrency != null) {
         	this.defaultCurrency = (Currency)defaultCurrency.getObject();
         } else {
-        	Currency dollarCurrency = getCurrencyForCode("USD");
-        	if (dollarCurrency != null) {
-        		this.defaultCurrency = dollarCurrency;
-        	} else {
-        		this.defaultCurrency = null;
-        	}
+       		this.defaultCurrency = null;
         }
     }
 
@@ -161,41 +147,6 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
 	 */
 	public Currency getCurrencyForCode(String code) {
 		return (Currency) currencies.get(code);
-	}
-
-	private void initSystemCurrencies() {
-		InputStream in = IsoCurrenciesPlugin.class.getResourceAsStream("Currencies.txt");
-		BufferedReader buffer = new BufferedReader(new InputStreamReader(in));
-		try {
-			String line = buffer.readLine();
-			while (line != null) {
-				final String code = line.substring(0, 3);
-				byte d;
-				try {
-					d = Byte.parseByte(line.substring(4, 5));
-				} catch (Exception ex) {
-					d = 2;
-				}
-				final byte decimals = d;
-				final String name = NAME.getString(code);
-				
-				PropertySet currencyPropertySet = JMoneyPlugin.getCurrencyPropertySet();
-
-				Currency newCurrency = (Currency)commodities.createNewElement(
-						this,
-						currencyPropertySet);
-				
-				newCurrency.setName(name);
-				newCurrency.setCode(code);
-				newCurrency.setDecimals(decimals);
-				
-				line = buffer.readLine();
-			}
-			
-		} catch (IOException ioex) {
-		}
-
-		JMoneyPlugin.getChangeManager().applyChanges("add ISO currencies");
 	}
 
     public Iterator getCommodityIterator() {
@@ -303,17 +254,6 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
     public Iterator getTransactionIterator() {
         return transactions.iterator();
     }
-/*   
-    // This is used when reading from the XML file only.
-    // No other time.
-    // TODO: why is addAccount different?
-    // TODO: support non-currencies too.
-    public void addCommodity(Commodity commodity) {
-    	if (commodity instanceof Currency) {
-    		currencies.put(((Currency)commodity).getCode(), commodity);
-    	}
-    }
-*/
 /* moved to MT940 code    
     public CapitalAccount getAccountByNumber(String accountNumber) {
         for (int i = 0; i < accounts.size(); i++) {
@@ -362,18 +302,17 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
      * @return true if the account was present, false if the account
      * 				was not present in the collection.
      */
-    public boolean removeAccount(Account account) {
+    public boolean removeAccount(final Account account) {
         Account parent = account.getParent();
         if (parent == null) {
             boolean accountFound = accounts.remove(account);
 
             // Fire the event.
             if (accountFound) {
-            	final AccountDeletedEvent event = new AccountDeletedEvent(this, account);
             	fireEvent(
             			new ISessionChangeFirer() {
             				public void fire(SessionChangeListener listener) {
-            					listener.accountDeleted(event);
+            					listener.accountDeleted(account);
             				}
             			});
             }
@@ -481,6 +420,90 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
     }
 
 
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.model2.Session#objectAdded(net.sf.jmoney.model2.IExtendableObject)
+	 */
+	public void objectAdded(final IExtendableObject extendableObject) {
+		if (extendableObject instanceof Account) {
+	        fireEvent(
+	            	new ISessionChangeFirer() {
+	            		public void fire(SessionChangeListener listener) {
+	            			listener.accountAdded((Account)extendableObject);
+	            		}
+	           		});
+		}
+
+		if (extendableObject instanceof Entry) {
+	        fireEvent(
+	            	new ISessionChangeFirer() {
+	            		public void fire(SessionChangeListener listener) {
+	            			listener.entryAdded((Entry)extendableObject);
+	            		}
+	           		});
+		}
+
+		// We always fire on the generic method.
+        fireEvent(
+            	new ISessionChangeFirer() {
+            		public void fire(SessionChangeListener listener) {
+            			listener.objectAdded(extendableObject);
+            		}
+           		});
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.model2.Session#objectDeleted(net.sf.jmoney.model2.IExtendableObject)
+	 */
+	public void objectDeleted(final IExtendableObject extendableObject) {
+		if (extendableObject instanceof Account) {
+	        fireEvent(
+	            	new ISessionChangeFirer() {
+	            		public void fire(SessionChangeListener listener) {
+	            			listener.accountDeleted((Account)extendableObject);
+	            		}
+	           		});
+		}
+
+		if (extendableObject instanceof Entry) {
+	        fireEvent(
+	            	new ISessionChangeFirer() {
+	            		public void fire(SessionChangeListener listener) {
+	            			listener.entryDeleted((Entry)extendableObject);
+	            		}
+	           		});
+		}
+
+		// We always fire on the generic method.
+        fireEvent(
+            	new ISessionChangeFirer() {
+            		public void fire(SessionChangeListener listener) {
+            			listener.objectDeleted(extendableObject);
+            		}
+           		});
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.model2.Session#objectChanged(net.sf.jmoney.model2.IExtendableObject, net.sf.jmoney.model2.PropertyAccessor)
+	 */
+	public void objectChanged(final IExtendableObject extendableObject, final PropertyAccessor propertyAccessor, final Object oldValue, final Object newValue) {
+		if (extendableObject instanceof Account) {
+	        fireEvent(
+	            	new ISessionChangeFirer() {
+	            		public void fire(SessionChangeListener listener) {
+	            			listener.accountChanged((Account)extendableObject, propertyAccessor, oldValue, newValue);
+	            		}
+	           		});
+		}
+
+		// We always fire on the generic method.
+        fireEvent(
+            	new ISessionChangeFirer() {
+            		public void fire(SessionChangeListener listener) {
+            			listener.objectChanged(extendableObject, propertyAccessor, oldValue, newValue);
+            		}
+           		});
+	}
+
 	/**
 	 * Create a new account.  Accounts are abstract, so
 	 * a property set derived from the account property
@@ -506,18 +529,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
 	 * @return
 	 */
 	public Account createAccount(PropertySet propertySet) {
-		Account newAccount = (Account)accounts.createNewElement(this, propertySet);
-
-		// Fire the event.
-        final AccountAddedEvent event = new AccountAddedEvent(this, newAccount);
-        fireEvent(
-        	new ISessionChangeFirer() {
-        		public void fire(SessionChangeListener listener) {
-        			listener.accountAdded(event);
-        		}
-       		});
-        
-        return newAccount;
+		return (Account)accounts.createNewElement(this, propertySet);
 	}
 
 	/**
@@ -545,36 +557,27 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
 	 * @return
 	 */
 	public Commodity createCommodity(PropertySet propertySet) {
-		Commodity newCommodity = (Commodity)commodities.createNewElement(this, propertySet);
-
-		if (newCommodity instanceof Currency) {
-			Currency newCurrency = (Currency)newCommodity;
-			currencies.put(newCurrency.getCode(), newCurrency);
-		}
-/* TODO: implement this		
-		// Fire the event.
-        final CommodityAddedEvent event = new CommodityAddedEvent(this, newCommodity);
-        fireEvent(
-        	new ISessionChangeFirer() {
-        		public void fire(SessionChangeListener listener) {
-        			listener.commodityAdded(event);
-        		}
-       		});
-*/        
-        return newCommodity;
+		return (Commodity)commodities.createNewElement(this, propertySet);
 	}
 
 	public Transaction createTransaction() {
-
-		Transaction newTransaction = (Transaction)transactions.createNewElement(
+		return (Transaction)transactions.createNewElement(
 					this, 
 					JMoneyPlugin.getTransactionPropertySet()); 
-
-		// TODO: fire events.
-		
-		return newTransaction;
 	}
 	
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.model2.Session#getChangeManager()
+	 */
+	public ChangeManager getChangeManager() {
+		if (changeManager == null) {
+			// create a new change manager.
+			ISessionManagement sessionManager = getObjectKey().getSessionManager();
+			changeManager = new ChangeManager(sessionManager);
+		}
+		return changeManager;
+	}
+
 	static public Object [] getDefaultProperties() {
 		return new Object [] { null };
 	}

@@ -31,8 +31,10 @@ import java.util.Vector;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.*;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.jface.action.*;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.*;
@@ -49,14 +51,15 @@ import org.eclipse.core.runtime.Platform;
 import net.sf.jmoney.Constants;
 import net.sf.jmoney.IBookkeepingPageListener;
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.AccountInfo;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.AccountAddedEvent;
-import net.sf.jmoney.model2.AccountDeletedEvent;
 import net.sf.jmoney.model2.CapitalAccountImpl;
+import net.sf.jmoney.model2.IExtendableObject;
+import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
-import net.sf.jmoney.model2.SessionReplacedEvent;
 
 /**
  * This class implements a workbench view that contains the
@@ -276,27 +279,46 @@ public class NavigationView extends ViewPart {
 
 	private SessionChangeListener listener =
 		new SessionChangeAdapter() {
-		public void sessionReplaced( SessionReplacedEvent event ) {
-			NavigationView.this.session = event.getNewSession();
-			if (NavigationView.this.session == null) {
-				// TODO: make folder contents and tree empty
-			} else {
-				accountsRootNode.setSession(event.getNewSession());
-				viewer.refresh(accountsRootNode, false);
-			}
+		public void sessionReplaced(Session oldSession, Session newSession) {
+			NavigationView.this.session = newSession;
+			accountsRootNode.setSession(newSession);
+			refreshViewer();
 		}
-		public void accountAdded(AccountAddedEvent event) {
-			// TODO process sub-accounts correctly
-			if (event.getNewAccount() instanceof CapitalAccount) {
-				accountsRootNode.addChild(event.getNewAccount());
+		public void accountAdded(Account newAccount) {
+			if (newAccount instanceof CapitalAccount) {
+				if (newAccount.getParent() == null) {
+					// An array of top level accounts is cached, so we add it now.
+					accountsRootNode.addChild(newAccount);
+				} else {
+					// Sub-accounts are not cached in any tree node, so there is
+					// nothing to do except to refresh the viewer.
+				}
 				refreshViewer ();
 			}
 		}
-		public void accountDeleted(AccountDeletedEvent event) {
-			// TODO process sub-accounts correctly
-			if (event.getOldAccount() instanceof CapitalAccount) {
-				accountsRootNode.removeChild(event.getOldAccount());
+		public void accountDeleted(Account oldAccount) {
+			if (oldAccount instanceof CapitalAccount) {
+				if (oldAccount.getParent() == null) {
+					// An array of top level accounts is cached, so we add it now.
+					accountsRootNode.removeChild(oldAccount);
+				} else {
+					// Sub-accounts are not cached in any tree node, so there is
+					// nothing to do except to refresh the viewer.
+				}
 				refreshViewer ();
+			}
+		}
+	    public void accountChanged(final Account account, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+			if (account instanceof CapitalAccount
+					&& propertyAccessor == AccountInfo.getNameAccessor()) {
+
+				// SWTException: Invalid thread access can occur
+				// without wrapping the call to update.
+		        Display.getDefault().syncExec( new Runnable() {
+		            public void run() {
+						viewer.update(account, null);
+		            }
+		        });
 			}
 		}
 	};
@@ -591,9 +613,24 @@ private Map idToNodeMap = new HashMap();
 			public void run() {
 				Session session = JMoneyPlugin.getDefault().getSession();
 
-				CapitalAccountImpl newAccount = (CapitalAccountImpl)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
-				newAccount.setName(JMoneyPlugin.getResourceString("Account.newAccount"));
-				JMoneyPlugin.getChangeManager().applyChanges("add new account");
+				CapitalAccountImpl account = null;
+				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
+					Object selectedObject = iterator.next();
+					if (selectedObject instanceof CapitalAccountImpl) {
+						account = (CapitalAccountImpl)selectedObject;
+						break;
+					}
+				}
+				
+				CapitalAccountImpl newAccount;
+				if (account == null) {
+					newAccount = (CapitalAccountImpl)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
+				} else {
+					newAccount = (CapitalAccountImpl)account.createSubAccount();
+				}
+		        newAccount.setName(JMoneyPlugin.getResourceString("Account.newAccount"));
+		        session.getChangeManager().applyChanges("add new account");
 				
 		        // Having added the new account, set it as the selected
 		        // account in the tree viewer.
@@ -601,29 +638,29 @@ private Map idToNodeMap = new HashMap();
 			}
 		};
 		newAccountAction.setText(JMoneyPlugin.getResourceString("MainFrame.newAccount"));
-		newAccountAction.setToolTipText("Action 2 tooltip");
+		newAccountAction.setToolTipText("Create a new account");
 		newAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
 				getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
-
+		
 		deleteAccountAction = new Action() {
 			public void run() {
 				Session session = JMoneyPlugin.getDefault().getSession();
 				CapitalAccount account = null;
-		           IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		           for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-		               Object selectedObject = iterator.next();
-			           account = (CapitalAccount)selectedObject;
-			           break;
-		           }
-		           if (account != null) {
-		            	session.removeAccount(account);
-		           }
+				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
+					Object selectedObject = iterator.next();
+					account = (CapitalAccount)selectedObject;
+					break;
+				}
+				if (account != null) {
+					session.removeAccount(account);
+				}
 			}
 		};
 		deleteAccountAction.setText(JMoneyPlugin.getResourceString("MainFrame.deleteAccount"));
-		deleteAccountAction.setToolTipText("Action 1 tooltip");
+		deleteAccountAction.setToolTipText("Delete an account");
 		deleteAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-			getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+			getImageDescriptor(ISharedImages.IMG_TOOL_DELETE));
 	}
 	
 	private void showMessage(String message) {

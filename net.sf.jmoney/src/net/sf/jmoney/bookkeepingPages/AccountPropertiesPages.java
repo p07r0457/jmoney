@@ -161,7 +161,7 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 			// account object by the time we get here
 			// and we need only commit the changes to any
 			// underlying database.
-			JMoneyPlugin.getChangeManager().applyChanges("update account properties");
+			session.getChangeManager().applyChanges("update account properties");
 		}
 	}
 	

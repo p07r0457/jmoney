@@ -91,7 +91,7 @@ public class ReconciliationEntry extends AbstractEntryExtension {
 	public void setStatus(int status) {
 		int oldStatus = this.status;
 		this.status = status;
-		firePropertyChange("status", oldStatus, status);
+		processPropertyChange(ReconciliationEntryInfo.getStatusAccessor(), new Integer(oldStatus), new Integer(status));
 	}
 	
 	/**

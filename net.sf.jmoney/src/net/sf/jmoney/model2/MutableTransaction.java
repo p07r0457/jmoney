@@ -40,7 +40,7 @@ public interface MutableTransaction extends Transaction, IMutableExtendableObjec
      */
     Transaction getOriginalTransaxion();
     
-    MutableEntryImpl createEntry();
+    MutableEntryImpl createEntry2();
     
     void removeEntry(Entry e);
     

@@ -24,6 +24,7 @@
 package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.EntryInfo;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -89,8 +90,12 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	        + "\nparent:" + parent
 	        + "\naccountKey:" + accountKey);
 	*/
-	
-		this.creation = creation;
+
+		if (creation == 0) {
+			this.creation = Calendar.getInstance().getTime().getTime();
+		} else {
+			this.creation = creation;
+		}
 		this.check = check;
 		this.valuta = valuta;
 		this.description = description;
@@ -223,7 +228,11 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	 * Sets the creation.
 	 */
 	public void setCreation(long aCreation) {
+		long oldCreation = this.creation;
 		creation = aCreation;
+		
+		// Notify the change manager.
+		processPropertyChange(EntryInfo.getCreationAccessor(), new Long(oldCreation), new Long(creation));
 	}
 	
 	/**
@@ -232,7 +241,9 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	public void setCheck(String aCheck) {
 		String oldCheck = this.check;
 		check = (aCheck != null && aCheck.length() == 0) ? null : aCheck;
-		firePropertyChange("check", oldCheck, check);
+		
+		// Notify the change manager.
+		processPropertyChange(EntryInfo.getCheckAccessor(), oldCheck, check);
 	}
 	
 	/**
@@ -241,7 +252,9 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	public void setValuta(Date aValuta) {
 		Date oldValuta = this.valuta;
 		valuta = aValuta;
-		firePropertyChange("valuta", oldValuta, valuta);
+		
+		// Notify the change manager.
+		processPropertyChange(EntryInfo.getValutaAccessor(), oldValuta, valuta);
 	}
 	
 	/**
@@ -250,7 +263,9 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	public void setDescription(String aDescription) {
 		String oldDescription = this.description;
 		description = (aDescription != null && aDescription.length() == 0) ? null : aDescription;
-		firePropertyChange("description", oldDescription, description);
+		
+		// Notify the change manager.
+		processPropertyChange(EntryInfo.getDescriptionAccessor(), oldDescription, description);
 	}
 	
 	/**
@@ -259,7 +274,17 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	public void setAccount(Account newAccount) {
 		Account oldAccount = this.account;
 		this.account = newAccount;
-		firePropertyChange("account", oldAccount, newAccount);
+		
+		// Add to the list of entries in each account.
+		if (oldAccount != null && oldAccount instanceof CapitalAccountImpl) {
+			((CapitalAccountImpl)oldAccount).removeEntry(this);
+		}
+		if (newAccount != null && newAccount instanceof CapitalAccountImpl) {
+			((CapitalAccountImpl)newAccount).addEntry(this);
+		}
+		
+		// Notify the change manager.
+		processPropertyChange(EntryInfo.getAccountAccessor(), oldAccount, newAccount);
 	}
 	
 	/**
@@ -268,7 +293,9 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	public void setAmount(long anAmount) {
 		long oldAmount = this.amount;
 		amount = anAmount;
-		firePropertyChange("amount", new Double(oldAmount), new Double(amount));
+		
+		// Notify the change manager.
+		processPropertyChange(EntryInfo.getAmountAccessor(), new Double(oldAmount), new Double(amount));
 	}
 	
 	/**
@@ -277,7 +304,9 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	public void setMemo(String aMemo) {
 		String oldMemo = this.memo;
 		this.memo = (aMemo != null && aMemo.length() == 0) ? null : aMemo;
-		firePropertyChange("memo", oldMemo, memo);
+		
+		// Notify the change manager.
+		processPropertyChange(EntryInfo.getMemoAccessor(), oldMemo, memo);
 	}
 	
 	// Methods for firing property changes
@@ -287,6 +316,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	 * (This method is not called for changes to properties
 	 * in extension property sets).
 	 */
+/*	
 	protected void firePropertyChange(String propertyLocalName, Object oldValue, Object newValue) {
 		if (newValue != null && !newValue.equals(oldValue)
 				|| newValue == null && oldValue != null) {
@@ -311,7 +341,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	protected void firePropertyChange(String propertyLocalName, char oldValue, char newValue) {
 		firePropertyChange(propertyLocalName, new Character(oldValue), new Character(newValue));
 	}
-
+*/
 
 	static public Object [] getDefaultProperties() {
 		return new Object [] { 

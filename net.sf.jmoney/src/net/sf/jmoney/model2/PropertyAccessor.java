@@ -155,40 +155,6 @@ public interface PropertyAccessor {
      */
     Comparator getCustomComparator();
     
-    /**
-     * When someone is listening for changes to a property in an object, they usually
-     * want to know about a change to the property in any of the objects of
-     * the type that contains the property.
-     * It would be very inefficient to add yourself as a listener to every object.
-     * Therefore one can instead add a listener to the PropertyAccessor object
-     * and be told about changes to the property in any object.
-     *
-     * To implement this, all objects of the appropriate type will, when a 
-     * property changes, tell the PropertyAccessor object.
-     *
-     * @param propertyName  The name of the property to listen on.
-     * @param listener  The PropertyChangeListener to be added
-     */
-    void addPropertyChangeListener(
-        String propertyName,
-        PropertyChangeListener listener);
-    
-    /**
-     * Remove a PropertyChangeListener for a specific property.
-     *
-     * @param propertyName  The name of the property that was listened on.
-     * @param listener  The PropertyChangeListener to be removed
-     */
-    void removePropertyChangeListener(
-        String propertyName,
-        PropertyChangeListener listener);
-    
-    /**
-     * This method must be called when the value of this property is changed in
-     * any object that contains this property.
-     */
-    void firePropertyChange(IExtendableObject source, Object oldValue, Object newValue);
-
 	/**
 	 * Create a Control object that edits the property.
 	 * 

@@ -28,6 +28,7 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryImpl;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
+import net.sf.jmoney.model2.PropertyAccessor;
 
 /**
  * @author Nigel
@@ -47,7 +48,15 @@ import net.sf.jmoney.model2.IPropertyRegistrar;
  */
 public class EntryInfo implements IExtensionPropertySetInfo {
 
-    public EntryInfo() {
+	private static PropertyAccessor checkAccessor = null;
+	private static PropertyAccessor descriptionAccessor = null;
+	private static PropertyAccessor accountAccessor = null;
+	private static PropertyAccessor valutaAccessor = null;
+	private static PropertyAccessor memoAccessor = null;
+	private static PropertyAccessor amountAccessor = null;
+	private static PropertyAccessor creationAccessor = null;
+
+	public EntryInfo() {
     }
 
 	public Class getImplementationClass() {
@@ -63,12 +72,61 @@ public class EntryInfo implements IExtensionPropertySetInfo {
 		// This must be done before we can convert the account entries panel
 		// over to SWT with generalized property support.
 		// For time being, we just pass null factories.
-		propertyRegistrar.addProperty("check", JMoneyPlugin.getResourceString("Entry.check"), 8.0, null, null, null);
-		propertyRegistrar.addProperty("description", JMoneyPlugin.getResourceString("Entry.description"), 30.0, null, null, null);
-		propertyRegistrar.addProperty("account", JMoneyPlugin.getResourceString("Entry.category"), 30.0, null, null, null);
-		propertyRegistrar.addProperty("valuta", JMoneyPlugin.getResourceString("Entry.valuta"), 10.0, null, null, null);
-		propertyRegistrar.addProperty("memo", JMoneyPlugin.getResourceString("Entry.memo"), 30.0, null, null, null);
-		propertyRegistrar.addProperty("amount", JMoneyPlugin.getResourceString("Entry.amount"), 10.0, null, null, null);
-		propertyRegistrar.addProperty("creation", JMoneyPlugin.getResourceString("Entry.creation"), 10.0, null, null, null);
+		checkAccessor       = propertyRegistrar.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),        8.0, null, null, null);
+		descriptionAccessor = propertyRegistrar.addProperty("description", JMoneyPlugin.getResourceString("Entry.description"), 30.0, null, null, null);
+		accountAccessor     = propertyRegistrar.addProperty("account",     JMoneyPlugin.getResourceString("Entry.category"),    30.0, null, null, null);
+		valutaAccessor      = propertyRegistrar.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      10.0, null, null, null);
+		memoAccessor        = propertyRegistrar.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        30.0, null, null, null);
+		amountAccessor      = propertyRegistrar.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      10.0, null, null, null);
+		creationAccessor    = propertyRegistrar.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    10.0, null, null, null);
 	}
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getCheckAccessor() {
+		return checkAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getDescriptionAccessor() {
+		return descriptionAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getAccountAccessor() {
+		return accountAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getValutaAccessor() {
+		return valutaAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getMemoAccessor() {
+		return memoAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getAmountAccessor() {
+		return amountAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getCreationAccessor() {
+		return creationAccessor;
+	}	
 }

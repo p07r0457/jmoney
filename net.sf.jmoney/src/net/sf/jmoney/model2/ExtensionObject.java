@@ -97,4 +97,8 @@ public abstract class ExtensionObject {
     public void setCharacterPropertyValue(PropertyAccessor propertyAccessor, char value) {
     	baseObject.setCharacterPropertyValue(propertyAccessor, value);
     }
+
+	protected void processPropertyChange(PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+		((ExtendableObjectHelperImpl)baseObject).processPropertyChange(propertyAccessor, oldValue, newValue);
+	}
 }

@@ -58,6 +58,8 @@ import java.util.Vector;
  */
 public class ChangeManager {
 
+	ISessionManagement sessionManager;
+	
 	/**
 	 * Maps IExtendableObject to ChangeEntry
 	 */
@@ -85,6 +87,10 @@ public class ChangeManager {
 		int id;
 		PropertyValues oldValues;
 		PropertyValues newValues;
+	}
+	
+	public ChangeManager(ISessionManagement sessionManager) {
+		this.sessionManager = sessionManager;
 	}
 	
 	public void setProperty(
@@ -193,7 +199,12 @@ public class ChangeManager {
 			}
 		}
 
-//		changeSupport.firePropertyChange(propertyAccessor.getLocalName(), oldName, newName);
+		// Fire an event for this change.
+        sessionManager.getSession().objectChanged(
+        		object,
+        		propertyAccessor,
+				oldValue,
+				newValue);
 	}
 	
 	public void createObject(

@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.model2;
 
+import java.lang.reflect.InvocationTargetException;
+
 /**
  *
  * @author  Nigel
@@ -31,6 +33,16 @@ public class MalformedPluginException extends RuntimeException {
     /** Creates a new instance of MalformedPluginExtension */
     public MalformedPluginException(String text) {
         super(text);
+    }
+    
+    /**
+     * Creates a new instance of MalformedPluginExtension
+     * This constructor should be used when an uncaught exception
+     * is raised inside a plug-in.  The stack for the original
+     * cause is maintained and logged. 	 
+     */
+    public MalformedPluginException(String text, InvocationTargetException cause) {
+        super(text, cause.getCause());
     }
     
 }

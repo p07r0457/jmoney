@@ -106,4 +106,9 @@ public interface IObjectKey {
 	 * @return
 	 */
 	Session getSession();
+
+	/**
+	 * @return
+	 */
+	ISessionManagement getSessionManager();
 }
