@@ -1,45 +1,26 @@
 /*
-*
-*  JMoney - A Personal Finance Manager
-*  Copyright (c) 2004 Nigel Westbury <westbury@users.sourceforge.net>
-*
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with this program; if not, write to the Free Software
-*  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*
-*/
+ *
+ *  JMoney - A Personal Finance Manager
+ *  Copyright (c) 2004 Nigel Westbury <westbury@users.sourceforge.net>
+ *
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ */
 
 package net.sf.jmoney;
-
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.ui.IElementFactory;
-import org.eclipse.ui.IMemento;
-import org.eclipse.ui.IPersistableElement;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.IWorkbenchWindowActionDelegate;
-import org.eclipse.ui.plugin.*;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.IPluginDescriptor;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.osgi.framework.BundleContext;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -47,16 +28,37 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+import java.util.Vector;
 
 import net.sf.jmoney.isocurrencies.IsoCurrenciesPlugin;
-import net.sf.jmoney.model2.*;
 import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.ISessionChangeFirer;
+import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.Propagator;
+import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.PropertySetNotFoundException;
+import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.SessionChangeFirerListener;
+import net.sf.jmoney.model2.SessionChangeListener;
+
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.osgi.framework.BundleContext;
 
 /**
  * The main plugin class to be used in the desktop.
  */
 public class JMoneyPlugin extends AbstractUIPlugin {
+
+    public static String PLUGIN_ID = "net.sf.jmoney";
+
 	//The shared instance.
 	private static JMoneyPlugin plugin;
 	//Resource bundle.
@@ -152,6 +154,22 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 			// should not happen
 			return ImageDescriptor.getMissingImageDescriptor().createImage();
 		}
+	}
+
+	/**
+	 * Log status to log the of this plug-in.
+	 */	
+	public static void log(IStatus status) {
+		getDefault().getLog().log(status);
+	}
+
+	/**
+	 * Log exception to the log of this plug-in.
+	 * 
+	 * @param e Exception to log
+	 */
+	public static void log(Throwable e) {
+		log(new Status(IStatus.ERROR, JMoneyPlugin.PLUGIN_ID, IStatus.ERROR, "Internal errror", e));
 	}
 
 	/**
