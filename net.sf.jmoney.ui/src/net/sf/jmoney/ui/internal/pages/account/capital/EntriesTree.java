@@ -29,8 +29,8 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.fields.TransactionInfo;
-import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Transaction;
 
