@@ -93,12 +93,18 @@ public class ActivLineChart extends LineChart {
         Date fromDateForThisAccount = params.fromDate;
         
         TimeSeries bts = new TimeSeries(acccount);
+        if (params.withSubaccounts) bts.setName(bts.getName() + " (and sub.)");
         
         CapitalAccount a = (CapitalAccount) util.getAccountByFullName(session, acccount);
         Entry e = null;
         
         // Sort the entries chronologicaly
-        List sortedEntries = util.getEntriesFromAccount(session, a);
+        List sortedEntries; 
+        if (params.withSubaccounts) 
+            sortedEntries = util.getEntriesFromAccountAndSubaccounts(session, a);
+        else
+            sortedEntries = util.getEntriesFromAccount(session, a);
+        
         sortedEntries = util.sortChronogicalyEntries(sortedEntries);
         
         // If the first movement is after fromDate, set fromDate to this one
@@ -111,9 +117,22 @@ public class ActivLineChart extends LineChart {
         long saldo = 0; 
         while (it.hasNext()) {
             e = (Entry) it.next();
-            if (params.type == LineChartParameters.MOUVEMENT) 
+
+            if (params.type == LineChartParameters.MOUVEMENT) {
+                // When calculating the MOUVEMENT, we have to sum the entries on a day only
+                // here, only the las entry is sumed. TODO: correct it
                 saldo = 0;
-            saldo = saldo + e.getAmount();
+            	saldo = saldo + e.getAmount();
+            } else  if (params.type == LineChartParameters.SALDO_ABSOLUT) {
+                // Saldo absolut: the entry is added to the last result
+            	saldo = saldo + e.getAmount();
+            } else if (params.type == LineChartParameters.SALDO_RELATIV) {
+                // Saldo relativ: the entry is added only if after the begin of the
+                // chart
+                if (e.getTransaction().getDate().after(fromDateForThisAccount)) 
+                	saldo = saldo + e.getAmount();
+            }
+
             Day date = new Day (e.getTransaction().getDate());
             saldos.put(date, new Long(saldo));
         }

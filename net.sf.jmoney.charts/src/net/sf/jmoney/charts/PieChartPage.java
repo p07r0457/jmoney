@@ -151,6 +151,12 @@ public class PieChartPage implements IBookkeepingPage {
 				Session session = JMoneyPlugin.getDefault().getSession();
 				return createContent(session, parent);
 			}
+			
+			public Composite createControl(Object nodeObject, Composite parent) {
+				Session session = JMoneyPlugin.getDefault().getSession();
+				return createContent(session, parent);
+			}
+
 		};
 	}
 	

@@ -15,8 +15,9 @@ import java.util.Vector;
 public class LineChartParameters {
 
     // Differents typs
-    public static final int SALDO = 1;
-    public static final int MOUVEMENT = 2;
+    public static final int SALDO_ABSOLUT = 1;
+    public static final int SALDO_RELATIV = 2;
+    public static final int MOUVEMENT = 3;
     
     public /*String*/Vector accountList;
     public Date	fromDate, toDate;
@@ -27,7 +28,10 @@ public class LineChartParameters {
     public boolean	average120;
     
     // Type of the graph (for the time, SALDO or MOUVEMENT)
-    public int type = SALDO;
+    public int type = SALDO_ABSOLUT;
+    
+    // Do we include the subaccounts for each account?
+    public boolean withSubaccounts;
     
     /**
      * 
@@ -97,5 +101,11 @@ public class LineChartParameters {
      */
     public void setDaily(boolean daily) {
         this.daily = daily;
+    }
+    /**
+     * @param withSubaccounts The withSubaccounts to set.
+     */
+    public void setWithSubaccounts(boolean withSubaccounts) {
+        this.withSubaccounts = withSubaccounts;
     }
 }

@@ -61,7 +61,8 @@ public class LineChartPage implements IBookkeepingPage {
     private Text fromDate, toDate;
     private final DateFormat df;
     private Button chkDaily, chkAverage30, chkAverage120;
-    private Button radSaldo, radMouvement;
+    private Button chkWithSubaccounts;
+    private Button radSaldoAbsolut, radSaldoRelativ, radMouvement;
     
     /**
      * Constructor
@@ -132,12 +133,18 @@ public class LineChartPage implements IBookkeepingPage {
 		chkAverage120 = new Button(actionGroup, SWT.CHECK);
 		chkAverage120.setText("Average 120 days");
 
-		radSaldo = new Button(typeGroup, SWT.RADIO);
-		radSaldo.setText("Saldo");
+		radSaldoAbsolut = new Button(typeGroup, SWT.RADIO);
+		radSaldoAbsolut.setText("Saldo (absolut)");
 		
+		radSaldoRelativ = new Button(typeGroup, SWT.RADIO);
+		radSaldoRelativ.setText("Saldo (relativ)");
+
 		radMouvement = new Button(typeGroup, SWT.RADIO);
 		radMouvement.setText("Mouvement");
 	
+		chkWithSubaccounts = new Button(actionGroup, SWT.CHECK);
+		chkWithSubaccounts.setText("Include the sub-accounts");
+
 		// Add the "Draw" Button
 		
 		Button redraw = new Button(actionGroup, SWT.NULL);
@@ -186,6 +193,12 @@ private void addAccountsInTree(TreeItem tn, Iterator it) {
 				Session session = JMoneyPlugin.getDefault().getSession();
 				return createContent(session, parent);
 			}
+
+			public Composite createControl(Object nodeObject, Composite parent) {
+				Session session = JMoneyPlugin.getDefault().getSession();
+				return createContent(session, parent);
+			}
+
 		};
 	}
 
@@ -205,9 +218,12 @@ private void createChart() {
     params.setDaily(chkDaily.getSelection());
     params.setAverage30(chkAverage30.getSelection());
     params.setAverage120(chkAverage120.getSelection());
+    params.setWithSubaccounts(chkWithSubaccounts.getSelection());
     
     if (radMouvement.getSelection()) 	params.setType(LineChartParameters.MOUVEMENT);
-    if (radSaldo.getSelection()) 		params.setType(LineChartParameters.SALDO);
+    if (radSaldoAbsolut.getSelection()) 		params.setType(LineChartParameters.SALDO_ABSOLUT);
+    if (radSaldoRelativ.getSelection()) 		params.setType(LineChartParameters.SALDO_RELATIV);
+    
     
     
     chart = new  ActivLineChart("myChart", session, params);
