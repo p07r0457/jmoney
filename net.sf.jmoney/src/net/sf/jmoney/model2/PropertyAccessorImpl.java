@@ -104,28 +104,36 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         Class implementationClass = propertySet.getImplementationClass();
         
         // Use introspection on the interface to find the getter method.
-        String theGetMethodName	= "get"
-        	+ localName.toUpperCase().charAt(0)
-			+ localName.substring(1, localName.length());
-        
-		theGetMethod = findMethod(theGetMethodName, null);
+        // Following the Java beans pattern, we allow the getter for a
+        // boolean property to have a prefix of either "get" or "is".
+        try {
+        	theGetMethod = findMethod("get", localName, null);
+        } catch (MalformedPluginException e) {
+            try {
+            	theGetMethod = findMethod("is", localName, null);
+                if (theGetMethod.getReturnType() != boolean.class) {
+                    throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + implementationClass.getName() + "' must return boolean.");
+                }
+            } catch (MalformedPluginException e2) {
+        		String propertyNamePart =
+        			localName.toUpperCase().substring(0, 1)
+					  + localName.substring(1, localName.length());
+    			throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a method with a signature of get" + propertyNamePart + "() or, if a boolean property, a signature of is" + propertyNamePart + "().");
+            }
+        }
         
         if (theGetMethod.getReturnType() == void.class) {
-            throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + implementationClass.getName() + "' must not return void.");
+            throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + implementationClass.getName() + "' must not return void.");
         }
         
         this.propertyClass = theGetMethod.getReturnType();
         
         // Use introspection on the implementation class to find the setter method.
-        String theSetMethodName	= "set"
-			+ localName.toUpperCase().charAt(0)
-			+ localName.substring(1, localName.length());
         Class parameterTypes[] = {propertyClass};
-        
-		theSetMethod = findMethod(theSetMethodName, parameterTypes);
+		theSetMethod = findMethod("set", localName, parameterTypes);
         
         if (theSetMethod.getReturnType() != void.class) {
-            throw new MalformedPluginException("Method '" + theSetMethodName + "' in '" + implementationClass.getName() + "' must return void type .");
+            throw new MalformedPluginException("Method '" + theSetMethod.getName() + "' in '" + implementationClass.getName() + "' must return void type .");
         }
     }
 
@@ -147,17 +155,11 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         isList = true;
 
 		// Use introspection on the interface to find the getXxxIterator method.
-		String theGetMethodName	= "get"
-			+ localName.toUpperCase().charAt(0)
-			+ localName.substring(1, localName.length())
-			+ "Iterator";
-		
-		theGetMethod = findMethod(theGetMethodName, null);
+		theGetMethod = findMethod("get", localName + "Iterator", null);
 		
 		if (theGetMethod.getReturnType() != Iterator.class) {
-			throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + propertySet.getImplementationClass().getName() + "' must return an Iterator type.");
+			throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + propertySet.getImplementationClass().getName() + "' must return an Iterator type.");
 		}
-
 	}
 
 	/**
@@ -192,32 +194,27 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 				parameters = new Class[0];
 			}	
 			
-			String methodName = "create"
-				+ localName.toUpperCase().charAt(0)
-				+ localName.substring(1, localName.length());
-			
-			theCreateMethod = findMethod(methodName, parameters);
+			theCreateMethod = findMethod("create", localName, parameters);
 			
 			if (theCreateMethod.getReturnType() != this.getValueClass()) {
-				throw new MalformedPluginException("Method '" + methodName + "' in '" + propertySet.getImplementationClass().getName() + "' must return an object of type " + this.getValueClass() + "."); 
+				throw new MalformedPluginException("Method '" + theCreateMethod.getName() + "' in '" + propertySet.getImplementationClass().getName() + "' must return an object of type " + this.getValueClass() + "."); 
 			}
 
-			// Use introspection on the implementation class to find the deleteXxx method.
-	        String theDeleteMethodName	= "delete"
-				+ localName.toUpperCase().charAt(0)
-				+ localName.substring(1, localName.length());
 	        Class deleteParameterTypes[] = {propertyClass};
-	        
-			theDeleteMethod = findMethod(theDeleteMethodName, deleteParameterTypes);
+			theDeleteMethod = findMethod("delete", localName, deleteParameterTypes);
 	        
 	        if (theDeleteMethod.getReturnType() != boolean.class) {
-	            throw new MalformedPluginException("Method '" + theDeleteMethodName + "' in '" + propertySet.getImplementationClass().getName() + "' must return boolean type .");
+	            throw new MalformedPluginException("Method '" + theDeleteMethod.getName() + "' in '" + propertySet.getImplementationClass().getName() + "' must return boolean type .");
 	        }
 
 		}
 	}
 
-	public Method findMethod(String methodName, Class [] parameters) {
+	public Method findMethod(String prefix, String propertyName, Class [] parameters) {
+		String methodName = prefix
+			+ propertyName.toUpperCase().charAt(0)
+			+ propertyName.substring(1, propertyName.length());
+		
 		try {
 			return getDeclaredMethodRecursively(propertySet.getImplementationClass(), methodName, parameters);
 		} catch (NoSuchMethodException e) {

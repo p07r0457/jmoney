@@ -241,7 +241,7 @@ public abstract class ExtendableObject {
 				// It is important that this is done before the property
 				// values are set in it.  The property may be propagated
 				// to other extensions, and back to this extension, through
-				// adapters.  We could get infinite recursion if the propagation
+				// propagators.  We could get infinite recursion if the propagation
 				// got back to this extension and the extension was not set.
 				extension.setBaseObject(this);
 				extension.setPropertySet(propertySet);
@@ -276,7 +276,7 @@ public abstract class ExtendableObject {
 				// It is important that this is done before the property
 				// values are set in it.  The property may be propagated
 				// to other extensions, and back to this extension, through
-				// adapters.  We could get infinite recursion if the propagation
+				// propagators.  We could get infinite recursion if the propagation
 				// got back to this extension and the extension was not set.
 				
 				// TODO: We really should not be propagating properties now.

@@ -75,6 +75,7 @@ import net.sf.jmoney.fields.BankAccountInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -333,7 +334,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		
 		SAXParserFactory factory = SAXParserFactory.newInstance();
 		try {
-			idToCurrencyMap = new HashMap();
+			idToCommodityMap = new HashMap();
 			idToAccountMap = new HashMap();
 			currentSAXEventProcessor = null;
 			
@@ -591,7 +592,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		/**
 		 * This method is called each time the next processor down
 		 * the stack processed an 'end element' and returned control
-		 * so this processor.
+		 * to this processor.
 		 * <P>
 		 * The processor below will pass the object that it had
 		 * read in.  This object might be a scalar property value
@@ -716,7 +717,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 */
 		public void startElement(String uri, String localName, Attributes atts)
 		throws SAXException {
-			
+System.out.println("start " + localName);			
 			// We set propertyAccessor to be the property accessor
 			// for the property whose value is contained in this
 			// element.  This property may be a scalar or a list
@@ -780,7 +781,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				Object value;
 				
 				if (propertyClass == Currency.class) {
-					value = idToCurrencyMap.get(idref);
+					value = idToCommodityMap.get(idref);
 				} else if (propertyClass == Account.class) {
 					value = idToAccountMap.get(idref);
 				} else {
@@ -816,11 +817,10 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					
 					// Save the id and appropriate map for this object so that the 
 					// object can be added to the map later when the object is created.
-					if (propertySetId.equals("net.sf.jmoney.currency")) {
-						map = idToCurrencyMap;
+					if (Commodity.class.isAssignableFrom(propertyClass)) {
+						map = idToCommodityMap;
 						id = atts.getValue("id");
-					} else if (propertySetId.equals("net.sf.jmoney.capitalAccount")
-							|| propertySetId.equals("net.sf.jmoney.categoryAccount")) {
+					} else if (Account.class.isAssignableFrom(propertyClass)) {
 						map = idToAccountMap;
 						id = atts.getValue("id");
 					}
@@ -1223,7 +1223,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	private Map accountIdMap;
 	
 	// Used for reading
-	private Map idToCurrencyMap;
+	private Map idToCommodityMap;
 	private Map idToAccountMap;
 	
 	/**

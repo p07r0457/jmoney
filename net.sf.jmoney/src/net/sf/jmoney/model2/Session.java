@@ -683,7 +683,8 @@ public class Session extends ExtendableObject implements IAdaptable {
 	 * to the database than to iterate through the entries, a process that
 	 * requires constructing each entry from data in the database.
 	 * <P>
-	 * No datastore is required to implement any adaptor interface.  Therefore
+	 * Datastores may optionally implement any adapter interface.
+	 * A datastore does not have to implement an adapter interface.  Therefore
 	 * all consumers must provide an alternative algorithm for obtaining the
 	 * same results.
 	 * <P>

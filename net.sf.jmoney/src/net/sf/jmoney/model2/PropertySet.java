@@ -75,6 +75,13 @@ public class PropertySet {
 	
 	boolean isExtension;
 	
+	/**
+	 * Used only to store the id passed to the constructor until it 
+	 * can be reconciled to the base or extended PropertySet object
+	 * by init().
+	 */
+	private String baseOrExtendablePropertySetId;
+	
 	// If there is no extension then certain methods that obtain
 	// property values should fetch default values.
 	// We determine the default values by constructing an extension
@@ -251,12 +258,22 @@ public class PropertySet {
 		}
 		
 		// Make a second pass thru the property sets.
-// TODO: is this right?		
+		// This finds the base property set or the extendable property set for
+		// each property set.
 		for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
 			PropertySet propertySet = (PropertySet)iter.next();
-			propertySet.initProperties();
+			propertySet.initPropertiesPass1();
 		}
 		
+		// Make a third pass thru the property sets.
+		// This finishes initialization that requires going up the chain of base
+		// property sets.  This part of the initialization cannot be done in pass 1
+		// because the base class may not have had its base class resolved until
+		// pass 1 is complete.
+		for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
+			PropertySet propertySet = (PropertySet)iter.next();
+			propertySet.initPropertiesPass2();
+		}
 	}
 	
 	
@@ -264,84 +281,18 @@ public class PropertySet {
 		this.propertySetId = propertySetId;
 		this.propertySetInfo  = propertySetInfo;
 		this.isExtension = isExtension;
-		
-		if (allPropertySetsMap.containsKey(propertySetId)) {
-			throw new MalformedPluginException("More than one property set has an id of " + propertySetId);
-		}
-		allPropertySetsMap.put(propertySetId, this);
-
-		if (!isExtension) {
-			extensionPropertySets = new HashMap();
-
-			if (baseOrExtendablePropertySetId != null) {
-				basePropertySet = (PropertySet)allPropertySetsMap.get(baseOrExtendablePropertySetId);
-				if (basePropertySet == null) {
-					throw new MalformedPluginException("No extendable property set with an id of " + baseOrExtendablePropertySetId + " exists.");
-				}
-				
-				if (basePropertySet.isExtension()) {
-					throw new MalformedPluginException(baseOrExtendablePropertySetId + " is a base property set.  Extension property sets cannot be extended, but " + propertySetId + " is declared as a base of " + baseOrExtendablePropertySetId + ".");
-				}
-				
-				if (!basePropertySet.isDerivable()) {
-					throw new MalformedPluginException(baseOrExtendablePropertySetId + " is a base property for " + propertySetId + ".  However, " + baseOrExtendablePropertySetId + " is not derivable (IPropertyRegistrar.setDerivableInfo not called from the IPropertySetInfo implementation).");
-				}
-			} else {
-				basePropertySet = null;
-			}
-			
-		} else {
-			extendablePropertySet = (PropertySet)allPropertySetsMap.get(baseOrExtendablePropertySetId);
-			if (extendablePropertySet == null) {
-				throw new MalformedPluginException("No extendable property set with an id of " + baseOrExtendablePropertySetId + " exists.");
-			}
-			
-			if (extendablePropertySet.isExtension()) {
-				throw new MalformedPluginException(baseOrExtendablePropertySetId + " is an extension property set.  Extension property sets cannot be extended, but " + propertySetId + " is declared as an extension of " + baseOrExtendablePropertySetId + ".");
-			}
-			
-			if (extendablePropertySet.extensionPropertySets.containsKey(propertySetId)) {
-				throw new RuntimeException("internal error - More than one property set has an id of " + propertySetId);
-			}
-			
-			extendablePropertySet.extensionPropertySets.put(propertySetId, this);
-
-			// Set up the extension that contains the default property values.
-			if (propertySetInfo != null) {
-				try {
-					if (propertySetInfo.getImplementationClass() != null) {
-						defaultExtension = (ExtensionObject)
-						propertySetInfo.getImplementationClass().newInstance();
-						// TODO: plugin error if null is returned
-					}
-				} catch (Exception e) {
-					// TODO: deal with this error
-					// Plug-in error if no default constructor.
-					e.printStackTrace();
-					throw new RuntimeException();
-				}
-			} else {
-				defaultExtension = null;
-			}
-		}
-		
-		// Add to the map that maps the extendable classes
-		// to the extendable property sets.
-		// Only final property sets (ones which do not define an enumerated type
-		// to control derived classes) are put in the map.  This is important because
-		// when we are looking for the property set for an instance of an object,
-		// we want to be sure we find only the final property set for that object.
-		if (!isExtension && !derivable) {
-			Class implementationClass = propertySetInfo.getImplementationClass();
-			if (classToPropertySetMap.containsKey(implementationClass)) {
-				throw new MalformedPluginException("More than one property set uses " + implementationClass + " as the Java implementation class.");
-			}
-			classToPropertySetMap.put(implementationClass, this);
-		}
+		this.baseOrExtendablePropertySetId = baseOrExtendablePropertySetId;
 		
 		derivable = false;
 		objectDescription = null;
 		
+		// propertySetInfo will be null if data is found in the datastore
+		// but no plug-in exists for the data.  This can happen if a plug-in
+		// creates an additional set of properties and puts data into those
+		// properties.  The data is saved to the datastore but the plug-in
+		// is then un-installed.  For time being, just bypass
+		// this code.
+		// TODO: implement and test this scenario.
 		if (propertySetInfo != null) {
 			// Set up the list of properties.
 			// This is done by calling the registerExtensionProperties
@@ -394,31 +345,123 @@ public class PropertySet {
 
 					}
 			);
-			
-			if (!isExtension && !derivable) {
-				if (objectDescription == null) {
-					throw new MalformedPluginException("IPropertyRegistrar.setObjectDescription is not called from the IPropertyInfo implementation for " + propertySetId + ", nor is the property set derivable or an extension.");
+		}
+		
+		// Add to our map that maps ids to PropertySet objects.
+		if (allPropertySetsMap.containsKey(propertySetId)) {
+			throw new MalformedPluginException("More than one property set has an id of " + propertySetId);
+		}
+		allPropertySetsMap.put(propertySetId, this);
+
+		if (!isExtension) {
+			extensionPropertySets = new HashMap();
+		}
+		
+		// Add to the map that maps the extendable classes
+		// to the extendable property sets.
+		// Only final property sets (ones which do not define an enumerated type
+		// to control derived classes) are put in the map.  This is important because
+		// when we are looking for the property set for an instance of an object,
+		// we want to be sure we find only the final property set for that object.
+		if (!isExtension && !derivable) {
+			Class implementationClass = propertySetInfo.getImplementationClass();
+			if (classToPropertySetMap.containsKey(implementationClass)) {
+				throw new MalformedPluginException("More than one property set uses " + implementationClass + " as the Java implementation class.");
+			}
+			classToPropertySetMap.put(implementationClass, this);
+		}
+	}
+
+	
+	/**
+	 * This method is called to perform pass 1 of the initialization process.
+	 * Some parts of the initialization require access to a complete list of
+	 * all the PropertySet objects and therefore cannot be done in the
+	 * PropertySet constructor.
+	 * <P>
+	 * The following are initialized by this method:
+	 * <UL>
+	 * <LI>this.extendablePropertySet</LI>
+	 * <LI>this.basePropertySet</LI>
+	 * <LI>this.defaultExtension</LI>
+	 * <LI>in the base class, derivedPropertySets</LI>
+	 * </UL>
+	 */
+	private void initPropertiesPass1() {
+		if (!isExtension) {
+			if (baseOrExtendablePropertySetId != null) {
+				basePropertySet = (PropertySet)allPropertySetsMap.get(baseOrExtendablePropertySetId);
+				if (basePropertySet == null) {
+					throw new MalformedPluginException("No extendable property set with an id of " + baseOrExtendablePropertySetId + " exists.");
 				}
 				
-				// Add this property set to the list of derived property sets
-				// for this and all the base classes.
-				for (PropertySet base = this; base != null; base = base.getBasePropertySet()) {
-					base.derivedPropertySets.add(this);
+				if (basePropertySet.isExtension()) {
+					throw new MalformedPluginException(baseOrExtendablePropertySetId + " is a base property set.  Extension property sets cannot be extended, but " + propertySetId + " is declared as a base of " + baseOrExtendablePropertySetId + ".");
+				}
+				
+				if (!basePropertySet.isDerivable()) {
+					throw new MalformedPluginException(baseOrExtendablePropertySetId + " is a base property for " + propertySetId + ".  However, " + baseOrExtendablePropertySetId + " is not derivable (IPropertyRegistrar.setDerivableInfo not called from the IPropertySetInfo implementation).");
 				}
 			} else {
-				if (objectDescription != null) {
-					if (isExtension) {
-						throw new MalformedPluginException("IPropertyRegistrar.setObjectDescription is called from the IPropertyInfo implementation for " + propertySetId + ", but the property set is an extension.");
-					} else {
-						throw new MalformedPluginException("IPropertyRegistrar.setObjectDescription is called from the IPropertyInfo implementation for " + propertySetId + ", but the property set is derivable.");
+				basePropertySet = null;
+			}
+			
+		} else {
+			extendablePropertySet = (PropertySet)allPropertySetsMap.get(baseOrExtendablePropertySetId);
+			if (extendablePropertySet == null) {
+				throw new MalformedPluginException("No extendable property set with an id of " + baseOrExtendablePropertySetId + " exists.");
+			}
+			
+			if (extendablePropertySet.isExtension()) {
+				throw new MalformedPluginException(baseOrExtendablePropertySetId + " is an extension property set.  Extension property sets cannot be extended, but " + propertySetId + " is declared as an extension of " + baseOrExtendablePropertySetId + ".");
+			}
+
+			// We have already checked that all property sets have unique ids, so a
+			// property set with the same id cannot already exist as an extension
+			// to the extendable property set.
+			assert (!extendablePropertySet.extensionPropertySets.containsKey(propertySetId));
+			extendablePropertySet.extensionPropertySets.put(propertySetId, this);
+
+			// Set up the extension that contains the default property values.
+			if (propertySetInfo != null) {
+				try {
+					if (propertySetInfo.getImplementationClass() != null) {
+						defaultExtension = (ExtensionObject)
+						propertySetInfo.getImplementationClass().newInstance();
+						// TODO: plugin error if null is returned
 					}
+				} catch (Exception e) {
+					// TODO: deal with this error
+					// Plug-in error if no default constructor.
+					e.printStackTrace();
+					throw new RuntimeException();
+				}
+			} else {
+				defaultExtension = null;
+			}
+		}
+		
+		if (!isExtension && !derivable) {
+			if (objectDescription == null) {
+				throw new MalformedPluginException("IPropertyRegistrar.setObjectDescription is not called from the IPropertyInfo implementation for " + propertySetId + ", nor is the property set derivable or an extension.");
+			}
+			
+			// Add this property set to the list of derived property sets
+			// for this and all the base classes.
+			for (PropertySet base = this; base != null; base = base.getBasePropertySet()) {
+				base.derivedPropertySets.add(this);
+			}
+		} else {
+			if (objectDescription != null) {
+				if (isExtension) {
+					throw new MalformedPluginException("IPropertyRegistrar.setObjectDescription is called from the IPropertyInfo implementation for " + propertySetId + ", but the property set is an extension.");
+				} else {
+					throw new MalformedPluginException("IPropertyRegistrar.setObjectDescription is called from the IPropertyInfo implementation for " + propertySetId + ", but the property set is derivable.");
 				}
 			}
 		}
-
-		
 	}
-
+	
 	
 	/**
 	 * This method is called to complete the initialization of this object.
@@ -436,7 +479,7 @@ public class PropertySet {
 	 * <LI>indexIntoConstructorParameters, for each PropertyAccessor in this property set</LI>
 	 * </UL>
 	 */
-	private void initProperties() {
+	private void initPropertiesPass2() {
 		if (isExtension || !derivable) {
 			// Build the list of properties that are passed to
 			// the 'new object' constructor and another list that
@@ -488,11 +531,11 @@ public class PropertySet {
 			}
 			
 			// Process the properties in this property set.
-			if (!isDerivable()) {
-				for (Iterator iter = getPropertyIterator1(); iter.hasNext(); ) {
-					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+			for (Iterator iter = getPropertyIterator1(); iter.hasNext(); ) {
+				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+				propertyAccessor.setIndexIntoConstructorParameters(parameterIndex++);
+				if (!isDerivable()) {
 					constructorProperties.add(propertyAccessor);
-					propertyAccessor.setIndexIntoConstructorParameters(parameterIndex++);
 					if (propertyAccessor.isList()) {
 						defaultConstructorProperties.add(propertyAccessor);
 					}
@@ -734,17 +777,6 @@ public class PropertySet {
 	 * @return
 	 */
 	static private void registerExtendablePropertySet(String propertySetId, String basePropertySetId, IPropertySetInfo propertySetInfo) {
-		if (basePropertySetId != null) {
-			PropertySet basePropertySet = (PropertySet)allPropertySetsMap.get(basePropertySetId);
-			if (basePropertySet == null) {
-				throw new RuntimeException("No extendable property set with an id of " + basePropertySetId + " exists.");
-			}
-			if (basePropertySet.isExtension()) {
-				throw new RuntimeException(basePropertySetId + " is an extension property set.  Property sets cannot be derived from extension property sets, but " + propertySetId + " is declared as a derivation of " + basePropertySetId + ".");
-			}
-			
-		}
-		
 		// Objects of this class self-register, so we need
 		// only construct the object.
 		new PropertySet(propertySetId, false, basePropertySetId, propertySetInfo);
@@ -759,13 +791,6 @@ public class PropertySet {
 	 * @return
 	 */
 	static private void registerExtensionPropertySet(String propertySetId, String extendablePropertySetId, IPropertySetInfo propertySetInfo) {
-		PropertySet extendablePropertySet = (PropertySet)allPropertySetsMap.get(extendablePropertySetId);
-		if (extendablePropertySet == null) {
-			throw new RuntimeException("No extendable property set with an id of " + extendablePropertySetId + " exists.");
-		}
-		if (extendablePropertySet.isExtension()) {
-			throw new RuntimeException("extension on extension");
-		}
 		// Objects of this class self-register, so we need
 		// only construct the object.
 		new PropertySet(propertySetId, true, extendablePropertySetId, propertySetInfo);
