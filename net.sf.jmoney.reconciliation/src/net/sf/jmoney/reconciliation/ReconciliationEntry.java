@@ -45,15 +45,6 @@ public class ReconciliationEntry extends EntryExtension {
 	 */
 	public static final int CLEARED = 2;
 	
-	/**
-	 * Entry is cleared.
-	 */
-	static String[] statusText = new String[] {
-			ReconciliationPlugin.getResourceString("Entry.unclearedShort"),
-			ReconciliationPlugin.getResourceString("Entry.reconcilingShort"),
-			ReconciliationPlugin.getResourceString("Entry.clearedShort"),
-	};
-	
 	protected int status = 0;
 	
 	/**
@@ -94,13 +85,6 @@ public class ReconciliationEntry extends EntryExtension {
 		processPropertyChange(ReconciliationEntryInfo.getStatusAccessor(), new Integer(oldStatus), new Integer(status));
 	}
 	
-	/**
-	 * Returns a short String representing the status.
-	 */
-	public String getStatusString() {
-		return statusText[getStatus()];
-	}
-
 	static public Object [] getDefaultProperties() {
 		return new Object [] { new Integer(UNCLEARED) };
 	}

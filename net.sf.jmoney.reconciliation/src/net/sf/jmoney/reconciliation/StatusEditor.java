@@ -22,80 +22,112 @@
 
 package net.sf.jmoney.reconciliation;
 
-import javax.swing.JComboBox;
+import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.PropertyAccessor;
+
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 
 /**
  * Note that this class has neither get/set methods for the value being edited
  * and no support for property change listeners.  This is
- * because objects of this class are tied to an Entry object.  Changes to this
- * object are reflected by this object in the Entry class objects.  
- * Consumers who are interested in changes to the Entry class objects should
+ * because objects of this class are tied to an CapitalAccount object.  
+ * Changes to this
+ * object are reflected by this object in the CapitalAccount class objects.  
+ * Consumers who are interested in changes to the CapitalAccount class objects should
  * add themselves as listeners to the appropriate PropertyAccessor object.
  *
- * @author  Nigel
+ * @author Nigel Westbury
+ * @author Johann Gyger
  */
-public class StatusEditor extends JComboBox {
-    
-    private int value;
-    
-    private ReconciliationEntry entry = null;
+public class StatusEditor implements IPropertyControl {
 
-    /** Creates new StatusEditor */
-    public StatusEditor() {
-    	super(
+    private Combo propertyControl;
+
+    private Entry entry = null;
+
+    /** 
+     * @param propertyAccessor the accessor for the property to be edited
+     * 			by this control.  This property accessor will always be the
+     * 			'status' property in the ReconciliationEntry propery set.
+     */
+    public StatusEditor(Composite parent, PropertyAccessor propertyAccessor) {
+        propertyControl = new Combo(parent, 0);
+
+        propertyControl.setItems(
     			new String[] { 
     					ReconciliationPlugin.getResourceString("Entry.uncleared"),
 						ReconciliationPlugin.getResourceString("Entry.reconciling"),
 						ReconciliationPlugin.getResourceString("Entry.cleared"),
     			}
-    	);
+        );
+        		
+        // Selection changes are reflected immediately in the
+        // mutable account object.  This allows other properties
+        // such as money amounts to listen for changes to the
+        // currency and change their format to be correct for
+        // the newly selected currency.
+
+        propertyControl.addSelectionListener(new SelectionListener() {
+            public void widgetSelected(SelectionEvent e) {
+                save();
+            }
+            public void widgetDefaultSelected(SelectionEvent e) {
+                // Should this be here?
+                save();
+            }
+        });
     }
-    
-    
-    /**
-     * This method is called by the super class when the user changes a selection
-     * but not when the selection is changed by the code.  We override this
-     * method so we can update the entry with the new selection whenever the user
-     * changes the selection.
-     */
-    public void setSelectedIndex(int index) {
-        super.setSelectedIndex(index);
-        entry.setStatus(index);
-    }
-   
+
     /**
      * Load the control with the value from the given entry.
      */
-    public void load(ReconciliationEntry entry) {
-        try {
-            this.entry = entry;
-            if (entry != null) {
-                super.setSelectedIndex(entry.getStatus());
-            } else {
-                // If no entry selected, set so nothing is selected.
-                super.setSelectedIndex(-1);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void load(ExtendableObject object) {
+    	if (object != null) {
+    		entry = (Entry)object;
+    		
+    		ReconciliationEntry ourEntry = (ReconciliationEntry)object.getExtension(ReconciliationEntryInfo.getPropertySet());
+    		if (ourEntry == null) {
+    			propertyControl.setText("");
+    		} else {
+    			propertyControl.select(ourEntry.getStatus());
+    		}
+    	}
+    	
+    	propertyControl.setEnabled(object != null);
     }
-    
+
     /**
-     * Save the value from the control back into the entry.
+     * Save the value from the control back into the object.
      *
-     * Beans may update the entry on a regular basis, not just when
+     * Editors may update the property on a regular basis, not just when
      * the framework calls the <code>save</code> method.  However, the only time
-     * that beans must update the entry is when the framework calls this method.
+     * that editors must update the property is when the framework calls this method.
      *
      * In this implementation we save the value back into the entry when the selection
      * is changed.  This causes the change to be seen in other views as soon as the
      * user changes the selection.
      *
-     * The framework should never call this method when no entry is selected
+     * The framework should never call this method when no account is selected
      * so we can assume that <code>entry</code> is not null.
      */
     public void save() {
-        int index = getSelectedIndex();
-        entry.setStatus(index);
+        int index = propertyControl.getSelectionIndex();
+        if (index != -1) {
+        	entry.setIntegerPropertyValue(ReconciliationEntryInfo.getStatusAccessor(), index);
+        }
     }
+
+    /* (non-Javadoc)
+     * @see net.sf.jmoney.model2.IPropertyControl#getControl()
+     */
+    public Control getControl() {
+        return propertyControl;
+    }
+
 }
