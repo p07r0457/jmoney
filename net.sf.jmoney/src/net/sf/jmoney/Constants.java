@@ -72,13 +72,13 @@ public interface Constants {
 */
 	
 	public static final Image ACCOUNTS_ICON =
-		JMoneyPlugin.createImage("icons/Accounts.gif");
+		JMoneyPlugin.createImage("icons/accounts.gif");
 
 	public static final Image ACCOUNT_ICON =
-		JMoneyPlugin.createImage("icons/Account.gif");
+		JMoneyPlugin.createImage("icons/account.gif");
 
 	public static final Image CATEGORY_ICON =
-		JMoneyPlugin.createImage("icons/Category.gif");
+		JMoneyPlugin.createImage("icons/category.gif");
 /*
 	public static final ImageIcon ARROW_UP_ICON =
 		new ImageIcon(Constants.class.getResource("images/ArrowUp.gif"));
