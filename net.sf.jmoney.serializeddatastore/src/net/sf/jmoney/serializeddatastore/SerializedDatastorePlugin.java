@@ -47,7 +47,6 @@ import org.xml.sax.helpers.DefaultHandler;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.CapitalAccountImpl;
 import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
-import net.sf.jmoney.model2.MutableEntryImpl;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionImpl;
 import net.sf.jmoney.model2.ExtendableObjectHelperImpl;
@@ -58,6 +57,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertyNotFoundException;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
+import net.sf.jmoney.model2.Transaction;
 // The following are treated specially by this datastore plug-in
 // so that we get more friendly idref names.
 import net.sf.jmoney.model2.Account;
@@ -67,7 +67,6 @@ import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.MutableTransaction;
 
 //SAX classes.
 import org.xml.sax.helpers.*;
@@ -736,7 +735,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			} catch (IllegalAccessException e) {
 				throw new MalformedPluginException("Constructor must be public.");
 			} catch (InvocationTargetException e) {
-				throw new MalformedPluginException("An exception occured within a constructor in a plug-in.");
+				e.printStackTrace();
+				throw new MalformedPluginException("An exception occured within a constructor in a plug-in.", e);
 			}
 			
 			objectKey.setObject(extendableObject);
@@ -1384,6 +1384,9 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	private void convertModelOneFormat(net.sf.jmoney.model.Session oldFormatSession, Session newSession) {
 		Map accountMap = new Hashtable();
 		
+		// Add the currencies
+		JMoneyPlugin.initSystemCurrencies(newSession);
+		
 		// Add the income and expense accounts
 		net.sf.jmoney.model.CategoryNode root = oldFormatSession.getCategories().getRootNode();
 		for (Enumeration e = root.children(); e.hasMoreElements();) {
@@ -1509,10 +1512,10 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					// other half of this entry and so we know the other half is not
 					// part of a split entry.
 					if (doubleEntriesPreviouslyFound.contains(de.getOther())) {
-						MutableTransaction trans = newSession.createNewTransaction();
+						Transaction trans = newSession.createTransaction();
 						trans.setDate(de.getDate());
-						MutableEntryImpl entry1 = trans.createEntry();
-						MutableEntryImpl entry2 = trans.createEntry();
+						Entry entry1 = trans.createEntry();
+						Entry entry2 = trans.createEntry();
 						entry1.setAmount(de.getAmount());
 						entry2.setAmount(-de.getAmount());
 						entry1.setAccount((Account)accountMap.get(de.getOther().getCategory()));
@@ -1520,19 +1523,17 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 						
 						copyEntryProperties(de, entry1, statusProperty);
 						copyEntryProperties(de.getOther(), entry2, statusProperty);
-						
-						trans.commit();
 					} else {
 						doubleEntriesPreviouslyFound.add(de);
 					}
 				} else if (oldEntry instanceof net.sf.jmoney.model.SplittedEntry) {
 					net.sf.jmoney.model.SplittedEntry se = (net.sf.jmoney.model.SplittedEntry)oldEntry;
 					
-					MutableTransaction trans = newSession.createNewTransaction();
+					Transaction trans = newSession.createTransaction();
 					trans.setDate(oldEntry.getDate());
 					
 					// Add the entry for the account that was holding the split entry.
-					MutableEntryImpl subEntry = trans.createEntry();
+					Entry subEntry = trans.createEntry();
 					subEntry.setAmount(oldEntry.getAmount());
 					subEntry.setAccount(newAccount);
 					
@@ -1547,13 +1548,11 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 						subEntry.setAccount((Account)accountMap.get(oldSubEntry.getCategory()));
 						copyEntryProperties(oldSubEntry, subEntry, statusProperty);
 					}
-					
-					trans.commit();
 				} else {
-					MutableTransaction trans = newSession.createNewTransaction();
+					Transaction trans = newSession.createTransaction();
 					trans.setDate(oldEntry.getDate());
-					MutableEntryImpl entry1 = trans.createEntry();
-					MutableEntryImpl entry2 = trans.createEntry();
+					Entry entry1 = trans.createEntry();
+					Entry entry2 = trans.createEntry();
 					entry1.setAmount(oldEntry.getAmount());
 					entry2.setAmount(-oldEntry.getAmount());
 					entry1.setAccount(newAccount);
@@ -1566,14 +1565,12 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					
 					entry2.setCreation(oldEntry.getCreation());
 					entry2.setDescription(oldEntry.getDescription());
-					
-					trans.commit();
 				}
 			}
 		}
 	}
 
-	private void copyEntryProperties(net.sf.jmoney.model.Entry oldEntry, MutableEntryImpl entry, PropertyAccessor statusProperty) {
+	private void copyEntryProperties(net.sf.jmoney.model.Entry oldEntry, Entry entry, PropertyAccessor statusProperty) {
 		entry.setCheck(oldEntry.getCheck());
 		entry.setCreation(oldEntry.getCreation());
 		entry.setDescription(oldEntry.getDescription());

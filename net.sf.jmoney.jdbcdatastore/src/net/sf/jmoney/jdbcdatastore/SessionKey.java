@@ -27,6 +27,7 @@ import java.util.Collection;
 import net.sf.jmoney.model2.ExtendableObjectHelperImpl;
 import net.sf.jmoney.model2.ExtensionProperties;
 import net.sf.jmoney.model2.IExtendableObject;
+import net.sf.jmoney.model2.ISessionManagement;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -82,5 +83,9 @@ public class SessionKey implements IDatabaseRowKey {
 
 	public Session getSession() {
 		return sessionManager.getSession();
+	}
+
+	public ISessionManagement getSessionManager() {
+		return sessionManager;
 	}
 }

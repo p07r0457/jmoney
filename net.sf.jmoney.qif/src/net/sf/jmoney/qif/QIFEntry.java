@@ -25,14 +25,14 @@ package net.sf.jmoney.qif;
 import net.sf.jmoney.model2.AbstractEntryExtension;
 
 /**
- * @author Nigel
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * Property set implementation class for the properties added
+ * to each Entry object by this plug-in.
+ * 
+ * @author Nigel Westbury
  */
 public class QIFEntry extends AbstractEntryExtension {
 	
-	protected char reconcilingState = ' ';
+	private char reconcilingState = ' ';
 	
 	/**
 	 * A default constructor is mandatory for all extension objects.
@@ -54,25 +54,33 @@ public class QIFEntry extends AbstractEntryExtension {
 	}
 	
 	/**
-	 * Returns the status.
+	 * Gets the status of the entry.
+	 * 
+	 * @return The status of the entry.
+	 * <LI>
+	 * <UL>' ' - the entry not not been reconciled</UL>
+	 * <UL>'*' - the entry is being reconciled</UL>
+	 * <UL>'C' - the entry has cleared and shows on the statement</UL>
+	 * </LI>
 	 */
 	public char getReconcilingState() {
 		return reconcilingState;
 	}
 	
 	/**
-	 * Sets the check. Either UNCLEARED, RECONCILING or CLEARED.
-	 *
-	 * At this point of time, any change to an extension causes a change notification
-	 * on the base entry object itself.  TODO: Most consumers will be aware of only 
-	 * one or a few extension types so it is not efficient to notify them when any
-	 * other extension is changed.  Think about whether it is worth bringing notifications
-	 * down to a finer granularity.
+	 * Sets the status of the entry.
+	 * 
+	 * @param reconcilingState the new status of the entry.
+	 * <LI>
+	 * <UL>' ' - the entry not not been reconciled</UL>
+	 * <UL>'*' - the entry is being reconciled</UL>
+	 * <UL>'C' - the entry has cleared and shows on the statement</UL>
+	 * </LI>
 	 */
 	public void setReconcilingState(char reconcilingState) {
 		char oldReconcilingState = this.reconcilingState;
 		this.reconcilingState = reconcilingState;
-		firePropertyChange("reconcilingState", oldReconcilingState, reconcilingState);
+		processPropertyChange(QIFEntryInfo.getReconcilingStateAccessor(), new Character(oldReconcilingState), new Character(reconcilingState));
 	}
 
 	static public Object [] getDefaultProperties() {

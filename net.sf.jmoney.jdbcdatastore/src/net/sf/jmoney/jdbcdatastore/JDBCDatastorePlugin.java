@@ -736,7 +736,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			throw new MalformedPluginException("Constructor must be public.");
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
-			throw new MalformedPluginException("An exception occured within a constructor in a plug-in.");
+			throw new MalformedPluginException("An exception occured within a constructor in a plug-in.", e);
 		}
 		
 		return extendableObject;

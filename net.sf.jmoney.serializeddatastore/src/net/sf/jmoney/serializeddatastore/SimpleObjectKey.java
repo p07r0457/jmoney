@@ -30,6 +30,7 @@ import net.sf.jmoney.model2.ExtendableObjectHelperImpl;
 import net.sf.jmoney.model2.ExtensionProperties;
 import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.ISessionManagement;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -80,5 +81,9 @@ public class SimpleObjectKey implements IObjectKey {
 
 	public Session getSession() {
 		return sessionManager.getSession();
+	}
+
+	public ISessionManagement getSessionManager() {
+		return sessionManager;
 	}
 }

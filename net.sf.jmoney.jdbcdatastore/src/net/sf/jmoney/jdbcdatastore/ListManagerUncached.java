@@ -197,7 +197,7 @@ public class ListManagerUncached implements IListManager {
 			throw new MalformedPluginException("Constructor must be public.");
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
-			throw new MalformedPluginException("An exception occured within a constructor in a plug-in.");
+			throw new MalformedPluginException("An exception occured within a constructor in a plug-in.", e);
 		}
 		
 		objectKey.setObject(extendableObject);

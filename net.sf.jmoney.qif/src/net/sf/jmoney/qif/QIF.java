@@ -178,7 +178,7 @@ public class QIF implements FileFormat {
         
         while (true) {
             MutableTransaction transaction = session.createNewTransaction();
-            Entry entry = transaction.createEntry();
+            Entry entry = transaction.createEntry2();
             QIFEntry ourEntry = (QIFEntry)entry.getExtension(qifPropertySet);
             
             Account category = null;
