@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+   id="net.sf.jmoney.categoriespanel"
+   name="Categories Panel Plug-in"
+   version="1.0.0"
+   provider-name="JMoney"
+   class="net.sf.jmoney.categoriespanel.CategoriesPanelPlugin">
+
+   <runtime>
+      <library name="categoriespanel.jar">
+         <export name="*"/>
+      </library>
+   </runtime>
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="net.sf.jmoney"/>
+   </requires>
+
+   <extension
+         point="net.sf.jmoney.pages">
+      <node
+          id="categoriesNode"
+	      label="%NavigationTreeModel.categories"
+    	  icon="icons/Category.gif">
+      </node>
+      <pages
+            class="net.sf.jmoney.bookkeepingPages.CategoryPage"
+            node="net.sf.jmoney.categoriespanel.categoriesNode">
+      </pages>
+   </extension>
+
+</plugin>
