@@ -90,4 +90,7 @@ public interface CapitalAccount extends Account {
 	
 	// Helper methods.
 	boolean hasEntries(Session session);
+	
+	// getter
+	int getLevel ();
 }

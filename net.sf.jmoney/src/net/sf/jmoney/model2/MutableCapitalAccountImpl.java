@@ -28,7 +28,7 @@ import java.beans.PropertyChangeSupport;
 import java.util.Collection;
 import java.util.Iterator;
 
-import net.sf.jmoney.model2.*;
+import org.eclipse.jface.util.PropertyChangeEvent;
 
 /**
  *
@@ -38,7 +38,10 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 	
 	private CapitalAccountImpl account;
 	
-	private CapitalAccountImpl parent;
+	// changed by Olivier Faucheux:
+	// was an "CapitalAccountImpl". Why?
+	// changed to Account
+	private Account parent;
 	
 	private SessionImpl session;
 	
@@ -79,14 +82,15 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 	 * Creates an instance of MutableCapitalAccount that is editing an account
 	 * that has already been committed to the database.
 	 */
-	public MutableCapitalAccountImpl(Session session, CapitalAccount account) {
+	public MutableCapitalAccountImpl(Session session, CapitalAccountImpl account) {
     	// Temp code.  The object key is created when
     	// it is requested.
     	super(null, null);
 
     	this.session = (SessionImpl)session;
-		this.parent = (CapitalAccountImpl)account.getParent();
-		this.account = (CapitalAccountImpl)account;
+    	Account parentAccount = account.getParent();
+		this.parent = parentAccount;
+		this.account = account;
 		
 		this.name = account.getName();
 		this.currency = account.getCurrency();
@@ -121,6 +125,7 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 	public IObjectKey getObjectKey() {
     	return new IObjectKey() {
     		public IExtendableObject getObject() {
+    		    // System.out.println("getObject called on " + this + " returns " + MutableCapitalAccountImpl.this.getName());
     			return MutableCapitalAccountImpl.this;
     		}
     		
@@ -363,12 +368,14 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 		return account.hasEntries(session);
 	}
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.Account#getParent()
+	/**
+	 * @author Faucheux
 	 */
 	public Account getParent() {
-		// TODO Auto-generated method stub
-		return null;
+		if (parent instanceof MutableAccount) {
+		    return ((MutableAccount) parent).getRealAccount();
+		} else
+		    return parent;
 	}
 
 	/* (non-Javadoc)
@@ -407,4 +414,47 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 	  EditLockMap.remove(lockedObject);
 	  }
 	*/
+	
+	/**
+	 * set the parent of the account. If another parent has already been set, an error is generated.
+	 * 
+	 * @author Olivier Faucheux
+	 */
+	public void setParent (CapitalAccount newParent) {
+	    Account oldParent = this.parent; 
+
+	    
+	    if (oldParent != null & oldParent != newParent) 
+	        throw new Error ("The account " + name + " can't become the account " + newParent.getName() + " as parent: it already have a parent (" + oldParent + ").");
+	    
+	    parent = newParent;
+	    account.parentKey = newParent.getObjectKey();
+
+	    // Fire the event
+		final PropertyChangeEvent event = new PropertyChangeEvent(account, "parent", oldParent, newParent);
+		session.fireEvent(
+				new ISessionChangeFirer() {
+					public void fire(SessionChangeListener listener) {
+						listener.accountChange(event);
+					}
+				});
+	}
+	
+	/**
+	 * @author Faucheux
+	 */
+	public int getLevel () {
+	    if (parent == null) 
+	        return 0;
+	    else 
+	        return parent.getLevel() + 1 ;
+	}
+	
+	/**
+	 * returns the real Account (not mutable) on which this mutable account points. 
+	 * @author Faucheux
+	 */
+	public Account getRealAccount () {
+	    return account;
+	}
 }

@@ -29,4 +29,5 @@ package net.sf.jmoney.model2;
  */
 public interface MutableAccount extends Account, IMutableExtendableObject {
 	void setName(String name);
+	public Account getRealAccount(); 
 }

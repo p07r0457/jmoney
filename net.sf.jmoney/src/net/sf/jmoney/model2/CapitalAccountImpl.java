@@ -378,4 +378,12 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
         public MutableCapitalAccount createMutableAccount(Session session) {
             return new MutableCapitalAccountImpl(session, this);
         }
+        
+     public int getLevel () {
+         if (parentKey == null)
+             return 0;
+         else 
+             // TODO: should be levelparent + 1
+             return 1;
+     }
 }

@@ -347,6 +347,23 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
 			}
         };
     }
+    
+    /**
+     * @author Faucheux
+     */
+    
+    public Iterator getCapitalAccountIteratorByLevel(int level) {
+    	Iterator itAccounts = accounts.iterator();
+    	Vector   vecResult = new Vector();
+    	while (itAccounts.hasNext()) {
+    	    Account a = (Account) itAccounts.next();
+    	    if (a instanceof CapitalAccount & ((CapitalAccount) a).getLevel() == level) {
+    	        vecResult.add(a);
+    	    }
+    	}
+    	return vecResult.iterator();
+    }
+
    
     public Iterator getIncomeExpenseAccountIterator() {
         return new Iterator() {

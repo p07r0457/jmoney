@@ -71,4 +71,10 @@ public interface MutableCapitalAccount extends CapitalAccount, MutableAccount {
     // TODO: Should this be moved to a separate initialization interface?
 
     void addSubAccount(CapitalAccount subAccount);
+    
+    /**
+     * Add a parent account. Should raise an error if the account already has another parent.
+     * @param newParent
+     */
+    void setParent(CapitalAccount newParent);
 }

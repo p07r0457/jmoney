@@ -48,4 +48,6 @@ public interface Account extends Comparable, IExtendableObject {
 	 * @return the full qualified name of the account.
 	 */
 	String getFullAccountName();
+	
+	public int getLevel();
 }

@@ -189,13 +189,16 @@ public class MutableIncomeExpenseAccountImpl  extends ExtendableObjectHelperImpl
 		return null;
 	}
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.Account#getParent()
+	/**
+	 * @author Faucheux
 	 */
 	public Account getParent() {
-		// TODO Auto-generated method stub
-		return null;
+		if (parent instanceof MutableAccount) {
+		    return ((MutableAccount) parent).getRealAccount();
+		} else
+		    return parent;
 	}
+
 
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.model2.Account#getSubAccountIterator()
@@ -233,4 +236,21 @@ public class MutableIncomeExpenseAccountImpl  extends ExtendableObjectHelperImpl
         EditLockMap.remove(lockedObject);
     }
  */
+	
+	public int getLevel () {
+	    if (parent == null) {
+	        return 0;
+	    } else {
+	        return parent.getLevel() + 1;
+	    }
+	}
+	
+	/**
+	 * returns the real Account (not mutable) on which this mutable account points. 
+	 * @author Faucheux
+	 */
+	public Account getRealAccount () {
+	    return account;
+	}
+
 }

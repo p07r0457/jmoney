@@ -42,6 +42,8 @@ public interface Session extends IExtendableObject {
     Iterator getAccountIterator();
     
     Iterator getCapitalAccountIterator();
+    
+    public Iterator getCapitalAccountIteratorByLevel(int level);
    
     Iterator getIncomeExpenseAccountIterator();
     
