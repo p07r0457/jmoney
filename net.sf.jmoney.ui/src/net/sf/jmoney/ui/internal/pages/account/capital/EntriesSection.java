@@ -42,6 +42,7 @@ import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -162,7 +163,11 @@ public class EntriesSection extends SectionPart {
 
         fViewer.addSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
-                handleSelectionChanged();
+                if (event.getSelection() instanceof IStructuredSelection) {
+                    IStructuredSelection s = (IStructuredSelection) event.getSelection();
+                    DisplayableEntry de = (DisplayableEntry) s.getFirstElement();
+                    fPage.fEntrySection.update(de.entry);
+                }
             }
         });
 
@@ -190,10 +195,6 @@ public class EntriesSection extends SectionPart {
         result[5] = new TextCellEditor(fTable); // credit
         result[6] = new TextCellEditor(fTable); // balance
         return result;
-    }
-
-    protected void handleSelectionChanged() {
-        // TODO
     }
 
     class ContentProvider implements IStructuredContentProvider {
