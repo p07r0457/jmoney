@@ -67,6 +67,11 @@
             node="net.sf.jmoney.reports.incomeExpense"
             id="incomeAndExpense">
       </pages>
+      <pages
+            class="net.sf.jmoney.reports.IncomeExpenseDetailPage"
+            extendable-property-set="net.sf.jmoney.categoryAccount"
+            id="incomeAndExpenseDetail">
+      </pages>
    </extension>
 
 </plugin>
