@@ -53,12 +53,18 @@ public abstract class AbstractAccountImpl extends ExtendableObjectHelperImpl imp
 	}
 	
 	public Account getParent() {
-		IExtendableObject parent = parentKey.getObject();
-		if (parent instanceof Account) {
-			return (Account)parent;
-		} else {
-			return null;
-		}
+	    if (parentKey == null) {
+	        return null;
+	    } else {
+	        IExtendableObject parent = parentKey.getObject();
+    		if (parent instanceof MutableAccount) {
+    		    return ((MutableAccount) parent).getRealAccount();
+    		} else if (parent instanceof Account) {
+	    		return (Account) parent;
+	        } else {
+	            return null;
+	        }
+	    }
 	}
 	
 	void removeSubAccount(Account subAccount) {
