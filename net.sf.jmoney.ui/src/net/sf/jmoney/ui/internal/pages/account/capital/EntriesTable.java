@@ -69,10 +69,22 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
  */
 public class EntriesTable implements IEntriesControl {
 
-    protected static final Color transactionColor          = new Color(Display.getCurrent(), 125, 215, 060);
-    protected static final Color alternateTransactionColor = new Color(Display.getCurrent(), 100, 160, 200);
-    protected static final Color entryColor                = new Color(Display.getCurrent(), 180, 225, 140);
-    protected static final Color alternateEntryColor       = new Color(Display.getCurrent(), 135, 185, 205);
+	// The darker blue and green lines
+	//protected static final Color transactionColor          = new Color(Display.getCurrent(), 125, 215, 060);
+	//protected static final Color alternateTransactionColor = new Color(Display.getCurrent(), 100, 160, 200);
+	//protected static final Color entryColor                = new Color(Display.getCurrent(), 180, 225, 140);
+	//protected static final Color alternateEntryColor       = new Color(Display.getCurrent(), 135, 185, 205);
+	
+	// The  lighter purple and green lines
+	// As suggested by Tom Drummond
+    protected static final Color transactionColor          = new Color(Display.getCurrent(), 237, 237, 255);
+    protected static final Color alternateTransactionColor = new Color(Display.getCurrent(), 237, 255, 237);
+    // But made a little darker to distinguish from the entry lines
+    //protected static final Color transactionColor          = new Color(Display.getCurrent(), 230, 230, 255);
+    //protected static final Color alternateTransactionColor = new Color(Display.getCurrent(), 230, 255, 237);
+
+    protected static final Color entryColor                = new Color(Display.getCurrent(), 240, 240, 255);
+    protected static final Color alternateEntryColor       = new Color(Display.getCurrent(), 240, 255, 255);
 
 	protected EntriesPage fPage;
 	protected Table fTable;
@@ -101,20 +113,23 @@ public class EntriesTable implements IEntriesControl {
         	
             col = new TableColumn(fTable, SWT.NULL);
             col.setText(entriesSectionProperty.getText());
-            tlayout.addColumnData(new ColumnWeightData(50, entriesSectionProperty.getMinimumWidth()));
+            tlayout.addColumnData(
+            		new ColumnWeightData(
+            				entriesSectionProperty.getWeight(), 
+							entriesSectionProperty.getMinimumWidth()));
         }
 
         col = new TableColumn(fTable, SWT.RIGHT);
         col.setText("Debit");
-        tlayout.addColumnData(new ColumnWeightData(50, 15));
+        tlayout.addColumnData(new ColumnWeightData(2, 70));
 
         col = new TableColumn(fTable, SWT.RIGHT);
         col.setText("Credit");
-        tlayout.addColumnData(new ColumnWeightData(50, 15));
+        tlayout.addColumnData(new ColumnWeightData(2, 70));
 
         col = new TableColumn(fTable, SWT.RIGHT);
         col.setText("Balance");
-        tlayout.addColumnData(new ColumnWeightData(50, 15));
+        tlayout.addColumnData(new ColumnWeightData(2, 70));
 
         fTable.setLayout(tlayout);
         fTable.setHeaderVisible(true);
@@ -433,10 +448,18 @@ public class EntriesTable implements IEntriesControl {
         public String getColumnText(Object obj, int index) {
             if (obj instanceof DisplayableItem && ! (obj instanceof DisplayableNewEmptyEntry)) {
         		DisplayableItem de = (DisplayableItem) obj;
-        		
+        	
         		if (index < fPage.allEntryDataObjects.size()) {
         			EntriesSectionProperty entryData = (EntriesSectionProperty)fPage.allEntryDataObjects.get(index);
-        			return entryData.getValueFormattedForTable(de.getEntry());
+
+        			// If this is an entry line, display only the entry properties, no
+            		// transaction properties.
+        			if (!(de instanceof DisplayableTransaction)
+        					&& entryData.getPropertyAccessor().getExtendablePropertySet() == TransactionInfo.getPropertySet()) {
+        				return "";
+        			} else {
+        				return entryData.getValueFormattedForTable(de.getEntry());
+        			}
         		} else {
         			Commodity c = fPage.getAccount().getCurrency();
         			switch (index - fPage.allEntryDataObjects.size()) {

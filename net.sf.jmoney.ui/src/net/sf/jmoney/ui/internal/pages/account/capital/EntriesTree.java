@@ -73,8 +73,10 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
  */
 public class EntriesTree implements IEntriesControl {
 
-    protected static final Color transactionColor          = new Color(Display.getCurrent(), 125, 215, 060);
-    protected static final Color alternateTransactionColor = new Color(Display.getCurrent(), 100, 160, 200);
+//    protected static final Color transactionColor          = new Color(Display.getCurrent(), 125, 215, 060);
+//    protected static final Color alternateTransactionColor = new Color(Display.getCurrent(), 100, 160, 200);
+    protected static final Color transactionColor          = new Color(Display.getCurrent(), 237, 237, 255);
+    protected static final Color alternateTransactionColor = new Color(Display.getCurrent(), 237, 255, 237);
     protected static final Color entryColor                = new Color(Display.getCurrent(), 180, 225, 140);
     protected static final Color alternateEntryColor       = new Color(Display.getCurrent(), 135, 185, 205);
 
@@ -110,25 +112,24 @@ public class EntriesTree implements IEntriesControl {
             
             // TODO: figure out how to get the columns to use up all
             // the width of the screen and no more (i.e. no scrolling).
-            // For time being, multiplying by five gets an approximation,
-            // but surely weights are relative to each other, so this
-            // should make no difference.
-            tlayout.addColumnData(new ColumnWeightData(50, entriesSectionProperty.getMinimumWidth() * 5));
+            tlayout.addColumnData(
+            		new ColumnWeightData(
+            				entriesSectionProperty.getWeight(), 
+							entriesSectionProperty.getMinimumWidth()));
 //            col.pack();
-//            col.setWidth(entriesSectionProperty.getMinimumWidth());
         }
 
         col = new TableColumn(table, SWT.RIGHT);
         col.setText("Debit");
-        tlayout.addColumnData(new ColumnWeightData(50, 70));
+        tlayout.addColumnData(new ColumnWeightData(2, 70));
 
         col = new TableColumn(table, SWT.RIGHT);
         col.setText("Credit");
-        tlayout.addColumnData(new ColumnWeightData(50, 70));
+        tlayout.addColumnData(new ColumnWeightData(2, 70));
 
         col = new TableColumn(table, SWT.RIGHT);
         col.setText("Balance");
-        tlayout.addColumnData(new ColumnWeightData(50, 70));
+        tlayout.addColumnData(new ColumnWeightData(2, 70));
 
         
         table.setLayout(tlayout);
@@ -512,7 +513,15 @@ public class EntriesTree implements IEntriesControl {
         		
         		if (index < fPage.allEntryDataObjects.size()) {
         			EntriesSectionProperty entryData = (EntriesSectionProperty)fPage.allEntryDataObjects.get(index);
-        			return entryData.getValueFormattedForTable(de.getEntry());
+
+        			// If this is an entry line, display only the entry properties, no
+            		// transaction properties.
+        			if (!(de instanceof DisplayableTransaction)
+        					&& entryData.getPropertyAccessor().getExtendablePropertySet() == TransactionInfo.getPropertySet()) {
+        				return "";
+        			} else {
+        				return entryData.getValueFormattedForTable(de.getEntry());
+        			}
         		} else {
         			Commodity c = fPage.getAccount().getCurrency();
         			switch (index - fPage.allEntryDataObjects.size()) {

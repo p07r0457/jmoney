@@ -50,12 +50,12 @@ abstract class EntriesSectionProperty {
 		return accessor.getName();
 	}
 
+	public int getWeight() {
+		return accessor.getWeight();
+	}
+
 	public int getMinimumWidth() {
-		// TODO: Are the values from the accessor correct?
-		// The values there were set to the values used
-		// in Swing and are typed to 'double'.
-		// We need to update these and change them to int.
-		return (int)accessor.getWidth();
+		return accessor.getMinimumWidth();
 	}
 
 	/**
