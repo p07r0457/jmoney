@@ -1093,18 +1093,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		return null;
 	}
 	
-	/**
-	 * Saves the old session.
-	 * Returns false if canceled by user or the save fails.
-	 */
-	public boolean saveOldSession(IWorkbenchWindow window) {
-		ISessionManagement previousSessionManager = JMoneyPlugin.getDefault().getSessionManager();
-		if (previousSessionManager == null) {
-			return true;
-		} else {
-			return previousSessionManager.canClose(window);
-		}
-	}
+
 
 	// Used for writing
 	private Map namespaceMap;  // PropertySet to String (namespace prefix)

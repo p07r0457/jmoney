@@ -26,6 +26,7 @@ package net.sf.jmoney.model2;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  *
@@ -169,12 +170,14 @@ public abstract class AbstractEntryExtension extends ExtensionObject implements 
 		entry.setMemo(memo);
 	}
             
-        public Entry getOriginalEntry() {
-            return entry.getOriginalEntry();
-        }
+
         
         public ExtensionObject getExtension(PropertySet propertySetKey) {
         	return entry.getExtension(propertySetKey);
+        }
+        
+        public Map getExtensionsAsIs() {
+        	return entry.getExtensionsAsIs();
         }
         
         public Object getPropertyValue(PropertyAccessor propertyAccessor) {

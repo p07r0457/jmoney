@@ -127,7 +127,7 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Trans
         }
         for (Iterator iter = entries.iterator(); iter.hasNext(); ) {
         	Entry entry = (Entry)iter.next();
-        	if (entry != thisEntry) {
+        	if (!entry.equals(thisEntry)) {
         		return entry;
         	}
         }
@@ -140,6 +140,15 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Trans
         this.date = date;
     }
     
+/**
+ * 
+ * @param newEntryList A vector containing objects of type
+ * 			MutableEntryImpl.
+ * @param newEntries An output parameter to which are added
+ * 			objects of type EntryImpl.
+ * @param deletedEntries An output parameter to which are added
+ * 			objects of type EntryImpl.
+ */
     // Changes must not be fired until all the changes have been committed.
     // Hence the lists of added and removed entries is returned.
     // TODO: We could return a single list of events to be fired,
@@ -159,8 +168,8 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Trans
             // replacement entries.
             boolean found = false;
             for (Iterator iter2 = newEntryList.iterator(); iter2.hasNext(); ) {
-                Entry mutableEntry = (Entry)iter2.next();
-                if (mutableEntry.getOriginalEntry() == entry) {
+                MutableEntryImpl mutableEntry = (MutableEntryImpl)iter2.next();
+                if (mutableEntry.getOriginalEntry().equals(entry)) {
                     found = true;
                     break;
                 }
@@ -177,11 +186,10 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Trans
         // exists in the original transaction then copy across the properties.
         // If the entry does not exist then add it.
         for (Iterator iter = newEntryList.iterator(); iter.hasNext(); ) {
-            EntryImpl mutableEntry = (EntryImpl)iter.next();
+        	MutableEntryImpl mutableEntry = (MutableEntryImpl)iter.next();
             
             if (mutableEntry.getOriginalEntry() != null) {
-                //                  assert(this.entries.contains(mutableEntry.getOriginalEntry());
-                ((EntryImpl)mutableEntry.getOriginalEntry()).copyProperties(mutableEntry);
+                (mutableEntry.getOriginalEntry()).copyProperties(mutableEntry);
             } else {
                 EntryImpl entry = this.createNewEntry(mutableEntry);
                 newEntries.add(entry);

@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.serializeddatastore.actions;
 
-import java.util.Vector;
-
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionImpl;
@@ -57,7 +55,7 @@ public class NewSessionAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-        if (SerializedDatastorePlugin.getDefault().saveOldSession(window)) {
+        if (JMoneyPlugin.getDefault().saveOldSession(window)) {
         	// Set the initial list of commodities to be the list
         	// of ISO currencies.
         	SimpleListManager commodities = new SimpleListManager();

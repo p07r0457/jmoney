@@ -73,7 +73,7 @@ public class MutableTransactionImpl extends ExtendableObjectHelperImpl implement
         
         for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
             EntryImpl entry = (EntryImpl)iter.next();
-            EntryImpl mutableEntry = new EntryImpl(this, entry);
+            Entry mutableEntry = new MutableEntryImpl(this, entry);
             this.entries.add(mutableEntry);
         }
     }
@@ -142,7 +142,7 @@ public class MutableTransactionImpl extends ExtendableObjectHelperImpl implement
         //
         // The parent will be switched to the actual committed transaction when
         // the transaction is committed.
-        Entry newEntry = new EntryImpl(this);
+        Entry newEntry = new MutableEntryImpl(this);
         entries.addElement(newEntry);
         return newEntry;
     }

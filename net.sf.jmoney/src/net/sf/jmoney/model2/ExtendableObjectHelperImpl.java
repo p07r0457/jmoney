@@ -139,6 +139,35 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 	}
 	
 	/**
+	 * Two or more instantiated objects may represent the same object
+	 * in the datastore.  Such objects should be considered
+	 * the same.  Therefore this method overrides the default
+	 * implementation that is based on Java identity.
+	 * <P>
+	 * @return true if the two objects represent the same object
+	 * 		in the datastore, false otherwise.
+	 */
+	public boolean equals(Object object) {
+		// Two objects represent the same object if and only if
+		// the keys from which they were created are the same.
+		// Therefore we compare the key objects to see if they
+		// both contain the same data.
+		if (object instanceof ExtendableObjectHelperImpl) {
+			ExtendableObjectHelperImpl extendableObject = (ExtendableObjectHelperImpl)object;
+			if (isMutable() || extendableObject.isMutable()) {
+				// Mutable objects are not considered the same as the
+				// original, nor are two mutable objects considered the
+				// same just because they are based on the same original
+				// object.
+				return this == extendableObject;
+			} else {
+				return getObjectKey().equals(extendableObject.getObjectKey());
+			}
+		} else {
+			return false;
+		}
+	}
+	/**
 	 * This method may be called by the datastore plug-in immediately
 	 * after it has constructed this object.
 	 * 
@@ -157,7 +186,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 		// Perform any processing that must take place after an object
 		// has been loaded from the datastore but before the extensions
 		// can be accessed.
-		postLoad();
+//		postLoad();
 		
 		Object extensionObject = extensions.get(propertySetKey);
 		
@@ -257,9 +286,11 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 	 * has been loaded from the datastore but before the extensions
 	 * can be accessed.
 	 */
+/*	
 	protected void postLoad() 
 	{
-	};
+	}
+	*/;
 	
 	/**
 	 * Takes a map of extensions that have been modified and copies

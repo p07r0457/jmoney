@@ -24,6 +24,7 @@
 package net.sf.jmoney.model2;
 
 import java.util.Date;
+import java.util.Map;
 
 /**
  * The data model for an entry.
@@ -49,7 +50,7 @@ public interface Entry extends IMutableExtendableObject {
 	 *
 	 * @exception RuntimeException This entry is not mutable.
 	 */
-	Entry getOriginalEntry();
+//	Entry getOriginalEntry();
 	
 	/**
 	 * Returns the creation.
@@ -123,4 +124,11 @@ public interface Entry extends IMutableExtendableObject {
 	 * Sets the memo.
 	 */
 	void setMemo(String aMemo);
+
+	/**
+	 * @return
+	 */
+	// TODO: Decide if we really need this method in its
+	// current form.
+	Map getExtensionsAsIs();
 }

@@ -32,11 +32,11 @@ import java.util.Map;
 /**
  * The data model for an entry.
  */
-public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
+public class MutableEntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	
-    protected MutableEntryImpl originalEntry = null;
+    protected EntryImpl originalEntry = null;
 	
-	protected IObjectKey transactionKey = null;
+	protected Transaction transaction = null;
 	
 	protected long creation = Calendar.getInstance().getTime().getTime();
 	
@@ -52,99 +52,73 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	
 	protected String memo = null;
 	
-    /**
-     * Constructor used by datastore plug-ins to create
-     * an entry object.
-     * 
-     * @param parent The key to a Transaction object.
-     * 		This parameter must be non-null.
-     * 		The getObject method must not be called on this
-     * 		key from within this constructor because the
-     * 		key may not yet be in a state in which it is
-     * 		capable of materializing an object.   
-     */
-	public EntryImpl(
-				IObjectKey objectKey,
-	    		Map extensions,
-				IObjectKey parent,
-	    		String check,
-	    		String description,
-	    		IObjectKey accountKey,
-	    		Date valuta,
-	    		String memo,
-	    		long amount,
-	    		long creation) {
-		super(objectKey, extensions);
+	/**
+	 * Creates a new entry in a transaction.
+	 * This constructor should be called from MutableTransaction.createEntry() only.
+	 */
 
-		this.creation = creation;
-		this.check = check;
-		this.valuta = valuta;
-		this.description = description;
-		this.account = (Account)accountKey.getObject();
-		this.amount = amount;
-		this.memo = memo;
-		
-        this.transactionKey = parent;
-	}
-	
-	// Called only by datastore after object originally constructed.
-	public void registerWithIndexes() {
-		if (account instanceof CapitalAccountImpl) {
-			CapitalAccountImpl capitalAccount = (CapitalAccountImpl) account;
-			capitalAccount.addEntry(this);
-		}
-	}
-	
-	public boolean isMutable() {
-		return false;
-	}
-
-	// TODO: see how we can remove this method from here,
-	// as it is only required for mutable objects.
-	protected IExtendableObject getOriginalObject() {
-		return null;
-	}
-
-	protected String getExtendablePropertySetId() {
-		return "net.sf.jmoney.entry";
+	MutableEntryImpl(MutableTransactionImpl transaction) {
+		super(null, null);
+		this.transaction = transaction;
 	}
 	
 	/**
-	 * Sets the property values in an entry to the values taken
-	 * from a mutable entry.
-	 *
-	 * This method is used when a new entry or changes to an existing
-	 * entry are to be committed to the database.
+	 * Creates a mutable entry that can be used to modify an existing entry.
+	 * This constructor should be called from MutableTransaction constructor only.
 	 */
-	void copyProperties(Entry sourceEntry) {
-		creation = sourceEntry.getCreation();
-		check = sourceEntry.getCheck();
-		valuta = sourceEntry.getValuta();
-		description = sourceEntry.getDescription();
-		account = (AbstractAccountImpl)sourceEntry.getAccount();
-		amount = sourceEntry.getAmount();
-		memo = sourceEntry.getMemo();
+	MutableEntryImpl(MutableTransactionImpl transaction, EntryImpl originalEntry) {
+		super(null, null);  // TODO: I don't think this is correct.
+
+		this.transaction = transaction;
+		this.originalEntry = originalEntry;
 		
-		copyExtensions(sourceEntry.getExtensionsAsIs());
+		creation = originalEntry.getCreation();
+		check = originalEntry.getCheck();
+		valuta = originalEntry.getValuta();
+		description = originalEntry.getDescription();
+		account = (AbstractAccountImpl)originalEntry.getAccount();
+		amount = originalEntry.getAmount();
+		memo = originalEntry.getMemo();
+	}
+
+	public boolean isMutable() {
+		return true;
+	}
+
+	protected IExtendableObject getOriginalObject() {
+		return originalEntry;
+	}
+	
+	protected String getExtendablePropertySetId() {
+		return "net.sf.jmoney.entry";
 	}
 	
 	/*
 	 * Used by the above to get extension info from mutable entry.
 	 */
 	public Map getExtensionsAsIs() {
-		// Entry interface, but called only from mutable
-		// entries.
-		// TODO: can we tidy this up???
-		throw new RuntimeException("internal error");
+		return extensions;
 	}
 	
 	/**
-	 * Returns the transaction.
+	 * Returns the creation.
 	 */
 	public Transaction getTransaxion() {
-		return (Transaction)transactionKey.getObject();
+		return transaction;
 	}
-
+	
+	/**
+	 * If this entry is a mutable entry then return the original
+	 * entry which is being edited, or, if this mutable entry is
+	 * a new entry that has never been committed to the datastore
+	 * then return null.
+	 *
+	 * @exception RuntimeException This entry is not mutable.
+	 */
+	public EntryImpl getOriginalEntry() {
+		return originalEntry;
+	}
+	
 	/**
 	 * Returns the creation.
 	 */
@@ -224,7 +198,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	public void setCheck(String aCheck) {
 		String oldCheck = this.check;
 		check = (aCheck != null && aCheck.length() == 0) ? null : aCheck;
-		firePropertyChange("check", oldCheck, check);
+//		firePropertyChange("check", oldCheck, check);
 	}
 	
 	/**
@@ -233,7 +207,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	public void setValuta(Date aValuta) {
 		Date oldValuta = this.valuta;
 		valuta = aValuta;
-		firePropertyChange("valuta", oldValuta, valuta);
+//		firePropertyChange("valuta", oldValuta, valuta);
 	}
 	
 	/**
@@ -242,7 +216,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	public void setDescription(String aDescription) {
 		String oldDescription = this.description;
 		description = (aDescription != null && aDescription.length() == 0) ? null : aDescription;
-		firePropertyChange("description", oldDescription, description);
+//		firePropertyChange("description", oldDescription, description);
 	}
 	
 	/**
@@ -251,7 +225,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	public void setAccount(Account newAccount) {
 		Account oldAccount = this.account;
 		this.account = newAccount;
-		firePropertyChange("account", oldAccount, newAccount);
+//		firePropertyChange("account", oldAccount, newAccount);
 	}
 	
 	/**
@@ -260,7 +234,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	public void setAmount(long anAmount) {
 		long oldAmount = this.amount;
 		amount = anAmount;
-		firePropertyChange("amount", new Double(oldAmount), new Double(amount));
+//		firePropertyChange("amount", new Double(oldAmount), new Double(amount));
 	}
 	
 	/**
@@ -269,7 +243,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	public void setMemo(String aMemo) {
 		String oldMemo = this.memo;
 		this.memo = (aMemo != null && aMemo.length() == 0) ? null : aMemo;
-		firePropertyChange("memo", oldMemo, memo);
+//		firePropertyChange("memo", oldMemo, memo);
 	}
 	
 	// Methods for firing property changes
@@ -279,6 +253,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	 * (This method is not called for changes to properties
 	 * in extension property sets).
 	 */
+/*	
 	protected void firePropertyChange(String propertyLocalName, Object oldValue, Object newValue) {
 		if (newValue != null && !newValue.equals(oldValue)
 				|| newValue == null && oldValue != null) {
@@ -305,4 +280,5 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	protected void firePropertyChange(String propertyLocalName, char oldValue, char newValue) {
 		firePropertyChange(propertyLocalName, new Character(oldValue), new Character(newValue));
 	}
+*/	
 }

@@ -26,6 +26,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IElementFactory;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPersistableElement;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.plugin.*;
 import org.eclipse.core.runtime.CoreException;
@@ -189,7 +190,19 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         return sessionManager;
     }
     
-    // Helper method
+	/**
+	 * Saves the old session.
+	 * Returns false if canceled by user or the save fails.
+	 */
+	public boolean saveOldSession(IWorkbenchWindow window) {
+		if (sessionManager == null) {
+			return true;
+		} else {
+			return sessionManager.canClose(window);
+		}
+	}
+	
+	// Helper method
     // TODO: see if we really need this method.
     public Session getSession() {
         return sessionManager == null 

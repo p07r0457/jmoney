@@ -31,7 +31,6 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.swt.widgets.FileDialog;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.SessionImpl;
 import net.sf.jmoney.serializeddatastore.*;
 
 /**
@@ -57,7 +56,7 @@ public class OpenSessionAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-        if (SerializedDatastorePlugin.getDefault().saveOldSession(window)) {
+        if (JMoneyPlugin.getDefault().saveOldSession(window)) {
             
             FileDialog dialog = new FileDialog(window.getShell());
             dialog.setFilterExtensions(new String[] { "*.jmx", "*.xml" });
