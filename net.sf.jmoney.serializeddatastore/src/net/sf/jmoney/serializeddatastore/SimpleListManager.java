@@ -28,7 +28,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
-import net.sf.jmoney.model2.ExtendableObjectHelperImpl;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.MalformedPluginException;
 import net.sf.jmoney.model2.IListManager;
@@ -51,9 +51,9 @@ public class SimpleListManager extends Vector implements IListManager {
 	 }
 
 	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.IListManager#createNewElement(net.sf.jmoney.model2.ExtendableObjectHelperImpl, net.sf.jmoney.model2.PropertySet, java.lang.Object[], net.sf.jmoney.model2.ExtensionProperties[])
+	 * @see net.sf.jmoney.model2.IListManager#createNewElement(net.sf.jmoney.model2.ExtendableObject, net.sf.jmoney.model2.PropertySet, java.lang.Object[], net.sf.jmoney.model2.ExtensionProperties[])
 	 */
-	public IExtendableObject createNewElement(ExtendableObjectHelperImpl parent, PropertySet propertySet/*, Object[] values, ExtensionProperties[] extensionProperties */) {
+	public IExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet/*, Object[] values, ExtensionProperties[] extensionProperties */) {
 		Vector constructorProperties = propertySet.getConstructorProperties();
 		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {
@@ -107,9 +107,9 @@ public class SimpleListManager extends Vector implements IListManager {
 		// to call the constructor.
 		
 		Constructor constructor = propertySet.getConstructor();
-		ExtendableObjectHelperImpl extendableObject;
+		ExtendableObject extendableObject;
 		try {
-			extendableObject = (ExtendableObjectHelperImpl)constructor.newInstance(constructorParameters);
+			extendableObject = (ExtendableObject)constructor.newInstance(constructorParameters);
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			throw new RuntimeException("internal error");

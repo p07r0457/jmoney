@@ -1,3 +1,26 @@
+/*
+*
+*  JMoney - A Personal Finance Manager
+*  Copyright (c) 2002 Johann Gyger <johann.gyger@switzerland.org>
+*  Copyright (c) 2004 Nigel Westbury <westbury@users.sourceforge.net>
+*
+*
+*  This program is free software; you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation; either version 2 of the License, or
+*  (at your option) any later version.
+*
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+*
+*  You should have received a copy of the GNU General Public License
+*  along with this program; if not, write to the Free Software
+*  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+*
+*/
+
 package net.sf.jmoney.serializeddatastore;
 
 import org.eclipse.ui.IWorkbenchWindow;
@@ -49,7 +72,7 @@ import net.sf.jmoney.model2.CapitalAccountImpl;
 import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionImpl;
-import net.sf.jmoney.model2.ExtendableObjectHelperImpl;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.ISessionManagement;
 import net.sf.jmoney.model2.MalformedPluginException;
@@ -233,7 +256,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		catch (ParserConfigurationException e) {
 			throw new RuntimeException("Serious XML parser configuration error");
 		} 
-		catch (SAXException se) {
+		catch (OldFormatJMoneyFileException se) {
 			// This exception will be throw if the file is old format (0.4.5 or prior).
 			// Try reading as an old format file.
 			System.out.println(se.getMessage());
@@ -291,6 +314,9 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		}
 		catch (IOException ioe) { 
 			throw new RuntimeException("IO internal exception error");
+		} catch (SAXException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Fatal SAX parser error");
 		} finally {
 			bin.close();
 			if (gin != null) gin.close();
@@ -336,8 +362,11 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		throws SAXException {
 			if (currentSAXEventProcessor == null) {
 				if (!localName.equals("session")) {
-					throw new SAXException(
-					"only element 'session' is allowed at top level");
+					if (localName.equals("java")) {
+						throw new OldFormatJMoneyFileException();
+					} else {
+						throw new SAXException("Unexpected top level element '" + localName + "' found.  The top level element must be either 'session' (new format file) or 'java' (old format file).");
+					}
 				}
 				
 				currentSAXEventProcessor = new ObjectProcessor(sessionManager, null, "net.sf.jmoney.session");
@@ -723,9 +752,9 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			// to call the constructor.
 			
 			Constructor constructor = propertySet.getConstructor();
-			ExtendableObjectHelperImpl extendableObject;
+			ExtendableObject extendableObject;
 			try {
-				extendableObject = (ExtendableObjectHelperImpl)constructor.newInstance(constructorParameters);
+				extendableObject = (ExtendableObject)constructor.newInstance(constructorParameters);
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
 				throw new RuntimeException("internal error");
