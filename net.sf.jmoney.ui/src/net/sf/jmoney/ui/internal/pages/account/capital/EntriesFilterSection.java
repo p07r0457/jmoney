@@ -21,6 +21,8 @@
  */
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
+import java.util.Iterator;
+
 import net.sf.jmoney.ui.internal.JMoneyUIPlugin;
 
 import org.eclipse.swt.SWT;
@@ -68,9 +70,19 @@ public class EntriesFilterSection extends SectionPart {
         fFilterCombo.setItems(fFilterComboItems);
         fFilterCombo.select(0);
 
+        // Build an array of the localized names of the properties
+        // on which a filter may be based.
+        String[] filterTypes = new String[fPage.allEntryDataObjects.size() + 1];
+        int i = 0;
+        filterTypes[i++] = JMoneyUIPlugin.getResourceString("EntryFilter.entry"); 
+        for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext(); ) {
+        	EntriesSectionProperty entriesSectionProperty = (EntriesSectionProperty)iter.next();
+            filterTypes[i++] = entriesSectionProperty.getText();
+        }
+        
         fFilterTypeCombo = new Combo(container, toolkit.getBorderStyle() | SWT.READ_ONLY);
         toolkit.adapt(fFilterTypeCombo, true, true);
-        fFilterTypeCombo.setItems(EntriesFilter.FILTER_TYPES);
+        fFilterTypeCombo.setItems(filterTypes);
         fFilterTypeCombo.select(0);
         
         fOperationCombo = new Combo(container, toolkit.getBorderStyle() | SWT.READ_ONLY);

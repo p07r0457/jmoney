@@ -24,6 +24,7 @@ package net.sf.jmoney.ui.internal.pages.account.capital;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.Iterator;
 
 import net.sf.jmoney.Constants;
 import net.sf.jmoney.JMoneyPlugin;
@@ -42,6 +43,7 @@ public class EntriesFilter implements Constants {
     /**
      * String representations of the available filter types.
 	 */
+/*	
     public static final String[] FILTER_TYPES = new String[] {
         JMoneyUIPlugin.getResourceString("EntryFilter.entry"),
         JMoneyPlugin.getResourceString("Entry.amount"),
@@ -52,7 +54,7 @@ public class EntriesFilter implements Constants {
         JMoneyPlugin.getResourceString("Entry.memo"),
         JMoneyPlugin.getResourceString("Entry.valuta")
     };
-
+*/
     /**
      * Filter pattern
      */
@@ -63,8 +65,14 @@ public class EntriesFilter implements Constants {
      */
     protected int type = 0;
 
+    protected EntriesPage fPage;
+    
     protected transient PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
+    public EntriesFilter(EntriesPage fPage) {
+    	this.fPage = fPage;
+    }
+    
 	/**
      * @return The filter pattern
      */
@@ -118,6 +126,8 @@ public class EntriesFilter implements Constants {
     /**
      * Filter the entry according to the provided filter criteria.
      * 
+     * The filter matching is on the text as it is displayed in the table.
+     * 
      * @param entry Entry to filter
      * @param account Account whose formatter is used to filter currency properties
      * @param dateFormat Formatter used to filter date properties
@@ -125,7 +135,25 @@ public class EntriesFilter implements Constants {
      * @return True, if "entry" matches the filter criteria; false, else
      */
 	public boolean filterEntry(Entry entry, CurrencyAccount account, VerySimpleDateFormat dateFormat, int filterType) {
-        switch (filterType) {
+		if (filterType == 0) {
+			// 'Entry' selected.  Entry matches if any of the properties
+			// match.
+	        for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext(); ) {
+	        	EntriesSectionProperty entriesSectionProperty = (EntriesSectionProperty)iter.next();
+	            String text = entriesSectionProperty.getValueFormattedForTable(entry);
+	            if (containsPattern(text)) {
+	            	return true;
+	            }
+	        }
+			return false;
+		} else {
+        	EntriesSectionProperty entriesSectionProperty = (EntriesSectionProperty)fPage.allEntryDataObjects.get(filterType-1);
+            String text = entriesSectionProperty.getValueFormattedForTable(entry);
+            return containsPattern(text);
+		}
+/*		
+		
+		switch (filterType) {
         case 0:
             return checkEntry(entry, account, dateFormat);
         case 1:
@@ -145,8 +173,10 @@ public class EntriesFilter implements Constants {
         default:
             return true;
         }
+*/        
     }
 
+/*	
     public boolean checkEntry(Entry entry, CurrencyAccount account, VerySimpleDateFormat df) {
         return pattern.equals("")
             || checkAmount(entry, account)
@@ -185,7 +215,8 @@ public class EntriesFilter implements Constants {
     public boolean checkValuta(Entry e, VerySimpleDateFormat df) {
         return containsPattern(df.format(e.getValuta()));
     }
-
+*/
+	
 	/**
 	 * Add a PropertyChangeListener.
 	 */
