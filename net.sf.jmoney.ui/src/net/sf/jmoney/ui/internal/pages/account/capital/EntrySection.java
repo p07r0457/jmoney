@@ -24,11 +24,17 @@ package net.sf.jmoney.ui.internal.pages.account.capital;
 import java.util.Iterator;
 import java.util.Vector;
 
+import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.Session;
 
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -46,8 +52,9 @@ public class EntrySection extends SectionPart {
 
     protected EntriesPage fPage;
     protected Text fDescription;
-    protected Vector fPropertyControls = new Vector(); 
-
+    
+    protected Entry currentEntry = null;
+    
     public EntrySection(EntriesPage page, Composite parent) {
         super(parent, page.getManagedForm().getToolkit(), Section.DESCRIPTION | Section.TITLE_BAR);
         fPage = page;
@@ -62,9 +69,26 @@ public class EntrySection extends SectionPart {
      * @param entry Entry whose editable properties are presented to the user
      */
     public void update(Entry entry) {
-        for (Iterator iter = fPropertyControls.iterator(); iter.hasNext();) {
-            IPropertyControl control = (IPropertyControl) iter.next();
-            control.load(entry);
+    	currentEntry = entry;
+
+        for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext();) {
+        	EntriesSectionProperty entriesSectionProperty = (EntriesSectionProperty)iter.next();
+        	ExtendableObject object = entriesSectionProperty.getObjectContainingProperty(entry);
+            IPropertyControl control = entriesSectionProperty.getControl();
+
+            // If the object is null this mean the property is not applicable.
+            // An example of when this might happen:
+            // If the the transaction contains more than two entries
+            // (a split transaction) then the properties that are taken
+            // from the other entry (currently account and description)
+            // are not meaningful and the controls should be disabled.
+            // Setting a null object in the controls will blank and
+            // disable the control.
+            
+            // If the property was not editable then no control will exist.
+            if (control != null) {
+            	control.load(object);
+            }
         }
     }
 
@@ -75,20 +99,62 @@ public class EntrySection extends SectionPart {
         layout.numColumns = 10;
         container.setLayout(layout);
 
-        PropertySet extendablePropertySet = PropertySet.getPropertySet(Entry.class);
-        for (Iterator iter = extendablePropertySet.getPropertyIterator3(); iter.hasNext();) {
-            PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
-            if (propertyAccessor.isScalar() && propertyAccessor.isEditable()) {
+        // When the user selects an entry, property values are displayed that
+        // the user may edit.  These properties do not all come from the selected
+        // entry.  Some properties come from the other entry in a double entry,
+        // and some properties come from the transaction.
+        
+        final Session session = fPage.getAccount().getSession();
+
+        // Create an edit control for each property.
+        for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext();) {
+        	final EntriesSectionProperty entriesSectionProperty = (EntriesSectionProperty)iter.next(); 
+            final PropertyAccessor propertyAccessor = entriesSectionProperty.getPropertyAccessor();
+
+            if (propertyAccessor.isEditable()) {
                 Label propertyLabel = new Label(container, 0);
                 propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
-                IPropertyControl propertyControl = propertyAccessor.createPropertyControl(container);
+                final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(container);
+        		propertyControl.load(null);
                 toolkit.adapt(propertyLabel, false, false);
                 toolkit.adapt(propertyControl.getControl(), true, true);
-                fPropertyControls.add(propertyControl);
-            }
+                entriesSectionProperty.setControl(propertyControl);
+				propertyControl.getControl().addFocusListener(
+						new FocusAdapter() {
 
+							// When a control gets the focus, save the old value here.
+							// This value is used in the change message.
+							String oldValueText;
+							
+							public void focusLost(FocusEvent e) {
+								System.out.println("Focus lost: " + propertyAccessor.getLocalName());
+								
+								if (session.isSessionFiring()) {
+									return;
+								}
+								
+								propertyControl.save();
+								String newValueText = propertyAccessor.formatValueForMessage(
+										entriesSectionProperty.getObjectContainingProperty(currentEntry));
+								
+								String description = 
+										"change " + propertyAccessor.getShortDescription() + " property"
+										+ " from " + oldValueText
+										+ " to " + newValueText;
+								
+								session.registerUndoableChange(description);
+							}
+							public void focusGained(FocusEvent e) {
+								System.out.println("Focus gained: " + propertyAccessor.getLocalName());
+								// Save the old value of this property for use in our 'undo' message.
+								oldValueText = propertyAccessor.formatValueForMessage(
+										entriesSectionProperty.getObjectContainingProperty(currentEntry));
+							}
+						});
+            }
         }
 
+        	
         getSection().setClient(container);
         toolkit.paintBordersFor(container);
         refresh();

@@ -21,8 +21,17 @@
  */
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
+import java.util.Iterator;
+import java.util.Vector;
+
 import net.sf.jmoney.IBookkeepingPage;
-import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.fields.TransactionInfo;
+import net.sf.jmoney.model2.CurrencyAccount;
+import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.views.NodeEditor;import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.ui.IMemento;
@@ -40,7 +49,11 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
     public static final String PAGE_ID = "entries";
 
 	protected NodeEditor fEditor;
-	protected EntriesFilterSection fEntriesFilterSection;
+
+	/** Element: EntriesSectionProperty */
+	protected Vector allEntryDataObjects = new Vector();
+
+    protected EntriesFilterSection fEntriesFilterSection;
     protected EntriesSection fEntriesSection;
 	protected EntrySection fEntrySection;
 
@@ -58,7 +71,58 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
      * @see org.eclipse.ui.forms.editor.FormPage#createFormContent(org.eclipse.ui.forms.IManagedForm)
      */
     protected void createFormContent(IManagedForm managedForm) {
-        ScrolledForm form = managedForm.getForm();
+    	// Build an array of all possible properties that may be
+    	// displayed in the table.
+        
+        // Add properties from the transaction.
+        for (Iterator iter = TransactionInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
+            final PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
+            if (propertyAccessor.isScalar()) {
+            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor) {
+					ExtendableObject getObjectContainingProperty(Entry entry) {
+						return entry.getTransaction();
+					}
+            	});
+            }
+        }
+
+        // Add properties from this entry.
+        // For time being, this is all the properties except the account and description,
+        // which come from the other entry.
+        for (Iterator iter = EntryInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
+            PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
+            if (propertyAccessor != EntryInfo.getAccountAccessor() && propertyAccessor != EntryInfo.getDescriptionAccessor()) {
+            	if (propertyAccessor.isScalar() && propertyAccessor.isEditable()) {
+            		allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor) {
+    					ExtendableObject getObjectContainingProperty(Entry entry) {
+    						return entry;
+    					}
+                	});
+            	}
+            }
+        }
+
+        // Add properties from the other entry.
+        // For time being, this is just the account and description.
+        PropertySet extendablePropertySet = EntryInfo.getPropertySet();
+        for (Iterator iter = extendablePropertySet.getPropertyIterator3(); iter.hasNext();) {
+            PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
+            if (propertyAccessor == EntryInfo.getAccountAccessor() || propertyAccessor == EntryInfo.getDescriptionAccessor()) {
+            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor) {
+					ExtendableObject getObjectContainingProperty(Entry entry) {
+						if (entry.getTransaction().hasMoreThanTwoEntries()) {
+							return null;
+						} else {
+							return entry.getTransaction().getOther(entry);
+						}
+					}
+            	});
+            }
+        }
+
+    	
+    	
+    	ScrolledForm form = managedForm.getForm();
         GridLayout layout = new GridLayout();
         form.getBody().setLayout(layout);
 
@@ -77,8 +141,8 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         form.setText("Accounting Entries");
     }
     
-    public Account getAccount () {
-        return (Account) fEditor.getSelectedObject();
+    public CurrencyAccount getAccount () {
+        return (CurrencyAccount) fEditor.getSelectedObject();
     }
 
 	public void saveState(IMemento memento) {
