@@ -75,6 +75,7 @@ public class EntryInfo implements IPropertySetInfo {
 		EntryInfo.propertySet = propertySet;
 		
 		IPropertyControlFactory textControlFactory = new TextControlFactory();
+        IPropertyControlFactory dateControlFactory = new DateControlFactory();
 		
 		IPropertyControlFactory amountControlFactory = new AmountControlFactory() {
 
@@ -91,6 +92,9 @@ public class EntryInfo implements IPropertySetInfo {
 		        editor.setListener(new SessionChangeAdapter() {
 		        		public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
 		        			Entry entry = (Entry)editor.getObject();
+		        			if (entry == null) {
+		        			    return;
+		        			}
 		        			// Has the account property changed?
 		        			if (changedObject == entry && changedProperty == EntryInfo.getAccountAccessor()) {
 		        				editor.updateCommodity(entry.getCommodity());	
@@ -118,11 +122,11 @@ public class EntryInfo implements IPropertySetInfo {
 
 		checkAccessor       = propertyRegistrar.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),        8.0, textControlFactory, null, null);
 		descriptionAccessor = propertyRegistrar.addProperty("description", JMoneyPlugin.getResourceString("Entry.description"), 30.0, textControlFactory, null, null);
-		accountAccessor     = propertyRegistrar.addProperty("account",     JMoneyPlugin.getResourceString("Entry.account"),     30.0, null, null, null);  // TODO
-		valutaAccessor      = propertyRegistrar.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      10.0, null, null, null);  // TODO 
+		accountAccessor     = propertyRegistrar.addProperty("account",     JMoneyPlugin.getResourceString("Entry.account"),     30.0, null, null, null);  // TODO Control factory
+		valutaAccessor      = propertyRegistrar.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      10.0, dateControlFactory, null, null);
 		memoAccessor        = propertyRegistrar.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        30.0, textControlFactory, null, null);
 		amountAccessor      = propertyRegistrar.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      10.0, amountControlFactory, null, null);
-		creationAccessor    = propertyRegistrar.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    10.0, null, null, null);  // TODO
+		creationAccessor    = propertyRegistrar.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    10.0, null, null, null);
 		
 		propertyRegistrar.setObjectDescription("Accounting Entry");
 	}
