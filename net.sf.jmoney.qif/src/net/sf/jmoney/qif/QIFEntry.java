@@ -33,6 +33,7 @@ import net.sf.jmoney.model2.EntryExtension;
 public class QIFEntry extends EntryExtension {
 	
 	private char reconcilingState = ' ';
+	private String address = null;
 	
 	/**
 	 * A default constructor is mandatory for all extension objects.
@@ -49,8 +50,11 @@ public class QIFEntry extends EntryExtension {
 	 * 
 	 * @param reconcilingState
 	 */
-	public QIFEntry(char reconcilingState) {
+	public QIFEntry(
+			char reconcilingState,
+			String address) {
 		this.reconcilingState = reconcilingState;
+		this.address = address;
 	}
 	
 	/**
@@ -60,11 +64,24 @@ public class QIFEntry extends EntryExtension {
 	 * <LI>
 	 * <UL>' ' - the entry not not been reconciled</UL>
 	 * <UL>'*' - the entry is being reconciled</UL>
-	 * <UL>'C' - the entry has cleared and shows on the statement</UL>
+	 * <UL>'X' - the entry has cleared and shows on the statement</UL>
 	 * </LI>
 	 */
 	public char getReconcilingState() {
 		return reconcilingState;
+	}
+	
+	/**
+	 * Gets the address of the payee for the bank account debit represented by
+	 * this entry.
+	 * 
+	 * @return The address, with each line separated by a '/n' character. QIF
+	 *         files usually support up to five lines of address, but there may
+	 *         be a sixth line for an optional message. Null will be returned if
+	 *         no address is set.
+	 */
+	public String getAddress() {
+		return address;
 	}
 	
 	/**
@@ -74,7 +91,7 @@ public class QIFEntry extends EntryExtension {
 	 * <LI>
 	 * <UL>' ' - the entry not not been reconciled</UL>
 	 * <UL>'*' - the entry is being reconciled</UL>
-	 * <UL>'C' - the entry has cleared and shows on the statement</UL>
+	 * <UL>'X' - the entry has cleared and shows on the statement</UL>
 	 * </LI>
 	 */
 	public void setReconcilingState(char reconcilingState) {
@@ -83,7 +100,22 @@ public class QIFEntry extends EntryExtension {
 		processPropertyChange(QIFEntryInfo.getReconcilingStateAccessor(), new Character(oldReconcilingState), new Character(reconcilingState));
 	}
 
+	/**
+	 * Sets the address.
+	 * 
+	 * @param address
+	 *            The address, with each line separated by a '/n' character. QIF
+	 *            files usually support up to five lines of address, but there
+	 *            may be a sixth line for an optional message. Null may be set
+	 *            to indicate no address.
+	 */
+	public void setAddress(String address) {
+		String oldAddress = this.address;
+		this.address = address;
+		processPropertyChange(QIFEntryInfo.getAddressAccessor(), oldAddress, address);
+	}
+
 	static public Object [] getDefaultProperties() {
-		return new Object [] { new Character(' ') };
+		return new Object [] { new Character(' '), null };
 	}
 }

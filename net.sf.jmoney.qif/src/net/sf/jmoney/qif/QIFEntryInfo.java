@@ -22,15 +22,12 @@
 
 package net.sf.jmoney.qif;
 
-import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
+import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
- * @author Nigel
- *
  * Add extra properties to the Entry objects to support QIF import
  * and export.  The plug-in in which this class appears provides support
  * to import and export QIF files.  However not all properties supported
@@ -53,11 +50,14 @@ import net.sf.jmoney.model2.PropertySet;
  * 		import, the property value will be maintained for as long as
  * 		the entry is not deleted and will be written out if a QIF
  * 		export is performed.</LI>
- * <P>
+ *
+ * @author Nigel Westbury
  */
 public class QIFEntryInfo implements IPropertySetInfo {
 
+	private static PropertySet propertySet = null;
 	private static PropertyAccessor reconcilingStateAccessor;
+	private static PropertyAccessor addressAccessor;
 	
     public QIFEntryInfo() {
     }
@@ -67,7 +67,17 @@ public class QIFEntryInfo implements IPropertySetInfo {
 	}
 	
 	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
+		QIFEntryInfo.propertySet = propertySet;
+
 		reconcilingStateAccessor = propertyRegistrar.addProperty("reconcilingState", "what???", 2.0, null, null);
+		addressAccessor = propertyRegistrar.addProperty("address", "what???", 2.0, null, null);
+	}
+
+	/**
+	 * @return
+	 */
+	public static PropertySet getPropertySet() {
+		return propertySet;
 	}
 
 	/**
@@ -75,5 +85,12 @@ public class QIFEntryInfo implements IPropertySetInfo {
 	 */
 	public static PropertyAccessor getReconcilingStateAccessor() {
 		return reconcilingStateAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getAddressAccessor() {
+		return addressAccessor;
 	}	
 }
