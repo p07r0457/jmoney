@@ -38,6 +38,21 @@
    <extension-point id="datastores" name="Datastore Implementations" schema="schema/datastores.exsd"/>
 
    <extension
+      point="org.eclipse.core.runtime.products"
+      id="product">
+      <product
+         name="Branded JMoney"
+         application="net.sf.jmoney.JMoneyApplication">
+         <property
+             name="windowImages" 
+             value="icons/Accounts.gif"/>
+         <property
+             name="appName" 
+             value="JMoney"/>
+      </product>          
+   </extension>
+    
+   <extension
          id="JMoneyApplication"
          name="JMoneyName"
          point="org.eclipse.core.runtime.applications">
@@ -48,6 +63,16 @@
       </application>
    </extension>
    
+	<extension point="org.eclipse.ui.intro">
+		<intro
+      		icon="icons\Accounts.gif"
+      		class="net.sf.jmoney.intro.JMoneyIntroPart"
+      		id="net.sf.jmoney.intro.custom"/>
+		<introProductBinding 
+			productId="net.sf.jmoney.product"
+			introId="net.sf.jmoney.intro.custom"/>
+	</extension>
+
    <extension
          point="org.eclipse.ui.perspectives">
       <perspective
