@@ -15,6 +15,7 @@ import org.jfree.data.MovingAverage;
 import org.jfree.data.time.Day;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.time.TimeSeriesDataItem;
 
 /**
  * @author Faucheux
@@ -32,41 +33,58 @@ public class ActivLineChart extends LineChart {
 
     
     /**
-     * Calculate the values for the all account.
+     * Calculate the values for each selected account.
      */
     protected void createOrUpdateValues(LineChartParameters param) {
 
         // Read the parameters.
         /*String*/Vector accountsToShow = param.accountList;
+        int numberOfAccounts = accountsToShow.size();
         
+        // Collect the dataes
+        TimeSeries timeSeries[] = new TimeSeries[numberOfAccounts]; 
+        for (int i=0; i<numberOfAccounts; i++) {
+            String accountFullName = (String)accountsToShow.get(i);
+            
+            timeSeries[i] = getTimeSerieForAccount(accountFullName, session);
+        }
+
+        // Trick for BALANCE-Graph: we add all the dataes in the same Serie
+        if (param.type == LineChartParameters.BALANCE) {
+            TimeSeries balanceTimeSeries = new TimeSeries("BALANCE");
+            for (int i=0; i<numberOfAccounts; i++) {
+                mixTimeSeries(balanceTimeSeries, timeSeries[i], true /* the debit accounts are already nagative */);
+            }
+            timeSeries[0] = balanceTimeSeries;
+            numberOfAccounts = 1;
+        }
+        
+        // Create the collection of wanted curves
         if (data == null)
             data = new TimeSeriesCollection();
         else
             data.removeAllSeries();
         
-        
-        for (int i=0; i<accountsToShow.size(); i++) {
-            String accountFullName = (String)accountsToShow.get(i);
-            
-            TimeSeries timeSeries = getTimeSerieForAccount(accountFullName, session);
-            if (params.daily)
-                data.addSeries(timeSeries);
+        for (int i=0; i<numberOfAccounts; i++) {
 
-            // Moving averages
+            // Daily values and moving averages
             TimeSeries mav;
             
+            if (params.daily)
+                data.addSeries(timeSeries[i]);
+
             if (param.average30) {
-                mav = MovingAverage.createMovingAverage(timeSeries, accountFullName + " (30 days)", 30, 30);
+                mav = MovingAverage.createMovingAverage(timeSeries[i], timeSeries[i].getName() + " (30 days)", 30, 30);
                 data.addSeries(mav);
             }
 
             if (param.average120) {
-                mav = MovingAverage.createMovingAverage(timeSeries, accountFullName + " (120 days)", 120, 120);
+                mav = MovingAverage.createMovingAverage(timeSeries[i], timeSeries[i].getName() + " (120 days)", 120, 120);
                 data.addSeries(mav);
             }
 
             if (param.average365) {
-                mav = MovingAverage.createMovingAverage(timeSeries, accountFullName + " (365 days)", 365, 365);
+                mav = MovingAverage.createMovingAverage(timeSeries[i], timeSeries[i].getName() + " (365 days)", 365, 365);
                 data.addSeries(mav);
             }
 
@@ -115,7 +133,7 @@ public class ActivLineChart extends LineChart {
                 // When calculating the MOUVEMENT, we have to sum the entries on a day only.
                 if (date.compareTo(dateOfPreviousMouvement) != 0) saldo = 0;
             	saldo = saldo + e.getAmount();
-            } else  if (params.type == LineChartParameters.SALDO_ABSOLUT) {
+            } else  if (params.type == LineChartParameters.SALDO_ABSOLUT || params.type == LineChartParameters.BALANCE) {
                 // Saldo absolut: the entry is added to the last result
             	saldo = saldo + e.getAmount();
             } else if (params.type == LineChartParameters.SALDO_RELATIV) {
@@ -150,4 +168,30 @@ public class ActivLineChart extends LineChart {
 
     }
 
+    /**
+     * Mix two series of dataes by adding or substracting the
+     * values of ts2 to the one of ts1.
+     * @param ts1 			First series. It will be updated 
+     * @param ts2			Second series. Won't be altered.
+     * @param ts2IsToAdd	True if the values of ts2 have to be added to the one of ts1. 
+     * 						False if they have to be substracted
+     * @see the function addAndOrUpdate from TimeSeries. This function has perhaps the same role
+     *      but isn't documented.  
+     * @author Faucheux
+     */
+    void mixTimeSeries (TimeSeries ts1, TimeSeries ts2, boolean ts2IsToAdd) {
+        for (int i=0; i<ts2.getItemCount(); i++) {
+            TimeSeriesDataItem itemOfTs2 = (TimeSeriesDataItem) ts2.getDataItem(i).clone();
+            TimeSeriesDataItem itemOfTs1 = ts1.getDataItem(itemOfTs2.getPeriod());
+            if (! ts2IsToAdd) {
+                itemOfTs2.setValue(new Long ( (-1) * itemOfTs2.getValue().longValue() ));
+            }
+            if (itemOfTs1 != null) {
+                System.out.println("I'm adding " + itemOfTs1.getValue() + " and " + itemOfTs2.getValue());
+                itemOfTs2.setValue(new Long(itemOfTs2.getValue().longValue() + itemOfTs1.getValue().longValue()));
+            }
+            System.out.println("I'm adding " + itemOfTs2.getValue() + " to ts1 for " + itemOfTs2.getPeriod());
+            ts1.addOrUpdate(itemOfTs2.getPeriod(), itemOfTs2.getValue());
+        }
+    }
 }

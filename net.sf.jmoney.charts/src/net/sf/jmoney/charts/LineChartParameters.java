@@ -18,6 +18,7 @@ public class LineChartParameters {
     public static final int SALDO_ABSOLUT = 1;
     public static final int SALDO_RELATIV = 2;
     public static final int MOUVEMENT = 3;
+    public static final int BALANCE = 4;
     
     public /*String*/Vector accountList;
     public Date	fromDate, toDate;

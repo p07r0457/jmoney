@@ -47,7 +47,7 @@ public class LineChartPage implements IBookkeepingPageFactory {
     private final DateFormat df;
     private Button chkDaily, chkAverage30, chkAverage120, chkAverage365;
     private Button chkWithSubaccounts;
-    private Button radSaldoAbsolut, radSaldoRelativ, radMouvement;
+    private Button radSaldoAbsolut, radSaldoRelativ, radMouvement, radBalance;
     
     /**
      * Constructor
@@ -90,7 +90,7 @@ public class LineChartPage implements IBookkeepingPageFactory {
 	    actionGroup.setText("Actions");
 	    actionGroup.setLayout(new CellLayout(2));
 	    
-		(new Label(actionGroup, SWT.NULL)).setText("From date:");
+	    (new Label(actionGroup, SWT.NULL)).setText("From date:");
 		fromDate = new Text (actionGroup, SWT.NULL);
 		fromDate.setText(df.format(new Date(0)));
 		
@@ -118,7 +118,10 @@ public class LineChartPage implements IBookkeepingPageFactory {
 
 		radMouvement = new Button(typeGroup, SWT.RADIO);
 		radMouvement.setText("Mouvement");
-	
+
+		radBalance = new Button(typeGroup, SWT.RADIO);
+		radBalance.setText("Balance");
+
 		chkWithSubaccounts = new Button(actionGroup, SWT.CHECK);
 		chkWithSubaccounts.setText("Include the sub-accounts");
 
@@ -256,6 +259,7 @@ private void createChart() {
     if (radMouvement.getSelection()) 	params.setType(LineChartParameters.MOUVEMENT);
     if (radSaldoAbsolut.getSelection()) 		params.setType(LineChartParameters.SALDO_ABSOLUT);
     if (radSaldoRelativ.getSelection()) 		params.setType(LineChartParameters.SALDO_RELATIV);
+    if (radBalance.getSelection()) 		params.setType(LineChartParameters.BALANCE);
     
     
     
