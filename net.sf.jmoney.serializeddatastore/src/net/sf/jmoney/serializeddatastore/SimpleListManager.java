@@ -22,14 +22,10 @@
 
 package net.sf.jmoney.serializeddatastore;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.MalformedPluginException;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -54,54 +50,45 @@ public class SimpleListManager extends Vector implements IListManager {
 	 */
 	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet/*, Object[] values, ExtensionProperties[] extensionProperties */) {
 		Vector constructorProperties = propertySet.getConstructorProperties();
-		int numberOfParameters = constructorProperties.size();
+		
+		int numberOfParameters = 0;
+		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+			if (propertyAccessor.isList()) {
+				numberOfParameters++;
+			}
+		}
 		if (!propertySet.isExtension()) {
 			numberOfParameters += 3;
 		}
 		Object[] constructorParameters = new Object[numberOfParameters];
 		
-		Object [] values = propertySet.getDefaultPropertyValues2();
-		
 		SimpleObjectKey objectKey = new SimpleObjectKey(sessionManager);
 		
-		constructorParameters[0] = objectKey;
-		constructorParameters[1] = null;
-		constructorParameters[2] = parent.getObjectKey();
+		int index = 0;
+		if (!propertySet.isExtension()) {
+			constructorParameters[0] = objectKey;
+			constructorParameters[1] = null;
+			constructorParameters[2] = parent.getObjectKey();
+			index = 3;
+		}
 		
-		// For all lists, set the Collection object to be a Vector.
-		// For all primative properties, get the value from the passed object.
-		// For all extendable objects, we get the property value from
-		// the passed object and then get the object key from that.
-		// This works because all objects must be in a list and that
-		// list owns the object, not us.
-		int valueIndex = 0;
+		// Construct the extendable object using the 'default' constructor.
+		// This constructor takes the minimum number of parameters necessary
+		// to properly construct the object, setting default values for all
+		// the scalar properties.  We must, however, pass objects that manage
+		// any lists within the object.
+		
+		// Add a list manager for each list property in the object.
 		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			int index = propertyAccessor.getIndexIntoConstructorParameters();
-			if (propertyAccessor.isScalar()) {
-				// Get the value from the passed object array.
-				Object value = values[valueIndex++];
-				
-				if (value != null) {
-					if (propertyAccessor.getValueClass().isPrimitive()
-							|| propertyAccessor.getValueClass() == String.class
-							|| propertyAccessor.getValueClass() == Long.class
-							|| propertyAccessor.getValueClass() == Date.class) {
-						constructorParameters[index] = value;
-					} else {
-						constructorParameters[index] = ((ExtendableObject)value).getObjectKey();
-					}
-				} else { 
-					constructorParameters[index] = null;
-				}
-			} else {
-				// Must be an element in an array.
-				constructorParameters[index] = new SimpleListManager(sessionManager);
+			if (propertyAccessor.isList()) {
+				constructorParameters[index++] = new SimpleListManager(sessionManager);
 			}
 		}
 		
 		// We can now create the object.
-		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
+		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructDefaultImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 

@@ -24,6 +24,8 @@
 package net.sf.jmoney.serializeddatastore;
 
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.internal.dialogs.EventLoopProgressMonitor;
+import org.eclipse.ui.internal.progress.ProgressMonitorJobsDialog;
 import org.eclipse.ui.plugin.*;
 import org.eclipse.core.runtime.*;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -38,6 +40,7 @@ import java.io.FileInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
@@ -63,6 +66,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -130,7 +134,6 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * Returns the string from the plugin's resource bundle,
 	 * or 'key' if not found.
 	 */
-	
 	public static String getResourceString(String key) {
 		ResourceBundle bundle = SerializedDatastorePlugin.getDefault().getResourceBundle();
 		try {
@@ -147,79 +150,165 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		return resourceBundle;
 	}
 	
-	/**
-	 * Called when the default startup session is to be created.
-	 *
-	 * Normally sessions are created in response to menu action items
-	 * added by the datastore plug-in.  However, when the user exits
-	 * from the framework, information about the current session is
-	 * saved and the same datastore is re-loaded when the framework
-	 * is restarted.
-	 */
-	// TODO remove this?
-	public void openDefaultSession(Properties defaultSessionProperties, IWorkbenchWindow window) {
-		String sessionFileName = defaultSessionProperties.getProperty("file");
-		File sessionFile = new File(sessionFileName);
-		SessionManager sessionManager = readSession(sessionFile, window);
-		JMoneyPlugin.getDefault().setSessionManager(sessionManager);
-	}
+	private SessionManager result;
 	
 	/**
 	 * Read session from file.
 	 */
-	public SessionManager readSession(File sessionFile, IWorkbenchWindow window) {
-		SessionManager result;
-		
-		String title = JMoneyPlugin.getResourceString("Dialog.Wait.Title");
-		String message = SerializedDatastorePlugin.getResourceString("MainFrame.OpeningFile")
-		+ " "
-		+ sessionFile;
-		
-		ProgressBar progressBar = new ProgressBar(
-				window.getShell(), SWT.HORIZONTAL);
-		
-		// Show the progress bar at 0 in a range of 0 to 100.
-		// TODO Update the progress bar as the input file is read.
-		// This can be done by writing a wrapper around the input stream class.
-		// This wrapper updates the progress bar as data is read from the input
-		// stream.
-		progressBar.setMinimum(0);
-		progressBar.setMaximum(100);
-		progressBar.setSelection(0);
-		
-		/*        
-		 MessageDialog waitDialog =
-		 new MessageDialog(
-		 window.getShell(), 
-		 title, 
-		 null, // accept the default window icon
-		 message, 
-		 MessageDialog.INFORMATION, 
-		 new String[] { IDialogConstants.OK_LABEL }, 0);
-		 waitDialog.open();
-		 */					
-		
+	public SessionManager readSession(final File sessionFile, final IWorkbenchWindow window) {
 		try {
-			result = readSessionQuietly(sessionFile);
-			//          waitDialog.close();
-			progressBar.dispose();
-		} catch (Exception ex) {
-			//  		waitDialog.close();
-			ex.printStackTrace();
-			progressBar.dispose();
+			if (sessionFile.length() < 500000) {
+				// If the file is smaller than 500K then it is
+				// not worthwhile using a progress monitor.
+				// The monitor would flash up so quickly that the
+				// user could not read it.
+				result = readSessionQuietly(sessionFile, null);
+			} else {
+				IRunnableWithProgress readSessionRunnable = new IRunnableWithProgress() {
+					
+					public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+						// Set the number of work units in the monitor where
+						// one work unit is reading 100 Kbytes.
+						int workUnits = (int)(sessionFile.length()/100000);
+						
+						monitor.beginTask(
+								SerializedDatastorePlugin.getResourceString("MainFrame.OpeningFile") + " " + sessionFile, 
+								workUnits);   
+						
+						try {
+							result = readSessionQuietly(sessionFile, monitor);
+						} catch (Exception ex) {
+							throw new InvocationTargetException(ex);
+						} finally {
+							monitor.done();
+						}
+					}
+					
+				};
+				
+				ProgressMonitorJobsDialog progressDialog = new ProgressMonitorJobsDialog(window.getShell());
+				
+				try {
+					progressDialog.run(true, false, readSessionRunnable);
+				} catch (InvocationTargetException e) {
+					throw e.getCause();
+				}
+				
+				EventLoopProgressMonitor monitor = new EventLoopProgressMonitor(new NullProgressMonitor());
+			}
+		} catch (InterruptedException e) {
+			// If the user inturrupted the read then no error message is displayed.
+			// Currently this cannot happen because the cancel button is not
+			// enabled in the progress dialog, but if the cancel button is enabled
+			// then we return null which will result in no session being opened and
+			// the previous session, if any, will remain open.
+			result = null;
+		} catch (Throwable ex) {
+			System.err.println(ex.toString());
+			ex.printStackTrace(System.err);
 			fileReadError(sessionFile, window);
 			result = null;
 		}
-		
 		return result;
 	}
 	
-	public SessionManager readSessionQuietly(File sessionFile) throws FileNotFoundException, IOException, CoreException {
-		SessionManager sessionManager;
+	/**
+	 * This class extends FileInputStream and overrides the
+	 * various read methods, counting the total number of
+	 * bytes read and updating the progress monitor.
+	 * <P>
+	 * This stream is used as input to BufferedInputStream,
+	 * either directly or through GZIPInputStream.  Of all
+	 * the read methods, only read(byte b[], int off, int len)
+	 * is used by BufferedInputStream, and read() is used
+	 * occassionally by GZIPInputStream.  However, for completeness,
+	 * all the read methods have been overridden to update
+	 * the byte count.
+	 * Other methods that may affect the progress, such as
+	 * skip(n), do not appear to be called by the above
+	 * consumers of the stream.
+	 */
+	private class FileInputStreamWithMonitor extends FileInputStream {
+
+		private IProgressMonitor monitor;
+		private long totalBytes = 0;
+		private int previousTotalWork = 0;
+
+		/**
+		 * @param monitor The monitor to be updated.  This
+		 * 			parameter must be non-null.  The monitor
+		 * 			must have been initialized for an expected
+		 * 			amount of total work units where one work unit
+		 * 			is reading 100 KBytes of the input stream.
+		 */
+		FileInputStreamWithMonitor(File sessionFile, IProgressMonitor monitor) 
+			throws FileNotFoundException {
+			super(sessionFile);
+			this.monitor = monitor;
+		}
 		
-		FileInputStream fin = new FileInputStream(sessionFile);
-		// Patch to aid with testing.  If the extension is 'xml'
-		// then assume the xml is not compressed.
+		/* This method reads a single byte at a time.
+		 * GZIPInputStream uses this method occassionally, so we increment
+		 * the count of bytes read just to stop errors creeping
+		 * in.  However, we don't bother to update the monitor.
+		 */
+		public int read() throws IOException {
+			totalBytes++;
+			return super.read();
+		}
+
+	    public int read(byte b[]) throws IOException {
+	    	int bytesRead = super.read(b);
+			updateProgress(bytesRead);
+			return bytesRead;
+	    }
+
+	    public int read(byte b[], int off, int len) throws IOException {
+		int bytesRead = super.read(b, off, len);
+		updateProgress(bytesRead);
+		return bytesRead;
+	    }
+
+	    /**
+	     * Update the progress monitor.  The number of bytes read from
+	     * the input stream is passed to this method and used to measure
+	     * the progress.
+	     *
+	     * @param bytesRead the number of bytes read from the input stream.
+	     */
+	    private void updateProgress(int bytesRead) {
+	    	if (bytesRead > 0) {
+	    		totalBytes += bytesRead;
+	    		int newTotalWork = (int)(totalBytes/100000);
+	    		if (newTotalWork > previousTotalWork) {
+	    			monitor.worked(newTotalWork - previousTotalWork);
+	    			previousTotalWork = newTotalWork;
+	    		}
+	    	}
+	    }
+	}
+	
+	/**
+	 * Read a session from file, creating a session manager and a
+	 * session.
+	 *
+	 * @param monitor Monitor into which this method will call
+	 * 			the beginTask method and update the progress.
+	 * 			This parameter may be null in which this method
+	 * 			will read the session without feedback on the progress.
+	 */
+	public SessionManager readSessionQuietly(File sessionFile, IProgressMonitor monitor) throws FileNotFoundException, IOException, CoreException {
+		SessionManager sessionManager;
+
+		InputStream fin;
+		if (monitor == null) {
+			fin = new FileInputStream(sessionFile);
+		} else {
+			fin = new FileInputStreamWithMonitor(sessionFile, monitor);
+		}
+		
+		// If the extension is 'xml' then no compression is used.
+		// If the extension is 'jmx' then compression is used.
 		GZIPInputStream gin = null;
 		BufferedInputStream bin;
 		if (sessionFile.getName().endsWith(".xml")) {
@@ -267,9 +356,14 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			if (gin != null) gin.close();
 			fin.close();
 			
-			fin = new FileInputStream(sessionFile);
-			// Patch to aid with testing.  If the extension is 'xml'
-			// then assume the xml is not compressed.
+			if (monitor == null) {
+				fin = new FileInputStream(sessionFile);
+			} else {
+				fin = new FileInputStreamWithMonitor(sessionFile, monitor);
+			}
+			
+			// If the extension is 'xml' then no compression is used.
+			// If the extension is 'jmx' then compression is used.
 			if (sessionFile.getName().endsWith(".xml")) {
 				bin = new BufferedInputStream(fin);
 			} else {
@@ -1134,68 +1228,111 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	/**
 	 * Write session to file.
 	 */
-	public void writeSession(SessionManager sessionManager, File sessionFile, IWorkbenchWindow window)  {
+	public void writeSession(final SessionManager sessionManager, final File sessionFile, IWorkbenchWindow window)  {
 		// If there is any modified data in the controls in any of the
 		// views, then commit these to the database now.
-		// TODO: How do we do this?  Should framework call first?
-		//  bookkeepingWindow.commitRemainingUserChanges();
-		
-		/* TODO: get the wait dialog working
-		 MessageDialog waitDialog =
-		 new MessageDialog(window.getShell(), Constants.LANGUAGE.getString("Dialog.Wait.Title"), 
-		 null, // accept the default window icon
-		 SerializerConstants.LANGUAGE.getString("MainFrame.SavingFile") + " " + sessionFile,
-		 MessageDialog.INFORMATION, new String[] { }, 0);
-		 waitDialog.open();
-		 */
+		// TODO: How do we do this?  Should framework call first
+		// commitRemainingUserChanges();
 		
 		try {
-			FileOutputStream fout = new FileOutputStream(sessionFile);
-			// Patch to aid with testing.  If the extension is 'xml'
-			// then do not compress.
-			BufferedOutputStream bout;
-			if (sessionFile.getName().endsWith(".xml")) {
-				bout = new BufferedOutputStream(fout);
+			if (/*session.getTransactionCount() < 1000*/ false) {
+				// If the session has less than 1000 transactions then it is
+				// not worthwhile using a progress monitor.
+				// The monitor would flash up so quickly that the
+				// user could not read it.
+				writeSessionQuietly(sessionManager, sessionFile, null);
 			} else {
-				GZIPOutputStream gout = new GZIPOutputStream(fout);
-				bout = new BufferedOutputStream(gout);
+				IRunnableWithProgress writeSessionRunnable = new IRunnableWithProgress() {
+					
+					public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+						// Set the number of work units in the monitor where
+						// one work unit is writing 500 transactions
+						//int workUnits = (int)(session.getTransactionCount()/500);
+						int workUnits =  IProgressMonitor.UNKNOWN;
+						
+						monitor.beginTask(
+								SerializedDatastorePlugin.getResourceString("MainFrame.SavingFile") + " " + sessionFile, 
+								workUnits);   
+						
+						try {
+							writeSessionQuietly(sessionManager, sessionFile, monitor);
+						} catch (Exception ex) {
+							throw new InvocationTargetException(ex);
+						} finally {
+							monitor.done();
+						}
+					}
+					
+				};
+				
+				ProgressMonitorJobsDialog progressDialog = new ProgressMonitorJobsDialog(window.getShell());
+				
+				try {
+					progressDialog.run(true, false, writeSessionRunnable);
+				} catch (InvocationTargetException e) {
+					throw e.getCause();
+				}
+				
+				EventLoopProgressMonitor monitor = new EventLoopProgressMonitor(new NullProgressMonitor());
 			}
-			
-			namespaceMap = new HashMap();
-			accountId = 1;
-			accountIdMap = new HashMap();
-			
-			try {
-				StreamResult streamResult = new StreamResult(bout);
-				SAXTransformerFactory tf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
-				// SAX2.0 ContentHandler.
-				TransformerHandler hd = tf.newTransformerHandler();
-				Transformer serializer = hd.getTransformer();
-				serializer.setOutputProperty(OutputKeys.ENCODING,"ISO-8859-1");
-//				serializer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM,"users.dtd");
-				serializer.setOutputProperty(OutputKeys.INDENT,"no");
-				hd.setResult(streamResult);
-				hd.startDocument();
-				writeObject(hd, sessionManager.getSession(), "session", Session.class);
-				hd.endDocument();
-			} catch (SAXException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (TransformerConfigurationException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			bout.close();
-			fout.close();
-			
-			sessionManager.setModified(false);
-
-			//       waitDialog.close();
-		} catch (IOException ex) {
-			//       waitDialog.close();
+		} catch (InterruptedException e) {
+			// If the user inturrupted the write then we do nothing.
+			// Currently this cannot happen because the cancel button is not
+			// enabled in the progress dialog, but if the cancel button is enabled
+			// then a message should perhaps be displayed here indicating that the
+			// file is unusable.
+		} catch (Throwable ex) {
+			System.err.println(ex.toString());
+			ex.printStackTrace(System.err);
 			fileWriteError(sessionFile, window);
 		}
+	}
+	
+
+	/**
+	 * Write session to file.
+	 *
+	 * @param monitor Monitor into which this method will call
+	 * 			the beginTask method and update the progress.
+	 * 			This parameter may be null in which this method
+	 * 			will write the session without feedback on the progress.
+	 */
+	// TODO: update the monitor, perhaps by counting the transactions. 
+	public void writeSessionQuietly(SessionManager sessionManager, File sessionFile, IProgressMonitor monitor)  
+	throws IOException, SAXException, TransformerConfigurationException {
+
+		FileOutputStream fout = new FileOutputStream(sessionFile);
+		
+		// If the extension is 'xml' then no compression is used.
+		// If the extension is 'jmx' then compression is used.
+		BufferedOutputStream bout;
+		if (sessionFile.getName().endsWith(".xml")) {
+			bout = new BufferedOutputStream(fout);
+		} else {
+			GZIPOutputStream gout = new GZIPOutputStream(fout);
+			bout = new BufferedOutputStream(gout);
+		}
+		
+		namespaceMap = new HashMap();
+		accountId = 1;
+		accountIdMap = new HashMap();
+		
+		StreamResult streamResult = new StreamResult(bout);
+		SAXTransformerFactory tf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
+		// SAX2.0 ContentHandler.
+		TransformerHandler hd = tf.newTransformerHandler();
+		Transformer serializer = hd.getTransformer();
+		serializer.setOutputProperty(OutputKeys.ENCODING,"ISO-8859-1");
+		serializer.setOutputProperty(OutputKeys.INDENT,"no");
+		hd.setResult(streamResult);
+		hd.startDocument();
+		writeObject(hd, sessionManager.getSession(), "session", Session.class);
+		hd.endDocument();
+		
+		bout.close();
+		fout.close();
+		
+		sessionManager.setModified(false);
 	}
 	
 
@@ -1293,6 +1430,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				if (!propertySet2.isExtension()
 						|| object.getExtension(propertySet2) != null) {
 					String name = propertyAccessor.getLocalName();
+					
 					for (Iterator elementIter = object.getPropertyIterator(propertyAccessor); elementIter.hasNext(); ) {
 						ExtendableObject listElement = (ExtendableObject)elementIter.next();
 						writeObject(hd, listElement, propertyAccessor.getLocalName(), propertyAccessor.getValueClass());
@@ -1610,7 +1748,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	public static boolean checkSessionImplementation(IWorkbenchWindow window) {
 		ISessionManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		if (sessionManager == null) {
-			MessageDialog waitDialog =
+			MessageDialog dialog =
 				new MessageDialog(
 						window.getShell(), 
 						"Menu item unavailable", 
@@ -1618,12 +1756,12 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 						"No session is open.", 
 						MessageDialog.ERROR, 
 						new String[] { IDialogConstants.OK_LABEL }, 0);
-			waitDialog.open();
+			dialog.open();
 			return false;
 		} else if (sessionManager instanceof SessionManager) {
 			return true;
 		} else {
-			MessageDialog waitDialog =
+			MessageDialog dialog =
 				new MessageDialog(
 						window.getShell(), 
 						"Menu item unavailable", 
@@ -1637,8 +1775,42 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 						"'new' or 'open' action.", 
 						MessageDialog.ERROR, 
 						new String[] { IDialogConstants.OK_LABEL }, 0);
-			waitDialog.open();
+			dialog.open();
 			return false;
 		}
+	}
+
+	/**
+	 * Create a new empty session.
+	 * 
+	 * @return A new SessionManager object.
+	 */
+	public SessionManager newSession() {
+    	SessionManager sessionManager = new SessionManager(null);
+    	
+    	// Set the initial list of commodities to be the list
+    	// of ISO currencies.
+    	SimpleListManager commodities = new SimpleListManager(sessionManager);
+    	
+    	SimpleObjectKey sessionKey = new SimpleObjectKey(sessionManager);
+    	
+    	// TODO: rather than hard code this constructor, use
+    	// more generalized code.  Plug-ins may have added
+    	// additional properties to the session.
+    	Session newSession = new Session(
+    			sessionKey,
+    			null,
+				null,
+				commodities,
+				new SimpleListManager(sessionManager),
+				new SimpleListManager(sessionManager),
+				null
+			);
+    	
+    	sessionKey.setObject(newSession);
+    	
+    	sessionManager.setSession(newSession);
+
+    	return sessionManager;
 	}
 }

@@ -33,7 +33,10 @@ import org.eclipse.ui.IPersistableElement;
 import org.eclipse.ui.IWorkbenchWindow;
 
 /**
- * Holds the fields that will be saved in a file.
+ * Provides the ISessionManager implementation.
+ * All plug-ins that provide a datastore
+ * implementation must provide an implementation of the
+ * ISessionManager interface.
  */
 public class SessionManager implements ISessionManager {
 
@@ -100,8 +103,6 @@ public class SessionManager implements ISessionManager {
         this.modified = modified;
     }
 
-
-
     public boolean canClose(IWorkbenchWindow window) {
         if (isModified()) {
             return SerializedDatastorePlugin.getDefault().requestSave(this, window);
@@ -123,26 +124,21 @@ public class SessionManager implements ISessionManager {
         }
     }
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.ISessionManager#getFactoryId()
-	 */
-	public String getFactoryId() {
-		return "net.sf.jmoney.serializeddatastore.factoryid";
-	}
-
 	private IPersistableElement persistableElement 
 	= new IPersistableElement() {
 		public String getFactoryId() {
-			return "net.sf.jmoney.serializeddatastore.factoryid";
+			return "net.sf.jmoney.serializeddatastore.SessionFactory";
 		}
 		public void saveState(IMemento memento) {
-			// The session must have been saved by now, because
-			// JMoney will not closed until the Session object says
-			// it is ok to close, and the Session object will not
-			// say it is ok to close unless it has available a file
-			// name to which the session can be saved.  (It will ask
-			// the user if the session was created using the New menu).
-			memento.putString("fileName", sessionFile.getPath());
+			// If no session file is set then the session has never been saved.
+			// Although the canClose method will have been called prior to this
+			// during the shutdown process, it is possible that the user answered
+			// 'no' when asked if the session should be saved.  We write no file name
+			// in this situation and the code to re-create the session will, in this case,
+			// re-create an empty session.
+			if (sessionFile != null) {
+				memento.putString("fileName", sessionFile.getPath());
+			}
 		}
 	};
 	

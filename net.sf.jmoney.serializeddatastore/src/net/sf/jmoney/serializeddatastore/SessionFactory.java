@@ -26,11 +26,14 @@ import java.io.File;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
+import net.sf.jmoney.model2.ISessionFactory;
+import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.ui.IElementFactory;
 import org.eclipse.ui.IMemento;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 /**
@@ -41,7 +44,7 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
  * delegated to it.
  * @see IWorkbenchWindowActionDelegate
  */
-public class SessionFactory implements IElementFactory {
+public class SessionFactory implements ISessionFactory {
 //	private IWorkbenchWindow window;
 	/**
 	 * The constructor.
@@ -52,22 +55,30 @@ public class SessionFactory implements IElementFactory {
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IElementFactory#createElement(org.eclipse.ui.IMemento)
 	 */
-	public IAdaptable createElement(IMemento memento) {
+	public ISessionManager createElement(IMemento memento, IWorkbenchWindow window) {
+		SessionManager sessionManager;
+		
 		String fileName = memento.getString("fileName");
         if (fileName != null) {
             File sessionFile = new File(fileName);
             try {
-                SessionManager sessionManager = SerializedDatastorePlugin.getDefault().readSessionQuietly(sessionFile);
-                if (sessionManager != null) {
-                    JMoneyPlugin.getDefault().setSessionManager(sessionManager);
-                }
-                return sessionManager;
+                sessionManager = SerializedDatastorePlugin.getDefault().readSession(sessionFile, window);
             } catch (Exception ex) {
-            	// If we could not read the session, we log the error
-            	// but are silent to the user.
-            	// TODO log error
+            	// If we could not read the session, an error message will already
+            	// have been displayed to the user by the above method.
+            	
+            	// Returning null indicates that the session could not be
+            	// opened and no session should be set.
+            	sessionManager = null;
             }
+        } else {
+        	// No file name is set.  This can happen if the workbench was last closed
+        	// with a session that had never been saved.  Although the user was prompted
+        	// to save the session when the workbench closed, the user may have pressed
+        	// the 'no' button.  We create an new empty session.
+            sessionManager = SerializedDatastorePlugin.getDefault().newSession();
         }
-        return null;
+
+        return sessionManager;
 	}
 }
