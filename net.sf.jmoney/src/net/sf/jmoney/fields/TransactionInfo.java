@@ -64,14 +64,11 @@ public class TransactionInfo implements IPropertySetInfo {
 	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
 		TransactionInfo.propertySet = propertySet;
 
-		// TODO implement a date control factory.
-		// For time being this does not matter because the transaction
-		// dates are all entered by the Swing panels, none by
-		// SWT panels.
 		IPropertyControlFactory textControlFactory = new TextControlFactory();
+        IPropertyControlFactory dateControlFactory = new DateControlFactory();
 		
 		entriesAccessor = propertyRegistrar.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), Entry.class, null);
-		dateAccessor = propertyRegistrar.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), 10.0, textControlFactory, null, null);
+		dateAccessor = propertyRegistrar.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), 10.0, dateControlFactory, null, null);
 		
 		propertyRegistrar.setObjectDescription("Financial Transaction");
 	}
