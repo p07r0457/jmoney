@@ -45,12 +45,15 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableLayout;
+//import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -104,14 +107,18 @@ public class EntriesTable implements IEntriesControl {
 	 * @param container
 	 * @param page
 	 */
-	public EntriesTable(Composite container, EntriesPage page) {
+	public EntriesTable(final Composite container, EntriesPage page) {
 		this.fPage = page;
 		FormToolkit toolkit = page.getEditor().getToolkit();
 		
         fTable = toolkit.createTable(container, SWT.FULL_SELECTION);
-        GridData gd = new GridData(GridData.FILL_BOTH);
-        gd.heightHint = 100;
-        fTable.setLayoutData(gd);
+
+        GridData gridData = new GridData(GridData.FILL_BOTH);
+        gridData.heightHint = 100;
+        gridData.widthHint = 100;
+        gridData.grabExcessHorizontalSpace = true;
+        gridData.grabExcessVerticalSpace = true;
+        fTable.setLayoutData(gridData);
 
         TableLayout tlayout = new TableLayout();
         
@@ -120,11 +127,12 @@ public class EntriesTable implements IEntriesControl {
         	
         	final TableColumn col = new TableColumn(fTable, SWT.NULL);
             col.setText(entriesSectionProperty.getText());
+            
             tlayout.addColumnData(
             		new ColumnWeightData(
             				entriesSectionProperty.getWeight(), 
 							entriesSectionProperty.getMinimumWidth()));
-            
+					
             visibleEntryDataObjects.add(entriesSectionProperty);
 
             col.addSelectionListener(new SelectionAdapter() {
@@ -277,10 +285,6 @@ public class EntriesTable implements IEntriesControl {
     			if (!visible) return;
     		}
     	});
-    	
-		
-		
-//		fTable.pack();
 	}
 
 	/* (non-Javadoc)

@@ -29,7 +29,6 @@ import java.util.Iterator;
 import net.sf.jmoney.Constants;
 import net.sf.jmoney.VerySimpleDateFormat;
 import net.sf.jmoney.model2.CurrencyAccount;
-import net.sf.jmoney.model2.Entry;
 
 /**
  * TODO Move to non-UI plug-in

@@ -24,8 +24,8 @@ package net.sf.jmoney.ui.internal.pages.account.capital;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
+
 import net.sf.jmoney.IBookkeepingPage;
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
@@ -42,7 +42,6 @@ import net.sf.jmoney.ui.internal.JMoneyUIPlugin;
 import net.sf.jmoney.views.NodeEditor;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -188,9 +187,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         toolBarManager.add(
         		new Action("tree", JMoneyUIPlugin.createImageDescriptor("icons/TreeView.gif")) {
         			public void run() {
-        				if (isChecked()) {
-        					fEntriesSection.setTreeView();
-        				}
+       					fEntriesSection.setTreeView();
         			}
         		}
         );
@@ -198,9 +195,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         toolBarManager.add(
         		new Action("table", JMoneyUIPlugin.createImageDescriptor("icons/TableView.gif")) {
         			public void run() {
-        				if (isChecked()) {
-        					fEntriesSection.setTableView();
-        				}
+       					fEntriesSection.setTableView();
         			}
         		}
         );

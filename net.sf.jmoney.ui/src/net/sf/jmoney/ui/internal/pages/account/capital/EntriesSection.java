@@ -18,12 +18,10 @@
  */
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
-import java.util.Date;
 import java.util.Iterator;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
-import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -31,7 +29,6 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
-import net.sf.jmoney.ui.internal.pages.account.capital.EntriesSection.DisplayableTransaction;
 
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -79,6 +76,8 @@ public class EntriesSection extends SectionPart {
 
         GridLayout layout = new GridLayout();
         layout.numColumns = 1;
+        layout.marginHeight = 0;
+        layout.marginWidth = 0;
         container.setLayout(layout);
 
         // Create the control that contains the Table or TableTree control.
@@ -93,9 +92,8 @@ public class EntriesSection extends SectionPart {
         
         GridData gridData = new GridData(GridData.FILL_BOTH);
         gridData.heightHint = 300;
-        gridData.widthHint = 800;
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData.verticalAlignment = GridData.FILL;
+        layout2.marginHeight = 0;
+        layout2.marginWidth = 0;
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.grabExcessVerticalSpace = true;
         containerOfEntriesControl.setLayoutData(gridData);
@@ -269,12 +267,8 @@ public class EntriesSection extends SectionPart {
     	}
     	
     	fEntriesControl.dispose();
-    	
     	fEntriesControl = new EntriesTable(containerOfEntriesControl, fPage);
-
-        toolkit.paintBordersFor(containerOfEntriesControl);
-        refresh();
-        containerOfEntriesControl.pack(true);
+        containerOfEntriesControl.layout(false);
 	}
 
 	/**
@@ -288,15 +282,8 @@ public class EntriesSection extends SectionPart {
     	}
     	
     	fEntriesControl.dispose();
-    	
     	fEntriesControl = new EntriesTree(containerOfEntriesControl, fPage);
-
-    	containerOfEntriesControl.redraw();
-    	containerOfEntriesControl.update();
-    	
-        toolkit.paintBordersFor(containerOfEntriesControl);
-//        refresh();
-        containerOfEntriesControl.pack(true);
+        containerOfEntriesControl.layout(false);
     }
 
     class DisplayableTransaction { 

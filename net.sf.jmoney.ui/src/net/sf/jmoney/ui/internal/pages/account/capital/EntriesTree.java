@@ -24,7 +24,6 @@ package net.sf.jmoney.ui.internal.pages.account.capital;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
@@ -34,7 +33,6 @@ import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.Transaction;
-import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableTransaction;
 
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -44,7 +42,6 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TableTreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
@@ -99,10 +96,8 @@ public class EntriesTree implements IEntriesControl {
     	Table table = fTableTree.getTable();
     	
         GridData gridData = new GridData(GridData.FILL_BOTH);
-        gridData.heightHint = 800;
-        gridData.heightHint = 300;
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData.verticalAlignment = GridData.FILL;
+        gridData.heightHint = 500;
+        gridData.widthHint = 100;
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.grabExcessVerticalSpace = true;
 		fTableTree.setLayoutData(gridData);
@@ -116,8 +111,6 @@ public class EntriesTree implements IEntriesControl {
             col = new TableColumn(table, SWT.NULL);
             col.setText(entriesSectionProperty.getText());
             
-            // TODO: figure out how to get the columns to use up all
-            // the width of the screen and no more (i.e. no scrolling).
             tlayout.addColumnData(
             		new ColumnWeightData(
             				entriesSectionProperty.getWeight(), 
@@ -219,7 +212,7 @@ public class EntriesTree implements IEntriesControl {
     	editor.grabHorizontal = true;
     	editor.minimumWidth = 50;
     	
-    	    	fTableTree.getTable().addMouseListener(new MouseAdapter() {
+    	fTableTree.getTable().addMouseListener(new MouseAdapter() {
 /*    	    		
     	    		public void handleEvent(Event e) {
     			// Clean up any previous editor control
@@ -337,8 +330,6 @@ public class EntriesTree implements IEntriesControl {
 */		    			
 					}
     	});
-    	
-        fTableTree.pack(true);
 	}
 	
 	/* (non-Javadoc)
