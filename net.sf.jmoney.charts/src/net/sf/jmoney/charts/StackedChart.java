@@ -118,7 +118,7 @@ public abstract class StackedChart extends JFrame {
         public void chartMouseMoved (ChartMouseEvent e) {}
         public void chartMouseClicked (ChartMouseEvent e) {
             if (e.getEntity() instanceof CategoryItemEntity) {
-                System.out.println("It is in " + ((CategoryItemEntity) e.getEntity()).getSeries());
+            	if (ChartsPlugin.DEBUG) System.out.println("It is in " + ((CategoryItemEntity) e.getEntity()).getSeries());
             }
         }
     }

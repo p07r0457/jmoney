@@ -3,6 +3,7 @@ package net.sf.jmoney.charts;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -10,6 +11,9 @@ import org.osgi.framework.BundleContext;
  * The main plugin class to be used in the desktop.
  */
 public class ChartsPlugin extends AbstractUIPlugin {
+
+    public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney.charts/debug"));
+
 	//The shared instance.
 	private static ChartsPlugin plugin;
 	//Resource bundle.

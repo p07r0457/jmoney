@@ -190,7 +190,7 @@ public class StackedChartPage implements IBookkeepingPageFactory {
 				// Check the selected accounts
 				TreeItem[] array = (TreeItem[])selectedTreeItems.toArray(new TreeItem[selectedTreeItems.size()]);
 				for (int j=0; j<array.length; j++) {
-					System.out.println(array[j].toString());
+					if (ChartsPlugin.DEBUG) System.out.println(array[j].toString());
 					array[j].setChecked(true);
 				}
 				// Also select them.  This causes the tree to be expanded so that
@@ -235,7 +235,7 @@ private void createChart() {
     params.setAccountList(accounts);
 
     params.setDates(fromDate.getText(),toDate.getText());
-    System.out.println("maxLevel: " + maxLevel.getText() );
+    if (ChartsPlugin.DEBUG) System.out.println("maxLevel: " + maxLevel.getText() );
     params.setMaxLevel(Integer.parseInt(maxLevel.getText()));
     
     if (radPeriodDay.getSelection())   params.setFrequence(StackedChartParameters.DAY);

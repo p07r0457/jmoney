@@ -141,7 +141,7 @@ public class ActivLineChart extends LineChart {
             
             
 
-            System.out.println("Add to the graph: " + saldo + " at " + date);
+            if (ChartsPlugin.DEBUG) System.out.println("Add to the graph: " + saldo + " at " + date);
             bts.add(date, new Double(saldo));
             date = (Day) date.next();
         }

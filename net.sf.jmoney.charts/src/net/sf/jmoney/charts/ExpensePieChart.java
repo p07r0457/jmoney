@@ -106,7 +106,7 @@ public class ExpensePieChart extends PieChart {
 	        	}
 	        	
 			    if (balance >= 0) {
-			        System.out.println(currentAccount.getName() + " : " + balance/100 +".");
+			    	if (ChartsPlugin.DEBUG) System.out.println(currentAccount.getName() + " : " + balance/100 +".");
 			        values.add(new CoupleStringNumber(currentAccount.getFullAccountName(), currentAccount.getName(), balance/100));
 			    	totalBalance += balance /100 ;
 			    }
@@ -223,11 +223,11 @@ public class ExpensePieChart extends PieChart {
 }
 	
 	public void chartMouseClicked (ChartMouseEvent e) {
-	    System.out.println("in chartMouseClicked");
+		if (ChartsPlugin.DEBUG) System.out.println("in chartMouseClicked");
 	    if (e.getEntity() != null) {
 	        PieSectionEntity pieSection = (PieSectionEntity) e.getEntity();
 	        String accountClicked = ((CoupleStringNumber) pieSection.getSectionKey()).longName;
-	        System.out.println("Im Entity : " + accountClicked);
+	        if (ChartsPlugin.DEBUG) System.out.println("Im Entity : " + accountClicked);
 	        PieChart newChart = new ExpensePieChart(accountClicked, this.session, this.maxLevel + 1, accountClicked);
 	        newChart.run();
 	        ChartPanel chartPanel = newChart.getChartPanel();

@@ -203,7 +203,7 @@ public class LineChartPage implements IBookkeepingPageFactory {
 				// Check the selected accounts
 				TreeItem[] array = (TreeItem[])selectedTreeItems.toArray(new TreeItem[selectedTreeItems.size()]);
 				for (int j=0; j<array.length; j++) {
-					System.out.println(array[j].toString());
+					if (ChartsPlugin.DEBUG) System.out.println(array[j].toString());
 					array[j].setChecked(true);
 				}
 				// Also select them.  This causes the tree to be expanded so that
