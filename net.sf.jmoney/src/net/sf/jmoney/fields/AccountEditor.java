@@ -137,7 +137,9 @@ public class AccountEditor implements IPropertyControl {
             propertyControl.setText("");
     	} else {
     		Account account = (Account) object.getPropertyValue(accountPropertyAccessor);
-    		propertyControl.setText(getLabel(account));
+    		if (account != null) {
+    			propertyControl.setText(getLabel(account));
+    		}
     	}
     	propertyControl.setEnabled(object != null);
     }

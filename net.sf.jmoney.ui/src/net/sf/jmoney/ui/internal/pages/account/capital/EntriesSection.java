@@ -36,6 +36,7 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 
@@ -48,16 +49,21 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableLayout;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Item;
@@ -106,6 +112,49 @@ public class EntriesSection extends SectionPart {
         createTable(container, toolkit);
         createTableViewer();
 
+        // Create the button area
+		Composite buttonArea = toolkit.createComposite(container);
+		
+		RowLayout layoutOfButtons = new RowLayout();
+		layoutOfButtons.fill = false;
+		layoutOfButtons.justify = true;
+		buttonArea.setLayout(layoutOfButtons);
+		
+        // Create the 'add transaction' and 'delete transaction' buttons.
+        Button addButton = toolkit.createButton(buttonArea, "New Transaction", SWT.PUSH);
+        addButton.addSelectionListener(new SelectionAdapter() {
+           public void widgetSelected(SelectionEvent event) {
+           		Session session = fPage.getAccount().getSession();
+           		Transaction transaction = session.createTransaction();
+           		Entry entry1 = transaction.createEntry();
+           		Entry entry2 = transaction.createEntry();
+           		entry1.setAccount(fPage.getAccount());
+           		
+           		// Select entry1 in the entries list.
+                StructuredSelection selection = new StructuredSelection(entry1);
+                fViewer.setSelection(selection, true);
+           }
+        });
+
+        Button deleteButton = toolkit.createButton(buttonArea, "Delete Transaction", SWT.PUSH);
+        deleteButton.addSelectionListener(new SelectionAdapter() {
+           public void widgetSelected(SelectionEvent event) {
+           		
+            if (fViewer.getSelection() instanceof IStructuredSelection) {
+                IStructuredSelection s = (IStructuredSelection) fViewer.getSelection();
+                Object selectedObject = s.getFirstElement();
+                // The selected object cannot be null because the 'delete tranaction'
+                // button would be disabled if no entry were selected.
+               	if (selectedObject instanceof DisplayableEntry) {
+               		DisplayableEntry de = (DisplayableEntry) selectedObject;
+               		Transaction transaction = de.entry.getTransaction();
+               		transaction.getSession().deleteTransaction(transaction);
+               		transaction.getSession().registerUndoableChange("Delete Transaction");
+                }
+            }
+           }
+        });
+        
         fPage.getAccount().getSession().addSessionChangeListener(new SessionChangeAdapter() {
 
 			public void accountChanged(Account account, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
@@ -117,7 +166,7 @@ public class EntriesSection extends SectionPart {
 
 			public void entryAdded(Entry newEntry) {
 				// if the entry is in this account, refresh the table.
-				if (newEntry.getAccount().equals(fPage.getAccount())) {
+				if (fPage.getAccount().equals(newEntry.getAccount())) {
 					refresh();
 				}
 				
@@ -131,7 +180,7 @@ public class EntriesSection extends SectionPart {
 
 			public void entryDeleted(Entry oldEntry) {
 				// if the entry was in this account, refresh the table.
-				if (oldEntry.getAccount().equals(fPage.getAccount())) {
+				if (fPage.getAccount().equals(oldEntry.getAccount())) {
 					refresh();
 				}
 				
@@ -241,6 +290,7 @@ public class EntriesSection extends SectionPart {
         fTable.setLayout(tlayout);
         fTable.setHeaderVisible(true);
         fTable.setLinesVisible(true);
+        
     }
 
     protected void createTableViewer() {

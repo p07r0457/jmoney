@@ -546,12 +546,28 @@ public class Session extends ExtendableObject implements IAdaptable {
         // account/category.  We must update this list now.
         if (found) {
         	for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
-        		Entry entry = (Entry)iter.next();
+        		final Entry entry = (Entry)iter.next();
         		// TODO: at some time, keep these lists for categories too
         		Account category = entry.getAccount();
         		if (category instanceof CapitalAccount) {
         			((CapitalAccount)category).removeEntry(entry);
         		}
+
+        		// Send notification of the deletion of the entries.
+        		// This code is identical to the code in Transaction.deleteEntry().
+    			processObjectDeletion(TransactionInfo.getEntriesAccessor(), entry);
+
+    			// In addition to the generic object deletion event, we also fire an event
+    			// specifically for entry deletion.  The entryDeleted event is superfluous 
+    			// and it may be simpler if we removed it, so that listeners receive the generic
+    			// objectDeleted event only.
+    			getSession().fireEvent(
+    		            	new ISessionChangeFirer() {
+    		            		public void fire(SessionChangeListener listener) {
+    		            			listener.entryDeleted(entry);
+    		            		}
+    		           		});
+        		
         	}
         	
 			processObjectDeletion(SessionInfo.getTransactionsAccessor(), transaction);
