@@ -1,0 +1,215 @@
+<html><head>
+
+<!-- $Id: package.html,v 1.1 2004-07-01 15:59:37 westbury Exp $ -->
+
+</head><body>
+
+<p> This package provides the core JMoney Plug-in APIs.
+You must use these APIs if you want to write a JMoney plug-in.
+</p>
+
+<p>See <a
+href='http://www.jmoney.sourceforge.net'>http://www.jmoney.sourceforge.net</a>
+for more information about the JMoney plug-in architecture.</p>
+
+<h2> The Accounting Data Model </h2>
+
+<p> The JMoney accounting framework can keep track of your money.  It can also
+keep track of other assets such as stocks.  Money can be kept in any of
+a number of different currencies.  All of these (currencies, stocks, and
+anything else you may wish to keep track of) are known as commodities.  An object
+exists in the data model for each commodity.  There will be a commodity
+object for each currency you use, a commodity object for each company whose
+stock you own, and so on.
+</p>
+<p>
+Your money can be kept in different places.  A bank account, for example, or
+you may have made a loan to someone.  You may have a negative amount of money
+(a debt liability) somewhere, for example with a credit card company.  Stock
+is probably kept in a stock brokerage.  You might even have two or more stock
+brokerage accounts.  All of these places where you have cash, stock, or other
+types of commodities are known as accounts.  There will be an account object
+for each place where you hold commodities (or where you have a liablility).
+</p>
+<p>
+Money comes and goes.  You may recieve money from a number of different
+sources.  For example, pay from your job or interest on you bank account.
+The things you spend money on will fall into a number of different categories
+and you may want to keep track of where your money goes.  Each source of money
+and each category of expenditure is known as a category.  A category may be
+entirely income (salary) or entirely expenditure (groceries) or a mixture (you
+may have a category for computer book purchases but then you sell one of your
+books on Amazon, thus creating an income item in that category).  You may also
+recieve income in commodities other than currency (stock options from your
+employer), or you may have expenditure in commodities other than currency.
+</p>
+<p>
+A typical financial transaction will involve a debit from an account and an
+expense entry in an income/expense category, or a credit to an account and an
+income entry in an income/expense category.  A financial transaction may also
+consist of a credit to one account and a debit from another account (a transfer
+of money between accounts).  A transaction could perhaps involve a 
+credit from a bank account and
+a number of expense entries into a number of different categories where
+the sum of the expenses equals the amount debited from the bank account.
+A transaction could also be an exchange of one commodity to another.
+In general, a transaction consists of two or more entries.  If all the entries
+are in the same commodity then the total of all the entries should be zero.
+There can be any number of account entries and any number of category
+entries in the transaction.
+</p>
+
+<h2> Reading the JMoney Database </h2>
+
+<p> Access to the top level object in the database is through the
+<code>Session</code> interface.  The <code>Session</code> interface has
+methods that provide iterators that iterate over the accounts, categories,
+and transactions.  From the account and category interfaces, you can
+get iterators that iterate over any sub-accounts and sub-categories.
+From the transaction interface, you can get an iterator that iterates
+over the entries in the transaction.
+</p>
+<p>
+The interfaces also provide methods for going back up the tree, from entry
+to transaction and transaction to session, and from sub-category to category
+and so on.
+
+<h2> Modifying the JMoney Database </h2>
+
+<p> Unless you are interested only in writing plug-ins that show reports
+and other views of the data, you are going to want to modify the accounting
+data.  This can be done using the interfaces in this package.  However, to do
+this is not quite as simple as calling the setter methods.  Indeed you will
+notice that the Category, Account, Transaxion, Entry, and Currency interfaces
+do not have setter methods.  If you want to modify data in an object then you
+must first obtain a mutable interface to the object.  Each of the five
+interfaces into the data model has a corresponding mutable interface.  Each
+mutable interface extends the non-mutable interface and adds the setter
+methods to it.
+</p>
+<table border="1" cellpadding="3" cellspacing="0" width="100%">
+    <tr align="center" bgcolor="#ccccff">
+	<th>Non-Mutable Interface</th>
+	<th>Mutable Interface</th>
+	<th>Methods for Obtaining the Mutable Interface</th>
+	</tr>
+
+    <tr>
+	<td>Account</td>
+	<td>MutableAccount</td>
+	<td>If you are creating a new account: 
+            <a href="Session.html#createNewAccount()"
+	    ><em>Session.createNewAccount()</em></a>,
+            If you are creating a new sub-account: 
+            <a href="Account.html#createNewSubAccount()"
+	    ><em>Account.createNewSubAccount()</em></a>,
+            if you are editing the properties of an existing account:
+            <a href="Account.html#createMutableAccount()"
+	    ><em>Account.createMutableAccount().</em></a>.
+	    </td>
+	</tr>
+
+    <tr>
+	<td>Category</td>
+	<td>MutableCategory</td>
+	<td>If you are creating a new top level category: 
+            <a href="Session.html#createNewSimpleCategory()"
+	    ><em>Session.createNewSimpleCategory()</em></a>,
+            If you are creating a new sub-category: 
+            <a href="Category.html#createNewSimpleSubCategory()"
+	    ><em>Category.createNewSimpleSubCategory()</em></a>,
+            if you are editing the properties of an existing category:
+            <a href="SimpleCategory.html#createMutableSimpleCategory()"
+	    ><em>SimpleCategory.createMutableSimpleCategory().</em></a>.
+	    </td>
+	</tr>
+
+    <tr>
+	<td>Commodity</td>
+	<td>MutableCommodity</td>
+	<td>If you are creating a new commodity: 
+            <a href="Session.html#createNewCommodity()"
+	    ><em>Session.createNewCommodity()</em></a>,
+            if you are editing the properties of an existing commodity:
+            <a href="Commodity.html#createMutableCommodity()"
+	    ><em>Commodity.createMutableCommodity().</em></a>.
+	    </td>
+	</tr>
+
+    <tr>
+	<td>Transaxion</td>
+	<td>MutableTransaxion</td>
+	<td>If you are creating a new transaction: 
+            <a href="Session.html#createNewTransaxion()"
+	    ><em>Session.createNewTransaxion()</em></a>,
+            if you are editing the properties and entries of an existing transaction:
+            <a href="Transaxion.html#createMutableTransaxion()"
+	    ><em>Transaxion.createMutableTransaxion().</em></a>.
+	    </td>
+	</tr>
+
+    <tr>
+	<td>Entry</td>
+	<td>Entry</td>
+	<td>The <em>Entry</em> interface is itself mutable.  However, you
+            should only use the setter methods on <em>Entry</em> objects
+            that have been obtained from a <em>MutableTransaxion</em>
+            object or that have been passed by the framework specifically
+            for the purpose of modification.  (needs cleanup).
+	    </td>
+	</tr>
+
+</table>
+
+<p>
+The JMoney architecture supports multiple storage methods.  You may keep all
+the accounting data for a session in memory, serializing it to disk when you
+save the session to disk and de-serializing it when you load a session from
+disk.  Alternatively, you may keep the accounting data in a transactional
+database, using perhaps JDO or some other technology.  Each method of storing
+data will have a different implementation of the database model interfaces.
+So the database model interfaces must be flexible enough to cope with
+the various storage methods, yet be simple enough for plug-in developers
+to understand.
+</p>
+<p>
+
+<h2> Accessing Extended Properties </h2>
+
+Plug-ins may extend any of the database model interfaces and add properties.
+The plug-in development section gives more detail on this.
+</p>
+<p>
+Extension objects also implement the interface to the object being extended.
+For example, an extension object that adds additional properties to an entry
+object will itself implement the Entry interface.  Extension properties and
+core properties are thus provided in a single interface.
+
+In many cases, when the framework passes an object to a plug-in, it does not
+pass the base object but will pass the extension object appropriate for
+the plug-in.  The plug-in thus gains access to its extension properties.
+
+In other cases the plug-in will have the base object but may want to access
+an extension property.  There are two ways the plug-in can do this.
+
+<ul>
+<li>
+Each of the data model interfaces contains a method to get the value of
+a property, given an object that identifies that property.
+For example, to get an extension property for an entry, call
+<em>getPropertyValue(PropertyAccessor)</em> in the Entry interface.
+</li>
+<li>
+Each of the data model interfaces contains a method to get the
+extension object for any plug-in.
+For example, to get the extension interface for an entry, 
+call <em>getExtension(Class)</em> in the Entry interface
+and pass the class of the plug-in bean.  Cast the result
+to the object that implements the extension properties
+for the given plug-in.
+</li>
+</ul>
+
+
+
+</body></html>
