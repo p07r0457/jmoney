@@ -57,6 +57,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.forms.editor.IFormPage;
+import org.eclipse.ui.forms.widgets.FormToolkit;
 
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JasperFillManager;
@@ -241,7 +242,7 @@ public class IncomeExpensePage implements IBookkeepingPage {
 				"Income & Expense Report", 
 				"Income & Expense Report") {
 			
-			public Composite createControl(Object nodeObject, Composite parent) {
+			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit) {
 				Session session = JMoneyPlugin.getDefault().getSession();
 				return createContent(session, parent);
 			}

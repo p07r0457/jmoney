@@ -28,6 +28,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.forms.editor.IFormPage;
+import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ColumnLayout;
 import org.eclipse.ui.internal.dnd.SwtUtil;
 import org.eclipse.ui.internal.layout.CellLayout;
@@ -181,7 +182,7 @@ private void addAccountsInTree(TreeItem tn, Iterator it) {
 				"Chart", 
 				"Line Chart") {
 			
-			public Composite createControl(Object nodeObject, Composite parent) {
+			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit) {
 				Session session = JMoneyPlugin.getDefault().getSession();
 				return createContent(session, parent);
 			}

@@ -56,6 +56,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.forms.editor.IFormPage;
+import org.eclipse.ui.forms.widgets.FormToolkit;
 
 import com.jasperassistant.designer.viewer.ViewerComposite;
 
@@ -273,7 +274,7 @@ public class AccountBalancesPage implements IBookkeepingPage {
 				"Account Balances Report", 
 				"Account Balances Report") {
 			
-			public Composite createControl(Object nodeObject, Composite parent) {
+			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit) {
 				Session session = JMoneyPlugin.getDefault().getSession();
 				return createContent(session, parent);
 			}

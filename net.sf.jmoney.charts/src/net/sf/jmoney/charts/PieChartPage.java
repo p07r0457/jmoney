@@ -35,6 +35,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.awt.SWT_AWT;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.forms.editor.IFormPage;
+import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.event.ChartChangeEvent;
@@ -146,7 +147,7 @@ public class PieChartPage implements IBookkeepingPage {
 				"Chart", 
 				"Pie Chart") {
 			
-			public Composite createControl(Object nodeObject, Composite parent) {
+			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit) {
 				Session session = JMoneyPlugin.getDefault().getSession();
 				return createContent(session, parent);
 			}
