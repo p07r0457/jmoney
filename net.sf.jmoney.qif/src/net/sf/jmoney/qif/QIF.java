@@ -591,7 +591,7 @@ public class QIF implements FileFormat {
     }
 
     private CapitalAccount getNewAccount(Session session, String accountName) {
-    	CapitalAccountImpl account = (CapitalAccountImpl)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
+    	CapitalAccount account = (CapitalAccount)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
         account.setName(accountName);
         return account;
     }
@@ -601,10 +601,10 @@ public class QIF implements FileFormat {
      * category will be created.
      */
     private IncomeExpenseAccount getCategory(String categoryName, Session session) {
-        IncomeExpenseAccountImpl category = (IncomeExpenseAccountImpl)
+        IncomeExpenseAccount category = (IncomeExpenseAccount)
             searchCategory(categoryName, session.getIncomeExpenseAccountIterator());
         if (category == null) {
-        	category = (IncomeExpenseAccountImpl)session.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+        	category = (IncomeExpenseAccount)session.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
         	category.setName(categoryName);
         }
         return category;
@@ -622,8 +622,8 @@ public class QIF implements FileFormat {
         searchCategory(name, category.getSubAccountIterator());
 
         if (subcategory == null) {
-            subcategory = (IncomeExpenseAccountImpl)((IncomeExpenseAccountImpl)category).createSubAccount();
-            ((IncomeExpenseAccountImpl)subcategory).setName(name);
+            subcategory = (IncomeExpenseAccount)((IncomeExpenseAccount)category).createSubAccount();
+            ((IncomeExpenseAccount)subcategory).setName(name);
         }
         
         return subcategory;

@@ -253,6 +253,8 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         try {
     		return interfaceClass.getDeclaredMethod(methodName, arguments);
         } catch (NoSuchMethodException e) {
+/* check the interfaces.  Actually this is not necessary because we now get an object,
+ * and so the method must be declared in this or a base class.
     		Class[] interfaces = interfaceClass.getInterfaces();
     		for (int i = 0; i < interfaces.length; i++) {
     	        try {
@@ -260,7 +262,10 @@ public class PropertyAccessorImpl implements PropertyAccessor {
     	        } catch (NoSuchMethodException e2) {
     	        }
     		}
-            throw new NoSuchMethodException("Method '" + methodName + "' was not found in '" + interfaceClass.getName() + "' nor in any of the interfaces extended by it.");
+ */
+        	return getDeclaredMethodRecursively(interfaceClass.getSuperclass(), methodName, arguments);
+
+//    		throw new NoSuchMethodException("Method '" + methodName + "' was not found in '" + interfaceClass.getName() + "' nor in any of the interfaces extended by it.");
         }
 	}
 	

@@ -29,7 +29,7 @@ import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.CapitalAccountImpl;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.events.SelectionEvent;
@@ -51,7 +51,7 @@ import org.eclipse.swt.widgets.Control;
  */
 public class CurrencyEditor implements IPropertyControl {
     
-    private CapitalAccountImpl account = null;
+    private CapitalAccount account = null;
 
     private Session session = null;
     
@@ -91,7 +91,7 @@ public class CurrencyEditor implements IPropertyControl {
      * Load the control with the value from the given account.
      */
     public void load(Object object) {
-    	account = (CapitalAccountImpl)object;
+    	account = (CapitalAccount)object;
     	
 		Currency currency = account.getCurrency();
 		propertyControl.setText(currency.getName() == null ? "" : currency.getName());

@@ -28,7 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.CapitalAccountImpl;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
@@ -66,7 +66,7 @@ public class CapitalAccountInfo implements IExtensionPropertySetInfo {
     }
 
 	public Class getImplementationClass() {
-		return CapitalAccountImpl.class;
+		return CapitalAccount.class;
 	}
 
     public Class getInterfaceClass() {

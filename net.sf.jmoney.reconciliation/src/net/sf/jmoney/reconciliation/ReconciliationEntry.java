@@ -28,7 +28,7 @@ import net.sf.jmoney.model2.*;
  *
  * @author  Nigel
  */
-public class ReconciliationEntry extends AbstractEntryExtension {
+public class ReconciliationEntry extends EntryExtension {
 	
 	/**
 	 * Entry is uncleared.

@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.Iterator;
 
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CapitalAccountImpl;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Session;
 
@@ -35,7 +35,7 @@ public class ActivLineChart extends LineChart {
         XYSeries bts = new XYSeries("Hello!");
         long saldo = 0;
         
-        CapitalAccountImpl a = (CapitalAccountImpl) session.getAccountByFullName("Banques.Postbank");
+        CapitalAccount a = (CapitalAccount) session.getAccountByFullName("Banques.Postbank");
         Entry e = null;
         Iterator it = a.getEntriesIterator(session);
         Date currentDate = null;

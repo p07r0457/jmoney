@@ -54,7 +54,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.CapitalAccountImpl;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
@@ -613,21 +613,21 @@ private Map idToNodeMap = new HashMap();
 			public void run() {
 				Session session = JMoneyPlugin.getDefault().getSession();
 
-				CapitalAccountImpl account = null;
+				CapitalAccount account = null;
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
 					Object selectedObject = iterator.next();
-					if (selectedObject instanceof CapitalAccountImpl) {
-						account = (CapitalAccountImpl)selectedObject;
+					if (selectedObject instanceof CapitalAccount) {
+						account = (CapitalAccount)selectedObject;
 						break;
 					}
 				}
 				
-				CapitalAccountImpl newAccount;
+				CapitalAccount newAccount;
 				if (account == null) {
-					newAccount = (CapitalAccountImpl)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
+					newAccount = (CapitalAccount)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
 				} else {
-					newAccount = (CapitalAccountImpl)account.createSubAccount();
+					newAccount = (CapitalAccount)account.createSubAccount();
 				}
 		        newAccount.setName(JMoneyPlugin.getResourceString("Account.newAccount"));
 		        session.getChangeManager().applyChanges("add new account");

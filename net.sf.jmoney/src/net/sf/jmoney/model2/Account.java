@@ -24,31 +24,90 @@
 package net.sf.jmoney.model2;
 
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Vector;
+
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.AccountInfo;
+import net.sf.jmoney.model2.*;
 
 /**
- * The base interface for accounts.  Accounts include both income and
- * expense categories and capital accounts such as bank and credit card
- * accounts.
+ * An implementation of the Account interface
  */
-public interface Account extends Comparable, IExtendableObject {
+public abstract class Account extends ExtendableObject {
 	
-	/**
-	 * @return the name of the account.
-	 */
-	String getName();
+	protected IObjectKey parentKey;
 	
-	Account getParent();
-	
-	Iterator getSubAccountIterator();
-	
-	// Helper methods.  These methods add useful function but these methods
-	// do not depend on the implementation so are implemented here.
-	
-	/**
-	 * @return the full qualified name of the account.
-	 */
-	String getFullAccountName();
+	protected String name;
 
-	// getter
-	int getLevel ();
+	protected IListManager subAccounts;
+	
+	protected Account(
+			IObjectKey objectKey, 
+			Map extensions, 
+			IObjectKey parentKey,
+			IListManager subAccounts) {
+		super(objectKey, extensions);
+		this.parentKey = parentKey;
+		this.subAccounts = subAccounts;
+	}
+	
+	/**
+	 * @return the name of this account.
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @param aName the name of this account.
+	 */
+	
+	public void setName(String newName) {
+		String oldName = name;
+		name = newName;
+		
+		// Notify the change manager.
+		processPropertyChange(AccountInfo.getNameAccessor(), oldName, newName);
+	}
+
+	public String getFullAccountName() {
+		return getName();
+	}
+	
+	public Account getParent() {
+		IExtendableObject parent = parentKey.getObject();
+		if (parent instanceof Account) {
+			return (Account)parent;
+		} else {
+			return null;
+		}
+	}
+	
+	public Iterator getSubAccountIterator() {
+		return subAccounts.iterator();
+	}
+	
+	boolean deleteSubAccount(Account subAccount) {
+		return subAccounts.remove(subAccount);
+	}
+	
+	public String toString() {
+		return getName();
+	}
+	
+	public int compareTo(Object o) {
+		Account c = (Account) o;
+		return getName().compareTo(c.getName());
+	}
+
+    public int getLevel () {
+        int level;
+        if (getParent() == null)
+            level = 0;
+        else 
+            level = getParent().getLevel() + 1;
+        System.out.println("Level from " + this.name + ", child of " + getParent() +" is " + level);
+        return level;
+    }
 }

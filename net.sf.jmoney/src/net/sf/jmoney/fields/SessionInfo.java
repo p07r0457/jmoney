@@ -27,14 +27,14 @@ import org.eclipse.swt.widgets.Composite;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
-import net.sf.jmoney.model2.CurrencyImpl;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
-import net.sf.jmoney.model2.SessionImpl;
+import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 
 /**
@@ -59,7 +59,7 @@ public class SessionInfo implements IExtensionPropertySetInfo {
     }
 
 	public Class getImplementationClass() {
-		return SessionImpl.class;
+		return Session.class;
 	}
 	
     public Class getInterfaceClass() {

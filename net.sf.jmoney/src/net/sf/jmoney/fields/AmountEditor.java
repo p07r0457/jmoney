@@ -26,7 +26,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.CapitalAccountImpl;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -57,7 +57,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class AmountEditor implements IPropertyControl {
     
-    private CapitalAccountImpl account = null;
+    private CapitalAccount account = null;
     
     private PropertyAccessor propertyAccessor;
     
@@ -73,7 +73,7 @@ public class AmountEditor implements IPropertyControl {
      * Load the control with the value from the given account.
      */
     public void load(Object object) {
-    	account = (CapitalAccountImpl)object;
+    	account = (CapitalAccount)object;
     	
 		Currency currency = account.getCurrency();
 		

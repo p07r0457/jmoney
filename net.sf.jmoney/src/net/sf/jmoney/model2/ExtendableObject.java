@@ -527,8 +527,8 @@ public abstract class ExtendableObject implements IExtendableObject {
 					&& writeMethod.getDeclaringClass() != IExtendableObject.class
 					&& readMethod.getDeclaringClass() != AccountExtension.class
 					&& writeMethod.getDeclaringClass() != AccountExtension.class
-					&& readMethod.getDeclaringClass() != AbstractEntryExtension.class
-					&& writeMethod.getDeclaringClass() != AbstractEntryExtension.class) {
+					&& readMethod.getDeclaringClass() != EntryExtension.class
+					&& writeMethod.getDeclaringClass() != EntryExtension.class) {
 				Object value;
 				try {
 					value = readMethod.invoke(extension, null);
@@ -625,7 +625,7 @@ public abstract class ExtendableObject implements IExtendableObject {
 					if (writeMethod != null
 							&& writeMethod.getDeclaringClass() != IExtendableObject.class
 							&& writeMethod.getDeclaringClass() != AccountExtension.class
-							&& writeMethod.getDeclaringClass() != AbstractEntryExtension.class) {
+							&& writeMethod.getDeclaringClass() != EntryExtension.class) {
 						this.writeMethod = writeMethod;
 					}
 					break;

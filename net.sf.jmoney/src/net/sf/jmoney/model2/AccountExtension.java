@@ -36,9 +36,9 @@ import java.util.Iterator;
  * and maintained at runtime.
  *
  */
-public abstract class AccountExtension extends ExtensionObject implements Account, Serializable {
+public abstract class AccountExtension extends ExtensionObject {
     
-    /** Creates a new instance of AbstractEntryExtension */
+    /** Creates a new instance of EntryExtension */
     public AccountExtension() {
     }
 

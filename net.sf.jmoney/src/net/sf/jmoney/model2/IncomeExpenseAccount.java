@@ -23,11 +23,70 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Map;
+
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.*;
+
 /**
- * Interface into accounts that are income and expense accounts.
- * This interface extends the Account interface.  
+ * An implementation of the IncomeExpenseAccount interface
  */
-public interface IncomeExpenseAccount extends Account {
-	// Category accounts have no additional properties
-	// so there is nothing to add in this interface.
+public class IncomeExpenseAccount extends Account {
+
+	private String fullAccountName = null;
+
+	public IncomeExpenseAccount(
+			IObjectKey objectKey, 
+			Map extensions, 
+			IObjectKey parent,
+			String name,
+			IListManager subAccounts) {
+		super(objectKey, extensions, parent, subAccounts);
+		this.name = name;
+	}
+
+	protected String getExtendablePropertySetId() {
+		return "net.sf.jmoney.category";
+	}
+	
+	public String getFullAccountName() {
+		if (fullAccountName == null) {
+			fullAccountName = name;
+			Account ancestorCategory = getParent();
+			while (ancestorCategory != null) {
+				fullAccountName = ancestorCategory.getName() + ":" + fullAccountName;
+				ancestorCategory = ancestorCategory.getParent();
+			}
+		}
+		return fullAccountName;
+	}
+
+	// TODO: use debugger to see if this version is called
+	// when the Method object references the version in the
+	// abstract base class.  If not then this is broke.
+	public void setName(String name) {
+		super.setName(name);
+		fullAccountName = null;
+	}
+
+	/**
+	 * This method is required by the JMoney framework.
+	 * 
+	 * @param name
+	 * @param extensionProperties
+	 * @return
+	 */
+    public IncomeExpenseAccount createSubAccount() {
+    	IncomeExpenseAccount newSubAccount = (IncomeExpenseAccount)subAccounts.createNewElement(
+				this, 
+				JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+
+		processObjectAddition(subAccounts, newSubAccount);
+		
+		return newSubAccount;
+    }
+    
+    static public  Object [] getDefaultProperties() {
+		return new Object [] { "new category" };
+	}
 }

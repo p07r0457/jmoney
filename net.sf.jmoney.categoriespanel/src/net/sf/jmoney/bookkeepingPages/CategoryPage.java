@@ -63,7 +63,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.categoriespanel.CategoriesPanelPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
@@ -223,7 +223,7 @@ public class CategoryPage implements IBookkeepingPageListener {
 		}
 		
 //		try {
-			((IncomeExpenseAccountImpl)selectedAccount).setName(nameField.getText());
+			((IncomeExpenseAccount)selectedAccount).setName(nameField.getText());
 			session.getChangeManager().applyChanges("rename category");
 //			} catch (ObjectLockedForEditException e) {
 			// The edit could not be made because someone else is editing
@@ -261,7 +261,7 @@ private void makeActions() {
 		public void run() {
 			Session session = JMoneyPlugin.getDefault().getSession();
 	        
-	        IncomeExpenseAccountImpl account = (IncomeExpenseAccountImpl)session.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+	        IncomeExpenseAccount account = (IncomeExpenseAccount)session.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
 	        account.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
 			session.getChangeManager().applyChanges("add new category");
 	        
@@ -286,7 +286,7 @@ private void makeActions() {
 				break;
 			}
 			if (account != null) {
-				IncomeExpenseAccountImpl subAccount = (IncomeExpenseAccountImpl)((IncomeExpenseAccountImpl)account).createSubAccount();
+				IncomeExpenseAccount subAccount = (IncomeExpenseAccount)((IncomeExpenseAccount)account).createSubAccount();
 				subAccount.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
 				session.getChangeManager().applyChanges("add new category");
 				

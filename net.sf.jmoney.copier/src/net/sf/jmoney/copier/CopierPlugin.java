@@ -3,11 +3,11 @@ package net.sf.jmoney.copier;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.CapitalAccountImpl;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ObjectLockedForEditException;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
@@ -109,10 +109,10 @@ public class CopierPlugin extends AbstractUIPlugin {
             Account oldAccount = (Account) iter.next();
             
             if (oldAccount instanceof CapitalAccount) {
-            	CapitalAccountImpl newAccount = (CapitalAccountImpl)newSession.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
+            	CapitalAccount newAccount = (CapitalAccount)newSession.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
             	populateAndCommitAccount(newSession, (CapitalAccount)oldAccount, newAccount, categoryMap);
             } else {
-                IncomeExpenseAccountImpl newCategory = (IncomeExpenseAccountImpl)newSession.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+                IncomeExpenseAccount newCategory = (IncomeExpenseAccount)newSession.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
                 populateAndCommitSimpleCategory(newSession, (IncomeExpenseAccount)oldAccount, newCategory, categoryMap);
             }            	
         }
@@ -141,9 +141,9 @@ public class CopierPlugin extends AbstractUIPlugin {
                 for (Iterator pluginIter = JMoneyPlugin.getEntryPropertySet().BeanContainer.getPluginIterator(); pluginIter.hasNext(); ) { 
                     PluginWrapper plugin = (PluginWrapper)pluginIter.next();
                     
-                    AbstractEntryExtension oldExtension = oldEntry.getExtension(plugin);
+                    EntryExtension oldExtension = oldEntry.getExtension(plugin);
                     if (oldExtension != null) {
-                        AbstractEntryExtension newExtension = newEntry.getExtension(plugin);
+                        EntryExtension newExtension = newEntry.getExtension(plugin);
                         // Copy the properties from one to the other.
                         plugin.copyEntryProperties(oldExtension, newExtension);
                     }
@@ -153,7 +153,7 @@ public class CopierPlugin extends AbstractUIPlugin {
         }
     }
     
-    private void populateAndCommitSimpleCategory(Session newSession, IncomeExpenseAccount oldCategory, IncomeExpenseAccountImpl newCategory, Map categoryMap)
+    private void populateAndCommitSimpleCategory(Session newSession, IncomeExpenseAccount oldCategory, IncomeExpenseAccount newCategory, Map categoryMap)
     throws ObjectLockedForEditException {
         newCategory.setName(oldCategory.getName());
         
@@ -162,12 +162,12 @@ public class CopierPlugin extends AbstractUIPlugin {
         for (Iterator iter = oldCategory.getSubAccountIterator(); iter.hasNext(); ) {
         	IncomeExpenseAccount oldSubCategory = (IncomeExpenseAccount)iter.next();
             
-            IncomeExpenseAccountImpl newSubCategory = (IncomeExpenseAccountImpl)newCategory.createSubAccount();
+            IncomeExpenseAccount newSubCategory = (IncomeExpenseAccount)newCategory.createSubAccount();
             populateAndCommitSimpleCategory(newSession, oldSubCategory, newSubCategory, categoryMap);
         }
     }
 
-    private void populateAndCommitAccount(Session newSession, CapitalAccount oldAccount, CapitalAccountImpl newAccount, Map categoryMap)
+    private void populateAndCommitAccount(Session newSession, CapitalAccount oldAccount, CapitalAccount newAccount, Map categoryMap)
     throws ObjectLockedForEditException {
         newAccount.setName(oldAccount.getName());
         newAccount.setAbbreviation(oldAccount.getAbbreviation());
@@ -183,7 +183,7 @@ public class CopierPlugin extends AbstractUIPlugin {
         for (Iterator iter = oldAccount.getSubAccountIterator(); iter.hasNext(); ) {
             CapitalAccount oldSubAccount = (CapitalAccount)iter.next();
             
-            CapitalAccountImpl newSubAccount = (CapitalAccountImpl)newAccount.createSubAccount();
+            CapitalAccount newSubAccount = (CapitalAccount)newAccount.createSubAccount();
             populateAndCommitAccount(newSession, oldSubAccount, newSubAccount, categoryMap);
         }
     }

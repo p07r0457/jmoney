@@ -32,7 +32,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertyNotFoundException;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
-import net.sf.jmoney.model2.SessionImpl;
+import net.sf.jmoney.model2.Session;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -350,7 +350,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		
 		// Create the session object.
 		
-		SessionImpl newSession = new SessionImpl(
+		Session newSession = new Session(
 				sessionKey,
 				null,
 				null,

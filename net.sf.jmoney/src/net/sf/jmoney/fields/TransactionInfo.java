@@ -32,7 +32,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
-import net.sf.jmoney.model2.TransactionImpl;
+import net.sf.jmoney.model2.Transaction;
 
 /**
  * @author Nigel
@@ -58,7 +58,7 @@ public class TransactionInfo implements IExtensionPropertySetInfo {
     }
 
 	public Class getImplementationClass() {
-		return TransactionImpl.class;
+		return Transaction.class;
 	}
 	
     public Class getInterfaceClass() {

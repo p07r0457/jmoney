@@ -49,7 +49,7 @@ public class AccountNode extends TreeNode {
 	}
 	
 	public void removeAccount (Account account) {
-		AccountNode accountNode = (AccountNode) hashAccountsNode.get( (Account) account);
+		AccountNode accountNode = (AccountNode) hashAccountsNode.get(account);
 		if (accountNode != null) {
 		    accountNode.getParent().removeChild(accountNode);
 		    accountNode.setParent(null);

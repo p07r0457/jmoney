@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.qif;
 
-import net.sf.jmoney.model2.AbstractEntryExtension;
+import net.sf.jmoney.model2.EntryExtension;
 
 /**
  * Property set implementation class for the properties added
@@ -30,7 +30,7 @@ import net.sf.jmoney.model2.AbstractEntryExtension;
  * 
  * @author Nigel Westbury
  */
-public class QIFEntry extends AbstractEntryExtension {
+public class QIFEntry extends EntryExtension {
 	
 	private char reconcilingState = ' ';
 	

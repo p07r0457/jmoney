@@ -26,7 +26,7 @@ import java.io.File;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
-import net.sf.jmoney.model2.SessionImpl;
+import net.sf.jmoney.model2.Session;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.ui.IElementFactory;

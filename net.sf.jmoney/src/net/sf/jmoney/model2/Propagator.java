@@ -110,7 +110,7 @@ public class Propagator {
 						throw new MalformedPluginException("The first parameter in propertyChange methods in propagators must be of type String");
 					}
 					// Check that parameter one implements Entry interface
-					/* Not needed - Entry extensions may not extend AbstractEntryExtension
+					/* Not needed - Entry extensions may not extend EntryExtension
 					 Class [] interfaces1 = parameters[1].getInterfaces();
 					 boolean interfaceOk = false;
 					 for (int j = 0; j < interfaces1.length; j++) {

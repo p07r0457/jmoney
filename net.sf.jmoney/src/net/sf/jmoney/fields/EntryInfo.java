@@ -23,9 +23,9 @@
 package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.CurrencyImpl;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.EntryImpl;
+import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -60,7 +60,7 @@ public class EntryInfo implements IExtensionPropertySetInfo {
     }
 
 	public Class getImplementationClass() {
-		return EntryImpl.class;
+		return Entry.class;
 	}
 	
     public Class getInterfaceClass() {

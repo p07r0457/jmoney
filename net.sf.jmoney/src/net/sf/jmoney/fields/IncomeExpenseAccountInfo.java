@@ -26,7 +26,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -50,7 +50,7 @@ public class IncomeExpenseAccountInfo implements IExtensionPropertySetInfo {
     }
 
 	public Class getImplementationClass() {
-		return IncomeExpenseAccountImpl.class;
+		return IncomeExpenseAccount.class;
 	}
 	
     public Class getInterfaceClass() {

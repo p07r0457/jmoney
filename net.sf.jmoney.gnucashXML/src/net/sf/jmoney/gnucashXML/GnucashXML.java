@@ -244,7 +244,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 				// Create the account
 				if (accountName != null) {
 					System.out.println("I'm creating the account >" + accountName + "< with guid >" + accountGUID + "<");
-					CapitalAccountImpl account = (CapitalAccountImpl)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());;
+					CapitalAccount account = (CapitalAccount)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());;
 					account.setName(accountName);
 					accountsGUIDTable.put(accountGUID, account);
 					if (parentGUID != null) {
@@ -297,10 +297,10 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			//System.out.println("childGUID:" + childGUID);
 			//System.out.println("parentGUID:" + parentGUID);
 			CapitalAccount child = (CapitalAccount) getAccountFromGUID(childGUID);
-			CapitalAccountImpl parent = (CapitalAccountImpl) getAccountFromGUID(parentGUID);
+			CapitalAccount parent = (CapitalAccount) getAccountFromGUID(parentGUID);
 			
 			session.deleteAccount(child);
-			CapitalAccountImpl newChild = (CapitalAccountImpl) parent.createSubAccount();
+			CapitalAccount newChild = (CapitalAccount) parent.createSubAccount();
 			accountsGUIDTable.remove(childGUID);
 			accountsGUIDTable.put(childGUID, newChild);
 			

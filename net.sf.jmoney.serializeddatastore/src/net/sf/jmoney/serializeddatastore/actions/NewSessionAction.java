@@ -24,7 +24,7 @@ package net.sf.jmoney.serializeddatastore.actions;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.SessionImpl;
+import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.serializeddatastore.*;
 
 import org.eclipse.jface.action.IAction;
@@ -67,7 +67,7 @@ public class NewSessionAction implements IWorkbenchWindowActionDelegate {
         	// TODO: rather than hard code this constructor, use
         	// more generalized code.  Plug-ins may have added
         	// additional properties to the session.
-        	Session newSession = new SessionImpl(
+        	Session newSession = new Session(
         			sessionKey,
         			null,
 					null,

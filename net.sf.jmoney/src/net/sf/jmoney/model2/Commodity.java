@@ -22,20 +22,29 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Map;
+
 /**
  *
  * @author  Nigel
  */
-public interface Commodity extends IExtendableObject {
+public abstract class Commodity extends ExtendableObject {
+	protected Commodity(
+			IObjectKey objectKey, 
+			Map extensions, 
+			IObjectKey parentKey) {
+		super(objectKey, extensions);
+	}
+	
     /**
      * @return the name of the currency.
      */
-    String getName();
+	public abstract String getName();
     
     /**
      * Set the name of the currency.
      */
-    void setName(String name);
+	public abstract void setName(String name);
     
     /**
      * Converts an amount of this commodity from string to integer
@@ -45,12 +54,12 @@ public interface Commodity extends IExtendableObject {
      * in units that are at least as small as the smallest possible
      * quantity of the commodity.
      */
-    long parse(String amountString);
+	public abstract long parse(String amountString);
     
     /**
      * Converts an amount of this commodity from integer to string format.
      */
-    String format(long amount);
+	public abstract String format(long amount);
     
 	/**
 	 * Although one normally uses the parse and format methods, this method
@@ -58,5 +67,5 @@ public interface Commodity extends IExtendableObject {
 	 * 
 	 * @return the scale factor for this currency (10 to the number of decimals).
 	 */
-	short getScaleFactor();
+	public abstract short getScaleFactor();
 }

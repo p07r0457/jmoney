@@ -68,10 +68,10 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.CapitalAccountImpl;
-import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
+import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.SessionImpl;
+import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.ISessionManager;
@@ -249,7 +249,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			SAXParser saxParser = factory.newSAXParser();
 			HandlerForObject handler = new HandlerForObject(sessionManager);
 			saxParser.parse(bin, handler); 
-			SessionImpl newSession = handler.getSession();
+			Session newSession = handler.getSession();
 
 			sessionManager.setSession(newSession);
 		} 
@@ -302,7 +302,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			sessionManager = new SessionManager(sessionFile);
 
 			SimpleObjectKey key = new SimpleObjectKey(sessionManager); 
-			SessionImpl newSessionNewFormat = new SessionImpl(
+			Session newSessionNewFormat = new Session(
 				key,
 				null,
 				null,
@@ -341,13 +341,13 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		/**
 		 * The top level session object.
 		 */
-		private SessionImpl session;
+		private Session session;
 		
 		HandlerForObject(SessionManager sessionManager) {
 			this.sessionManager = sessionManager;
 		}
 		
-		SessionImpl getSession() {
+		Session getSession() {
 			return session;
 		}
 		
@@ -401,7 +401,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			if (parent == null) {
 				// We are back at the top level.
 				// Save this object because it is the session object.
-				session = (SessionImpl)currentSAXEventProcessor.getValue();
+				session = (Session)currentSAXEventProcessor.getValue();
 			}
 			
 			currentSAXEventProcessor = parent;
@@ -1081,7 +1081,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * Saves the session in the selected file.
 	 */
 	public void saveSession(IWorkbenchWindow window) {
-		SessionManager sessionManager = (SessionManager)JMoneyPlugin.getDefault().getSession();
+		SessionManager sessionManager = (SessionManager)JMoneyPlugin.getDefault().getSessionManager();
 		if (sessionManager.getFile() == null) {
 			File sessionFile = obtainFileName(window);
 			if (sessionFile != null) {
@@ -1430,7 +1430,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			Object obj = node.getUserObject();
 			if (obj instanceof net.sf.jmoney.model.SimpleCategory) {
 				net.sf.jmoney.model.SimpleCategory oldCategory = (net.sf.jmoney.model.SimpleCategory) obj;
-				IncomeExpenseAccountImpl newCategory = (IncomeExpenseAccountImpl)newSession.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+				IncomeExpenseAccount newCategory = (IncomeExpenseAccount)newSession.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
 				newCategory.setName(oldCategory.getCategoryName());
 				
 				accountMap.put(oldCategory, newCategory);
@@ -1440,7 +1440,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					Object obj2 = subNode.getUserObject();
 					if (obj2 instanceof net.sf.jmoney.model.SimpleCategory) {
 						net.sf.jmoney.model.SimpleCategory oldSubCategory = (net.sf.jmoney.model.SimpleCategory) obj2;
-						IncomeExpenseAccountImpl newSubCategory = (IncomeExpenseAccountImpl)newSession.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+						IncomeExpenseAccount newSubCategory = (IncomeExpenseAccount)newSession.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
 						newCategory.setName(oldCategory.getCategoryName());
 
 						accountMap.put(oldSubCategory, newSubCategory);
@@ -1454,7 +1454,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		for (Iterator iter = oldAccounts.iterator(); iter.hasNext(); ) {
 			net.sf.jmoney.model.Account oldAccount = (net.sf.jmoney.model.Account)iter.next();
 			
-			CapitalAccountImpl newAccount = (CapitalAccountImpl)newSession.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
+			CapitalAccount newAccount = (CapitalAccount)newSession.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
 			newAccount.setName(oldAccount.getName());
 			newAccount.setAbbreviation(oldAccount.getAbbrevation());
 			newAccount.setAccountNumber(oldAccount.getAccountNumber());

@@ -33,15 +33,15 @@ import java.util.Map;
  * @author  Nigel
  *
  * To add fields and methods to an Entry object, one should
- * derive a class on AbstractEntryExtension.  This mechanism
+ * derive a class on EntryExtension.  This mechanism
  * allows multiple extensions to an Entry object to be added
  * and maintained at runtime.
  *
  */
-public abstract class AbstractEntryExtension extends ExtensionObject implements Entry {
+public abstract class EntryExtension extends ExtensionObject {
 	
-	/** Creates a new instance of AbstractEntryExtension */
-	public AbstractEntryExtension() {
+	/** Creates a new instance of EntryExtension */
+	public EntryExtension() {
 	}
 	
 	/*

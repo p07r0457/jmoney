@@ -25,7 +25,7 @@ package net.sf.jmoney.fields;
 import org.eclipse.swt.widgets.Composite;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.AbstractAccountImpl;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
@@ -57,7 +57,7 @@ public class AccountInfo implements IExtensionPropertySetInfo {
     }
 
 	public Class getImplementationClass() {
-		return AbstractAccountImpl.class;
+		return Account.class;
 	}
 
     public Class getInterfaceClass() {

@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.qif;
 
-import net.sf.jmoney.model2.CurrencyImpl;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.PropertyAccessor;
