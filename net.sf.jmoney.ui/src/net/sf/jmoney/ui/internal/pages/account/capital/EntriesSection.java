@@ -36,6 +36,7 @@ import net.sf.jmoney.VerySimpleDateFormat;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.Transaction;
 
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnWeightData;
@@ -105,6 +106,7 @@ public class EntriesSection extends SectionPart {
 
         getSection().setClient(container);
         toolkit.paintBordersFor(container);
+        fTable.setTopIndex(fTable.getItemCount()-5);
         refresh();
     }
 
@@ -116,6 +118,7 @@ public class EntriesSection extends SectionPart {
 
         TableColumn col;
         TableLayout tlayout = new TableLayout();
+        
 
         col = new TableColumn(fTable, SWT.NULL);
         col.setText("Check");
@@ -133,6 +136,10 @@ public class EntriesSection extends SectionPart {
         col.setText("Description");
         tlayout.addColumnData(new ColumnWeightData(50, 300));
 
+        col = new TableColumn(fTable, SWT.NULL);
+        col.setText("To account");
+        tlayout.addColumnData(new ColumnWeightData(50, 70));
+        
         col = new TableColumn(fTable, SWT.RIGHT);
         col.setText("Debit");
         tlayout.addColumnData(new ColumnWeightData(50, 70));
@@ -163,10 +170,14 @@ public class EntriesSection extends SectionPart {
 
         fViewer.addSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
+                // Display the details of the new selected entry in the fields
+                // TODO: update the fields for all AbstractDispayableEntry
                 if (event.getSelection() instanceof IStructuredSelection) {
                     IStructuredSelection s = (IStructuredSelection) event.getSelection();
-                    DisplayableEntry de = (DisplayableEntry) s.getFirstElement();
-                    fPage.fEntrySection.update(de.entry);
+                    if (s.getFirstElement() instanceof DisplayableEntry) {
+                        DisplayableEntry de = (DisplayableEntry) s.getFirstElement();
+                        fPage.fEntrySection.update(de.entry);
+                    }
                 }
             }
         });
@@ -186,14 +197,15 @@ public class EntriesSection extends SectionPart {
 
     // TODO This is not implemnted properly yet.
     protected CellEditor[] createCellEditors() {
-        CellEditor[] result = new CellEditor[7];
+        CellEditor[] result = new CellEditor[8];
         result[0] = new TextCellEditor(fTable); // check
         result[1] = new TextCellEditor(fTable); // date
         result[2] = new TextCellEditor(fTable); // valuta
         result[3] = new TextCellEditor(fTable); // description
-        result[4] = new TextCellEditor(fTable); // debit
-        result[5] = new TextCellEditor(fTable); // credit
-        result[6] = new TextCellEditor(fTable); // balance
+        result[4] = new TextCellEditor(fTable); // to account
+        result[5] = new TextCellEditor(fTable); // debit
+        result[6] = new TextCellEditor(fTable); // credit
+        result[7] = new TextCellEditor(fTable); // balance
         return result;
     }
 
@@ -237,6 +249,9 @@ public class EntriesSection extends SectionPart {
                 saldo = saldo + e.getAmount();
                 d_entries.add(new DisplayableEntry(e, saldo));
             }
+            
+            // an empty line to have the possibility to enter a new entry
+            d_entries.add(new DisplayableNewEmptyEntry());
 
             return d_entries.toArray();
         }
@@ -246,30 +261,41 @@ public class EntriesSection extends SectionPart {
         // TODO Use formatting capabilities of IPropertyAccessor
         // as soon as they are available.
         protected NumberFormat nf = DecimalFormat.getCurrencyInstance();
+
         public String getColumnText(Object obj, int index) {
-            DisplayableEntry de = (DisplayableEntry) obj;
-            Commodity c = de.entry.getAccount().getCommodity(de.entry);
-            switch (index) {
-            case 0: // check
-                String s = de.entry.getCheck();
-                return s == null ? "" : s;
-            case 1: // date
-                Date d = de.entry.getTransaction().getDate();
-                return d == null ? "" : fDateFormat.format(d);
-            case 2: // valuta
-                d = de.entry.getValuta();
-                return d == null ? "" : fDateFormat.format(d);
-            case 3: // description
-                s = de.entry.getDescription();
-                return s == null ? "" : s;
-            case 4: // income
-                return de.entry.getAmount() >= 0 ? c.format(de.entry.getAmount()) : "";
-            case 5: // expense
-                return de.entry.getAmount() < 0 ? c.format(-de.entry.getAmount()) : "";
-            case 6: // balance
-                return c.format(de.balance);
+            if (obj instanceof AbstractDisplayableEntry) {
+                AbstractDisplayableEntry de = (AbstractDisplayableEntry) obj;
+                // TODO: use the good commodity
+                Commodity c = fPage.getAccount().getCommodity(null);
+	            switch (index) {
+	            case 0: // check
+	                String s = de.getCheck();
+	                return s == null ? "" : s;
+	            case 1: // date
+	                Date d = de.getDate();
+	                return d == null ? "" : fDateFormat.format(d);
+	            case 2: // valuta
+	                d = de.getValuta();
+	                return d == null ? "" : fDateFormat.format(d);
+	            case 3: // description
+	                s = de.getDescription();
+	                return s == null ? "" : s;
+	            case 4: // to account
+	                s = de.getOtherAccountName();
+	                return s == null ? "" : s;
+	            case 5: // income
+	                return de.getAmount() >= 0 ? c.format(de.getAmount()) : "";
+	            case 6: // expense
+	                return de.getAmount() < 0 ? c.format(-de.getAmount()) : "";
+	            case 7: // balance
+	                return c.format(de.getBalance());
+	            }
+	            return ""; //$NON-NLS-1$
+	            
+            } else {
+                // type of entry not recognize
+                return ""; //$NON-NLS-1$
             }
-            return ""; //$NON-NLS-1$
         }
         public Image getColumnImage(Object obj, int index) {
             return null;
@@ -279,6 +305,11 @@ public class EntriesSection extends SectionPart {
     class EntrySorter extends ViewerSorter {
         public int compare(Viewer notused, Object o1, Object o2) {
             if (o1 instanceof DisplayableEntry && o2 instanceof DisplayableEntry) {
+                if (o1 instanceof DisplayableNewEmptyEntry) {
+                    return -1;
+                } else if (o2 instanceof DisplayableNewEmptyEntry) {
+                    return 1;
+                }
                 Date d1 = ((DisplayableEntry) o1).entry.getTransaction().getDate();
                 Date d2 = ((DisplayableEntry) o2).entry.getTransaction().getDate();
                 // TODO Taken from EntryComparator as a quick fix
@@ -292,7 +323,28 @@ public class EntriesSection extends SectionPart {
         }
     }
 
-    class DisplayableEntry {
+    abstract class AbstractDisplayableEntry {
+        abstract String getCheck ();
+        abstract Date   getDate ();
+        abstract Date   getValuta ();
+        abstract String getDescription ();
+        abstract long   getAmount ();
+        
+        abstract void setCheck (String check);
+        abstract void setDate (Date date);
+        abstract void setValuta (Date valuata);
+        abstract void setDescription (String description);
+        abstract void setAmount (long amount);
+
+        abstract String getOtherAccountName ();
+        abstract long   getBalance ();
+        
+
+        //TODO: abstract void set/getCommodity();
+    }
+    
+    class DisplayableEntry extends AbstractDisplayableEntry { 
+        
         private Entry entry;
         private long balance;
 
@@ -300,7 +352,65 @@ public class EntriesSection extends SectionPart {
             this.entry = entry;
             this.balance = saldo;
         }
+        
+        /* Trivial functions */
+        String getCheck ()        { return entry.getCheck(); }
+        Date   getDate ()         { return entry.getTransaction().getDate(); }
+        Date   getValuta ()       { return entry.getValuta(); }
+        String getDescription ()  { return entry.getDescription(); }
+        long   getAmount ()       { return entry.getAmount(); }
+
+        void setCheck (String check)              { entry.setCheck(check); }
+        void setDate (Date date)                  { entry.getTransaction().setDate(date); }
+        void setValuta (Date valuta)              { entry.setValuta(valuta); }
+        void setDescription (String description)  { entry.setDescription(description); }
+        void setAmount (long amount)              { entry.setAmount(amount); }
+
+        String getOtherAccountName () {
+            Transaction t = entry.getTransaction();
+            if (t.hasMoreThanTwoEntries())
+                return "-- splitted --";
+            else
+                return t.getOther(entry).getAccount().getName();
+        }
+
+        long getBalance () { return balance ; }
     }
+
+    /**
+     * This class is to be used for new entries which are currently filled in by the
+     * user, before they are comited and transformed in real entries
+     * @author Faucheux
+     */
+    class DisplayableNewEmptyEntry extends AbstractDisplayableEntry {
+        
+        String check = null;
+        Date   date = null;
+        Date   valuta = null;
+        String description = null;
+        long   amount = 0;
+        
+        public DisplayableNewEmptyEntry(){
+            // 	constructor to define a new, empty entry which we be filled in by the user
+        }
+
+        String getCheck ()        { return check; }
+        Date   getDate ()         { return date; }
+        Date   getValuta ()       { return valuta; }
+        String getDescription ()  { return description; }
+        long   getAmount ()       { return amount;}
+        
+        void setCheck (String check)              { this.check = check; }
+        void setDate (Date date)                  { this.date = date; }
+        void setValuta (Date valuta)              { this.valuta = valuta; }
+        void setDescription (String description)  { this.description = description; }
+        void setAmount (long amount)              { this.amount = amount; }
+
+        String getOtherAccountName () { return null; }
+        long   getBalance () { return 0; }
+        
+    }
+    
 
     class CellModifier implements ICellModifier {
         public boolean canModify(Object element, String property) {
@@ -310,44 +420,50 @@ public class EntriesSection extends SectionPart {
             int index = getColumnIndex(property);
             return fLabelProvider.getColumnText(element, index);
         }
+        
         public void modify(Object element, String property, Object value) {
+            
             if (element instanceof Item) {
                 element = ((Item) element).getData();
             }
-            DisplayableEntry de = (DisplayableEntry) element;
-            Commodity c = de.entry.getAccount().getCommodity(de.entry);
+            
+            AbstractDisplayableEntry de = (AbstractDisplayableEntry) element;
+            // TODO: here, we should set the commodity to the one of the account for a new Entry,
+            // and the one of the entry in case the entry already exists
+            Commodity c = fPage.getAccount().getCommodity(null);
             int index = getColumnIndex(property);
             switch (index) {
             case 0: // check
                 String s = (String) value;
-                de.entry.setCheck(s.length() == 0 ? null : s);
+                de.setCheck(s.length() == 0 ? null : s);
                 fViewer.update(element, new String[] { property});
                 break;
             case 1: // date
                 Date d = fDateFormat.parse((String) value);
-                de.entry.getTransaction().setDate(d);
+                de.setDate(d);
                 fViewer.update(element, new String[] { property});
                 break;
             case 2: // valuta
                 d = fDateFormat.parse((String) value);
-                de.entry.setValuta(d);
+                de.setValuta(d);
                 fViewer.update(element, new String[] { property});
                 break;
             case 3: // description
                 s = (String) value;
-                de.entry.setDescription(s.length() == 0 ? null : s);
+                de.setDescription(s.length() == 0 ? null : s);
                 fViewer.update(element, new String[] { property});
                 break;
             case 4: // income
-                de.entry.setAmount(c.parse((String) value));
+                de.setAmount(c.parse((String) value));
                 fViewer.refresh();
                 break;
             case 5: // expense
-                de.entry.setAmount(-c.parse((String) value));
+                de.setAmount(-c.parse((String) value));
                 fViewer.refresh();
                 break;
             }
         }
+        
         protected int getColumnIndex(String property) {
             int index = 0;
             if (property.equals("check"))
