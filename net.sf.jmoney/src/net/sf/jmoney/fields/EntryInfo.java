@@ -63,6 +63,7 @@ public class EntryInfo implements IPropertySetInfo {
 	private static PropertyAccessor memoAccessor = null;
 	private static PropertyAccessor amountAccessor = null;
 	private static PropertyAccessor creationAccessor = null;
+	private static PropertyAccessor incomeExpenseCurrencyAccessor = null;
 
 	public EntryInfo() {
     }
@@ -133,6 +134,7 @@ public class EntryInfo implements IPropertySetInfo {
 		memoAccessor        = propertyRegistrar.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        30.0, textControlFactory, null);
 		amountAccessor      = propertyRegistrar.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      10.0, amountControlFactory, null);
 		creationAccessor    = propertyRegistrar.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    10.0, new DateControlFactory(true), null);
+		incomeExpenseCurrencyAccessor = propertyRegistrar.addProperty("incomeExpenseCurrency",    JMoneyPlugin.getResourceString("Entry.currency"),    20.0, new CurrencyControlFactory(), null);
 		
 		propertyRegistrar.setObjectDescription("Accounting Entry");
 	}
@@ -191,5 +193,12 @@ public class EntryInfo implements IPropertySetInfo {
 	 */
 	public static PropertyAccessor getCreationAccessor() {
 		return creationAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getIncomeExpenseCurrencyAccessor() {
+		return incomeExpenseCurrencyAccessor;
 	}	
 }

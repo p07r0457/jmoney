@@ -51,6 +51,12 @@ public class Entry extends ExtendableObject {
 	
 	protected String memo = null;
 	
+	/**
+	 * Applicable only if the account is an IncomeExpenseAccount
+	 * and the multi-currency property in the account is set.
+	 */
+	protected Currency incomeExpenseCurrency = null; 
+	
     /**
      * Constructor used by datastore plug-ins to create
      * an entry object.
@@ -78,7 +84,8 @@ public class Entry extends ExtendableObject {
     		Date       valuta,
     		String     memo,
     		long       amount,
-    		long       creation) {
+    		long       creation,
+    		IObjectKey incomeExpenseCurrencyKey) {
 		super(objectKey, extensions);
 		
 		if (creation == 0) {
@@ -96,6 +103,11 @@ public class Entry extends ExtendableObject {
 		}
 		this.amount = amount;
 		this.memo = memo;
+		if (incomeExpenseCurrencyKey == null) {
+			this.incomeExpenseCurrency = null;
+		} else {
+			this.incomeExpenseCurrency = (Currency)incomeExpenseCurrencyKey.getObject();
+		}
 		
         this.transactionKey = parent;
 	}
@@ -186,6 +198,16 @@ public class Entry extends ExtendableObject {
 	 */
 	public Account getAccount() {
 		return account;
+	}
+	
+	/**
+	 * Returns the currency in which the amount in this entry is denominated.
+	 * This property is applicable if and only if the account for this entry
+	 * is an IncomeExpenseAccount and the multi-currency property in the account
+	 * is set.
+	 */
+	public Currency getIncomeExpenseCurrency() {
+		return incomeExpenseCurrency;
 	}
 	
 	public String getFullAccountName() {
@@ -314,6 +336,20 @@ public class Entry extends ExtendableObject {
 		
 		// Notify the change manager.
 		processPropertyChange(EntryInfo.getMemoAccessor(), oldMemo, memo);
+	}
+	
+	/**
+	 * Sets the currency in which the amount in this entry is denominated.
+	 * This property is applicable if and only if the account for this entry
+	 * is an IncomeExpenseAccount and the multi-currency property in the account
+	 * is set.
+	 */
+	public void setIncomeExpenseCurrency(Currency incomeExpenseCurrency) {
+		Currency oldIncomeExpenseCurrency = this.incomeExpenseCurrency;
+		this.incomeExpenseCurrency = incomeExpenseCurrency;
+		
+		// Notify the change manager.
+		processPropertyChange(EntryInfo.getIncomeExpenseCurrencyAccessor(), oldIncomeExpenseCurrency, incomeExpenseCurrency);
 	}
 	
 	static public Object [] getDefaultProperties() {

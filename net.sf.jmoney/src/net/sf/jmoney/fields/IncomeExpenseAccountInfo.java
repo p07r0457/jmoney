@@ -49,7 +49,9 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
 	private static PropertySet propertySet = null;
 	private static PropertyAccessor subAccountAccessor = null;
-
+	private static PropertyAccessor multiCurrencyAccessor = null;
+	private static PropertyAccessor currencyAccessor = null;
+	
 	public IncomeExpenseAccountInfo() {
     }
 
@@ -62,7 +64,8 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
 		subAccountAccessor = propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccount.class, null);
 
-		// There are no scalar properties actually defined in this property set!
+		multiCurrencyAccessor = propertyRegistrar.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), 5.0, new CheckBoxControlFactory(), null);
+		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), 15.0, new CurrencyControlFactory(), null);
 		
 		// We should define something for the implied enumerated value
 		// that is controlled by the derived class type.  This has no
@@ -83,5 +86,19 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 	 */
 	public static PropertyAccessor getSubAccountAccessor() {
 		return subAccountAccessor;
+	}	
+
+    /**
+	 * @return
+	 */
+	public static PropertyAccessor getMultiCurrencyAccessor() {
+		return multiCurrencyAccessor;
+	}	
+
+    /**
+	 * @return
+	 */
+	public static PropertyAccessor getCurrencyAccessor() {
+		return currencyAccessor;
 	}	
 }

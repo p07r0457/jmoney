@@ -33,6 +33,19 @@ import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
  */
 public class IncomeExpenseAccount extends Account {
 
+	/**
+	 * True if the entries in this account can be in any account,
+	 * false if all the entries must be in the same currency
+	 * (in which case the currency property must be set).
+	 */
+	private boolean multiCurrency = true;
+	
+	/**
+	 * The currency in which all entries in this account are denominated.
+	 * This property is not applicable if multiCurrency is true.
+	 */
+	private Currency currency = null;
+	
 	private String fullAccountName = null;
 
 	public IncomeExpenseAccount(
@@ -40,8 +53,16 @@ public class IncomeExpenseAccount extends Account {
 			Map extensions, 
 			IObjectKey parent,
 			String name,
-			IListManager subAccounts) {
+			IListManager subAccounts,
+			boolean multiCurrency,
+			IObjectKey currencyKey) {
 		super(objectKey, extensions, parent, name, subAccounts);
+		this.multiCurrency = multiCurrency;
+		if (currencyKey == null) {
+			this.currency = null;
+		} else {
+			this.currency = (Currency)currencyKey.getObject();
+		}
 	}
 
 	public IncomeExpenseAccount(
@@ -76,14 +97,34 @@ public class IncomeExpenseAccount extends Account {
 		fullAccountName = null;
 	}
 
+	public boolean isMultiCurrency() {
+		return multiCurrency;
+	}
+	
+	public Currency getCurrency() {
+		return currency;
+	}
+	
+	public void setMultiCurrency(boolean multiCurrency) {
+		this.multiCurrency = multiCurrency;
+	}
+	
+	public void setCurrency(Currency currency) {
+		this.currency = currency;
+	}
+	
 	/**
 	 * @return Commodity represented by the amount in the given entry
 	 */
-	// TODO: Can income and expense categories contain
-	// mixed currencies?  This method probably needs to
-	// be implemented.
 	public Commodity getCommodity(Entry entry) {
-	    throw new RuntimeException("Illegal invocation");
+		// Income and expense accounts may be either single currency or
+		// multiple currency.
+		if (!multiCurrency) {
+			return currency;
+		} else {
+			// This is a multi-currency account, so we look to the entry.
+			return entry.getIncomeExpenseCurrency();
+		}
 	}
 
 	/**
