@@ -23,6 +23,9 @@
       <library name="lib/commons-collections-3.0.jar">
          <export name="*"/>
       </library>
+      <library name="lib/swtjasperviewer-1.0.0.jar">
+         <export name="*"/>
+      </library>
    </runtime>
    <requires>
       <import plugin="org.eclipse.ui"/>
