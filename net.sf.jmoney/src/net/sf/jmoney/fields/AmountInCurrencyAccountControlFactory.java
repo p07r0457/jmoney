@@ -25,13 +25,10 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.CurrencyAccount;
-import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
-import net.sf.jmoney.model2.SessionChangeListener;
 
 import org.eclipse.swt.widgets.Composite;
 
@@ -58,17 +55,10 @@ public class AmountInCurrencyAccountControlFactory extends AmountControlFactory 
     }
 
     protected Commodity getCommodity(ExtendableObject object) {
-    	{
-    	    Commodity result = null;
-    	    if (object instanceof CurrencyAccount)
-    	        result = ((CurrencyAccount) object).getCurrency();
-    	    else if (object instanceof Entry)
-    	        result = ((Entry) object).getCommodity();
-    	    else
-    	        throw new IllegalArgumentException(object.toString());
-    	    return result;
-    	}
-
-    	
+    	return ((CurrencyAccount) object).getCurrency();
     }
+
+	public boolean isEditable() {
+		return true;
+	}
 }

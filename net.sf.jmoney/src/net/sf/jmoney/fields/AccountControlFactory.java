@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.fields;
 
-import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
@@ -31,25 +31,25 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import org.eclipse.swt.widgets.Composite;
 
 /**
- * A control factory to select a currency.
+ * A control factory to select an account.
  * 
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class CurrencyControlFactory implements IPropertyControlFactory {
+public class AccountControlFactory implements IPropertyControlFactory {
 
     public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
-        return new CurrencyEditor(parent, propertyAccessor);
+        return new AccountEditor(parent, propertyAccessor);
     }
 
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        Currency value = (Currency) extendableObject.getPropertyValue(propertyAccessor);
-        return value == null ? "none" : "'" + value.getName() + "'";
+        Account value = (Account) extendableObject.getPropertyValue(propertyAccessor);
+        return value == null ? "<none>" : value.getFullAccountName();
     }
 
     public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        Currency value = (Currency) extendableObject.getPropertyValue(propertyAccessor);
-        return value == null ? "" : value.getCode();
+        Account value = (Account) extendableObject.getPropertyValue(propertyAccessor);
+        return value == null ? "" : value.getFullAccountName();
     }
 
 	public boolean isEditable() {

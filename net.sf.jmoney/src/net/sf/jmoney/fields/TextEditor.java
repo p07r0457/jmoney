@@ -58,8 +58,14 @@ public class TextEditor implements IPropertyControl {
 
     public void load(ExtendableObject object) {
         fExtendableObject = object;
-        String text = object.getStringPropertyValue(propertyAccessor);
-        propertyControl.setText(text == null ? "" : text);
+
+        if (object == null) {
+            propertyControl.setText("");
+    	} else {
+            String text = object.getStringPropertyValue(propertyAccessor);
+            propertyControl.setText(text == null ? "" : text);
+    	}
+    	propertyControl.setEnabled(object != null);
     }
 
     public void save() {

@@ -24,15 +24,22 @@
 package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CapitalAccountInfo;
 import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.fields.TransactionInfo;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.Vector;
 
 /**
  * The data model for an account.
@@ -43,11 +50,11 @@ public abstract class CapitalAccount extends Account {
 
 	protected String comment = null;
 
-        /**
-         * This list is maintained for efficiency only.
-         * The master list is the list of transactions, with each
-         * transaction containing a list of entries.
-         */
+	/**
+	 * This list is maintained for efficiency only.
+	 * The master list is the list of transactions, with each
+	 * transaction containing a list of entries.
+	 */
 	protected Collection entries;
 
 	/**
@@ -114,10 +121,106 @@ public abstract class CapitalAccount extends Account {
 	};
 
 	/**
-	 * @return An iterator that returns the entries of this account.
+	 * Get the entries in the account.
+	 * 
+	 * @return A read-only collection with elements of
+	 * 				type <code>Entry</code>
 	 */
-	public Iterator getEntriesIterator(Session session) {
-		return entries.iterator();
+	public Collection getEntries() {
+		return Collections.unmodifiableCollection(entries);
+	}
+	
+	/**
+	 * Get the entries in this account sorted according to the given
+	 * sort specification.  If the datastore plug-in has implemented
+	 * the IEntryQueries interface then pass the request on to the
+	 * datastore through the method of the same name in the IEntryQueries
+	 * interface.  If the IEntryQueries interface has not been implemented
+	 * by the datastore then evaluate ourselves.
+	 * <P> 
+	 * @return A collection containing the entries of this account.
+	 * 				The entries are sorted using the given property and
+	 * 				given sort order.  The collection is a read-only
+	 * 				collection.
+	 */
+	public Collection getSortedEntries(final PropertyAccessor sortProperty, boolean descending) {
+		IEntryQueries queries = (IEntryQueries)getSession().getAdapter(IEntryQueries.class);
+    	if (queries != null) {
+    		return queries.getSortedEntries(this, sortProperty, descending);
+    	} else {
+    		// IEntryQueries has not been implemented in the datastore.
+    		// We must therefore provide our own implementation.
+    		
+    		List sortedEntries = new LinkedList();
+    		
+    		Iterator it = entries.iterator();
+    		while (it.hasNext()) {
+    			sortedEntries.add(it.next());
+    		}
+    		
+    		Comparator entryComparator;
+    		if (sortProperty.getPropertySet() == EntryInfo.getPropertySet()) {
+    			entryComparator = new Comparator() {
+    				public int compare(Object a, Object b) {
+    					Object value1 = ((Entry) a).getPropertyValue(sortProperty);
+    					Object value2 = ((Entry) b).getPropertyValue(sortProperty);
+    					if (value1 == null && value2 == null) return 0;
+    					if (value1 == null) return 1;
+    					if (value2 == null) return -1;
+    					if (Comparable.class.isAssignableFrom(sortProperty.getValueClass())) {
+    						return ((Comparable)value1).compareTo(value2);
+    					} else {
+    						throw new RuntimeException("not yet implemented");
+    					}
+    				}
+    			};
+    		} else if (sortProperty.getPropertySet() == TransactionInfo.getPropertySet()) {
+    			entryComparator = new Comparator() {
+    				public int compare(Object a, Object b) {
+    					Object value1 = ((Entry) a).getTransaction().getPropertyValue(sortProperty);
+    					Object value2 = ((Entry) b).getTransaction().getPropertyValue(sortProperty);
+    					if (value1 == null && value2 == null) return 0;
+    					if (value1 == null) return 1;
+    					if (value2 == null) return -1;
+    					if (Comparable.class.isAssignableFrom(sortProperty.getValueClass())) {
+    						return ((Comparable)value1).compareTo(value2);
+    					} else {
+    						throw new RuntimeException("not yet implemented");
+    					}
+    				}
+    			};
+    		} else if (sortProperty.getPropertySet() == AccountInfo.getPropertySet()) {
+    			entryComparator = new Comparator() {
+    				public int compare(Object a, Object b) {
+    					Object value1 = ((Entry) a).getAccount().getPropertyValue(sortProperty);
+    					Object value2 = ((Entry) b).getAccount().getPropertyValue(sortProperty);
+    					if (value1 == null && value2 == null) return 0;
+    					if (value1 == null) return 1;
+    					if (value2 == null) return -1;
+    					if (Comparable.class.isAssignableFrom(sortProperty.getValueClass())) {
+    						return ((Comparable)value1).compareTo(value2);
+    					} else {
+    						throw new RuntimeException("not yet implemented");
+    					}
+    				}
+    			};
+    		} else {
+    			throw new RuntimeException("given property cannot be used for entry sorting");
+    		}
+    		
+    		if (descending) {
+    			final Comparator ascendingComparator = entryComparator;
+    			entryComparator = new Comparator() {
+    				public int compare(Object a, Object b) {
+    					return ascendingComparator.compare(b, a);
+    				}
+    			};
+    		}
+    		
+    		Collections.sort(sortedEntries, entryComparator);
+    		
+    		return sortedEntries;
+    	}
 	};
 	
 	/**
@@ -125,7 +228,7 @@ public abstract class CapitalAccount extends Account {
 	 * 			false if no entries are in this account
 	 */
 	public boolean hasEntries() {
-		return entries.size() != 0;
+		return !entries.isEmpty();
 	}
 	
 	// These methods are used when maintaining the list
@@ -249,5 +352,70 @@ public abstract class CapitalAccount extends Account {
 	static public Object [] getDefaultProperties() {
 		return new Object [] { "new account", null, null, null, new Long(0), null, null, null };
 	}
-	
+
+	/**
+	 * @param date
+	 * @param date2
+	 * @param includeSubAccounts
+	 * @return
+	 */
+	public long [] getEntryTotalsByMonth(int startYear, int startMonth, int numberOfMonths, boolean includeSubAccounts) {
+		IEntryQueries queries = (IEntryQueries)getSession().getAdapter(IEntryQueries.class);
+    	if (queries != null) {
+    		return queries.getEntryTotalsByMonth(this, startYear, startMonth, numberOfMonths, includeSubAccounts);
+    	} else {
+    		// IEntryQueries has not been implemented in the datastore.
+    		// We must therefore provide our own implementation.
+    		
+    		Vector entriesList = new Vector();
+    		entriesList.addAll(entries);
+    		if (includeSubAccounts) {
+    			addEntriesFromSubAccounts(this, entriesList);
+    		}
+    		
+            Collections.sort(entriesList, new Comparator() {
+                public int compare(Object a, Object b) {
+                    return ((Entry) a).getTransaction().getDate().compareTo(
+                            ((Entry) b).getTransaction().getDate());
+                }
+            });
+
+    		
+    		long [] totals = new long[numberOfMonths];
+
+    		// calculate the sum for each month
+    		int year = startYear;
+    		int month = startMonth; 
+            for (int i=0; i<numberOfMonths; i++) {
+            	Date startOfMonth = new Date(year - 1900, month, 1);
+            	month++;
+            	if (month == 13) {
+            		year++;
+            		month = 1;
+            	}
+            	Date endOfMonth = new Date(year - 1900, month, 1);
+            	
+            	int total = 0;
+            	for (Iterator iter = entriesList.iterator(); iter.hasNext(); ) {
+            		Entry entry = (Entry)iter.next();
+            		if (entry.getTransaction().getDate().compareTo(startOfMonth) >= 0 
+            		 && entry.getTransaction().getDate().compareTo(endOfMonth) < 0) {
+            			total += entry.getAmount();
+            		}
+            	}
+            	totals[i] = total;
+            }
+            
+            return totals;
+    	}
+	}
+
+	private void addEntriesFromSubAccounts(CapitalAccount a, Collection entriesList) {
+		for (Iterator it = a.getSubAccountIterator(); it.hasNext(); ) {
+			CapitalAccount subAccount = (CapitalAccount)it.next();
+			entriesList.add(subAccount.getEntries());
+			addEntriesFromSubAccounts(subAccount, entriesList);
+		}
+	}
+
 }

@@ -56,7 +56,9 @@ public interface IPropertyControl {
     Control getControl();
 
     /**
-     * Load the value into the control object.
+     * Load the value into the control.  If the
+     * object is null then the control must both have its
+     * value blanked out and be disabled.
      * 
      * @param object The object that contains the value of
      * the property.

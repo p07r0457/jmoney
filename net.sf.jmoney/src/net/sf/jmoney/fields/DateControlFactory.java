@@ -43,8 +43,18 @@ public class DateControlFactory implements IPropertyControlFactory {
     // TODO Listen to date format changes.
     protected VerySimpleDateFormat fDateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
 
+    protected boolean readOnly;
+    
+    public DateControlFactory() {
+    	this.readOnly = false;
+    }
+    
+    public DateControlFactory(boolean readOnly) {
+    	this.readOnly = readOnly;
+    }
+    
     public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
-        return new DateEditor(parent, propertyAccessor, fDateFormat);
+  		return new DateEditor(parent, propertyAccessor, fDateFormat);
     }
 
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
@@ -61,4 +71,7 @@ public class DateControlFactory implements IPropertyControlFactory {
         return fDateFormat.format(value);
     }
 
+	public boolean isEditable() {
+		return !readOnly;
+	}
 }

@@ -59,8 +59,14 @@ public class DateEditor implements IPropertyControl {
      * @see net.sf.jmoney.model2.IPropertyControl#load(net.sf.jmoney.model2.ExtendableObject)
      */
     public void load(ExtendableObject object) {
-        Date d = (Date) object.getPropertyValue(fPropertyAccessor);
-        fPropertyControl.setText(fDateFormat.format(d));
+    	this.fExtendableObject = object;
+    	if (object == null) {
+            fPropertyControl.setText("");
+    	} else {
+            Date d = (Date) object.getPropertyValue(fPropertyAccessor);
+            fPropertyControl.setText(fDateFormat.format(d));
+    	}
+    	fPropertyControl.setEnabled(object != null);
     }
 
     /* (non-Javadoc)

@@ -91,10 +91,17 @@ public interface IObjectKey {
 	ExtendableObject getObject();
 
 	/**
-	 * This method creates an object that 
-	 * For example, the list of entries in a given account is often required.
+	 * This method creates a collection that contains the entries
+	 * for an account.
+	 * <P>
+	 * The list of entries in a given account is often required.
 	 * Entries are not owned by the account but entries are owned by the transaction
-	 * and the transactions are owned by the session.  Therefore to do a  
+	 * and the transactions are owned by the session.  The entries in an
+	 * account can be obtained by searching all the entries in all the transactions
+	 * and looking for entries with the given account.  To speed this process up,
+	 * an object is created in each account than can return the entries quickly.
+	 * The actual implementation these objects depends on the datastore.
+	 * This method creates such an object.
 	 * 
 	 * @see index documentation
 	 * @param accountAccessor

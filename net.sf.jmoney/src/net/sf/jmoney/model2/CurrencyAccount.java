@@ -242,19 +242,28 @@ public class CurrencyAccount extends CapitalAccount {
 		System.out.println("Calculing the Balance for >" + name + "< (without sub-accounts) between " + fromDate + " and " + toDate);
 		
 		long bal = getStartBalance();
-		Iterator eIt = null;
-		
-		// Sum each entry the entry between the two dates 
-		eIt = entries.iterator();
-		while (eIt.hasNext()) {
-			Entry e = (Entry) eIt.next();
-			if ((e.getTransaction().getDate().compareTo(fromDate) >= 0)
-					&& e.getTransaction().getDate().compareTo(toDate) <= 0){
-				bal += e.getAmount();
-				
-			}
-		}
-		
+
+		IEntryQueries queries = (IEntryQueries)getSession().getAdapter(IEntryQueries.class);
+    	if (queries != null) {
+    		bal += queries.sumOfAmounts(this, fromDate, toDate);
+    	} else {
+    		// IEntryQueries has not been implemented in the datastore.
+    		// We must therefore provide our own implementation.
+    		
+    		Iterator eIt = null;
+    		
+    		// Sum each entry the entry between the two dates 
+    		eIt = entries.iterator();
+    		while (eIt.hasNext()) {
+    			Entry e = (Entry) eIt.next();
+    			if ((e.getTransaction().getDate().compareTo(fromDate) >= 0)
+    					&& e.getTransaction().getDate().compareTo(toDate) <= 0){
+    				bal += e.getAmount();
+    				
+    			}
+    		}
+    	}
+    	
 		return bal;
 	}
 	

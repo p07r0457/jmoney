@@ -66,4 +66,23 @@ public interface IPropertyControlFactory {
 	 * @return The value of the property formatted as appropriate.
 	 */
 	String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor);
+
+	/**
+	 * Indicates if the property is editable.  If the property
+	 * is editable then the <code>createPropertyControl</code>
+	 * method must create and return a valid property.  If the
+	 * property is not editable then the <code>createPropertyControl</code>
+	 * method will never be called by the framework.
+	 * <P>
+	 * Most properties will be editable.  However some properties,
+	 * such as the creation date for each entry, cannot be edited
+	 * by the user.  The rest of this interface must still be implemented
+	 * so that the values can be formatted correctly for displaying
+	 * to the user.
+	 * 
+	 * @return true if a control is provided to allow the user to
+	 * 			edit the property, false if the user cannot edit
+	 * 			the property
+	 */
+	boolean isEditable();
 }

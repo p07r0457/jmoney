@@ -22,12 +22,14 @@
 
 package net.sf.jmoney.fields;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Commodity;
-import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.CurrencyAccount;
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -51,29 +53,42 @@ import org.eclipse.swt.widgets.Control;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class CurrencyEditor implements IPropertyControl {
+public class AccountEditor implements IPropertyControl {
 
-    private CurrencyAccount fAccount;
+    private ExtendableObject extendableObject;
 
-    private PropertyAccessor currencyPropertyAccessor;
+    private PropertyAccessor accountPropertyAccessor;
 
     private Combo propertyControl;
 
+    private Vector allAccounts = new Vector();
+    
     /** 
      * @param propertyAccessor the accessor for the property to be edited
      * 			by this control.  The property must be of type Currency.
      */
-    public CurrencyEditor(Composite parent, PropertyAccessor propertyAccessor) {
+    public AccountEditor(Composite parent, PropertyAccessor propertyAccessor) {
         propertyControl = new Combo(parent, 0);
-        this.currencyPropertyAccessor = propertyAccessor;
+        this.accountPropertyAccessor = propertyAccessor;
 
         Session session = JMoneyPlugin.getDefault().getSession();
 
-        for (Iterator iter = session.getCommodityIterator(); iter.hasNext();) {
-            Commodity commodity = (Commodity) iter.next();
-            if (commodity instanceof Currency) {
-                propertyControl.add(commodity.getName());
-            }
+        // We keep an array of accounts, the order of the array matches
+        // the order in the combo box.  This allows easy lookup of the 
+        // account given the selected index in the combo.
+        
+        addAccounts(session.getAccountIterator(), allAccounts);
+
+        // Sort the accounts by name.
+        Collections.sort(allAccounts, new Comparator() {
+			public int compare(Object arg0, Object arg1) {
+				return ((Account)arg0).getName().compareTo(((Account)arg1).getName());
+			}
+        });
+        
+        for (Iterator iter = allAccounts.iterator(); iter.hasNext();) {
+        	Account account = (Account) iter.next();
+            propertyControl.add(getLabel(account));
         }
 
         // Selection changes are reflected immediately in the
@@ -93,35 +108,42 @@ public class CurrencyEditor implements IPropertyControl {
         });
     }
 
+    private void addAccounts(Iterator iter, Vector allAccounts) {
+        while (iter.hasNext()) {
+        	Account account = (Account) iter.next();
+        	allAccounts.add(account);
+            addAccounts(account.getSubAccountIterator(), allAccounts);
+        }
+    }
+    
+    private String getLabel(Account account) {
+    	String text = account.getName();
+        if (account instanceof CapitalAccount) {
+            text += " (TRANSFER)";
+        }
+        if (account.getParent() != null) {
+        	text += " - " + account.getParent().getFullAccountName();
+        }
+        return text;
+    }
+    
     /**
      * Load the control with the value from the given account.
      */
     public void load(ExtendableObject object) {
-        fAccount = (CurrencyAccount) object;
-
+    	extendableObject = object;
+    	
     	if (object == null) {
             propertyControl.setText("");
     	} else {
-            Currency currency = (Currency) fAccount.getPropertyValue(currencyPropertyAccessor);
-            propertyControl.setText(currency.getName() == null ? "" : currency.getName());
-
-            // If the currency property being edited is the currency
-            // for a CurrencyAccount and the account has entries then the currency cannot
-            // be changed.  We therefore disable the control.
-            // It might be that at some future time we implement
-            // an extension point that allows plug-ins to veto
-            // changes.  If so then this may be better implemented
-            // using such an extension point.
-            if (currencyPropertyAccessor == CurrencyAccountInfo.getCurrencyAccessor()) {
-                CurrencyAccount currencyAccount = (CurrencyAccount) fAccount;
-                propertyControl.setEnabled(!currencyAccount.hasEntries());
-            }
+    		Account account = (Account) object.getPropertyValue(accountPropertyAccessor);
+    		propertyControl.setText(getLabel(account));
     	}
     	propertyControl.setEnabled(object != null);
     }
 
     /**
-     * Save the value from the control back into the account object.
+     * Save the value from the control back into the object.
      *
      * Editors may update the property on a regular basis, not just when
      * the framework calls the <code>save</code> method.  However, the only time
@@ -132,16 +154,12 @@ public class CurrencyEditor implements IPropertyControl {
      * user changes the selection.
      *
      * The framework should never call this method when no account is selected
-     * so we can assume that <code>account</code> is not null.
+     * so we can assume that <code>extendableObject</code> is not null.
      */
     public void save() {
-        String currencyName = propertyControl.getText();
-        for (Iterator iter = JMoneyPlugin.getDefault().getSession().getCommodityIterator(); iter.hasNext();) {
-            Commodity commodity = (Commodity) iter.next();
-            if (commodity instanceof Currency && commodity.getName().equals(currencyName)) {
-                fAccount.setPropertyValue(currencyPropertyAccessor, (Currency) commodity);
-            }
-        }
+        int index = propertyControl.getSelectionIndex();
+        Account account = (Account)allAccounts.get(index);
+        extendableObject.setPropertyValue(accountPropertyAccessor, account);
     }
 
     /* (non-Javadoc)

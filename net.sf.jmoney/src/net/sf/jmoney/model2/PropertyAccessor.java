@@ -57,6 +57,10 @@ public interface PropertyAccessor {
     /**
      * Returns the property set which contains this property.
      */
+	// TODO: Check all the uses of this.  Some of the uses require
+	// that for extension property sets, the property set being
+	// extended should be returned.  This saves the caller from having
+	// to test the property set.
     PropertySet getPropertySet();
     
     /**

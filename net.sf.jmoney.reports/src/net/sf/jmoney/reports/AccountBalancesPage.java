@@ -343,7 +343,7 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 							new String[] { IDialogConstants.OK_LABEL }, 0);
 				dialog.open();
 			} else {
-				JRDataSource ds = new JRBeanCollectionDataSource(getItems());
+				JRDataSource ds = new JRBeanCollectionDataSource(items);
 				JasperPrint print =
 					JasperFillManager.fillReport(is, params, ds);
 				viewer.getReportViewer().setDocument(print);
@@ -382,7 +382,7 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 				CurrencyAccount currencyAccount = (CurrencyAccount)account;
 				long bal = currencyAccount.getStartBalance();
 				
-				Iterator eIt = account.getEntriesIterator(session);
+				Iterator eIt = account.getEntries().iterator();
 				while (eIt.hasNext()) {
 					Entry e = (Entry) eIt.next();
 					if (accept(e))

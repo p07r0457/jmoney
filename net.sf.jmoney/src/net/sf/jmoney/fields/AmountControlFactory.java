@@ -23,14 +23,9 @@
 package net.sf.jmoney.fields;
 
 import net.sf.jmoney.model2.Commodity;
-import net.sf.jmoney.model2.CurrencyAccount;
-import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
-
-import org.eclipse.swt.widgets.Composite;
 
 /**
  * A control factory to edit an amount of a commodity.
@@ -58,5 +53,9 @@ public abstract class AmountControlFactory implements IPropertyControlFactory {
         }
     }
 
-    protected abstract Commodity getCommodity(ExtendableObject object);
+	public boolean isEditable() {
+		return true;
+	}
+
+	protected abstract Commodity getCommodity(ExtendableObject object);
 }

@@ -97,19 +97,20 @@ public class StackedAccountChart extends StackedChart {
             CapitalAccount a = (CapitalAccount) itAccounts.next();
             accountCategory accountCategory = new accountCategory(a.getName(), 0);
             // get the entries
-            List entriesList; 
-	        if (a.getLevel() < maxLevel) {
+            boolean includeSubAccounts;
+            if (a.getLevel() < maxLevel) {
 	        	// If the account has sub accounts, they will have their own entry -> we don't have to include them here
-	            entriesList = util.getEntriesFromAccount(session, a);
+	            includeSubAccounts = false;
 	        } else {
 	        	// If the account has sub accounts, they won't have their own entry -> we have to include them here
-	            entriesList = util.getEntriesFromAccountAndSubaccounts (session, a);
+	            includeSubAccounts = true;
 	        }
-
-            entriesList = util.sortChronogicalyEntries(entriesList);
+            
+            long [] totals = a.getEntryTotalsByMonth(fromDate.getMonth(), fromDate.getYear()+1900, numberOfMonths, includeSubAccounts); 
+	        
             // calculate the sum for each month
             for (int i=0; i<numberOfMonths; i++) {
-                accountCategory.setLong(i, util.getSumMouvementsBetweenDates(entriesList, dateBegin[i], dateEnd[i]));
+                accountCategory.setLong(i, totals[i]);
                 accountCategory.orderingValue += accountCategory.getLong(i);
                 accountCategory.totalValue += accountCategory.getLong(i);
             }

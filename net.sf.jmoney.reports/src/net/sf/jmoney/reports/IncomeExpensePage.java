@@ -403,7 +403,7 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 							new String[] { IDialogConstants.OK_LABEL }, 0);
 				dialog.open();
 			} else {
-				JRDataSource ds = new JRBeanCollectionDataSource(getItems());
+				JRDataSource ds = new JRBeanCollectionDataSource(items);
 				JasperPrint print =
 					JasperFillManager.fillReport(is, params, ds);
 				viewer.getReportViewer().setDocument(print);
@@ -431,7 +431,7 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 					items = new HashMap();
 					byCurrency.put(cc, items);
 				}
-				addEntries(allItems, items, cc, a.getEntriesIterator(session));
+				addEntries(allItems, items, cc, a.getEntries().iterator());
 			}
 		}
 

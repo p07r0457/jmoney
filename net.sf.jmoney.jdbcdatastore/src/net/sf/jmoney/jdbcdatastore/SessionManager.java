@@ -23,14 +23,22 @@
 package net.sf.jmoney.jdbcdatastore;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
+import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IEntryQueries;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 
@@ -43,7 +51,7 @@ import org.eclipse.ui.IWorkbenchWindow;
  *
  * @author Nigel Westbury
  */
-public class SessionManager implements ISessionManager {
+public class SessionManager implements ISessionManager, IEntryQueries {
 	
 	private Connection connection;
 	
@@ -156,6 +164,11 @@ public class SessionManager implements ISessionManager {
 		if (adapter == IPersistableElement.class) {
 			return persistableElement;
 		}
+		
+		if (adapter == IEntryQueries.class) {
+			return this;
+		}
+		
 		return null;
 	}
 	
@@ -212,5 +225,92 @@ public class SessionManager implements ISessionManager {
 		Map mapOfObjects = getMapOfCachedObjects(propertySet);
 		return (ExtendableObject)mapOfObjects.get(new Integer(id));
 	}
+
+	/**
+	 * @see net.sf.jmoney.model2.IEntryQueries#sumOfAmounts(net.sf.jmoney.model2.CurrencyAccount, java.util.Date, java.util.Date)
+	 */
+	public long sumOfAmounts(CurrencyAccount account, Date fromDate, Date toDate) {
+		IDatabaseRowKey proxy = (IDatabaseRowKey)account.getObjectKey();
+		
+		try {
+			String sql = "SELECT SUM(amount) FROM net_sf_jmoney_entry, net_sf_jmoney_transaction"
+				+ " WHERE account = " + proxy.getRowId()
+				+ " AND date >= " + fromDate
+				+ " AND date <= " + toDate;
+			
+			ResultSet rs = getReusableStatement().executeQuery(sql);
+			rs.next();
+			return rs.getLong(0);
+		} catch (SQLException e) {
+			throw new RuntimeException("SQL statement failed");
+		}
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.model2.IEntryQueries#getSortedReadOnlyCollection(net.sf.jmoney.model2.CapitalAccount, net.sf.jmoney.model2.PropertyAccessor, boolean)
+	 */
+	public Collection getSortedEntries(CapitalAccount account, PropertyAccessor sortProperty, boolean descending) {
+		// TODO implement this.
+		throw new RuntimeException("must implement");
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.model2.IEntryQueries#getEntryTotalsByMonth(int, int, int, boolean)
+	 */
+	public long[] getEntryTotalsByMonth(CapitalAccount account, int startYear, int startMonth, int numberOfMonths, boolean includeSubAccounts) {
+		IDatabaseRowKey proxy = (IDatabaseRowKey)account.getObjectKey();
+		
+		String startDateString = '\''
+			+ new Integer(startYear).toString() + "-"
+			+ new Integer(startMonth).toString() + "-"
+			+ new Integer(1).toString()
+			+ '\'';
+
+		int endMonth = startMonth + numberOfMonths;
+		int years = (endMonth - 1) / 12;
+		endMonth -= years * 12;
+		int endYear = startYear + years;
+		
+		String endDateString = '\''
+			+ new Integer(endYear).toString() + "-"
+			+ new Integer(endMonth).toString() + "-"
+			+ new Integer(1).toString()
+			+ '\'';
+
+		String accountList = "(" + proxy.getRowId();
+		accountList += ")";
+		if (includeSubAccounts) {
+			addEntriesFromSubAccounts(account, accountList);
+		}
+		
+		try {
+			String sql = "SELECT SUM(amount), DateSerial(Year(date),Month(date),1) FROM net_sf_jmoney_entry, net_sf_jmoney_transaction"
+				+ " GROUP BY DateSerial(Year(date),Month(date),1)"
+				+ " WHERE account IN " + accountList
+				+ " AND date >= " + startDateString
+				+ " AND date < " + endDateString
+				+ " ORDER BY DateSerial(Year(date),Month(date),1)";
+			
+			ResultSet rs = getReusableStatement().executeQuery(sql);
+			
+			long [] totals = new long[numberOfMonths];
+			for (int i = 0; i < numberOfMonths; i++) {
+				rs.next();
+				totals[i] = rs.getLong(0);
+			}
+			return totals;
+		} catch (SQLException e) {
+			throw new RuntimeException("SQL statement failed");
+		}
+	}
 	
+	private void addEntriesFromSubAccounts(CapitalAccount a, String accounts) {
+		for (Iterator it = a.getSubAccountIterator(); it.hasNext(); ) {
+			CapitalAccount subAccount = (CapitalAccount)it.next();
+			IDatabaseRowKey proxy = (IDatabaseRowKey)subAccount.getObjectKey();
+			accounts += "," + proxy.getRowId();
+			addEntriesFromSubAccounts(subAccount, accounts);
+		}
+	}
+
 }

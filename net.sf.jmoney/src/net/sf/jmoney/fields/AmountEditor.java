@@ -83,17 +83,22 @@ public class AmountEditor implements IPropertyControl {
     public void load(ExtendableObject object) {
         fObject = object;
         
-        fCommodity = factory.getCommodity(fObject);
-		
-		// Some amounts may be of type Long, not long, so that 
-		// they can be null, so we must get the property
-		// value as a Long.
-		Long amount = (Long) fObject.getPropertyValue(amountPropertyAccessor);
-		if (amount == null) {
-			propertyControl.setText("");
-		} else {
-			propertyControl.setText(fCommodity.format(amount.longValue()));
-		}
+    	if (object == null) {
+            propertyControl.setText("");
+    	} else {
+            fCommodity = factory.getCommodity(fObject);
+    		
+    		// Some amounts may be of type Long, not long, so that 
+    		// they can be null, so we must get the property
+    		// value as a Long.
+    		Long amount = (Long) fObject.getPropertyValue(amountPropertyAccessor);
+    		if (amount == null) {
+    			propertyControl.setText("");
+    		} else {
+    			propertyControl.setText(fCommodity.format(amount.longValue()));
+    		}
+    	}
+    	propertyControl.setEnabled(object != null);
     }
     
     /**

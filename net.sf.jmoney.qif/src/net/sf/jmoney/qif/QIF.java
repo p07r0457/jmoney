@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
 import java.util.StringTokenizer;
@@ -45,6 +46,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.BankAccountInfo;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
+import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.*;
 
 /**
@@ -469,19 +471,18 @@ public class QIF implements FileFormat {
         
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-            Iterator entryIter = account.getEntriesIterator(session);
 
-            // TODO: We need to ensure the entries are ordered in date order.
-            // This was not done in the original JMoney.  One symptom of this
-            // is that the date of the first entry containing the start balance
-            // may be incorrect.
-            
+            // Get the entries in date order.
+            // The entries must be in date order because the date of the
+            // first entry is used as the date of the opening balance record.
+            Collection entries = account.getSortedEntries(TransactionInfo.getDateAccessor(), false);
+
             // write header
             writeln(writer, "!Type:Bank");
 
             // write first entry (containing the start balance)
-            if (entryIter.hasNext()) {
-                Entry entry = (Entry) entryIter.next();
+            if (!entries.isEmpty()) {
+                Entry entry = (Entry) entries.iterator().next();
                 String dateString = formatDate(entry.getTransaction().getDate());
                 if (dateString != null)
                     writeln(writer, dateString);
@@ -495,7 +496,7 @@ public class QIF implements FileFormat {
             writeln(writer, "^");
 
             // write entries
-            for (entryIter = account.getEntriesIterator(session); entryIter.hasNext(); ) {
+            for (Iterator entryIter = entries.iterator(); entryIter.hasNext(); ) {
                 Entry entry = (Entry) entryIter.next();
                 // date
                 String dateString = formatDate(entry.getTransaction().getDate());
@@ -686,9 +687,9 @@ public class QIF implements FileFormat {
  */
     private void removeSimilarTransfer(Session session, Entry newEntry) {
         CapitalAccount account = (CapitalAccount)newEntry.getAccount();
-        for (Iterator iter = account.getEntriesIterator(session); iter.hasNext(); ) {
+        for (Iterator iter = account.getEntries().iterator(); iter.hasNext(); ) {
             Entry entry2 = (Entry) iter.next();
-            if ((entry2 != newEntry)
+            if ((!entry2.equals(newEntry))
             && (entry2.getAmount() == newEntry.getAmount())
             && (entry2.getTransaction().equals(newEntry.getTransaction()))) {
                 session.deleteTransaction(entry2.getTransaction());

@@ -54,4 +54,7 @@ public class TextControlFactory implements IPropertyControlFactory {
         return extendableObject.getStringPropertyValue(propertyAccessor);
     }
 
+	public boolean isEditable() {
+		return true;
+	}
 }
