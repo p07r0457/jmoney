@@ -32,6 +32,8 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.SectionPart;
+import org.eclipse.ui.forms.events.ExpansionAdapter;
+import org.eclipse.ui.forms.events.ExpansionEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
 
@@ -49,9 +51,18 @@ public class EntriesFilterSection extends SectionPart {
     protected Text fFilterText;
 
 	public EntriesFilterSection(EntriesPage page, Composite parent) {
-        super(parent, page.getManagedForm().getToolkit(), Section.DESCRIPTION | Section.TITLE_BAR);
+        super(parent, page.getManagedForm().getToolkit(), Section.DESCRIPTION | Section.TITLE_BAR | Section.TWISTIE | Section.EXPANDED);
         fPage = page;
-        getSection().setText("Entries Filter");
+        getSection().addExpansionListener(new ExpansionAdapter() {
+    		public void expansionStateChanged(ExpansionEvent e) {
+    			// TODO warn the user if the section is being collapsed
+    			// while a filter is in effect.  Alternatively, we can
+    			// show some other indication that the entries list
+    			// is filtered.  If we don't do anything, the user may
+    			// get confused because entries are not being shown.
+    		}
+    	});
+    	getSection().setText("Entries Filter");
         getSection().setDescription("Show only entries in the table below that match your filter criteria.");
 		createClient(page.getManagedForm().getToolkit());
 	}

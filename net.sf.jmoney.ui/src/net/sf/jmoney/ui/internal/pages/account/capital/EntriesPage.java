@@ -129,14 +129,17 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         fEntriesFilterSection = new EntriesFilterSection(this, form.getBody());
         fEntriesFilterSection.getSection().setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         managedForm.addPart(fEntriesFilterSection);
-
+        fEntriesFilterSection.initialize(managedForm);
+        
         fEntriesSection = new EntriesSection(this, form.getBody());
         fEntriesSection.getSection().setLayoutData(new GridData(GridData.FILL_BOTH));
         managedForm.addPart(fEntriesSection);
+        fEntriesSection.initialize(managedForm);
 
         fEntrySection = new EntrySection(this, form.getBody());
         fEntrySection.getSection().setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         managedForm.addPart(fEntriesSection);
+        fEntrySection.initialize(managedForm);
 
         form.setText("Accounting Entries");
     }
