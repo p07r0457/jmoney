@@ -1023,6 +1023,9 @@ System.out.println("start " + localName);
 				value = new String(ch, start, length);
 			} else if (propertyClass.equals(char.class)) {
 				value = new Character(ch[start]);
+			} else if (propertyClass.equals(boolean.class)) {
+				String s = new String(ch, start, length);
+				value = new Boolean(s);
 			} else if (propertyClass.equals(Date.class)) {
 //				String s = new String(ch, start, length);
 //				String numbers[] = s.split("\.");
