@@ -27,7 +27,8 @@ import org.eclipse.swt.widgets.Composite;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
-import net.sf.jmoney.model2.IExtensionPropertySetInfo;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
@@ -49,7 +50,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
  * including oneself), these are registered through the same extension
  * point that plug-ins must also use to register their properties.
  */
-public class CommodityInfo implements IExtensionPropertySetInfo {
+public class CommodityInfo implements IPropertySetInfo {
 
 	private static PropertyAccessor nameAccessor = null;
 
@@ -60,15 +61,19 @@ public class CommodityInfo implements IExtensionPropertySetInfo {
 		return Commodity.class;
 	}
 
-    public Class getInterfaceClass() {
-        return Commodity.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		IPropertyControlFactory textControlFactory =
 			new IPropertyControlFactory() {
 				public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
 					return new TextEditor(parent, propertyAccessor);
+				}
+
+				public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+					return "'" + extendableObject.getStringPropertyValue(propertyAccessor) + "'";
+				}
+
+				public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+					return extendableObject.getStringPropertyValue(propertyAccessor);
 				}
 		};
 		

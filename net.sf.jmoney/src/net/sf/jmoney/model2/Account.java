@@ -76,7 +76,7 @@ public abstract class Account extends ExtendableObject {
 	}
 	
 	public Account getParent() {
-		IExtendableObject parent = parentKey.getObject();
+		ExtendableObject parent = parentKey.getObject();
 		if (parent instanceof Account) {
 			return (Account)parent;
 		} else {
@@ -92,6 +92,9 @@ public abstract class Account extends ExtendableObject {
 		return subAccounts.remove(subAccount);
 	}
 	
+    /**
+	 * This method is used for debugging purposes only.
+	 */
 	public String toString() {
 		return getName();
 	}

@@ -72,6 +72,9 @@ public class PropertyAccessorImpl implements PropertyAccessor {
     // Applies only if list property
     private Method theCreateMethod;
     
+    // Applies only if list property
+    private Method theDeleteMethod;
+    
 	/**
 	 * true if property is a list property, i.e. can contain
 	 * multiple values.  false otherwise.
@@ -85,6 +88,10 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 	 * 
 	 */
 	private int indexIntoConstructorParameters = -1;
+	
+	/**
+	 * Index into the array of scalar properties.
+	 */
 	private int indexIntoScalarProperties = -1;
 	
     public PropertyAccessorImpl(PropertySet propertySet, String localName, String shortDescription, double width, IPropertyControlFactory propertyControlFactory, Class editorBeanClass, IPropertyDependency propertyDependency) {
@@ -98,44 +105,32 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         
         isList = false;
        
-        // Use introspection on the interface to find the getter method.
-        Class interfaceClass = propertySet.getInterfaceClass();
+        Class implementationClass = propertySet.getImplementationClass();
         
+        // Use introspection on the interface to find the getter method.
         String theGetMethodName	= "get"
         	+ localName.toUpperCase().charAt(0)
 			+ localName.substring(1, localName.length());
         
-        try {
-            this.theGetMethod = interfaceClass.getDeclaredMethod(theGetMethodName, null);
-        } catch (NoSuchMethodException e) {
-            throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + interfaceClass.getName() + "' was not found.");
-        }
+		theGetMethod = findMethod(theGetMethodName, null);
         
         if (theGetMethod.getReturnType() == void.class) {
-            throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + interfaceClass.getName() + "' must not return void.");
+            throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + implementationClass.getName() + "' must not return void.");
         }
         
         this.propertyClass = theGetMethod.getReturnType();
         
         // Use introspection on the implementation class to find the setter method.
-        Class implementationClass = propertySet.getImplementationClass();
-        
         String theSetMethodName	= "set"
 			+ localName.toUpperCase().charAt(0)
 			+ localName.substring(1, localName.length());
         Class parameterTypes[] = {propertyClass};
         
-        try {
-            this.theSetMethod = implementationClass.getDeclaredMethod(theSetMethodName, parameterTypes);
-        } catch (NoSuchMethodException e) {
-            throw new MalformedPluginException("Method '" + theSetMethodName + "' in '" + implementationClass.getName() + "' was not found.");
-        }
+		theSetMethod = findMethod(theSetMethodName, parameterTypes);
         
         if (theSetMethod.getReturnType() != void.class) {
             throw new MalformedPluginException("Method '" + theSetMethodName + "' in '" + implementationClass.getName() + "' must return void type .");
         }
-
-//        propertySupport = new PropertyChangeSupport(this);
     }
 
     /**
@@ -156,22 +151,17 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         isList = true;
 
 		// Use introspection on the interface to find the getXxxIterator method.
-		Class interfaceClass = propertySet.getInterfaceClass();
-		
 		String theGetMethodName	= "get"
 			+ localName.toUpperCase().charAt(0)
 			+ localName.substring(1, localName.length())
 			+ "Iterator";
 		
-		try {
-			this.theGetMethod = getDeclaredMethodRecursively(interfaceClass, theGetMethodName, null);
-		} catch (NoSuchMethodException e) {
-			throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + interfaceClass.getName() + "' was not found.");
-		}
+		theGetMethod = findMethod(theGetMethodName, null);
 		
 		if (theGetMethod.getReturnType() != Iterator.class) {
-			throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + interfaceClass.getName() + "' must return an Iterator type.");
+			throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + propertySet.getImplementationClass().getName() + "' must return an Iterator type.");
 		}
+
 	}
 
 	/**
@@ -210,33 +200,46 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 				+ localName.toUpperCase().charAt(0)
 				+ localName.substring(1, localName.length());
 			
-			try {
-				theCreateMethod =
-					propertySet.getImplementationClass().getMethod(methodName, parameters);
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchMethodException e) {
-				String parameterText = "";
-				for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
-					if (paramIndex > 0) {
-						parameterText = parameterText + ", ";
-					}
-					String className = parameters[paramIndex].getName();
-					if (parameters[paramIndex].isArray()) {
-						// The returned class name seems to be a mess when the class is an array,
-						// so we tidy it up.
-						parameterText = parameterText + className.substring(2, className.length()-1) + "[]";
-					} else {
-						parameterText = parameterText + className;
-					}
-				}
-				throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a '" + methodName + "' method that takes parameters of types (" + parameterText + ").");
-			}
+			theCreateMethod = findMethod(methodName, parameters);
 			
 			if (theCreateMethod.getReturnType() != this.getValueClass()) {
 				throw new MalformedPluginException("Method '" + methodName + "' in '" + propertySet.getImplementationClass().getName() + "' must return an object of type " + this.getValueClass() + "."); 
 			}
+
+			// Use introspection on the implementation class to find the deleteXxx method.
+	        String theDeleteMethodName	= "delete"
+				+ localName.toUpperCase().charAt(0)
+				+ localName.substring(1, localName.length());
+	        Class deleteParameterTypes[] = {propertyClass};
+	        
+			theDeleteMethod = findMethod(theDeleteMethodName, deleteParameterTypes);
+	        
+	        if (theDeleteMethod.getReturnType() != boolean.class) {
+	            throw new MalformedPluginException("Method '" + theDeleteMethodName + "' in '" + propertySet.getImplementationClass().getName() + "' must return boolean type .");
+	        }
+
+		}
+	}
+
+	public Method findMethod(String methodName, Class [] parameters) {
+		try {
+			return getDeclaredMethodRecursively(propertySet.getImplementationClass(), methodName, parameters);
+		} catch (NoSuchMethodException e) {
+			String parameterText = "";
+			for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
+				if (paramIndex > 0) {
+					parameterText = parameterText + ", ";
+				}
+				String className = parameters[paramIndex].getName();
+				if (parameters[paramIndex].isArray()) {
+					// The returned class name seems to be a mess when the class is an array,
+					// so we tidy it up.
+					parameterText = parameterText + className.substring(2, className.length()-1) + "[]";
+				} else {
+					parameterText = parameterText + className;
+				}
+			}
+			throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a '" + methodName + "' method that takes parameters of types (" + parameterText + ").");
 		}
 	}
 
@@ -248,25 +251,18 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 	 * This method will find the method if any of the interfaces
 	 * extended by this interface define the method. 
 	 */
-	private Method getDeclaredMethodRecursively(Class interfaceClass, String methodName, Class[] arguments)
+	private Method getDeclaredMethodRecursively(Class implementationClass, String methodName, Class[] arguments)
 		throws NoSuchMethodException {
-        try {
-    		return interfaceClass.getDeclaredMethod(methodName, arguments);
-        } catch (NoSuchMethodException e) {
-/* check the interfaces.  Actually this is not necessary because we now get an object,
- * and so the method must be declared in this or a base class.
-    		Class[] interfaces = interfaceClass.getInterfaces();
-    		for (int i = 0; i < interfaces.length; i++) {
-    	        try {
-    	        	return getDeclaredMethodRecursively(interfaces[i], methodName, arguments);
-    	        } catch (NoSuchMethodException e2) {
-    	        }
-    		}
- */
-        	return getDeclaredMethodRecursively(interfaceClass.getSuperclass(), methodName, arguments);
-
-//    		throw new NoSuchMethodException("Method '" + methodName + "' was not found in '" + interfaceClass.getName() + "' nor in any of the interfaces extended by it.");
-        }
+		Class classToTry = implementationClass;
+		do {
+			try {
+				return classToTry.getDeclaredMethod(methodName, arguments);
+			} catch (NoSuchMethodException e) {
+				classToTry = classToTry.getSuperclass();
+			}
+		} while (classToTry != null);
+		
+		throw new NoSuchMethodException();
 	}
 	
 	public PropertySet getPropertySet() {
@@ -281,12 +277,103 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 		}
     }
     
-    public Method getTheGetMethod() {
-        return theGetMethod;
+    public Object invokeGetMethod(Object invocationTarget) {
+		try {
+			return theGetMethod.invoke(invocationTarget, null);
+		} catch (InvocationTargetException e) {
+			// TODO Process this properly
+			e.printStackTrace();
+			throw new RuntimeException("Plugin error");
+		} catch (Exception e) {
+			// IllegalAccessException and IllegalArgumentException exceptions should
+			// not be possible here because the method was checked
+			// for correct access rights and parameters during initialization.
+			// Therefore throw a runtime exception.
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		}
     }
     
-    public Method getTheSetMethod() {
-        return theSetMethod;
+    public void invokeSetMethod(Object invocationTarget, Object value) {
+		try {
+			Object parameters[] = new Object[] { value };
+			theSetMethod.invoke(invocationTarget, parameters);
+		} catch (InvocationTargetException e) {
+			// TODO Process this properly
+			e.printStackTrace();
+			throw new RuntimeException("Plugin error");
+		} catch (Exception e) {
+			// IllegalAccessException and IllegalArgumentException exceptions should
+			// not be possible here because the method was checked
+			// for correct access rights and parameters during initialization.
+			// Therefore throw a runtime exception.
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		}
+    }
+
+    /**
+     * This version of the method is valid only for list objects where
+     * the list is typed to a property set that is not derivable.
+     */
+    public ExtendableObject invokeCreateMethod(Object invocationTarget) {
+		try {
+			Object parameters[] = new Object[] { };
+			return (ExtendableObject)theCreateMethod.invoke(invocationTarget, parameters);
+		} catch (InvocationTargetException e) {
+			// TODO Process this properly
+			e.printStackTrace();
+			throw new RuntimeException("Plugin error");
+		} catch (Exception e) {
+			// IllegalAccessException and IllegalArgumentException exceptions should
+			// not be possible here because the method was checked
+			// for correct access rights and parameters during initialization.
+			// Therefore throw a runtime exception.
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		}
+    }
+    
+    /**
+     * This version of the method is valid only for list objects where
+     * the list is typed to a property set that is derivable.
+     * The property set of the object to be created must be passed.
+     */
+    public ExtendableObject invokeCreateMethod(Object invocationTarget, PropertySet actualPropertySet) {
+		try {
+			Object parameters[] = new Object[] { actualPropertySet };
+			return (ExtendableObject)theCreateMethod.invoke(invocationTarget, parameters);
+		} catch (InvocationTargetException e) {
+			// TODO Process this properly
+			e.printStackTrace();
+			throw new RuntimeException("Plugin error");
+		} catch (Exception e) {
+			// IllegalAccessException and IllegalArgumentException exceptions should
+			// not be possible here because the method was checked
+			// for correct access rights and parameters during initialization.
+			// Therefore throw a runtime exception.
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		}
+    }
+    
+    public boolean invokeDeleteMethod(Object invocationTarget, ExtendableObject object) {
+		try {
+			Object parameters[] = new Object[] { object };
+			Boolean result = (Boolean)theDeleteMethod.invoke(invocationTarget, parameters);
+			return result.booleanValue();
+		} catch (InvocationTargetException e) {
+			// TODO Process this properly
+			e.printStackTrace();
+			throw new RuntimeException("Plugin error");
+		} catch (Exception e) {
+			// IllegalAccessException and IllegalArgumentException exceptions should
+			// not be possible here because the method was checked
+			// for correct access rights and parameters during initialization.
+			// Therefore throw a runtime exception.
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		}
     }
 
     /**
@@ -308,7 +395,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 		for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
 			PropertySet propertySet = (PropertySet)iter.next();
 			if (!propertySet.isExtension()) {
-				if (propertySet.getInterfaceClass() == propertyClass) {
+				if (propertySet.getImplementationClass() == propertyClass) {
 					return propertySet;
 				}
 			}
@@ -404,6 +491,35 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 		return propertyControlFactory.createPropertyControl(parent, this);
 	}
 
+	public String formatValueForMessage(ExtendableObject object) {
+		// When a PropertyAccessor object is created, it is
+		// provided with an interface to a factory that constructs
+		// control objects that edit the property.
+		// This factory can also format values for us.
+		// We call into that factory to obtain the property value
+		// and format it.
+
+		// If null or the empty string is returned to us, 
+		// change to "empty".
+		String formattedValue = propertyControlFactory.formatValueForMessage(object, this);
+		return (formattedValue == null || formattedValue.length() == 0)
+			? "empty" : formattedValue;
+	}
+
+	public String formatValueForTable(ExtendableObject object) {
+		// When a PropertyAccessor object is created, it is
+		// provided with an interface to a factory that constructs
+		// control objects that edit the property.
+		// This factory can also format values for us.
+		// We call into that factory to obtain the property value
+		// and format it.
+		
+		// If null is returned to us, change to the empty string.
+		String formattedValue = propertyControlFactory.formatValueForTable(object, this);
+		return (formattedValue == null)
+			? "" : formattedValue;
+	}
+
 	/**
 	 * @return the index into the constructor parameters, where
 	 * 		an index of zero indicates that the property is the
@@ -417,6 +533,25 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 		return indexIntoConstructorParameters;
 	}
 
+	/**
+	 * It is often useful to have an array of property values
+	 * of an extendable object.  This array contains all scalar
+	 * properties in the extendable object, including extension
+	 * properties and properties from any base property sets.
+	 * <P>
+	 * In these arrays, the properties (including extension properties)
+	 * from the base property sets are put first in the array.
+	 * This means a given property will always be at the same index
+	 * in the array regardless of the actual derived property set.
+	 * <P>
+	 * This index is guaranteed to match the order in which
+	 * properties are returned by the PropertySet.getPropertyIterator3().
+	 * i.e. if this method returns n then in every case where the
+	 * iterator returned by getPropertyIterator3 returns this property,
+	 * this property will be returned as the (n+1)'th element in the iterator.
+	 * 
+	 * @return the index of this property into the arrays of scalar properties.
+	 */
 	public int getIndexIntoScalarProperties() {
 		return indexIntoScalarProperties;
 	}
@@ -436,6 +571,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 	// the property set getter interface.  There would thus
 	// be no code supplied to do all of this logic, and nor
 	// do we want to require users to provide this code.
+/* nrwnrw
 	public Object getValue(IExtendableObject values) {
 		Object value;
 		Object objectWithProperties = values;				
@@ -446,7 +582,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 		try {
 			value = getTheGetMethod().invoke(objectWithProperties, null);
 		} catch (IllegalAccessException e) {
-			throw new MalformedPluginException("Method '" + getTheGetMethod().getName() + "' in '" + getPropertySet().getInterfaceClass().getName() + "' must be public.");
+			throw new MalformedPluginException("Method '" + getTheGetMethod().getName() + "' in '" + getPropertySet().getImplementationClass().getName() + "' must be public.");
 		} catch (IllegalArgumentException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -459,4 +595,5 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 		
 		return value;
 	}
+*/	
 }

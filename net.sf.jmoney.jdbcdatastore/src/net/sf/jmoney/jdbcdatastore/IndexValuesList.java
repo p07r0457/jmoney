@@ -47,14 +47,14 @@ import net.sf.jmoney.model2.PropertySet;
  */
 public class IndexValuesList implements Collection {
 	private SessionManager sessionManager;
-	private int idOfRequiredPropertyValue;
+	private IDatabaseRowKey keyOfRequiredPropertyValue;
 	private PropertySet propertySet;
 	private String tableName;
 	private String columnName;
 	
-	public IndexValuesList(SessionManager sessionManager, int idOfRequiredPropertyValue, PropertyAccessor propertyAccessor) {
+	public IndexValuesList(SessionManager sessionManager, IDatabaseRowKey keyOfRequiredPropertyValue, PropertyAccessor propertyAccessor) {
 		this.sessionManager = sessionManager;
-		this.idOfRequiredPropertyValue = idOfRequiredPropertyValue;
+		this.keyOfRequiredPropertyValue = keyOfRequiredPropertyValue;
 		
 		propertySet = propertyAccessor.getPropertySet();
 		
@@ -71,7 +71,7 @@ public class IndexValuesList implements Collection {
 		try {
 			ResultSet resultSet = sessionManager.getReusableStatement().executeQuery(
 					"SELECT COUNT(*) FROM " + tableName
-					+ " WHERE \"" + columnName + "\" = " + idOfRequiredPropertyValue);
+					+ " WHERE \"" + columnName + "\" = " + keyOfRequiredPropertyValue.getRowId());
 			resultSet.next();
 			int size = resultSet.getInt(1);
 			resultSet.close();
@@ -98,7 +98,7 @@ public class IndexValuesList implements Collection {
 			Statement stmt = sessionManager.getConnection().createStatement();
 			ResultSet resultSet = stmt.executeQuery(
 					"SELECT * FROM " + tableName 
-					+ " WHERE \"" + columnName + "\" = " + idOfRequiredPropertyValue);
+					+ " WHERE \"" + columnName + "\" = " + keyOfRequiredPropertyValue.getRowId());
 			return new UncachedObjectIterator(resultSet, propertySet, null, sessionManager);
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -115,7 +115,10 @@ public class IndexValuesList implements Collection {
 	}
 	
 	public boolean add(Object arg0) {
-		throw new RuntimeException("method not implemented");
+		// The list is not cached.  
+		// We read from the database every time.
+		// There is therefore nothing to do here.
+		return true;
 	}
 	
 	public boolean remove(Object arg0) {

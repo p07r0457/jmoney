@@ -28,7 +28,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.sf.jmoney.model2.IExtendableObject;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertySet;
@@ -160,15 +160,6 @@ public class SessionManager implements ISessionManager {
 	}
 	
 	/**
-	 * @param accountNumber
-	 * @return
-	 */
-/*	
-	public IObjectKey lookupAccountKey(int accountNumber) {
-		return (IObjectKey)accountsMap.get(new Integer(accountNumber));
-	}
-*/
-	/**
 	 * This method must not be called if the property set
 	 * or any base property set is already cached.
 	 * The results are unpredictable if the property set
@@ -217,9 +208,9 @@ public class SessionManager implements ISessionManager {
 	 * @return
 	 */
 	// TODO: We may not need this method.
-	public IExtendableObject lookupObject(PropertySet propertySet, int id) {
+	public ExtendableObject lookupObject(PropertySet propertySet, int id) {
 		Map mapOfObjects = getMapOfCachedObjects(propertySet);
-		return (IExtendableObject)mapOfObjects.get(new Integer(id));
+		return (ExtendableObject)mapOfObjects.get(new Integer(id));
 	}
 	
 }

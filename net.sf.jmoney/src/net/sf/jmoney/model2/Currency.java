@@ -36,8 +36,6 @@ import net.sf.jmoney.fields.CurrencyInfo;
  */
 public class Currency extends Commodity {
 	
-	private String name;
-	
 	private static final int MAX_DECIMALS = 4;
 	private static final short[] SCALE_FACTOR = { 1, 10, 100, 1000, 10000 };
 	private static NumberFormat[] numberFormat = null;
@@ -65,12 +63,11 @@ public class Currency extends Commodity {
 				String name,
 				String code,
 				int decimals) {
-		super(objectKey, extensions, parentKey);
+		super(objectKey, extensions, parentKey, name);
 		
 		if (decimals < 0 || decimals > MAX_DECIMALS)
 			throw new IllegalArgumentException("Number of decimals not supported");
 
-		this.name = name;
 		this.code = code;
 		this.decimals = decimals;
 	}
@@ -84,21 +81,6 @@ public class Currency extends Commodity {
 	 */
 	public String getCode() {
 		return code;
-	}
-	
-	/**
-	 * @return the name of the currency.
-	 */
-	public String getName() {
-		return name;
-	}
-	
-	public void setName(String name) {
-        String oldName = this.name;
-		this.name = name;
-
-		// Notify the change manager.
-		processPropertyChange(CommodityInfo.getNameAccessor(), oldName, name);
 	}
 	
 	public void setCode(String code) {

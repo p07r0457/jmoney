@@ -24,6 +24,7 @@
 package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 
 import java.util.Date;
@@ -76,26 +77,46 @@ public class Transaction extends ExtendableObject {
     }
     
     public Entry createEntry() {
-		Entry newEntry = (Entry)entries.createNewElement(this, JMoneyPlugin.getEntryPropertySet());
+		final Entry newEntry = (Entry)entries.createNewElement(this, JMoneyPlugin.getEntryPropertySet());
 
-		processObjectAddition(entries, newEntry);
+		processObjectAddition(TransactionInfo.getEntriesAccessor(), newEntry);
 		
-		return newEntry;
+		getObjectKey().getSession().fireEvent(
+				new ISessionChangeFirer() {
+					public void fire(SessionChangeListener listener) {
+						listener.entryAdded(newEntry);
+					}
+				});
+		
+	    return newEntry;
 	}
 
-    public boolean deleteEntry(Entry entry) {
+    public boolean deleteEntry(final Entry entry) {
         boolean found = entries.remove(entry);
 
-        // TODO: This is not correct.  Move it into the
-        // above 'remove' method.
+		if (found) {
+			processObjectDeletion(TransactionInfo.getEntriesAccessor(), entry);
+
+			// In addition to the generic object deletion event, we also fire an event
+			// specifically for entry deletion.  The entryDeleted event is superfluous 
+			// and it may be simpler if we removed it, so that listeners receive the generic
+			// objectDeleted event only.
+			getObjectKey().getSession().fireEvent(
+		            	new ISessionChangeFirer() {
+		            		public void fire(SessionChangeListener listener) {
+		            			listener.entryDeleted(entry);
+		            		}
+		           		});
+		}
+
+		// TODO: This is not correct.  Move it into the
+        // above 'remove' method or something.
         if (found) {
         	// TODO: at some time, keep these lists for categories too
         	Account category = entry.getAccount();
         	if (category instanceof CapitalAccount) {
         		((CapitalAccount)category).removeEntry(entry);
         	}
-
-    	getObjectKey().getSession().objectDeleted(entry);
         }
         
     	return found;

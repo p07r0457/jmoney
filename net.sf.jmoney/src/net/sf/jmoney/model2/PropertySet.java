@@ -55,7 +55,7 @@ import java.lang.reflect.Method;
 public class PropertySet {
 	
 	private String propertySetId;
-	private IExtensionPropertySetInfo propertySetInfo;
+	private IPropertySetInfo propertySetInfo;
 	
 	private Vector properties = new Vector();  // type: PropertyAccessor
 	
@@ -151,8 +151,8 @@ public class PropertySet {
 				if (elements[j].getName().equals("extendable-property-set")) {
 					try {
 						Object listener = elements[j].createExecutableExtension("info-class");
-						if (listener instanceof IExtensionPropertySetInfo) {
-							IExtensionPropertySetInfo pageListener = (IExtensionPropertySetInfo)listener;
+						if (listener instanceof IPropertySetInfo) {
+							IPropertySetInfo pageListener = (IPropertySetInfo)listener;
 							
 							String fullPropertySetId = extensions[i].getNamespace();
 							String id = elements[j].getAttribute("id");
@@ -180,8 +180,8 @@ public class PropertySet {
 				if (elements[j].getName().equals("extension-property-set")) {
 					try {
 						Object listener = elements[j].createExecutableExtension("info-class");
-						if (listener instanceof IExtensionPropertySetInfo) {
-							IExtensionPropertySetInfo pageListener = (IExtensionPropertySetInfo)listener;
+						if (listener instanceof IPropertySetInfo) {
+							IPropertySetInfo pageListener = (IPropertySetInfo)listener;
 							
 							String fullPropertySetId = extensions[i].getNamespace();
 							String id = elements[j].getAttribute("id");
@@ -213,7 +213,7 @@ public class PropertySet {
 	}
 	
 	
-	private PropertySet(String propertySetId, boolean isExtension, String baseOrExtendablePropertySetId, IExtensionPropertySetInfo propertySetInfo) {
+	private PropertySet(String propertySetId, boolean isExtension, String baseOrExtendablePropertySetId, IPropertySetInfo propertySetInfo) {
 		this.propertySetId = propertySetId;
 		this.propertySetInfo  = propertySetInfo;
 		this.isExtension = isExtension;
@@ -259,9 +259,9 @@ public class PropertySet {
 			// Set up the extension that contains the default property values.
 			if (propertySetInfo != null) {
 				try {
-					if (propertySetInfo.getInterfaceClass() != null) {
+					if (propertySetInfo.getImplementationClass() != null) {
 						defaultExtension = (ExtensionObject)
-						propertySetInfo.getInterfaceClass().newInstance();
+						propertySetInfo.getImplementationClass().newInstance();
 						// TODO: plugin error if null is returned
 					}
 				} catch (Exception e) {
@@ -282,11 +282,11 @@ public class PropertySet {
 		// when we are looking for the property set for an instance of an object,
 		// we want to be sure we find only the final property set for that object.
 		if (!isExtension && !derivablePropertySet) {
-			Class interfaceClass = propertySetInfo.getInterfaceClass();
-			if (classToPropertySetMap.containsKey(interfaceClass)) {
-				throw new MalformedPluginException("More than one property set uses " + interfaceClass + " as the Java implementation class.");
+			Class implementationClass = propertySetInfo.getImplementationClass();
+			if (classToPropertySetMap.containsKey(implementationClass)) {
+				throw new MalformedPluginException("More than one property set uses " + implementationClass + " as the Java implementation class.");
 			}
-			classToPropertySetMap.put(interfaceClass, this);
+			classToPropertySetMap.put(implementationClass, this);
 		}
 		
 		derivablePropertySet = false;
@@ -365,7 +365,7 @@ public class PropertySet {
 				parameterIndex += propertySet2.getPropertyCount();
 				totalPropertyCount += propertySet2.getPropertyCount();
 				// Count the scalar properties
-				for (Iterator iter = propertySet2.getPropertyIterator1(); iter.hasNext(); ) {
+				for (Iterator iter = propertySet2.getPropertyIterator2(); iter.hasNext(); ) {
 					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 					if (propertyAccessor.isScalar()) {
 						scalarIndex++;
@@ -381,8 +381,16 @@ public class PropertySet {
 		for (Iterator iter = properties.iterator(); iter.hasNext(); ) {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 			propertyAccessor.setIndexIntoConstructorParameters(parameterIndex++);
-			if (propertyAccessor.isScalar()) {
-				propertyAccessor.setIndexIntoScalarProperties(scalarIndex++);
+		}
+
+		// For each scalar property in this property set and any extension property sets,
+		// set the index of this property into the array of scalar properties.
+		if (!isExtension()) {
+			for (Iterator iter = getPropertyIterator2(); iter.hasNext(); ) {
+				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+				if (propertyAccessor.isScalar()) {
+					propertyAccessor.setIndexIntoScalarProperties(scalarIndex++);
+				}
 			}
 		}
 
@@ -553,7 +561,7 @@ public class PropertySet {
 	 * 			with this id. 
 	 * @return
 	 */
-	static private void registerExtendablePropertySet(String propertySetId, String basePropertySetId, IExtensionPropertySetInfo propertySetInfo) {
+	static private void registerExtendablePropertySet(String propertySetId, String basePropertySetId, IPropertySetInfo propertySetInfo) {
 		if (basePropertySetId != null) {
 			PropertySet basePropertySet = (PropertySet)allPropertySetsMap.get(basePropertySetId);
 			if (basePropertySet == null) {
@@ -578,7 +586,7 @@ public class PropertySet {
 	 * 			with this id. 
 	 * @return
 	 */
-	static private void registerExtensionPropertySet(String propertySetId, String extendablePropertySetId, IExtensionPropertySetInfo propertySetInfo) {
+	static private void registerExtensionPropertySet(String propertySetId, String extendablePropertySetId, IPropertySetInfo propertySetInfo) {
 		PropertySet extendablePropertySet = (PropertySet)allPropertySetsMap.get(extendablePropertySetId);
 		if (extendablePropertySet == null) {
 			throw new RuntimeException("No extendable property set with an id of " + extendablePropertySetId + " exists.");
@@ -711,16 +719,6 @@ public class PropertySet {
 	}
 	
 	/**
-	 * @return The interface that contains getters for the
-	 * properties in this property set.  All objects that
-	 * contain properties from this property set will support
-	 * this interface.
-	 */
-	public Class getInterfaceClass() {
-		return propertySetInfo.getInterfaceClass();
-	}
-	
-	/**
 	 * @return The implementation class.
 	 * The interface that contains both getters and setters
 	 * for the properties in this property set.
@@ -740,7 +738,7 @@ public class PropertySet {
 			Object [] values = (Object[])theDefaultPropertiesMethod.invoke(null, null);
 			return values;
 		} catch (IllegalAccessException e) {
-			throw new MalformedPluginException("Method '" + theDefaultPropertiesMethod.getName() + "' in '" + getInterfaceClass().getName() + "' must be public.");
+			throw new MalformedPluginException("Method '" + theDefaultPropertiesMethod.getName() + "' in '" + getImplementationClass().getName() + "' must be public.");
 		} catch (IllegalArgumentException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -849,7 +847,9 @@ public class PropertySet {
 	 * immediately derived from the base-most class, and so
 	 * on with the properties from this property set being
 	 * last.  This order gives the most intuitive order from
-	 * the user's perspective.
+	 * the user's perspective.  This order also ensures that
+	 * a property in a base class has the same index in the returned order,
+	 * regardless of the actual derived property set.
 	 * 
 	 * @ return An iterator which iterates over a set of
 	 * 		<code>PropertyAccessor</code> objects.
@@ -1060,12 +1060,26 @@ public class PropertySet {
 	 * This method should be used only by plug-ins that implement
 	 * a datastore.
 	 * 
-	 * @return The full constructor.  The full constructor takes
-	 * 		a set of parameters sufficient to fully construct the
-	 * 		object.
+	 * @return A newly constructed object, constructed from the given
+	 * 		parameters.  This object may be an ExtendableObject or
+	 * 		may be an ExtensionObject.
 	 */
-	public Constructor getConstructor() {
-		return implementationClassConstructor;
+	public Object constructImplementationObject(Object [] constructorParameters) {
+		// TODO: tidy up error processing
+		try {
+			return implementationClassConstructor.newInstance(constructorParameters);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		} catch (IllegalAccessException e) {
+			throw new MalformedPluginException("Constructor must be public.");
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+			throw new MalformedPluginException("An exception occured within a constructor in a plug-in.", e);
+		}
 	}
 
 

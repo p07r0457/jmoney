@@ -38,5 +38,5 @@ public interface IPropertyDependency {
      * @param object the object containing the property on which
      * 		the applicability of a property depends.
      */
-	boolean isSelected(IExtendableObject object);
+	boolean isSelected(ExtendableObject object);
 }

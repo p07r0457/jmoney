@@ -24,7 +24,6 @@ package net.sf.jmoney.jdbcdatastore;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.MalformedPluginException;
@@ -268,7 +267,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 						for (Iterator iter3 = propertySet2.getPropertyIterator2(); iter3.hasNext(); ) {
 							PropertyAccessor propertyAccessor = (PropertyAccessor)iter3.next();
 							if (propertyAccessor.isList()
-							 && propertySet.getInterfaceClass() == propertyAccessor.getValueClass()) {
+							 && propertySet.getImplementationClass() == propertyAccessor.getValueClass()) {
 								// Add to the list of possible parents.
 								list.add(new ParentList(propertySet2, propertyAccessor));
 							}
@@ -333,7 +332,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				
 			accountListManager.add(accountObject);
 			
-			int accountId = rs.getInt("net_sf_jmoney_account._ID");
+			int accountId = rs.getInt(1);  // _ID
 			accountsMap.put(new Integer(accountId), accountObject);
 		}
 		rs.close();
@@ -444,14 +443,21 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				
 				boolean nullable = true;
 				Class valueClass = propertyAccessor.getValueClass();
-				if (valueClass == Integer.class
-						|| valueClass == Long.class) {
+				if (valueClass == Integer.class) {
 					info.columnDefinition = "INT";
 					nullable = true;
-				} else if (valueClass == int.class
-						|| valueClass == long.class) {
+				} else if (valueClass == int.class) {
 					info.columnDefinition = "INT";
 					nullable = false;
+				} if (valueClass == Long.class) {
+					info.columnDefinition = "BIGINT";
+					nullable = true;
+				} else if (valueClass == long.class) {
+					info.columnDefinition = "BIGINT";
+					nullable = false;
+				} else if (valueClass == Character.class) {
+					info.columnDefinition = "CHAR";
+					nullable = true;
 				} else if (valueClass == char.class) {
 					info.columnDefinition = "CHAR";
 					nullable = false;
@@ -461,16 +467,13 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				} else if (valueClass == String.class) {
 					info.columnDefinition = "VARCHAR";
 					nullable = true;
-				} else if (valueClass == Character.class) {
-					info.columnDefinition = "CHAR";
-					nullable = true;
 				} else if (valueClass == Boolean.class) {
 					info.columnDefinition = "BIT";
 					nullable = true;
 				} else if (valueClass == Date.class) {
 					info.columnDefinition = "DATE";
 					nullable = true;
-				} else if (IExtendableObject.class.isAssignableFrom(valueClass)) {
+				} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
 					info.columnDefinition = "INT";
 					nullable = true;
 					
@@ -485,7 +488,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					info.foreignKeyPropertySet = null;
 					for (Iterator iter2 = PropertySet.getPropertySetIterator(); iter2.hasNext(); ) {
 						PropertySet propertySet2 = (PropertySet)iter2.next();
-						if (propertySet2.getInterfaceClass() == valueClass) {
+						if (propertySet2.getImplementationClass() == valueClass) {
 							info.foreignKeyPropertySet = propertySet2;
 							break;
 						}
@@ -504,7 +507,10 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				// if other applications (outside JMoney) access the database.
 					
 				if (propertyAccessor.getPropertySet().isExtension()) {
-					Object defaultValue = propertyAccessor.getPropertySet().getDefaultPropertyValues2()[propertyAccessor.getIndexIntoScalarProperties()];
+					// TODO: fix the following line.
+					// It currently assumes only one property per extension
+					// property set.
+					Object defaultValue = propertyAccessor.getPropertySet().getDefaultPropertyValues2()[0];
 					info.columnDefinition +=
 						" DEFAULT " + valueToSQLText(defaultValue);
 				}
@@ -518,10 +524,43 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			}
 		}
 		
+		// If the property set is a derivable property set
+		// and is the base-most property set
+		// then we must have a column called _PROPERTY_SET.
+		// This column contains the id of the actual 
+		// (non-derivable) property set of this object.
+		// This column is required because otherwise we would not
+		// know which further tables need to be joined to get the
+		// complete set of properties with which we can construct
+		// the object.
+		if (propertySet.getBasePropertySet() == null
+		 && propertySet.isDerivable()) {
+			ColumnInfo info = new ColumnInfo();
+			info.columnName = "_PROPERTY_SET";
+			info.columnDefinition = "VARCHAR NOT NULL";
+			result.add(info);
+		}
+		
 		return result;
 	}
 	
 	private static String[] tableOnlyType = new String[] { "TABLE" };
+
+	private void traceResultSetLabels(ResultSet rs) {
+		try {
+			String x = "";		
+			ResultSetMetaData rsmd = rs.getMetaData();
+			int cols = rsmd.getColumnCount();
+			for (int i = 1; i <= cols; i++) {
+				x += rsmd.getColumnLabel(i) + ", ";
+			}
+			System.out.println(x);
+			
+		} catch (Exception SQLException) {
+			throw new RuntimeException("database error");
+		}
+		System.out.println("");
+	}
 
 	private void traceResultSet(ResultSet rs) {
 		try {
@@ -687,7 +726,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * be materialized (or at least, the key to the parent).
 	 * The parent key is passed to this method by the caller
 	 * and that saves this method from needing to build a
-	 * new parent key.
+	 * new parent key from the object's data in the database.
 	 *
 	 * @param rs
 	 * @param propertySet
@@ -729,7 +768,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				value = rs.getString(columnName);
 			} else if (valueClass == Date.class) {
 				value = rs.getDate(columnName);
-			} else if (IExtendableObject.class.isAssignableFrom(valueClass)) {
+			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
 				int rowIdOfProperty = rs.getInt(columnName);
 				PropertySet propertySetOfProperty = PropertySet.getPropertySet(valueClass);
 				
@@ -759,7 +798,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				if (map == null) {
 					value = new ObjectKeyUncached(rowIdOfProperty, propertySetOfProperty, sessionManager);
 				} else {
-					value = ((IExtendableObject)map.get(new Integer(rowIdOfProperty))).getObjectKey();
+					value = ((ExtendableObject)map.get(new Integer(rowIdOfProperty))).getObjectKey();
 				}
 			} else {
 				throw new RuntimeException("unknown type");
@@ -772,26 +811,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		}
 		
 		// We can now create the object.
-		// The parameters to the constructor have been placed
-		// in the constructorParameters array so we need only
-		// to call the constructor.
-		
-		Constructor constructor = propertySet.getConstructor();
-		ExtendableObject extendableObject;
-		try {
-			extendableObject = (ExtendableObject)constructor.newInstance(constructorParameters);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		} catch (IllegalAccessException e) {
-			throw new MalformedPluginException("Constructor must be public.");
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-			throw new MalformedPluginException("An exception occured within a constructor in a plug-in.", e);
-		}
+		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
 		
 		return extendableObject;
 	}
@@ -878,6 +898,8 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				|| parentPropertySet.getId().equals("net.sf.jmoney.entry")) {
 			// Not cached
 			parentKey = new ObjectKeyUncached(parentId, parentPropertySet, sessionManager);
+		} else if (parentPropertySet.getId().equals("net.sf.jmoney.session")) { 
+			parentKey = sessionManager.getSessionKey();
 		} else {
 			// Cached
 			parentKey = sessionManager.lookupObject(parentPropertySet, parentId).getObjectKey();
@@ -936,7 +958,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * 
 	 * @return The id of the inserted row
 	 */
-	public static int insertIntoDatabase(PropertySet propertySet, ExtendableObject newObject, PropertyAccessor listProperty, IExtendableObject parent, SessionManager sessionManager) {
+	public static int insertIntoDatabase(PropertySet propertySet, ExtendableObject newObject, PropertyAccessor listProperty, ExtendableObject parent, SessionManager sessionManager) {
 		int rowId = -1;
 
 		// We must insert into the base table first, then the table for the objects
@@ -983,26 +1005,8 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					}
 					
 					// Get the value from the passed property value array.
-//					Object value = values[propertyAccessor.getIndexIntoScalarProperties()];
-					Object objectWithProperties = newObject;				
-					Object value;
-					try {
-						value = propertyAccessor.getTheGetMethod().invoke(objectWithProperties, null);
-					} catch (IllegalAccessException e) {
-						throw new MalformedPluginException("Method '" + propertyAccessor.getTheGetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' must be public.");
-					} catch (IllegalArgumentException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-						throw new RuntimeException("internal error");
-					} catch (InvocationTargetException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-						throw new RuntimeException("internal error");
-					}
+					Object value = newObject.getPropertyValue(propertyAccessor);
 
-					
-					
-					
 					columnNames += separator + "\"" + columnName + "\"";
 					columnValues += separator + valueToSQLText(value);
 					
@@ -1011,12 +1015,24 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			}
 
 			// Set the parent id in the appropriate column
-			if (listProperty.getValueClass() == propertySet2.getInterfaceClass()) {
+			if (listProperty.getValueClass() == propertySet2.getImplementationClass()) {
 				IDatabaseRowKey parentKey = (IDatabaseRowKey)parent.getObjectKey();
 				String valueString = Integer.toString(parentKey.getRowId());
 				String parentColumnName = listProperty.getName().replace('.', '_');
 				columnNames += separator + "\"" + parentColumnName + "\"";
 				columnValues += separator + valueString;
+				separator = ", ";
+			}
+
+			// If the base-most property set and it is derivable, 
+			// the _PROPERTY_SET column must be set.
+			if (propertySet2.getBasePropertySet() == null
+			 && propertySet2.isDerivable()) {
+				columnNames += separator + "_PROPERTY_SET";
+				// Set to the id of the final
+				// (non-derivable) property set for this object.
+				PropertySet finalPropertySet = (PropertySet)propertySets.get(0); 
+				columnValues += separator + "\'" + finalPropertySet.getId() + "\'";
 				separator = ", ";
 			}
 			
@@ -1058,7 +1074,6 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @param sessionManager
 	 */
 	public static void updateProperties(PropertySet propertySet, int rowId, Object[] oldValues, Object[] newValues, SessionManager sessionManager) {
-
 		Statement stmt = sessionManager.getReusableStatement();
 
 		// The array of property values contains the properties from the
@@ -1089,6 +1104,9 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				
 				if (propertyAccessor.isScalar()) {
 					
+					if (propertyAccessor.getIndexIntoScalarProperties() != propertyIndex) {
+						throw new RuntimeException("index mismatch");
+					}
 					// See if the value of the property has changed.
 					Object oldValue = oldValues[propertyIndex];
 					Object newValue = newValues[propertyIndex];
@@ -1130,6 +1148,52 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	}
 
 	/**
+	 * @param actualPropertySet
+	 * @param rowId
+	 * @param propertyAccessor
+	 * @param oldValue
+	 * @param newValue
+	 * @param sessionManager
+	 */
+	public static void updateProperties(PropertySet actualPropertySet, int rowId, PropertyAccessor propertyAccessor, Object oldValue, Object newValue, SessionManager sessionManager) {
+	
+	// Build two arrays of old and new values.
+	// Ultimately we will have a layer between that does this
+	// for us, also combining multiple updates to the same row
+	// into a single update.  Until then, we need this code here.
+
+		// TODO: improve performance here.
+		int count = 0;
+		for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor2 = (PropertyAccessor)iter.next();
+			if (propertyAccessor2.isScalar()) {
+				count++;
+			}
+		}
+		
+		Object [] oldValues = new Object[count];
+		Object [] newValues = new Object[count];
+		
+		int i = 0;
+		for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor2 = (PropertyAccessor)iter.next();
+			if (propertyAccessor2.isScalar()) {
+				if (propertyAccessor2 == propertyAccessor) {
+				oldValues[i] = oldValue;
+				newValues[i] = newValue;
+				} else {
+					// kludge: both null means no change.
+				oldValues[i] = null;
+				newValues[i] = null;
+				}
+				i++;
+			}
+		}
+		updateProperties(actualPropertySet, rowId, oldValues, newValues, sessionManager);
+	}
+
+	
+	/**
 	 * Given a value of a property as an Object, return the text that 
 	 * represents the value in an SQL statement.
 	 * 
@@ -1154,8 +1218,8 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					+ new Integer(date.getMonth()).toString() + "-"
 					+ new Integer(date.getDay()).toString()
 					+ '\'';
-			} else if (IExtendableObject.class.isAssignableFrom(valueClass)) {
-				IExtendableObject extendableObject = (IExtendableObject)value;
+			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
+				ExtendableObject extendableObject = (ExtendableObject)value;
 				IDatabaseRowKey key = (IDatabaseRowKey)extendableObject.getObjectKey();
 				valueString = Integer.toString(key.getRowId());
 			} else { 
@@ -1179,7 +1243,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
      * 				was not present in the database.
 	 */
 // TODO: throw error if object is referenced.	
-	public static boolean deleteFromDatabase(int rowId, IExtendableObject extendableObject, SessionManager sessionManager) {
+	public static boolean deleteFromDatabase(int rowId, ExtendableObject extendableObject, SessionManager sessionManager) {
 		PropertySet propertySet = PropertySet.getPropertySet(extendableObject.getClass()); 
 		
 		Statement stmt = sessionManager.getReusableStatement();
@@ -1219,4 +1283,73 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		
 		return true;
 	}
+
+	/**
+	 * @param propertySet
+	 * @param sessionManager
+	 * @param objectKeyProxy The key to this object.  This is required by this
+	 * 			method because it must be passed to the constructor.
+	 * 			This method does not call the setObject or setRowId
+	 * 			methods on this key.  It is the caller's responsibility
+	 * 			to call these methods.
+	 * @param parent
+	 * @param constructWithCachedLists
+	 * @return
+	 */
+	public static ExtendableObject constructExtendableObject(PropertySet propertySet, SessionManager sessionManager, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists) {
+		Vector constructorProperties = propertySet.getConstructorProperties();
+		int numberOfParameters = constructorProperties.size();
+		if (!propertySet.isExtension()) {
+			numberOfParameters += 3;
+		}
+		Object[] constructorParameters = new Object[numberOfParameters];
+		
+		Object [] defaultValues = propertySet.getDefaultPropertyValues2();
+		
+		constructorParameters[0] = objectKey;
+		constructorParameters[1] = null;
+		constructorParameters[2] = parent.getObjectKey();
+	
+		// For all lists, set the Collection object to be a Vector.
+		// For all primative properties, get the value from the passed object.
+		// For all extendable objects, we get the property value from
+		// the passed object and then get the object key from that.
+		// This works because all objects must be in a list and that
+		// list owns the object, not us.
+		int indexIntoDefaultValues = 0;
+		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+			int index = propertyAccessor.getIndexIntoConstructorParameters();
+			if (propertyAccessor.isScalar()) {
+				// Get the value from the array of values.
+				Object value = defaultValues[indexIntoDefaultValues++];
+				
+				if (value != null) {
+					if (propertyAccessor.getValueClass().isPrimitive()
+							|| propertyAccessor.getValueClass() == String.class
+							|| propertyAccessor.getValueClass() == Long.class
+							|| propertyAccessor.getValueClass() == Date.class) {
+						constructorParameters[index] = value;
+					} else {
+						constructorParameters[index] = ((ExtendableObject)value).getObjectKey();
+					}
+				} else { 
+					constructorParameters[index] = null;
+				}
+			} else {
+				// Must be an element in an array.
+				if (constructWithCachedLists) {
+					constructorParameters[index] = new ListManagerCached(sessionManager, propertyAccessor);
+				} else {
+					constructorParameters[index] = new ListManagerUncached(objectKey, sessionManager, propertyAccessor);
+				}
+			}
+		}
+		
+		// We can now create the object.
+		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
+		
+		return extendableObject;
+	}
+
 }

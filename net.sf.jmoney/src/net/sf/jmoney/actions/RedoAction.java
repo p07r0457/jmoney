@@ -20,15 +20,17 @@
 *
 */
 
-package net.sf.jmoney.jdbcdatastore.actions;
+package net.sf.jmoney.actions;
+
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.Session;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
-
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.jdbcdatastore.*;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 
 /**
  * Our sample action implements workbench action delegate.
@@ -38,12 +40,12 @@ import net.sf.jmoney.jdbcdatastore.*;
  * delegated to it.
  * @see IWorkbenchWindowActionDelegate
  */
-public class OpenSessionAction implements IWorkbenchWindowActionDelegate {
+public class RedoAction implements IWorkbenchWindowActionDelegate {
 	private IWorkbenchWindow window;
 	/**
 	 * The constructor.
 	 */
-	public OpenSessionAction() {
+	public RedoAction() {
 	}
 
 	/**
@@ -53,12 +55,21 @@ public class OpenSessionAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		if (JMoneyPlugin.getDefault().saveOldSession(window)) {
-			SessionManager sessionManager = JDBCDatastorePlugin.getDefault().readSession(/*sessionFile,*/ window);
-			if (sessionManager != null) {
-				JMoneyPlugin.getDefault().setSessionManager(sessionManager);
-			}
-		}
+        Session session = JMoneyPlugin.getDefault().getSession();
+
+        if (session == null) {
+            MessageDialog waitDialog = new MessageDialog(
+                    window.getShell(),
+                    "Disabled Action Selected",
+                    null, // accept the default window icon
+                    "You cannot redo a change unless a session is open.  You must first open a session or create a new session.",
+                    MessageDialog.INFORMATION,
+                    new String[] { IDialogConstants.OK_LABEL }, 0);
+            waitDialog.open();
+            return;
+        }
+        
+        session.redoChange(window);
 	}
 
 	/**

@@ -28,7 +28,8 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.IExtensionPropertySetInfo;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
@@ -50,7 +51,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
  * including oneself), these are registered through the same extension
  * point that plug-ins must also use to register their properties.
  */
-public class CurrencyInfo implements IExtensionPropertySetInfo {
+public class CurrencyInfo implements IPropertySetInfo {
 
 	private static PropertyAccessor codeAccessor = null;
 	private static PropertyAccessor decimalsAccessor = null;
@@ -62,15 +63,19 @@ public class CurrencyInfo implements IExtensionPropertySetInfo {
 		return Currency.class;
 	}
 	
-    public Class getInterfaceClass() {
-        return Currency.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		IPropertyControlFactory textControlFactory =
 			new IPropertyControlFactory() {
 				public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
 					return new TextEditor(parent, propertyAccessor);
+				}
+
+				public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+					return "'" + extendableObject.getStringPropertyValue(propertyAccessor) + "'";
+				}
+
+				public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+					return extendableObject.getStringPropertyValue(propertyAccessor);
 				}
 		};
 		

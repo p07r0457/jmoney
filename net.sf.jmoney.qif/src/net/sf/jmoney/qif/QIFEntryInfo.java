@@ -23,7 +23,7 @@
 package net.sf.jmoney.qif;
 
 import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.IExtensionPropertySetInfo;
+import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.PropertyAccessor;
 
@@ -54,7 +54,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
  * 		export is performed.</LI>
  * <P>
  */
-public class QIFEntryInfo implements IExtensionPropertySetInfo {
+public class QIFEntryInfo implements IPropertySetInfo {
 
 	private static PropertyAccessor reconcilingStateAccessor;
 	
@@ -65,10 +65,6 @@ public class QIFEntryInfo implements IExtensionPropertySetInfo {
 		return QIFEntry.class;
 	}
 	
-    public Class getInterfaceClass() {
-        return QIFEntry.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar extensionRegistrar) {
 		reconcilingStateAccessor = extensionRegistrar.addProperty("reconcilingState", "what???", 2.0, null, null, null);
 	}

@@ -254,7 +254,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         if (newSessionManager != null) {
         	if (!getSession().getCommodityIterator().hasNext()) {
         		initSystemCurrencies(getSession());
-        		getSession().getChangeManager().applyChanges("add ISO currencies");
+        		getSession().registerUndoableChange("add ISO currencies");
         	}
         }
 

@@ -70,11 +70,15 @@ public interface PropertyAccessor {
     // TODO: Consider removing this method.  It is not used.
     PropertySet getExtendablePropertySet();
     
-    Method getTheGetMethod();
+    Object invokeGetMethod(Object invocationTarget);
     
-    Method getTheSetMethod();
+    void invokeSetMethod(Object invocationTarget, Object value);
     
-//  Method getTheAddMethod();
+    ExtendableObject invokeCreateMethod(Object invocationTarget);
+    
+    ExtendableObject invokeCreateMethod(Object invocationTarget, PropertySet actualPropertySet);
+    
+    boolean invokeDeleteMethod(Object invocationTarget, ExtendableObject value);
     
     /**
      * Returns the property class.
@@ -88,6 +92,13 @@ public interface PropertyAccessor {
      */
     Class getValueClass();
     
+    /**
+     * Returns the PropertySet for the values of this property.
+     * This property must contain a value or values that are
+     * extendable objects. 
+     */
+    PropertySet getValuePropertySet();
+
     /**
      * Return a name for this property.
      *
@@ -164,6 +175,32 @@ public interface PropertyAccessor {
 	IPropertyControl createPropertyControl(Composite parent);
 
 	/**
+	 * Format the value of a property so it can be embedded into a
+	 * message.
+	 *
+	 * The returned value will look sensible when embedded in a message.
+	 * Therefore null values and empty values are returned as non-empty
+	 * text such as "none" or "empty".  Text values are placed in
+	 * quotes unless sure that only a single word will be returned that
+	 * would be readable without quotes.
+	 *
+	 * @return The value of the property formatted as appropriate.
+	 */
+	String formatValueForMessage(ExtendableObject object);
+
+	/**
+	 * Format the value of a property as appropriate for displaying in a
+	 * table.
+	 * 
+	 * The returned value is expected to be displayed in a table or some similar
+	 * view.  Null and empty values are therefore returned as empty strings.
+	 * Text values are not quoted.
+	 * 
+	 * @return The value of the property formatted as appropriate.
+	 */
+	String formatValueForTable(ExtendableObject object);
+
+	/**
 	 * @return the index into the constructor parameters, where
 	 * 		an index of zero indicates that the property is the
 	 * 		first parameter to the constructor.  An index of -1
@@ -191,7 +228,7 @@ public interface PropertyAccessor {
 	 * @return The value of this property from the
 	 * 			passed <code>values</code> object.
 	 */
-	public Object getValue(IExtendableObject values);
+//	public Object getValue(IExtendableObject values);
 
 	/**
 	 * 

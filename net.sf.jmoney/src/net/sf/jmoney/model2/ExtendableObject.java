@@ -37,26 +37,26 @@ import org.xml.sax.*;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * A partial implementation of an extendable object.  Plug-ins that provide
- * a datastore implementation must implement certain interfaces that
- * extend the IExtendableObject interface.
+ * This is the base class for all objects that may have extension
+ * property sets added by plug-ins.  The framework supports the
+ * following objects that may be extended:
+ * <UL>
+ * <LI>Session</LI>
+ * <LI>Commodity</LI>
+ * <LI>Account</LI>
+ * <LI>Transaction</LI>
+ * <LI>Entry</LI>
+ * </UL>
  * <P>
- * This class provides a partial implementation of the IExtendableObject interface.
- * By extending this class, a full implementation of the IExtendableObject interface
- * can be coded with less code than would be necessary if a full
- * implementation of the IExtendableObject interface were to be developed without
- * assistance of this class.  Whileas all datastore implementations
- * provided with jmoney use this helper class, it is not required that
- * plug-ins use this class.  A plug-in may provide an IExtendableObject implementation
- * without using this class.
+ * Plug-ins are also able to create new classes of extendable
+ * objects by deriving classes from this class.
  * <P>
- * For some methods in the IExtendableObject interface, this class provides a
- * full implementation.  For other methods, protected helper methods be 
- * provided to aid in the implementation.
+ * This class contains abstract methods for which an implementation
+ * must be provided.
  * 
- * @author  Nigel
+ * @author  Nigel Westbury
  */
-public abstract class ExtendableObject implements IExtendableObject {
+public abstract class ExtendableObject {
 	
 	/**
 	 * The key from which this object can be fetched from
@@ -92,22 +92,7 @@ public abstract class ExtendableObject implements IExtendableObject {
 				PropertySet propertySet = (PropertySet)entry.getKey();
 				Object[] constructorParameters = (Object[])entry.getValue();
 				
-				Constructor constructor = propertySet.getConstructor();
-				ExtensionObject extensionObject;
-				try {
-					extensionObject = (ExtensionObject)constructor.newInstance(constructorParameters);
-				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
-					throw new RuntimeException("internal error");
-				} catch (InstantiationException e) {
-					e.printStackTrace();
-					throw new RuntimeException("internal error");
-				} catch (IllegalAccessException e) {
-					throw new MalformedPluginException("Constructor must be public.");
-				} catch (InvocationTargetException e) {
-					e.printStackTrace();
-					throw new MalformedPluginException("An exception occured within a constructor in a plug-in.", e);
-				}
+				ExtensionObject extensionObject = (ExtensionObject)propertySet.constructImplementationObject(constructorParameters);
 				
 				extensionObject.setBaseObject(this);
 				extensionObject.setPropertySet(propertySet);
@@ -116,6 +101,9 @@ public abstract class ExtendableObject implements IExtendableObject {
 		}
 	}
 	
+	/**
+	 * @return The key that fetches this object.
+	 */
 	public IObjectKey getObjectKey() {
 		return objectKey;
 	}
@@ -146,14 +134,55 @@ public abstract class ExtendableObject implements IExtendableObject {
 	// but not public access.  Unfortunately this cannot be done
 	// so for time being allow public access.
 	public void processPropertyChange(PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-		getObjectKey().getSession().getChangeManager().setProperty(this, propertyAccessor, oldValue, newValue);
+		if (oldValue == newValue ||
+				(oldValue != null && oldValue.equals(newValue)))
+					return;
+
+		// Update the database.
+		IObjectKey key = getObjectKey();
+		PropertySet propertySet = PropertySet.getPropertySet(this.getClass());
+		key.updateProperties(propertySet, propertyAccessor, oldValue, newValue);
+
+		// Nofify the change manager.
+		getObjectKey().getSession().getChangeManager().processPropertyUpdate(this, propertyAccessor, oldValue, newValue);
+
+		// Fire an event for this change.
+		getObjectKey().getSession().objectChanged(
+        		this,
+        		propertyAccessor,
+				oldValue,
+				newValue);
 	}
 	
 	// Should allow default package access and protected access
 	// but not public access.  Unfortunately this cannot be done
 	// so for time being allow public access.
-	public void processObjectAddition(IListManager objectList, IExtendableObject newObject) {
-		getObjectKey().getSession().getChangeManager().processObjectAddition(this, objectList, newObject);
+	public void processObjectAddition(PropertyAccessor owningListProperty, final ExtendableObject newObject) {
+		getObjectKey().getSession().getChangeManager().processObjectCreation(this, owningListProperty, newObject);
+
+		// Fire the event.
+		getObjectKey().getSession().fireEvent(
+            	new ISessionChangeFirer() {
+            		public void fire(SessionChangeListener listener) {
+            			listener.objectAdded(newObject);
+            		}
+           		});
+	}
+	
+	// Should allow default package access and protected access
+	// but not public access.  Unfortunately this cannot be done
+	// so for time being allow public access.
+	public void processObjectDeletion(PropertyAccessor owningListProperty, final ExtendableObject oldObject) {
+		// Notify the change manager.
+		getObjectKey().getSession().getChangeManager().processObjectDeletion(this, owningListProperty, oldObject);
+		
+		// Fire the event.
+		getObjectKey().getSession().fireEvent(
+            	new ISessionChangeFirer() {
+            		public void fire(SessionChangeListener listener) {
+            			listener.objectDeleted(oldObject);
+            		}
+           		});
 	}
 	
 	/**
@@ -171,6 +200,10 @@ public abstract class ExtendableObject implements IExtendableObject {
 	public void registerWithIndexes() {
 	}
 	
+	/**
+	 * Get the extension that implements the properties needed by
+	 * a given plug-in.
+	 */
 	public ExtensionObject getExtension(PropertySet propertySet) {
 		Object extensionObject = extensions.get(propertySet);
 		
@@ -185,7 +218,7 @@ public abstract class ExtendableObject implements IExtendableObject {
 				
 				try {
 					extension = (ExtensionObject)
-					propertySet.getInterfaceClass().newInstance();
+					propertySet.getImplementationClass().newInstance();
 					// TODO: plugin error if null is returned
 				} catch (Exception e) {
 					// TODO: ensure that we check for a default constructor
@@ -220,7 +253,7 @@ public abstract class ExtendableObject implements IExtendableObject {
 				
 				try {
 					extension = (ExtensionObject)
-					propertySet.getInterfaceClass().newInstance();
+					propertySet.getImplementationClass().newInstance();
 					// TODO: plugin error if null is returned
 				} catch (Exception e) {
 					// TODO: ensure that we check for a default constructor
@@ -270,30 +303,55 @@ public abstract class ExtendableObject implements IExtendableObject {
         return ((Character)getPropertyValue(propertyAccessor)).charValue();
     }
     
+    /**
+     * Returns the value of a given property.
+     * <P>
+     * The property may be any property in the passed object,
+     * including properties that are stored in extension objects.
+     * The property may be defined in the actual class or
+     * any super classes which the class extends.  The property
+     * may also be a property in any extension class which extends
+     * the class of this object or which extends any super class
+     * of the class of this object.
+     * <P>
+     * If the property is in an extension and that extension does
+     * not exist in this object then the default value of the
+     * property is returned.
+     */
 	public Object getPropertyValue(PropertyAccessor propertyAccessor) {
 		Object objectWithProperties = getPropertySetInterface(propertyAccessor.getPropertySet());
 		
-		try {
-			return  propertyAccessor.getTheGetMethod().invoke(objectWithProperties, null);
-		} catch (IllegalAccessException e) {
-			throw new MalformedPluginException("Method '" + propertyAccessor.getTheGetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' must be public.");
-		} catch (Exception e) {
-			// TODO:
-			return null;
+		// If there is no extension then we use a default extension
+		// obtained from the propertySet object.  This extension object
+		// was constructed using the default constructor.
+		// This default extension is never passed outside this package
+		// because plugins have no need for it and can cause chaos if
+		// they alter it.  However it is useful for use inside the
+		// package such as here.
+		if (objectWithProperties == null) {
+			objectWithProperties = propertyAccessor.getPropertySet().getDefaultPropertyValues();
 		}
+		
+		return  propertyAccessor.invokeGetMethod(objectWithProperties);
 	}
 	
+	/**
+	 * Obtain an iterator that iterates over the values of a
+	 * list property.
+	 * 
+	 * @param propertyAccessor The property accessor for the property
+	 * 			whose values are to be iterated.  The property
+	 * 			must be a list property (and not a scalar property).
+	 */
 	public Iterator getPropertyIterator(PropertyAccessor propertyAccessor) {
 		Object objectWithProperties = getPropertySetInterface(propertyAccessor.getPropertySet());
 		
-		try {
-			return  (Iterator)propertyAccessor.getTheGetMethod().invoke(objectWithProperties, null);
-		} catch (IllegalAccessException e) {
-			throw new MalformedPluginException("Method '" + propertyAccessor.getTheGetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' must be public.");
-		} catch (Exception e) {
-			// TODO:
-			return null;
+		// If no extension exists then return the empty iterator.
+		if (objectWithProperties == null) {
+			return new EmptyIterator();
 		}
+		
+		return (Iterator)propertyAccessor.invokeGetMethod(objectWithProperties);
 	}
 	
 	public void setPropertyValue(PropertyAccessor propertyAccessor, Object value) {
@@ -301,39 +359,35 @@ public abstract class ExtendableObject implements IExtendableObject {
 		// the object, without going through a mutable object.
 		// We cannot therefore rely on this object being mutable, so temporarily
 		// set this flag.
+		// TODO: review this method.
 		alwaysReturnNonNullExtensions = true;
 		Object objectWithProperties = getMutablePropertySetInterface(propertyAccessor.getPropertySet());
 		alwaysReturnNonNullExtensions = false;
-		Object parameters[] = {value};
-		try {
-			propertyAccessor.getTheSetMethod().invoke(objectWithProperties, parameters);
-		} catch (IllegalAccessException e) {
-			throw new MalformedPluginException("Method '" + propertyAccessor.getTheSetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' must be public.");
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-			throw new MalformedPluginException("Method '" + propertyAccessor.getTheSetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' threw an exception that was not caught by the plug-in.");
-		} catch (IllegalArgumentException e) {
-			System.out.println(e.getMessage());
-			throw new RuntimeException("An unexpected error occurred in ExtendableObject.setPropertyValue");
-		}
+		
+		propertyAccessor.invokeSetMethod(objectWithProperties, value);
 	}
 
+	/**
+	 * Given a property set, return the actual object against
+	 * which the various methods to get and set properties may
+	 * be invoked.
+	 * <P>
+	 * If the property set is an extendable property set then
+	 * the methods must be invoked against the extendable object
+	 * itself.  If the property set is an extension property set
+	 * then we must find the appropriate extension object.
+	 * 
+	 * @param propertySet
+	 * @return The object (extendable or extension object)
+	 * 			against which the methods for the given property
+	 * 			must be invoked, or null if an extension property
+	 * 			and no extension exists.
+	 */
 	private Object getPropertySetInterface(PropertySet propertySet) {
 		if (!propertySet.isExtension()) {
 			return this;
 		} else {
 			ExtensionObject extension = getExtension(propertySet);
-			
-			// If there is no extension then we use a default extension
-			// obtained from the plugin object.  This extension object
-			// was constructed using the default constructor.
-			// This default extension is never passed outside this package
-			// because plugins have no need for it and can cause chaos if
-			// they alter it.  However it is useful for use inside the
-			// package such as here.
-			if (extension == null) {
-				extension = propertySet.getDefaultPropertyValues();
-			}
 			
 			return extension;
 		}
@@ -349,15 +403,30 @@ public abstract class ExtendableObject implements IExtendableObject {
 		}
 	}
 	
+	// TODO: check whether we need this method.
 	public String getPropertyValueAsString(PropertyAccessor propertyAccessor) {
 		Object objectWithProperties = getPropertySetInterface(propertyAccessor.getPropertySet());
+		
+		// If there is no extension then we use a default extension
+		// obtained from the propertySet object.  This extension object
+		// was constructed using the default constructor.
+		// This default extension is never passed outside this package
+		// because plugins have no need for it and can cause chaos if
+		// they alter it.  However it is useful for use inside the
+		// package such as here.
+		if (objectWithProperties == null) {
+			objectWithProperties = propertyAccessor.getPropertySet().getDefaultPropertyValues();
+		}
 		
 		String result = "";
 		
 		// Now we use introspection on the interface to find this property
+		String localName = propertyAccessor.getLocalName();
 		String theGetStringMethodName 
-		= propertyAccessor.getTheGetMethod().getName()
-		+ "String";
+          = "get"
+        	+ localName.toUpperCase().charAt(0)
+			+ localName.substring(1, localName.length())
+			+ "String";
 		
 		try {
 			Method theGetStringMethod = objectWithProperties.getClass().getDeclaredMethod(theGetStringMethodName, null);
@@ -378,20 +447,10 @@ public abstract class ExtendableObject implements IExtendableObject {
 			
 		} catch (NoSuchMethodException e) {
 			// No special method to get the value as a string, so use the method to
-			// get in native type and then we must convert to a string.
-		    try {
-		        Object value = propertyAccessor
-					.getTheGetMethod()
-					.invoke(objectWithProperties, null);
-		        if (value != null) {
-					result = value.toString();
-		        }
-			} catch (RuntimeException e2) {
-			    e2.printStackTrace(System.err);
-			} catch (InvocationTargetException e2) {
-			    e2.printStackTrace(System.err);
-			} catch (IllegalAccessException e2) {
-			    e2.printStackTrace(System.err);
+			// get in native type and convert to a string.
+			Object value = propertyAccessor.invokeGetMethod(objectWithProperties);
+			if (value != null) {
+				result = value.toString();
 			}
 		}
 
@@ -413,57 +472,37 @@ public abstract class ExtendableObject implements IExtendableObject {
 	public void setCharacterPropertyValue(PropertyAccessor propertyAccessor, char value) {
 		setPropertyValue(propertyAccessor, new Character(value));
 	}
-	
-	public void setPropertyValueFromString(PropertyAccessor propertyAccessor, String value) {
-		Object objectWithProperties = getMutablePropertySetInterface(propertyAccessor.getPropertySet());
+
+	/**
+	 * @param owningListProperty
+	 * @param object
+	 */
+	public ExtendableObject createObject(PropertyAccessor owningListProperty, PropertySet actualPropertySet) {
+		// TODO: ensure the following always returns non-null.
+		Object objectWithProperties = getMutablePropertySetInterface(owningListProperty.getPropertySet());
 		
-		// Now we use introspection on the interface to find this property
-		// bit of a kludge here
-		try {
-			String theSetStringMethodName
-			= propertyAccessor.getTheSetMethod().getName() + "String";
-			Class setFromStringParameterTypes[] = {String.class};
-			
-			try {
-				Method theSetStringMethod = objectWithProperties.getClass().getDeclaredMethod(theSetStringMethodName, setFromStringParameterTypes);
-				
-				if (theSetStringMethod.getReturnType() != void.class) {
-					throw new MalformedPluginException("Method '" + theSetStringMethodName + "' must return void type .");
-				}
-				
-				Object parameters[] = {value};
-				theSetStringMethod.invoke(objectWithProperties, parameters);
-			} catch (NoSuchMethodException e) {
-				// No special method to set the value as a string, so convert the string
-				// to the native type ourselves and then use the normal set method.
-				
-				Method theSetMethod = propertyAccessor.getTheSetMethod();
-				
-				Class parameterTypes[] = theSetMethod.getParameterTypes();
-				Class parameterType = parameterTypes[0];
-				
-				// Construct an object of this class from the string value.
-				Class constructorParameterTypes[] = {String.class};
-				Constructor contructorFromString;
-				try {
-					contructorFromString = parameterType.getConstructor(constructorParameterTypes);
-				} catch (NoSuchMethodException e2) {
-					throw new MalformedPluginException("No constructor to construct '" + parameterType.getName() + "' from a string.");
-				}
-				Object constructorParameters[] = {value};
-				Object valueObject = contructorFromString.newInstance(constructorParameters);
-				
-				Object setMethodParameters[] = {valueObject};
-				theSetMethod.invoke(objectWithProperties, setMethodParameters);
-			}
-			// Plugin error
-		} catch (InstantiationException e) {
-			// Plugin error
-		} catch (IllegalAccessException e) {
-			// Plugin error
-		} catch (InvocationTargetException e) {
-			// Plugin error
+		if (owningListProperty.getValuePropertySet().isDerivable()) {
+			return owningListProperty.invokeCreateMethod(objectWithProperties, actualPropertySet);
+		} else {
+			return owningListProperty.invokeCreateMethod(objectWithProperties);
 		}
+	}
+	
+	/**
+	 * @param owningListProperty
+	 * @param object
+	 */
+	public boolean deleteObject(PropertyAccessor owningListProperty, ExtendableObject object) {
+		Object objectWithProperties = getMutablePropertySetInterface(owningListProperty.getPropertySet());
+		
+		// If objectWithProperties is null, the list is in an extension and no properties
+		// have been set in the extension.  That means the list is empty so return false
+		// to indicate the object to be deleted cannot be found.
+		if (objectWithProperties == null) {
+			return false;
+		}
+		
+		return owningListProperty.invokeDeleteMethod(objectWithProperties, object);
 	}
 	
 	/**
@@ -504,7 +543,7 @@ public abstract class ExtendableObject implements IExtendableObject {
 	}
 	
 	
-	protected static String extensionToString(IExtendableObject extension) {
+	protected static String extensionToString(ExtendableObject extension) {
 		BeanInfo beanInfo;
 		try {
 			beanInfo = Introspector.getBeanInfo(extension.getClass());
@@ -523,8 +562,8 @@ public abstract class ExtendableObject implements IExtendableObject {
 			// than the following.
 			if (readMethod != null
 					&& writeMethod != null
-					&& readMethod.getDeclaringClass() != IExtendableObject.class
-					&& writeMethod.getDeclaringClass() != IExtendableObject.class
+					&& readMethod.getDeclaringClass() != ExtendableObject.class
+					&& writeMethod.getDeclaringClass() != ExtendableObject.class
 					&& readMethod.getDeclaringClass() != AccountExtension.class
 					&& writeMethod.getDeclaringClass() != AccountExtension.class
 					&& readMethod.getDeclaringClass() != EntryExtension.class
@@ -623,7 +662,7 @@ public abstract class ExtendableObject implements IExtendableObject {
 					Method writeMethod = pd[j].getWriteMethod();
 					// TODO: clean up
 					if (writeMethod != null
-							&& writeMethod.getDeclaringClass() != IExtendableObject.class
+							&& writeMethod.getDeclaringClass() != ExtendableObject.class
 							&& writeMethod.getDeclaringClass() != AccountExtension.class
 							&& writeMethod.getDeclaringClass() != EntryExtension.class) {
 						this.writeMethod = writeMethod;
@@ -695,5 +734,5 @@ public abstract class ExtendableObject implements IExtendableObject {
 			}
 		}
 	}
-	
+
 }

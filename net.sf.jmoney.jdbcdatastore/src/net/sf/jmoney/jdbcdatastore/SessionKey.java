@@ -26,7 +26,6 @@ import java.util.Collection;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionProperties;
-import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -41,7 +40,7 @@ import net.sf.jmoney.model2.Session;
  * @author Nigel Westbury
  */
 public class SessionKey implements IDatabaseRowKey {
-	private IExtendableObject extendableObject;
+	private ExtendableObject extendableObject;
 	private SessionManager sessionManager;
 
 	/**
@@ -54,11 +53,11 @@ public class SessionKey implements IDatabaseRowKey {
 	SessionKey() {
 	}
 	
-	public IExtendableObject getObject() {
+	public ExtendableObject getObject() {
 		return extendableObject;
 	}
 
-	void setObject(IExtendableObject extendableObject, SessionManager sessionManager) {
+	void setObject(ExtendableObject extendableObject, SessionManager sessionManager) {
 		this.extendableObject = extendableObject;
 		this.sessionManager = sessionManager;
 	}
@@ -76,9 +75,14 @@ public class SessionKey implements IDatabaseRowKey {
 		return 0;
 	}
 
-	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues, ExtensionProperties [] extensionProperties) {
+	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
 		// actualPropertySet is always the session property set.
 		JDBCDatastorePlugin.updateProperties(actualPropertySet, 0, oldValues, newValues, sessionManager);
+	}
+
+	public void updateProperties(PropertySet actualPropertySet, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+		// actualPropertySet is always the session property set.
+		JDBCDatastorePlugin.updateProperties(actualPropertySet, 0, propertyAccessor, oldValue, newValue, sessionManager);
 	}
 
 	public Session getSession() {

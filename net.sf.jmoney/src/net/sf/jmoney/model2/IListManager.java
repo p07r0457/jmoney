@@ -39,5 +39,5 @@ public interface IListManager extends Collection {
 	 * 
 	 * @return the newly created object.
 	 */
-	IExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet);
+	ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet);
 }

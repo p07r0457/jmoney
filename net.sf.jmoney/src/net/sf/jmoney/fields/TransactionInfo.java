@@ -26,11 +26,12 @@ import org.eclipse.swt.widgets.Composite;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Transaction;
-import net.sf.jmoney.model2.IExtensionPropertySetInfo;
+import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.Transaction;
 
@@ -50,9 +51,11 @@ import net.sf.jmoney.model2.Transaction;
  * including oneself), these are registered through the same extension
  * point that plug-ins must also use to register their properties.
  */
-public class TransactionInfo implements IExtensionPropertySetInfo {
+public class TransactionInfo implements IPropertySetInfo {
 
 	private static PropertyAccessor dateAccessor = null;
+
+	private static PropertyAccessor entriesAccessor = null;
 
 	public TransactionInfo() {
     }
@@ -61,10 +64,6 @@ public class TransactionInfo implements IExtensionPropertySetInfo {
 		return Transaction.class;
 	}
 	
-    public Class getInterfaceClass() {
-        return Transaction.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		// TODO implement a date control factory.
 		// For time being this does not matter because the transaction
@@ -75,12 +74,27 @@ public class TransactionInfo implements IExtensionPropertySetInfo {
 				public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
 					return new TextEditor(parent, propertyAccessor);
 				}
+
+				public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+					return "'" + extendableObject.getStringPropertyValue(propertyAccessor) + "'";
+				}
+
+				public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+					return extendableObject.getStringPropertyValue(propertyAccessor);
+				}
 		};
 		
-		propertyRegistrar.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), Entry.class, null);
+		entriesAccessor = propertyRegistrar.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), Entry.class, null);
 
 		dateAccessor = propertyRegistrar.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), 10.0, textControlFactory, null, null);
 	}
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getEntriesAccessor() {
+		return entriesAccessor;
+	}	
 
 	/**
 	 * @return

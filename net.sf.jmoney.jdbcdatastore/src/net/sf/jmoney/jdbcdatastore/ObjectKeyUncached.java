@@ -28,7 +28,6 @@ import java.util.Collection;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionProperties;
-import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -58,13 +57,23 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 	private PropertySet typedPropertySet;
 	private SessionManager sessionManager;
 	
-	ObjectKeyUncached(int rowId, PropertySet propertySet, SessionManager sessionManager) {
+	/**
+	 * @param PropertySet 
+	 * 		The property set for the type of this reference.
+	 * 		WARNING: This is not the actual property set for the object.
+	 * 		The object may have a property set that is derived from
+	 * 		the property set for the type of the reference.
+	 * 		The actual property set of the object cannot be determined
+	 * 		until the object is read from the database and therefore
+	 * 		is not passed to the constructor.
+	 */
+	ObjectKeyUncached(int rowId, PropertySet typedPropertySet, SessionManager sessionManager) {
 		this.rowId = rowId;
-		this.typedPropertySet = propertySet;
+		this.typedPropertySet = typedPropertySet;
 		this.sessionManager = sessionManager;
 	}
 	
-	public IExtendableObject getObject() {
+	public ExtendableObject getObject() {
 		// The object is constructed on demand.
 		
 		// If the class of extendable objects that may be referenced by
@@ -117,7 +126,9 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 				
 				rs = sessionManager.getReusableStatement().executeQuery(sql);
 			}
-			
+
+			rs.next();
+
 			ExtendableObject extendableObject = JDBCDatastorePlugin.materializeObject(rs, typedPropertySet, this, sessionManager);
 			
 			return extendableObject;
@@ -128,15 +139,19 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 	}
 
 	public Collection createIndexValuesList(PropertyAccessor propertyAccessor) {
-		return new IndexValuesList(sessionManager, rowId, propertyAccessor);
+		return new IndexValuesList(sessionManager, this, propertyAccessor);
 	}
 
 	public int getRowId() {
 		return rowId;
 	}
 
-	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues, ExtensionProperties [] extensionProperties) {
+	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
 		JDBCDatastorePlugin.updateProperties(actualPropertySet, rowId, oldValues, newValues, sessionManager);
+	}
+
+	public void updateProperties(PropertySet actualPropertySet, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+		JDBCDatastorePlugin.updateProperties(actualPropertySet, rowId, propertyAccessor, oldValue, newValue, sessionManager);
 	}
 
 	public Session getSession() {
@@ -145,5 +160,23 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 
 	public ISessionManager getSessionManager() {
 		throw new RuntimeException("should only be called for session keys");
+	}
+
+	/**
+	 * Until an object has been persisted to the database, no
+	 * row id is available.  The row id is set to -1 initially.
+	 * When the object is persisted, this method must be called
+	 * to set the row id to the actual row id.
+	 * <P>
+	 * Although uncached objects must be written to the database
+	 * immediately, because the getObject method reads the object
+	 * from the database, we cannot write the object to the database
+	 * until the object has been created, hence we need this method.
+	 *  
+	 * @param rowId The row id obtained when the object is
+	 * 			persisted in the database.
+	 */
+	public void setRowId(int rowId) {
+		this.rowId = rowId;
 	}
 }

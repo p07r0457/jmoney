@@ -55,7 +55,7 @@ import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.IExtendableObject;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
@@ -630,7 +630,7 @@ private Map idToNodeMap = new HashMap();
 					newAccount = (CapitalAccount)account.createSubAccount();
 				}
 		        newAccount.setName(JMoneyPlugin.getResourceString("Account.newAccount"));
-		        session.getChangeManager().applyChanges("add new account");
+		        session.registerUndoableChange("add new account");
 				
 		        // Having added the new account, set it as the selected
 		        // account in the tree viewer.
@@ -654,6 +654,7 @@ private Map idToNodeMap = new HashMap();
 				}
 				if (account != null) {
 					session.deleteAccount(account);
+			        session.registerUndoableChange("delete account");
 				}
 			}
 		};

@@ -24,28 +24,47 @@ package net.sf.jmoney.model2;
 
 import java.util.Map;
 
+import net.sf.jmoney.fields.CommodityInfo;
+
 /**
  *
  * @author  Nigel
  */
 public abstract class Commodity extends ExtendableObject {
+
+	private String name;
+	
 	protected Commodity(
 			IObjectKey objectKey, 
 			Map extensions, 
-			IObjectKey parentKey) {
+			IObjectKey parentKey,
+			String name) {
 		super(objectKey, extensions);
+		this.name = name;
 	}
 	
-    /**
-     * @return the name of the currency.
-     */
-	public abstract String getName();
-    
-    /**
-     * Set the name of the currency.
-     */
-	public abstract void setName(String name);
-    
+	/**
+	 * @return the name of the currency.
+	 */
+	public String getName() {
+		return name;
+	}
+	
+	public void setName(String name) {
+        String oldName = this.name;
+		this.name = name;
+
+		// Notify the change manager.
+		processPropertyChange(CommodityInfo.getNameAccessor(), oldName, name);
+	}
+
+	/**
+	 * This method is used for debugging purposes only.
+	 */
+	public String toString() {
+		return name;
+	}
+	
     /**
      * Converts an amount of this commodity from string to integer
      * format.

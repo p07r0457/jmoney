@@ -26,7 +26,6 @@ import java.util.Collection;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionProperties;
-import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -34,7 +33,7 @@ import net.sf.jmoney.model2.Session;
 
 /**
  * This class provides an IObjectKey implementation for objects
- * that is cached.  An instance of the object must be constructed
+ * that are cached.  An instance of the object must be constructed
  * by the code that constructed this ObjectKeyCached object and
  * must be set into this object by calling the setObject method.
  * The cached object will then be returned each time getObject 
@@ -43,7 +42,7 @@ import net.sf.jmoney.model2.Session;
  * @author Nigel Westbury
  */
 public class ObjectKeyCached implements IDatabaseRowKey {
-	private IExtendableObject extendableObject;
+	private ExtendableObject extendableObject;
 	private int rowId;
 	private SessionManager sessionManager;
 
@@ -67,11 +66,11 @@ public class ObjectKeyCached implements IDatabaseRowKey {
 		this.sessionManager = sessionManager;
 	}
 	
-	void setObject(IExtendableObject extendableObject) {
+	void setObject(ExtendableObject extendableObject) {
 		this.extendableObject = extendableObject;
 	}
 
-	public IExtendableObject getObject() {
+	public ExtendableObject getObject() {
 		return extendableObject;
 	}
 
@@ -80,15 +79,19 @@ public class ObjectKeyCached implements IDatabaseRowKey {
 		// It may be that this will have to be changed to a class
 		// that extends Vector and provides more methods.
 		// TO DO: update above comment when design complete.
-		return new IndexValuesList(sessionManager, rowId, propertyAccessor);
+		return new IndexValuesList(sessionManager, this, propertyAccessor);
 	}
 
 	public int getRowId() {
 		return rowId;
 	}
 
-	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues, ExtensionProperties [] extensionProperties) {
+	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
 		JDBCDatastorePlugin.updateProperties(actualPropertySet, rowId, oldValues, newValues, sessionManager);
+	}
+
+	public void updateProperties(PropertySet actualPropertySet, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+		JDBCDatastorePlugin.updateProperties(actualPropertySet, rowId, propertyAccessor, oldValue, newValue, sessionManager);
 	}
 
 	public Session getSession() {

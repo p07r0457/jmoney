@@ -94,9 +94,17 @@ public class TextEditor implements IPropertyControl {
      * Editors may update the property on a regular basis, not just when
      * the framework calls the <code>save</code> method.  However, the only time
      * that editors must update the property is when the framework calls this method.
+     * <P>
+     * Null strings and empty strings appear the same to the user and
+     * are thus considered the same value.  We use null for empty text
+     * because it is more efficient and is what is generally used as default value
+     * by the datastore.
      */
     public void save() {
-		account.setStringPropertyValue(propertyAccessor, propertyControl.getText());
+    	String text = propertyControl.getText();
+		account.setStringPropertyValue(
+				propertyAccessor, 
+				text.length() == 0 ? null : text);
     }
 
     /* (non-Javadoc)

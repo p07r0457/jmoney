@@ -57,7 +57,7 @@ import java.util.Collection;
  * @author Nigel Westbury
  */
 public interface IObjectKey {
-	IExtendableObject getObject();
+	ExtendableObject getObject();
 
 	/**
 	 * @param accountAccessor
@@ -82,7 +82,15 @@ public interface IObjectKey {
 	 * 			be passed as objects (Integer, Long etc).
 	 * @param extensionProperties
 	 */
-	void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues, ExtensionProperties[] extensionProperties);
+	void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues);
+
+	/**
+	 * @param propertySet
+	 * @param propertyAccessor
+	 * @param oldValue
+	 * @param newValue
+	 */
+	void updateProperties(PropertySet actualPropertySet, PropertyAccessor propertyAccessor, Object oldValue, Object newValue);
 
 	/**
 	 * Returns the session object.  Objects often need access to the session object.

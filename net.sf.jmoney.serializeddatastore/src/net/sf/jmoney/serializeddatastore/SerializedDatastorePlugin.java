@@ -71,9 +71,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.MalformedPluginException;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -87,9 +85,7 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Currency;
 // The following are required so that we can convert
 // old format files.
-import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
 
 //SAX classes.
 import org.xml.sax.helpers.*;
@@ -754,26 +750,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		throws SAXException {
 			
 			// We can now create the object.
-			// The parameters to the constructor have been placed
-			// in the constructorParameters array so we need only
-			// to call the constructor.
-			
-			Constructor constructor = propertySet.getConstructor();
-			ExtendableObject extendableObject;
-			try {
-				extendableObject = (ExtendableObject)constructor.newInstance(constructorParameters);
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
-			} catch (InstantiationException e) {
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
-			} catch (IllegalAccessException e) {
-				throw new MalformedPluginException("Constructor must be public.");
-			} catch (InvocationTargetException e) {
-				e.printStackTrace();
-				throw new MalformedPluginException("An exception occured within a constructor in a plug-in.", e);
-			}
+			ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
 			
 			objectKey.setObject(extendableObject);
 			
@@ -822,7 +799,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 								|| propertyAccessor.getValueClass() == Date.class) {
 							constructorParameters[index] = value;
 						} else {
-							constructorParameters[index] = ((IExtendableObject)value).getObjectKey();
+							constructorParameters[index] = ((ExtendableObject)value).getObjectKey();
 							//extendableObject.setPropertyValue(propertyAccessor, value);
 						}
 					} else {
@@ -855,7 +832,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 								|| propertyAccessor.getValueClass() == Date.class) {
 							extensionConstructorParameters[index] = value;
 						} else {
-							extensionConstructorParameters[index] = ((IExtendableObject)value).getObjectKey();
+							extensionConstructorParameters[index] = ((ExtendableObject)value).getObjectKey();
 						}
 					} else {
 						// Must be an element in an array.
@@ -1234,7 +1211,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * 			type is determined by inspecting the adder and remover methods. 
 	 * @throws SAXException
 	 */
-	void writeObject(TransformerHandler hd, IExtendableObject object, String elementName, Class propertyType) throws SAXException {
+	void writeObject(TransformerHandler hd, ExtendableObject object, String elementName, Class propertyType) throws SAXException {
 		// Find the property set information for this object.
 		PropertySet propertySet = PropertySet.getPropertySet(object.getClass());
 
@@ -1275,7 +1252,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			atts.addAttribute("", "", "id", "CDATA", id);
 		}
 
-		if (propertySet.getInterfaceClass() != propertyType) {
+		if (propertySet.getImplementationClass() != propertyType) {
 			atts.addAttribute("", "", "propertySet", "CDATA", propertySet.getId());
 		}
 
@@ -1317,7 +1294,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 						|| object.getExtension(propertySet2) != null) {
 					String name = propertyAccessor.getLocalName();
 					for (Iterator elementIter = object.getPropertyIterator(propertyAccessor); elementIter.hasNext(); ) {
-						IExtendableObject listElement = (IExtendableObject)elementIter.next();
+						ExtendableObject listElement = (ExtendableObject)elementIter.next();
 						writeObject(hd, listElement, propertyAccessor.getLocalName(), propertyAccessor.getValueClass());
 					}
 				}

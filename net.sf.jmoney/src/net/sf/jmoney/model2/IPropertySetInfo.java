@@ -21,15 +21,13 @@
  */
 package net.sf.jmoney.model2;
 
-import java.lang.reflect.Constructor;
-
 /**
  * @author Nigel
  *
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-public interface IExtensionPropertySetInfo {
+public interface IPropertySetInfo {
 
 	/**
 	 * The registerExtensionProperties method provides information on
@@ -48,10 +46,9 @@ public interface IExtensionPropertySetInfo {
 	 * circumstances so null will be returned.
 	 * 
 	 * @return The class that contains a storage implementation
-	 * 		for the properties listed, or null if the properties in
-	 * 		this set are in the base object.
+	 * 		for the properties listed.
 	 */
-    Class getInterfaceClass();
+	Class getImplementationClass();
     
     /**
      * This method is the first method called by the framework.
@@ -116,9 +113,4 @@ public interface IExtensionPropertySetInfo {
      * 		to register the properties.
      */
     void registerProperties(IPropertyRegistrar propertyRegistrar);
-
-	/**
-	 * @return The class that implements the property set.
-	 */
-	Class getImplementationClass();
 }

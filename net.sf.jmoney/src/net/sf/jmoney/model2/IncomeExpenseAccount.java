@@ -26,6 +26,8 @@ package net.sf.jmoney.model2;
 import java.util.Map;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.CapitalAccountInfo;
+import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.*;
 
 /**
@@ -77,15 +79,48 @@ public class IncomeExpenseAccount extends Account {
 	 * @return
 	 */
     public IncomeExpenseAccount createSubAccount() {
-    	IncomeExpenseAccount newSubAccount = (IncomeExpenseAccount)subAccounts.createNewElement(
+    	final IncomeExpenseAccount newSubAccount = (IncomeExpenseAccount)subAccounts.createNewElement(
 				this, 
 				JMoneyPlugin.getIncomeExpenseAccountPropertySet());
 
-		processObjectAddition(subAccounts, newSubAccount);
+		processObjectAddition(IncomeExpenseAccountInfo.getSubAccountAccessor(), newSubAccount);
+		
+		// In addition to the generic object creation event, we also fire an event
+		// specifically for account creation.  The accountAdded event is superfluous 
+		// and it may be simpler if we removed it, so that listeners receive the generic
+		// objectAdded event only.
+		getObjectKey().getSession().fireEvent(
+				new ISessionChangeFirer() {
+					public void fire(SessionChangeListener listener) {
+						listener.accountAdded(newSubAccount);
+					}
+				});
 		
 		return newSubAccount;
     }
     
+	/**
+	 * This version is required by the JMoney framework.
+	 */
+	boolean deleteSubAccount(final IncomeExpenseAccount subAccount) {
+		boolean found = subAccounts.remove(subAccount);
+		if (found) {
+			processObjectDeletion(IncomeExpenseAccountInfo.getSubAccountAccessor(), subAccount);
+
+			// In addition to the generic object deletion event, we also fire an event
+			// specifically for account deletion.  The accountDeleted event is superfluous 
+			// and it may be simpler if we removed it, so that listeners receive the generic
+			// objectDeleted event only.
+			getObjectKey().getSession().fireEvent(
+					new ISessionChangeFirer() {
+						public void fire(SessionChangeListener listener) {
+							listener.accountDeleted(subAccount);
+						}
+					});
+		}
+		return found;
+	}
+	
     static public  Object [] getDefaultProperties() {
 		return new Object [] { "new category" };
 	}

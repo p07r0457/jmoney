@@ -266,7 +266,7 @@ public class QIF implements FileFormat {
             removeSimilarTransfer(session, entry);
         }
         
-		session.getChangeManager().applyChanges("import QIF account");
+		session.registerUndoableChange("import QIF account");
     }
 
 /*    

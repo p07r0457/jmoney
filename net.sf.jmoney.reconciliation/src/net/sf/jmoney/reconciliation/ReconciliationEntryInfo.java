@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.reconciliation;
 
-import net.sf.jmoney.model2.IExtensionPropertySetInfo;
+import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.PropertyAccessor;
 
@@ -32,7 +32,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-public class ReconciliationEntryInfo implements IExtensionPropertySetInfo {
+public class ReconciliationEntryInfo implements IPropertySetInfo {
 
 	private static PropertyAccessor statusAccessor;
 	
@@ -43,10 +43,6 @@ public class ReconciliationEntryInfo implements IExtensionPropertySetInfo {
 		return ReconciliationEntry.class;
 	}
 	
-    public Class getInterfaceClass() {
-        return ReconciliationEntry.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar extensionRegistrar) {
 		statusAccessor = extensionRegistrar.addProperty("status", ReconciliationPlugin.getResourceString("Entry.statusShort"), 2.0, null, StatusEditor.class, null);
 	}

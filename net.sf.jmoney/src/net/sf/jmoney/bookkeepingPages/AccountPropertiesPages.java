@@ -36,12 +36,15 @@ import org.eclipse.ui.IMemento;
 
 import net.sf.jmoney.IBookkeepingPageListener;
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.AccountInfo;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.ObjectLockedForEditException;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.model2.SessionChangeListener;
 
 /**
  * @author Nigel
@@ -60,14 +63,35 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 	 * the account property controls.
 	 */
 	private class AccountPropertiesControl extends Composite {
-		CapitalAccount account;
-		Session session;
+		CapitalAccount account = null;
+		Session session = null;
 		
 		/**
 		 * List of the IPropertyControl objects for the
 		 * properties that can be edited in this panel.
 		 */
 		Vector propertyControlList = new Vector();
+	
+		// Listen for changes to the account properties.
+		// If anyone else changes any of the account properties
+		// then we update the values in the edit controls.
+		// Note that we do not need to deal with the case where
+		// the account is deleted or the session is closed.  
+		// If the account is deleted then
+		// the navigation view will destroy the node and destroy
+		// this view.
+		
+		private SessionChangeListener listener =
+			new SessionChangeAdapter() {
+		    public void accountChanged(final Account account, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+				if (account == AccountPropertiesControl.this.account) {
+					System.out.println("Property changed, reloading control: " + propertyAccessor.getLocalName());
+					// Find the control for this property.
+					IPropertyControl propertyControl = (IPropertyControl)propertyControlList.get(propertyAccessor.getIndexIntoScalarProperties());
+					propertyControl.load(account);
+				}
+			}
+		};
 		
 		/**
 		 * @param parent
@@ -85,6 +109,8 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 			
 			// TODO: what is this?
 			pack();
+			
+			JMoneyPlugin.getDefault().addSessionChangeListener(listener);
 		}
 
 		void setAccount(CapitalAccount account, Session session) {
@@ -108,12 +134,41 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 					final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(this);
 					propertyControl.getControl().addFocusListener(
 							new FocusAdapter() {
+
+								// When a control gets the focus, save the old value here.
+								// This value is used in the change message.
+								String oldValueText;
+								
 								public void focusLost(FocusEvent e) {
+									System.out.println("Focus lost: " + propertyAccessor.getLocalName());
+									
+									if (AccountPropertiesControl.this.session.isSessionFiring()) {
+										return;
+									}
+									
 									propertyControl.save();
-									updateAndReleaseAccount();
+									String newValueText = propertyAccessor.formatValueForMessage(
+											AccountPropertiesControl.this.account);
+									
+									String description;
+									if (propertyAccessor == AccountInfo.getNameAccessor()) {
+										description = 
+											"rename account from " + oldValueText
+											+ " to " + newValueText;
+									} else {
+										description = 
+											"change " + propertyAccessor.getShortDescription() + " property"
+											+ " in '" + AccountPropertiesControl.this.account.getName() + "' account"
+											+ " from " + oldValueText
+											+ " to " + newValueText;
+									}
+									AccountPropertiesControl.this.session.registerUndoableChange(description);
 								}
 								public void focusGained(FocusEvent e) {
-									lockAccountForEdit();
+									System.out.println("Focus gained: " + propertyAccessor.getLocalName());
+									// Save the old value of this property for use in our 'undo' message.
+									oldValueText = propertyAccessor.formatValueForMessage(
+											AccountPropertiesControl.this.account);
 								}
 							});
 					
@@ -122,49 +177,14 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 				}
 			}
 			
-			// Get a lock on the account and set the property
-			// values into the controls.
-			lockAccountForEdit();
-		}
-
-		void lockAccountForEdit() {
-			// Try to get a lock on the account.		
-//			try {
-				// TODO: Decide if we need the ability to get a lock on the account.
-
-				// Set the values from the account object into the Text fields.
-				for (Iterator iter = propertyControlList.iterator(); iter.hasNext(); ) {
-					IPropertyControl propertyControl = (IPropertyControl)iter.next();
-					propertyControl.load(account);
-				}
-/*				
-			} catch (ObjectLockedForEditException e) {
-				// Someone else is editing the properties of this
-				// account so we gray out the controls.
-				
-				// TODO: do we need a flag to indicate we are in disabled mode?
-				
-				// Set the values from the account object into the Text fields.
-				for (Iterator iter = propertyControlList.iterator(); iter.hasNext(); ) {
-					IPropertyControl propertyControl = (IPropertyControl)iter.next();
-					propertyControl.loadDisabled(account);
-				}
+			// Set the values from the account object into the control fields.
+			for (Iterator iter = propertyControlList.iterator(); iter.hasNext(); ) {
+				IPropertyControl propertyControl = (IPropertyControl)iter.next();
+				propertyControl.load(account);
 			}
-*/			
-		}
-		
-		void updateAndReleaseAccount() {
-			// Property values are copied from the control into
-			// the account object whenever a control
-			// loses focus.  Therefore we know that all values
-			// have been copied from the controls into the
-			// account object by the time we get here
-			// and we need only commit the changes to any
-			// underlying database.
-			session.getChangeManager().applyChanges("update account properties");
 		}
 	}
-	
+
 	public void init(IMemento memento) {
 		// The user cannot change the way this view is displayed,
 		// so nothing to do here.

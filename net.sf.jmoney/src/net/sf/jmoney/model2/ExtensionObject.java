@@ -30,10 +30,10 @@ import java.util.Iterator;
  * extension property sets should be derived.
  */
 public abstract class ExtensionObject {
-	protected IExtendableObject baseObject;
+	protected ExtendableObject baseObject;
 	protected PropertySet propertySet;
 	
-	void setBaseObject(IExtendableObject baseObject) {
+	void setBaseObject(ExtendableObject baseObject) {
 		this.baseObject = baseObject;
 	}
 	

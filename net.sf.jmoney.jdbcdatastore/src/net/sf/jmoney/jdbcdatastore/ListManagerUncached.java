@@ -22,20 +22,13 @@
 
 package net.sf.jmoney.jdbcdatastore;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
-import java.util.Vector;
 
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ExtensionProperties;
-import net.sf.jmoney.model2.IExtendableObject;
-import net.sf.jmoney.model2.MalformedPluginException;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -67,7 +60,7 @@ public class ListManagerUncached implements IListManager {
 		typedPropertySet = null;
 		for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
 			PropertySet propertySet = (PropertySet)iter.next();
-			if (propertySet.getInterfaceClass() == valueClass) {
+			if (propertySet.getImplementationClass() == valueClass) {
 				typedPropertySet = propertySet;
 				break;
 			}
@@ -76,128 +69,22 @@ public class ListManagerUncached implements IListManager {
 			throw new RuntimeException(valueClass.getName() + " not found.");
 	}
 	
-	public IExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object [] values, ExtensionProperties [] extensionProperties) {
-		// TODO: implement this.
-		// It is almost identical to the version below.
-		return null;
-	}
-	
-	public IExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet) {
+	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet) {
 
-		// Use the default constructor for the object.
-		// This creates an object with the following properties:
-		// - it is not a part of the object store
-		// - its properties are set to the default values
-		// - it has no location (i.e. parent) set
-		// - it can be added to the object store by calling 
-		//		the appropriate add<PropertyName> method.
-		//		This passes an ObjectKey and a parent to the object.
-		// - none of the list values can contain properties,
-		//		though this may change at a later time.
-		// - if it contains references to objects in the object store
-		//		then it may not be 'kept' without a listener, just as references to
-		//		objects in the object store may not be kept without a listener.
-		//		(the objects may be deleted).
+ 		// First build the in-memory object.  Even though the object is not
+		// cached in the object key, the object must be constructed to get
+		// the default values to be written to the database and the
+		// object must be constructed so it can be returned to the caller.
 		
-		// No, I have changed my mind.  For time being, get an
-		// array of default values from a static method.
-		// This is passed to this method.
-		Object values[] = propertySet.getDefaultPropertyValues2();
+		ObjectKeyUncached objectKey = new ObjectKeyUncached(-1, typedPropertySet, sessionManager);
 		
-		
- 		// First build the in-memory object.  This object is
-		// returned to the caller.
-		
-		Vector constructorProperties = propertySet.getConstructorProperties();
-		int numberOfParameters = constructorProperties.size();
-		if (!propertySet.isExtension()) {
-			numberOfParameters += 3;
-		}
-		Object[] constructorParameters = new Object[numberOfParameters];
-		
-		ObjectKeyCached objectKey = new ObjectKeyCached(-1, sessionManager);
-		
-		constructorParameters[0] = objectKey;
-		constructorParameters[1] = null;
-		constructorParameters[2] = parent.getObjectKey();
-	
-		// For all lists, set the Collection object to be a Vector.
-		// For all primative properties, get the value from the passed object.
-		// For all extendable objects, we get the property value from
-		// the passed object and then get the object key from that.
-		// This works because all objects must be in a list and that
-		// list owns the object, not us.
-		int indexIntoScalarProperties = 0;
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			int index = propertyAccessor.getIndexIntoConstructorParameters();
-			if (propertyAccessor.isScalar()) {
-				// Get the value from the passed object.
-				Object value = values[indexIntoScalarProperties++];
-				
-/*				
-				Object objectWithProperties = values;				
-				
-				try {
-					value = propertyAccessor.getTheGetMethod().invoke(objectWithProperties, null);
-				} catch (IllegalAccessException e) {
-					throw new MalformedPluginException("Method '" + propertyAccessor.getTheGetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' must be public.");
-				} catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					throw new RuntimeException("internal error");
-				} catch (InvocationTargetException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					throw new RuntimeException("internal error");
-				}
-*/				
-				if (value != null) {
-					if (propertyAccessor.getValueClass().isPrimitive()
-							|| propertyAccessor.getValueClass() == String.class
-							|| propertyAccessor.getValueClass() == Long.class
-							|| propertyAccessor.getValueClass() == Date.class) {
-						constructorParameters[index] = value;
-					} else {
-						constructorParameters[index] = ((IExtendableObject)value).getObjectKey();
-					}
-				} else { 
-					constructorParameters[index] = null;
-				}
-			} else {
-				// Must be an element in an array.
-				// If an object is not cached, then neither are
-				// any lists in the object.  i.e. do not materialized
-				// the objects in a list just because the owning object
-				// is materialized.
-				constructorParameters[index] = new ListManagerUncached(objectKey, sessionManager, propertyAccessor);
-			}
-		}
-		
-		// We can now create the object.
-		// The parameters to the constructor have been placed
-		// in the constructorParameters array so we need only
-		// to call the constructor.
-		
-		Constructor constructor = propertySet.getConstructor();
-		ExtendableObject extendableObject;
-		try {
-			extendableObject = (ExtendableObject)constructor.newInstance(constructorParameters);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		} catch (IllegalAccessException e) {
-			throw new MalformedPluginException("Constructor must be public.");
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-			throw new MalformedPluginException("An exception occured within a constructor in a plug-in.", e);
-		}
-		
-		objectKey.setObject(extendableObject);
+		// If an object is not cached, then neither are
+		// any lists in the object.  i.e. do not materialized
+		// the objects in a list just because the owning object
+		// is materialized.
 
+		ExtendableObject extendableObject = JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, false);
+		
 		// Insert the new object into the tables.
 		
 		int rowId = JDBCDatastorePlugin.insertIntoDatabase(propertySet, extendableObject, listProperty, parent, sessionManager);
@@ -297,7 +184,7 @@ public class ListManagerUncached implements IListManager {
 
 	public boolean remove(Object o) {
 		// Delete this object from the database.
-		IExtendableObject extendableObject = (IExtendableObject)o;
+		ExtendableObject extendableObject = (ExtendableObject)o;
 		IDatabaseRowKey key = (IDatabaseRowKey)extendableObject.getObjectKey();
 		return JDBCDatastorePlugin.deleteFromDatabase(key.getRowId(), extendableObject, sessionManager);
 	}

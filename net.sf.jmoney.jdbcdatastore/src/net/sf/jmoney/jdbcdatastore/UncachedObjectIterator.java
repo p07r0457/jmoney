@@ -37,7 +37,7 @@ import net.sf.jmoney.model2.PropertySet;
  * Objects of this class are constructed from a result set
  * that contains the properties for a set of objects to be iterated.
  * This class implements the Iterator interface and will return
- * the set of IExtendableObject objects.
+ * the set of ExtendableObject objects.
  *
  * @author Nigel Westbury
  */

@@ -79,16 +79,8 @@ public class Entry extends ExtendableObject {
     		String     memo,
     		long       amount,
     		long       creation) {
-	super(objectKey, extensions);
-
-	/*
-
-	System.out.println("Creating an Entry with" 
-	        + "\nobjectKey: " + objectKey
-	        + "\nparent:" + parent
-	        + "\naccountKey:" + accountKey);
-	*/
-
+		super(objectKey, extensions);
+		
 		if (creation == 0) {
 			this.creation = Calendar.getInstance().getTime().getTime();
 		} else {

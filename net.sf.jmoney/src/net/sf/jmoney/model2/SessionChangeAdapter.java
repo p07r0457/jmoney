@@ -85,12 +85,12 @@ public class SessionChangeAdapter implements SessionChangeListener {
     public void entryDeleted(Entry oldEntry) {
     }
 
-	public void objectAdded(IExtendableObject extendableObject) {
+	public void objectAdded(ExtendableObject extendableObject) {
 	}
 
-	public void objectDeleted(IExtendableObject extendableObject) {
+	public void objectDeleted(ExtendableObject extendableObject) {
 	}
 
-	public void objectChanged(IExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+	public void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 	}
 }

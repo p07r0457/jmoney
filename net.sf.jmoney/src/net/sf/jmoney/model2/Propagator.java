@@ -170,12 +170,12 @@ public class Propagator {
 		Class [] parameters = method.getParameterTypes();
 		
 		PropertySet sourcePropertySet = propertySet1;
-		if (sourcePropertySet.getInterfaceClass().equals(parameters[1])) {
+		if (sourcePropertySet.getImplementationClass().equals(parameters[1])) {
 			
 			for (Iterator destinationIter = PropertySet.getExtensionPropertySetIterator(extendablePropertySet2); destinationIter.hasNext(); ) {
 				PropertySet destinationPropertySet = (PropertySet)destinationIter.next();
 				
-				if (destinationPropertySet.getInterfaceClass().equals(parameters[2])) {
+				if (destinationPropertySet.getImplementationClass().equals(parameters[2])) {
 					
 					// Method looks ok so add to map.
 					
@@ -210,7 +210,7 @@ public class Propagator {
 		}
 	}
 	
-	public static synchronized void fireAdaptors(IExtendableObject source, PropertyAccessor propertyAccessor) {
+	public static synchronized void fireAdaptors(ExtendableObject source, PropertyAccessor propertyAccessor) {
 		// We must be very careful when firing propagators.  Propagators usually work two-way,
 		// with updates to one property being reflected in another property and updates
 		// to the other property being reflected in the first property.  There may be

@@ -23,16 +23,17 @@
 package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.IExtensionPropertySetInfo;
+import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.PropertyAccessor;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
  * extension point.  It implements an extension.
  * <P>
- * This extension registers the Entry properties.  By registering
+ * This extension registers the IncomeExpenseAccount properties.  By registering
  * the properties, every one can know how to display, edit, and store
  * the properties.
  * <P>
@@ -44,21 +45,19 @@ import net.sf.jmoney.model2.IncomeExpenseAccount;
  * 
  * @author Nigel
  */
-public class IncomeExpenseAccountInfo implements IExtensionPropertySetInfo {
+public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
-    public IncomeExpenseAccountInfo() {
+	private static PropertyAccessor subAccountAccessor = null;
+
+	public IncomeExpenseAccountInfo() {
     }
 
 	public Class getImplementationClass() {
 		return IncomeExpenseAccount.class;
 	}
 	
-    public Class getInterfaceClass() {
-        return IncomeExpenseAccount.class;
-    }
-
     public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccount.class, null);
+    	subAccountAccessor = propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccount.class, null);
 
 		// There are no scalar properties actually defined in this property set!
 		
@@ -66,4 +65,11 @@ public class IncomeExpenseAccountInfo implements IExtensionPropertySetInfo {
 		// that is controlled by the derived class type.  This has no
 		// been designed yet, so for time being we have nothing to do.
 	}
+
+    /**
+	 * @return
+	 */
+	public static PropertyAccessor getSubAccountAccessor() {
+		return subAccountAccessor;
+	}	
 }

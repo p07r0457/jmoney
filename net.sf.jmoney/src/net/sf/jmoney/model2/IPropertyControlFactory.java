@@ -40,4 +40,30 @@ public interface IPropertyControlFactory {
 	 * 			control.
 	 */
 	IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor);
+
+	/**
+	 * Format the value of a property so it can be embedded into a
+	 * message.
+	 *
+	 * The returned value must look sensible when embedded in a message.
+	 * Therefore null values and empty values must return non-empty
+	 * text such as "none" or "empty".  Text values should be placed in
+	 * quotes unless sure that only a single word will be returned that
+	 * would be readable without quotes.
+	 *
+	 * @return The value of the property formatted as appropriate.
+	 */
+	String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor);
+
+	/**
+	 * Format the value of a property as appropriate for displaying in a
+	 * table.
+	 * 
+	 * The returned value will be displayed in a table or some similar
+	 * view.  Null and empty values should be returned as empty strings.
+	 * Text values should not be quoted.
+	 * 
+	 * @return The value of the property formatted as appropriate.
+	 */
+	String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor);
 }

@@ -42,8 +42,12 @@ import java.io.InputStreamReader;
 import java.io.File;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.CommodityInfo;
+import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
+import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.isocurrencies.IsoCurrenciesPlugin;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPersistableElement;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -67,7 +71,9 @@ public class Session extends ExtendableObject {
     private Vector sessionChangeListeners = new Vector();
     private Vector sessionChangeFirerListeners = new Vector();
 
-	private ChangeManager changeManager = null;
+	private ChangeManager changeManager = new ChangeManager();
+
+	private boolean sessionFiring = false;
 
     /**
      * Constructor used by datastore plug-ins to create
@@ -256,79 +262,6 @@ public class Session extends ExtendableObject {
     }
 */
     
-    public boolean deleteCommodity(Commodity commodity) {
-        return commodities.remove(commodity);
-        
-        // Fire the event.
-/* TODO: complete this        
-        final CommodityDeletedEvent event = new CommodityDeletedEvent(this, commodity);
-        fireEvent(
-        	new ISessionChangeFirer() {
-        		public void fire(SessionChangeListener listener) {
-        			listener.commodityDeleted(event);
-        		}
-       		});
-*/       		
-    }
-
-    /**
-     * Removes the specified account from this collection,
-     * if it is present.
-     * <P>
-     * Note that accounts may be sub-accounts.  Only top
-     * level accounts are in this session's account list.
-     * Sub-accounts must be removed by calling the 
-     * <code>removeSubAccount</code> method on the parent account.
-     * 
-     * @param account Account to be removed from this collection.
-     * 				This parameter may not be null.
-     * @return true if the account was present, false if the account
-     * 				was not present in the collection.
-     */
-    public boolean deleteAccount(final Account account) {
-        Account parent = account.getParent();
-        if (parent == null) {
-            boolean accountFound = accounts.remove(account);
-
-            // Fire the event.
-            if (accountFound) {
-            	fireEvent(
-            			new ISessionChangeFirer() {
-            				public void fire(SessionChangeListener listener) {
-            					listener.accountDeleted(account);
-            				}
-            			});
-            }
-            return accountFound;
-        } else {
-        	// Pass the request on to the parent account.
-            return ((Account)parent).deleteSubAccount(account);
-        }
-    }
-
-   	public boolean deleteTransaction(Transaction transaction) {
-   		// TODO: This method does not remove the entries from
-   		// any underlying database.  We must decide how this
-   		// is best done.
-   		
-   		boolean found = transactions.remove(transaction);
-
-        // For efficiency, we keep a list of entries in each
-        // account/category.  We must update this list now.
-        if (found) {
-        	for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
-        		Entry entry = (Entry)iter.next();
-        		// TODO: at some time, keep these lists for categories too
-        		Account category = entry.getAccount();
-        		if (category instanceof CapitalAccount) {
-        			((CapitalAccount)category).removeEntry(entry);
-        		}
-        	}
-        }
-        
-        return found;
-    }
-    
     public void addSessionChangeListener(SessionChangeListener l) {
         sessionChangeListeners.add(l);
     }
@@ -360,8 +293,9 @@ public class Session extends ExtendableObject {
      * workbench window then it should register with the JMoneyPlugin
      * object.
      */
-    // TODO: Change to package protection when interface is removed.
-    public void fireEvent(ISessionChangeFirer firer) {
+    void fireEvent(ISessionChangeFirer firer) {
+    	sessionFiring = true;
+    	
     	// Notify listeners who are listening to us using the
     	// SessionChangeListener interface.
         if (!sessionChangeFirerListeners.isEmpty()) {
@@ -385,75 +319,54 @@ public class Session extends ExtendableObject {
         		firer.fire(listenerArray[i]);
         	}
         }
+
+        sessionFiring = false;
     }
 
+    /**
+     * This method is used by plug-ins so that they know if
+     * code is being called from within change notification.
+     *
+     * It is important for plug-ins to know this.  Plug-ins
+     * MUST NOT change the session data while a listener is
+     * being notified of a change to the datastore.
+     * This can happen very indirectly.  For example, suppose
+     * an account is deleted.  The navigation view's listener
+     * is notified and so removes the account's node from the
+     * navigation tree.  If an account properties panel is
+     * open, the panel is destroyed.  Because the panel is
+     * being destroyed, the control that had the focus is sent
+     * a 'focus lost' notification.  The 'focus lost' notification
+     * takes the edited data from the control and writes it to
+     * the datastore.
+     * <P>
+     * Writing data to the datastore during session change notifications
+     * can cause serious problems.  The data may conflict.  The
+     * undo/redo operations are almost impossible to manage.
+     * In the above scenario with the deleted account, an attempt
+     * is made to update a property for an object that has been
+     * deleted.  The problems are endless.
+     * <P>
+     * It would be good if the datastore simply ignored such changes.
+     * This would provide more robust support for plug-ins, and plug-ins
+     * would not have to test this flag.  However, for the time being,
+     * plug-ins must test this flag and avoid making changes when this
+     * flag is set.  Plug-ins only need to do this in focus lost events
+     * as that is the only time I can think of where this problem may
+     * occur.
+     *  
+     * @return True if the session is notifying listeners of
+     * 			a change to the session data, otherwise false.
+     */
+    // TODO: Revisit this, especially the last paragraph above.
+    public boolean isSessionFiring() {
+    	return sessionFiring;
+    }
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.Session#objectAdded(net.sf.jmoney.model2.IExtendableObject)
+    /* (non-Javadoc)
+	 * @see net.sf.jmoney.model2.Session#objectChanged(net.sf.jmoney.model2.ExtendableObject, net.sf.jmoney.model2.PropertyAccessor)
 	 */
-	public void objectAdded(final IExtendableObject extendableObject) {
-		if (extendableObject instanceof Account) {
-	        fireEvent(
-	            	new ISessionChangeFirer() {
-	            		public void fire(SessionChangeListener listener) {
-	            			listener.accountAdded((Account)extendableObject);
-	            		}
-	           		});
-		}
-
-		if (extendableObject instanceof Entry) {
-	        fireEvent(
-	            	new ISessionChangeFirer() {
-	            		public void fire(SessionChangeListener listener) {
-	            			listener.entryAdded((Entry)extendableObject);
-	            		}
-	           		});
-		}
-
-		// We always fire on the generic method.
-        fireEvent(
-            	new ISessionChangeFirer() {
-            		public void fire(SessionChangeListener listener) {
-            			listener.objectAdded(extendableObject);
-            		}
-           		});
-	}
-
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.Session#objectDeleted(net.sf.jmoney.model2.IExtendableObject)
-	 */
-	public void objectDeleted(final IExtendableObject extendableObject) {
-		if (extendableObject instanceof Account) {
-	        fireEvent(
-	            	new ISessionChangeFirer() {
-	            		public void fire(SessionChangeListener listener) {
-	            			listener.accountDeleted((Account)extendableObject);
-	            		}
-	           		});
-		}
-
-		if (extendableObject instanceof Entry) {
-	        fireEvent(
-	            	new ISessionChangeFirer() {
-	            		public void fire(SessionChangeListener listener) {
-	            			listener.entryDeleted((Entry)extendableObject);
-	            		}
-	           		});
-		}
-
-		// We always fire on the generic method.
-        fireEvent(
-            	new ISessionChangeFirer() {
-            		public void fire(SessionChangeListener listener) {
-            			listener.objectDeleted(extendableObject);
-            		}
-           		});
-	}
-
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.Session#objectChanged(net.sf.jmoney.model2.IExtendableObject, net.sf.jmoney.model2.PropertyAccessor)
-	 */
-	public void objectChanged(final IExtendableObject extendableObject, final PropertyAccessor propertyAccessor, final Object oldValue, final Object newValue) {
+	public void objectChanged(final ExtendableObject extendableObject, final PropertyAccessor propertyAccessor, final Object oldValue, final Object newValue) {
 		if (extendableObject instanceof Account) {
 	        fireEvent(
 	            	new ISessionChangeFirer() {
@@ -497,9 +410,20 @@ public class Session extends ExtendableObject {
 	 * @return
 	 */
 	public Account createAccount(PropertySet propertySet) {
-		Account newAccount = (Account)accounts.createNewElement(this, propertySet);
+		final Account newAccount = (Account)accounts.createNewElement(this, propertySet);
 
-		processObjectAddition(accounts, newAccount);
+		processObjectAddition(SessionInfo.getAccountsAccessor(), newAccount);
+		
+		// In addition to the generic object creation event, we also fire an event
+		// specifically for account creation.  The accountAdded event is superfluous 
+		// and it may be simpler if we removed it, so that listeners receive the generic
+		// objectAdded event only.
+		getObjectKey().getSession().fireEvent(
+				new ISessionChangeFirer() {
+					public void fire(SessionChangeListener listener) {
+						listener.accountAdded(newAccount);
+					}
+				});
 		
 		return newAccount;
 	}
@@ -531,7 +455,7 @@ public class Session extends ExtendableObject {
 	public Commodity createCommodity(PropertySet propertySet) {
 		Commodity newCommodity = (Commodity)commodities.createNewElement(this, propertySet);
 
-		processObjectAddition(commodities, newCommodity);
+		processObjectAddition(SessionInfo.getCommoditiesAccessor(), newCommodity);
 		
 		return newCommodity;
 	}
@@ -541,20 +465,87 @@ public class Session extends ExtendableObject {
 					this, 
 					JMoneyPlugin.getTransactionPropertySet()); 
 
-		processObjectAddition(transactions, newTransaction);
+		processObjectAddition(SessionInfo.getTransactionsAccessor(), newTransaction);
 		
 		return newTransaction;
 	}
 	
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.Session#getChangeManager()
-	 */
+    public boolean deleteCommodity(Commodity commodity) {
+        boolean found = commodities.remove(commodity);
+		if (found) {
+			processObjectDeletion(SessionInfo.getCommoditiesAccessor(), commodity);
+		}
+		return found;
+    }
+
+    /**
+     * Removes the specified account from this collection,
+     * if it is present.
+     * <P>
+     * Note that accounts may be sub-accounts.  Only top
+     * level accounts are in this session's account list.
+     * Sub-accounts must be removed by calling the 
+     * <code>removeSubAccount</code> method on the parent account.
+     * 
+     * @param account Account to be removed from this collection.
+     * 				This parameter may not be null.
+     * @return true if the account was present, false if the account
+     * 				was not present in the collection.
+     */
+    public boolean deleteAccount(final Account account) {
+        Account parent = account.getParent();
+        if (parent == null) {
+            boolean accountFound = accounts.remove(account);
+            if (accountFound) {
+            	processObjectDeletion(SessionInfo.getAccountsAccessor(), account);
+
+            	// In addition to the generic object deletion event, we also fire an event
+    			// specifically for account deletion.  The accountDeleted event is superfluous 
+    			// and it may be simpler if we removed it, so that listeners receive the generic
+    			// objectDeleted event only.
+    			getObjectKey().getSession().fireEvent(
+    					new ISessionChangeFirer() {
+    						public void fire(SessionChangeListener listener) {
+    							listener.accountDeleted(account);
+    						}
+    					});
+            }
+            return accountFound;
+        } else {
+        	// Pass the request on to the parent account.
+            return ((Account)parent).deleteSubAccount(account);
+        }
+    }
+
+   	public boolean deleteTransaction(Transaction transaction) {
+   		boolean found = transactions.remove(transaction);
+
+        // For efficiency, we keep a list of entries in each
+        // account/category.  We must update this list now.
+        if (found) {
+        	for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
+        		Entry entry = (Entry)iter.next();
+        		// TODO: at some time, keep these lists for categories too
+        		Account category = entry.getAccount();
+        		if (category instanceof CapitalAccount) {
+        			((CapitalAccount)category).removeEntry(entry);
+        		}
+        	}
+        	
+			processObjectDeletion(SessionInfo.getTransactionsAccessor(), transaction);
+        }
+        
+        return found;
+    }
+    
 	public ChangeManager getChangeManager() {
+/*
 		if (changeManager == null) {
 			// create a new change manager.
 			ISessionManager sessionManager = getObjectKey().getSessionManager();
 			changeManager = new ChangeManager(sessionManager);
 		}
+*/		
 		return changeManager;
 	}
 
@@ -590,6 +581,67 @@ public class Session extends ExtendableObject {
 	            return a;
 	    }
 	    return null;
+	}
+
+	/**
+	 * Indicates the completion of a set of changes to the datastore 
+	 * that make a single undo/redo change.  This undo/redo change
+	 * will be added to the list of past changes that can be undone.
+	 * If there are any undone changes that can be redone then those
+	 * are cleared because once a new change is made, undo changes cannot
+	 * be redone.
+	 * <P>
+	 * If no changes were made then this method does nothing.
+	 * The change will not appear in the list of changes that can
+	 * be undone and the list of changes that can be redone is not cleared.
+	 * 
+	 * @param string Localized text describing the change.
+	 */
+	public void registerUndoableChange(String description) {
+		// Pass the request on to the change manager.
+		changeManager.registerChanges(description);
+	}
+
+	/**
+	 * @param string
+	 */
+	public void undoChange(IWorkbenchWindow window) {
+		String nextUndoDescription = changeManager.getUndoDescription();
+		if (nextUndoDescription == null) {
+			MessageDialog.openInformation(
+					window.getShell(),
+					"Jmoney Plug-in",
+					"No change that can be 'undone'.");
+			return;
+		}
+		
+ 		if (MessageDialog.openQuestion(
+				window.getShell(),
+				"Jmoney Plug-in",
+				"Undo " + nextUndoDescription + "?")) {
+ 			changeManager.undoChange();
+ 		}
+	}
+
+	/**
+	 * @param string
+	 */
+	public void redoChange(IWorkbenchWindow window) {
+		String nextRedoDescription = changeManager.getRedoDescription();
+		if (nextRedoDescription == null) {
+			MessageDialog.openInformation(
+					window.getShell(),
+					"Jmoney Plug-in",
+					"No change that can be 'redone'.");
+			return;
+		}
+		
+ 		if (MessageDialog.openQuestion(
+				window.getShell(),
+				"Jmoney Plug-in",
+				"Redo " + nextRedoDescription + "?")) {
+ 			changeManager.redoChange();
+ 		}
 	}
 
 }

@@ -28,11 +28,12 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.IExtensionPropertySetInfo;
+import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
@@ -53,31 +54,60 @@ import net.sf.jmoney.model2.Transaction;
  * including oneself), these are registered through the same extension
  * point that plug-ins must also use to register their properties.
  */
-public class SessionInfo implements IExtensionPropertySetInfo {
+public class SessionInfo implements IPropertySetInfo {
 
-    public SessionInfo() {
+	private static PropertyAccessor commoditiesAccessor = null;
+	private static PropertyAccessor accountsAccessor = null;
+	private static PropertyAccessor transactionsAccessor = null;
+
+	public SessionInfo() {
     }
 
 	public Class getImplementationClass() {
 		return Session.class;
 	}
 	
-    public Class getInterfaceClass() {
-        return Session.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		IPropertyControlFactory currencyControlFactory =
 			new IPropertyControlFactory() {
 				public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
 					return new CurrencyEditor(parent);
 				}
+
+				public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+					return extendableObject.getPropertyValue(propertyAccessor).toString();
+				}
+
+				public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+					return ((Currency)extendableObject.getPropertyValue(propertyAccessor)).getName();
+				}
 		};
 
-		propertyRegistrar.addPropertyList("commodity", JMoneyPlugin.getResourceString("<not used???>"), Commodity.class, null);
-		propertyRegistrar.addPropertyList("account", JMoneyPlugin.getResourceString("<not used???>"), Account.class, null);
-		propertyRegistrar.addPropertyList("transaction", JMoneyPlugin.getResourceString("<not used???>"), Transaction.class, null);
+		commoditiesAccessor = propertyRegistrar.addPropertyList("commodity", JMoneyPlugin.getResourceString("<not used???>"), Commodity.class, null);
+		accountsAccessor = propertyRegistrar.addPropertyList("account", JMoneyPlugin.getResourceString("<not used???>"), Account.class, null);
+		transactionsAccessor = propertyRegistrar.addPropertyList("transaction", JMoneyPlugin.getResourceString("<not used???>"), Transaction.class, null);
 		
 		propertyRegistrar.addProperty("defaultCurrency", JMoneyPlugin.getResourceString("Session.defaultCurrency"), 15.0, currencyControlFactory, null, null);
 	}
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getCommoditiesAccessor() {
+		return commoditiesAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getAccountsAccessor() {
+		return accountsAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getTransactionsAccessor() {
+		return transactionsAccessor;
+	}	
 }

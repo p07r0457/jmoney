@@ -49,15 +49,15 @@ public class EntryEditor {
         // Use introspection on the interface to find the load method.
         // The load method takes one parameter which an entry extension of the appropriate class.
     
-        Class parameterTypes[] = { propertySet.getInterfaceClass() };
+        Class parameterTypes[] = { propertySet.getImplementationClass() };
         try {
             this.theLoadMethod = editor.getClass().getDeclaredMethod("load", parameterTypes);
         } catch (NoSuchMethodException e) {
-            throw new MalformedPluginException("Method 'load(" + propertySet.getInterfaceClass().getName() + ")' in '" + editor.getClass().getName() + "' was not found.");
+            throw new MalformedPluginException("Method 'load(" + propertySet.getImplementationClass().getName() + ")' in '" + editor.getClass().getName() + "' was not found.");
         }
         
         if (theLoadMethod.getReturnType() != void.class) {
-            throw new MalformedPluginException("Method 'load(" + propertySet.getInterfaceClass().getName() + ")' in '" + editor.getClass().getName() + "' must return void.");
+            throw new MalformedPluginException("Method 'load(" + propertySet.getImplementationClass().getName() + ")' in '" + editor.getClass().getName() + "' must return void.");
         }
         
         // The save method takes no parameters and must return void.

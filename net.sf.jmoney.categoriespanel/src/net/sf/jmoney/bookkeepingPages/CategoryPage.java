@@ -224,7 +224,7 @@ public class CategoryPage implements IBookkeepingPageListener {
 		
 //		try {
 			((IncomeExpenseAccount)selectedAccount).setName(nameField.getText());
-			session.getChangeManager().applyChanges("rename category");
+			session.registerUndoableChange("rename category");
 //			} catch (ObjectLockedForEditException e) {
 			// The edit could not be made because someone else is editing
 			// the properties of this category.
@@ -263,7 +263,7 @@ private void makeActions() {
 	        
 	        IncomeExpenseAccount account = (IncomeExpenseAccount)session.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
 	        account.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-			session.getChangeManager().applyChanges("add new category");
+			session.registerUndoableChange("add new category");
 	        
 	        // Having added the new account, set it as the selected
 	        // account in the tree viewer.
@@ -288,7 +288,7 @@ private void makeActions() {
 			if (account != null) {
 				IncomeExpenseAccount subAccount = (IncomeExpenseAccount)((IncomeExpenseAccount)account).createSubAccount();
 				subAccount.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-				session.getChangeManager().applyChanges("add new category");
+				session.registerUndoableChange("add new category");
 				
 				// Having added the new account, set it as the selected
 				// account in the tree viewer.

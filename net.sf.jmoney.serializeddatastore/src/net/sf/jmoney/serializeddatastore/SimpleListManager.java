@@ -29,7 +29,6 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.MalformedPluginException;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -53,7 +52,7 @@ public class SimpleListManager extends Vector implements IListManager {
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.model2.IListManager#createNewElement(net.sf.jmoney.model2.ExtendableObject, net.sf.jmoney.model2.PropertySet, java.lang.Object[], net.sf.jmoney.model2.ExtensionProperties[])
 	 */
-	public IExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet/*, Object[] values, ExtensionProperties[] extensionProperties */) {
+	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet/*, Object[] values, ExtensionProperties[] extensionProperties */) {
 		Vector constructorProperties = propertySet.getConstructorProperties();
 		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {
@@ -90,7 +89,7 @@ public class SimpleListManager extends Vector implements IListManager {
 							|| propertyAccessor.getValueClass() == Date.class) {
 						constructorParameters[index] = value;
 					} else {
-						constructorParameters[index] = ((IExtendableObject)value).getObjectKey();
+						constructorParameters[index] = ((ExtendableObject)value).getObjectKey();
 					}
 				} else { 
 					constructorParameters[index] = null;
@@ -102,26 +101,7 @@ public class SimpleListManager extends Vector implements IListManager {
 		}
 		
 		// We can now create the object.
-		// The parameters to the constructor have been placed
-		// in the constructorParameters array so we need only
-		// to call the constructor.
-		
-		Constructor constructor = propertySet.getConstructor();
-		ExtendableObject extendableObject;
-		try {
-			extendableObject = (ExtendableObject)constructor.newInstance(constructorParameters);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		} catch (IllegalAccessException e) {
-			throw new MalformedPluginException("Constructor must be public.");
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-			throw new MalformedPluginException("An exception occured within a constructor in a plug-in.", e);
-		}
+		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 
@@ -136,13 +116,6 @@ public class SimpleListManager extends Vector implements IListManager {
 	}
 	
 	public boolean remove(Object object) {
-		boolean found = super.remove(object);
-		
-		// Fire the event.
-		if (found) {
-			sessionManager.getSession().objectDeleted((IExtendableObject)object);
-		}
-		
-		return found;
+		return super.remove(object);
 	}
 }

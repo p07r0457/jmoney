@@ -227,15 +227,16 @@ public class CapitalAccount extends Account {
 	}
 
 	public void setCurrency(Currency aCurrency) {
+        Currency oldCurrency = currency;
+		currency = aCurrency;
+
+		// Notify the change manager.
+		processPropertyChange(CapitalAccountInfo.getCurrencyAccessor(), oldCurrency, aCurrency);
+
 		if (this.currency == aCurrency ||
 				(this.currency != null && this.currency.equals(aCurrency)))
 				return;
 		
-		// Notify the change manager.
-		processPropertyChange(CapitalAccountInfo.getCurrencyAccessor(), this.currency, aCurrency);
-
-        Currency oldCurrency = currency;
-		currency = aCurrency;
 		changeSupport.firePropertyChange("currency", oldCurrency, currency);
 	}
 
@@ -366,15 +367,48 @@ public class CapitalAccount extends Account {
 	 * @return
 	 */
 	public CapitalAccount createSubAccount() {
-		CapitalAccount newSubAccount = (CapitalAccount)subAccounts.createNewElement(
+		final CapitalAccount newSubAccount = (CapitalAccount)subAccounts.createNewElement(
 				this, 
 				JMoneyPlugin.getCapitalAccountPropertySet()); 
 
-		processObjectAddition(subAccounts, newSubAccount);
+		processObjectAddition(CapitalAccountInfo.getSubAccountAccessor(), newSubAccount);
+		
+		// In addition to the generic object creation event, we also fire an event
+		// specifically for account creation.  The accountAdded event is superfluous 
+		// and it may be simpler if we removed it, so that listeners receive the generic
+		// objectAdded event only.
+		getObjectKey().getSession().fireEvent(
+				new ISessionChangeFirer() {
+					public void fire(SessionChangeListener listener) {
+						listener.accountAdded(newSubAccount);
+					}
+				});
 		
 		return newSubAccount;
 	}
         
+	/**
+	 * This version is required by the JMoney framework.
+	 */
+	boolean deleteSubAccount(final CapitalAccount subAccount) {
+		boolean found = subAccounts.remove(subAccount);
+		if (found) {
+			processObjectDeletion(CapitalAccountInfo.getSubAccountAccessor(), subAccount);
+			
+			// In addition to the generic object deletion event, we also fire an event
+			// specifically for account deletion.  The accountDeleted event is superfluous 
+			// and it may be simpler if we removed it, so that listeners receive the generic
+			// objectDeleted event only.
+			getObjectKey().getSession().fireEvent(
+					new ISessionChangeFirer() {
+						public void fire(SessionChangeListener listener) {
+							listener.accountDeleted(subAccount);
+						}
+					});
+		}
+		return found;
+	}
+	
 	static public Object [] getDefaultProperties() {
 		return new Object [] { "new account", null, null, null, new Long(0), null, null, null };
 	}

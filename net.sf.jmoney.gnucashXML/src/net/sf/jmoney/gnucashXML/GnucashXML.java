@@ -136,7 +136,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			createTransactions(doc);
 
 			// Commit the changes to the datastore
-			session.getChangeManager().applyChanges(GnucashXMLPlugin.getResourceString("importDescription"));
+			session.registerUndoableChange(GnucashXMLPlugin.getResourceString("importDescription"));
 		} catch (MalformedURLException e) {
 			System.err.println(e.toString());
 		} catch (IOException e) {

@@ -6,11 +6,13 @@ package net.sf.jmoney.model2;
  */
 public class ExtensionProperties {
 	private PropertySet propertySet;
-	private Object[] values;
+	private Object[] oldValues;
+	private Object[] newValues;
 
-	public ExtensionProperties(PropertySet propertySet, Object [] values) {
+	public ExtensionProperties(PropertySet propertySet, Object [] oldValues, Object [] newValues) {
 		this.propertySet = propertySet;
-		this.values = values;
+		this.oldValues = oldValues;
+		this.newValues = newValues;
 	}
 	
 	public void setProperties(ExtensionObject extensionObject) {

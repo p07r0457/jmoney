@@ -32,7 +32,7 @@ public class EnumerationAccessor implements IPropertyDependency {
     public EnumerationAccessor() {
     }
 
-	public boolean isSelected(IExtendableObject object) {
+	public boolean isSelected(ExtendableObject object) {
 		// TODO Auto-generated method stub
 		return false;
 	}

@@ -26,7 +26,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.IExtensionPropertySetInfo;
+import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.PropertyAccessor;
 
@@ -46,7 +46,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
  * including oneself), these are registered through the same extension
  * point that plug-ins must also use to register their properties.
  */
-public class EntryInfo implements IExtensionPropertySetInfo {
+public class EntryInfo implements IPropertySetInfo {
 
 	private static PropertyAccessor checkAccessor = null;
 	private static PropertyAccessor descriptionAccessor = null;
@@ -63,10 +63,6 @@ public class EntryInfo implements IExtensionPropertySetInfo {
 		return Entry.class;
 	}
 	
-    public Class getInterfaceClass() {
-        return Entry.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		// TODO: implement the SWT control factories here.
 		// This must be done before we can convert the account entries panel

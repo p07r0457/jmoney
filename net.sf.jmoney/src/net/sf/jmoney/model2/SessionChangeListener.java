@@ -95,17 +95,17 @@ public interface SessionChangeListener extends EventListener {
 	 *
 	 * @param extendableObject
 	 */
-	void objectAdded(IExtendableObject extendableObject);
+	void objectAdded(ExtendableObject extendableObject);
 
 	/**
 	 * An extendable object has been deleted.
 	 */
-    void objectDeleted(IExtendableObject extendableObject);
+    void objectDeleted(ExtendableObject extendableObject);
 
     /**
 	 * A scalar property in an extendable object
 	 * has been changed.
 	 */
-    void objectChanged(IExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue);
+    void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue);
 
 }
