@@ -68,10 +68,7 @@ public class StatusEditor implements IPropertyControl {
         );
         		
         // Selection changes are reflected immediately in the
-        // mutable account object.  This allows other properties
-        // such as money amounts to listen for changes to the
-        // currency and change their format to be correct for
-        // the newly selected currency.
+        // datastore.
 
         propertyControl.addSelectionListener(new SelectionListener() {
             public void widgetSelected(SelectionEvent e) {
