@@ -48,6 +48,7 @@ public class EntriesFilterSection extends SectionPart {
 
 	public EntriesFilterSection(EntriesPage page, Composite parent) {
         super(parent, page.getManagedForm().getToolkit(), Section.DESCRIPTION | Section.TITLE_BAR);
+        fPage = page;
         getSection().setText("Entries Filter");
         getSection().setDescription("Show only entries in the table below that match your filter criteria.");
 		createClient(page.getManagedForm().getToolkit());
