@@ -20,24 +20,23 @@
  *
  */
 
-package net.sf.jmoney.ui.bookkeepingPages;
+package net.sf.jmoney.ui.internal.pages.account.capital;
 
 import org.eclipse.ui.forms.editor.IFormPage;
 
 import net.sf.jmoney.IBookkeepingPage;
-import net.sf.jmoney.ui.internal.editors.CapitalAccountPropertiesPage;
 import net.sf.jmoney.views.NodeEditor;
 
 /**
  * @author Nigel Westbury
  */
-public class AccountPropertiesPage implements IBookkeepingPage {
-	
+public class EntriesBookkeepingPage implements IBookkeepingPage {
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
-	 */
-	public IFormPage createFormPage(NodeEditor editor) {
-		return new CapitalAccountPropertiesPage(editor);
-	}
+    /* (non-Javadoc)
+     * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
+     */
+    public IFormPage createFormPage(NodeEditor editor) {
+        return new EntriesPage(editor);
+    }
+
 }
