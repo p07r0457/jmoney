@@ -94,12 +94,16 @@ public class LineChartPage implements IBookkeepingPageFactory {
 	    treeItem.setText("Accounts");  // TODO - Faucheux Internationlization
 	    addAccountsInTree(treeItem, session.getCapitalAccountIterator(), selectedAccounts, selectedTreeItems);
 
-	    // Add other components
-	    Group typeGroup = new Group(swingComposite, SWT.NULL);
+	    // Add other components (Parameters)
+	    
+	    Composite parameterContainer = new  Composite(swingComposite, SWT.EMBEDDED);
+	    parameterContainer.setLayout(new FillLayout(SWT.VERTICAL));
+	    
+	    Group typeGroup = new Group(parameterContainer, SWT.NULL);
 	    typeGroup.setText("Type");
 	    typeGroup.setLayout(new CellLayout(2));
 	    
-	    Group actionGroup = new Group(swingComposite, SWT.NULL);
+	    Group actionGroup = new Group(parameterContainer, SWT.NULL);
 	    actionGroup.setText("Actions");
 	    actionGroup.setLayout(new CellLayout(2));
 	    
