@@ -35,12 +35,14 @@
       <node
             id="chartsNode"
             label="%NavigationTreeModel.Charts"
+            icon="icons/chart.gif"
             position="500">
       </node>
       <node
             id="pieChart"
             label="%Chart.pieChart"
             parent="net.sf.jmoney.charts.chartsNode"
+            icon="icons/chart.gif"
             position="100">
       </node>
       <pages
@@ -52,6 +54,7 @@
             id="lineChart"
             label="%Chart.lineChart"
             parent="net.sf.jmoney.charts.chartsNode"
+            icon="icons/chart.gif"
             position="100">
       </node>
       <pages
@@ -63,6 +66,7 @@
             id="stackedChart"
             label="%Chart.stackedChart"
             parent="net.sf.jmoney.charts.chartsNode"
+            icon="icons/chart.gif"
             position="100">
       </node>
       <pages
