@@ -60,6 +60,7 @@ import javax.xml.transform.stream.StreamResult;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.BankAccountInfo;
+import net.sf.jmoney.fields.CurrencyInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.BankAccount;
@@ -1545,7 +1546,7 @@ System.out.println("start " + localName);
 		Map accountMap = new Hashtable();
 		
 		// Add the currencies
-		JMoneyPlugin.initSystemCurrencies(newSession);
+		JMoneyPlugin.initSystemCurrency(newSession);
 		
 		// Add the income and expense accounts
 		net.sf.jmoney.model.CategoryNode root = oldFormatSession.getCategories().getRootNode();
@@ -1564,13 +1565,13 @@ System.out.println("start " + localName);
 		for (Iterator iter = oldAccounts.iterator(); iter.hasNext(); ) {
 			net.sf.jmoney.model.Account oldAccount = (net.sf.jmoney.model.Account)iter.next();
 			
-			BankAccount newAccount = (BankAccount)newSession.createAccount(BankAccountInfo.getPropertySet());
+            BankAccount newAccount = (BankAccount)newSession.createAccount(BankAccountInfo.getPropertySet());
 			newAccount.setName(oldAccount.getName());
 			newAccount.setAbbreviation(oldAccount.getAbbrevation());
 			newAccount.setAccountNumber(oldAccount.getAccountNumber());
 			newAccount.setBank(oldAccount.getBank());
 			newAccount.setComment(oldAccount.getComment());
-			newAccount.setCurrency(newSession.getCurrencyForCode(oldAccount.getCurrencyCode()));
+			newAccount.setCurrency(JMoneyPlugin.getIsoCurrency(newSession, oldAccount.getCurrencyCode()));
 			newAccount.setMinBalance(oldAccount.getMinBalance());
 			newAccount.setStartBalance(oldAccount.getStartBalance());
 
@@ -1718,7 +1719,7 @@ System.out.println("start " + localName);
 		}
 	}
 
-	/**
+    /**
 	 * Copies category properties across from old to new.  Sub-categories are also
 	 * copied across.
 	 * 
