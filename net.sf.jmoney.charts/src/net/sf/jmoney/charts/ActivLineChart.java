@@ -41,17 +41,17 @@ public class ActivLineChart extends LineChart {
         Date currentDate = null;
         while (it.hasNext()) {
             e = (Entry) it.next();
-            if (e.getTransaxion().getDate().equals(currentDate)) {
+            if (e.getTransaction().getDate().equals(currentDate)) {
                saldo += e.getAmount();
            } else {
-               System.out.println("Add to the graph: " + saldo + " at " + e.getTransaxion().getDate().getTime());
-               bts.add(e.getTransaxion().getDate().getTime(), saldo / 100);
+               System.out.println("Add to the graph: " + saldo + " at " + e.getTransaction().getDate().getTime());
+               bts.add(e.getTransaction().getDate().getTime(), saldo / 100);
                saldo += e.getAmount();
-               currentDate = e.getTransaxion().getDate();
+               currentDate = e.getTransaction().getDate();
            }
         }
         // TODO Faucheux - Shouldn't we add the last entry?
-        // if ( e != null ) bts.add(e.getTransaxion().getDate().getTime(), saldo);
+        // if ( e != null ) bts.add(e.getTransaction().getDate().getTime(), saldo);
 
         return bts;
     }
