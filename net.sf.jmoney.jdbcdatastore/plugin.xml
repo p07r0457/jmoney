@@ -42,4 +42,11 @@
       </actionSet>
    </extension>
 
+   <extension
+         point="org.eclipse.ui.elementFactories">
+        <factory 
+           id ="net.sf.jmoney.jdbcdatastore.SessionFactory" 
+           class="net.sf.jmoney.jdbcdatastore.SessionFactory">
+        </factory> 
+   </extension>
 </plugin>
