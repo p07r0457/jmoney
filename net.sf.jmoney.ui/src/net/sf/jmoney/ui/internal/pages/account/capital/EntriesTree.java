@@ -29,7 +29,7 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.fields.TransactionInfo;
-import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Transaction;
@@ -432,12 +432,12 @@ public class EntriesTree implements IEntriesControl {
          * needs, for example the saldo.
          */
         public Object[] getElements(Object parent) {
-            CapitalAccount account = (CapitalAccount) parent;
+            CurrencyAccount account = (CurrencyAccount) parent;
             Iterator it = account
 				.getSortedEntries(TransactionInfo.getDateAccessor(), false)
 				.iterator();
             Vector d_entries = new Vector();
-            long saldo = 0;
+            long saldo = account.getStartBalance();
             while (it.hasNext()) {
                 Entry e = (Entry) it.next();
                 saldo = saldo + e.getAmount();
@@ -485,7 +485,7 @@ public class EntriesTree implements IEntriesControl {
 		 * @see org.eclipse.jface.viewers.ITreeContentProvider#getParent(java.lang.Object)
 		 */
 		public Object getParent(Object element) {
-			if (element instanceof CapitalAccount) {
+			if (element instanceof CurrencyAccount) {
 				return null;
 			} else {
 				return fPage.getAccount();

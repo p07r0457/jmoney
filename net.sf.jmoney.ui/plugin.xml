@@ -22,7 +22,7 @@
 
    <extension         point="net.sf.jmoney.pages">      <pages
             class="net.sf.jmoney.ui.internal.pages.account.capital.EntriesBookkeepingPage"
-            extendable-property-set="net.sf.jmoney.capitalAccount"
+            extendable-property-set="net.sf.jmoney.currencyAccount"
             id="entries">      </pages>      <pages
             class="net.sf.jmoney.ui.internal.pages.account.bank.PropertiesBookkeepingPage"
             extendable-property-set="net.sf.jmoney.bankAccount"
