@@ -155,6 +155,21 @@ public abstract class ExtendableObject {
 			return false;
 		}
 	}
+
+	/**
+	 * Required to support hash maps.
+	 * 
+	 * If the datastore plug-in keeps the entire datastore in
+	 * memory then the default hashCode implementation in the
+	 * object key will work fine.  However, if the datastore is
+	 * backed by a database then multiple instances of the same
+	 * object key may exist in memory.  In such a case, a hashCode
+	 * implementation must be provided for the object keys that
+	 * return the same hash code for each instance of the object key.
+	 */
+	public int hashCode() {
+		return getObjectKey().hashCode();
+	}
 	
 	// Should allow default package access and protected access
 	// but not public access.  Unfortunately this cannot be done

@@ -130,7 +130,7 @@ public class EntryInfo implements IPropertySetInfo {
 		checkAccessor       = propertyRegistrar.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),       2, 50,  textControlFactory, null);
 		descriptionAccessor = propertyRegistrar.addProperty("description", JMoneyPlugin.getResourceString("Entry.description"), 5, 100, textControlFactory, null);
 		accountAccessor     = propertyRegistrar.addProperty("account",     JMoneyPlugin.getResourceString("Entry.category"),    2, 70,  accountControlFactory, null);
-		valutaAccessor      = propertyRegistrar.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      0, 70,  dateControlFactory, null);
+		valutaAccessor      = propertyRegistrar.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      0, 76,  dateControlFactory, null);
 		memoAccessor        = propertyRegistrar.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        5, 100, textControlFactory, null);
 		amountAccessor      = propertyRegistrar.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      2, 70,  amountControlFactory, null);
 		creationAccessor    = propertyRegistrar.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    0, 70,  new DateControlFactory(true), null);

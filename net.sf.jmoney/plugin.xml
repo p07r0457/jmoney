@@ -11,6 +11,9 @@
       <library name="jmoney.jar">
          <export name="*"/>
       </library>
+      <library name="swtcalendar-0.4.0.jar">
+         <export name="*"/>
+      </library>
    </runtime>
    <requires>
       <import plugin="org.eclipse.ui"/>
