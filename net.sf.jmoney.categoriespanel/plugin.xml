@@ -24,7 +24,8 @@
       <node
           id="categoriesNode"
 	      label="%NavigationTreeModel.categories"
-    	  icon="icons/Category.gif">
+    	  icon="icons/Category.gif"
+    	  position="200">
       </node>
       <pages
             class="net.sf.jmoney.bookkeepingPages.CategoryPage"
