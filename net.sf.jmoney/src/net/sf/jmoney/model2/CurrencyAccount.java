@@ -152,6 +152,7 @@ public class CurrencyAccount extends CapitalAccount {
 	};
 
 	public void setCurrency(Currency aCurrency) {
+	    if (aCurrency == null) throw new IllegalArgumentException();
         Currency oldCurrency = currency;
 		currency = aCurrency;
 
