@@ -1546,21 +1546,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			if (obj instanceof net.sf.jmoney.model.SimpleCategory) {
 				net.sf.jmoney.model.SimpleCategory oldCategory = (net.sf.jmoney.model.SimpleCategory) obj;
 				IncomeExpenseAccount newCategory = (IncomeExpenseAccount)newSession.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
-				newCategory.setName(oldCategory.getCategoryName());
-				
-				accountMap.put(oldCategory, newCategory);
-				
-				for (Enumeration e2 = oldCategory.getCategoryNode().children(); e2.hasMoreElements();) {
-					net.sf.jmoney.model.CategoryNode subNode = (net.sf.jmoney.model.CategoryNode) e2.nextElement();
-					Object obj2 = subNode.getUserObject();
-					if (obj2 instanceof net.sf.jmoney.model.SimpleCategory) {
-						net.sf.jmoney.model.SimpleCategory oldSubCategory = (net.sf.jmoney.model.SimpleCategory) obj2;
-						IncomeExpenseAccount newSubCategory = (IncomeExpenseAccount)newSession.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
-						newCategory.setName(oldCategory.getCategoryName());
-
-						accountMap.put(oldSubCategory, newSubCategory);
-					}
-				}
+				copyCategoryProperties(oldCategory, newCategory, accountMap);
 			}
 		}
 		
@@ -1721,6 +1707,31 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		}
 	}
 
+	/**
+	 * Copies category properties across from old to new.  Sub-categories are also
+	 * copied across.
+	 * 
+	 * @param accountMap this and all sub-categories are added to this map, mapping
+	 * 			old categories to the new categories
+	 */
+	private void copyCategoryProperties(net.sf.jmoney.model.SimpleCategory oldCategory, IncomeExpenseAccount newCategory, Map accountMap) {
+		accountMap.put(oldCategory, newCategory);
+		
+		newCategory.setName(oldCategory.getCategoryName());
+		
+		for (Enumeration e2 = oldCategory.getCategoryNode().children(); e2.hasMoreElements();) {
+			net.sf.jmoney.model.CategoryNode subNode = (net.sf.jmoney.model.CategoryNode) e2.nextElement();
+			Object obj2 = subNode.getUserObject();
+			if (obj2 instanceof net.sf.jmoney.model.SimpleCategory) {
+				net.sf.jmoney.model.SimpleCategory oldSubCategory = (net.sf.jmoney.model.SimpleCategory) obj2;
+				IncomeExpenseAccount newSubCategory = (IncomeExpenseAccount)newCategory.createSubAccount();
+				copyCategoryProperties(oldSubCategory, newSubCategory, accountMap);
+
+				accountMap.put(oldSubCategory, newSubCategory);
+			}
+		}
+	}
+	
 	private void copyEntryProperties(net.sf.jmoney.model.Entry oldEntry, Entry entry, PropertyAccessor statusProperty) {
 		entry.setCheck(oldEntry.getCheck());
 		entry.setCreation(oldEntry.getCreation());
