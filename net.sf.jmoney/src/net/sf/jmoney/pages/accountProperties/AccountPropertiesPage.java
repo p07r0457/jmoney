@@ -184,7 +184,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 
 
 	/* (non-Javadoc)
-	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
+	 * @see net.sf.jmoney.IBookkeepingPage#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
 	public IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento)
 	{
