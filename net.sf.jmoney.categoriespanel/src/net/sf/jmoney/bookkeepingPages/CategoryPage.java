@@ -56,6 +56,7 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.forms.editor.IFormPage;
+import org.eclipse.ui.forms.widgets.FormToolkit;
 
 import net.sf.jmoney.Constants;
 import net.sf.jmoney.IBookkeepingPage;
@@ -115,7 +116,7 @@ public class CategoryPage implements IBookkeepingPage {
 				CategoriesPanelPlugin.getResourceString("NavigationTreeModel.categories"), 
 				"Income and Expense Categories") {
 			
-			public Composite createControl(Object nodeObject, Composite parent) {
+			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit) {
 				
 				/**
 				 * topLevelControl is a control with grid layout, 

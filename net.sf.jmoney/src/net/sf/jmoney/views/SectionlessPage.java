@@ -72,28 +72,17 @@ public abstract class SectionlessPage extends FormPage {
 	    public GenericFormPart(SectionlessPage page, Composite parent) {
 	        this.page = page;
 	        this.parent = parent;
-
+	        
 	        FormToolkit toolkit = page.getManagedForm().getToolkit();
-
-	    parent.setLayout(new FillLayout());
-		Composite propertiesControl = createControl(page.getSelectedObject(), parent);
-			
-	        // TODO: Do this.........
-//toolkit.paintBordersFor(propertiesControl);
 	        
 	        // Modified by Faucheux
-	        // The one and only visible control in the parent
-	        // should fill the entire space.
-	        final Control control = propertiesControl;
-	        control.setBackground(control.getDisplay().getSystemColor(
-	                SWT.COLOR_DARK_BLUE));
-	        control.pack(true);
-
-	        parent.setBackground(control.getDisplay().getSystemColor(
-	                SWT.COLOR_YELLOW));
-	        parent.pack(true);
+	        parent.setLayout(new FillLayout());
+	        Composite propertiesControl = createControl(page.getSelectedObject(), parent, toolkit);
 	        
-	        refresh();
+	        toolkit.adapt(propertiesControl);
+	        
+	        // Add the borders around the edit controls
+	        toolkit.paintBordersFor(propertiesControl);
 	    }
 
 	    /* (non-Javadoc)
@@ -121,9 +110,6 @@ public abstract class SectionlessPage extends FormPage {
 
         formPart = new GenericFormPart(this, form.getBody());
 
-//        fPropertiesSection.getSection().setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-//        form.getBody().setLayoutData(new GridData(GridData.FILL_BOTH));
-
         managedForm.addPart(formPart);
 
        	form.setText(formHeader);
@@ -146,6 +132,6 @@ public abstract class SectionlessPage extends FormPage {
 	 * @return The control that contains the page specific content
 	 * 			of the page
 	 */
-	public abstract Composite createControl(Object nodeObject, Composite parent);
+	public abstract Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit);
 }
 
