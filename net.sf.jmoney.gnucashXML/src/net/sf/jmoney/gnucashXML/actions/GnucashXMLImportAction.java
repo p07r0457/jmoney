@@ -82,7 +82,7 @@ public class GnucashXMLImportAction implements IWorkbenchWindowActionDelegate {
 				GnucashXMLPlugin.getResourceString("MainFrame.import"));
 		xmlFileChooser.setFilterExtensions(new String[] { "*.xml;*.xac" });
 		xmlFileChooser.setFilterNames(new String[] { "XML Gnucash Files (*.xml; *.xac)" });
-		// TODO: delete Directory 
+		// TODO: Faucheux - delete Directory 
 		xmlFileChooser.setFilterPath("D:\\Program Files\\Eclipse\\eclipse\\workspace\\ReadGnucashFile");
 		String fileName = xmlFileChooser.open();
 

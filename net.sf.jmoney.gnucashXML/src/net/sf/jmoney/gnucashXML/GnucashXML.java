@@ -132,7 +132,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 
 			// Create the transactions
 			monitor.beginTask("Importing the transactions...", 3);
-			// createTransactions(doc);
+			createTransactions(doc);
 
 		} catch (MalformedURLException e) {
 			System.err.println(e.toString());
@@ -140,14 +140,14 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			System.err.println(e.toString());
 		} catch (SAXException e) {
 			System.err.println(e.toString());
-		/*
+
 		} catch (LessThanTwoSplitsException e) {
 			System.err.println(e.toString());
 		} catch (MoreThanTwoSplitsException e) {
 			System.err.println(e.toString());
 		} catch (ParseException e) {
 			System.err.println(e.toString());
-		*/
+
 		} catch (Error e) {
 		    System.err.println(e.getStackTrace());
 		    throw e;
@@ -158,7 +158,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 
 	/**
 	 * Export the session in a GnuCash-XML-File
-	 * (NOT IMPLEMENTED!) todo 
+	 * (NOT IMPLEMENTED!) TODO Faucheux
 	 * @author=Olivier Faucheux
 	 */
 	public void exportAccount(Session session, Account account, File file) {
@@ -194,7 +194,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 	 *   </gnc-v2>
 	 * @author Olivier Faucheux
 	 * 
-	 * TODO: 
+	 * TODO: Faucheux
 	 *  - treats the type (EXPENSE, BANK, CASH, CURRENCY, ...)
 	 *  - treats the currency (for the time, the standard currency is always used)
 	 *  - when (or if ever) jmoney accepts it, treats the parent.  
@@ -302,7 +302,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
    *   </splits>
    * </transaction>
    *
-   * TODO:
+   * TODO Faucheux:
    *  - can we store the "date-entered" in jmoney too?
    *  - when we have two "splits", it's a simple double Entry. When more, it's a splitted one. 
    *    For the time, only "simple double" Entries works.
@@ -348,7 +348,9 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 		long l1 = Long.parseLong(s.substring(0, posDivision));
 		long l2 = Long.parseLong(s.substring(posDivision + 1));
 
-		return (l1/l2);
+		// TODO: Faucheux - understand why return (l1/l2) is not the good one;
+		return l1;
+		
 
 	}
 
@@ -366,7 +368,21 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 		String firstAccountGUID = null;
 		String secondAccountName = null;
 		String secondAccountGUID = null;
-
+		String description = null; 
+		XMLElement transactionNode;
+		
+		
+		transactionNode = (XMLElement) propertyElement.getParentNode();
+		
+		try {
+		description = 
+		    transactionNode
+			.getElementsByTagName("description")
+			.item(0)
+			.getFirstChild()
+			.getNodeValue();
+		} catch (NullPointerException e) { /* No description */ }
+		
 		Element firstAccoutElement =
 			(Element) propertyElement.getElementsByTagName(
 				"split").item(
@@ -378,6 +394,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 				.getFirstChild()
 				.getNodeValue();
 		Account firstAccount = getAccountFromGUID(firstAccountGUID);
+		if (firstAccount instanceof MutableAccount) firstAccount = ((MutableAccount) firstAccount).getRealAccount();
 		Element secondAccoutElement =
 			(Element) propertyElement.getElementsByTagName(
 				"split").item(
@@ -389,6 +406,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 				.getFirstChild()
 				.getNodeValue();
 		Account secondAccount = getAccountFromGUID(secondAccountGUID);
+		if (secondAccount instanceof MutableAccount) secondAccount = ((MutableAccount) secondAccount).getRealAccount();
 
 		String Value =
 			firstAccoutElement
@@ -397,19 +415,20 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 				.getFirstChild()
 				.getNodeValue();
 
-
 		Entry e1 = t.createEntry();
-		e1.setAmount(getLong(Value));
+		e1.setAmount(-getLong(Value));
 		e1.setAccount(secondAccount);
+		e1.setDescription(description);
 
 		Entry e2 = t.createEntry();
-		e2.setAmount(-getLong(Value));
+		e2.setAmount(getLong(Value));
 		e2.setAccount(firstAccount);
+		e2.setDescription(description);
 
 		// t.addEntry(e1);
 		// t.addEntry(e2);
 		
-		// TODO: to check
+		// TODO: Faucheux to check
 	}
 
 	private void treatTransaction(Node transactionElement)
@@ -422,6 +441,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 				(Element) transactionElement.getFirstChild();
 				propertyElement != null;
 				propertyElement = (Element) propertyElement.getNextSibling()) {
+			    String transactionDescription = null;
 
 				String propertyElementName = propertyElement.getNodeName();
 				String propertyElementValue = 
@@ -441,17 +461,17 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 								.getNodeValue()));
 
 				} else if (propertyElementName.equalsIgnoreCase("trn:description")) {
-					// TODO t.setDescription(propertyElementValue);
+					transactionDescription = propertyElementValue;
 
 				} else if (
 						propertyElementName.equalsIgnoreCase("trn:splits")) {
 						
 						if (propertyElement.getElementsByTagName("split").getLength() < 2) {
-							// TODO
+							// TODO Faucheux
 						} else if (propertyElement.getElementsByTagName("split").getLength() == 2) {
 							treatSimpleTransaction(propertyElement, t);
 						} else {
-							// TODO
+							// TODO Faucheux
 						}
 
 				}
