@@ -30,31 +30,9 @@ import java.util.Vector;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
-import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.Commodity;
-import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.SessionChangeAdapter;
-import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.model2.*;
 
-import org.eclipse.jface.viewers.CellEditor;
-import org.eclipse.jface.viewers.ColumnWeightData;
-import org.eclipse.jface.viewers.ICellModifier;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.TableLayout;
-import org.eclipse.jface.viewers.TableViewer;
-import org.eclipse.jface.viewers.TextCellEditor;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerSorter;
+import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -145,8 +123,8 @@ public class EntriesSection extends SectionPart {
                 Object selectedObject = s.getFirstElement();
                 // The selected object cannot be null because the 'delete tranaction'
                 // button would be disabled if no entry were selected.
-               	if (selectedObject instanceof DisplayableEntry) {
-               		DisplayableEntry de = (DisplayableEntry) selectedObject;
+               	if (selectedObject instanceof DisplayableTransaction) {
+               		DisplayableTransaction de = (DisplayableTransaction) selectedObject;
                		Transaction transaction = de.entry.getTransaction();
                		transaction.getSession().deleteTransaction(transaction);
                		transaction.getSession().registerUndoableChange("Delete Transaction");
@@ -326,8 +304,8 @@ public class EntriesSection extends SectionPart {
                     // I don't understand this so I am simply bypassing the update
                     // in this case.  Nigel
                     if (selectedObject != null) {
-                    	if (selectedObject instanceof DisplayableEntry) {
-                    		DisplayableEntry de = (DisplayableEntry) selectedObject;
+                    	if (selectedObject instanceof DisplayableTransaction) {
+                    		DisplayableTransaction de = (DisplayableTransaction) selectedObject;
                     		fPage.fEntrySection.update(de.entry);
                     	}
                     }
@@ -342,8 +320,14 @@ public class EntriesSection extends SectionPart {
          * Remark: I'm not sure it's the better implementation. Not sure too
          * that it's works when the entries are changed (inserted or deleted)...
          */
-        for (int i = 0; i < fViewer.getTable().getItemCount(); i += 2) {
-            fViewer.getTable().getItem(i).setBackground(alternateEntryColor);
+        boolean isOdd = true;
+        for (int i = 0; i < fViewer.getTable().getItemCount(); i++) {
+            if (fViewer.getTable().getItem(i).getData() instanceof DisplayableTransaction) {
+                isOdd = ! isOdd;
+            } 
+            if (isOdd) {
+                fViewer.getTable().getItem(i).setBackground(alternateEntryColor);
+            }
         }
 
     }
@@ -381,10 +365,19 @@ public class EntriesSection extends SectionPart {
 				.iterator();
             Vector d_entries = new Vector();
             long saldo = 0;
-            for ( ; it.hasNext(); ) {
+            while (it.hasNext()) {
                 Entry e = (Entry) it.next();
                 saldo = saldo + e.getAmount();
-                d_entries.add(new DisplayableEntry(e, saldo));
+                d_entries.add(new DisplayableTransaction(e, saldo));
+                if (e.getTransaction().hasMoreThanTwoEntries()) {
+                    // Case of an splitted entry. We display the transaction on the first line
+                    // and the entries of the transaction on the following ones.
+                    Iterator itSubEntries = e.getTransaction().getEntryIterator();
+                    while (itSubEntries.hasNext()) {
+                        // TODO: create a new class for this usage.
+                        d_entries.add(new DisplayableEntry((Entry) itSubEntries.next()));
+                    }
+                }
             }
             
             // an empty line to have the possibility to enter a new entry
@@ -398,52 +391,29 @@ public class EntriesSection extends SectionPart {
         protected NumberFormat nf = DecimalFormat.getCurrencyInstance();
 
         public String getColumnText(Object obj, int index) {
-            if (obj instanceof AbstractDisplayableEntry) {
-            	if (obj instanceof DisplayableEntry) {
-            		
-            		DisplayableEntry de = (DisplayableEntry) obj;
-            		
-            		if (index < fPage.allEntryDataObjects.size()) {
-            			EntriesSectionProperty entryData = (EntriesSectionProperty)fPage.allEntryDataObjects.get(index);
-            			return entryData.getValueFormattedForTable(de.entry);
-            		} else {
-            			Commodity c = fPage.getAccount().getCurrency();
-            			switch (index - fPage.allEntryDataObjects.size()) {
-            			case 0: // income
-            				return de.entry.getAmount() >= 0 ? c.format(de.entry.getAmount()) : "";
-            			case 1: // expense
-            				return de.entry.getAmount() < 0 ? c.format(-de.entry.getAmount()) : "";
-            			case 2: // balance
-            				return c.format(de.balance);
-            			}
-            		}
+            if (obj instanceof DisplayableItem && ! (obj instanceof DisplayableNewEmptyEntry)) {
+        		DisplayableItem de = (DisplayableItem) obj;
+        		
+        		if (index < fPage.allEntryDataObjects.size()) {
+        			EntriesSectionProperty entryData = (EntriesSectionProperty)fPage.allEntryDataObjects.get(index);
+        			return entryData.getValueFormattedForTable(de.getEntry());
+        		} else {
+        			Commodity c = fPage.getAccount().getCurrency();
+        			switch (index - fPage.allEntryDataObjects.size()) {
+        			case 0: // income
+        				return de.getEntry().getAmount() >= 0 ? c.format(de.getEntry().getAmount()) : "";
+        			case 1: // expense
+        				return de.getEntry().getAmount() < 0 ? c.format(-de.getEntry().getAmount()) : "";
+        			case 2: // balance
+        			    if (de instanceof DisplayableTransaction) {
+        			        return c.format(((DisplayableTransaction)de).balance);
+        			    } else { 
+        			        return "";
+        			    }
+        			}
             	}
             }
-/*            
-            Commodity c = de.entry.getAccount().getCommodity(de.entry);
-            switch (index) {
-            case 0: // check
-                String s = de.entry.getCheck();
-                return s == null ? "" : s;
-            case 1: // date
-                Date d = de.entry.getTransaction().getDate();
-                return d == null ? "" : fDateFormat.format(d);
-            case 2: // valuta
-                d = de.entry.getValuta();
-                return d == null ? "" : fDateFormat.format(d);
-            case 3: // description
-                s = de.entry.getDescription();
-                return s == null ? "" : s;
-            case 4: // to account
-                s = de.getOtherAccountName();
-                return s == null ? "" : s;
-            case 5: // income
-                return de.entry.getAmount() >= 0 ? c.format(de.entry.getAmount()) : "";
-            case 6: // expense
-                return de.entry.getAmount() < 0 ? c.format(-de.entry.getAmount()) : "";
-            case 7: // balance
-                return c.format(de.balance);
-*/            
+
             return ""; //$NON-NLS-1$
         }
 
@@ -452,28 +422,52 @@ public class EntriesSection extends SectionPart {
         }
     }
 
+    /**
+     * Class to sort two displayable items.
+     * For the time: two transactions are sorted by the date,
+     * two Entries are sort, first by their transaction then (if they belong the same transaction)
+     * by the amount.
+     * 
+     * In all case, a new Entry is sorted as least.
+     * 
+     * @author Faucheux
+     */
     class EntrySorter extends ViewerSorter {
         public int compare(Viewer notused, Object o1, Object o2) {
-            if (o1 instanceof DisplayableEntry && o2 instanceof DisplayableEntry) {
-                if (o1 instanceof DisplayableNewEmptyEntry) {
-                    return -1;
-                } else if (o2 instanceof DisplayableNewEmptyEntry) {
-                    return 1;
-                }
-                Date d1 = ((DisplayableEntry) o1).entry.getTransaction().getDate();
-                Date d2 = ((DisplayableEntry) o2).entry.getTransaction().getDate();
-                // TODO Taken from EntryComparator as a quick fix
-                if (d1 == null && d2 == null) return 0;
-                if (d1 == null) return 1;
-                if (d2 == null) return -1;
-                return d1.compareTo(d2);
-            } else {
-                return super.compare(notused, o1, o2);
+            
+            assert (o1 instanceof DisplayableItem);
+            assert (o2 instanceof DisplayableItem);
+            
+            // The case of a new Entry
+            if (o1 instanceof DisplayableNewEmptyEntry) return 1;
+            if (o2 instanceof DisplayableNewEmptyEntry) return -1;
+
+            // Compare the transactions
+            DisplayableItem di1 = (DisplayableItem)o1;
+            DisplayableItem di2 = (DisplayableItem)o2;
+            
+            // Case of two items of the same transaction
+            if (di1.getTransaction() == (di2.getTransaction())) {
+                if (di1 instanceof DisplayableTransaction) return -1;
+                if (di2 instanceof DisplayableTransaction) return 1;
+                return (di1.getAmount() - di2.getAmount() > 0) ? -1 : 1;
             }
+            
+            // Case of two different transactions
+            Date d1 = di1.getTransaction().getDate();
+            Date d2 = di2.getTransaction().getDate();
+            // TODO Taken from EntryComparator as a quick fix
+            if (d1 == null && d2 == null) return 0;
+            if (d1 == null) return 1;
+            if (d2 == null) return -1;
+            int difference = d1.compareTo(d2); 
+            if (difference != 0) return difference;
+            // TODO perhaps an other test for transactions with the same date?
+            return di1.getTransaction().hashCode() - di2.getTransaction().hashCode(); 
         }
     }
 
-    abstract class AbstractDisplayableEntry {
+    abstract class DisplayableItem {
         abstract String getCheck ();
         abstract Date   getDate ();
         abstract Date   getValuta ();
@@ -486,19 +480,47 @@ public class EntriesSection extends SectionPart {
         abstract void setDescription (String description);
         abstract void setAmount (long amount);
 
-        abstract String getOtherAccountName ();
-        abstract long   getBalance ();
-        
+        // abstract String getOtherAccountName ();
+        // abstract long   getBalance ();
+        abstract Transaction getTransaction ();
+        abstract Entry       getEntry ();
 
         //TODO: abstract void set/getCommodity();
     }
     
-    class DisplayableEntry extends AbstractDisplayableEntry { 
+    class DisplayableEntry extends DisplayableItem { 
+        
+        private Entry entry;
+
+        public DisplayableEntry(Entry entry) {
+            this.entry = entry;
+        }
+        
+        /* Trivial functions */
+        String getCheck ()        { return entry.getCheck(); }
+        Date   getDate ()         { return entry.getTransaction().getDate(); }
+        Date   getValuta ()       { return entry.getValuta(); }
+        String getDescription ()  { return entry.getDescription(); }
+        long   getAmount ()       { return entry.getAmount(); }
+
+        void setCheck (String check)              { entry.setCheck(check); }
+        void setDate (Date date)                  { entry.getTransaction().setDate(date); }
+        void setValuta (Date valuta)              { entry.setValuta(valuta); }
+        void setDescription (String description)  { entry.setDescription(description); }
+        void setAmount (long amount)              { entry.setAmount(amount); }
+
+        String      getAccountName () {return entry.getAccount().getName(); }
+        Transaction getTransaction () {return entry.getTransaction(); }
+        Entry getEntry() { return entry; }
+    }
+    
+    
+    class DisplayableTransaction extends DisplayableItem { 
         
         private Entry entry;
         private long balance;
 
-        public DisplayableEntry(Entry entry, long saldo) {
+        public DisplayableTransaction(Entry entry, long saldo) {
             this.entry = entry;
             this.balance = saldo;
         }
@@ -524,9 +546,10 @@ public class EntriesSection extends SectionPart {
                 return t.getOther(entry).getAccount().getName();
         }
 
-        long getBalance () { return balance ; }
-        
+        long  getBalance () { return balance ; }
         Entry getEntry() { return entry; }
+        Transaction getTransaction () {return entry.getTransaction(); }
+        
     }
 
     /**
@@ -534,7 +557,7 @@ public class EntriesSection extends SectionPart {
      * user, before they are comited and transformed in real entries
      * @author Faucheux
      */
-    class DisplayableNewEmptyEntry extends AbstractDisplayableEntry {
+    class DisplayableNewEmptyEntry extends DisplayableItem {
         
         String check = null;
         Date   date = null;
@@ -560,80 +583,9 @@ public class EntriesSection extends SectionPart {
 
         String getOtherAccountName () { return null; }
         long   getBalance () { return 0; }
-        
+        Transaction getTransaction () {return null; }
+        Entry getEntry () { return null ; }
+
     }
-    
-/*
-    class CellModifier implements ICellModifier {
-        public boolean canModify(Object element, String property) {
-        	return false;
-            //return !property.equals("balance");
-        }
-        public Object getValue(Object element, String property) {
-            int index = getColumnIndex(property);
-            return fLabelProvider.getColumnText(element, index);
-        }
-        
-        public void modify(Object element, String property, Object value) {
-            
-            if (element instanceof Item) {
-                element = ((Item) element).getData();
-            }
-            
-            AbstractDisplayableEntry de = (AbstractDisplayableEntry) element;
-            // TODO: here, we should set the commodity to the one of the account for a new Entry,
-            // and the one of the entry in case the entry already exists
-            Commodity c = fPage.getAccount().getCommodity(null);
-            int index = getColumnIndex(property);
-            switch (index) {
-            case 0: // check
-                String s = (String) value;
-                de.setCheck(s.length() == 0 ? null : s);
-                fViewer.update(element, new String[] { property});
-                break;
-            case 1: // date
-                Date d = fDateFormat.parse((String) value);
-                de.setDate(d);
-                fViewer.update(element, new String[] { property});
-                break;
-            case 2: // valuta
-                d = fDateFormat.parse((String) value);
-                de.setValuta(d);
-                fViewer.update(element, new String[] { property});
-                break;
-            case 3: // description
-                s = (String) value;
-                de.setDescription(s.length() == 0 ? null : s);
-                fViewer.update(element, new String[] { property});
-                break;
-            case 4: // income
-                de.setAmount(c.parse((String) value));
-                fViewer.refresh();
-                break;
-            case 5: // expense
-                de.setAmount(-c.parse((String) value));
-                fViewer.refresh();
-                break;
-            }
-        }
-        
-        protected int getColumnIndex(String property) {
-            int index = 0;
-            if (property.equals("check"))
-                return index = 0;
-            else if (property.equals("date"))
-                return index = 1;
-            else if (property.equals("valuta"))
-                return index = 2;
-            else if (property.equals("description"))
-                return index = 3;
-            else if (property.equals("debit"))
-                return index = 4;
-            else if (property.equals("credit"))
-                return index = 5;
-            else if (property.equals("balance")) return index = 6;
-            return index;
-        }
-    }
-*/
 }
+    
