@@ -954,7 +954,15 @@ public class PropertySet {
 	}
 	
 	/**
-	 * @return
+	 * This is used in two situations:
+	 * - when data is read from an XML file and there is no value for a
+	 * property in the file.  The property from this method is passed
+	 * to the constructor.
+	 * - when a SQL column is created, the value from this method is
+	 * used as the default value.
+	 * 
+	 * @return an array of default property values, there being a value
+	 * 				for each scalar property (but not the list properties)
 	 */
 	public Object[] getDefaultPropertyValues2() {
 		// We do not cache the array returned by this method.

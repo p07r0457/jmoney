@@ -178,6 +178,6 @@ public class IncomeExpenseAccount extends Account {
 	}
 	
     static public  Object [] getDefaultProperties() {
-		return new Object [] { "new category" };
+		return new Object [] { "new category", new Boolean(true), null };
 	}
 }

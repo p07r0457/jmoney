@@ -361,6 +361,7 @@ public class Entry extends ExtendableObject {
 				null,
 				new Long(0),
 				new Long(0),  // creation, should be now.
+				null,
 				};
 	}
 }

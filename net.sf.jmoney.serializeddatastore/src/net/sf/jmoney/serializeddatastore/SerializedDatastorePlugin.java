@@ -697,12 +697,14 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			// For all other parameters, the value is set when the property
 			// value is found.  We initialize to null here so a null value
 			// will be passed to the constructor if no value is found.
+			Object[] defaultProperties = propertySet.getDefaultPropertyValues2();
+			int i = 0;
 			for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
 				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 				if (propertyAccessor.isList()) {
 					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = new SimpleListManager(sessionManager);
 				} else {
-					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = null;
+					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = defaultProperties[i++];
 				}
 			}
 		}
