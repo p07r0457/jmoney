@@ -26,6 +26,10 @@ import java.util.Iterator;
 import net.sf.jmoney.JMoneyPlugin;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
@@ -80,6 +84,16 @@ public class EntriesFilterSection extends SectionPart {
                 JMoneyPlugin.getResourceString("EntriesFilterSection.clear")};
         fFilterCombo.setItems(fFilterComboItems);
         fFilterCombo.select(0);
+        fFilterCombo.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				if (fFilterCombo.getSelectionIndex() == 1) {
+					fFilterText.setText("");
+					fPage.filter.setPattern("");
+					// always leave selection at 'filter' (this combo is acting as a push button)
+					fFilterCombo.select(0);
+				}
+			}
+        });
 
         // Build an array of the localized names of the properties
         // on which a filter may be based.
@@ -95,6 +109,11 @@ public class EntriesFilterSection extends SectionPart {
         toolkit.adapt(fFilterTypeCombo, true, true);
         fFilterTypeCombo.setItems(filterTypes);
         fFilterTypeCombo.select(0);
+        fFilterTypeCombo.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				fPage.filter.setType(fFilterTypeCombo.getSelectionIndex());
+			}
+        });
         
         fOperationCombo = new Combo(container, toolkit.getBorderStyle() | SWT.READ_ONLY);
         toolkit.adapt(fOperationCombo, true, true);
@@ -104,10 +123,14 @@ public class EntriesFilterSection extends SectionPart {
 
         fFilterText = toolkit.createText(container, "");
         fFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        fFilterText.addFocusListener(new FocusAdapter() {
+			public void focusLost(FocusEvent e) {
+				fPage.filter.setPattern(fFilterText.getText());
+			}
+        });
 
         getSection().setClient(container);
         toolkit.paintBordersFor(container);
         refresh();
     }
-
 }

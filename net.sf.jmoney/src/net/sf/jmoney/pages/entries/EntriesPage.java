@@ -86,6 +86,8 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
     protected EntriesSection fEntriesSection;
 	protected EntrySection fEntrySection;
 
+	final EntriesFilter filter = new EntriesFilter(this);
+
     /**
      * Create a new page to edit entries.
      * 

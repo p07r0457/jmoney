@@ -27,8 +27,6 @@ import java.beans.PropertyChangeSupport;
 import java.util.Iterator;
 
 import net.sf.jmoney.Constants;
-import net.sf.jmoney.VerySimpleDateFormat;
-import net.sf.jmoney.model2.CurrencyAccount;
 
 /**
  * TODO Move to non-UI plug-in
@@ -38,29 +36,14 @@ import net.sf.jmoney.model2.CurrencyAccount;
 public class EntriesFilter implements Constants {
 
     /**
-     * String representations of the available filter types.
-	 */
-/*	
-    public static final String[] FILTER_TYPES = new String[] {
-        JMoneyUIPlugin.getResourceString("EntryFilter.entry"),
-        JMoneyPlugin.getResourceString("Entry.amount"),
-        JMoneyPlugin.getResourceString("Entry.category"),
-        JMoneyPlugin.getResourceString("Entry.check"),
-        JMoneyPlugin.getResourceString("Entry.date"),
-        JMoneyPlugin.getResourceString("Entry.description"),
-        JMoneyPlugin.getResourceString("Entry.memo"),
-        JMoneyPlugin.getResourceString("Entry.valuta")
-    };
-*/
-    /**
-     * Filter pattern
-     */
-    protected String pattern = "";
-
-    /**
      * Filter type, defined as index of FILTER_TYPES.
      */
-    protected int type = 0;
+    protected int filterColumnIndex = 0;
+	
+	/**
+     * Filter pattern.  An empty filter pattern indicates that filtering is off.
+     */
+    protected String pattern = "";
 
     protected EntriesPage fPage;
     
@@ -89,6 +72,7 @@ public class EntriesFilter implements Constants {
         if (!aPattern.equals(pattern)) {
             pattern = aPattern;
             changeSupport.firePropertyChange("pattern", null, null);
+			fPage.fEntriesSection.refresh();
         }
     }
 
@@ -98,8 +82,8 @@ public class EntriesFilter implements Constants {
      * 
      * @return Filter type
      */
-    public int getType() {
-        return type;
+    public int getFilterColumn() {
+        return filterColumnIndex;
     }
 
 	/**
@@ -108,9 +92,12 @@ public class EntriesFilter implements Constants {
      * @param type Filter type
      */
     public void setType(int aType) {
-        if (type == aType) return;
-        type = aType;
+        if (filterColumnIndex == aType) return;
+        filterColumnIndex = aType;
         changeSupport.firePropertyChange("type", null, null);
+        if (!pattern.equals("")) {
+        	fPage.fEntriesSection.refresh();
+        }
     }
 
     /**
@@ -125,94 +112,33 @@ public class EntriesFilter implements Constants {
      * 
      * The filter matching is on the text as it is displayed in the table.
      * 
-     * @param entry Entry to filter
-     * @param account Account whose formatter is used to filter currency properties
-     * @param dateFormat Formatter used to filter date properties
-     * @param filterType Filter type to use for filtering
+     * @param IDisplayableItem item representing the row in the table
+     *			to be filered 			
      * @return True, if "entry" matches the filter criteria; false, else
      */
-	public boolean filterEntry(IDisplayableItem data, CurrencyAccount account, VerySimpleDateFormat dateFormat, int filterType) {
-		if (filterType == 0) {
-			// 'Entry' selected.  Entry matches if any of the properties
-			// match.
-	        for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext(); ) {
-	        	IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)iter.next();
-	            String text = entriesSectionProperty.getValueFormattedForTable(data);
-	            if (containsPattern(text)) {
-	            	return true;
-	            }
-	        }
-			return false;
+	public boolean filterEntry(IDisplayableItem data) {
+		if (pattern.equals("")) {
+			// Filter is not active so all entries match
+			return true;
 		} else {
-        	IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)fPage.allEntryDataObjects.get(filterType-1);
-            String text = entriesSectionProperty.getValueFormattedForTable(data);
-            return containsPattern(text);
+			if (filterColumnIndex == 0) {
+				// 'Entry' selected.  Entry matches if any of the properties
+				// match.
+				for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext(); ) {
+					IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)iter.next();
+					String text = entriesSectionProperty.getValueFormattedForTable(data);
+					if (containsPattern(text)) {
+						return true;
+					}
+				}
+				return false;
+			} else {
+				IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)fPage.allEntryDataObjects.get(filterColumnIndex-1);
+				String text = entriesSectionProperty.getValueFormattedForTable(data);
+				return containsPattern(text);
+			}
 		}
-/*		
-		
-		switch (filterType) {
-        case 0:
-            return checkEntry(entry, account, dateFormat);
-        case 1:
-            return checkAmount(entry, account);
-        case 2:
-            return checkCategory(entry);
-        case 3:
-            return checkCheck(entry);
-        case 4:
-            return checkDate(entry, dateFormat);
-        case 5:
-            return checkDescription(entry);
-        case 6:
-            return checkMemo(entry);
-        case 7:
-            return checkValuta(entry, dateFormat);
-        default:
-            return true;
-        }
-*/        
     }
-
-/*	
-    public boolean checkEntry(Entry entry, CurrencyAccount account, VerySimpleDateFormat df) {
-        return pattern.equals("")
-            || checkAmount(entry, account)
-			|| checkCategory(entry)
-			|| checkCheck(entry)
-			|| checkDate(entry, df)
-			|| checkDescription(entry)
-			|| checkMemo(entry)
-			|| checkValuta(entry, df);
-	}
-
-	public boolean checkAmount(Entry e, CurrencyAccount account) {
-        return containsPattern(account.getCurrency().format(e.getAmount()));
-    }
-
-    public boolean checkCategory(Entry e) {
-        return containsPattern(e.getFullAccountName());
-    }
-
-    public boolean checkCheck(Entry e) {
-        return containsPattern(e.getCheck());
-    }
-
-    public boolean checkDate(Entry e, VerySimpleDateFormat df) {
-        return containsPattern(df.format(e.getTransaction().getDate()));
-    }
-
-    public boolean checkDescription(Entry e) {
-        return containsPattern(e.getDescription());
-    }
-
-    public boolean checkMemo(Entry e) {
-        return containsPattern(e.getMemo());
-    }
-
-    public boolean checkValuta(Entry e, VerySimpleDateFormat df) {
-        return containsPattern(df.format(e.getValuta()));
-    }
-*/
 	
 	/**
 	 * Add a PropertyChangeListener.

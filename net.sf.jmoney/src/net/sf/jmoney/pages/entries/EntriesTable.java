@@ -427,8 +427,52 @@ public class EntriesTable implements IEntriesControl {
         for (Iterator iter = accountEntries.iterator(); iter.hasNext(); ) {
             Entry accountEntry = (Entry) iter.next();
         	DisplayableTransaction data = new DisplayableTransaction(accountEntry, 0);
-            entries[i++] = data;
-        }    	
+        	if (matchesFilter(data)) {
+        		entries[i++] = data;
+        	}
+        }
+        
+        // reduce array to actual size
+        if (i < accountEntries.size()) {
+        	DisplayableTransaction[] oldEntries = entries;
+            entries = new DisplayableTransaction[i];
+        	for (int j=0; j<i; j++) {
+        		entries[j] = oldEntries[j];
+        	}
+        }
+    }
+    
+    /**
+     * Filters work at the transaction level, not the entry level.
+     * Either the entire transaction is displayed, or none of
+     * the transaction is displayed.  If any entry in a split
+     * transaction matches the filter then the entire transaction
+     * is shown.
+     * 
+     * @param transData
+     * @return
+     */
+    private boolean matchesFilter(DisplayableTransaction transData) {
+    	Transaction trans = transData.getTransactionForTransactionFields();
+    	
+    	if (fPage.filter.filterEntry(transData)) {
+    		return true;
+    	}
+    	
+        if (trans.hasMoreThanTwoEntries()) {
+    		Iterator itSubEntries = trans.getEntryIterator();
+    		while (itSubEntries.hasNext()) {
+    			Entry entry2 = (Entry) itSubEntries.next();
+    			if (!entry2.equals(transData.getEntryForAccountFields())) {
+    				DisplayableEntry entryData = new DisplayableEntry(entry2, transData);
+    				if (fPage.filter.filterEntry(entryData)) {
+    					return true;
+    				}
+    			}
+    		}
+    	}
+        
+        return false;
     }
     
 	interface IItemFetcher {
@@ -563,6 +607,10 @@ public class EntriesTable implements IEntriesControl {
 			}
 		});
 		
+		refreshAfterTransactionListChange();
+	}
+	
+	private void refreshAfterTransactionListChange() {
 		// Replace the data in each TableItem object.
         // The correct number of items should be in the table.
 		// However, just in case something has gone wrong, or perhaps
@@ -826,10 +874,13 @@ public class EntriesTable implements IEntriesControl {
     /**
 	 * Refresh the viewer.
 	 */
-    //TODO: rename this to refreshLabels
+    //TODO: split into refresh and refreshLabels???
 	public void refresh() {
 		//fViewer.refresh();
 		// TODO: complete
+		buildEntryList();
+		
+		refreshAfterTransactionListChange();
 	}	
 
 	/**

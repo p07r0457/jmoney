@@ -298,6 +298,15 @@ public class EntriesSection extends SectionPart {
     }
 
 	/**
+	 * This method is called whenever the filter has changed
+	 * and must be re-applied. 
+	 */
+	void refreshFilter() {
+		// Refresh the entries table control
+		fEntriesControl.refresh();
+	}
+	
+	/**
 	 * Set the entries list to be a flat table.  If any other
 	 * entries control is set, destroy it first.
 	 */
