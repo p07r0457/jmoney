@@ -22,12 +22,10 @@
 
 package net.sf.jmoney.views;
 
-import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.IBookkeepingPage;
-import net.sf.jmoney.JMoneyPlugin;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
@@ -67,6 +65,22 @@ public class NodeEditor extends FormEditor {
     	cInput.pages = pages;
     }
 
+    public void dispose() {
+    	// When the editor is disposed, let the editor input
+    	// know that there is no editor open.  This is necessary
+    	// because the input is kept around by Eclipse even when the
+    	// editor is closed and kept in a Most Recently Used list.
+    	// This list is persisted in the workbench memento, but the
+    	// editor input must not try to persist the values of the controls
+    	// because the controls no longer exist.
+    	// We indicate this situation by clearing out the list
+    	// of pages.
+        NodeEditorInput cInput = (NodeEditorInput)this.getEditorInput();
+    	cInput.pages = null;
+    	
+    	super.dispose();
+    }
+    
     /* (non-Javadoc)
      * @see org.eclipse.ui.IEditorPart#init(org.eclipse.ui.IEditorSite, org.eclipse.ui.IEditorInput)
      */

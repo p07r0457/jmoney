@@ -303,18 +303,21 @@ public class NavigationView extends ViewPart {
 			   			}
 			   			
 			   			// Create an editor for this node (or active if an editor
-			   			// is already open).
-			   			try {
-			   				IWorkbenchWindow window = getSite().getWorkbenchWindow();
-			   				IEditorInput editorInput = new NodeEditorInput(selectedObject,
-									labelProvider.getText(selectedObject),
-			   						labelProvider.getImage(selectedObject),
-									pageListeners,
-									null);
-			   				window.getActivePage().openEditor(editorInput,
-			   				"net.sf.jmoney.genericEditor");
-			   			} catch (PartInitException e) {
-			   				JMoneyPlugin.log(e);
+			   			// is already open).  However, if no pages are registered for this
+			   			// node then do nothing.
+			   			if (!pageListeners.isEmpty()) {
+			   				try {
+			   					IWorkbenchWindow window = getSite().getWorkbenchWindow();
+			   					IEditorInput editorInput = new NodeEditorInput(selectedObject,
+			   							labelProvider.getText(selectedObject),
+										labelProvider.getImage(selectedObject),
+										pageListeners,
+										null);
+			   					window.getActivePage().openEditor(editorInput,
+			   					"net.sf.jmoney.genericEditor");
+			   				} catch (PartInitException e) {
+			   					JMoneyPlugin.log(e);
+			   				}
 			   			}
 			   			
 			   			break;

@@ -200,16 +200,19 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
 		}
 		
 		// Save the contents of each page.
+		// However, if the pages array is null then this means
+		// either the addPages method on the editor was not called
+		// or the editor has been closed.  In either case we cannot
+		// save the page state because the page controls do not exist.
 		if (pages == null) {
-			// Seems to happen if page were never displayed???
 			System.out.println("no pages set in " + nodeObject.toString());
-			return;
-		}
-		for (int i = 0; i < pageFactories.size(); i++) {
-			TreeNode.PageEntry entry = (TreeNode.PageEntry)pageFactories.get(i);
-			String pageId = (String)entry.getPageId();
-			IBookkeepingPageFactory pageListener = (IBookkeepingPageFactory)entry.getPageFactory();
-			pages[i].saveState(memento.createChild(pageId));
+		} else {
+			for (int i = 0; i < pageFactories.size(); i++) {
+				TreeNode.PageEntry entry = (TreeNode.PageEntry)pageFactories.get(i);
+				String pageId = (String)entry.getPageId();
+				IBookkeepingPageFactory pageListener = (IBookkeepingPageFactory)entry.getPageFactory();
+				pages[i].saveState(memento.createChild(pageId));
+			}
 		}
 	}
 
