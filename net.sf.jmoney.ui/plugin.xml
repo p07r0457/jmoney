@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+   id="net.sf.jmoney.ui"
+   name="JMoney UI Plug-in"
+   version="1.0.0"
+   provider-name=""
+   class="net.sf.jmoney.ui.internal.JMoneyUIPlugin">
+
+   <runtime>
+      <library name="jmoney_ui.jar">
+         <export name="*"/>
+      </library>
+   </runtime>
+
+   <requires>
+      <import plugin="net.sf.jmoney"/>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.ui.forms"/>
+   </requires>
+
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            id="net.sf.jmoney.ui.CapitalAccountEditor"
+            name="Capital Account Editor"
+            icon="icons/Account.gif"
+            class="net.sf.jmoney.ui.internal.editors.CapitalAccountEditor">
+      </editor>
+   </extension>
+</plugin>
