@@ -28,7 +28,6 @@ import java.beans.PropertyChangeSupport;
 import net.sf.jmoney.Constants;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
-import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.ui.internal.JMoneyUIPlugin;
@@ -40,25 +39,19 @@ import net.sf.jmoney.ui.internal.JMoneyUIPlugin;
  */
 public class EntriesFilter implements Constants {
 
-	/**
-	 * Get string representations of the available filter types.
-	 * 
-	 * @return Available filter types
+    /**
+     * String representations of the available filter types.
 	 */
-    public static String[] filterTypes() {
-		String[] filterType =
-			{
-				JMoneyUIPlugin.getResourceString("EntryFilter.entry"),
-				JMoneyPlugin.getResourceString("Entry.amount"),
-				JMoneyPlugin.getResourceString("Entry.category"),
-				JMoneyPlugin.getResourceString("Entry.check"),
-				JMoneyPlugin.getResourceString("Entry.date"),
-				JMoneyPlugin.getResourceString("Entry.description"),
-				JMoneyPlugin.getResourceString("Entry.memo"),
-				JMoneyPlugin.getResourceString("Entry.valuta"),
-			};
-		return filterType;
-	}
+    public static final String[] FILTER_TYPES = new String[] {
+        JMoneyUIPlugin.getResourceString("EntryFilter.entry"),
+        JMoneyPlugin.getResourceString("Entry.amount"),
+        JMoneyPlugin.getResourceString("Entry.category"),
+        JMoneyPlugin.getResourceString("Entry.check"),
+        JMoneyPlugin.getResourceString("Entry.date"),
+        JMoneyPlugin.getResourceString("Entry.description"),
+        JMoneyPlugin.getResourceString("Entry.memo"),
+        JMoneyPlugin.getResourceString("Entry.valuta")
+    };
 
     /**
      * Filter pattern
@@ -66,7 +59,7 @@ public class EntriesFilter implements Constants {
     protected String pattern = "";
 
     /**
-     * Filter type
+     * Filter type, defined as index of FILTER_TYPES.
      */
     protected int type = 0;
 
@@ -80,13 +73,14 @@ public class EntriesFilter implements Constants {
     }
 
     /**
-     * Set the filter pattern.
-     * TODO Maybe support regular expressions.
+     * Set the filter pattern. The pattern is not treated case-sensitive.
+     * TODO Maybe support regular expressions
      * 
-     * @param pattern Filter pattern
+     * @param aPattern Filter pattern
      */
     public void setPattern(String aPattern) {
         if (aPattern == null) aPattern = "";
+        aPattern = aPattern.toLowerCase();
         if (!aPattern.equals(pattern)) {
             pattern = aPattern;
             changeSupport.firePropertyChange("pattern", null, null);
@@ -165,38 +159,31 @@ public class EntriesFilter implements Constants {
 	}
 
 	public boolean checkAmount(Entry e, CurrencyAccount account) {
-        return contains(account.getCurrency().format(e.getAmount()));
+        return containsPattern(account.getCurrency().format(e.getAmount()));
     }
 
     public boolean checkCategory(Entry e) {
-        return contains(e.getFullAccountName());
+        return containsPattern(e.getFullAccountName());
     }
 
     public boolean checkCheck(Entry e) {
-        return contains(e.getCheck());
+        return containsPattern(e.getCheck());
     }
 
     public boolean checkDate(Entry e, VerySimpleDateFormat df) {
-        return contains(df.format(e.getTransaction().getDate()));
+        return containsPattern(df.format(e.getTransaction().getDate()));
     }
 
     public boolean checkDescription(Entry e) {
-        return contains(e.getDescription());
+        return containsPattern(e.getDescription());
     }
 
     public boolean checkMemo(Entry e) {
-        return contains(e.getMemo());
+        return containsPattern(e.getMemo());
     }
 
     public boolean checkValuta(Entry e, VerySimpleDateFormat df) {
-        return contains(df.format(e.getValuta()));
-    }
-
-    private boolean contains(String s) {
-        if (isEmpty())
-            return true;
-        else
-            return (s != null) && (s.indexOf(pattern) >= 0);
+        return containsPattern(df.format(e.getValuta()));
     }
 
 	/**
@@ -212,5 +199,16 @@ public class EntriesFilter implements Constants {
 	public void removePropertyChangeListener(PropertyChangeListener pcl) {
 		changeSupport.removePropertyChangeListener(pcl);
 	}
+
+    /**
+     * @param s String to check
+     * @return Does "s" contain the pattern?
+     */
+    protected boolean containsPattern(String s) {
+        if (isEmpty())
+            return true;
+        else
+            return (s != null) && (s.toLowerCase().indexOf(pattern) >= 0);
+    }
 
 }

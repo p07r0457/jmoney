@@ -69,7 +69,7 @@ public class EntriesFilterSection extends SectionPart {
 
         fFilterTypeCombo = new Combo(container, toolkit.getBorderStyle() | SWT.READ_ONLY);
         toolkit.adapt(fFilterTypeCombo, true, true);
-        fFilterTypeCombo.setItems(EntriesFilter.filterTypes());
+        fFilterTypeCombo.setItems(EntriesFilter.FILTER_TYPES);
         fFilterTypeCombo.select(0);
         
         fOperationCombo = new Combo(container, toolkit.getBorderStyle() | SWT.READ_ONLY);
