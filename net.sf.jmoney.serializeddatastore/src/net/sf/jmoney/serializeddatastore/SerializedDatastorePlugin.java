@@ -33,6 +33,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
@@ -60,7 +62,6 @@ import javax.xml.transform.stream.StreamResult;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.BankAccountInfo;
-import net.sf.jmoney.fields.CurrencyInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.BankAccount;
@@ -107,6 +108,15 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	private static SerializedDatastorePlugin plugin;
 	//Resource bundle.
 	private ResourceBundle resourceBundle;
+	
+	/**
+	 * Date format used for embedding dates in SQL statements:
+	 * yyyy.MM.dd
+	 */
+	private static SimpleDateFormat dateFormat = (SimpleDateFormat) DateFormat.getDateInstance();
+	static {
+		dateFormat.applyPattern("yyyy.MM.dd");
+	}
 	
 	/**
 	 * The constructor.
@@ -1485,9 +1495,12 @@ System.out.println("start " + localName);
 							String text;
 							if (value instanceof Date) {
 								Date date = (Date)value;
-								text = new Integer(date.getYear() + 1900).toString() + "."
+								text = dateFormat.format(date);
+								
+								String text2 = new Integer(date.getYear() + 1900).toString() + "."
 								+ new Integer(date.getMonth()).toString() + "."
 								+ new Integer(date.getDay()).toString();
+								
 							} else {
 								text = value.toString();
 							}
