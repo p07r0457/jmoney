@@ -26,8 +26,10 @@ import java.io.IOException;
 import java.net.URL;
 
 import junit.framework.TestCase;
+import net.sf.jmoney.serializeddatastore.IFileDatastore;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
 import net.sf.jmoney.serializeddatastore.SessionManager;
+import net.sf.jmoney.serializeddatastore.formats.JMoneyXmlFormat;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Platform;
@@ -51,7 +53,9 @@ public class OpenSessionTest extends TestCase {
      */
     public void testOldEmptyUncompressed() throws IOException, CoreException {
         File file = getSessionFile("old_empty_session.xml");
-        SessionManager manager = SerializedDatastorePlugin.getDefault().readSessionQuietly(file, null);
+        JMoneyXmlFormat reader = new JMoneyXmlFormat();
+        SessionManager manager = new SessionManager("net.sf.jmoney.serializeddatastore.xmlFormat", reader, file);
+        reader.readSessionQuietly(file, manager, null);
         assertNotNull(manager);
         assertNotNull(manager.getSession());
     }
@@ -67,7 +71,9 @@ public class OpenSessionTest extends TestCase {
      */
     public void testOldEmptyCompressed() throws IOException, CoreException {
         File file = getSessionFile("old_empty_session.jmx");
-        SessionManager manager = SerializedDatastorePlugin.getDefault().readSessionQuietly(file, null);
+        JMoneyXmlFormat reader = new JMoneyXmlFormat();
+        SessionManager manager = new SessionManager("net.sf.jmoney.serializeddatastore.jmxFormat", reader, file);
+        reader.readSessionQuietly(file, manager, null);
         assertNotNull(manager);
         assertNotNull(manager.getSession());
     }
@@ -83,7 +89,9 @@ public class OpenSessionTest extends TestCase {
      */
     public void testNewEmptyUncompressed() throws IOException, CoreException {
         File file = getSessionFile("new_empty_session.xml");
-        SessionManager manager = SerializedDatastorePlugin.getDefault().readSessionQuietly(file, null);
+        JMoneyXmlFormat reader = new JMoneyXmlFormat();
+        SessionManager manager = new SessionManager("net.sf.jmoney.serializeddatastore.xmlFormat", reader, file);
+        reader.readSessionQuietly(file, manager, null);
         assertNotNull(manager);
         assertNotNull(manager.getSession());
     }
@@ -99,7 +107,9 @@ public class OpenSessionTest extends TestCase {
      */
     public void testNewEmptyCompressed() throws IOException, CoreException {
         File file = getSessionFile("new_empty_session.jmx");
-        SessionManager manager = SerializedDatastorePlugin.getDefault().readSessionQuietly(file, null);
+        JMoneyXmlFormat reader = new JMoneyXmlFormat();
+        SessionManager manager = new SessionManager("net.sf.jmoney.serializeddatastore.jmxFormat", reader, file);
+        reader.readSessionQuietly(file, manager, null);
         assertNotNull(manager);
         assertNotNull(manager.getSession());
     }
