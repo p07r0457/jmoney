@@ -41,6 +41,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.*;
 
 /**
@@ -500,9 +501,9 @@ public class QIF implements FileFormat {
 
                 // status
                 QIFEntry ourEntry = (QIFEntry)entry.getExtension(qifPropertySet);
-                if (ourEntry.getReconcilingState() == "*")
+                if (ourEntry.getReconcilingState() == '*')
                     writeln(writer, "C*");
-                else if (ourEntry.getReconcilingState() == "X")
+                else if (ourEntry.getReconcilingState() == 'X')
                     writeln(writer, "CX");
 
                 // amount
@@ -593,9 +594,14 @@ public class QIF implements FileFormat {
     }
 
     private CapitalAccount getNewAccount(Session session, String accountName) {
-        MutableCapitalAccount account = session.createNewCapitalAccount();
+/*
+    	MutableCapitalAccount account = session.createNewCapitalAccount();
         account.setName(accountName);
         return account.commit();
+*/
+    	CapitalAccountImpl account = (CapitalAccountImpl)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
+        account.setName(accountName);
+        return account;
     }
 
     /**
@@ -604,12 +610,16 @@ public class QIF implements FileFormat {
      */
     // TODO: How can we make this thread safe???
     private IncomeExpenseAccount getCategory(String categoryName, Session session) {
-        IncomeExpenseAccount category =
+        IncomeExpenseAccountImpl category = (IncomeExpenseAccountImpl)
             searchCategory(categoryName, session.getIncomeExpenseAccountIterator());
         if (category == null) {
+/*        	
             MutableIncomeExpenseAccount mutableCategory = session.createNewIncomeExpenseAccount();
             mutableCategory.setName(categoryName);
             category = mutableCategory.commit();
+*/            
+        	category = (IncomeExpenseAccountImpl)session.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+        	category.setName(categoryName);
         }
         return category;
     }
@@ -676,9 +686,14 @@ public class QIF implements FileFormat {
                 newSubCategory.rollback();
             }
 */            
+        	
+/*        	
             MutableIncomeExpenseAccount newSubCategory = category.createNewSubAccount(session);
             newSubCategory.setName(name);
             subcategory = newSubCategory.commit();
+*/            
+            IncomeExpenseAccountImpl newSubCategory = (IncomeExpenseAccountImpl)((IncomeExpenseAccountImpl)category).createSubAccount();
+            newSubCategory.setName(name);
         }
         
         return subcategory;

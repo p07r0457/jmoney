@@ -36,18 +36,21 @@ public class ExpensePieChart extends PieChart {
 	    Iterator aIt = session.getAccountsUntilLevel(maxLevel).iterator();
 	    while (aIt.hasNext()) {
 	        Account currentAccount = (Account) aIt.next();
-	        long balance;
+	        if (currentAccount instanceof CapitalAccount) {
+		        CapitalAccount currentCapitalAccount = (CapitalAccount) currentAccount;
+ 	        long balance;
 	        
 	        if (currentAccount.getLevel() < maxLevel) {
 	        	// If the account has sub accounts, they will have their own entry -> we don't have to include them here
-	        	balance = currentAccount.getBalance(session, fromDate, toDate);
+	        	balance = currentCapitalAccount.getBalance(session, fromDate, toDate);
 	        } else {
 	        	// If the account has sub accounts, they won't have their own entry -> we have to include them here
-	        	balance = currentAccount.getBalanceWithSubAccounts(session, fromDate, toDate);
+	        	balance = currentCapitalAccount.getBalanceWithSubAccounts(session, fromDate, toDate);
 	        }
 	        
 	        System.out.println(currentAccount.getName() + " : " + balance +".");
 		    values.add(new CoupleStringNumber(currentAccount.getName(), balance));
+	        }
 	    }
 	    
 	    // set the (sorted) values in the graph

@@ -57,12 +57,13 @@ public class SaveSessionAsAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		// FIXME: finish this
-        SessionImpl session = (SessionImpl)JMoneyPlugin.getDefault().getSession();
-        File sessionFile = SerializedDatastorePlugin.getDefault().obtainFileName(window);
-        if (sessionFile != null) {
-        	SerializedDatastorePlugin.getDefault().writeSession(session, sessionFile, window);
-        }
+		if (SerializedDatastorePlugin.checkSessionImplementation(window)) { 
+			File sessionFile = SerializedDatastorePlugin.getDefault().obtainFileName(window);
+			if (sessionFile != null) {
+				SessionManagementImpl sessionManager = (SessionManagementImpl)JMoneyPlugin.getDefault().getSessionManager();
+				SerializedDatastorePlugin.getDefault().writeSession(sessionManager, sessionFile, window);
+			}
+		}
 	}
 
 	/**

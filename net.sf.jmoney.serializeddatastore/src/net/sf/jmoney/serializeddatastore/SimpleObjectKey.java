@@ -25,9 +25,14 @@ package net.sf.jmoney.serializeddatastore;
 import java.util.Collection;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.ExtendableObjectHelperImpl;
+import net.sf.jmoney.model2.ExtensionProperties;
 import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.Session;
 
 /**
  * This class provides the IObjectKey implementation.
@@ -38,16 +43,20 @@ import net.sf.jmoney.model2.PropertyAccessor;
  * simply a reference to the object.
  */
 public class SimpleObjectKey implements IObjectKey {
+	private SessionManagementImpl sessionManager;
 	private IExtendableObject extendableObject;
 	
-	SimpleObjectKey() {
+	// TODO: make this default protection
+	public SimpleObjectKey(SessionManagementImpl sessionManager) {
+		this.sessionManager = sessionManager;
 	}
 	
 	public IExtendableObject getObject() {
 		return extendableObject;
 	}
 
-	void setObject(IExtendableObject extendableObject) {
+	// TODO: make this default protection
+	public void setObject(IExtendableObject extendableObject) {
 		this.extendableObject = extendableObject;
 	}
 
@@ -60,5 +69,16 @@ public class SimpleObjectKey implements IObjectKey {
 	}
 	
 	private class IndexValuesList extends Vector {
+	}
+
+	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues, ExtensionProperties [] extensionProperties) {
+		// There is no backend datastore that needs updating, so we
+		// have nothing to do except to mark the session as modified.
+		
+		sessionManager.setModified(true);
+	}
+
+	public Session getSession() {
+		return sessionManager.getSession();
 	}
 }

@@ -23,17 +23,12 @@
 package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.CurrencyImpl;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
-import net.sf.jmoney.model2.MutableIncomeExpenseAccount;
 
 /**
- * @author Nigel
- *
  * This class is a listener class to the net.sf.jmoney.fields
  * extension point.  It implements an extension.
  * <P>
@@ -46,6 +41,8 @@ import net.sf.jmoney.model2.MutableIncomeExpenseAccount;
  * follow the Eclipse paradigm (every one should be treated equal,
  * including oneself), these are registered through the same extension
  * point that plug-ins must also use to register their properties.
+ * 
+ * @author Nigel
  */
 public class IncomeExpenseAccountInfo implements IExtensionPropertySetInfo {
 
@@ -59,12 +56,8 @@ public class IncomeExpenseAccountInfo implements IExtensionPropertySetInfo {
     public Class getInterfaceClass() {
         return IncomeExpenseAccount.class;
     }
-    
-    public Class getMutableInterfaceClass() {
-        return MutableIncomeExpenseAccount.class;
-    }
-    
-	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+
+    public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccount.class, null);
 
 		// There are no scalar properties actually defined in this property set!

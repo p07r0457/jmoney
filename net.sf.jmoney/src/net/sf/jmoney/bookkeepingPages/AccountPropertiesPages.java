@@ -25,8 +25,6 @@ package net.sf.jmoney.bookkeepingPages;
 import java.util.Iterator;
 import java.util.Vector;
 
-import javax.swing.tree.TreeNode;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -38,15 +36,12 @@ import org.eclipse.ui.IMemento;
 
 import net.sf.jmoney.IBookkeepingPageListener;
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.MutableCapitalAccount;
 import net.sf.jmoney.model2.ObjectLockedForEditException;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.views.AccountNode;
 
 /**
  * @author Nigel
@@ -65,8 +60,7 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 	 * the account property controls.
 	 */
 	private class AccountPropertiesControl extends Composite {
-		CapitalAccount nonMutableAccount;
-		MutableCapitalAccount account;
+		CapitalAccount account;
 		Session session;
 		
 		/**
@@ -94,7 +88,7 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 		}
 
 		void setAccount(CapitalAccount account, Session session) {
-			nonMutableAccount = account;
+			this.account = account;
 			this.session = session;
 			
 			// Create the controls to edit the properties.
@@ -135,36 +129,39 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 
 		void lockAccountForEdit() {
 			// Try to get a lock on the account.		
-			try {
-				this.account = nonMutableAccount.createMutableAccount(session);
+//			try {
+				// TODO: Decide if we need the ability to get a lock on the account.
 
 				// Set the values from the account object into the Text fields.
 				for (Iterator iter = propertyControlList.iterator(); iter.hasNext(); ) {
 					IPropertyControl propertyControl = (IPropertyControl)iter.next();
 					propertyControl.load(account);
 				}
+/*				
 			} catch (ObjectLockedForEditException e) {
 				// Someone else is editing the properties of this
 				// account so we gray out the controls.
-				this.account = null;
+				
+				// TODO: do we need a flag to indicate we are in disabled mode?
 				
 				// Set the values from the account object into the Text fields.
 				for (Iterator iter = propertyControlList.iterator(); iter.hasNext(); ) {
 					IPropertyControl propertyControl = (IPropertyControl)iter.next();
-					propertyControl.loadDisabled(nonMutableAccount);
+					propertyControl.loadDisabled(account);
 				}
 			}
+*/			
 		}
 		
 		void updateAndReleaseAccount() {
 			// Property values are copied from the control into
-			// the mutable account object whenever a control
+			// the account object whenever a control
 			// loses focus.  Therefore we know that all values
 			// have been copied from the controls into the
-			// mutable account object by the time we get here
-			// and we need only commit the mutable account object.
-			nonMutableAccount = account.commit();
-			account = null;
+			// account object by the time we get here
+			// and we need only commit the changes to any
+			// underlying database.
+			JMoneyPlugin.getChangeManager().applyChanges("update account properties");
 		}
 	}
 	
@@ -182,17 +179,8 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 	 * @see net.sf.jmoney.IBookkeepingPageListener#getPageCount(java.lang.Object)
 	 */
 	public int getPageCount(Object selectedObject) {
-	    /**
-	     * He! I don't have an account, but an AccountNode...
-	     */
 		if (selectedObject instanceof CapitalAccount) {
 			return 1;
-		}
-		if (selectedObject instanceof AccountNode) {
-			if (((AccountNode)selectedObject).account instanceof CapitalAccount
-			        | ((AccountNode)selectedObject).account instanceof MutableCapitalAccount) {
-			    return 1;
-			}
 		}
 		return 0;
 	}
@@ -201,20 +189,12 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
 	public BookkeepingPage[] createPages(Object selectedObject, Session session, Composite parent) {
-	    // TODO Add support for other accounts type.
-		if (selectedObject instanceof AccountNode) {
-		    Account account = ((AccountNode)selectedObject).account;
-
-		    if (account instanceof MutableCapitalAccount) {
-		         account = ((MutableCapitalAccount)account).getRealAccount();
-		     } 
-		        
-		    if (account instanceof CapitalAccount) {
-		        AccountPropertiesControl propertiesControl = new AccountPropertiesControl(parent);
-		        propertiesControl.setAccount((CapitalAccount)account, session);
-		        return new BookkeepingPage[] 
+		if (selectedObject instanceof CapitalAccount) {
+			CapitalAccount account = (CapitalAccount)selectedObject;
+			AccountPropertiesControl propertiesControl = new AccountPropertiesControl(parent);
+			propertiesControl.setAccount(account, session);
+			return new BookkeepingPage[] 
 									   { new BookkeepingPage(propertiesControl, JMoneyPlugin.getResourceString("AccountPropertiesPanel.title")) };
-		    }
 		}
 		return null;
 	}

@@ -100,4 +100,8 @@ public class ReconciliationEntry extends AbstractEntryExtension {
 	public String getStatusString() {
 		return statusText[getStatus()];
 	}
+
+	static public Object [] getDefaultProperties() {
+		return new Object [] { new Integer(UNCLEARED) };
+	}
 }

@@ -56,23 +56,32 @@ public class NewSessionAction implements IWorkbenchWindowActionDelegate {
 	 */
 	public void run(IAction action) {
         if (JMoneyPlugin.getDefault().saveOldSession(window)) {
+        	SessionManagementImpl sessionManager = new SessionManagementImpl(null);
+        	
         	// Set the initial list of commodities to be the list
         	// of ISO currencies.
-        	SimpleListManager commodities = new SimpleListManager();
+        	SimpleListManager commodities = new SimpleListManager(sessionManager);
+        	
+        	SimpleObjectKey sessionKey = new SimpleObjectKey(sessionManager);
         	
         	// TODO: rather than hard code this constructor, use
         	// more generalized code.  Plug-ins may have added
         	// additional properties to the session.
         	Session newSession = new SessionImpl(
-        			null,
+        			sessionKey,
         			null,
 					null,
 					commodities,
-					new SimpleListManager(),
-					new SimpleListManager(),
+					new SimpleListManager(sessionManager),
+					new SimpleListManager(sessionManager),
 					null
 				);
-        	JMoneyPlugin.getDefault().setSessionManager(new SessionManagementImpl(null, newSession));
+        	
+        	
+        	sessionKey.setObject(newSession);
+        	
+        	sessionManager.setSession(newSession);
+        	JMoneyPlugin.getDefault().setSessionManager(sessionManager);
         }
 	}
 

@@ -45,6 +45,9 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.CapitalAccountImpl;
+import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
+import net.sf.jmoney.model2.MutableEntryImpl;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionImpl;
 import net.sf.jmoney.model2.ExtendableObjectHelperImpl;
@@ -64,8 +67,6 @@ import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.MutableCapitalAccount;
-import net.sf.jmoney.model2.MutableIncomeExpenseAccount;
 import net.sf.jmoney.model2.MutableTransaction;
 
 //SAX classes.
@@ -196,7 +197,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	}
 	
 	public SessionManagementImpl readSessionQuietly(File sessionFile) throws FileNotFoundException, IOException, CoreException {
-		SessionManagementImpl result;
+		SessionManagementImpl sessionManager;
 		
 		FileInputStream fin = new FileInputStream(sessionFile);
 		// Patch to aid with testing.  If the extension is 'xml'
@@ -219,13 +220,16 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			idToAccountMap = new HashMap();
 			currentSAXEventProcessor = null;
 			
+			sessionManager = new SessionManagementImpl(sessionFile);
+
 			factory.setValidating(false);
 			factory.setNamespaceAware(true);
 			SAXParser saxParser = factory.newSAXParser();
-			HandlerForObject handler = new HandlerForObject();
+			HandlerForObject handler = new HandlerForObject(sessionManager);
 			saxParser.parse(bin, handler); 
 			SessionImpl newSession = handler.getSession();
-			result = new SessionManagementImpl(sessionFile, newSession);
+
+			sessionManager.setSession(newSession);
 		} 
 		catch (ParserConfigurationException e) {
 			throw new RuntimeException("Serious XML parser configuration error");
@@ -269,20 +273,22 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 								null));	
 			}
 			
-			SimpleObjectKey key = new SimpleObjectKey(); 
+			sessionManager = new SessionManagementImpl(sessionFile);
+
+			SimpleObjectKey key = new SimpleObjectKey(sessionManager); 
 			SessionImpl newSessionNewFormat = new SessionImpl(
 				key,
 				null,
 				null,
-				new SimpleListManager(),
-				new SimpleListManager(),
-				new SimpleListManager(),
+				new SimpleListManager(sessionManager),
+				new SimpleListManager(sessionManager),
+				new SimpleListManager(sessionManager),
 				null
 			);
 			key.setObject(newSessionNewFormat);
+			sessionManager.setSession(newSessionNewFormat);
 			
 			convertModelOneFormat((net.sf.jmoney.model.Session)newSession, newSessionNewFormat);
-			result = new SessionManagementImpl(sessionFile, newSessionNewFormat);
 		}
 		catch (IOException ioe) { 
 			throw new RuntimeException("IO internal exception error");
@@ -292,20 +298,21 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			fin.close();
 		}
 		
-		result.setFile(sessionFile);
+		sessionManager.setFile(sessionFile);
 		
-		return result;
+		return sessionManager;
 	}
 	
 	private class HandlerForObject extends DefaultHandler {
 		
+		protected SessionManagementImpl sessionManager;
 		/**
 		 * The top level session object.
 		 */
 		private SessionImpl session;
 		
-		HandlerForObject() {
-			
+		HandlerForObject(SessionManagementImpl sessionManager) {
+			this.sessionManager = sessionManager;
 		}
 		
 		SessionImpl getSession() {
@@ -334,7 +341,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					"only element 'session' is allowed at top level");
 				}
 				
-				currentSAXEventProcessor = new ObjectProcessor(null, "net.sf.jmoney.session");
+				currentSAXEventProcessor = new ObjectProcessor(sessionManager, null, "net.sf.jmoney.session");
 			} else {
 				currentSAXEventProcessor.startElement(uri, localName, attributes);
 			}
@@ -392,6 +399,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	
 	abstract private class SAXEventProcessor {
 		protected SAXEventProcessor parent;
+		protected SessionManagementImpl sessionManager;
 		
 		/**
 		 * Creates a new SAXEventProcessor object.
@@ -402,7 +410,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 *        found then this original event processor must be restored as
 		 *        the active event processor.
 		 */
-		SAXEventProcessor(SAXEventProcessor parent) {
+		SAXEventProcessor(SessionManagementImpl sessionManager, SAXEventProcessor parent) {
+			this.sessionManager = sessionManager;
 			this.parent = parent;
 		}
 		
@@ -522,10 +531,10 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 *        found then this original event processor must be restored as
 		 *        the active event processor.
 		 */
-		ObjectProcessor(ObjectProcessor parent, String propertySetId) {
-			super(parent);
+		ObjectProcessor(SessionManagementImpl sessionManager, ObjectProcessor parent, String propertySetId) {
+			super(sessionManager, parent);
 			
-			objectKey = new SimpleObjectKey();
+			objectKey = new SimpleObjectKey(sessionManager);
 
 			try {
 				this.propertySet = PropertySet.getPropertySet(propertySetId);
@@ -555,13 +564,11 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
 				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 				if (propertyAccessor.isList()) {
-					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = new SimpleListManager();
+					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = new SimpleListManager(sessionManager);
 				} else {
 					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = null;
 				}
 			}
-			
-			
 		}
 		
 		/**
@@ -623,7 +630,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					// for all obsoleted properties.
 					// We drop the value.
 					// Ignore content
-					currentSAXEventProcessor = new IgnoreElementProcessor(this, null);
+					currentSAXEventProcessor = new IgnoreElementProcessor(sessionManager, this, null);
 					return;
 			}
 			
@@ -658,7 +665,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				// that we know the value before we even create the inner processor
 				// to process the content).
 				
-				currentSAXEventProcessor = new IgnoreElementProcessor(this, value);
+				currentSAXEventProcessor = new IgnoreElementProcessor(sessionManager, this, value);
 			} else {
 				if (!propertyClass.isPrimitive() 
 						&& propertyClass != String.class
@@ -683,10 +690,10 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 						id = atts.getValue("id");
 					}
 					
-					currentSAXEventProcessor = new ObjectProcessor(this, propertySetId);
+					currentSAXEventProcessor = new ObjectProcessor(sessionManager, this, propertySetId);
 				} else {
 					// Property class is primative or primative class
-					currentSAXEventProcessor = new PropertyProcessor(this, propertyClass);
+					currentSAXEventProcessor = new PropertyProcessor(sessionManager, this, propertyClass);
 				}
 			}
 		}
@@ -857,8 +864,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 *        found then this original event processor must be restored as
 		 *        the active event processor.
 		 */
-		PropertyProcessor(SAXEventProcessor parent, Class propertyClass) {
-			super(parent);
+		PropertyProcessor(SessionManagementImpl sessionManager, SAXEventProcessor parent, Class propertyClass) {
+			super(sessionManager, parent);
 			this.propertyClass = propertyClass;
 		}
 		
@@ -957,8 +964,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 * @param parent DOCUMENT ME!
 		 * @param elementName DOCUMENT ME!
 		 */
-		IgnoreElementProcessor(SAXEventProcessor parent, Object value) {
-			super(parent);
+		IgnoreElementProcessor(SessionManagementImpl sessionManager, SAXEventProcessor parent, Object value) {
+			super(sessionManager, parent);
 			this.value = value;
 		}
 		
@@ -978,7 +985,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			if (value != null) {
 				throw new RuntimeException("Cannot have content inside an element with an idref");
 			}
-			currentSAXEventProcessor = new IgnoreElementProcessor(this, null);
+			currentSAXEventProcessor = new IgnoreElementProcessor(sessionManager, this, null);
 		}
 		
 		/**
@@ -1037,18 +1044,16 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	/**
 	 * Saves the session in the selected file.
 	 */
-	private void saveSession(IWorkbenchWindow window) {
+	public void saveSession(IWorkbenchWindow window) {
 		SessionManagementImpl sessionManager = (SessionManagementImpl)JMoneyPlugin.getDefault().getSession();
 		if (sessionManager.getFile() == null) {
 			File sessionFile = obtainFileName(window);
 			if (sessionFile != null) {
-				writeSession(sessionManager.getSession(), sessionFile, window);
+				writeSession(sessionManager, sessionFile, window);
 				sessionManager.setFile(sessionFile);
-				sessionManager.setModified(false);
 			}
 		} else {
-			writeSession(sessionManager.getSession(), sessionManager.getFile(), window);
-			sessionManager.setModified(false);
+			writeSession(sessionManager, sessionManager.getFile(), window);
 		}
 	}
 	
@@ -1116,7 +1121,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	/**
 	 * Write session to file.
 	 */
-	public void writeSession(Session session, File sessionFile, IWorkbenchWindow window)  {
+	public void writeSession(SessionManagementImpl sessionManager, File sessionFile, IWorkbenchWindow window)  {
 		// If there is any modified data in the controls in any of the
 		// views, then commit these to the database now.
 		// TODO: How do we do this?  Should framework call first?
@@ -1158,7 +1163,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				serializer.setOutputProperty(OutputKeys.INDENT,"no");
 				hd.setResult(streamResult);
 				hd.startDocument();
-				writeObject(hd, session, "session", Session.class);
+				writeObject(hd, sessionManager.getSession(), "session", Session.class);
 				hd.endDocument();
 			} catch (SAXException e) {
 				// TODO Auto-generated catch block
@@ -1171,6 +1176,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			bout.close();
 			fout.close();
 			
+			sessionManager.setModified(false);
+
 			//       waitDialog.close();
 		} catch (IOException ex) {
 			//       waitDialog.close();
@@ -1384,10 +1391,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			Object obj = node.getUserObject();
 			if (obj instanceof net.sf.jmoney.model.SimpleCategory) {
 				net.sf.jmoney.model.SimpleCategory oldCategory = (net.sf.jmoney.model.SimpleCategory) obj;
-				
-				MutableIncomeExpenseAccount newMutableCategory = newSession.createNewIncomeExpenseAccount();
-				newMutableCategory.setName(oldCategory.getCategoryName());
-				IncomeExpenseAccount newCategory = newMutableCategory.commit();
+				IncomeExpenseAccountImpl newCategory = (IncomeExpenseAccountImpl)newSession.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+				newCategory.setName(oldCategory.getCategoryName());
 				
 				accountMap.put(oldCategory, newCategory);
 				
@@ -1396,33 +1401,30 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					Object obj2 = subNode.getUserObject();
 					if (obj2 instanceof net.sf.jmoney.model.SimpleCategory) {
 						net.sf.jmoney.model.SimpleCategory oldSubCategory = (net.sf.jmoney.model.SimpleCategory) obj2;
-						
-						MutableIncomeExpenseAccount newMutableSubCategory = newCategory.createNewSubAccount(newSession);
-						newMutableSubCategory.setName(oldSubCategory.getCategoryName());
-						IncomeExpenseAccount newSubCategory = newMutableSubCategory.commit();
-						
+						IncomeExpenseAccountImpl newSubCategory = (IncomeExpenseAccountImpl)newSession.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+						newCategory.setName(oldCategory.getCategoryName());
+
 						accountMap.put(oldSubCategory, newSubCategory);
 					}
 				}
 			}
 		}
 		
-		// Add the capital  accounts
+		// Add the capital accounts
 		Vector oldAccounts = oldFormatSession.getAccounts();
 		for (Iterator iter = oldAccounts.iterator(); iter.hasNext(); ) {
 			net.sf.jmoney.model.Account oldAccount = (net.sf.jmoney.model.Account)iter.next();
 			
-			MutableCapitalAccount newMutableAccount = newSession.createNewCapitalAccount();
-			newMutableAccount.setName(oldAccount.getName());
-			newMutableAccount.setAbbreviation(oldAccount.getAbbrevation());
-			newMutableAccount.setAccountNumber(oldAccount.getAccountNumber());
-			newMutableAccount.setBank(oldAccount.getBank());
-			newMutableAccount.setComment(oldAccount.getComment());
-			newMutableAccount.setCurrency(newSession.getCurrencyForCode(oldAccount.getCurrencyCode()));
-			newMutableAccount.setMinBalance(oldAccount.getMinBalance());
-			newMutableAccount.setStartBalance(oldAccount.getStartBalance());
-			CapitalAccount newAccount = newMutableAccount.commit();
-			
+			CapitalAccountImpl newAccount = (CapitalAccountImpl)newSession.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
+			newAccount.setName(oldAccount.getName());
+			newAccount.setAbbreviation(oldAccount.getAbbrevation());
+			newAccount.setAccountNumber(oldAccount.getAccountNumber());
+			newAccount.setBank(oldAccount.getBank());
+			newAccount.setComment(oldAccount.getComment());
+			newAccount.setCurrency(newSession.getCurrencyForCode(oldAccount.getCurrencyCode()));
+			newAccount.setMinBalance(oldAccount.getMinBalance());
+			newAccount.setStartBalance(oldAccount.getStartBalance());
+
 			accountMap.put(oldAccount, newAccount);
 		}
 		
@@ -1509,8 +1511,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					if (doubleEntriesPreviouslyFound.contains(de.getOther())) {
 						MutableTransaction trans = newSession.createNewTransaction();
 						trans.setDate(de.getDate());
-						Entry entry1 = trans.createEntry();
-						Entry entry2 = trans.createEntry();
+						MutableEntryImpl entry1 = trans.createEntry();
+						MutableEntryImpl entry2 = trans.createEntry();
 						entry1.setAmount(de.getAmount());
 						entry2.setAmount(-de.getAmount());
 						entry1.setAccount((Account)accountMap.get(de.getOther().getCategory()));
@@ -1530,7 +1532,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					trans.setDate(oldEntry.getDate());
 					
 					// Add the entry for the account that was holding the split entry.
-					Entry subEntry = trans.createEntry();
+					MutableEntryImpl subEntry = trans.createEntry();
 					subEntry.setAmount(oldEntry.getAmount());
 					subEntry.setAccount(newAccount);
 					
@@ -1550,8 +1552,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				} else {
 					MutableTransaction trans = newSession.createNewTransaction();
 					trans.setDate(oldEntry.getDate());
-					Entry entry1 = trans.createEntry();
-					Entry entry2 = trans.createEntry();
+					MutableEntryImpl entry1 = trans.createEntry();
+					MutableEntryImpl entry2 = trans.createEntry();
 					entry1.setAmount(oldEntry.getAmount());
 					entry2.setAmount(-oldEntry.getAmount());
 					entry1.setAccount(newAccount);
@@ -1570,8 +1572,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			}
 		}
 	}
-	
-	private void copyEntryProperties(net.sf.jmoney.model.Entry oldEntry, Entry entry, PropertyAccessor statusProperty) {
+
+	private void copyEntryProperties(net.sf.jmoney.model.Entry oldEntry, MutableEntryImpl entry, PropertyAccessor statusProperty) {
 		entry.setCheck(oldEntry.getCheck());
 		entry.setCreation(oldEntry.getCreation());
 		entry.setDescription(oldEntry.getDescription());
@@ -1581,5 +1583,52 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			entry.setIntegerPropertyValue(statusProperty, oldEntry.getStatus());
 		}
 	}
-	
+
+	/**
+	 * Check that we have a current session and that the session
+	 * was created by this plug-in.  If not, display an appropriate
+	 * message to the user indicating that the user operation
+	 * is not available and giving the reasons why the user
+	 * operation is not available.
+	 * @param window
+	 *  
+	 * @return true if the current session was created by this
+	 * 			plug-in, false if no session is open
+	 * 			or if the current session was created by
+	 * 			another plug-in that also implements a datastore.
+	 */
+	public static boolean checkSessionImplementation(IWorkbenchWindow window) {
+		ISessionManagement sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		if (sessionManager == null) {
+			MessageDialog waitDialog =
+				new MessageDialog(
+						window.getShell(), 
+						"Menu item unavailable", 
+						null, // accept the default window icon
+						"No session is open.", 
+						MessageDialog.ERROR, 
+						new String[] { IDialogConstants.OK_LABEL }, 0);
+			waitDialog.open();
+			return false;
+		} else if (sessionManager instanceof SessionManagementImpl) {
+			return true;
+		} else {
+			MessageDialog waitDialog =
+				new MessageDialog(
+						window.getShell(), 
+						"Menu item unavailable", 
+						null, // accept the default window icon
+						"This session cannot be saved using this 'save' action.  " +
+						"More than one plug-in is installed that provides a" +
+						"datastore implementation.  The current session was" +
+						"created using a different plug-in from the plug-in that" +
+						"created this 'save' action.  You can only use this 'save'" +
+						"action if the session was created using the corresponding" +
+						"'new' or 'open' action.", 
+						MessageDialog.ERROR, 
+						new String[] { IDialogConstants.OK_LABEL }, 0);
+			waitDialog.open();
+			return false;
+		}
+	}
 }

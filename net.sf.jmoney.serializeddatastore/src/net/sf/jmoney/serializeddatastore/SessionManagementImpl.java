@@ -43,8 +43,22 @@ public class SessionManagementImpl implements ISessionManagement {
 
 	private Session session;
 
-	public SessionManagementImpl(File sessionFile, Session session) {
+	/** This version is used to solve a 'chicken and egg' problem.
+	 * The session object constructor may need to SessionManagement object.
+	 * Therefore we allow a SessionManagement object to be created
+	 * first and the Session object to be set later.
+	 * 
+	 * @param sessionFile
+	 */
+	public SessionManagementImpl(File sessionFile) {
 		this.sessionFile = sessionFile;
+		this.session = null;
+	}
+	
+	/**
+	 * Used for two-part construction.
+	 */
+	public void setSession(Session session) {
 		this.session = session;
 	}
 	
@@ -76,21 +90,17 @@ public class SessionManagementImpl implements ISessionManagement {
         return modified;
     }
 
-    public void setModified(boolean m) {
-        if (modified == m)
-            return;
-        modified = m;
-//        changeSupport.firePropertyChange("modified", !m, m);
+    /**
+     * This plug-in needs to know if a session has been modified so
+     * that it knows whether to save the session.  This method must
+     * be called with a 'true' value whenever the session is modified and
+     * must be called with a 'false' value whenever the session is saved.
+     */
+    void setModified(boolean modified) {
+        this.modified = modified;
     }
 
-    /**
-     * Other class implementations in this package may call this method
-     * when classes further down inside this session are modified.
-     */
-    // TODO: Change to package only access when mutable stuff moved to impl.
-    public void modified() {
-        setModified(true);
-    }
+
 
     public boolean canClose(IWorkbenchWindow window) {
         if (isModified()) {

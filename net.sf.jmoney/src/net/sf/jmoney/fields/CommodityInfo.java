@@ -25,6 +25,7 @@ package net.sf.jmoney.fields;
 import org.eclipse.swt.widgets.Composite;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.AbstractAccountImpl;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
@@ -54,9 +55,7 @@ public class CommodityInfo implements IExtensionPropertySetInfo {
     }
 
 	public Class getImplementationClass() {
-		// This is a derivable property set, therefore it has no
-		// implementation class.
-		return null;
+		return Commodity.class;
 	}
 
     public Class getInterfaceClass() {

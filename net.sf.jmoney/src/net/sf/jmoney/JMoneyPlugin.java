@@ -58,6 +58,8 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	
     ISessionManagement sessionManager;
 
+	private ChangeManager changeManager = new ChangeManager();
+
     protected transient Vector sessionChangeListeners = new Vector();
     
     // Create a listener that listens for changes to the new session.
@@ -76,6 +78,13 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     			
     		}
     	};
+	static PropertySet commodityPropertySet = null;
+	static PropertySet currencyPropertySet = null;	
+	static PropertySet accountPropertySet = null;
+	static PropertySet capitalAccountPropertySet = null;
+	static PropertySet incomeExpenseAccountPropertySet = null;
+	static PropertySet transactionPropertySet = null;
+	private static PropertySet entryPropertySet = null;
     
     /**
 	 * The constructor.
@@ -216,12 +225,6 @@ public class JMoneyPlugin extends AbstractUIPlugin {
      * with a new set of accounting data.  This method is normally called
      * only by plug-ins that implement a datastore when accounting data
      * is loaded.
-     *
-     * If a session is already set then that session will be closed.
-     * The close request may be rejected by that session (for example,
-     * the close implementation may have asked the user for a location
-     * to save the data and the user clicked on the cancel button).
-     * If that happens, this method will throw CurrentSessionCloseRejectedException.
      *
      * To avoid doing too much work and user input before setting the new 
      * session, only to find that the
@@ -376,6 +379,119 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     	return getPreferenceStore().getString("dateFormat");
     }
 
+	/**
+	 * @return
+	 */
+	public static PropertySet getCommodityPropertySet() {
+		if (commodityPropertySet == null) {
+			try {
+				commodityPropertySet = PropertySet.getPropertySet("net.sf.jmoney.commodity");
+			} catch (PropertySetNotFoundException e) {
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			}
+		}
+		
+		return commodityPropertySet;
+	}
+
+	/**
+	 * @return
+	 */
+	public static PropertySet getCurrencyPropertySet() {
+		if (currencyPropertySet == null) {
+			try {
+				currencyPropertySet = PropertySet.getPropertySet("net.sf.jmoney.currency");
+			} catch (PropertySetNotFoundException e) {
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			}
+		}
+		
+		return currencyPropertySet;
+	}
+	
+	/**
+	 * @return
+	 */
+	public static PropertySet getAccountPropertySet() {
+		if (accountPropertySet == null) {
+			try {
+				accountPropertySet = PropertySet.getPropertySet("net.sf.jmoney.account");
+			} catch (PropertySetNotFoundException e) {
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			}
+		}
+		
+		return accountPropertySet;
+	}
+
+	/**
+	 * @return
+	 */
+	public static PropertySet getCapitalAccountPropertySet() {
+		if (capitalAccountPropertySet == null) {
+			try {
+				capitalAccountPropertySet = PropertySet.getPropertySet("net.sf.jmoney.capitalAccount");
+			} catch (PropertySetNotFoundException e) {
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			}
+		}
+		
+		return capitalAccountPropertySet;
+	}
+	
+	/**
+	 * @return
+	 */
+	public static PropertySet getIncomeExpenseAccountPropertySet() {
+		if (incomeExpenseAccountPropertySet == null) {
+			try {
+				incomeExpenseAccountPropertySet = PropertySet.getPropertySet("net.sf.jmoney.categoryAccount");
+			} catch (PropertySetNotFoundException e) {
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			}
+		}
+		
+		return incomeExpenseAccountPropertySet;
+	}
+	
+	/**
+	 * @return
+	 */
+	public static PropertySet getTransactionPropertySet() {
+		if (transactionPropertySet == null) {
+			try {
+				transactionPropertySet = PropertySet.getPropertySet("net.sf.jmoney.transaction");
+			} catch (PropertySetNotFoundException e) {
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			}
+		}
+		
+		return transactionPropertySet;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertySet getEntryPropertySet() {
+		if (entryPropertySet == null) {
+			try {
+				entryPropertySet = PropertySet.getPropertySet("net.sf.jmoney.entry");
+			} catch (PropertySetNotFoundException e) {
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			}
+		}
+		
+		return entryPropertySet;
+	}
+
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IPersistableElement#getFactoryId()
 	 */
@@ -446,4 +562,13 @@ public class JMoneyPlugin extends AbstractUIPlugin {
      */
 //    void commitRemainingUserChanges();
     
+	
+	
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.model2.Session#getChangeManager()
+	 */
+	public static ChangeManager getChangeManager() {
+		return getDefault().changeManager;
+	}
+
 }

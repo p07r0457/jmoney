@@ -54,13 +54,12 @@ public class QIFEntry extends AbstractEntryExtension {
 	}
 	
 	/**
-	 * 
-	 * @author Faucheux
+	 * Returns the status.
 	 */
-	public String getReconcilingState() {
-	    return Character.toString(reconcilingState);
+	public char getReconcilingState() {
+		return reconcilingState;
 	}
-
+	
 	/**
 	 * Sets the check. Either UNCLEARED, RECONCILING or CLEARED.
 	 *
@@ -76,8 +75,7 @@ public class QIFEntry extends AbstractEntryExtension {
 		firePropertyChange("reconcilingState", oldReconcilingState, reconcilingState);
 	}
 
-	public void setReconcilingState(String reconcilingState) {
-	    setReconcilingState(reconcilingState.charAt(0));
+	static public Object [] getDefaultProperties() {
+		return new Object [] { new Character(' ') };
 	}
-
 }

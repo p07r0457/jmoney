@@ -24,7 +24,6 @@ package net.sf.jmoney.views;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Vector;
@@ -50,9 +49,14 @@ import org.eclipse.core.runtime.Platform;
 import net.sf.jmoney.Constants;
 import net.sf.jmoney.IBookkeepingPageListener;
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.*;
-import org.eclipse.jface.util.PropertyChangeEvent;
-
+import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.AccountAddedEvent;
+import net.sf.jmoney.model2.AccountDeletedEvent;
+import net.sf.jmoney.model2.CapitalAccountImpl;
+import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.model2.SessionChangeListener;
+import net.sf.jmoney.model2.SessionReplacedEvent;
 
 /**
  * This class implements a workbench view that contains the
@@ -69,7 +73,7 @@ public class NavigationView extends ViewPart {
 	private Action newAccountAction;
 	private Action deleteAccountAction;
 
-	private AccountNode accountsRootNode;
+	private AccountsNode accountsRootNode;
 	
 	private Session session;
 	
@@ -87,7 +91,113 @@ public class NavigationView extends ViewPart {
 	
 	
 	
+	class TreeNode implements IAdaptable {
+		private String name;
+		private Image image;
+		private TreeNode parent;
+		private String parentId;
+		protected ArrayList children = null;
+		private Vector pageListeners = new Vector();
+		
+		public TreeNode(String name, Image image, TreeNode parent) {
+			this.name = name;
+			this.image = image;
+			this.parent = parent;
+		}
+		public TreeNode(String name, Image image, String parentId) {
+			this.name = name;
+			this.image = image;
+			this.parentId = parentId;
+		}
+		public String getName() {
+			return name;
+		}
+		public TreeNode getParent() {
+			return parent;
+		}
+		public String toString() {
+			return getName();
+		}
+		public Object getAdapter(Class key) {
+			return null;
+		}
+		public Image getImage() {
+			return image;
+		}
+		public void addChild(Object child) {
+			if (children == null) {
+				children = new ArrayList();
+			}
+			children.add(child);
+		}
+		
+		public void removeChild(Object child) {
+			children.remove(child);
+		}
+		public Object [] getChildren() {
+			if (children == null) {
+				return new Object[0];
+			} else {
+				return children.toArray(new Object[children.size()]);
+			}
+		}
+		public boolean hasChildren() {
+			return children != null && children.size()>0;
+		}
+		/**
+		 * @return
+		 */
+		public Object getParentId() {
+			return parentId;
+		}
 
+		/**
+		 * @param parentNode
+		 */
+		public void setParent(TreeNode parent) {
+			this.parent = parent;
+		}
+
+		/**
+		 * @param pageListener
+		 */
+		public void addPageListener(IBookkeepingPageListener pageListener) {
+			pageListeners.add(pageListener);
+		}
+		/**
+		 * @return An array of objects that implement the IBookkeepingPageListener
+		 * 		interface.  The returned value is never null but the Vector may
+		 * 		be empty if there are no listeners for this node.
+		 */
+		public Vector getPageListeners() {
+			return pageListeners;
+		}
+	}
+
+	// TODO: Should the list of accounts be cached by the TreeNode object?
+	// Or should we change this code and send the request to the datastore each time the tree view requests
+	// a list of accounts or sub-accounts?
+	class AccountsNode extends TreeNode {
+		public AccountsNode(String name, Image image, TreeNode parent) {
+			super(name, image, parent);
+			setSession(JMoneyPlugin.getDefault().getSession());
+		}
+		
+		private void setSession(Session session) {
+			// Initialize with list of top level accounts from the session.
+			if (children == null) {
+				children = new ArrayList();
+			} else {
+				children.clear();
+			}
+			if (session != null) {
+				for (Iterator iter = session.getCapitalAccountIterator(); iter.hasNext(); ) {
+					CapitalAccount account = (CapitalAccount)iter.next();
+					children.add(account);
+				}
+			}
+		}
+	}
 
 	class ViewContentProvider implements IStructuredContentProvider, 
 										   ITreeContentProvider {
@@ -176,68 +286,34 @@ public class NavigationView extends ViewPart {
 			}
 		}
 		public void accountAdded(AccountAddedEvent event) {
-		    /**
-		     * Modified by Faucheux
-		     */
+			// TODO process sub-accounts correctly
 			if (event.getNewAccount() instanceof CapitalAccount) {
-			    CapitalAccount account = (CapitalAccount) event.getNewAccount();
-			    addAccount(account);
-			    refreshViewer ();
-		     }
+				accountsRootNode.addChild(event.getNewAccount());
+				refreshViewer ();
+			}
 		}
-
-		/**
-		 * add an account to the tree structure
-		 * TODO: manage the subaccounts too.
-		 * @param account
-		 * @author Faucheux
-		 */
-		private void addAccount(CapitalAccount account) {
-		    AccountNode accountsNode = new AccountNode(account, accountsRootNode);
-		}
-		
-		/**
-		 * remove an account of the tree structure
-		 * @param account
-		 * @author Faucheux
-		 */
-		private void deleteAccount (CapitalAccount account) {
-			accountsRootNode.removeAccount(account);
-		}
-
 		public void accountDeleted(AccountDeletedEvent event) {
+			// TODO process sub-accounts correctly
 			if (event.getOldAccount() instanceof CapitalAccount) {
-			    CapitalAccount account = (CapitalAccount) event.getOldAccount();
-			    deleteAccount(account);
-			    refreshViewer ();
+				accountsRootNode.removeChild(event.getOldAccount());
+				refreshViewer ();
 			}
 		}
-		
-		public void accountChange (PropertyChangeEvent event) {
-            if (event.getSource() instanceof CapitalAccount) {
-			    CapitalAccount account = (CapitalAccount) event.getSource(); 
-			    deleteAccount(account);
-			    addAccount(account);
-			    refreshViewer ();
-			}
-		    
-		}
-		
-		/**
-		 * Refresh the viewer Object thread-safe. 
-		 *
-		 */
-		private void refreshViewer () {
-	        Display.getDefault().syncExec( new Runnable() {
-                public void run() {
-                    viewer.refresh(accountsRootNode, false);
-                }
-            });
-		}
-	
 	};
 	
-	private Map idToNodeMap = new HashMap();
+	/**
+	 * Refresh the viewer Object thread-safe. 
+	 *
+	 */
+	private void refreshViewer () {
+        Display.getDefault().syncExec( new Runnable() {
+            public void run() {
+                viewer.refresh(accountsRootNode, false);
+            }
+        });
+	}
+
+private Map idToNodeMap = new HashMap();
 	private Map pageListenerAndNodeIdMap = new HashMap();
 	private Vector accountPageListeners = new Vector();
 
@@ -409,7 +485,6 @@ public class NavigationView extends ViewPart {
 				// No node found with given id, so the
 				// page listener is dropped.
 				// TODO Log missing node.
-			    System.err.println("Missing node: " + nodeId);
 			}
 		}
 
@@ -421,7 +496,7 @@ public class NavigationView extends ViewPart {
 		viewer.setLabelProvider(new ViewLabelProvider());
 		viewer.setSorter(new NameSorter());
 
-		AccountNode accountsObject = new AccountNode(JMoneyPlugin.getResourceString("NavigationTreeModel.accounts"), Constants.ACCOUNTS_ICON, invisibleRoot);
+		AccountsNode accountsObject = new AccountsNode(JMoneyPlugin.getResourceString("NavigationTreeModel.accounts"), Constants.ACCOUNTS_ICON, invisibleRoot);
 
 		invisibleRoot.addChild(accountsObject);
 		
@@ -454,16 +529,13 @@ public class NavigationView extends ViewPart {
 			           for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
 			           	Object selectedObject = iterator.next();
 			           	Vector pageListeners;
-			           	pageListeners = new Vector();
-			           	
 			           	if (selectedObject instanceof TreeNode) {
-			           		pageListeners.addAll(((TreeNode)selectedObject).getPageListeners());
+			           		pageListeners = ((TreeNode)selectedObject).getPageListeners();
+			           	} else if (selectedObject instanceof CapitalAccount) {
+			           		pageListeners = accountPageListeners;
+			           	} else {
+			           		pageListeners = new Vector();
 			           	}
-			           	
-			           	if (selectedObject instanceof AccountNode) { 
-			           	    pageListeners.addAll(accountPageListeners);
-			           	}
-			           	
 			           	FolderView.getDefault().setSelectedObject(pageListeners, selectedObject, session);
 			           	break;
 			           }
@@ -518,13 +590,14 @@ public class NavigationView extends ViewPart {
 		newAccountAction = new Action() {
 			public void run() {
 				Session session = JMoneyPlugin.getDefault().getSession();
-		        MutableCapitalAccount mutableAccount = session.createNewCapitalAccount();
-		        mutableAccount.setName(JMoneyPlugin.getResourceString("Account.newAccount"));
-		        CapitalAccount account = mutableAccount.commit();
+
+				CapitalAccountImpl newAccount = (CapitalAccountImpl)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
+		        newAccount.setName(JMoneyPlugin.getResourceString("Account.newAccount"));
+		        JMoneyPlugin.getChangeManager().applyChanges("add new account");
 		        
 		        // Having added the new account, set it as the selected
 		        // account in the tree viewer.
-		        viewer.setSelection(new StructuredSelection(account), true);
+		        viewer.setSelection(new StructuredSelection(newAccount), true);
 			}
 		};
 		newAccountAction.setText(JMoneyPlugin.getResourceString("MainFrame.newAccount"));

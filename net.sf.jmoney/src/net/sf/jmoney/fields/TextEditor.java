@@ -23,8 +23,8 @@
 package net.sf.jmoney.fields;
 
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CapitalAccountImpl;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.MutableCapitalAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
 
 import org.eclipse.swt.widgets.Control;
@@ -45,7 +45,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class TextEditor implements IPropertyControl {
     
-    private MutableCapitalAccount account = null;
+    private CapitalAccountImpl account = null;
     
     private PropertyAccessor propertyAccessor;
     
@@ -67,7 +67,7 @@ public class TextEditor implements IPropertyControl {
      * Load the control with the value from the given account.
      */
     public void load(Object object) {
-    	account = (MutableCapitalAccount)object;
+    	account = (CapitalAccountImpl)object;
     	
 		String text = account.getStringPropertyValue(propertyAccessor);
 		propertyControl.setText(text == null ? "" : text);

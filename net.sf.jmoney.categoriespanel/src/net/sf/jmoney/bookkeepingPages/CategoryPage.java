@@ -67,7 +67,7 @@ import net.sf.jmoney.model2.AccountAddedEvent;
 import net.sf.jmoney.model2.AccountDeletedEvent;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.MutableIncomeExpenseAccount;
+import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
 import net.sf.jmoney.model2.ObjectLockedForEditException;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
@@ -284,17 +284,16 @@ public class CategoryPage implements IBookkeepingPageListener {
 			throw new RuntimeException("selected account null when it should not be null.");
 		}
 		
-		try {
-			MutableIncomeExpenseAccount mutableAccount = selectedAccount.createMutableAccount(session);
-			mutableAccount.setName(nameField.getText());
-			mutableAccount.commit();
-		} catch (ObjectLockedForEditException e) {
+//		try {
+			((IncomeExpenseAccountImpl)selectedAccount).setName(nameField.getText());
+			JMoneyPlugin.getChangeManager().applyChanges("rename category");
+//			} catch (ObjectLockedForEditException e) {
 			// The edit could not be made because someone else is editing
 			// the properties of this category.
 			// TODO: deal with this properly.  Should be control be
 			// disabled, or should the user be told some other way
 			// that the properties cannot be changed?
-		}
+//		}
 	}
 	
 	private void hookContextMenu() {
@@ -323,9 +322,10 @@ private void makeActions() {
 	newAccountAction = new Action() {
 		public void run() {
 			Session session = JMoneyPlugin.getDefault().getSession();
-	        MutableIncomeExpenseAccount mutableAccount = session.createNewIncomeExpenseAccount();
-	        mutableAccount.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-	        IncomeExpenseAccount account = mutableAccount.commit();
+	        
+	        IncomeExpenseAccountImpl account = (IncomeExpenseAccountImpl)session.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+	        account.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
+			JMoneyPlugin.getChangeManager().applyChanges("add new category");
 	        
 	        // Having added the new account, set it as the selected
 	        // account in the tree viewer.
@@ -348,9 +348,9 @@ private void makeActions() {
 				break;
 			}
 			if (account != null) {
-				MutableIncomeExpenseAccount mutableAccount = account.createNewSubAccount(session);
-				mutableAccount.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-				IncomeExpenseAccount subAccount = mutableAccount.commit();
+				IncomeExpenseAccountImpl subAccount = (IncomeExpenseAccountImpl)((IncomeExpenseAccountImpl)account).createSubAccount();
+				subAccount.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
+				JMoneyPlugin.getChangeManager().applyChanges("add new category");
 				
 				// Having added the new account, set it as the selected
 				// account in the tree viewer.

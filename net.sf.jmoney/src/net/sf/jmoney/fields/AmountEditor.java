@@ -26,9 +26,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CapitalAccountImpl;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.MutableCapitalAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
 
 import org.eclipse.swt.widgets.Control;
@@ -57,7 +57,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class AmountEditor implements IPropertyControl {
     
-    private MutableCapitalAccount account = null;
+    private CapitalAccountImpl account = null;
     
     private PropertyAccessor propertyAccessor;
     
@@ -73,7 +73,7 @@ public class AmountEditor implements IPropertyControl {
      * Load the control with the value from the given account.
      */
     public void load(Object object) {
-    	account = (MutableCapitalAccount)object;
+    	account = (CapitalAccountImpl)object;
     	
 		Currency currency = account.getCurrency();
 		
@@ -95,11 +95,22 @@ public class AmountEditor implements IPropertyControl {
 					if (event.getPropertyName().equals("currency")) {
 						// Get the current text from the control and try to re-format
 						// it for the new currency.
+						// However, if the property can take null values and the control
+						// contains the empty string then set the amount to null.
+						// (The currency amount parser returns a zero amount for the
+						// empty string).
+						// Amounts can be represented by 'Long' or by 'long'.
+						// 'Long' values can be null, 'long' values cannot be null.
+						
 						String amountString = propertyControl.getText();
-						Currency currency = account.getCurrency();
-						long amount = currency.parse(amountString);
-						account.setLongPropertyValue(propertyAccessor, amount);
-						propertyControl.setText(currency.format(amount));
+						if (amountString.equals("") && propertyAccessor.getValueClass() == long.class) {
+							account.setPropertyValue(propertyAccessor, null);
+						} else {
+							Currency currency = account.getCurrency();
+							long amount = currency.parse(amountString);
+							account.setLongPropertyValue(propertyAccessor, amount);
+							propertyControl.setText(currency.format(amount));
+						}
 					}
 				}
 			});

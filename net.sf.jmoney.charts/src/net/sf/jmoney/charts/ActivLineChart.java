@@ -37,7 +37,7 @@ public class ActivLineChart extends LineChart {
         
         CapitalAccountImpl a = (CapitalAccountImpl) session.getAccountByFullName("Banques.Postbank");
         Entry e = null;
-        Iterator it = a.entries.iterator() ;
+        Iterator it = a.getEntriesIterator(session);
         Date currentDate = null;
         while (it.hasNext()) {
             e = (Entry) it.next();

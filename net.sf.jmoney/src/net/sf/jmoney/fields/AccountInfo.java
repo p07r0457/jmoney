@@ -25,6 +25,7 @@ package net.sf.jmoney.fields;
 import org.eclipse.swt.widgets.Composite;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.AbstractAccountImpl;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
@@ -51,13 +52,13 @@ import net.sf.jmoney.model2.PropertyAccessor;
  */
 public class AccountInfo implements IExtensionPropertySetInfo {
 
-    public AccountInfo() {
+	private static PropertyAccessor nameAccessor = null;
+
+	public AccountInfo() {
     }
 
 	public Class getImplementationClass() {
-		// This is a derivable property set, therefore it has no
-		// implementation class.
-		return null;
+		return AbstractAccountImpl.class;
 	}
 
     public Class getInterfaceClass() {
@@ -76,7 +77,14 @@ public class AccountInfo implements IExtensionPropertySetInfo {
 				}
 		};
 		
-		propertyRegistrar.addProperty("name", JMoneyPlugin.getResourceString("AccountPropertiesPanel.name"), 30.0, textControlFactory, null, null);
+		nameAccessor = propertyRegistrar.addProperty("name", JMoneyPlugin.getResourceString("AccountPropertiesPanel.name"), 30.0, textControlFactory, null, null);
 		propertyRegistrar.setDerivableInfo();
 	}
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getNameAccessor() {
+		return nameAccessor;
+	}	
 }

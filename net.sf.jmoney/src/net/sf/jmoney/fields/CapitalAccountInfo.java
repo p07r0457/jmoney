@@ -32,7 +32,6 @@ import net.sf.jmoney.model2.CapitalAccountImpl;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.MutableCapitalAccount;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -55,6 +54,14 @@ import net.sf.jmoney.model2.PropertyAccessor;
  */
 public class CapitalAccountInfo implements IExtensionPropertySetInfo {
 
+	private static PropertyAccessor currencyAccessor = null;
+	private static PropertyAccessor bankAccessor = null;
+	private static PropertyAccessor accountNumberAccessor = null;
+	private static PropertyAccessor startBalanceAccessor = null;
+	private static PropertyAccessor minBalanceAccessor = null;
+	private static PropertyAccessor abbreviationAccessor = null;
+	private static PropertyAccessor commentAccessor = null;
+
     public CapitalAccountInfo() {
     }
 
@@ -65,12 +72,8 @@ public class CapitalAccountInfo implements IExtensionPropertySetInfo {
     public Class getInterfaceClass() {
         return CapitalAccount.class;
     }
-    
-    public Class getMutableInterfaceClass() {
-        return MutableCapitalAccount.class;
-    }
-    
-	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+
+    public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		// TODO: figure out editors.
 		// One Currency, two longs, others are Strings
 		
@@ -111,12 +114,61 @@ public class CapitalAccountInfo implements IExtensionPropertySetInfo {
 		
 		propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), CapitalAccount.class, null);
 
-		propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), 15.0, currencyControlFactory, null, null);
-		propertyRegistrar.addProperty("bank", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), 30.0, textControlFactory, null, null);
-		propertyRegistrar.addProperty("accountNumber", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), 15.0, textControlFactory, null, null);
-		propertyRegistrar.addProperty("startBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.startBalance"), 15.0, amountControlFactory, null, null);
-		propertyRegistrar.addProperty("minBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.minBalance"), 15.0, amountControlFactory, null, null);
-		propertyRegistrar.addProperty("abbreviation", JMoneyPlugin.getResourceString("AccountPropertiesPanel.abbrevation"), 30.0, textControlFactory, null, null);
-		propertyRegistrar.addProperty("comment", JMoneyPlugin.getResourceString("AccountPropertiesPanel.comment"), 30.0, commentControlFactory, null, null);
+		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), 15.0, currencyControlFactory, null, null);
+		bankAccessor = propertyRegistrar.addProperty("bank", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), 30.0, textControlFactory, null, null);
+		accountNumberAccessor = propertyRegistrar.addProperty("accountNumber", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), 15.0, textControlFactory, null, null);
+		startBalanceAccessor = propertyRegistrar.addProperty("startBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.startBalance"), 15.0, amountControlFactory, null, null);
+		minBalanceAccessor = propertyRegistrar.addProperty("minBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.minBalance"), 15.0, amountControlFactory, null, null);
+		abbreviationAccessor = propertyRegistrar.addProperty("abbreviation", JMoneyPlugin.getResourceString("AccountPropertiesPanel.abbrevation"), 30.0, textControlFactory, null, null);
+		commentAccessor = propertyRegistrar.addProperty("comment", JMoneyPlugin.getResourceString("AccountPropertiesPanel.comment"), 30.0, commentControlFactory, null, null);
 	}
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getCurrencyAccessor() {
+		return currencyAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getBankAccessor() {
+		return bankAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getAccountNumberAccessor() {
+		return accountNumberAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getStartBalanceAccessor() {
+		return startBalanceAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getMinBalanceAccessor() {
+		return minBalanceAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getAbbreviationAccessor() {
+		return abbreviationAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getCommentAccessor() {
+		return commentAccessor;
+	}	
 }
