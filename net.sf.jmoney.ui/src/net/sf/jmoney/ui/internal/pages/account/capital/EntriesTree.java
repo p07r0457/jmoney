@@ -260,7 +260,7 @@ public class EntriesTree implements IEntriesControl {
      * For the time: two transactions are sorted by the date,
      * two Entries are sort, first by their transaction then (if they belong the same transaction)
      * by the amount.
-     * 
+     * <p><p>
      * In all case, a new Entry is sorted as least.
      * 
      * @author Faucheux
@@ -429,6 +429,9 @@ public class EntriesTree implements IEntriesControl {
         }
         /** 
          * Returns the elements the table has to display. 
+         * Only the transaction are displayed here. If a transaction has several entries, these
+         * one are give to the table through getChildrens.
+         * <p><p>
          * We should give the entry back with other informations the display
          * needs, for example the saldo.
          */
@@ -443,22 +446,15 @@ public class EntriesTree implements IEntriesControl {
                 Entry e = (Entry) it.next();
                 saldo = saldo + e.getAmount();
                 d_entries.add(new DisplayableTransaction(e, saldo));
-                if (e.getTransaction().hasMoreThanTwoEntries()) {
-                    // Case of an splitted entry. We display the transaction on the first line
-                    // and the entries of the transaction on the following ones.
-                    Iterator itSubEntries = e.getTransaction().getEntryIterator();
-                    while (itSubEntries.hasNext()) {
-                        // TODO: create a new class for this usage.
-                        d_entries.add(new DisplayableEntry((Entry) itSubEntries.next()));
-                    }
-                }
-            }
+                
+             }
             
             // an empty line to have the possibility to enter a new entry
             d_entries.add(new DisplayableNewEmptyEntry());
 
             return d_entries.toArray();
         }
+        
         /** 
          * Returns the children of an element.
          * Only transactions have children.
@@ -492,15 +488,14 @@ public class EntriesTree implements IEntriesControl {
 				return fPage.getAccount();
 			}
 		}
-		/* (non-Javadoc)
-		 * @see org.eclipse.jface.viewers.ITreeContentProvider#hasChildren(java.lang.Object)
+
+		/**
+		 * Returns true only if the displayed transaction is a splitted one.
+		 * @author Faucheux
 		 */
 		public boolean hasChildren(Object element) {
-			if (element instanceof DisplayableTransaction) {
-				return true;
-			} else {
-				return false;
-			}
+		    return (element instanceof DisplayableTransaction
+		            && ((DisplayableTransaction) element).getTransaction().hasMoreThanTwoEntries());
 		}
     }
 
