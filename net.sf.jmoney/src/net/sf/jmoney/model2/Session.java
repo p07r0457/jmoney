@@ -23,7 +23,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.beans.PropertyChangeListener;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -43,37 +42,26 @@ public interface Session extends IExtendableObject {
     Iterator getAccountIterator();
     
     Iterator getCapitalAccountIterator();
-    
-    public Iterator getCapitalAccountIteratorByLevel(int level);
    
+    public Iterator getCapitalAccountIteratorByLevel(int level);
+
     Iterator getIncomeExpenseAccountIterator();
     
     Iterator getTransactionIterator();
     
-    MutableIncomeExpenseAccount createNewIncomeExpenseAccount();
-        
-    MutableCapitalAccount createNewCapitalAccount();
+	Account createAccount(PropertySet actualPropertySet);
 
     MutableTransaction createNewTransaction();
 
-    MutableTransaction createMutableTransaction(Transaction transaction) throws ObjectLockedForEditException;
-
-    void removeAccount(Account account);
+    boolean removeCommodity(Commodity commodity);
     
-    void removeTransaction(Transaction transaction);
+    boolean removeAccount(Account account);
+    
+    boolean removeTransaction(Transaction transaction);
 
 //  Object[] getAvailableCurrencies();
     Currency getCurrencyForCode(String code);
     
-    /**
-     * Adds a PropertyChangeListener.
-     */
-//    void addPropertyChangeListener(PropertyChangeListener pcl);
-
-    /**
-     * Removes a PropertyChangeListener.
-     */
-//    void removePropertyChangeListener(PropertyChangeListener pcl);
     void addSessionChangeListener(SessionChangeListener listener);
     
     void removeSessionChangeListener(SessionChangeListener listener);
@@ -86,7 +74,7 @@ public interface Session extends IExtendableObject {
     // However, this interface should be merged with the implementation
     // so this issue will then go away.
     void fireEvent(ISessionChangeFirer firer);
-    
+
     /**
      * get all Accounts from level 0 (accounts without any parent) until the given level  
      * @author Faucheux

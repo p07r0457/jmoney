@@ -53,8 +53,6 @@ public interface IExtensionPropertySetInfo {
 	 */
     Class getInterfaceClass();
     
-    Class getMutableInterfaceClass();
-    
     /**
      * This method is the first method called by the framework.
      * This method registers all the extension properties by calling

@@ -24,6 +24,7 @@
 package net.sf.jmoney.model2;
 
 import java.beans.PropertyChangeListener;
+import java.util.Date;
 import java.util.Iterator;
 
 /**
@@ -84,13 +85,9 @@ public interface CapitalAccount extends Account {
 	 */
 	void removePropertyChangeListener(PropertyChangeListener pcl);
 	
-	MutableCapitalAccount createNewSubAccount(Session session) throws ObjectLockedForEditException;
-	
-	MutableCapitalAccount createMutableAccount(Session session) throws ObjectLockedForEditException;
-	
 	// Helper methods.
 	boolean hasEntries(Session session);
 	
-	// getter
-	int getLevel ();
+	long getBalance(Session session, Date fromDate, Date toDate);
+	long getBalanceWithSubAccounts(Session session, Date fromDate, Date toDate);
 }

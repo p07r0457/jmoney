@@ -124,6 +124,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 				} catch (IllegalAccessException e) {
 					throw new MalformedPluginException("Constructor must be public.");
 				} catch (InvocationTargetException e) {
+					e.printStackTrace();
 					throw new MalformedPluginException("An exception occured within a constructor in a plug-in.");
 				}
 				
@@ -182,13 +183,13 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 	public void registerWithIndexes() {
 	}
 	
-	public ExtensionObject getExtension(PropertySet propertySetKey) {
+	public ExtensionObject getExtension(PropertySet propertySet) {
 		// Perform any processing that must take place after an object
 		// has been loaded from the datastore but before the extensions
 		// can be accessed.
 //		postLoad();
 		
-		Object extensionObject = extensions.get(propertySetKey);
+		Object extensionObject = extensions.get(propertySet);
 		
 		ExtensionObject extension;
 		
@@ -202,7 +203,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 				
 				try {
 					extension = (ExtensionObject)
-					propertySetKey.getInterfaceClass().newInstance();
+					propertySet.getInterfaceClass().newInstance();
 					// TODO: plugin error if null is returned
 				} catch (Exception e) {
 					// TODO: ensure that we check for a default constructor
@@ -218,15 +219,15 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 				// adaptors.  We could get infinite recursion if the propagation
 				// got back to this extension and the extension was not set.
 				extension.setBaseObject(this);
-				extension.setPropertySet(propertySetKey);
-				extensions.put(propertySetKey, extension);
+				extension.setPropertySet(propertySet);
+				extensions.put(propertySet, extension);
 				
 				if (getOriginalObject() != null) {
 					
-					ExtensionObject originalExtension = getOriginalObject().getExtension(propertySetKey);
+					ExtensionObject originalExtension = getOriginalObject().getExtension(propertySet);
 					
 					if (originalExtension != null) {
-						propertySetKey.copyProperties(originalExtension, extension);
+						propertySet.copyProperties(originalExtension, extension);
 					}
 				}
 			} else {
@@ -247,7 +248,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 				
 				try {
 					extension = (ExtensionObject)
-					propertySetKey.getInterfaceClass().newInstance();
+					propertySet.getInterfaceClass().newInstance();
 					// TODO: plugin error if null is returned
 				} catch (Exception e) {
 					// TODO: ensure that we check for a default constructor
@@ -267,8 +268,8 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 				// If there are changes, the datastore was inconsistent,
 				// and changing other properties now could cause confusion.
 				extension.setBaseObject(this);
-				extension.setPropertySet(propertySetKey);
-				extensions.put(propertySetKey, extension);
+				extension.setPropertySet(propertySet);
+				extensions.put(propertySet, extension);
 				stringToExtension(extensionString, extension);
 			} else {
 				// Extension object is not a string so it must be
@@ -319,10 +320,10 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 		for (Iterator iter = modifiedExtensions.entrySet().iterator(); iter.hasNext(); ) {
 			Map.Entry mapEntry = (Map.Entry)iter.next();
 			
-			PropertySet propertySetKey = (PropertySet)mapEntry.getKey();
+			PropertySet propertySet = (PropertySet)mapEntry.getKey();
 			IExtendableObject extension = (IExtendableObject)mapEntry.getValue();
 			
-			if (extensions.get(propertySetKey) != null) {
+			if (extensions.get(propertySet) != null) {
 				// Extension is also in the original.
 				
 				// TODO: Loop around the properties and see which are
@@ -332,7 +333,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 				// to null if none are different.
 				
 				// Replace the extension.
-				extensions.put(propertySetKey, extension);
+				extensions.put(propertySet, extension);
 			} else {
 				// The extension does not exist in the original.
 				
@@ -342,7 +343,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 				// different.
 				
 				// Add the extension.
-				extensions.put(propertySetKey, extension);
+				extensions.put(propertySet, extension);
 			}
 		}
 	}
@@ -399,6 +400,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 		} catch (IllegalAccessException e) {
 			throw new MalformedPluginException("Method '" + propertyAccessor.getTheSetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' must be public.");
 		} catch (InvocationTargetException e) {
+			e.printStackTrace();
 			throw new MalformedPluginException("Method '" + propertyAccessor.getTheSetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' threw an exception that was not caught by the plug-in.");
 		} catch (IllegalArgumentException e) {
 			System.out.println(e.getMessage());
@@ -468,7 +470,12 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 			// No special method to get the value as a string, so use the method to
 			// get in native type and then we must convert to a string.
 		    try {
-		        result = (String) propertyAccessor.getTheGetMethod().invoke(objectWithProperties, null);
+		        Object value = propertyAccessor
+					.getTheGetMethod()
+					.invoke(objectWithProperties, null);
+		        if (value != null) {
+					result = value.toString();
+		        }
 			} catch (RuntimeException e2) {
 			    e2.printStackTrace(System.err);
 			} catch (InvocationTargetException e2) {
@@ -476,12 +483,9 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 			} catch (IllegalAccessException e2) {
 			    e2.printStackTrace(System.err);
 			}
-			
-			if (result == null) {
-				result = "";
-			}
 		}
-		return (String)result;
+
+		return result;
 	}
 	
 	public void setIntegerPropertyValue(PropertyAccessor propertyAccessor, int value) {
@@ -567,9 +571,9 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 		// through the adaptors get non-null extensions.
 		alwaysReturnNonNullExtensions = true;
 		
-		PropertySet propertySetKey = PropertySet.getPropertySetCreatingIfNecessary(propertySetId, getExtendablePropertySetId());
+		PropertySet propertySet = PropertySet.getPropertySetCreatingIfNecessary(propertySetId, getExtendablePropertySetId());
 		
-		if (!propertySetKey.isExtensionClassKnown()) {
+		if (!propertySet.isExtensionClassKnown()) {
 			// The plug-in that originally implemented this extension
 			// is not installed.  We therefore do not know the class
 			// that contains the properties.  We must not lose the
@@ -577,11 +581,11 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 			// We therefore store the data in the map as a String.
 			// If the plug-in is ever installed then the string can be
 			// de-serialized to produce the correct extension object.
-			extensions.put(propertySetKey, extensionString);
+			extensions.put(propertySet, extensionString);
 		} else {
 			// Because the 'alwaysReturnNonNullExtensions' flag is set,
 			// this method will always return  non-null extension.
-			ExtensionObject extension = getExtension(propertySetKey);
+			ExtensionObject extension = getExtension(propertySet);
 			
 			stringToExtension(extensionString, extension);
 		}

@@ -89,6 +89,14 @@ public class MutableTransactionImpl extends ExtendableObjectHelperImpl implement
     		public Collection createIndexValuesList(PropertyAccessor propertyAccessor) {
     			throw new RuntimeException("internal error");
     		}
+
+			public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues, ExtensionProperties[] extensionProperties) {
+    			throw new RuntimeException("internal error");
+			}
+
+			public Session getSession() {
+    			throw new RuntimeException("internal error");
+			}
     	};
 	}
 	
@@ -129,20 +137,19 @@ public class MutableTransactionImpl extends ExtendableObjectHelperImpl implement
         return transaction;
     }
     
-    public MutableTransaction createMutableTransaxion(Session session)
+    public MutableTransaction createMutableTransaction(Session session)
     throws ObjectLockedForEditException {
-        // TODO: Ensure no mutable interface on this object already.
-        return new MutableTransactionImpl(session, this);
+		throw new RuntimeException("object already mutable");
     }
     
-    public Entry createEntry() {
+    public MutableEntryImpl createEntry() {
         // Pass this mutable transaction object as the parent of the new entry.
         // This allows the entry to get access to properties from the transaction.
         // This is very useful when, say, sorting entries by date.
         //
         // The parent will be switched to the actual committed transaction when
         // the transaction is committed.
-        Entry newEntry = new MutableEntryImpl(this);
+    	MutableEntryImpl newEntry = new MutableEntryImpl(this);
         entries.addElement(newEntry);
         return newEntry;
     }
@@ -156,23 +163,10 @@ public class MutableTransactionImpl extends ExtendableObjectHelperImpl implement
         Vector deletedEntries = new Vector();
         
         if (transaction == null) {
-			PropertySet transactionPropertySet;
-			try {
-				transactionPropertySet = PropertySet.getPropertySet("net.sf.jmoney.transaction");
-			} catch (PropertySetNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
-			}
-			transaction = (TransactionImpl)session.createNewTransaction(transactionPropertySet, this);
-//            transaction = new TransactionImpl();
-//            transaction.setDate(date);
-            transaction.updateEntries(entries, newEntries, deletedEntries);
-//          session.addTransaxion(transaction);
-        } else {
-            transaction.setDate(date);
-            transaction.updateEntries(entries, newEntries, deletedEntries);
+    		transaction = (TransactionImpl)session.createTransaction();
         }
+        transaction.setDate(date);
+        transaction.updateEntries(entries, newEntries, deletedEntries);
         
         // Now the transaction has been added and can been seen by
         // others, fire the change events.
@@ -190,12 +184,10 @@ public class MutableTransactionImpl extends ExtendableObjectHelperImpl implement
         // Mark this object as now being unusable.
 //      isDead = true;
         
-        session.modified();
-
         return transaction;
     }
 
-/* not needed until multi-threading taken into consideration    
+/* not yet implemented    
     public void rollback() {
         // remove this mutable object from the map.
         EditLockMap.remove(lockedObject);

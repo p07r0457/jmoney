@@ -26,6 +26,7 @@ import java.lang.reflect.*;
 import java.beans.*;   // for PropertyChangeSupport and PropertyChangeListener
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.Vector;
 
 import javax.swing.JComponent;
 
@@ -69,7 +70,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
     private Method theSetMethod;
     
     // Applies only if list property
-//  private Method theAddMethod;
+    private Method theCreateMethod;
     
 	/**
 	 * true if property is a list property, i.e. can contain
@@ -84,6 +85,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 	 * 
 	 */
 	private int indexIntoConstructorParameters = -1;
+	private int indexIntoScalarProperties = -1;
 	
     /**
      * List of listeners that are listening for changes to the value of this property
@@ -101,7 +103,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         this.editorBeanClass = editorBeanClass;
         
         isList = false;
-        
+       
         // Use introspection on the interface to find the getter method.
         Class interfaceClass = propertySet.getInterfaceClass();
         
@@ -123,7 +125,8 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         
         // Use introspection on the interface to find the setter method.
         // This must be done on the mutable interface.
-        Class mutableInterfaceClass = propertySet.getMutableInterfaceClass();
+//      Class mutableInterfaceClass = propertySet.getMutableInterfaceClass();
+        Class implementationClass = propertySet.getImplementationClass();
         
         String theSetMethodName	= "set"
 			+ localName.toUpperCase().charAt(0)
@@ -131,15 +134,15 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         Class parameterTypes[] = {propertyClass};
         
         try {
-            this.theSetMethod = mutableInterfaceClass.getDeclaredMethod(theSetMethodName, parameterTypes);
+            this.theSetMethod = implementationClass.getDeclaredMethod(theSetMethodName, parameterTypes);
         } catch (NoSuchMethodException e) {
-            throw new MalformedPluginException("Method '" + theSetMethodName + "' in '" + mutableInterfaceClass.getName() + "' was not found.");
+            throw new MalformedPluginException("Method '" + theSetMethodName + "' in '" + implementationClass.getName() + "' was not found.");
         }
         
         if (theSetMethod.getReturnType() != void.class) {
-            throw new MalformedPluginException("Method '" + theSetMethodName + "' in '" + mutableInterfaceClass.getName() + "' must return void type .");
+            throw new MalformedPluginException("Method '" + theSetMethodName + "' in '" + implementationClass.getName() + "' must return void type .");
         }
-       
+
         propertySupport = new PropertyChangeSupport(this);
     }
 
@@ -159,46 +162,90 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         this.shortDescription = shortDescription;
         
         isList = true;
-        
-        // Use introspection on the interface to find the getXxxIterator method.
-        Class interfaceClass = propertySet.getInterfaceClass();
-        
-        String theGetMethodName	= "get"
-        	+ localName.toUpperCase().charAt(0)
+
+		// Use introspection on the interface to find the getXxxIterator method.
+		Class interfaceClass = propertySet.getInterfaceClass();
+		
+		String theGetMethodName	= "get"
+			+ localName.toUpperCase().charAt(0)
 			+ localName.substring(1, localName.length())
 			+ "Iterator";
+		
+		try {
+			this.theGetMethod = getDeclaredMethodRecursively(interfaceClass, theGetMethodName, null);
+		} catch (NoSuchMethodException e) {
+			throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + interfaceClass.getName() + "' was not found.");
+		}
+		
+		if (theGetMethod.getReturnType() != Iterator.class) {
+			throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + interfaceClass.getName() + "' must return an Iterator type.");
+		}
+	}
+
+	/**
+	 * Complete initialization of this object by finding the methods
+	 * required by the JMoney framework.  This cannot be done in the
+	 * constructor because finding the 'create' methods requires accessing
+	 * other PropertyAccessor objects, and so must be done in a second pass
+	 * after all PropertyAccessor objects and all PropertySet objects have
+	 * been constructed.
+	 * <P>
+	 * Note that the 'get' methods must be processed in pass 1 (in the constructor).
+	 * This is because the class of a property is determined by looking at the
+	 * return type of the 'get' method, and the class of other properties is
+	 * required by this method.
+	 */
+	public void initMethods() {
         
-        try {
-            this.theGetMethod = getDeclaredMethodRecursively(interfaceClass, theGetMethodName, null);
-        } catch (NoSuchMethodException e) {
-            throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + interfaceClass.getName() + "' was not found.");
-        }
-        
-        if (theGetMethod.getReturnType() != Iterator.class) {
-            throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + interfaceClass.getName() + "' must return an Iterator type.");
-        }
-        
-        // Use introspection on the interface to find the setter method.
-        // This must be done on the mutable interface.
-   /*
-        Class mutableInterfaceClass = propertySet.getMutableInterfaceClass();
-        
-        String theAddMethodName	= "add"
-			+ localName.toUpperCase().charAt(0)
-			+ localName.substring(1, localName.length());
-        Class parameterTypes[] = {propertyClass};
-        
-        try {
-            this.theAddMethod = mutableInterfaceClass.getDeclaredMethod(theAddMethodName, parameterTypes);
-        } catch (NoSuchMethodException e) {
-            throw new MalformedPluginException("Method '" + theAddMethodName + "' in '" + mutableInterfaceClass.getName() + "' was not found.");
-        }
-        
-        if (theAddMethod.getReturnType() != void.class) {
-            throw new MalformedPluginException("Method '" + theAddMethodName + "' in '" + mutableInterfaceClass.getName() + "' must return void type .");
-        }
-*/     
-        propertySupport = new PropertyChangeSupport(this);
+		if (isList) {
+			// For every list, there must be an create<propertyName>
+			// method.  Find this method.
+			
+			Class parameters[];
+			
+			if (getValuePropertySet().isDerivable()) {
+				// Class is derivable, which means we don't know the property
+				// set at compile time, so the method takes the property set
+				// as a parameter.
+				parameters = new Class [] {
+						PropertySet.class, 
+				};
+			} else {
+				parameters = new Class[0];
+			}	
+			
+			String methodName = "create"
+				+ localName.toUpperCase().charAt(0)
+				+ localName.substring(1, localName.length());
+			
+			try {
+				theCreateMethod =
+					propertySet.getImplementationClass().getMethod(methodName, parameters);
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchMethodException e) {
+				String parameterText = "";
+				for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
+					if (paramIndex > 0) {
+						parameterText = parameterText + ", ";
+					}
+					String className = parameters[paramIndex].getName();
+					if (parameters[paramIndex].isArray()) {
+						// The returned class name seems to be a mess when the class is an array,
+						// so we tidy it up.
+						parameterText = parameterText + className.substring(2, className.length()-1) + "[]";
+					} else {
+						parameterText = parameterText + className;
+					}
+				}
+				throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a '" + methodName + "' method that takes parameters of types (" + parameterText + ").");
+			}
+			
+			if (theCreateMethod.getReturnType() != this.getValueClass()) {
+				throw new MalformedPluginException("Method '" + methodName + "' in '" + propertySet.getImplementationClass().getName() + "' must return an object of type " + this.getValueClass() + "."); 
+			}
+		}
 	}
 
 	/**
@@ -206,7 +253,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 	 * Whereas Class.getDeclaredMethod finds a method from an
 	 * interface, it will not find the method if the method is
 	 * defined in an interface which the given interface extends.
-	 * This method will find the method if an of the interfaces
+	 * This method will find the method if any of the interfaces
 	 * extended by this interface define the method. 
 	 */
 	private Method getDeclaredMethodRecursively(Class interfaceClass, String methodName, Class[] arguments)
@@ -228,6 +275,14 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 	public PropertySet getPropertySet() {
         return propertySet;
     }
+	
+	public PropertySet getExtendablePropertySet() {
+		if (propertySet.isExtension()) {
+			return propertySet.getExtendablePropertySet();
+		} else {
+			return propertySet;
+		}
+    }
     
     public Method getTheGetMethod() {
         return theGetMethod;
@@ -236,13 +291,33 @@ public class PropertyAccessorImpl implements PropertyAccessor {
     public Method getTheSetMethod() {
         return theSetMethod;
     }
-/*    
-    public Method getTheAddMethod() {
-        return theAddMethod;
-    }
-*/    
+
+    /**
+     * Returns the class for the values of this property.
+     * This is the class that is returned by the getter method
+     * or, if this property is a list, the class of objects
+     * returned by the list iterator.
+     */
     public Class getValueClass() {
         return propertyClass;
+    }
+    
+    /**
+     * Returns the PropertySet for the values of this property.
+     * This property must contain a value or values that are
+     * extendable objects. 
+     */
+    public PropertySet getValuePropertySet() {
+		for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
+			PropertySet propertySet = (PropertySet)iter.next();
+			if (!propertySet.isExtension()) {
+				if (propertySet.getInterfaceClass() == propertyClass) {
+					return propertySet;
+				}
+			}
+		}
+		
+        throw new RuntimeException("No property set found for extendable class object" + propertyClass.getName() + ".");
     }
     
     /**
@@ -419,7 +494,46 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 		return indexIntoConstructorParameters;
 	}
 
+	public int getIndexIntoScalarProperties() {
+		return indexIntoScalarProperties;
+	}
+	
 	public void setIndexIntoConstructorParameters(int indexIntoConstructorParameters) {
 		this.indexIntoConstructorParameters = indexIntoConstructorParameters;
+	}
+
+	public void setIndexIntoScalarProperties(int indexIntoScalarProperties) {
+		this.indexIntoScalarProperties = indexIntoScalarProperties;
+	}
+
+	// You may wonder why this code is here when it is also
+	// in the ExtendableObjectHelperImpl class.
+	// The reason is that callers can provide a very basic
+	// implementation, often an inline implementation, of
+	// the property set getter interface.  There would thus
+	// be no code supplied to do all of this logic, and nor
+	// do we want to require users to provide this code.
+	public Object getValue(IExtendableObject values) {
+		Object value;
+		Object objectWithProperties = values;				
+
+		// TODO: Return the value of an extension property if
+		// neccessary.
+		
+		try {
+			value = getTheGetMethod().invoke(objectWithProperties, null);
+		} catch (IllegalAccessException e) {
+			throw new MalformedPluginException("Method '" + getTheGetMethod().getName() + "' in '" + getPropertySet().getInterfaceClass().getName() + "' must be public.");
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		}
+		
+		return value;
 	}
 }

@@ -83,6 +83,10 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Trans
         return entries.iterator();
     }
     
+    // TODO: Ensure no mutable interface on this object already.
+    public MutableTransaction createMutableTransaction(Session session) throws ObjectLockedForEditException {
+        return new MutableTransactionImpl(session, this);
+    }
 
     /**
      *DISREGARD ALL THIS
@@ -191,8 +195,16 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Trans
             if (mutableEntry.getOriginalEntry() != null) {
                 (mutableEntry.getOriginalEntry()).copyProperties(mutableEntry);
             } else {
-                EntryImpl entry = this.createNewEntry(mutableEntry);
-                newEntries.add(entry);
+            	EntryImpl entry = (EntryImpl)this.createEntry();
+            	entry.setAccount(mutableEntry.getAccount());
+            	entry.setAmount(mutableEntry.getAmount());
+            	entry.setCheck(mutableEntry.getCheck());
+            	entry.setCreation(mutableEntry.getCreation());
+            	entry.setDescription(mutableEntry.getDescription());
+            	entry.setMemo(mutableEntry.getMemo());
+            	entry.setValuta(mutableEntry.getValuta());
+            	
+            	newEntries.add(entry);
             }
         }
         
@@ -210,24 +222,17 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Trans
             Entry entry = (Entry)iter.next();
             // TODO: at some time, keep these lists for categories too
             Account category = entry.getAccount();
-            if (category instanceof CapitalAccount) {
+            if (category instanceof CapitalAccountImpl) {
                 ((CapitalAccountImpl)category).removeEntry(entry);
             }
         }
         
     }
 
-    public EntryImpl createNewEntry(Entry entry) {
-    	PropertySet entryPropertySet;
-		try {
-			entryPropertySet = PropertySet.getPropertySet("net.sf.jmoney.entry");
-		} catch (PropertySetNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		}
+    public Entry createEntry() {
+    	PropertySet entryPropertySet = JMoneyPlugin.getEntryPropertySet();
 
-		EntryImpl newEntry = (EntryImpl)entries.createNewElement(this, entryPropertySet, entry);
+		EntryImpl newEntry = (EntryImpl)entries.createNewElement(this, entryPropertySet);
 
 		// Fire the event.
 /* no - fire events only when the change has been committed.
@@ -242,5 +247,10 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Trans
        		});
  */       
         return newEntry;
+	}
+
+	static public Object [] getDefaultProperties() {
+		// TODO: Check if this is set to the current day.
+		return new Object [] { new Date() };
 	}
 }

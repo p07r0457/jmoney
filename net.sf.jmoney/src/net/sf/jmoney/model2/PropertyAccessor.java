@@ -35,6 +35,22 @@ import org.eclipse.swt.widgets.Composite;
  *
  * This object contains the metadata.
  *
+ * Some properties may be allowed to take null values and
+ * some may not.  The determination is made by the JMoney framework
+ * by looking at the type returned by the getter method.
+ * <P>
+ * The following properties may take null values:
+ * <UL>
+ * <LI>All properties that reference extendable objects</LI>
+ * <LI>All properties of type String, Date or other such simple class</LI>
+ * <LI>All properties where the type is one of the classes representing intrinsic types,
+ * 			such as Integer, Long</LI>
+ * </UL>
+ * The following properties may not take null values:
+ * <UL>
+ * <LI>All properties where the type is an intrinsic type, such as int, long</LI>
+ * </UL>
+ * 
  * @author  Nigel
  */
 public interface PropertyAccessor {
@@ -42,6 +58,17 @@ public interface PropertyAccessor {
      * Returns the property set which contains this property.
      */
     PropertySet getPropertySet();
+    
+    /**
+     * Returns the extendable property set which contains this property.
+     * 
+     * If the property is in an extendable property set then this
+     * method returns the same value as <code>getPropertySet()</code>.
+     * If the property is in an extension property set then
+     * the property set being extended is returned.
+     */
+    // TODO: Consider removing this method.  It is not used.
+    PropertySet getExtendablePropertySet();
     
     Method getTheGetMethod();
     
@@ -182,9 +209,31 @@ public interface PropertyAccessor {
 	int getIndexIntoConstructorParameters();
 
 	/**
+	 * @return
+	 */
+	int getIndexIntoScalarProperties();
+
+	/**
 	 * 
 	 * @param indexIntoConstructorParameters
 	 */
 	// TODO: This method should be accessible only from within the package. 
 	void setIndexIntoConstructorParameters(int indexIntoConstructorParameters);
+
+	/**
+	 * @param values
+	 * @return The value of this property from the
+	 * 			passed <code>values</code> object.
+	 */
+	public Object getValue(IExtendableObject values);
+
+	/**
+	 * 
+	 */
+	void initMethods();
+
+	/**
+	 * @param i
+	 */
+	void setIndexIntoScalarProperties(int indexIntoScalarIndex);
 }

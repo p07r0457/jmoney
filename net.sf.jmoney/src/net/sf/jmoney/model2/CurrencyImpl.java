@@ -69,12 +69,13 @@ public class CurrencyImpl extends ExtendableObjectHelperImpl implements Currency
 		
 		if (decimals < 0 || decimals > MAX_DECIMALS)
 			throw new IllegalArgumentException("Number of decimals not supported");
+
 		this.name = name;
 		this.code = code;
 		this.decimals = decimals;
 	}
 	
-	protected boolean isMutable() {
+    protected boolean isMutable() {
 		return false;
 	}
 	
@@ -160,4 +161,9 @@ public class CurrencyImpl extends ExtendableObjectHelperImpl implements Currency
 	public short getScaleFactor() {
 		return SCALE_FACTOR[decimals];
 	}
+
+	static public Object [] getDefaultProperties() {
+		return new Object [] { "new currency", null, new Integer(2) };
+	}
 }
+

@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
@@ -39,6 +40,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.File;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.isocurrencies.IsoCurrenciesPlugin;
 
 import org.eclipse.ui.IMemento;
@@ -48,7 +50,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 /**
  * Holds the fields that will be saved in a file.
  */
-public class SessionImpl extends ExtendableObjectHelperImpl implements Session, Serializable {
+public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
 
     protected Currency defaultCurrency;
     
@@ -63,10 +65,6 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
     protected Hashtable currencies = new Hashtable();
     protected Object[] sortedCurrencies = null;
         
-    protected transient boolean modified = false;
-
-//    protected transient PropertyChangeSupport changeSupport =
-//        new PropertyChangeSupport(this);
     protected transient Vector sessionChangeListeners = new Vector();
     protected transient Vector sessionChangeFirerListeners = new Vector();
 
@@ -181,109 +179,23 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
 				final byte decimals = d;
 				final String name = NAME.getString(code);
 				
-				PropertySet currencyPropertySet;
-				try {
-					currencyPropertySet = PropertySet.getPropertySet("net.sf.jmoney.currency");
-				} catch (PropertySetNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					throw new RuntimeException("internal error");
-				}
-				// TODO: Sort out what should really be in the Currency interface and remove
-				// most of the methods in the following implementation.
+				PropertySet currencyPropertySet = JMoneyPlugin.getCurrencyPropertySet();
+
 				Currency newCurrency = (Currency)commodities.createNewElement(
 						this,
-						currencyPropertySet, 
-						new Currency() {
-
-							public String getCode() {
-								return code;
-							}
-
-							public void setCode(String code) {
-								// TODO Auto-generated method stub
-								
-							}
-
-							public int getDecimals() {
-								return decimals;
-							}
-
-							public void setDecimals(int decimals) {
-								// TODO Auto-generated method stub
-								
-							}
-
-							public String getName() {
-								return name;
-							}
-
-							public void setName(String name) {
-								// TODO Auto-generated method stub
-								
-							}
-
-							public long parse(String amountString) {
-								// TODO Auto-generated method stub
-								return 0;
-							}
-
-							public String format(long amount) {
-								// TODO Auto-generated method stub
-								return null;
-							}
-
-							public short getScaleFactor() {
-								// TODO Auto-generated method stub
-								return 0;
-							}
-
-							public ExtensionObject getExtension(PropertySet propertySetKey) {
-								// No extension properties are to be set.
-								return null;
-							}
-
-							public Object getPropertyValue(PropertyAccessor propertyAccessor) {
-								// TODO Auto-generated method stub
-								return null;
-							}
-
-							public int getIntegerPropertyValue(PropertyAccessor propertyAccessor) {
-								// TODO Auto-generated method stub
-								return 0;
-							}
-
-							public long getLongPropertyValue(PropertyAccessor propertyAccessor) {
-								// TODO Auto-generated method stub
-								return 0;
-							}
-
-							public String getStringPropertyValue(PropertyAccessor propertyAccessor) {
-								// TODO Auto-generated method stub
-								return null;
-							}
-
-							public Iterator getPropertyIterator(PropertyAccessor propertyAccessor) {
-								// TODO Auto-generated method stub
-								return null;
-							}
-
-							public String getPropertyValueAsString(PropertyAccessor propertyAccessor) {
-								// TODO Auto-generated method stub
-								return null;
-							}
-
-							public IObjectKey getObjectKey() {
-								// TODO Auto-generated method stub
-								return null;
-							}
-							
-						});
-
+						currencyPropertySet);
+				
+				newCurrency.setName(name);
+				newCurrency.setCode(code);
+				newCurrency.setDecimals(decimals);
+				
 				line = buffer.readLine();
 			}
+			
 		} catch (IOException ioex) {
 		}
+
+		JMoneyPlugin.getChangeManager().applyChanges("add ISO currencies");
 	}
 
     public Iterator getCommodityIterator() {
@@ -347,6 +259,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
 			}
         };
     }
+   
     
     /**
      * @author Faucheux
@@ -357,15 +270,14 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
     	Vector   vecResult = new Vector();
     	while (itAccounts.hasNext()) {
     	    Account a = (Account) itAccounts.next();
-    	    if (a instanceof CapitalAccount & ((CapitalAccount) a).getLevel() == level) {
+       	    if (a instanceof CapitalAccount && ((CapitalAccount) a).getLevel() == level) {
     	        vecResult.add(a);
     	    }
     	}
     	return vecResult.iterator();
     }
 
-   
-    public Iterator getIncomeExpenseAccountIterator() {
+       public Iterator getIncomeExpenseAccountIterator() {
         return new Iterator() {
         	Iterator iter = accounts.iterator();
         	Object element;
@@ -402,25 +314,6 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
     	}
     }
 */
-/*    
-    // Used by MutableCapitalAccountImpl and
-    // MutableIncomeExpenseAccountImpl.
-    // TODO: Remove this method and use instead the
-    // new method that gets the datastore to create
-    // new objects.
-    public void addAccount(Account account) {
-        accounts.add(account);
-              
-        // Fire the event.
-        final AccountAddedEvent event = new AccountAddedEvent(this, account);
-        fireEvent(
-        	new ISessionChangeFirer() {
-        		public void fire(SessionChangeListener listener) {
-        			listener.accountAdded(event);
-        		}
-       		});
-    }
-*/
 /* moved to MT940 code    
     public CapitalAccount getAccountByNumber(String accountNumber) {
         for (int i = 0; i < accounts.size(); i++) {
@@ -433,43 +326,69 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
         return null;
     }
 */
-/*
-    public CapitalAccount getNewAccount(String name) {
-        Currency defaultCurrency = Currency.getCurrencyForCode(
-                userProperties.getDefaultCurrencyCode());
-        CapitalAccount account = new CapitalAccountImpl(name, defaultCurrency);
-        accounts.addElement(account);
-        modified();
-        return account;
-    }
-*/
-    // TODO: Ensure no mutable interface on this object already.
-    public MutableIncomeExpenseAccount createNewIncomeExpenseAccount() {
-        return new MutableIncomeExpenseAccountImpl(this);
-    }
-        
-    // TODO: Ensure no mutable interface on this object already.
-    public MutableCapitalAccount createNewCapitalAccount() {
-        return new MutableCapitalAccountImpl(this);
-    }
-     
+
     public MutableTransaction createNewTransaction() {
         return new MutableTransactionImpl(this);
     }
 
-    // TODO: Ensure no mutable interface on this object already.
-    public MutableTransaction createMutableTransaction(Transaction transaction) throws ObjectLockedForEditException {
-        if (transaction instanceof MutableTransaction) {
-            throw new ObjectLockedForEditException();
-        }
-        return new MutableTransactionImpl(this, transaction);
-    }
+
     
+    public boolean removeCommodity(Commodity commodity) {
+        return commodities.remove(commodity);
+        
+        // Fire the event.
+/* TODO: complete this        
+        final CommodityDeletedEvent event = new CommodityDeletedEvent(this, commodity);
+        fireEvent(
+        	new ISessionChangeFirer() {
+        		public void fire(SessionChangeListener listener) {
+        			listener.commodityDeleted(event);
+        		}
+       		});
+*/       		
+    }
+
+    /**
+     * Removes the specified account from this collection,
+     * if it is present.
+     * <P>
+     * Note that accounts may be sub-accounts.  Only top
+     * level accounts are in this session's account list.
+     * Sub-accounts must be removed by calling the 
+     * <code>removeSubAccount</code> method on the parent account.
+     * 
+     * @param account Account to be removed from this collection.
+     * 				This parameter may not be null.
+     * @return true if the account was present, false if the account
+     * 				was not present in the collection.
+     */
+    public boolean removeAccount(Account account) {
+        Account parent = account.getParent();
+        if (parent == null) {
+            boolean accountFound = accounts.remove(account);
+
+            // Fire the event.
+            if (accountFound) {
+            	final AccountDeletedEvent event = new AccountDeletedEvent(this, account);
+            	fireEvent(
+            			new ISessionChangeFirer() {
+            				public void fire(SessionChangeListener listener) {
+            					listener.accountDeleted(event);
+            				}
+            			});
+            }
+            return accountFound;
+        } else {
+        	// Pass the request on to the parent account.
+            return ((AbstractAccountImpl)parent).removeSubAccount(account);
+        }
+    }
+
     // Used by MutableTransactionImpl.
     // Also this is the implementation of the addXxx pattern
     // required for list properties.
 /*    
-    public void addTransaxion(Transaction transaction) {
+    public void addTransaction(Transaction transaction) {
         transactions.add(transaction);
        
         // For efficiency, we keep a list of entries in each
@@ -482,92 +401,27 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
                 ((CapitalAccountImpl)category).addEntry(entry);
             }
         }
-        modified();
-    }
-    
-    public void addTransaction(Transaction transaction) {
-    	addTransaxion(transaction);
     }
 */    	
-   	public void removeTransaction(Transaction transaction) {
-        transactions.remove(transaction);
+   	public boolean removeTransaction(Transaction transaction) {
+        boolean found = transactions.remove(transaction);
 
         // For efficiency, we keep a list of entries in each
         // account/category.  We must update this list now.
-        for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
-            Entry entry = (Entry)iter.next();
-            // TODO: at some time, keep these lists for categories too
-            Account category = entry.getAccount();
-            if (category instanceof CapitalAccount) {
-                ((CapitalAccountImpl)category).removeEntry(entry);
-            }
+        if (found) {
+        	for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
+        		Entry entry = (Entry)iter.next();
+        		// TODO: at some time, keep these lists for categories too
+        		Account category = entry.getAccount();
+        		if (category instanceof CapitalAccount) {
+        			((CapitalAccountImpl)category).removeEntry(entry);
+        		}
+        	}
         }
-        modified();
+        
+        return found;
     }
     
-    // This is atomic, so does not need a mutable object.
-    public void removeAccount(Account account) {
-        Account parent = account.getParent();
-        if (parent == null) {
-/*
-        	if (account instanceof IncomeExpenseAccount) {
-                categories.remove(account);
-            } else {
-                accounts.remove(account);
-            }
-*/            
-            accounts.remove(account);
-        } else {
-            ((AbstractAccountImpl)parent).removeSubAccount(account);
-        }
-        
-        modified();
-        
-        // Fire the event.
-        final AccountDeletedEvent event = new AccountDeletedEvent(this, account);
-        fireEvent(
-        	new ISessionChangeFirer() {
-        		public void fire(SessionChangeListener listener) {
-        			listener.accountDeleted(event);
-        		}
-       		});
-    }
-
-    boolean isModified() {
-        return modified;
-    }
-
-    // 'A' to stop it being a property
-    public void setModifiedA(boolean m) {
-        if (modified == m)
-            return;
-        modified = m;
-//        changeSupport.firePropertyChange("modified", !m, m);
-    }
-
-    /**
-     * Other class implementations in this package may call this method
-     * when classes further down inside this session are modified.
-     */
-    // TODO: Change to package only access when mutable stuff moved to impl.
-    public void modified() {
-        setModifiedA(true);
-    }
-
-    /**
-     * Adds a PropertyChangeListener.
-     */
-//    public void addPropertyChangeListener(PropertyChangeListener pcl) {
-//        changeSupport.addPropertyChangeListener(pcl);
-//    }
-
-    /**
-     * Removes a PropertyChangeListener.
-     */
-//    public void removePropertyChangeListener(PropertyChangeListener pcl) {
-//        changeSupport.removePropertyChangeListener(pcl);
-//    }
-
     public void addSessionChangeListener(SessionChangeListener l) {
         sessionChangeListeners.add(l);
     }
@@ -584,62 +438,6 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
         sessionChangeFirerListeners.remove(l);
     }
     
-    // The following methods are here only so that the object can be
-    // serialized as a bean.
-/*    
-    public Vector getCommodities() {
-        Vector result = new Vector();
-    	for (Iterator iter = currencies.values().iterator(); iter.hasNext(); ) {
-    		// All happen to be currencies
-    		Currency commodity = (Currency)iter.next();
-    		result.add(commodity);
-    	}
-    	return result;
-    }
-    
-    public void setCommodities(Vector commodities) {
-    	this.currencies = new Hashtable();
-    	for (Iterator iter = commodities.iterator(); iter.hasNext(); ) {
-    		// All happen to be currencies
-    		Currency commodity = (Currency)iter.next();
-    		this.currencies.put(commodity.getCode(), commodity);
-    	}
-    }
-
-    public Vector getAccounts() {
-        return accounts;
-    }
-    
-    public void setAccounts(Vector accounts) {
-        this.accounts = accounts;
-    }
-
-    public Vector getCategories() {
-        return categories;
-    }
-    
-    public void setCategories(Vector categories) {
-        this.categories = categories;
-    }
-
-    public Vector getTransactions() {
-        return transactions;
-    }
-    
-    public void setTransactions(Vector transactions) {
-        this.transactions = transactions;
-    }
-*/
-    /**
-     * Passes an event on to all listeners who are listening for changes
-     * to this session.
-     * Called by other classes committing changes.
-     */
-/*    
-    void fire(PropertyChangeEvent evt) {
-        changeSupport.firePropertyChange(evt);
-    }
-*/
     /**
      * In practice it is likely that the only listener will be the
      * JMoneyPlugin object.  Views should all listen to the JMoneyPlugin
@@ -682,6 +480,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
         }
     }
 
+
 	/**
 	 * Create a new account.  Accounts are abstract, so
 	 * a property set derived from the account property
@@ -706,8 +505,8 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
 	 * @param account
 	 * @return
 	 */
-	public Account createNewAccount(PropertySet propertySet, Account account) {
-		AbstractAccountImpl newAccount = (AbstractAccountImpl)accounts.createNewElement(this, propertySet, account);
+	public Account createAccount(PropertySet propertySet) {
+		Account newAccount = (Account)accounts.createNewElement(this, propertySet);
 
 		// Fire the event.
         final AccountAddedEvent event = new AccountAddedEvent(this, newAccount);
@@ -745,8 +544,8 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
 	 * @param commodity
 	 * @return
 	 */
-	public Commodity createNewCommodity(PropertySet propertySet, Commodity commodity) {
-		Commodity newCommodity = (Commodity)commodities.createNewElement(this, propertySet, commodity);
+	public Commodity createCommodity(PropertySet propertySet) {
+		Commodity newCommodity = (Commodity)commodities.createNewElement(this, propertySet);
 
 		if (newCommodity instanceof Currency) {
 			Currency newCurrency = (Currency)newCommodity;
@@ -765,22 +564,19 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
         return newCommodity;
 	}
 
-	public Transaction createNewTransaction(PropertySet propertySet, Transaction transaction) {
-		TransactionImpl newTransaction = (TransactionImpl)transactions.createNewElement(this, propertySet, transaction);
+	public Transaction createTransaction() {
 
-		// Fire the event.
-/* Do we need notification of new transactions, or are the notifications
- * for addition and removal of each entry good enough?
- 		
-        final AccountAddedEvent event = new AccountAddedEvent(this, newAccount);
-        fireEvent(
-        	new ISessionChangeFirer() {
-        		public void fire(SessionChangeListener listener) {
-        			listener.accountAdded(event);
-        		}
-       		});
-*/        
-        return newTransaction;
+		Transaction newTransaction = (Transaction)transactions.createNewElement(
+					this, 
+					JMoneyPlugin.getTransactionPropertySet()); 
+
+		// TODO: fire events.
+		
+		return newTransaction;
+	}
+	
+	static public Object [] getDefaultProperties() {
+		return new Object [] { null };
 	}
 	
 	/**

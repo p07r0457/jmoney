@@ -64,4 +64,46 @@ public interface IObjectKey {
 	 * @return
 	 */
 	Collection createIndexValuesList(PropertyAccessor propertyAccessor);
+
+	/**
+	 * Set the given property values in the datastore.
+	 * <P>
+	 * This method does not update the values in the object
+	 * itself.  That must be done by the caller after this
+	 * method is called.  This method may read the old values
+	 * from the object itself to determine which values
+	 * have changed.
+	 *  
+	 * @param oldValues An object from which the old values of the properties may
+	 * 			be obtained by calling the getter method for each property.
+	 * @param newValues An array containing the new property values.  The elements
+	 * 			of this array must match one to one the scalar properties of the object
+	 * 			and in the correct order.  Intrinsic properties (int, long etc) must
+	 * 			be passed as objects (Integer, Long etc).
+	 * @param extensionProperties
+	 */
+	void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues, ExtensionProperties[] extensionProperties);
+
+	/**
+	 * Returns the session object.  Objects often need access to the session object.
+	 * For example, the CapitalAccount constructor sets the currency to the default
+	 * currency for the session if a null currency is passed.
+	 * <P>
+	 * The datastore implementation usually require that the object keys have access
+	 * to the session manager.  It is therefore very easy to provide the session
+	 * through this method, and this saves a lot of code and fields in the 
+	 * object implementation classes to keep track of the session.
+	 * <P>
+	 * WARNING: Be very careful about the use of this method.
+	 * The session will not be set until it is constructed.
+	 * Therefore any code that may be called during the initial
+	 * construction of a session may not call this method.
+	 * This includes extendable object constructors that are being
+	 * called to construct an object store from a datastore.
+	 * It does not include the constructor when adding a new object.
+	 * As these are the same constructors, this is very confusing.
+	 *   
+	 * @return
+	 */
+	Session getSession();
 }

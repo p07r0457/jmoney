@@ -33,14 +33,13 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 
 /**
+ * This class maintains the set of propagators that have
+ * been added by the plug-ins.  This class provides methods
+ * that may be called when a property value is changed that
+ * ensure that all the appropriate propagator methods are called
+ * to propagate the new property value.
  *
  * @author  Nigel
- *
- * This class acts as a container for the accounting plugins.
- * Each accounting plugin has a bean called Info.  When an
- * accounting plugin is added to the accounting package, this
- * bean is added to the list maintained by the Propagator
- * class.
  */
 public class Propagator {
 	

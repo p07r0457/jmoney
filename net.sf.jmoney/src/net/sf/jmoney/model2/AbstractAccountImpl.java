@@ -27,6 +27,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.model2.*;
 
 /**
@@ -36,39 +38,54 @@ public abstract class AbstractAccountImpl extends ExtendableObjectHelperImpl imp
 	
 	protected IObjectKey parentKey;
 	
+	protected String name;
+
 	protected IListManager subAccounts;
 	
 	protected AbstractAccountImpl(
 			IObjectKey objectKey, 
 			Map extensions, 
-			IObjectKey parent,
+			IObjectKey parentKey,
 			IListManager subAccounts) {
 		super(objectKey, extensions);
-		this.parentKey = parent;
+		this.parentKey = parentKey;
 		this.subAccounts = subAccounts;
 	}
 	
+	/**
+	 * @return the name of this account.
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * @param aName the name of this account.
+	 */
+	
+	public void setName(String newName) {
+		String oldName = name;
+		name = newName;
+		
+		// Notify the change manager.
+		JMoneyPlugin.getChangeManager().setProperty(this, AccountInfo.getNameAccessor(), oldName, newName);
+	}
+
 	public String getFullAccountName() {
 		return getName();
 	}
 	
 	public Account getParent() {
-	    if (parentKey == null) {
-	        return null;
-	    } else {
-	        IExtendableObject parent = parentKey.getObject();
-    		if (parent instanceof MutableAccount) {
-    		    return ((MutableAccount) parent).getRealAccount();
-    		} else if (parent instanceof Account) {
-	    		return (Account) parent;
-	        } else {
-	            return null;
-	        }
-	    }
+		IExtendableObject parent = parentKey.getObject();
+		if (parent instanceof Account) {
+			return (Account)parent;
+		} else {
+			return null;
+		}
 	}
 	
-	void removeSubAccount(Account subAccount) {
-		subAccounts.remove(subAccount);
+	boolean removeSubAccount(Account subAccount) {
+		return subAccounts.remove(subAccount);
 	}
 	
 	public Iterator getSubAccountIterator() {
@@ -85,4 +102,14 @@ public abstract class AbstractAccountImpl extends ExtendableObjectHelperImpl imp
 		Account c = (Account) o;
 		return getName().compareTo(c.getName());
 	}
+
+    public int getLevel () {
+        int level;
+        if (parentKey == null || getParent() == null)
+            level = 0;
+        else 
+            level = getParent().getLevel() + 1;
+        System.out.println("Level from " + this.name + ", child of " + getParent() +" is " + level);
+        return level;
+    }
 }

@@ -45,7 +45,7 @@ public interface IExtendableObject {
 	 * Get the extension that implements the properties needed by
 	 * a given plug-in.
 	 */
-	ExtensionObject getExtension(PropertySet propertySetKey);
+	ExtensionObject getExtension(PropertySet propertySet);
 	
 	Object getPropertyValue(PropertyAccessor propertyAccessor);
 	

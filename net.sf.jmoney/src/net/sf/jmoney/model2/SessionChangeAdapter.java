@@ -80,16 +80,6 @@ public class SessionChangeAdapter implements SessionChangeListener {
 	 * fired for each entry in the transaction.
 	 */
     public void entryAdded(EntryAddedEvent event) {
-        Entry  entry = event.getNewEntry();
-        Account account = entry.getAccount();
-        /*  Tja ! the entry will be added when the transaction is committed -> this code is not needed. -- Faucheux
-        if (account instanceof CapitalAccountImpl) {
-            ((CapitalAccountImpl) account).addEntry(entry);
-        } else if (account instanceof MutableCapitalAccountImpl) {
-            ((CapitalAccountImpl)((MutableCapitalAccountImpl) account).getRealAccount()).addEntry(entry);
-        }
-        */
-
     }
 
     /**

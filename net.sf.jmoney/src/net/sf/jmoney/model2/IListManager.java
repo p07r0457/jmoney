@@ -35,16 +35,9 @@ public interface IListManager extends Collection {
 	/**
 	 * This method creates a new object in this collection
 	 * in the datastore.  The new object will be initialized
-	 * with values taken from the given object.
-	 * <P>
-	 * Multi-valued properties are not initialized.
-	 * These must be set at a later time by the caller.
+	 * with default values.
 	 * 
-	 * @param extendableObject An object that implements the getters
-	 * 			from which the initial values of the new object are
-	 * 			obtained.
 	 * @return the newly created object.
 	 */
-	// TODO: Decide if we should initialize multi-valued properties too.
-	IExtendableObject createNewElement(ExtendableObjectHelperImpl parent, PropertySet propertySet, IExtendableObject values);
+	IExtendableObject createNewElement(ExtendableObjectHelperImpl parent, PropertySet propertySet);
 }

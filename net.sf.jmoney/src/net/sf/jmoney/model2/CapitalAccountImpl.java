@@ -24,6 +24,7 @@
 package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.CapitalAccountInfo;
 import net.sf.jmoney.model2.*;
 
 import java.beans.PropertyChangeListener;
@@ -66,8 +67,6 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 
 	protected static String[] entryOrderNames;
 
-	protected String name;
-
 	protected Currency currency;
 
 	protected String bank = null;
@@ -82,15 +81,12 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 
 	protected String comment = null;
 
-	protected Vector children;
-	
         /**
          * This list is maintained for efficiency only.
          * The master list is the list of transactions, with each
          * transaction containing a list of entries.
          */
-//	protected transient Vector entries = new Vector();
-	public Collection entries;
+	protected Collection entries;
 
 	protected PropertyChangeSupport changeSupport =
 		new PropertyChangeSupport(this);
@@ -110,7 +106,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 			IObjectKey parent,
 			String name,
 			IListManager subAccounts,
-			IObjectKey currency,
+			IObjectKey currencyKey,
 			String bank,
 			String accountNumber,
 			long startBalance,
@@ -124,8 +120,12 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 		// This account is being loaded from the datastore and therefore a currency
 		// must be set.  We store internally the Currency object itself, not the 
 		// key used to fetch the Currency object.
-        this.currency = (Currency)currency.getObject();
-        
+		if (currencyKey == null) {
+			this.currency = objectKey.getSession().getDefaultCurrency();
+		} else {
+			this.currency = (Currency)currencyKey.getObject();
+		}
+		
         this.bank = bank;
         this.accountNumber = accountNumber;
         this.startBalance = startBalance;
@@ -143,7 +143,6 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 		}
 		
 		this.entries = objectKey.createIndexValuesList(accountAccessor);
-		this.children = new Vector();
 	}
 
 	protected boolean isMutable() {
@@ -160,13 +159,6 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 		return "net.sf.jmoney.account";
 	}
 	
-	/**
-	 * @return the name of this account.
-	 */
-	public String getName() {
-		return name;
-	}
-
 	/**
 	 * @return the locale of this account.
 	 */
@@ -243,21 +235,15 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 		entries.remove(entry);
 	}
 
-	/**
-	 * @param aName the name of this account.
-	 */
-	
-	public void setName(String aName) {
-		if (name != null && name.equals(aName))
-			return;
-		name = aName;
-		changeSupport.firePropertyChange("name", null, name);
-	}
-
 	public void setCurrency(Currency aCurrency) {
-		if (currency == aCurrency)
-			return;
-                Currency oldCurrency = currency;
+		if (this.currency == aCurrency ||
+				(this.currency != null && this.currency.equals(aCurrency)))
+				return;
+		
+		// Notify the change manager.
+		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getCurrencyAccessor(), this.currency, aCurrency);
+
+        Currency oldCurrency = currency;
 		currency = aCurrency;
 		changeSupport.firePropertyChange("currency", oldCurrency, currency);
 	}
@@ -267,10 +253,11 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 	 */
 
 	public void setBank(String aBank) {
-		if (bank != null && bank.equals(aBank))
-			return;
-		bank = aBank;
-		changeSupport.firePropertyChange("bank", null, bank);
+        String oldBank = this.bank;
+		this.bank = aBank;
+
+		// Notify the change manager.
+		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getBankAccessor(), oldBank, aBank);
 	}
 
 	/**
@@ -279,10 +266,11 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 	 */
 	
 	public void setAccountNumber(String anAccountNumber) {
-		if (accountNumber != null && accountNumber.equals(anAccountNumber))
-			return;
-		accountNumber = anAccountNumber;
-		changeSupport.firePropertyChange("accountNumber", null, accountNumber);
+        String oldAccountNumber = this.accountNumber;
+        this.accountNumber = anAccountNumber;
+
+		// Notify the change manager.
+		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getAccountNumberAccessor(), oldAccountNumber, anAccountNumber);
 	}
 
 	/**
@@ -291,10 +279,11 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 	 */
 	
 	public void setStartBalance(long s) {
-		if (startBalance == s)
-			return;
-		startBalance = s;
-		changeSupport.firePropertyChange("startBalance", null, new Long(s));
+        long oldStartBalance = this.startBalance;
+		this.startBalance = s;
+
+		// Notify the change manager.
+		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getStartBalanceAccessor(), new Long(oldStartBalance), new Long(s));
 	}
 
 	/**
@@ -302,10 +291,11 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 	 */
 	
 	public void setMinBalance(Long m) {
-		if (minBalance == m)
-			return;
-		minBalance = m;
-		changeSupport.firePropertyChange("minBalance", null, m);
+        Long oldMinBalance = this.minBalance;
+		this.minBalance = m;
+
+		// Notify the change manager.
+		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getMinBalanceAccessor(), oldMinBalance, m);
 	}
 
 	/**
@@ -313,10 +303,11 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 	 */
 	
 	public void setAbbreviation(String anAbbreviation) {
-		if (abbreviation != null && abbreviation.equals(anAbbreviation))
-			return;
-		abbreviation = anAbbreviation;
-		changeSupport.firePropertyChange("abbreviation", null, abbreviation);
+        String oldAbbreviation = this.abbreviation;
+        this.abbreviation = anAbbreviation;
+
+		// Notify the change manager.
+		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getAbbreviationAccessor(), oldAbbreviation, anAbbreviation);
 	}
 
 	/**
@@ -324,10 +315,11 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 	 */
 	
 	public void setComment(String aComment) {
-		if (comment != null && comment.equals(aComment))
-			return;
-		comment = aComment;
-		changeSupport.firePropertyChange("comment", null, comment);
+        String oldComment = this.comment;
+        this.comment = aComment;
+
+		// Notify the change manager.
+		JMoneyPlugin.getChangeManager().setProperty(this, CapitalAccountInfo.getCommentAccessor(), oldComment, aComment);
 	}
 
 	/**
@@ -364,10 +356,10 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 
 	public String getFullAccountName() {
 	    if (getParent() == null) {
-	       return name;
-	    } else {
-	        return getParent().getFullAccountName() + "." + this.name;
-	    }
+		       return name;
+		    } else {
+		        return getParent().getFullAccountName() + "." + this.name;
+		    }
 	}
 
 	public int compareTo(Object o) {
@@ -375,75 +367,79 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 		return getName().compareTo(a.getName());
 	}
 
-        // TODO: Ensure no mutable interface on this object already.
-        public MutableCapitalAccount createNewSubAccount(Session session) {
-            return new MutableCapitalAccountImpl(session, this, 0);
-        }
+	/**
+	 * This version is required by the JMoney framework.
+	 * 
+	 * @param name
+	 * @param extensionProperties
+	 * @return
+	 */
+	public CapitalAccount createSubAccount() {
+		CapitalAccount newAccount = (CapitalAccount)subAccounts.createNewElement(
+				this, 
+				JMoneyPlugin.getCapitalAccountPropertySet()); 
+		
+		// Fire the event.
+		/* how do we get the session?        	
+		 final AccountAddedEvent event = new AccountAddedEvent(session, newAccount);
+		 session.fireEvent(
+		 new ISessionChangeFirer() {
+		 public void fire(SessionChangeListener listener) {
+		 listener.accountAdded(event);
+		 }
+		 });
+		 */
+		return newAccount;
+	}
         
-        // TODO: Ensure no mutable interface on this object already.
-        public MutableCapitalAccount createMutableAccount(Session session) {
-            return new MutableCapitalAccountImpl(session, this);
-        }
-        
-     public int getLevel () {
-         int level;
-         if (parentKey == null)
-             level = 0;
-         else 
-             level = getParent().getLevel() + 1;
-         System.out.println("Level from " + this.name + ", child of " + getParent() +" is " + level);
-         return level;
-     }
-
- 	/**
- 	 * Get the balance at a given date
- 	 * 
- 	 * @param date
- 	 * @return the balance
-     * @author Faucheux
- 	 */
- 	public long getBalance(Session session, Date fromDate, Date toDate) {
- 		System.out.println("Calculing the Balance for >" + name + "< (without sub-accounts) between " + fromDate + " and " + toDate);
-
- 		long bal = getStartBalance();
- 		Iterator eIt = null;
- 		
- 		// Sum each entry the entry between the two dates 
- 		eIt = entries.iterator();
- 		while (eIt.hasNext()) {
- 			Entry e = (Entry) eIt.next();
- 			if ((e.getTransaxion().getDate().compareTo(fromDate) >= 0)
- 					&& e.getTransaxion().getDate().compareTo(toDate) <= 0){
- 				bal += e.getAmount();
- 			    
- 			}
- 		}
-
- 		return bal;
- 	}
-
- 	/**
- 	 * Get the balance between two dates , inclusive sub-accounts
- 	 * 
- 	 * @param date
- 	 * @return the balance
- 	 * @author Faucheux
- 	 */
- 	public long getBalanceWithSubAccounts(Session session, Date fromDate, Date toDate) {
- 		System.out.println("Calculing the Balance for >" + name + "< (with sub-accounts) between " + fromDate + " and " + toDate);
- 		long bal = getBalance(session, fromDate, toDate);
- 	
- 		Iterator aIt = children.iterator();
-
- 		while (aIt.hasNext()) {
- 			bal += ((Account) aIt.next()).getBalanceWithSubAccounts(session, fromDate, toDate);
- 		}
- 		return bal;
- 	}
- 	
-
-    public void addChild(Account a) {
-        children.add(a);
-    }
-
+	static public Object [] getDefaultProperties() {
+		return new Object [] { "new account", null, null, null, new Long(0), null, null, null };
+	}
+	
+	/**
+	 * Get the balance at a given date
+	 * 
+	 * @param date
+	 * @return the balance
+	 * @author Faucheux
+	 */
+	public long getBalance(Session session, Date fromDate, Date toDate) {
+		System.out.println("Calculing the Balance for >" + name + "< (without sub-accounts) between " + fromDate + " and " + toDate);
+		
+		long bal = getStartBalance();
+		Iterator eIt = null;
+		
+		// Sum each entry the entry between the two dates 
+		eIt = entries.iterator();
+		while (eIt.hasNext()) {
+			Entry e = (Entry) eIt.next();
+			if ((e.getTransaxion().getDate().compareTo(fromDate) >= 0)
+					&& e.getTransaxion().getDate().compareTo(toDate) <= 0){
+				bal += e.getAmount();
+				
+			}
+		}
+		
+		return bal;
+	}
+	
+	/**
+	 * Get the balance between two dates , inclusive sub-accounts
+	 * 
+	 * @param date
+	 * @return the balance
+	 * @author Faucheux
+	 */
+	public long getBalanceWithSubAccounts(Session session, Date fromDate, Date toDate) {
+		System.out.println("Calculing the Balance for >" + name + "< (with sub-accounts) between " + fromDate + " and " + toDate);
+		long bal = getBalance(session, fromDate, toDate);
+		
+		Iterator aIt = getSubAccountIterator();
+		
+		while (aIt.hasNext()) {
+			bal += ((CapitalAccount) aIt.next()).getBalanceWithSubAccounts(session, fromDate, toDate);
+		}
+		return bal;
+	}
+    	
 }

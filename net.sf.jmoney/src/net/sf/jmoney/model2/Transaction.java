@@ -39,6 +39,8 @@ public interface Transaction extends IExtendableObject {
     
     Iterator getEntryIterator();
     
+	MutableTransaction createMutableTransaction(Session session) throws ObjectLockedForEditException;
+	
     // Helper methods:
     
     boolean hasTwoEntries();

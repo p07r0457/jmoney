@@ -28,8 +28,6 @@ package net.sf.jmoney.model2;
  * This interface extends the Account interface.  
  */
 public interface IncomeExpenseAccount extends Account {
-
-        public MutableIncomeExpenseAccount createNewSubAccount(Session session);
-
-        MutableIncomeExpenseAccount createMutableAccount(Session session) throws ObjectLockedForEditException;
+	// Category accounts have no additional properties
+	// so there is nothing to add in this interface.
 }

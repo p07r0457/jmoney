@@ -23,10 +23,9 @@
 
 package net.sf.jmoney.model2;
 
-import java.util.Date;
 import java.util.Map;
-import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.*;
 
 /**
@@ -34,12 +33,8 @@ import net.sf.jmoney.model2.*;
  */
 public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements IncomeExpenseAccount {
 
-	private String accountName;
-
 	private String fullAccountName = null;
 
-	protected Vector children;
-	
 	public IncomeExpenseAccountImpl(
 			IObjectKey objectKey, 
 			Map extensions, 
@@ -48,7 +43,6 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Inc
 			IListManager subAccounts) {
 		super(objectKey, extensions, parent, subAccounts);
 		setName(accountName);
-		children = new Vector();
 	}
 
 	protected boolean isMutable() {
@@ -65,36 +59,40 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Inc
 		return "net.sf.jmoney.category";
 	}
 	
-	public String getName() {
-		return accountName;
-	}
-
 	public String getFullAccountName() {
 		if (fullAccountName == null) {
-                    fullAccountName = accountName;
-                    Account ancestorCategory = getParent();
-                    while (ancestorCategory != null) {
-			fullAccountName = ancestorCategory.getName() + ":" + fullAccountName;
-                        ancestorCategory = ancestorCategory.getParent();
-                    }
+			fullAccountName = name;
+			Account ancestorCategory = getParent();
+			while (ancestorCategory != null) {
+				fullAccountName = ancestorCategory.getName() + ":" + fullAccountName;
+				ancestorCategory = ancestorCategory.getParent();
+			}
 		}
 		return fullAccountName;
 	}
 
-	public void setName(String accountName) {
-		this.accountName = accountName;
+	// TODO: use debugger to see if this version is called
+	// when the Method object references the version in the
+	// abstract base class.  If not then this is broke.
+	public void setName(String name) {
+		super.setName(name);
 		fullAccountName = null;
 	}
 
 	/**
+	 * This method is required by the JMoney framework.
 	 * 
-	 * @param accountPropertySet
+	 * @param name
+	 * @param extensionProperties
 	 * @return
 	 */
-	public Account createNewSubAccount(Session session, PropertySet propertySet, IncomeExpenseAccount account) {
-		AbstractAccountImpl newAccount = (AbstractAccountImpl)subAccounts.createNewElement(this, propertySet, account);
+    public IncomeExpenseAccount createSubAccount() {
+    	IncomeExpenseAccount newAccount = (IncomeExpenseAccount)subAccounts.createNewElement(
+				this, 
+				JMoneyPlugin.getIncomeExpenseAccountPropertySet());
 
 		// Fire the event.
+/* how do we get the session???    	
         final AccountAddedEvent event = new AccountAddedEvent(session, newAccount);
         session.fireEvent(
         	new ISessionChangeFirer() {
@@ -102,43 +100,11 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Inc
         			listener.accountAdded(event);
         		}
        		});
-        
+*/
         return newAccount;
+    }
+    
+    static public  Object [] getDefaultProperties() {
+		return new Object [] { "new category" };
 	}
-
-        // TODO: Ensure no mutable interface on this object already.
-        public MutableIncomeExpenseAccount createNewSubAccount(Session session) {
-            return new MutableIncomeExpenseAccountImpl(session, this, 0);
-        }
-        
-        public MutableIncomeExpenseAccount createMutableAccount(Session session) throws ObjectLockedForEditException {
-            return new MutableIncomeExpenseAccountImpl(session, this);
-        }
-        
-        public int getLevel () {
-            if (parentKey == null) {
-                return 0;
-            } else {
-                System.err.println("Warning: ParentKey is not null! > Level is false"); // TODO
-                return 1;
-            }
-        }
-        
-        /**
-         * @author Faucheux
-         */
-     	public long getBalance(Session session, Date fromDate, Date toDate) {
-     	   return 0;
-     	}
-
-        /**
-         * @author Faucheux
-         */
-     	public long getBalanceWithSubAccounts(Session session, Date fromDate, Date toDate) {
-     	    return 0;
-     	}
-
-        public void addChild(Account a) {
-            children.add(a);
-        }
 }

@@ -29,7 +29,7 @@ import java.util.Map;
 /**
  * The data model for an entry.
  */
-public interface Entry extends IMutableExtendableObject {
+public interface Entry extends IExtendableObject {
 	
 	/**
 	 * Returns the transaction.

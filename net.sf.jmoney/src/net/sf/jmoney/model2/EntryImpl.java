@@ -55,7 +55,13 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
     /**
      * Constructor used by datastore plug-ins to create
      * an entry object.
-     * 
+     *
+     * Note that the entry constructed by this constructor
+     * may be invalid.  For example, it is possible that a
+     * null account is set.  It is the callers responsibility
+     * to ensure that an account is set before it relinquishes
+     * control to other plug-ins.
+     *  
      * @param parent The key to a Transaction object.
      * 		This parameter must be non-null.
      * 		The getObject method must not be called on this
@@ -64,33 +70,35 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
      * 		capable of materializing an object.   
      */
 	public EntryImpl(
-				IObjectKey objectKey,
-	    		Map        extensions,
-				IObjectKey parent,
-	    		String     check,
-	    		String     description,
-	    		IObjectKey accountKey,
-	    		Date       valuta,
-	    		String     memo,
-	    		long       amount,
-	    		long       creation) {
-		super(objectKey, extensions);
+			IObjectKey objectKey,
+    		Map        extensions,
+			IObjectKey parent,
+    		String     check,
+    		String     description,
+    		IObjectKey accountKey,
+    		Date       valuta,
+    		String     memo,
+    		long       amount,
+    		long       creation) {
+	super(objectKey, extensions);
 
-		/*
+	/*
 
-		System.out.println("Creating an Entry with" 
-		        + "\nobjectKey: " + objectKey
-		        + "\nparent:" + parent
-		        + "\naccountKey:" + accountKey);
-		*/
-		
+	System.out.println("Creating an Entry with" 
+	        + "\nobjectKey: " + objectKey
+	        + "\nparent:" + parent
+	        + "\naccountKey:" + accountKey);
+	*/
+	
 		this.creation = creation;
 		this.check = check;
 		this.valuta = valuta;
 		this.description = description;
-		this.account = accountKey.getObject() instanceof Account 
-			? (Account)accountKey.getObject()
-			: null;
+		if (accountKey == null) {
+			this.account = null;
+		} else {
+			this.account = (Account)accountKey.getObject();
+		}
 		this.amount = amount;
 		this.memo = memo;
 		
@@ -292,16 +300,14 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	protected void firePropertyChange(String propertyLocalName, Object oldValue, Object newValue) {
 		if (newValue != null && !newValue.equals(oldValue)
 				|| newValue == null && oldValue != null) {
+	    	PropertySet entryPropertySet = JMoneyPlugin.getEntryPropertySet();
 			// TODO tidy this up.
-			// Should remove getExtendablePropertySet method
-			// altogether and should not get by name but this
+			// Should not get by name but this
 			// should be set directly and stored in a static
 			// in the class.
 			try {
-				PropertySet.getPropertySet("net.sf.jmoney.entry").getProperty(propertyLocalName).firePropertyChange(
+				entryPropertySet.getProperty(propertyLocalName).firePropertyChange(
 					this, oldValue, newValue);
-			} catch (PropertySetNotFoundException e) {
-				throw new RuntimeException("internal error");
 			} catch (PropertyNotFoundException e) {
 				throw new RuntimeException("internal error");
 			}
@@ -314,5 +320,18 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	
 	protected void firePropertyChange(String propertyLocalName, char oldValue, char newValue) {
 		firePropertyChange(propertyLocalName, new Character(oldValue), new Character(newValue));
+	}
+
+
+	static public Object [] getDefaultProperties() {
+		return new Object [] { 
+				null,
+				null,
+				null,
+				null,
+				null,
+				new Long(0),
+				new Long(0),  // creation, should be now.
+				};
 	}
 }
