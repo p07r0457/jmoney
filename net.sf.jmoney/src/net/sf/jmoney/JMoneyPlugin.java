@@ -72,6 +72,8 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 
     public static final String PLUGIN_ID = "net.sf.jmoney";
 
+    public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney/debug"));
+
 	//The shared instance.
 	private static JMoneyPlugin plugin;
 	//Resource bundle.
@@ -436,11 +438,11 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 			// data in the session memento.  Therefore, if a session is open,
 			// just return that.  We know it is the right session.
 			if (getDefault().getSession() != null) {
-				System.out.println("creating session - subsequent time");
+				if (DEBUG) System.out.println("creating session - subsequent time");
 				return getDefault().getSession();
 			}
 			
-			System.out.println("creating session - first time");
+			if (DEBUG) System.out.println("creating session - first time");
 			String factoryId = memento.getString("currentSessionFactoryId"); 
 			if (factoryId != null && factoryId.length() != 0) {
 				// Search for the factory.

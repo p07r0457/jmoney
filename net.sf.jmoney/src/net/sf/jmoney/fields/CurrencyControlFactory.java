@@ -95,7 +95,7 @@ public class CurrencyControlFactory implements IPropertyControlFactory {
 	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
 		int index = ((Integer)value).intValue();
 		if (index > usedCurrencies.size()) 
-		    System.out.println("Can't find the " + index + " currency of " + usedCurrencies.size());
+			if (JMoneyPlugin.DEBUG) System.out.println("Can't find the " + index + " currency of " + usedCurrencies.size());
 		else { 
 		    Currency currency = (Currency) usedCurrencies.get(index);
         	extendableObject.setPropertyValue(propertyAccessor, currency);

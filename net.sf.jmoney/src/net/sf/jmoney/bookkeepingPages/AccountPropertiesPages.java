@@ -84,7 +84,7 @@ public class AccountPropertiesPages implements IBookkeepingPageFactory {
 			new SessionChangeAdapter() {
 		    public void accountChanged(final Account account, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 				if (account == AccountPropertiesControl.this.account) {
-					System.out.println("Property changed, reloading control: " + propertyAccessor.getLocalName());
+					if (JMoneyPlugin.DEBUG) System.out.println("Property changed, reloading control: " + propertyAccessor.getLocalName());
 					// Find the control for this property.
 					IPropertyControl propertyControl = (IPropertyControl)propertyControlList.get(propertyAccessor.getIndexIntoScalarProperties());
 					propertyControl.load(account);
@@ -133,7 +133,7 @@ public class AccountPropertiesPages implements IBookkeepingPageFactory {
 								String oldValueText;
 								
 								public void focusLost(FocusEvent e) {
-									System.out.println("Focus lost: " + propertyAccessor.getLocalName());
+									if (JMoneyPlugin.DEBUG) System.out.println("Focus lost: " + propertyAccessor.getLocalName());
 									
 									if (AccountPropertiesControl.this.session.isSessionFiring()) {
 										return;
@@ -158,7 +158,7 @@ public class AccountPropertiesPages implements IBookkeepingPageFactory {
 									AccountPropertiesControl.this.session.registerUndoableChange(description);
 								}
 								public void focusGained(FocusEvent e) {
-									System.out.println("Focus gained: " + propertyAccessor.getLocalName());
+									if (JMoneyPlugin.DEBUG) System.out.println("Focus gained: " + propertyAccessor.getLocalName());
 									// Save the old value of this property for use in our 'undo' message.
 									oldValueText = propertyAccessor.formatValueForMessage(
 											AccountPropertiesControl.this.account);

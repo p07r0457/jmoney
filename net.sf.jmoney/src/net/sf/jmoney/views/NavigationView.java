@@ -246,7 +246,7 @@ public class NavigationView extends ViewPart {
     public void init(IViewSite site, IMemento memento) throws PartInitException {
         init(site);
 
-		System.out.println("navigation view initialized");
+        if (JMoneyPlugin.DEBUG) System.out.println("navigation view initialized");
         if (memento != null) {
         	// Restore any session that was open when the workbench
         	// was last closed.

@@ -27,6 +27,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
+
 /**
  * Keeps track of changes made to the model.
  * 
@@ -458,9 +460,9 @@ public class ChangeManager {
 		
 		UndoableChange lastChange = (UndoableChange)previousChanges.lastElement();
 		
-		System.out.println("start undo of changes: " + lastChange.getDescription());
+		if (JMoneyPlugin.DEBUG) System.out.println("start undo of changes: " + lastChange.getDescription());
 		lastChange.undoChanges();
-		System.out.println("finish undo of changes: " + lastChange.getDescription());
+		if (JMoneyPlugin.DEBUG) System.out.println("finish undo of changes: " + lastChange.getDescription());
 		
 		// The above call to undoChanges sent changes to the
 		// datastore.  These changes are stored in the

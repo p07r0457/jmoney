@@ -247,13 +247,13 @@ public class DateEditor implements IPropertyControl {
 			button.setBounds(bounds.width-size.y, 0, size.y, bounds.height);
 		}
 		public Point computeSize(Composite editor, int wHint, int hHint, boolean force) {
-			System.out.println("wHint =" + wHint + ", " + hHint);
+			if (JMoneyPlugin.DEBUG) System.out.println("wHint =" + wHint + ", " + hHint);
 			if (wHint != SWT.DEFAULT && hHint != SWT.DEFAULT)
 				return new Point(wHint, hHint);
 			Point contentsSize = textControl.computeSize(SWT.DEFAULT, SWT.DEFAULT, force); 
 			Point buttonSize =  button.computeSize(SWT.DEFAULT, SWT.DEFAULT, force);
-			System.out.println("contents =" + contentsSize.x + ", " + contentsSize.y);
-			System.out.println("contents =" + buttonSize.x + ", " + buttonSize.y);
+			if (JMoneyPlugin.DEBUG) System.out.println("contents =" + contentsSize.x + ", " + contentsSize.y);
+			if (JMoneyPlugin.DEBUG) System.out.println("contents =" + buttonSize.x + ", " + buttonSize.y);
 			// Just return the button width to ensure the button is not clipped
 			// if the label is long.  Date text needs 60
 			// The label will just use whatever extra width there is

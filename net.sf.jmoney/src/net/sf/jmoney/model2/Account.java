@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.EntryInfo;
 
@@ -179,7 +180,7 @@ public abstract class Account extends ExtendableObject {
             level = 0;
         else 
             level = getParent().getLevel() + 1;
-        System.out.println("Level from " + this.name + ", child of " + getParent() +" is " + level);
+        if (JMoneyPlugin.DEBUG) System.out.println("Level from " + this.name + ", child of " + getParent() +" is " + level);
         return level;
     }
 }

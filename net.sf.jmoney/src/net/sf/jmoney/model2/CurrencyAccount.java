@@ -240,7 +240,7 @@ public class CurrencyAccount extends CapitalAccount {
 	 * @author Faucheux
 	 */
 	public long getBalance(Session session, Date fromDate, Date toDate) {
-		System.out.println("Calculing the Balance for >" + name + "< (without sub-accounts) between " + fromDate + " and " + toDate);
+		if (JMoneyPlugin.DEBUG) System.out.println("Calculing the Balance for >" + name + "< (without sub-accounts) between " + fromDate + " and " + toDate);
 		
 		long bal = getStartBalance();
 
@@ -276,7 +276,7 @@ public class CurrencyAccount extends CapitalAccount {
 	 * @author Faucheux
 	 */
 	public long getBalanceWithSubAccounts(Session session, Date fromDate, Date toDate) {
-		System.out.println("Calculing the Balance for >" + name + "< (with sub-accounts) between " + fromDate + " and " + toDate);
+		if (JMoneyPlugin.DEBUG) System.out.println("Calculing the Balance for >" + name + "< (with sub-accounts) between " + fromDate + " and " + toDate);
 		long bal = getBalance(session, fromDate, toDate);
 		
 		Iterator aIt = getSubAccountIterator();

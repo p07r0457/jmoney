@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 
@@ -648,7 +649,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 	    Iterator it = getAccountIterator();
 	    while (it.hasNext()) {
 	        a = (Account) it.next();
-	        System.out.println("Compare " + name + " to " + a.getFullAccountName());
+	        if (JMoneyPlugin.DEBUG) System.out.println("Compare " + name + " to " + a.getFullAccountName());
 	        if (a.getFullAccountName().equals(name))
 	            return a;
 	    }
