@@ -22,7 +22,6 @@
 
 package net.sf.jmoney;
 
-import net.sf.jmoney.views.FolderView;
 import net.sf.jmoney.views.NavigationView;
 
 import org.eclipse.ui.IFolderLayout;
@@ -44,12 +43,8 @@ public class JMoneyPerspective implements IPerspectiveFactory {
         IFolderLayout navigator = layout.createFolder("navigator", IPageLayout.LEFT, 0.2f, layout.getEditorArea());
         navigator.addView(NavigationView.ID_VIEW);
 
-        IFolderLayout main = layout.createFolder("main", IPageLayout.BOTTOM, 0.5f, layout.getEditorArea());
-        main.addView(FolderView.ID_VIEW);
-
         layout.addPerspectiveShortcut("net.sf.jmoney.JMoneyPerspective");
         layout.addShowViewShortcut(NavigationView.ID_VIEW);
-        layout.addShowViewShortcut(FolderView.ID_VIEW);
     }
 
 }

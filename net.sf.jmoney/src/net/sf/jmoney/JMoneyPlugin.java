@@ -57,7 +57,7 @@ import org.osgi.framework.BundleContext;
  */
 public class JMoneyPlugin extends AbstractUIPlugin {
 
-    public static String PLUGIN_ID = "net.sf.jmoney";
+    public static final String PLUGIN_ID = "net.sf.jmoney";
 
 	//The shared instance.
 	private static JMoneyPlugin plugin;

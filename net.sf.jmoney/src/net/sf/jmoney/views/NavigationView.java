@@ -623,36 +623,6 @@ private Map idToNodeMap = new HashMap();
 		hookContextMenu();
 		contributeToActionBars();
 		
-		// Listen for changes in the selection and update the 
-		// folder view.
-		// TODO: figure out how to get the folder view dynamically.
-		// The static getter is not such a clean interface.
-/* This code is commented out because it seems that when we listen
- * for a selection event, the double click event is not notified!		
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			   public void selectionChanged(SelectionChangedEvent event) {
-			       // if the selection is empty clear the label
-			       if (event.getSelection().isEmpty()) {
-			           FolderView.getDefault().setSelectedObject(new Vector(), null, null);
-			       } else if (event.getSelection() instanceof IStructuredSelection) {
-			           IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-			           for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-			           	Object selectedObject = iterator.next();
-			           	Vector pageListeners;
-			           	if (selectedObject instanceof TreeNode) {
-			           		pageListeners = ((TreeNode)selectedObject).getPageListeners();
-			           	} else if (selectedObject instanceof CapitalAccount) {
-			           		pageListeners = accountPageListeners;
-			           	} else {
-			           		pageListeners = new Vector();
-			           	}
-			           	FolderView.getDefault().setSelectedObject(pageListeners, selectedObject, session);
-			           	break;
-			           }
-			       }
-			   }
-			});
-*/		
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 		   public void doubleClick(DoubleClickEvent event) {
 			   	// if the selection is empty clear the label
@@ -672,11 +642,6 @@ private Map idToNodeMap = new HashMap();
 			   			} else {
 			   				pageListeners = new Vector();
 			   			}
-			   			
-			   			// Update the old folder view.
-			   			// This view is now deprecated.
-//			   			FolderView.getDefault().setSelectedObject(pageListeners, selectedObject, session);
-			   			
 			   			
 			   			// Create an editor for this node (or active if an editor
 			   			// is already open).

@@ -216,13 +216,6 @@
             class="net.sf.jmoney.views.NavigationView"
             id="net.sf.jmoney.views.NavigationView">
       </view>
-      <view
-            name="Folder"
-            icon="icons/sample.gif"
-            category="net.sf.jmoney.viewCategory"
-            class="net.sf.jmoney.views.FolderView"
-            id="net.sf.jmoney.views.FolderView">
-      </view>
    </extension>
 
    <extension
