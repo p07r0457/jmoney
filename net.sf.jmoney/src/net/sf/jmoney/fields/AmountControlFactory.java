@@ -80,7 +80,14 @@ public abstract class AmountControlFactory implements IPropertyControlFactory {
         if (amount == null) {
             return "";
         } else {
-            return getCommodity(extendableObject).format(amount.longValue());
+        	// TODO: clean this up when we have a plan for incomplete data.
+        	// For time being, use the default currency for formatting if the user
+        	// has not set the currency for the account.
+        	Commodity commodity = getCommodity(extendableObject);
+        	if (commodity == null) {
+        		commodity = extendableObject.getSession().getDefaultCurrency();
+        	}
+            return commodity.format(amount.longValue());
         }
     }
 

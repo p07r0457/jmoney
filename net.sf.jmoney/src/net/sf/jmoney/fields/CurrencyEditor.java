@@ -103,7 +103,14 @@ public class CurrencyEditor implements IPropertyControl {
             propertyControl.setText("");
     	} else {
             Currency currency = (Currency) extendableObject.getPropertyValue(currencyPropertyAccessor);
-            propertyControl.setText(currency.getName() == null ? "" : currency.getName());
+            // Currency should not be null, but check in case of incomplete data.
+            // TODO: clean this up when we know the policy on invalid data in the
+            // datastore.
+            if (currency == null) {
+                propertyControl.setText("");
+            } else {
+            	propertyControl.setText(currency.getName() == null ? "" : currency.getName());
+            }
 
             // If the currency property being edited is the currency
             // for a CurrencyAccount and the account has entries then the currency cannot
