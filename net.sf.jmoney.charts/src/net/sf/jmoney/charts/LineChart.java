@@ -21,9 +21,13 @@ import net.sf.jmoney.model2.*;
 
 import org.jfree.data.*;
 import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.ui.RectangleAnchor;
+import org.jfree.ui.Spacer;
 import org.jfree.chart.*;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.ValueMarker;
+import org.jfree.chart.plot.XYPlot;
 
 /**
  * A simple PieChart
@@ -85,6 +89,11 @@ public abstract class LineChart extends JFrame {
         // set the background color for the chart...
         chart.setBackgroundPaint(Color.yellow);
         
+        // add a seconde range axis to improve the lisibility
+        NumberAxis axis1 = (NumberAxis) ((XYPlot) chart.getPlot()).getRangeAxis();
+        NumberAxis axis2 = new NumberAxis("Amount");
+        ((XYPlot) chart.getPlot()).setRangeAxis(1, axis2);
+        axis2.setRange(axis1.getRange());
 
         // add the chart to a panel...
         ChartPanel chartPanel = new ChartPanel(chart);
