@@ -27,7 +27,7 @@ package net.sf.jmoney.model2;
  * @author  Nigel
  */
 public interface IPropertyRegistrar {
-    
+	
 	
 	/**
 	 * Creates an enumerated value.
@@ -51,98 +51,105 @@ public interface IPropertyRegistrar {
 	 * 		creating another property which depends on the enumerated
 	 * 		type having this value.
 	 */
-        EnumerationAccessor addEnumeratedValue(
-            PropertyAccessor propertyAccessor,
-            String internalName, 
-            String displayName);
-
-        /**
-         * Creates an enumerated value that represents a derived class.
-         * 
-         * @param propertyAccessor
-         * @param internalName
-         * @param displayName
-         * @param derivedClass This parameter must be specified if and
-         * 			only if the enumerated type controls derived classes.
-         * 			<em>derivedClass</em> is a class derived from the class
-         * 			in which the enumerated type occurs.
-         * @return
-         */
-        EnumerationAccessor addEnumeratedValue(
-                PropertyAccessor propertyAccessor,
-                String internalName, 
-                String displayName,
-				Class derivedClass);
-
-		/**
-		 * @param location Entry, CapitalAccount, Commodity or Transaction
-		 * @param name
-		 * @param shortDescription
-		 * @param width
-		 * @param currencyControlFactory
-		 * @param editor
-		 * @param propertyDependency
-		 */
-		PropertyAccessor addProperty(
-				String name, 
-				String shortDescription, 
-				double width, 
-				IPropertyControlFactory controlFactory,
-				Class editor, 
-				IPropertyDependency propertyDependency);
-		
-		/**
-		 * This method should be called if the property contains
-		 * a list of properties.  If an object contains a list
-		 * of properties then the object implementation must contain
-		 * a method of the form getFooIterator() that returns an
-		 * Iterator, where 'foo' is the name of the list property.   
-		 *
-		 * @param name
-		 * @param listItemClass The class for all items in the list.
-		 * 			Items in the list may be of a class derived from
-		 * 			this class.
-		 * @param shortDescription
-		 * @param width
-		 * @param propertyDependency
-		 */
-		PropertyAccessor addPropertyList(
-				String name,
-				String shortDescription, 
-				Class listItemClass,
-				IPropertyDependency propertyDependency);
-		
-		/**
-		 * This method should be called if the property set is designed to have
-		 * further property sets derived from it.  Unlike Java classes, a developer
-		 * can derived from an existing property set only if that property set was
-		 * designed to have other property sets derive from it.
-		 *
-		 * @param name The name of a property whose value depends on
-		 * 				the derived class.  The interface class for
-		 * 				this property set must define a getter method
-		 * 				for this property that returns a string.
-		 * 				The implementation classes for any derived
-		 * 				property sets must implement the getter method
-		 * 				and return a localized string that describes
-		 * 				the type of object represented by the derived
-		 * 				class.  
-		 * @param displayName An internationalized string that describes the enumerated
-		 * 			property that indicates the actual derived class.
-		 * @return
-		 */
-		PropertyAccessor setDerivableInfo(String name, String displayName);
-
-		/**
-		 * This method should be called if the property set is designed to have
-		 * further property sets derived from it.  Unlike Java classes, a developer
-		 * can derived from an existing property set only if that property set was
-		 * designed to have other property sets derive from it.
-		 * <P>
-		 * This version of this method does not provide text that can
-		 * be displayed to the user.
-		 * 
-		 * TODO decide whether we need this version at all.
-		 */
-		PropertyAccessor setDerivableInfo();
+	EnumerationAccessor addEnumeratedValue(
+			PropertyAccessor propertyAccessor,
+			String internalName, 
+			String displayName);
+	
+	/**
+	 * Creates an enumerated value that represents a derived class.
+	 * 
+	 * @param propertyAccessor
+	 * @param internalName
+	 * @param displayName
+	 * @param derivedClass This parameter must be specified if and
+	 * 			only if the enumerated type controls derived classes.
+	 * 			<em>derivedClass</em> is a class derived from the class
+	 * 			in which the enumerated type occurs.
+	 * @return
+	 */
+	EnumerationAccessor addEnumeratedValue(
+			PropertyAccessor propertyAccessor,
+			String internalName, 
+			String displayName,
+			Class derivedClass);
+	
+	/**
+	 * @param location Entry, CapitalAccount, Commodity or Transaction
+	 * @param name
+	 * @param displayName localized description of the property
+	 * @param width
+	 * @param currencyControlFactory
+	 * @param editor
+	 * @param propertyDependency
+	 */
+	PropertyAccessor addProperty(
+			String name, 
+			String displayName, 
+			double width, 
+			IPropertyControlFactory controlFactory,
+			Class editor, 
+			IPropertyDependency propertyDependency);
+	
+	/**
+	 * This method should be called if the property contains
+	 * a list of properties.  If an object contains a list
+	 * of properties then the object implementation must contain
+	 * a method of the form getFooIterator() that returns an
+	 * Iterator, where 'foo' is the name of the list property.   
+	 *
+	 * @param name
+	 * @param listItemClass The class for all items in the list.
+	 * 			Items in the list may be of a class derived from
+	 * 			this class.
+	 * @param shortDescription
+	 * @param width
+	 * @param propertyDependency
+	 */
+	PropertyAccessor addPropertyList(
+			String name,
+			String shortDescription, 
+			Class listItemClass,
+			IPropertyDependency propertyDependency);
+	
+	/**
+	 * This method should be called if the property set is designed to have
+	 * further property sets derived from it.  Unlike Java classes, a developer
+	 * can derived from an existing property set only if that property set was
+	 * designed to have other property sets derive from it.
+	 *
+	 * @param name The name of a property whose value depends on
+	 * 				the derived class.  The implementation class for
+	 * 				this property set must define an abstract getter method
+	 * 				for this property that returns a string.
+	 * 				The implementation classes for any derived
+	 * 				property sets must implement the getter method
+	 * 				and return a localized string that describes
+	 * 				the type of object represented by the derived
+	 * 				class.  
+	 * @param displayName An internationalized string that describes the enumerated
+	 * 			property that indicates the actual derived class.
+	 * @return
+	 */
+	PropertyAccessor setDerivableInfo(String name, String displayName);
+	
+	/**
+	 * This method should be called if the property set is designed to have
+	 * further property sets derived from it.  Unlike Java classes, a developer
+	 * can derived from an existing property set only if that property set was
+	 * designed to have other property sets derive from it.
+	 * <P>
+	 * This version of this method does not provide text that can
+	 * be displayed to the user.
+	 * 
+	 * TODO decide whether we need this version at all.
+	 */
+	PropertyAccessor setDerivableInfo();
+	
+	/**
+	 * If the object is not an extension and not derivable then
+	 * a localized description of the type of object represented
+	 * by this property set must be set by calling this method.
+	 */
+	void setObjectDescription(String description);
 }

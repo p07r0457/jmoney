@@ -42,6 +42,9 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.BankAccountInfo;
+import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.*;
 
 /**
@@ -158,7 +161,7 @@ public class QIF implements FileFormat {
      */
     private void importAccount(
         Session session,
-        CapitalAccount account,
+        BankAccount account,
         BufferedReader buffer)
         throws IOException, CanceledException {
         String line;
@@ -450,7 +453,13 @@ public class QIF implements FileFormat {
         }
     }
 
-    public void exportAccount(Session session, CapitalAccount account, File file) {
+    public void exportAccount(Session session, CapitalAccount capitalAccount, File file) {
+    	if (!(capitalAccount instanceof CurrencyAccount)) {
+    		// TODO: process other account types
+    		return;
+    	}
+    	CurrencyAccount account = (CurrencyAccount)capitalAccount;
+    	
         PropertySet qifPropertySet;
         try {
         	qifPropertySet = PropertySet.getPropertySet("net.sf.jmoney.qif.entryProperties");
@@ -542,7 +551,7 @@ public class QIF implements FileFormat {
         }
     }
 
-    private String formatAmount(long amount, CapitalAccount account) {
+    private String formatAmount(long amount, CurrencyAccount account) {
         return number.format(
             ((double) amount) / account.getCurrency().getScaleFactor());
     }
@@ -591,7 +600,7 @@ public class QIF implements FileFormat {
     }
 
     private CapitalAccount getNewAccount(Session session, String accountName) {
-    	CapitalAccount account = (CapitalAccount)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
+    	CapitalAccount account = (CapitalAccount)session.createAccount(BankAccountInfo.getPropertySet());
         account.setName(accountName);
         return account;
     }
@@ -604,7 +613,7 @@ public class QIF implements FileFormat {
         IncomeExpenseAccount category = (IncomeExpenseAccount)
             searchCategory(categoryName, session.getIncomeExpenseAccountIterator());
         if (category == null) {
-        	category = (IncomeExpenseAccount)session.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+        	category = (IncomeExpenseAccount)session.createAccount(IncomeExpenseAccountInfo.getPropertySet());
         	category.setName(categoryName);
         }
         return category;

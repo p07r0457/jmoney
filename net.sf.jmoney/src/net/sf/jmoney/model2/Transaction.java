@@ -24,6 +24,7 @@
 package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 
 import java.util.Date;
@@ -88,11 +89,11 @@ public class Transaction extends ExtendableObject {
     }
     
     public Entry createEntry() {
-		final Entry newEntry = (Entry)entries.createNewElement(this, JMoneyPlugin.getEntryPropertySet());
+		final Entry newEntry = (Entry)entries.createNewElement(this, EntryInfo.getPropertySet());
 
 		processObjectAddition(TransactionInfo.getEntriesAccessor(), newEntry);
 		
-		getObjectKey().getSession().fireEvent(
+		getSession().fireEvent(
 				new ISessionChangeFirer() {
 					public void fire(SessionChangeListener listener) {
 						listener.entryAdded(newEntry);
@@ -112,7 +113,7 @@ public class Transaction extends ExtendableObject {
 			// specifically for entry deletion.  The entryDeleted event is superfluous 
 			// and it may be simpler if we removed it, so that listeners receive the generic
 			// objectDeleted event only.
-			getObjectKey().getSession().fireEvent(
+			getSession().fireEvent(
 		            	new ISessionChangeFirer() {
 		            		public void fire(SessionChangeListener listener) {
 		            			listener.entryDeleted(entry);

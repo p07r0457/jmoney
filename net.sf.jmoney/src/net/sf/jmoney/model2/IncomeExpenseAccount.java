@@ -86,7 +86,7 @@ public class IncomeExpenseAccount extends Account {
     public IncomeExpenseAccount createSubAccount() {
     	final IncomeExpenseAccount newSubAccount = (IncomeExpenseAccount)subAccounts.createNewElement(
 				this, 
-				JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+				IncomeExpenseAccountInfo.getPropertySet());
 
 		processObjectAddition(IncomeExpenseAccountInfo.getSubAccountAccessor(), newSubAccount);
 		
@@ -94,7 +94,7 @@ public class IncomeExpenseAccount extends Account {
 		// specifically for account creation.  The accountAdded event is superfluous 
 		// and it may be simpler if we removed it, so that listeners receive the generic
 		// objectAdded event only.
-		getObjectKey().getSession().fireEvent(
+		getSession().fireEvent(
 				new ISessionChangeFirer() {
 					public void fire(SessionChangeListener listener) {
 						listener.accountAdded(newSubAccount);
@@ -116,7 +116,7 @@ public class IncomeExpenseAccount extends Account {
 			// specifically for account deletion.  The accountDeleted event is superfluous 
 			// and it may be simpler if we removed it, so that listeners receive the generic
 			// objectDeleted event only.
-			getObjectKey().getSession().fireEvent(
+			getSession().fireEvent(
 					new ISessionChangeFirer() {
 						public void fire(SessionChangeListener listener) {
 							listener.accountDeleted(subAccount);

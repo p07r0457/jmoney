@@ -32,6 +32,8 @@ import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.PropertySetNotFoundException;
 
 /**
  * @author Nigel
@@ -51,6 +53,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
  */
 public class CommodityInfo implements IPropertySetInfo {
 
+	private static PropertySet propertySet = null;
 	private static PropertyAccessor nameAccessor = null;
 
 	public CommodityInfo() {
@@ -60,7 +63,9 @@ public class CommodityInfo implements IPropertySetInfo {
 		return Commodity.class;
 	}
 
-	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
+		CommodityInfo.propertySet = propertySet;
+		
 		IPropertyControlFactory textControlFactory =
 			new IPropertyControlFactory() {
 				public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
@@ -78,6 +83,13 @@ public class CommodityInfo implements IPropertySetInfo {
 		
 		nameAccessor = propertyRegistrar.addProperty("name", JMoneyPlugin.getResourceString("Commodity.name"), 30.0, textControlFactory, null, null);
 		propertyRegistrar.setDerivableInfo("commodityType", "Commodity Type");
+	}
+
+	/**
+	 * @return
+	 */
+	public static PropertySet getPropertySet() {
+		return propertySet;
 	}
 
 	/**

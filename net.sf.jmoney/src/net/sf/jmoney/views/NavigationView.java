@@ -49,12 +49,15 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 
 import net.sf.jmoney.Constants;
+import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageListener;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
+import net.sf.jmoney.fields.CapitalAccountInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ISessionFactory;
 import net.sf.jmoney.model2.ISessionManager;
@@ -77,7 +80,7 @@ public class NavigationView extends ViewPart {
 
 	private TreeViewer viewer;
 	private DrillDownAdapter drillDownAdapter;
-	private Action newAccountAction;
+	private Vector newAccountActions = new Vector();  // Element type: Action
 	private Action deleteAccountAction;
 
 	private AccountsNode accountsRootNode;
@@ -341,7 +344,8 @@ public class NavigationView extends ViewPart {
 
 private Map idToNodeMap = new HashMap();
 	private Map pageListenerAndNodeIdMap = new HashMap();
-	private Vector accountPageListeners = new Vector();
+//	private Vector accountPageListeners = new Vector();
+	private Map objectToPagesMap = new HashMap();  // PropertySet to Vector of IBookkeepingPage
 
 	private IMemento memento;
 		
@@ -358,8 +362,6 @@ private Map idToNodeMap = new HashMap();
         if (memento != null) {
         	// Restore any session that was open when the workbench
         	// was last closed.
-        	ISessionManager sessionManager = null;
-        	
         	String factoryId = memento.getString("currentSessionFactoryId"); 
         	if (factoryId != null && factoryId.length() != 0) {
         		// Search for the factory.
@@ -377,30 +379,22 @@ private Map idToNodeMap = new HashMap();
         							
         							// Create and initialize the session object from 
         							// the data stored in the memento.
-        							sessionManager = (ISessionManager)listener.createElement(memento.getChild("currentSession"), getSite().getWorkbenchWindow());
-        							break;
+        							listener.openSession(memento.getChild("currentSession"), getSite().getWorkbenchWindow());
         						} catch (CoreException e) {
+        							// Could not create the factory given by the 'class' attribute
+        							// Log the error and start JMoney with no open session.
         							e.printStackTrace();
         						}
+        						break;
         					}
         				}
         			}
         		}
         	}
-        	
-        	// If the plug-in that had originally created the session is not
-        	// installed or if an error occurred while opening the session
-        	// then sessionManager will be null and we start
-        	// the workbench with no open session.  Otherwise set the
-			// returned session as the current session.
-            if (sessionManager != null) {
-                JMoneyPlugin.getDefault().setSessionManager(sessionManager);
-                session = sessionManager.getSession();
-            }
-        } else {
-        	session = null;
         }
     	
+        session = JMoneyPlugin.getDefault().getSession();
+        
         // init is called before createPartControl,
         // and the objects that need the memento are not
         // created until createPartControl is called so we save
@@ -481,9 +475,68 @@ private Map idToNodeMap = new HashMap();
 								// (This means the page should be supplied if
 								// the node represents an object that contains
 								// the given property set).
-								String nodeClass = elements[j].getAttribute("extendable-property-set");
-								if (nodeClass != null && nodeClass.equals("net.sf.jmoney.capitalAccount")) {
-									accountPageListeners.add(pageListener);
+								String propertySetId = elements[j].getAttribute("extendable-property-set");
+								if (propertySetId != null) {
+									try {
+										PropertySet pagePropertySet = PropertySet.getPropertySet(propertySetId);
+
+										for (Iterator iter = pagePropertySet.getDerivedPropertySetIterator(); iter.hasNext(); ) {
+											PropertySet derivedPropertySet = (PropertySet)iter.next();
+											Vector pageList = (Vector)objectToPagesMap.get(derivedPropertySet);
+											if (pageList == null) {
+												pageList = new Vector();
+												objectToPagesMap.put(derivedPropertySet, pageList);
+											}
+											
+											pageList.add(pageListener);
+										}
+									} catch (PropertySetNotFoundException e1) {
+										// This is a plug-in error.
+										// TODO implement properly.
+										e1.printStackTrace();
+									}
+								}
+							}
+						}
+						// Now add the 'new style' pages
+						if (listener instanceof IBookkeepingPage) {
+							IBookkeepingPage pageListener = (IBookkeepingPage)listener;
+/* not sure about this code
+    	 					IMemento pageMemento = null; 
+    	 					if (memento != null) {
+    	 						pageMemento = memento.getChild(pageListener.getClass().getName());
+    	 					}
+    	 					pageListener.init(pageMemento);
+*/
+							String nodeId = elements[j].getAttribute("node");
+							if (nodeId != null && nodeId.length() != 0) {
+								pageListenerAndNodeIdMap.put(pageListener, nodeId);
+							} else {
+								// No 'node' attribute so see if we have
+								// an 'extendable-property-set' attribute.
+								// (This means the page should be supplied if
+								// the node represents an object that contains
+								// the given property set).
+								String propertySetId = elements[j].getAttribute("extendable-property-set");
+								if (propertySetId != null) {
+									try {
+										PropertySet pagePropertySet = PropertySet.getPropertySet(propertySetId);
+
+										for (Iterator iter = pagePropertySet.getDerivedPropertySetIterator(); iter.hasNext(); ) {
+											PropertySet derivedPropertySet = (PropertySet)iter.next();
+											Vector pageList = (Vector)objectToPagesMap.get(derivedPropertySet);
+											if (pageList == null) {
+												pageList = new Vector();
+												objectToPagesMap.put(derivedPropertySet, pageList);
+											}
+											
+											pageList.add(pageListener);
+										}
+									} catch (PropertySetNotFoundException e1) {
+										// This is a plug-in error.
+										// TODO implement properly.
+										e1.printStackTrace();
+									}
 								}
 							}
 						}
@@ -574,6 +627,8 @@ private Map idToNodeMap = new HashMap();
 		// folder view.
 		// TODO: figure out how to get the folder view dynamically.
 		// The static getter is not such a clean interface.
+/* This code is commented out because it seems that when we listen
+ * for a selection event, the double click event is not notified!		
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			   public void selectionChanged(SelectionChangedEvent event) {
 			       // if the selection is empty clear the label
@@ -597,6 +652,48 @@ private Map idToNodeMap = new HashMap();
 			       }
 			   }
 			});
+*/		
+		viewer.addDoubleClickListener(new IDoubleClickListener() {
+		   public void doubleClick(DoubleClickEvent event) {
+			   	// if the selection is empty clear the label
+			   	if (event.getSelection().isEmpty()) {
+			   		// I don't see how this can happen.
+			   	} else if (event.getSelection() instanceof IStructuredSelection) {
+			   		IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+			   		for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
+			   			Object selectedObject = iterator.next();
+			   			Vector pageListeners;
+			   			if (selectedObject instanceof TreeNode) {
+			   				pageListeners = ((TreeNode)selectedObject).getPageListeners();
+			   			} else if (selectedObject instanceof ExtendableObject) {
+			   				
+			   				PropertySet propertySet = PropertySet.getPropertySet(selectedObject.getClass());
+			   				pageListeners = (Vector)objectToPagesMap.get(propertySet);
+			   			} else {
+			   				pageListeners = new Vector();
+			   			}
+			   			
+			   			// Update the old folder view.
+			   			// This view is now deprecated.
+//			   			FolderView.getDefault().setSelectedObject(pageListeners, selectedObject, session);
+			   			
+			   			
+			   			// Create an editor for this node (or active if an editor
+			   			// is already open).
+			   			try {
+			   				IWorkbenchWindow window = getSite().getWorkbenchWindow();
+			   				IEditorInput editorInput = new NodeEditorInput(selectedObject, pageListeners);
+			   				window.getActivePage().openEditor(editorInput,
+			   				"net.sf.jmoney.genericEditor");
+			   			} catch (PartInitException e) {
+			   				JMoneyPlugin.log(e);
+			   			}
+			   			
+			   			break;
+			   		}
+			   	}
+		   }
+		});
 	}
 
 	
@@ -620,13 +717,19 @@ private Map idToNodeMap = new HashMap();
 	}
 
 	private void fillLocalPullDown(IMenuManager manager) {
-		manager.add(newAccountAction);
+		for (Iterator iter = newAccountActions.iterator(); iter.hasNext(); ) {
+			Action newAccountAction = (Action)iter.next();
+			manager.add(newAccountAction);
+		}
 		manager.add(new Separator());
 		manager.add(deleteAccountAction);
 	}
 
 	private void fillContextMenu(IMenuManager manager) {
-		manager.add(newAccountAction);
+		for (Iterator iter = newAccountActions.iterator(); iter.hasNext(); ) {
+			Action newAccountAction = (Action)iter.next();
+			manager.add(newAccountAction);
+		}
 		manager.add(deleteAccountAction);
 		manager.add(new Separator());
 		drillDownAdapter.addNavigationActions(manager);
@@ -635,45 +738,71 @@ private Map idToNodeMap = new HashMap();
 	}
 	
 	private void fillLocalToolBar(IToolBarManager manager) {
-		manager.add(newAccountAction);
+		for (Iterator iter = newAccountActions.iterator(); iter.hasNext(); ) {
+			Action newAccountAction = (Action)iter.next();
+			manager.add(newAccountAction);
+		}
 		manager.add(deleteAccountAction);
 		manager.add(new Separator());
 		drillDownAdapter.addNavigationActions(manager);
 	}
 
 	private void makeActions() {
-		newAccountAction = new Action() {
-			public void run() {
-				Session session = JMoneyPlugin.getDefault().getSession();
-
-				CapitalAccount account = null;
-				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-					Object selectedObject = iterator.next();
-					if (selectedObject instanceof CapitalAccount) {
-						account = (CapitalAccount)selectedObject;
-						break;
+		// For each class of object derived (directly or indirectly)
+		// from the capital account class, and that is not itself
+		// derivable, add a menu item to create a new account of
+		// that type.
+		for (Iterator iter = CapitalAccountInfo.getPropertySet().getDerivedPropertySetIterator(); iter.hasNext(); ) {
+			final PropertySet derivedPropertySet = (PropertySet)iter.next();
+			
+			Action newAccountAction = new Action() {
+				public void run() {
+					CapitalAccount account = null;
+					IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+					for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
+						Object selectedObject = iterator.next();
+						if (selectedObject instanceof CapitalAccount) {
+							account = (CapitalAccount)selectedObject;
+							break;
+						}
 					}
+					
+					CapitalAccount newAccount;
+					if (account == null) {
+						newAccount = (CapitalAccount)session.createAccount(derivedPropertySet);
+					} else {
+						newAccount = (CapitalAccount)account.createSubAccount(derivedPropertySet);
+					}
+					//		        newAccount.setName(JMoneyPlugin.getResourceString("Account.newAccount"));
+					session.registerUndoableChange("add new account");
+					
+					// Having added the new account, set it as the selected
+					// account in the tree viewer.
+					viewer.setSelection(new StructuredSelection(newAccount), true);
 				}
-				
-				CapitalAccount newAccount;
-				if (account == null) {
-					newAccount = (CapitalAccount)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
-				} else {
-					newAccount = (CapitalAccount)account.createSubAccount();
-				}
-		        newAccount.setName(JMoneyPlugin.getResourceString("Account.newAccount"));
-		        session.registerUndoableChange("add new account");
-				
-		        // Having added the new account, set it as the selected
-		        // account in the tree viewer.
-		        viewer.setSelection(new StructuredSelection(newAccount), true);
-			}
-		};
-		newAccountAction.setText(JMoneyPlugin.getResourceString("MainFrame.newAccount"));
-		newAccountAction.setToolTipText("Create a new account");
-		newAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-				getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+			};
+			
+			Object [] messageArgs = new Object[] {
+					derivedPropertySet.getObjectDescription()
+			};
+			
+			newAccountAction.setText(
+					new java.text.MessageFormat(
+							JMoneyPlugin.getResourceString("MainFrame.newAccount"), 
+							java.util.Locale.US)
+							.format(messageArgs));
+			
+			newAccountAction.setToolTipText(
+					new java.text.MessageFormat(
+							"Create a New {0}", 
+							java.util.Locale.US)
+							.format(messageArgs));
+			
+			newAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
+					getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+			
+			newAccountActions.add(newAccountAction);
+		}
 		
 		deleteAccountAction = new Action() {
 			public void run() {

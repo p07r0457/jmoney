@@ -13,6 +13,8 @@ import javax.swing.filechooser.FileFilter;
 import net.sf.jmoney.Constants;
 import net.sf.jmoney.JMoneyPlugin;
 
+import net.sf.jmoney.fields.BankAccountInfo;
+import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.*;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -244,7 +246,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 				// Create the account
 				if (accountName != null) {
 					System.out.println("I'm creating the account >" + accountName + "< with guid >" + accountGUID + "<");
-					CapitalAccount account = (CapitalAccount)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());;
+					CapitalAccount account = (CapitalAccount)session.createAccount(BankAccountInfo.getPropertySet());;
 					account.setName(accountName);
 					accountsGUIDTable.put(accountGUID, account);
 					if (parentGUID != null) {
@@ -300,7 +302,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			CapitalAccount parent = (CapitalAccount) getAccountFromGUID(parentGUID);
 			
 			session.deleteAccount(child);
-			CapitalAccount newChild = (CapitalAccount) parent.createSubAccount();
+			CapitalAccount newChild = (CapitalAccount) parent.createSubAccount(BankAccountInfo.getPropertySet());
 			accountsGUIDTable.remove(childGUID);
 			accountsGUIDTable.put(childGUID, newChild);
 			

@@ -25,8 +25,19 @@ package net.sf.jmoney.model2;
 import org.eclipse.swt.widgets.Control;
 
 /**
- * @author Nigel
- *
+ * Interface into a control that edits a property value.
+ * <P>
+ * All registered properties must include an implementation
+ * of the <code>IPropertyControlFactory</code> interface.  This interface
+ * contains the createPropertyControl method which is called
+ * to create a <code>Control</code> that can edit the property.
+ * The <code>Control</code> is wrapped in an <code>IPropertyControl</code>
+ * implementation that handles the movement of data between the
+ * property and the control. 
+ * 
+ * @see IPropertyControlFactory
+ * @see org.eclipse.swt.widgets.Control
+ * @author Nigel Westbury
  */
 public interface IPropertyControl {
 	/**

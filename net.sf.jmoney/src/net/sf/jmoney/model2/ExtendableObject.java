@@ -109,6 +109,16 @@ public abstract class ExtendableObject {
 	}
 	
 	/**
+	 * @return The session containing this object
+	 */
+	public Session getSession() {
+		// The key must contain the session and so there is no reason
+		// for the extendable objects to also contain a session field.
+		// Get the session from the key.
+		return objectKey.getSession();
+	}
+	
+	/**
 	 * Two or more instantiated objects may represent the same object
 	 * in the datastore.  Such objects should be considered
 	 * the same.  Therefore this method overrides the default
@@ -144,10 +154,10 @@ public abstract class ExtendableObject {
 		key.updateProperties(propertySet, propertyAccessor, oldValue, newValue);
 
 		// Nofify the change manager.
-		getObjectKey().getSession().getChangeManager().processPropertyUpdate(this, propertyAccessor, oldValue, newValue);
+		getSession().getChangeManager().processPropertyUpdate(this, propertyAccessor, oldValue, newValue);
 
 		// Fire an event for this change.
-		getObjectKey().getSession().objectChanged(
+		getSession().objectChanged(
         		this,
         		propertyAccessor,
 				oldValue,
@@ -158,10 +168,10 @@ public abstract class ExtendableObject {
 	// but not public access.  Unfortunately this cannot be done
 	// so for time being allow public access.
 	public void processObjectAddition(PropertyAccessor owningListProperty, final ExtendableObject newObject) {
-		getObjectKey().getSession().getChangeManager().processObjectCreation(this, owningListProperty, newObject);
+		getSession().getChangeManager().processObjectCreation(this, owningListProperty, newObject);
 
 		// Fire the event.
-		getObjectKey().getSession().fireEvent(
+		getSession().fireEvent(
             	new ISessionChangeFirer() {
             		public void fire(SessionChangeListener listener) {
             			listener.objectAdded(newObject);
@@ -174,10 +184,10 @@ public abstract class ExtendableObject {
 	// so for time being allow public access.
 	public void processObjectDeletion(PropertyAccessor owningListProperty, final ExtendableObject oldObject) {
 		// Notify the change manager.
-		getObjectKey().getSession().getChangeManager().processObjectDeletion(this, owningListProperty, oldObject);
+		getSession().getChangeManager().processObjectDeletion(this, owningListProperty, oldObject);
 		
 		// Fire the event.
-		getObjectKey().getSession().fireEvent(
+		getSession().fireEvent(
             	new ISessionChangeFirer() {
             		public void fire(SessionChangeListener listener) {
             			listener.objectDeleted(oldObject);
@@ -474,8 +484,15 @@ public abstract class ExtendableObject {
 	}
 
 	/**
-	 * @param owningListProperty
-	 * @param object
+	 * @param owningListProperty property accessor for the list property into which
+	 * 			the newly created object is to be placed
+	 * @param actualPropertySet if the list property is typed to contain
+	 * 			properties that are derivable then <code>actualPropertySet</code>
+	 * 			must contain the non-derivable property set for the object to
+	 * 			be created.  f the list property is typed to contain
+	 * 			properties that are not derivable then <code>actualPropertySet</code>
+	 * 			is ignored and objects are always created as appropriate for
+	 * 			the owning list.
 	 */
 	public ExtendableObject createObject(PropertyAccessor owningListProperty, PropertySet actualPropertySet) {
 		// TODO: ensure the following always returns non-null.
@@ -503,6 +520,27 @@ public abstract class ExtendableObject {
 		}
 		
 		return owningListProperty.invokeDeleteMethod(objectWithProperties, object);
+	}
+	
+	/**
+	 * Return a list of extension that exist for this object.
+	 * This is the list of extensions that have actually been
+	 * created for this object, not the list of valid extensions
+	 * for this object type.  If no property values have yet been set
+	 * in an extension that the extension will not have been created
+	 * and will thus not be returned by this method.
+	 * <P>
+	 * It is more efficient to use this method than to loop through
+	 * all the possible extension property sets and see which ones exist
+	 * in this object.
+	 *
+	 * @return an Iterator that returns elements of type
+	 * 		<code>Map.Entry</code>.  Each Map.Entry contains a
+	 * 		key of type PropertySet and a value of
+	 * 		ExtensionObject.
+	 */
+	public Iterator getExtensionIterator() {
+		return extensions.entrySet().iterator();
 	}
 	
 	/**

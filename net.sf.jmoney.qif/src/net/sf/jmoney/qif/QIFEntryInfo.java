@@ -26,6 +26,7 @@ import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertySet;
 
 /**
  * @author Nigel
@@ -65,8 +66,8 @@ public class QIFEntryInfo implements IPropertySetInfo {
 		return QIFEntry.class;
 	}
 	
-	public void registerProperties(IPropertyRegistrar extensionRegistrar) {
-		reconcilingStateAccessor = extensionRegistrar.addProperty("reconcilingState", "what???", 2.0, null, null, null);
+	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
+		reconcilingStateAccessor = propertyRegistrar.addProperty("reconcilingState", "what???", 2.0, null, null, null);
 	}
 
 	/**

@@ -30,6 +30,7 @@ import java.util.Hashtable;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.SessionInfo;
+import net.sf.jmoney.fields.TransactionInfo;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IMemento;
@@ -438,7 +439,7 @@ public class Session extends ExtendableObject {
 		// specifically for account creation.  The accountAdded event is superfluous 
 		// and it may be simpler if we removed it, so that listeners receive the generic
 		// objectAdded event only.
-		getObjectKey().getSession().fireEvent(
+		fireEvent(
 				new ISessionChangeFirer() {
 					public void fire(SessionChangeListener listener) {
 						listener.accountAdded(newAccount);
@@ -483,7 +484,7 @@ public class Session extends ExtendableObject {
 	public Transaction createTransaction() {
 		Transaction newTransaction = (Transaction)transactions.createNewElement(
 					this, 
-					JMoneyPlugin.getTransactionPropertySet()); 
+					TransactionInfo.getPropertySet()); 
 
 		processObjectAddition(SessionInfo.getTransactionsAccessor(), newTransaction);
 		
@@ -523,7 +524,7 @@ public class Session extends ExtendableObject {
     			// specifically for account deletion.  The accountDeleted event is superfluous 
     			// and it may be simpler if we removed it, so that listeners receive the generic
     			// objectDeleted event only.
-    			getObjectKey().getSession().fireEvent(
+    			fireEvent(
     					new ISessionChangeFirer() {
     						public void fire(SessionChangeListener listener) {
     							listener.accountDeleted(account);
@@ -559,13 +560,6 @@ public class Session extends ExtendableObject {
     }
     
 	public ChangeManager getChangeManager() {
-/*
-		if (changeManager == null) {
-			// create a new change manager.
-			ISessionManager sessionManager = getObjectKey().getSessionManager();
-			changeManager = new ChangeManager(sessionManager);
-		}
-*/		
 		return changeManager;
 	}
 

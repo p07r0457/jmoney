@@ -39,7 +39,7 @@ public interface ISessionManager extends IAdaptable {
 	 * non-null.  (If no session is set then no ISessionManager
 	 * implementation should be set).
 	 * 
-	 * @return
+	 * @return the session object
 	 */
 	Session getSession();
 	

@@ -1,7 +1,12 @@
 package net.sf.jmoney.copier;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtensionObject;
 import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
@@ -98,19 +103,28 @@ public class CopierPlugin extends AbstractUIPlugin {
      * This is therefore more than just a deep copy.  It is a conversion.
      */
     public void populateSession(Session newSession, Session oldSession) {
-        Map categoryMap = new Hashtable();
+        Map objectMap = new Hashtable();
         
-        // Add the accounts
+        PropertySet propertySet = PropertySet.getPropertySet(oldSession.getClass());
+    	populateObject(propertySet, oldSession, newSession, objectMap);
+/*
+    	// Add the accounts
         for (Iterator iter = oldSession.getAccountIterator(); iter.hasNext(); ) {
             Account oldAccount = (Account) iter.next();
             
+/ *            
             if (oldAccount instanceof CapitalAccount) {
             	CapitalAccount newAccount = (CapitalAccount)newSession.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
-            	populateCapitalAccount(newSession, (CapitalAccount)oldAccount, newAccount, categoryMap);
+            	populateCapitalAccount(newSession, (CapitalAccount)oldAccount, newAccount, accountMap);
             } else {
                 IncomeExpenseAccount newCategory = (IncomeExpenseAccount)newSession.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
-                populateIncomeExpenseAccount(newSession, (IncomeExpenseAccount)oldAccount, newCategory, categoryMap);
-            }            	
+                populateIncomeExpenseAccount(newSession, (IncomeExpenseAccount)oldAccount, newCategory, accountMap);
+            }
+* /
+            PropertySet propertySet = PropertySet.getPropertySet(oldAccount.getClass());
+        	Account newAccount = newSession.createAccount(propertySet);
+        	populateObject(propertySet, oldAccount, newAccount, objectMap);
+
         }
 
         // Add the transactions and entries
@@ -125,30 +139,17 @@ public class CopierPlugin extends AbstractUIPlugin {
                 
                 Entry newEntry = trans.createEntry();
                 newEntry.setAmount(oldEntry.getAmount());
-                newEntry.setAccount((Account)categoryMap.get(oldEntry.getAccount()));
+                newEntry.setAccount((Account)objectMap.get(oldEntry.getAccount()));
                 newEntry.setCheck(oldEntry.getCheck());
                 newEntry.setCreation(oldEntry.getCreation());
                 newEntry.setDescription(oldEntry.getDescription());
                 newEntry.setMemo(oldEntry.getMemo());
                 newEntry.setValuta(oldEntry.getValuta());
-                
-                // Copy the extensions.
-/* TODO: sort out how best to do this.                
-                for (Iterator pluginIter = JMoneyPlugin.getEntryPropertySet().BeanContainer.getPluginIterator(); pluginIter.hasNext(); ) { 
-                    PluginWrapper plugin = (PluginWrapper)pluginIter.next();
-                    
-                    EntryExtension oldExtension = oldEntry.getExtension(plugin);
-                    if (oldExtension != null) {
-                        EntryExtension newExtension = newEntry.getExtension(plugin);
-                        // Copy the properties from one to the other.
-                        plugin.copyEntryProperties(oldExtension, newExtension);
-                    }
-                }
-*/                
             }
         }
+*/        
     }
-    
+ /*   
     private void populateIncomeExpenseAccount(Session newSession, IncomeExpenseAccount oldCategory, IncomeExpenseAccount newCategory, Map categoryMap) {
         newCategory.setName(oldCategory.getName());
         
@@ -180,5 +181,56 @@ public class CopierPlugin extends AbstractUIPlugin {
             CapitalAccount newSubAccount = (CapitalAccount)newAccount.createSubAccount();
             populateCapitalAccount(newSession, oldSubAccount, newSubAccount, categoryMap);
         }
+    }
+*/    
+    private void populateObject(PropertySet propertySet, ExtendableObject oldObject, ExtendableObject newObject, Map objectMap) {
+    	
+    	// For all non-extension properties (including properties
+    	// in base classes), read the property value from the
+    	// old object and write it to the new object.
+    	for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
+    		PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+    		if (!propertyAccessor.getPropertySet().isExtension()) {
+    			copyProperty(propertyAccessor, oldObject, newObject, objectMap);
+    		}
+    	}
+    	
+    	// Now copy the extensions.  This is done by looping through the extensions
+    	// in the old object and, for every extension that exists in the old object,
+    	// copy the properties to the new object.
+    	for (Iterator extensionIter = oldObject.getExtensionIterator(); extensionIter.hasNext(); ) {
+    		Map.Entry mapEntry = (Map.Entry)extensionIter.next();
+    		PropertySet extensionPropertySet = (PropertySet)mapEntry.getKey();
+    		ExtensionObject extension = (ExtensionObject)mapEntry.getValue();
+    		for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); ) {
+    			PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIter.next();
+    			copyProperty(propertyAccessor, oldObject, newObject, objectMap);
+    		}
+    	}
+    
+    	// TODO: This code works because
+    	// Commodity and Account objects are the
+    	// only objects referenced by other objects.
+    	// Plug-ins could change this, thus breaking this code.
+    	if (oldObject instanceof Commodity
+    			|| oldObject instanceof Account) {
+    		objectMap.put(oldObject, newObject);
+    	}
+    }
+
+    private void copyProperty(PropertyAccessor propertyAccessor, ExtendableObject oldAccount, ExtendableObject newAccount, Map objectMap) {
+    	if (propertyAccessor.isScalar()) {
+    		newAccount.setPropertyValue(
+    				propertyAccessor,
+					oldAccount.getPropertyValue(propertyAccessor));
+    	} else {
+    		// Property is a list property.
+    		for (Iterator listIter = oldAccount.getPropertyIterator(propertyAccessor); listIter.hasNext(); ) {
+    			ExtendableObject oldSubObject = (ExtendableObject)listIter.next();
+    			PropertySet listElementPropertySet = PropertySet.getPropertySet(oldSubObject.getClass());
+    			ExtendableObject newSubObject = newAccount.createObject(propertyAccessor, listElementPropertySet);
+    			populateObject(listElementPropertySet, oldSubObject, newSubObject, objectMap);
+    		}
+    	}
     }
 }

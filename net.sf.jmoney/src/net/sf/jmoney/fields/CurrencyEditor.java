@@ -28,7 +28,10 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.CurrencyAccount;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.events.SelectionEvent;
@@ -50,17 +53,21 @@ import org.eclipse.swt.widgets.Control;
  */
 public class CurrencyEditor implements IPropertyControl {
     
-    private CapitalAccount account = null;
+    private ExtendableObject extendableObject = null;
 
-    private Session session = null;
+    private PropertyAccessor currencyPropertyAccessor;
     
     private Combo propertyControl;
     
-    /** Creates new CurrencyEditor */
-    public CurrencyEditor(Composite parent) {
+    /** 
+     * @param propertyAccessor the accessor for the property to be edited
+     * 			by this control.  The property must be of type Currency.
+     */
+    public CurrencyEditor(Composite parent, PropertyAccessor propertyAccessor) {
     	propertyControl = new Combo(parent, 0);
+    	this.currencyPropertyAccessor = propertyAccessor;
 
-    	session = JMoneyPlugin.getDefault().getSession();
+    	Session session = JMoneyPlugin.getDefault().getSession();
     	
 		for (Iterator iter = session.getCommodityIterator(); iter.hasNext(); ) {
 			Commodity commodity = (Commodity)iter.next();
@@ -90,18 +97,22 @@ public class CurrencyEditor implements IPropertyControl {
      * Load the control with the value from the given account.
      */
     public void load(Object object) {
-    	account = (CapitalAccount)object;
+    	extendableObject = (CapitalAccount)object;
     	
-		Currency currency = account.getCurrency();
+		Currency currency = (Currency)extendableObject.getPropertyValue(currencyPropertyAccessor);
 		propertyControl.setText(currency.getName() == null ? "" : currency.getName());
 
-		// If the account has entries then the currency cannot
+		// If the currency property being edited is the currency
+		// for a CurrencyAccount and the account has entries then the currency cannot
 		// be changed.  We therefore disable the control.
 		// It might be that at some future time we implement
 		// an extension point that allows plug-ins to veto
 		// changes.  If so then this may be better implemented
 		// using such an extension point.
-		propertyControl.setEnabled(!account.hasEntries(session));
+		if (currencyPropertyAccessor == CurrencyAccountInfo.getCurrencyAccessor()) {
+			CurrencyAccount currencyAccount = (CurrencyAccount)extendableObject;
+			propertyControl.setEnabled(!currencyAccount.hasEntries());
+		}
     }
     
     /**
@@ -110,7 +121,7 @@ public class CurrencyEditor implements IPropertyControl {
     public void loadDisabled(Object object) {
     	CapitalAccount account = (CapitalAccount)object;
     	
-		Currency currency = account.getCurrency();
+		Currency currency = (Currency)account.getPropertyValue(currencyPropertyAccessor);
 		propertyControl.setText(currency.getName() == null ? "" : currency.getName());
 		
 		propertyControl.setEnabled(false);
@@ -127,8 +138,8 @@ public class CurrencyEditor implements IPropertyControl {
      * is changed.  This causes the change to be seen in other views as soon as the
      * user changes the selection.
      *
-     * The framework should never call this method when no entry is selected
-     * so we can assume that <code>entry</code> is not null.
+     * The framework should never call this method when no account is selected
+     * so we can assume that <code>account</code> is not null.
      */
     public void save() {
 		String currencyName = propertyControl.getText();
@@ -136,8 +147,7 @@ public class CurrencyEditor implements IPropertyControl {
 			Commodity commodity = (Commodity)iter.next();
 			if (commodity instanceof Currency
 					&& commodity.getName().equals(currencyName)) {
-				account.setCurrency((Currency)commodity);
-				
+				extendableObject.setPropertyValue(currencyPropertyAccessor, (Currency)commodity);
 			}
 		}
     }

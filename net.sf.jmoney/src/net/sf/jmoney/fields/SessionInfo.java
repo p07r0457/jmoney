@@ -25,6 +25,7 @@ package net.sf.jmoney.fields;
 import org.eclipse.swt.widgets.Composite;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
@@ -55,6 +56,7 @@ import net.sf.jmoney.model2.IPropertyRegistrar;
  */
 public class SessionInfo implements IPropertySetInfo {
 
+	private static PropertySet propertySet = null;
 	private static PropertyAccessor commoditiesAccessor = null;
 	private static PropertyAccessor accountsAccessor = null;
 	private static PropertyAccessor transactionsAccessor = null;
@@ -66,11 +68,13 @@ public class SessionInfo implements IPropertySetInfo {
 		return Session.class;
 	}
 	
-	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
+		SessionInfo.propertySet = propertySet;
+
 		IPropertyControlFactory currencyControlFactory =
 			new IPropertyControlFactory() {
 				public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
-					return new CurrencyEditor(parent);
+					return new CurrencyEditor(parent, propertyAccessor);
 				}
 
 				public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
@@ -87,6 +91,15 @@ public class SessionInfo implements IPropertySetInfo {
 		transactionsAccessor = propertyRegistrar.addPropertyList("transaction", JMoneyPlugin.getResourceString("<not used???>"), Transaction.class, null);
 		
 		propertyRegistrar.addProperty("defaultCurrency", JMoneyPlugin.getResourceString("Session.defaultCurrency"), 15.0, currencyControlFactory, null, null);
+		
+		propertyRegistrar.setObjectDescription("JMoney Session");
+	}
+
+	/**
+	 * @return
+	 */
+	public static PropertySet getPropertySet() {
+		return propertySet;
 	}
 
 	/**

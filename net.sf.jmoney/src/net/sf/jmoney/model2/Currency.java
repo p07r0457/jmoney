@@ -101,10 +101,10 @@ public class Currency extends Commodity {
 		this.code = code;
 
 		if (oldCode != null) {
-			getObjectKey().getSession().currencies.remove(oldCode);
+			getSession().currencies.remove(oldCode);
 		}
 		if (code != null) {
-			getObjectKey().getSession().currencies.put(code, this);
+			getSession().currencies.put(code, this);
 		}
 
 		// Notify the change manager.

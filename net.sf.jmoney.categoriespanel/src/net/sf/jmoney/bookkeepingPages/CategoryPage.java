@@ -46,7 +46,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.events.FocusAdapter;
@@ -61,8 +60,8 @@ import net.sf.jmoney.Constants;
 import net.sf.jmoney.IBookkeepingPageListener;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.categoriespanel.CategoriesPanelPlugin;
+import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
@@ -261,7 +260,7 @@ private void makeActions() {
 		public void run() {
 			Session session = JMoneyPlugin.getDefault().getSession();
 	        
-	        IncomeExpenseAccount account = (IncomeExpenseAccount)session.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+	        IncomeExpenseAccount account = (IncomeExpenseAccount)session.createAccount(IncomeExpenseAccountInfo.getPropertySet());
 	        account.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
 			session.registerUndoableChange("add new category");
 	        

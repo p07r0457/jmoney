@@ -27,6 +27,7 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertySet;
 
 /**
  * @author Nigel
@@ -46,6 +47,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
  */
 public class EntryInfo implements IPropertySetInfo {
 
+	private static PropertySet propertySet = null;
 	private static PropertyAccessor checkAccessor = null;
 	private static PropertyAccessor descriptionAccessor = null;
 	private static PropertyAccessor accountAccessor = null;
@@ -61,7 +63,9 @@ public class EntryInfo implements IPropertySetInfo {
 		return Entry.class;
 	}
 	
-	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
+		EntryInfo.propertySet = propertySet;
+
 		// TODO: implement the SWT control factories here.
 		// This must be done before we can convert the account entries panel
 		// over to SWT with generalized property support.
@@ -73,6 +77,15 @@ public class EntryInfo implements IPropertySetInfo {
 		memoAccessor        = propertyRegistrar.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        30.0, null, null, null);
 		amountAccessor      = propertyRegistrar.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      10.0, null, null, null);
 		creationAccessor    = propertyRegistrar.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    10.0, null, null, null);
+		
+		propertyRegistrar.setObjectDescription("Accounting Entry");
+	}
+
+	/**
+	 * @return
+	 */
+	public static PropertySet getPropertySet() {
+		return propertySet;
 	}
 
 	/**

@@ -27,39 +27,76 @@ import java.util.Collection;
 /**
  * Interface into a key object that holds the data required to
  * obtain an extendable data object.
- * 
+ * <P>
  * JMoney data storage is implemented in plug-ins.  This allows
  * a choice of methods of data storage.  Some data storage implementations
  * may load the entire database into memory when the datastore is opened.
  * An example of this type of datastore plug-in is the XML serialized data
  * storage plug-in.  Other plug-ins, however, may only load data on demand.
  * An example is a plug-in that stores the data in a JDBC database.
- * In this case, an <code>Entry</code> object may only be loaded into storage
- * when the user requests an account entry list view of the account in
+ * The JDBC database plug-in, for example, constructs an <code>Entry</code> object 
+ * only when the user requests an account entry list view of the account in
  * which the <code>Entry</code> occurs.
  * <P>
- * In order to support this, the property set implementations do not
- * directly contain references to their object properties.
+ * In order to support this, the data model implementation classes do not
+ * directly contain references to other classes in the data model.
  * Instead, they contain a reference to an object that
  * implements the <code>IObjectKey</code> interface.  The
- * object key object implements the <code>getObject</code>
+ * object key implements the <code>getObject</code>
  * method which returns a reference to the actual extendable 
  * object.  This method should be called when and only when
- * a reference to the property object is required.  The method
+ * a reference to the property object is required.  The <code>getObject</code> method
  * should be called by the getter for the property.
  * <P>
  * This interface is not used for properties that are lists
  * (regardless of whether the list is a list of objects or
  * a list of scalar values).  List properties use the
- * <code>AbstractCollection</code> interface.
+ * <code>IListManager</code> interface.
+ * <P>
+ * This interface is designed to be implemented only by plug-ins
+ * that implement a datastore.  Most plug-ins do not need to be
+ * aware of this interface or need to call any of the methods in it.
+ * Plug-ins that implement property sets that contain properties that
+ * reference other data model objects must be aware of this interface.
  * 
- * @see AbstractCollection
+ * @see IListManager
  * @author Nigel Westbury
  */
 public interface IObjectKey {
+	/**
+	 * Returns a reference to the actual extendable 
+	 * object.  This method should be called when and only when
+	 * a reference to the property object is required.  The <code>getObject</code> method
+	 * should be called by the getter for the property.
+	 * <P>
+	 * Implementations of this method may construct the object
+	 * every time the method is called.  Construction of the object
+	 * may require reading data from a database.  Users of this method
+	 * must therefore be aware that
+	 * <LI>
+	 * <UL>This method may not be efficient.  Users of this method should
+	 * 		therefore cache values returned by this method.
+	 * </UL>
+	 * <UL>This method may return an object with a different java identity
+	 * 		each time it is called.  However, every call of this method on
+	 * 		a given IObjectKey object will return objects that all are
+	 * 		equal when using the <code>equals</code> method.
+	 * </UL>
+	 * <UL>This method is used when getting property values using the getter methods.
+	 * 		users of getter methods that return references to objects in the data model
+	 * 		must therefore also be aware of the above two points.
+	 * </UL>
+	 * @return a reference to the actual extendable object
+	 */
 	ExtendableObject getObject();
 
 	/**
+	 * This method creates an object that 
+	 * For example, the list of entries in a given account is often required.
+	 * Entries are not owned by the account but entries are owned by the transaction
+	 * and the transactions are owned by the session.  Therefore to do a  
+	 * 
+	 * @see index documentation
 	 * @param accountAccessor
 	 * @return
 	 */

@@ -23,7 +23,7 @@
 package net.sf.jmoney.fields;
 
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -55,7 +55,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class AmountEditor implements IPropertyControl {
     
-    private CapitalAccount account = null;
+    private CurrencyAccount account = null;
     
     private PropertyAccessor amountPropertyAccessor;
     
@@ -71,7 +71,7 @@ public class AmountEditor implements IPropertyControl {
      * Load the control with the value from the given account.
      */
     public void load(Object object) {
-    	account = (CapitalAccount)object;
+    	account = (CurrencyAccount)object;
     	
 		Currency currency = account.getCurrency();
 		
@@ -87,11 +87,11 @@ public class AmountEditor implements IPropertyControl {
 
 		// We must listen for changes to the currency so that
 		// we can change the format of the amount.
-		account.getObjectKey().getSession().addSessionChangeListener(
+		account.getSession().addSessionChangeListener(
 				new SessionChangeAdapter() {
 					public void accountChanged(Account changedAccount, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
 						if (changedAccount == AmountEditor.this.account
-								&& changedProperty == CapitalAccountInfo.getCurrencyAccessor()) {
+								&& changedProperty == CurrencyAccountInfo.getCurrencyAccessor()) {
 							// Get the current text from the control and try to re-format
 							// it for the new currency.
 							// However, if the property can take null values and the control
@@ -128,8 +128,17 @@ public class AmountEditor implements IPropertyControl {
     /**
      * Load the control with the value from the given account.
      */
+/* Disabled controls are going to infuriate users.
+ * Perhaps it is better to remove this method.
+ * If the same data can be edited from two different places
+ * then we allow editing from both.  As focus is lost in one
+ * place, the other is updated.  This does involve writing data
+ * to the datastore when the focus is lost, which may not always
+ * be possible due to constraints.....
+ * TODO: think about locking etc.
+ */    
     public void loadDisabled(Object object) {
-    	CapitalAccount nonMutableAccount = (CapitalAccount)object;
+    	CurrencyAccount nonMutableAccount = (CurrencyAccount)object;
     	account = null;
     	
 		Currency currency = nonMutableAccount.getCurrency();

@@ -109,8 +109,14 @@ public interface IPropertySetInfo {
      * <P>
      * The dependencies can only occur in this order, so we are safe.
      *  
+     * @param propertySet the property set object being initialized by this call.
+     * 		The property set object is not in an initialized state when it is
+     * 		passed to this method so this method must not call any methods on
+     * 		the property set object.  However, implementations of this method
+     * 		are encouraged to save the reference in a static member in order to
+     * 		provide quick reference to the PropertySet object.
      * @param propertyRegistrar The interface to be used by this method
      * 		to register the properties.
      */
-    void registerProperties(IPropertyRegistrar propertyRegistrar);
+    void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar);
 }

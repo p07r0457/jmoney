@@ -212,7 +212,15 @@ public interface PropertyAccessor {
 	int getIndexIntoConstructorParameters();
 
 	/**
-	 * @return
+	 * The index returned by this method will always
+	 * match the order in which properties are returned
+	 * by the getPropertyIterator3() method in the PropertySet
+	 * class.
+	 * 
+	 * @return the index of this property in the list of scalar
+	 * 			properties for the class.  This method returns zero
+	 * 			for the first scalar property returned by
+	 * 			PropertySet.getPropertyIterator3() and so on. 
 	 */
 	int getIndexIntoScalarProperties();
 

@@ -32,6 +32,7 @@ import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertySet;
 
 /**
  * @author Nigel
@@ -51,6 +52,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
  */
 public class CurrencyInfo implements IPropertySetInfo {
 
+	private static PropertySet propertySet = null;
 	private static PropertyAccessor codeAccessor = null;
 	private static PropertyAccessor decimalsAccessor = null;
 
@@ -61,7 +63,8 @@ public class CurrencyInfo implements IPropertySetInfo {
 		return Currency.class;
 	}
 	
-	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
+		CurrencyInfo.propertySet = propertySet;
 		IPropertyControlFactory textControlFactory =
 			new IPropertyControlFactory() {
 				public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
@@ -79,6 +82,15 @@ public class CurrencyInfo implements IPropertySetInfo {
 		
 		codeAccessor = propertyRegistrar.addProperty("code", JMoneyPlugin.getResourceString("Currency.code"), 8.0, textControlFactory, null, null);
 		decimalsAccessor = propertyRegistrar.addProperty("decimals", JMoneyPlugin.getResourceString("Currency.decimals"), 8.0, textControlFactory, null, null);
+		
+		propertyRegistrar.setObjectDescription("Currency");
+	}
+
+	/**
+	 * @return
+	 */
+	public static PropertySet getPropertySet() {
+		return propertySet;
 	}
 
 	/**

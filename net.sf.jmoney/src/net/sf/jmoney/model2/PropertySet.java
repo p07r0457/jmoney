@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,11 +41,28 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
- * @author Nigel
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
- */
+ * A <code>PropertySet</code> contains information about a
+ * property set.  A property set is a set of properties
+ * that either:
+ * <UL>
+ * <LI>form the base set of properties in a data model object
+ *     </LI>
+ * <LI>or are the properties added to a data model object
+ * by a derived class (such property sets are known as
+ * derived property sets)
+ *     </LI>
+ * <LI>or are the properties added to a data model object by
+ * a plug-in (such property sets are know as extension
+ * property sets) 
+ *     </LI>
+ * </UL>
+ * The <code>getBasePropertySet</code> and <code>isExtension</code> methods  
+ * can be called to determine in which of the above three categories
+ * a property set lies.
+ * 
+ * @see propertySets.html
+ * @author Nigel Westbury
+*/
 
 //TODO: do we really need the info to be kept here at all????
 public class PropertySet {
@@ -72,7 +90,16 @@ public class PropertySet {
 	 * true if further property sets must be derived from this property set,
 	 * false if property sets cannot be derived from this property set.
 	 */
-	private boolean derivablePropertySet; // defined only if an extension property set
+	private boolean derivable; // defined only if an extendable property set
+	
+	/**
+	 * Localized text describing the type of object represented
+	 * by this property set.
+	 * <P>
+	 * This field is defined only if an extendable property set 
+	 * and not derivable.
+	 */
+	private String objectDescription;  // defined only if an extendable property set and not derivable
 	
 	private static Map allPropertySetsMap = new HashMap();   // type: String (property set id) to PropertySet
 
@@ -91,9 +118,10 @@ public class PropertySet {
 	PropertySet extendablePropertySet;	
 
 	// Valid for extendable property sets only
-	// TODO: Add values to this.  Currently this is always empty!
 	/**
-	 * Set of property sets that are derived from this property set.
+	 * Set of property sets that are derived from this property set
+	 * (either directly or indirectly) and that are not
+	 * themselves derivable.
 	 */
 	private Vector derivedPropertySets = new Vector();
 
@@ -106,8 +134,8 @@ public class PropertySet {
 	private Constructor defaultImplementationClassConstructor;
 	
 	/**
-	 * All properties in this and base property sets that are
-	 * passed to the constructor.  The order of properties in
+	 * A list of all properties in this and base property sets that are
+	 * passed to the 're-instantiating' constructor.  The order of properties in
 	 * this vector object is the same as the order in which the
 	 * properties are passed as parameters into the constructor. 
 	 * <P>
@@ -120,7 +148,26 @@ public class PropertySet {
 	 * <P>
 	 * This field is undefined for derivable property sets.
 	 */
-	Vector constructorProperties;
+	private Vector constructorProperties;
+	
+	/**
+	 * A list of all properties in this and base property sets that are
+	 * passed to the 'new object' constructor.  The 'new object' constructor
+	 * takes parameters only for the properties that are lists, so this
+	 * vector is a list of the list properties.  The order of properties in
+	 * this vector object is the same as the order in which the
+	 * properties are passed as parameters into the constructor. 
+	 * <P>
+	 * Note that constructors for extendable objects take extra
+	 * parameters at the start before the property parameters.
+	 * There are no elements in this Vector corresponding to 
+	 * these parameters.  Therefore the
+	 * indexes into this Vector will not correspond to the index into
+	 * the parameter list.
+	 * <P>
+	 * This field is undefined for derivable property sets.
+	 */
+	private Vector defaultConstructorProperties;
 	
 	private Method theDefaultPropertiesMethod;
 
@@ -228,12 +275,15 @@ public class PropertySet {
 			if (baseOrExtendablePropertySetId != null) {
 				basePropertySet = (PropertySet)allPropertySetsMap.get(baseOrExtendablePropertySetId);
 				if (basePropertySet == null) {
-					throw new RuntimeException("No extendable property set with an id of " + baseOrExtendablePropertySetId + " exists.");
+					throw new MalformedPluginException("No extendable property set with an id of " + baseOrExtendablePropertySetId + " exists.");
 				}
 				
 				if (basePropertySet.isExtension()) {
-					// TODO should this be MalformedPluginException?
-					throw new RuntimeException(baseOrExtendablePropertySetId + " is a base property set.  Extension property sets cannot be extended, but " + propertySetId + " is declared as a base of " + baseOrExtendablePropertySetId + ".");
+					throw new MalformedPluginException(baseOrExtendablePropertySetId + " is a base property set.  Extension property sets cannot be extended, but " + propertySetId + " is declared as a base of " + baseOrExtendablePropertySetId + ".");
+				}
+				
+				if (!basePropertySet.isDerivable()) {
+					throw new MalformedPluginException(baseOrExtendablePropertySetId + " is a base property for " + propertySetId + ".  However, " + baseOrExtendablePropertySetId + " is not derivable (IPropertyRegistrar.setDerivableInfo not called from the IPropertySetInfo implementation).");
 				}
 			} else {
 				basePropertySet = null;
@@ -242,11 +292,11 @@ public class PropertySet {
 		} else {
 			extendablePropertySet = (PropertySet)allPropertySetsMap.get(baseOrExtendablePropertySetId);
 			if (extendablePropertySet == null) {
-				throw new RuntimeException("No extendable property set with an id of " + baseOrExtendablePropertySetId + " exists.");
+				throw new MalformedPluginException("No extendable property set with an id of " + baseOrExtendablePropertySetId + " exists.");
 			}
 			
 			if (extendablePropertySet.isExtension()) {
-				throw new RuntimeException(baseOrExtendablePropertySetId + " is an extension property set.  Extension property sets cannot be extended, but " + propertySetId + " is declared as an extension of " + baseOrExtendablePropertySetId + ".");
+				throw new MalformedPluginException(baseOrExtendablePropertySetId + " is an extension property set.  Extension property sets cannot be extended, but " + propertySetId + " is declared as an extension of " + baseOrExtendablePropertySetId + ".");
 			}
 			
 			if (extendablePropertySet.extensionPropertySets.containsKey(propertySetId)) {
@@ -280,7 +330,7 @@ public class PropertySet {
 		// to control derived classes) are put in the map.  This is important because
 		// when we are looking for the property set for an instance of an object,
 		// we want to be sure we find only the final property set for that object.
-		if (!isExtension && !derivablePropertySet) {
+		if (!isExtension && !derivable) {
 			Class implementationClass = propertySetInfo.getImplementationClass();
 			if (classToPropertySetMap.containsKey(implementationClass)) {
 				throw new MalformedPluginException("More than one property set uses " + implementationClass + " as the Java implementation class.");
@@ -288,7 +338,8 @@ public class PropertySet {
 			classToPropertySetMap.put(implementationClass, this);
 		}
 		
-		derivablePropertySet = false;
+		derivable = false;
+		objectDescription = null;
 		
 		if (propertySetInfo != null) {
 			// Set up the list of properties.
@@ -299,6 +350,7 @@ public class PropertySet {
 			// property.
 			
 			propertySetInfo.registerProperties(
+					this,
 					new IPropertyRegistrar() {
 						
 						public EnumerationAccessor addEnumeratedValue(PropertyAccessor propertyAccessor, String internalName, String displayName) {
@@ -312,31 +364,55 @@ public class PropertySet {
 						}
 						
 						// TODO change all shortDescription to displayName
-						public PropertyAccessor addProperty(String name, String shortDescription, double width, IPropertyControlFactory propertyControlFactory, Class editor, IPropertyDependency propertyDependency) {
-							PropertyAccessor accessor = new PropertyAccessorImpl(PropertySet.this, name, shortDescription, width, propertyControlFactory, editor, propertyDependency);
+						public PropertyAccessor addProperty(String name, String displayName, double width, IPropertyControlFactory propertyControlFactory, Class editor, IPropertyDependency propertyDependency) {
+							PropertyAccessor accessor = new PropertyAccessorImpl(PropertySet.this, name, displayName, width, propertyControlFactory, editor, propertyDependency);
 							properties.add(accessor);
 							return accessor;
 						}
 
-						public PropertyAccessor addPropertyList(String name, String shortDescription, Class listItemClass, IPropertyDependency propertyDependency) {
-							PropertyAccessor accessor = new PropertyAccessorImpl(PropertySet.this, name, shortDescription, listItemClass, propertyDependency);
+						public PropertyAccessor addPropertyList(String name, String displayName, Class listItemClass, IPropertyDependency propertyDependency) {
+							PropertyAccessor accessor = new PropertyAccessorImpl(PropertySet.this, name, displayName, listItemClass, propertyDependency);
 							properties.add(accessor);
 							return accessor;
 						}
 						
 						public PropertyAccessor setDerivableInfo(String name, String displayName) {
-							derivablePropertySet = true;
+							derivable = true;
 							// TODO Auto-generated method stub
 							return null;
 						}
 						
 						public PropertyAccessor setDerivableInfo() {
-							derivablePropertySet = true;
+							derivable = true;
 							return null;
+						}
+
+						public void setObjectDescription(String description) {
+							objectDescription = description;
 						}
 
 					}
 			);
+			
+			if (!isExtension && !derivable) {
+				if (objectDescription == null) {
+					throw new MalformedPluginException("IPropertyRegistrar.setObjectDescription is not called from the IPropertyInfo implementation for " + propertySetId + ", nor is the property set derivable or an extension.");
+				}
+				
+				// Add this property set to the list of derived property sets
+				// for this and all the base classes.
+				for (PropertySet base = this; base != null; base = base.getBasePropertySet()) {
+					base.derivedPropertySets.add(this);
+				}
+			} else {
+				if (objectDescription != null) {
+					if (isExtension) {
+						throw new MalformedPluginException("IPropertyRegistrar.setObjectDescription is called from the IPropertyInfo implementation for " + propertySetId + ", but the property set is an extension.");
+					} else {
+						throw new MalformedPluginException("IPropertyRegistrar.setObjectDescription is called from the IPropertyInfo implementation for " + propertySetId + ", but the property set is derivable.");
+					}
+				}
+			}
 		}
 
 		
@@ -348,90 +424,104 @@ public class PropertySet {
 	 * Some parts of the initialization require access to a complete list of
 	 * all the PropertySet objects and therefore cannot be done in the
 	 * PropertySet constructor.
+	 * <P>
+	 * The following are initialized by this method:
+	 * <UL>
+	 * <LI>this.constructorParameters</LI>
+	 * <LI>this.defaultConstructorParameters</LI>
+	 * <LI>this.implementationClassConstructor</LI>
+	 * <LI>this.defaultImplementationClassConstructor</LI>
+	 * <LI>indexIntoScalarProperties, for each scalar PropertyAccessor in this property set</LI>
+	 * <LI>indexIntoConstructorParameters, for each PropertyAccessor in this property set</LI>
+	 * </UL>
 	 */
 	private void initProperties() {
-		// Find the constructor method.
-		
-		// The properties from any base property set come first in
-		// the constructor, so add those first.
-		int parameterIndex = 0;
-		int scalarIndex = 0;
-		int totalPropertyCount = 0;
-		if (!isExtension) {
-			parameterIndex += 3;
+		if (isExtension || !derivable) {
+			// Build the list of properties that are passed to
+			// the 'new object' constructor and another list that
+			// are passed to the 're-instantiating' constructor.
 			
-			for (PropertySet propertySet2 = getBasePropertySet(); propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
-				parameterIndex += propertySet2.getPropertyCount();
-				totalPropertyCount += propertySet2.getPropertyCount();
-				// Count the scalar properties
-				for (Iterator iter = propertySet2.getPropertyIterator2(); iter.hasNext(); ) {
+			constructorProperties = new Vector();
+			defaultConstructorProperties = new Vector();
+		}
+		
+		if (!isExtension) {
+			
+			// We need to be able to iterate through property sets
+			// starting at the base property set and continuing through
+			// derived property sets until we get to this property set.
+			// To do this, we first build a list of the base property sets
+			// and we can then iterate through these property sets in
+			// reverse order.
+			Vector basePropertySets = new Vector();
+			for (PropertySet base = getBasePropertySet(); base != null; base = base.getBasePropertySet()) {
+				basePropertySets.add(base);
+			}
+			
+			// Add the appropriate properties from the base classes to
+			// the constructorParameters and defaultConstructorParameters arrays.
+			int parameterIndex = 3;
+			int scalarIndex = 0;
+			
+			for (int i = basePropertySets.size()-1; i >= 0; i--) {
+				PropertySet base = (PropertySet)basePropertySets.get(i);
+
+				for (Iterator iter = base.getPropertyIterator1(); iter.hasNext(); ) {
+					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+					if (!isDerivable()) {
+						constructorProperties.add(propertyAccessor);
+						if (propertyAccessor.isList()) {
+							defaultConstructorProperties.add(propertyAccessor);
+						}
+					}
+					
+					parameterIndex++;
+				}
+
+				for (Iterator iter = base.getPropertyIterator2(); iter.hasNext(); ) {
 					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 					if (propertyAccessor.isScalar()) {
 						scalarIndex++;
 					}
 				}
 			}
-		}
-		
-		totalPropertyCount += getPropertyCount();
-		
-		// For each property in this property set, set the index
-		// of that property in the constructor parameter list.
-		for (Iterator iter = properties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			propertyAccessor.setIndexIntoConstructorParameters(parameterIndex++);
-		}
-
-		// For each scalar property in this property set and any extension property sets,
-		// set the index of this property into the array of scalar properties.
-		if (!isExtension()) {
+			
+			// Process the properties in this property set.
+			if (!isDerivable()) {
+				for (Iterator iter = getPropertyIterator1(); iter.hasNext(); ) {
+					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+					constructorProperties.add(propertyAccessor);
+					propertyAccessor.setIndexIntoConstructorParameters(parameterIndex++);
+					if (propertyAccessor.isList()) {
+						defaultConstructorProperties.add(propertyAccessor);
+					}
+				}
+			}
+			
 			for (Iterator iter = getPropertyIterator2(); iter.hasNext(); ) {
 				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 				if (propertyAccessor.isScalar()) {
 					propertyAccessor.setIndexIntoScalarProperties(scalarIndex++);
 				}
 			}
-		}
-
-		// Find the full constructor (unless this is a derivable
-		// property set, in which case no constructor is needed).
-		if (isExtension || !derivablePropertySet) {
-			// Build the list of properties that are passed to
-			// the constructor.
-			
-			constructorProperties = new Vector();
-			constructorProperties.setSize(totalPropertyCount);
-
-			int listCount = 0;
-			
-			// The properties must be added in the same order as they
-			// were registered, which is the same order as they are
-			// returned by the iterator.
-			if (!isExtension()) {
-				int startOfPropertySet2 = totalPropertyCount;
-				for (PropertySet propertySet2 = this; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
-					startOfPropertySet2 -= propertySet2.getPropertyCount(); 
-					int index2 = startOfPropertySet2;
-					for (Iterator iter = propertySet2.getPropertyIterator1(); iter.hasNext(); ) {
-						PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-						constructorProperties.setElementAt(propertyAccessor, index2++);
-						if (propertyAccessor.isList()) {
-							listCount++;
-						}
-					}
-				}
-			} else {
-				int index2 = 0;
-				for (Iterator iter = properties.iterator(); iter.hasNext(); ) {
-					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-					constructorProperties.setElementAt(propertyAccessor, index2++);
-					if (propertyAccessor.isList()) {
-						listCount++;
-					}
+		} else {
+			// This property set is an extension.
+			int parameterIndex = 0;
+			for (Iterator iter = getPropertyIterator1(); iter.hasNext(); ) {
+				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+				constructorProperties.add(propertyAccessor);
+				propertyAccessor.setIndexIntoConstructorParameters(parameterIndex++);
+				if (propertyAccessor.isList()) {
+					defaultConstructorProperties.add(propertyAccessor);
 				}
 			}
-			
-			// Build the list of types of the constructor parameters.
+		}
+		
+		// Find the full constructor (unless this is a derivable
+		// property set, in which case no constructor is needed).
+
+		// Build the list of types of the constructor parameters.
+		if (isExtension || !derivable) {
 			{
 				int i = 0;
 				int parameterCount = constructorProperties.size();
@@ -488,13 +578,13 @@ public class PropertySet {
 					throw new MalformedPluginException("The " + propertySetInfo.getImplementationClass().getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
 				}
 			}
-		
-			// Find the constructor which sets the default values for
+			
+			// Find the 'new object' constructor which sets the default values for
 			// the scalar properties.
 			// Build the list of types of the constructor parameters.
 			{
 				int i = 0;
-				int parameterCount = listCount;
+				int parameterCount = defaultConstructorProperties.size();
 				if (!isExtension) {
 					parameterCount += 3;
 				}
@@ -510,11 +600,9 @@ public class PropertySet {
 					parameters[i++] = IObjectKey.class;
 				}
 				
-				for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
+				for (Iterator iter = defaultConstructorProperties.iterator(); iter.hasNext(); ) {
 					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-					if (propertyAccessor.isList()) {
-						parameters[i++] = IListManager.class; 
-					}
+					parameters[i++] = IListManager.class; 
 				}
 				
 				try {
@@ -534,12 +622,8 @@ public class PropertySet {
 					throw new MalformedPluginException("The " + propertySetInfo.getImplementationClass().getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
 				}
 			}
-		}
-		
-		// Find the getDefaultProperties method.
-				
-		// If this is a derivable property set then no default properties method is needed.
-		if (isExtension || !derivablePropertySet) {
+			
+			// Find the getDefaultProperties method.
 			
 			Class parameters[] = new Class[] { };
 			
@@ -600,12 +684,40 @@ public class PropertySet {
 
 
 	/**
-	 * This method may not be called on derivable property sets.
+	 * Returns the list of properties whose values are passed as
+	 * parameters to the 're-instantiating' constructor of the implementation class.
+	 * <P>
+	 * All properties, scalar and list properties, are included
+	 * in this list.  The collection is ordered in the same order
+	 * as the property values are passed to the constructor.
+	 * <P>
+	 * This method may not be called on derivable property sets
+	 * because objects implementing derivable property sets are
+	 * abstract and so no constructor is used by the JMoney framework.
 	 *  
 	 * @return
 	 */
-	public Vector getConstructorProperties() {
+	public Collection getConstructorProperties() {
 		return constructorProperties;
+	}
+
+
+	/**
+	 * Returns the list of properties whose values are passed as
+	 * parameters to the 'new object' constructor of the implementation class.
+	 * <P>
+	 * Only list properties are included
+	 * in this list.  The collection is ordered in the same order
+	 * as the property values are passed to the constructor.
+	 * <P>
+	 * This method may not be called on derivable property sets
+	 * because objects implementing derivable property sets are
+	 * abstract and so no constructor is used by the JMoney framework.
+	 *  
+	 * @return
+	 */
+	public Collection getDefaultConstructorProperties() {
+		return defaultConstructorProperties;
 	}
 
 
@@ -659,7 +771,7 @@ public class PropertySet {
 	}
 	
 	/**
-	 * This version is called when one plug-in wants to access a property
+	 * This method is called when one plug-in wants to access a property
 	 * in another plug-in's property set.  Callers must be able to handle
 	 * the case where the requested property set is not found.  The plug-in
 	 * must catch PropertySetNotFoundException and supply appropriate behavior
@@ -739,7 +851,7 @@ public class PropertySet {
 
 	
 	/**
-	 * This version is called when loading data from an extension
+	 * This method is called when loading data from an extension
 	 * in a datastore.
 	 * The datastore will store the property set id and will pass it.
 	 * If no property set with the given id exists in the map then
@@ -773,14 +885,43 @@ public class PropertySet {
 		return propertySetId;
 	}
 	
+	/**
+	 * Indicates if the plug-in that had created these properties
+	 * is installed.
+	 * <P>
+	 * The datastore may contain data in properties that had 
+	 * been added by a plug-in but that plug-in may not be installed.
+	 * The plug-in may have been un-installed since the data was
+	 * entered, or the files containing the accounting data may
+	 * have been copied to another computer which does not have
+	 * the plug-in installed.  
+	 * <P>
+	 * JMoney does not drop the data in such circumstances.
+	 * The data is maintained, even though it cannot be
+	 * processed except in a very generic way.
+	 * 
+	 * @see doc on data without plug-in
+	 * @return
+	 */
+	// TODO: more work needed in this area
 	public boolean isExtensionClassKnown() {
 		return propertySetInfo != null;
 	}
 	
 	/**
-	 * @return The implementation class.
-	 * The interface that contains both getters and setters
-	 * for the properties in this property set.
+	 * Returns the implementation class for this property set.
+	 * 
+	 * The implementation class for a property set is a class that
+	 * implements getters and setters for all the properties in
+	 * the property set.  Implementation classes for property sets
+	 * have a few other rules they must follow too.  For example,
+	 * certain constructors must be provided and they must extend
+	 * either ExtendableObject or ExtensionObject.
+	 * See the documentation on property set implementation classes
+	 * for further information.
+	 *
+	 * @see doc on implemetation classes
+	 * @return the implementation class
 	 */
 	public Class getImplementationClass() {
 		return propertySetInfo.getImplementationClass();
@@ -972,6 +1113,8 @@ public class PropertySet {
 
 	// private helper method.
 	// Method valid for extendable property set only.
+	// TODO: This method is broken.  The derived properties sets are all the non-derivable
+	// property sets, including possibly this property set.
 	void addPropertiesFromDerivedPropertySets(Vector fields) {
 		for (Iterator propertySetIterator = derivedPropertySets.iterator(); propertySetIterator.hasNext(); ) {
 			PropertySet derivedPropertySet = (PropertySet)propertySetIterator.next();
@@ -1085,6 +1228,18 @@ public class PropertySet {
 
 
 	/**
+	 * @return localized text describing the type of object
+	 * 			represented by this property set
+	 */
+	public String getObjectDescription() {
+		if (isExtension() || isDerivable()) {
+			throw new RuntimeException("internal error");
+		}
+		return objectDescription;
+	}
+
+
+	/**
 	 * This method is valid for extendable property sets only.
 	 * Do not call this method on extension property sets.
 	 * 
@@ -1176,7 +1331,18 @@ public class PropertySet {
 	 * 			property set.
 	 */
 	public boolean isDerivable() {
-		return derivablePropertySet;
+		return derivable;
+	}
+
+
+	/**
+	 * 
+	 * @return an Iterator that iterates over all the property sets
+	 * 				that are derived from this property set and
+	 * 				that are themselves not derivable
+	 */
+	public Iterator getDerivedPropertySetIterator() {
+		return derivedPropertySets.iterator();
 	}
 
 

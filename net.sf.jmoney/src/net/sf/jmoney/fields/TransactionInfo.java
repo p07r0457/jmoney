@@ -30,6 +30,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
@@ -52,8 +53,8 @@ import net.sf.jmoney.model2.IPropertyRegistrar;
  */
 public class TransactionInfo implements IPropertySetInfo {
 
+	private static PropertySet propertySet = null;
 	private static PropertyAccessor dateAccessor = null;
-
 	private static PropertyAccessor entriesAccessor = null;
 
 	public TransactionInfo() {
@@ -63,7 +64,9 @@ public class TransactionInfo implements IPropertySetInfo {
 		return Transaction.class;
 	}
 	
-	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
+		TransactionInfo.propertySet = propertySet;
+
 		// TODO implement a date control factory.
 		// For time being this does not matter because the transaction
 		// dates are all entered by the Swing panels, none by
@@ -86,6 +89,15 @@ public class TransactionInfo implements IPropertySetInfo {
 		entriesAccessor = propertyRegistrar.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), Entry.class, null);
 
 		dateAccessor = propertyRegistrar.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), 10.0, textControlFactory, null, null);
+		
+		propertyRegistrar.setObjectDescription("Financial Transaction");
+	}
+
+	/**
+	 * @return
+	 */
+	public static PropertySet getPropertySet() {
+		return propertySet;
 	}
 
 	/**

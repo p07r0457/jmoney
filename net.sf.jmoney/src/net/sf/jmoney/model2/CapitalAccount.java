@@ -39,38 +39,6 @@ import java.util.Iterator;
  */
 public class CapitalAccount extends Account {
 
-	/**
-	 * The entries are ordered by their creation.
-	 */
-	public static final int CREATION_ORDER = 0;
-
-	/**
-	 * The entries are ordered by their date field.
-	 */
-	public static final int DATE_ORDER = 1;
-
-	/**
-	 * The entries are ordered by their check field.
-	 */
-	public static final int CHECK_ORDER = 2;
-
-	/**
-	 * The entries are ordered by their valuta field.
-	 */
-	public static final int VALUTA_ORDER = 3;
-
-	protected static String[] entryOrderNames;
-
-	protected Currency currency;
-
-	protected String bank = null;
-
-	protected String accountNumber = null;
-
-	protected long startBalance = 0;
-
-	protected Long minBalance = null;
-
 	protected String abbreviation = null;
 
 	protected String comment = null;
@@ -81,9 +49,6 @@ public class CapitalAccount extends Account {
          * transaction containing a list of entries.
          */
 	protected Collection entries;
-
-	protected PropertyChangeSupport changeSupport =
-		new PropertyChangeSupport(this);
 
 	/**
 	 * The full constructor for a CapitalAccount object.  This constructor is called
@@ -100,28 +65,10 @@ public class CapitalAccount extends Account {
 			IObjectKey parent,
 			String name,
 			IListManager subAccounts,
-			IObjectKey currencyKey,
-			String bank,
-			String accountNumber,
-			long startBalance,
-			Long minBalance,
 			String abbreviation,
 			String comment) {
 		super(objectKey, extensions, parent, name, subAccounts);
 		
-		// This account is being loaded from the datastore and therefore a currency
-		// must be set.  We store internally the Currency object itself, not the 
-		// key used to fetch the Currency object.
-		if (currencyKey == null) {
-			this.currency = objectKey.getSession().getDefaultCurrency();
-		} else {
-			this.currency = (Currency)currencyKey.getObject();
-		}
-		
-        this.bank = bank;
-        this.accountNumber = accountNumber;
-        this.startBalance = startBalance;
-        this.minBalance = minBalance;
         this.abbreviation = abbreviation;
         this.comment = comment;
         
@@ -142,13 +89,6 @@ public class CapitalAccount extends Account {
 			IListManager subAccounts) {
 		super(objectKey, extensions, parent, JMoneyPlugin.getResourceString("Account.newAccount"), subAccounts);
 		
-		// Set the currency to the session default currency.
-		this.currency = objectKey.getSession().getDefaultCurrency();
-		
-        this.bank = null;
-        this.accountNumber = null;
-        this.startBalance = 0;
-        this.minBalance = null;
         this.abbreviation = null;
         this.comment = null;
         
@@ -156,48 +96,9 @@ public class CapitalAccount extends Account {
 	}
 
 	protected String getExtendablePropertySetId() {
-		return "net.sf.jmoney.account";
+		return "net.sf.jmoney.capitalAccount";
 	}
 	
-	/**
-	 * @return the locale of this account.
-	 */
-	public String getCurrencyCode() {
-		return currency.getCode();
-	}
-
-	public Currency getCurrency() {
-            return currency;
-	}
-
-	/**
-	 * @return the bank name of this account.
-	 */
-	public String getBank() {
-		return bank;
-	};
-
-	/**
-	 * @return the account number of this account.
-	 */
-	public String getAccountNumber() {
-		return accountNumber;
-	};
-
-	/**
-	 * @return the initial balance of this account.
-	 */
-	public long getStartBalance() {
-		return startBalance;
-	};
-
-	/**
-	 * @return the minimal balance of this account.
-	 */
-	public Long getMinBalance() {
-		return minBalance;
-	};
-
 	/**
 	 * @return the abbrevation of this account.
 	 */
@@ -218,85 +119,25 @@ public class CapitalAccount extends Account {
 	public Iterator getEntriesIterator(Session session) {
 		return entries.iterator();
 	};
-
-        public boolean hasEntries(Session session) {
-            return entries.size() != 0;
-        }
-
-        // These methods are used when maintaining the list
-        // of entries in each account.
-        // TODO: remove these methods when indexes are supported.
-        
+	
+	/**
+	 * @return true if there are any entries in this account,
+	 * 			false if no entries are in this account
+	 */
+	public boolean hasEntries() {
+		return entries.size() != 0;
+	}
+	
+	// These methods are used when maintaining the list
+	// of entries in each account.
+	// TODO: remove these methods when indexes are supported.
+	
 	public void addEntry(Entry entry) {
 		entries.add(entry);
 	}
 
 	void removeEntry(Entry entry) {
 		entries.remove(entry);
-	}
-
-	public void setCurrency(Currency aCurrency) {
-        Currency oldCurrency = currency;
-		currency = aCurrency;
-
-		// Notify the change manager.
-		processPropertyChange(CapitalAccountInfo.getCurrencyAccessor(), oldCurrency, aCurrency);
-
-		if (this.currency == aCurrency ||
-				(this.currency != null && this.currency.equals(aCurrency)))
-				return;
-		
-		changeSupport.firePropertyChange("currency", oldCurrency, currency);
-	}
-
-	/**
-	 * @param aBank the name of this account.
-	 */
-
-	public void setBank(String aBank) {
-        String oldBank = this.bank;
-		this.bank = aBank;
-
-		// Notify the change manager.
-		processPropertyChange(CapitalAccountInfo.getBankAccessor(), oldBank, aBank);
-	}
-
-	/**
-	 * Sets the account number of this account.
-	 * @param anAccountNumber the account number
-	 */
-	
-	public void setAccountNumber(String anAccountNumber) {
-        String oldAccountNumber = this.accountNumber;
-        this.accountNumber = anAccountNumber;
-
-		// Notify the change manager.
-		processPropertyChange(CapitalAccountInfo.getAccountNumberAccessor(), oldAccountNumber, anAccountNumber);
-	}
-
-	/**
-	 * Sets the initial balance of this account.
-	 * @param s the start balance
-	 */
-	
-	public void setStartBalance(long s) {
-        long oldStartBalance = this.startBalance;
-		this.startBalance = s;
-
-		// Notify the change manager.
-		processPropertyChange(CapitalAccountInfo.getStartBalanceAccessor(), new Long(oldStartBalance), new Long(s));
-	}
-
-	/**
-	 * @param m the minimal balance which may be null.
-	 */
-	
-	public void setMinBalance(Long m) {
-        Long oldMinBalance = this.minBalance;
-		this.minBalance = m;
-
-		// Notify the change manager.
-		processPropertyChange(CapitalAccountInfo.getMinBalanceAccessor(), oldMinBalance, m);
 	}
 
 	/**
@@ -321,22 +162,6 @@ public class CapitalAccount extends Account {
 
 		// Notify the change manager.
         processPropertyChange(CapitalAccountInfo.getCommentAccessor(), oldComment, aComment);
-	}
-
-	/**
-	 * Adds a PropertyChangeListener.
-	 * @param pcl a property change listener
-	 */
-	public void addPropertyChangeListener(PropertyChangeListener pcl) {
-		changeSupport.addPropertyChangeListener(pcl);
-	}
-
-	/**
-	 * Removes a PropertyChangeListener.
-	 * @param pcl a property change listener
-	 */
-	public void removePropertyChangeListener(PropertyChangeListener pcl) {
-		changeSupport.removePropertyChangeListener(pcl);
 	}
 
 	/**
@@ -371,14 +196,17 @@ public class CapitalAccount extends Account {
 	/**
 	 * This version is required by the JMoney framework.
 	 * 
-	 * @param name
-	 * @param extensionProperties
+	 * @param propertySet a property set derived (directly or
+	 * 			indirectly) from the CapitalAccount property set.
+	 * 			This property set must not be derivable and is
+	 * 			the property set for the type of capital account
+	 * 			to be created.
 	 * @return
 	 */
-	public CapitalAccount createSubAccount() {
+	public CapitalAccount createSubAccount(PropertySet propertySet) {
 		final CapitalAccount newSubAccount = (CapitalAccount)subAccounts.createNewElement(
 				this, 
-				JMoneyPlugin.getCapitalAccountPropertySet()); 
+				propertySet); 
 
 		processObjectAddition(CapitalAccountInfo.getSubAccountAccessor(), newSubAccount);
 		
@@ -386,7 +214,7 @@ public class CapitalAccount extends Account {
 		// specifically for account creation.  The accountAdded event is superfluous 
 		// and it may be simpler if we removed it, so that listeners receive the generic
 		// objectAdded event only.
-		getObjectKey().getSession().fireEvent(
+		getSession().fireEvent(
 				new ISessionChangeFirer() {
 					public void fire(SessionChangeListener listener) {
 						listener.accountAdded(newSubAccount);
@@ -408,7 +236,7 @@ public class CapitalAccount extends Account {
 			// specifically for account deletion.  The accountDeleted event is superfluous 
 			// and it may be simpler if we removed it, so that listeners receive the generic
 			// objectDeleted event only.
-			getObjectKey().getSession().fireEvent(
+			getSession().fireEvent(
 					new ISessionChangeFirer() {
 						public void fire(SessionChangeListener listener) {
 							listener.accountDeleted(subAccount);
@@ -422,50 +250,4 @@ public class CapitalAccount extends Account {
 		return new Object [] { "new account", null, null, null, new Long(0), null, null, null };
 	}
 	
-	/**
-	 * Get the balance at a given date
-	 * 
-	 * @param date
-	 * @return the balance
-	 * @author Faucheux
-	 */
-	public long getBalance(Session session, Date fromDate, Date toDate) {
-		System.out.println("Calculing the Balance for >" + name + "< (without sub-accounts) between " + fromDate + " and " + toDate);
-		
-		long bal = getStartBalance();
-		Iterator eIt = null;
-		
-		// Sum each entry the entry between the two dates 
-		eIt = entries.iterator();
-		while (eIt.hasNext()) {
-			Entry e = (Entry) eIt.next();
-			if ((e.getTransaction().getDate().compareTo(fromDate) >= 0)
-					&& e.getTransaction().getDate().compareTo(toDate) <= 0){
-				bal += e.getAmount();
-				
-			}
-		}
-		
-		return bal;
-	}
-	
-	/**
-	 * Get the balance between two dates , inclusive sub-accounts
-	 * 
-	 * @param date
-	 * @return the balance
-	 * @author Faucheux
-	 */
-	public long getBalanceWithSubAccounts(Session session, Date fromDate, Date toDate) {
-		System.out.println("Calculing the Balance for >" + name + "< (with sub-accounts) between " + fromDate + " and " + toDate);
-		long bal = getBalance(session, fromDate, toDate);
-		
-		Iterator aIt = getSubAccountIterator();
-		
-		while (aIt.hasNext()) {
-			bal += ((CapitalAccount) aIt.next()).getBalanceWithSubAccounts(session, fromDate, toDate);
-		}
-		return bal;
-	}
-    	
 }

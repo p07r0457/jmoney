@@ -16,6 +16,7 @@
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="net.sf.jmoney.isocurrencies"/>
+      <import plugin="org.eclipse.ui.forms"/>
    </requires>
 <!-- These two only should be here with Eclipse RC1
    <requires>
@@ -223,6 +224,17 @@
             id="net.sf.jmoney.views.FolderView">
       </view>
    </extension>
+
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            id="net.sf.jmoney.genericEditor"
+            name="Generic Node Editor"
+            icon="icons/Account.gif"
+            class="net.sf.jmoney.views.NodeEditor">
+      </editor>
+   </extension>
+
    <extension
          point="net.sf.jmoney.pages">
       <pages
@@ -258,6 +270,16 @@
       	id="capitalAccount"
           info-class="net.sf.jmoney.fields.CapitalAccountInfo"
           base-property-set="net.sf.jmoney.account">
+      </extendable-property-set>
+      <extendable-property-set
+      	id="currencyAccount"
+          info-class="net.sf.jmoney.fields.CurrencyAccountInfo"
+          base-property-set="net.sf.jmoney.capitalAccount">
+      </extendable-property-set>
+      <extendable-property-set
+      	id="bankAccount"
+          info-class="net.sf.jmoney.fields.BankAccountInfo"
+          base-property-set="net.sf.jmoney.currencyAccount">
       </extendable-property-set>
       <extendable-property-set
       	id="transaction"

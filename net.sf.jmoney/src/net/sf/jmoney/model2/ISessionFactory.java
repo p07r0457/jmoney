@@ -23,6 +23,8 @@
 
 package net.sf.jmoney.model2;
 
+import net.sf.jmoney.JMoneyPlugin;
+
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchWindow;
 
@@ -51,11 +53,17 @@ public interface ISessionFactory {
 	/**
 	 * Re-opens a session from the state captured within the given 
 	 * memento. 
+	 * The opened session is set as the current open JMoney session. 
+	 * If no session can be opened then an appropriate message is
+	 * displayed to the user and the previous session, if any, is
+	 * left open.
+	 * <P>
+	 * A session may fail to open for a number of reasons.  The most
+	 * likely are that the plug-in that had originally created the session is not
+	 * installed or an error occurred while opening the session.
 	 *
 	 * @param memento a memento containing the state for the object
 	 * @param window the window to which message are to be displayed
-	 * @return an object implementing the <code>ISessionManagement</code> interface,
-	 * or <code>null</code> if the session could not be created
 	 */
-	public ISessionManager createElement(IMemento memento, IWorkbenchWindow window);
+	public void openSession(IMemento memento, IWorkbenchWindow window);
 }

@@ -32,13 +32,13 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Vector;
 
+import net.sf.jmoney.fields.CurrencyInfo;
 import net.sf.jmoney.isocurrencies.IsoCurrenciesPlugin;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ISessionChangeFirer;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.Propagator;
 import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeFirerListener;
 import net.sf.jmoney.model2.SessionChangeListener;
@@ -85,14 +85,6 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     		}
     	};
 
-    private static PropertySet commodityPropertySet = null;
-    private static PropertySet currencyPropertySet = null;	
-	private static PropertySet accountPropertySet = null;
-	private static PropertySet capitalAccountPropertySet = null;
-	private static PropertySet incomeExpenseAccountPropertySet = null;
-	private static PropertySet transactionPropertySet = null;
-	private static PropertySet entryPropertySet = null;
-    
     /**
 	 * The constructor.
 	 */
@@ -309,7 +301,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 				String name = NAME.getString(code);
 				
 				Currency newCurrency = (Currency)session.createCommodity(
-						JMoneyPlugin.getCurrencyPropertySet());
+						CurrencyInfo.getPropertySet());
 				
 				newCurrency.setName(name);
 				newCurrency.setCode(code);
@@ -351,122 +343,4 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     	// the above initializeDefaultPreferences method will be returned.
     	return getPreferenceStore().getString("dateFormat");
     }
-
-	/**
-	 * @return
-	 */
-	public static PropertySet getCommodityPropertySet() {
-		if (commodityPropertySet == null) {
-			try {
-				commodityPropertySet = PropertySet.getPropertySet("net.sf.jmoney.commodity");
-			} catch (PropertySetNotFoundException e) {
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
-			}
-		}
-		
-		return commodityPropertySet;
-	}
-
-	/**
-	 * @return
-	 */
-	public static PropertySet getCurrencyPropertySet() {
-		if (currencyPropertySet == null) {
-			try {
-				currencyPropertySet = PropertySet.getPropertySet("net.sf.jmoney.currency");
-			} catch (PropertySetNotFoundException e) {
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
-			}
-		}
-		
-		return currencyPropertySet;
-	}
-	
-	/**
-	 * @return
-	 */
-	public static PropertySet getAccountPropertySet() {
-		if (accountPropertySet == null) {
-			try {
-				accountPropertySet = PropertySet.getPropertySet("net.sf.jmoney.account");
-			} catch (PropertySetNotFoundException e) {
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
-			}
-		}
-		
-		return accountPropertySet;
-	}
-
-	/**
-	 * @return
-	 */
-	public static PropertySet getCapitalAccountPropertySet() {
-		if (capitalAccountPropertySet == null) {
-			try {
-				capitalAccountPropertySet = PropertySet.getPropertySet("net.sf.jmoney.capitalAccount");
-			} catch (PropertySetNotFoundException e) {
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
-			}
-		}
-		
-		return capitalAccountPropertySet;
-	}
-	
-	/**
-	 * @return
-	 */
-	public static PropertySet getIncomeExpenseAccountPropertySet() {
-		if (incomeExpenseAccountPropertySet == null) {
-			try {
-				incomeExpenseAccountPropertySet = PropertySet.getPropertySet("net.sf.jmoney.categoryAccount");
-			} catch (PropertySetNotFoundException e) {
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
-			}
-		}
-		
-		return incomeExpenseAccountPropertySet;
-	}
-	
-	/**
-	 * @return
-	 */
-	public static PropertySet getTransactionPropertySet() {
-		if (transactionPropertySet == null) {
-			try {
-				transactionPropertySet = PropertySet.getPropertySet("net.sf.jmoney.transaction");
-			} catch (PropertySetNotFoundException e) {
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
-			}
-		}
-		
-		return transactionPropertySet;
-	}	
-
-	/**
-	 * @return
-	 */
-	public static PropertySet getEntryPropertySet() {
-		if (entryPropertySet == null) {
-			try {
-				entryPropertySet = PropertySet.getPropertySet("net.sf.jmoney.entry");
-			} catch (PropertySetNotFoundException e) {
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
-			}
-		}
-		
-		return entryPropertySet;
-	}
-
-    /**
-     * If there is any modified data in the controls in any of the
-     * views, then commit these to the database now.
-     */
-//    void commitRemainingUserChanges();
 }

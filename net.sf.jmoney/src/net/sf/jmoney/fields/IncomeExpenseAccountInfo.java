@@ -27,6 +27,7 @@ import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertySet;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -46,6 +47,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
  */
 public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
+	private static PropertySet propertySet = null;
 	private static PropertyAccessor subAccountAccessor = null;
 
 	public IncomeExpenseAccountInfo() {
@@ -55,14 +57,25 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 		return IncomeExpenseAccount.class;
 	}
 	
-    public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-    	subAccountAccessor = propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccount.class, null);
+    public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
+		IncomeExpenseAccountInfo.propertySet = propertySet;
+
+		subAccountAccessor = propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccount.class, null);
 
 		// There are no scalar properties actually defined in this property set!
 		
 		// We should define something for the implied enumerated value
 		// that is controlled by the derived class type.  This has no
 		// been designed yet, so for time being we have nothing to do.
+		
+		propertyRegistrar.setObjectDescription("Income or Expense Category");
+	}
+
+	/**
+	 * @return
+	 */
+	public static PropertySet getPropertySet() {
+		return propertySet;
 	}
 
     /**

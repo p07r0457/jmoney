@@ -22,12 +22,12 @@
 
 package net.sf.jmoney.fields;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.BankAccount;
+import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
@@ -52,22 +52,21 @@ import net.sf.jmoney.model2.PropertySet;
  * including oneself), these are registered through the same extension
  * point that plug-ins must also use to register their properties.
  */
-public class CapitalAccountInfo implements IPropertySetInfo {
+public class CurrencyAccountInfo implements IPropertySetInfo {
 
 	private static PropertySet propertySet = null;
-	private static PropertyAccessor subAccountAccessor = null;
-	private static PropertyAccessor abbreviationAccessor = null;
-	private static PropertyAccessor commentAccessor = null;
+	private static PropertyAccessor currencyAccessor = null;
+	private static PropertyAccessor startBalanceAccessor = null;
 
-    public CapitalAccountInfo() {
+    public CurrencyAccountInfo() {
     }
 
 	public Class getImplementationClass() {
-		return CapitalAccount.class;
+		return CurrencyAccount.class;
 	}
 
     public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
-		CapitalAccountInfo.propertySet = propertySet;
+		CurrencyAccountInfo.propertySet = propertySet;
 		
 		IPropertyControlFactory textControlFactory =
 			new IPropertyControlFactory() {
@@ -89,33 +88,51 @@ public class CapitalAccountInfo implements IPropertySetInfo {
 				}
 		};
 
-		IPropertyControlFactory commentControlFactory =
+		IPropertyControlFactory amountControlFactory =
 			new IPropertyControlFactory() {
 				public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
-					IPropertyControl commentControl = new TextEditor(parent, SWT.MULTI | SWT.WRAP, propertyAccessor);
-					GridData gridData = new GridData();
-					gridData.verticalAlignment = GridData.FILL;
-					gridData.grabExcessVerticalSpace = true;
-					gridData.horizontalAlignment = GridData.FILL;
-					gridData.grabExcessHorizontalSpace = true;
-					commentControl.getControl().setLayoutData(gridData);
-					return commentControl;
+					return new AmountEditor(parent, propertyAccessor);
 				}
 
 				public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-					return "'" + extendableObject.getStringPropertyValue(propertyAccessor) + "'";
+					Long amount = (Long)extendableObject.getPropertyValue(propertyAccessor);
+					if (amount == null) {
+						return "none"; 
+					} else {
+						Currency currency = ((BankAccount)extendableObject).getCurrency();
+						return currency.format(amount.longValue());
+					}
 				}
 
 				public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-					return extendableObject.getStringPropertyValue(propertyAccessor);
+					Long amount = (Long)extendableObject.getPropertyValue(propertyAccessor);
+					if (amount == null) {
+						return ""; 
+					} else {
+						Currency currency = ((BankAccount)extendableObject).getCurrency();
+						return currency.format(amount.longValue());
+					}
 				}
 		};
 		
-		subAccountAccessor = propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), CapitalAccount.class, null);
+		IPropertyControlFactory currencyControlFactory =
+			new IPropertyControlFactory() {
+				public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
+					return new CurrencyEditor(parent, propertyAccessor);
+				}
 
-		abbreviationAccessor = propertyRegistrar.addProperty("abbreviation", JMoneyPlugin.getResourceString("AccountPropertiesPanel.abbrevation"), 30.0, textControlFactory, null, null);
-		commentAccessor = propertyRegistrar.addProperty("comment", JMoneyPlugin.getResourceString("AccountPropertiesPanel.comment"), 30.0, commentControlFactory, null, null);
+				public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+					return extendableObject.getPropertyValue(propertyAccessor).toString();
+				}
+
+				public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+					return ((Currency)extendableObject.getPropertyValue(propertyAccessor)).getName();
+				}
+		};
 		
+		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), 15.0, currencyControlFactory, null, null);
+		startBalanceAccessor = propertyRegistrar.addProperty("startBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.startBalance"), 15.0, amountControlFactory, null, null);
+
 		propertyRegistrar.setDerivableInfo();
 	}
 
@@ -129,21 +146,14 @@ public class CapitalAccountInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getSubAccountAccessor() {
-		return subAccountAccessor;
+	public static PropertyAccessor getCurrencyAccessor() {
+		return currencyAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getAbbreviationAccessor() {
-		return abbreviationAccessor;
-	}	
-
-	/**
-	 * @return
-	 */
-	public static PropertyAccessor getCommentAccessor() {
-		return commentAccessor;
+	public static PropertyAccessor getStartBalanceAccessor() {
+		return startBalanceAccessor;
 	}	
 }

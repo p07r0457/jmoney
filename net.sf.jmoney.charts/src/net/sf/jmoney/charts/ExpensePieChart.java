@@ -95,18 +95,20 @@ public class ExpensePieChart extends PieChart {
 	    // Iterator aIt = util.getAccountsUntilLevel(session,maxLevel).iterator();
 	    while (aIt.hasNext()) {
 	        Account currentAccount = (Account) aIt.next();
-	        if (currentAccount instanceof CapitalAccount) {
-		        CapitalAccount currentCapitalAccount = (CapitalAccount) currentAccount;
-		        long balance;
-	        
-		        if (currentAccount.getLevel() < maxLevel) {
-		        	// If the account has sub accounts, they will have their own entry -> we don't have to include them here
-		        	balance = currentCapitalAccount.getBalance(session, fromDate, toDate);
-		        } else {
-		        	// If the account has sub accounts, they won't have their own entry -> we have to include them here
-		        	balance = currentCapitalAccount.getBalanceWithSubAccounts(session, fromDate, toDate);
-		        }
-		        
+	        // TODO: Konten, die mehrere Währung enthalten,
+	        // mussen auch gezeigt sind.
+	        if (currentAccount instanceof CurrencyAccount) {
+	        	CurrencyAccount currentCapitalAccount = (CurrencyAccount) currentAccount;
+	        	long balance;
+	        	
+	        	if (currentAccount.getLevel() < maxLevel) {
+	        		// If the account has sub accounts, they will have their own entry -> we don't have to include them here
+	        		balance = currentCapitalAccount.getBalance(session, fromDate, toDate);
+	        	} else {
+	        		// If the account has sub accounts, they won't have their own entry -> we have to include them here
+	        		balance = currentCapitalAccount.getBalanceWithSubAccounts(session, fromDate, toDate);
+	        	}
+	        	
 			    if (balance >= 0) {
 			        System.out.println(currentAccount.getName() + " : " + balance/100 +".");
 			        values.add(new CoupleStringNumber(currentAccount.getFullAccountName(), currentAccount.getName(), balance/100));

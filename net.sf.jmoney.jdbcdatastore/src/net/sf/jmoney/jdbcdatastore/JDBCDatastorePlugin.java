@@ -22,13 +22,16 @@
 
 package net.sf.jmoney.jdbcdatastore;
 
-import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.AccountInfo;
+import net.sf.jmoney.fields.CapitalAccountInfo;
+import net.sf.jmoney.fields.CommodityInfo;
+import net.sf.jmoney.fields.CurrencyInfo;
+import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.PropertyNotFoundException;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;
@@ -227,11 +230,11 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	
 	
 	SessionManager initGeneralized(Connection con) throws SQLException {
-		PropertySet commodityPropertySet = JMoneyPlugin.getCommodityPropertySet();
-		PropertySet currencyPropertySet = JMoneyPlugin.getCurrencyPropertySet();
-		PropertySet accountPropertySet = JMoneyPlugin.getAccountPropertySet();
-		PropertySet capitalPropertySet = JMoneyPlugin.getCapitalAccountPropertySet();
-		PropertySet incomeExpensePropertySet = JMoneyPlugin.getIncomeExpenseAccountPropertySet();
+		PropertySet commodityPropertySet = CommodityInfo.getPropertySet();
+		PropertySet currencyPropertySet = CurrencyInfo.getPropertySet();
+		PropertySet accountPropertySet = AccountInfo.getPropertySet();
+		PropertySet capitalPropertySet = CapitalAccountInfo.getPropertySet();
+		PropertySet incomeExpensePropertySet = IncomeExpenseAccountInfo.getPropertySet();
 		
 		SessionKey sessionKey = new SessionKey();
 		
@@ -731,7 +734,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		 */
 		Object[] constructorParameters;
 		
-		Vector constructorProperties = propertySet.getConstructorProperties();
+		Collection constructorProperties = propertySet.getConstructorProperties();
 		constructorParameters = new Object[3 + constructorProperties.size()];
 		Map extensionMap = new HashMap();
 		constructorParameters[0] = key;
@@ -1285,7 +1288,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @return
 	 */
 	public static ExtendableObject constructExtendableObject(PropertySet propertySet, SessionManager sessionManager, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists) {
-		Vector constructorProperties = propertySet.getConstructorProperties();
+		Collection constructorProperties = propertySet.getConstructorProperties();
 		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {
 			numberOfParameters += 3;
