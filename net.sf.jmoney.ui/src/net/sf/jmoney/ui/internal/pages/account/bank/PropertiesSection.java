@@ -21,7 +21,7 @@
  */
 package net.sf.jmoney.ui.internal.pages.account.bank;
 
-import net.sf.jmoney.model2.BankAccount;import net.sf.jmoney.model2.CapitalAccount;import net.sf.jmoney.model2.CurrencyAccount;
+import net.sf.jmoney.model2.BankAccount;
 
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
