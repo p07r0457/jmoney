@@ -335,7 +335,6 @@ public class NavigationView extends ViewPart {
         Display.getDefault().syncExec( new Runnable() {
             public void run() {
                 viewer.refresh(accountsRootNode, false);
-                viewer.expandAll();
             }
         });
 	}
