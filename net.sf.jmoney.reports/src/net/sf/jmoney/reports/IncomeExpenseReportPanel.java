@@ -214,7 +214,7 @@ public class IncomeExpenseReportPanel extends JPanel implements Constants {
 				}
 			}
 */
-                        for (Iterator iter = e.getTransaxion().getEntryIterator(); iter.hasNext(); ) {
+                        for (Iterator iter = e.getTransaction().getEntryIterator(); iter.hasNext(); ) {
                             Entry e2 = (Entry)iter.next();
                             if (e2 != e) {
 				Account c = e.getAccount();
@@ -235,7 +235,7 @@ public class IncomeExpenseReportPanel extends JPanel implements Constants {
             // TODO: figure out this code
 //		if (e instanceof DoubleEntry)
 //			return false;
-		return acceptFrom(e.getTransaxion().getDate()) && acceptTo(e.getTransaxion().getDate());
+		return acceptFrom(e.getTransaction().getDate()) && acceptTo(e.getTransaction().getDate());
 	}
 
 	private boolean acceptFrom(Date d) {

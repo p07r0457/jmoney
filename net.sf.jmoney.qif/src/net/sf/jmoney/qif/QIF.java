@@ -473,7 +473,7 @@ public class QIF implements FileFormat {
             // write first entry (containing the start balance)
             if (entryIter.hasNext()) {
                 Entry entry = (Entry) entryIter.next();
-                String dateString = formatDate(entry.getTransaxion().getDate());
+                String dateString = formatDate(entry.getTransaction().getDate());
                 if (dateString != null)
                     writeln(writer, dateString);
             }
@@ -489,7 +489,7 @@ public class QIF implements FileFormat {
             for (entryIter = account.getEntriesIterator(session); entryIter.hasNext(); ) {
                 Entry entry = (Entry) entryIter.next();
                 // date
-                String dateString = formatDate(entry.getTransaxion().getDate());
+                String dateString = formatDate(entry.getTransaction().getDate());
                 if (dateString != null)
                     writeln(writer, dateString);
                 // memo
@@ -681,8 +681,8 @@ public class QIF implements FileFormat {
             Entry entry2 = (Entry) iter.next();
             if ((entry2 != newEntry)
             && (entry2.getAmount() == newEntry.getAmount())
-            && (entry2.getTransaxion().equals(newEntry.getTransaxion()))) {
-                session.removeTransaction(entry2.getTransaxion());
+            && (entry2.getTransaction().equals(newEntry.getTransaction()))) {
+                session.deleteTransaction(entry2.getTransaction());
             }
         }
     }

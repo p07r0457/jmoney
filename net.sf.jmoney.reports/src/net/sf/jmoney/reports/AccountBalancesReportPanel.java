@@ -245,7 +245,7 @@ public class AccountBalancesReportPanel extends JPanel implements Constants {
 					int status = entry.getIntegerPropertyValue(reconciliationStatusAccessor);
 					return status == CLEARED;
 				case DATE :
-					return acceptTo(entry.getTransaxion().getDate());
+					return acceptTo(entry.getTransaction().getDate());
 			}
 		}
 		return true;

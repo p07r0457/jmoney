@@ -26,7 +26,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
 
-import net.sf.jmoney.model2.ExtendableObjectHelperImpl;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionProperties;
 import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.ISessionManagement;
@@ -118,7 +118,7 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 				rs = sessionManager.getReusableStatement().executeQuery(sql);
 			}
 			
-			ExtendableObjectHelperImpl extendableObject = JDBCDatastorePlugin.materializeObject(rs, typedPropertySet, this, sessionManager);
+			ExtendableObject extendableObject = JDBCDatastorePlugin.materializeObject(rs, typedPropertySet, this, sessionManager);
 			
 			return extendableObject;
 		} catch (SQLException e) {

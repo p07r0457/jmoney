@@ -23,7 +23,7 @@
 package net.sf.jmoney.jdbcdatastore;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.ExtendableObjectHelperImpl;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
@@ -279,7 +279,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		rs = stmt.executeQuery("SELECT * FROM net_sf_jmoney_currency JOIN net_sf_jmoney_commodity ON net_sf_jmoney_currency._ID = net_sf_jmoney_commodity._ID");
 
 		while (rs.next()) {
-			ExtendableObjectHelperImpl commodityObject = materializeObjectCached(rs, currencyPropertySet, sessionKey, sessionManager);
+			ExtendableObject commodityObject = materializeObjectCached(rs, currencyPropertySet, sessionKey, sessionManager);
 			
 			commodityListManager.add(commodityObject);
 			
@@ -293,7 +293,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// Fetch the capital accounts
 		rs = stmt.executeQuery("SELECT * FROM net_sf_jmoney_capitalAccount JOIN net_sf_jmoney_account ON net_sf_jmoney_capitalAccount._ID = net_sf_jmoney_account._ID");
 		while (rs.next()) {
-			ExtendableObjectHelperImpl accountObject = materializeObjectCached(rs, capitalPropertySet, sessionKey, sessionManager);
+			ExtendableObject accountObject = materializeObjectCached(rs, capitalPropertySet, sessionKey, sessionManager);
 				
 			accountListManager.add(accountObject);
 			
@@ -305,7 +305,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// Fetch the income and expense accounts
 		rs = stmt.executeQuery("SELECT * FROM net_sf_jmoney_categoryAccount JOIN net_sf_jmoney_account ON net_sf_jmoney_categoryAccount._ID = net_sf_jmoney_account._ID");
 		while (rs.next()) {
-			ExtendableObjectHelperImpl accountObject = materializeObjectCached(rs, incomeExpensePropertySet, sessionKey, sessionManager);
+			ExtendableObject accountObject = materializeObjectCached(rs, incomeExpensePropertySet, sessionKey, sessionManager);
 				
 			accountListManager.add(accountObject);
 			
@@ -614,11 +614,11 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		columnResultSet.close();
 	}
 
-	static ExtendableObjectHelperImpl materializeObjectCached(ResultSet rs, PropertySet propertySet, IObjectKey parentKey, SessionManagementImpl sessionManager) throws SQLException {
+	static ExtendableObject materializeObjectCached(ResultSet rs, PropertySet propertySet, IObjectKey parentKey, SessionManagementImpl sessionManager) throws SQLException {
 		int rowId = rs.getInt(1); // '_ID' column
 		ObjectKeyCached key = new ObjectKeyCached(rowId, sessionManager);
 		
-		ExtendableObjectHelperImpl extendableObject = materializeObject(rs, propertySet, key, parentKey, sessionManager);
+		ExtendableObject extendableObject = materializeObject(rs, propertySet, key, parentKey, sessionManager);
 		
 		key.setObject(extendableObject);
 		
@@ -643,7 +643,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @return
 	 * @throws SQLException
 	 */ 
-	static ExtendableObjectHelperImpl materializeObject(ResultSet rs, PropertySet propertySet, IObjectKey key, IObjectKey parentKey, SessionManagementImpl sessionManager) throws SQLException {
+	static ExtendableObject materializeObject(ResultSet rs, PropertySet propertySet, IObjectKey key, IObjectKey parentKey, SessionManagementImpl sessionManager) throws SQLException {
 		/**
 		 * The list of parameters to be passed to the constructor
 		 * of this object.
@@ -723,9 +723,9 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// to call the constructor.
 		
 		Constructor constructor = propertySet.getConstructor();
-		ExtendableObjectHelperImpl extendableObject;
+		ExtendableObject extendableObject;
 		try {
-			extendableObject = (ExtendableObjectHelperImpl)constructor.newInstance(constructorParameters);
+			extendableObject = (ExtendableObject)constructor.newInstance(constructorParameters);
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			throw new RuntimeException("internal error");
@@ -757,7 +757,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @return
 	 * @throws SQLException
 	 */
-	static ExtendableObjectHelperImpl materializeObject(ResultSet rs, PropertySet propertySet, IObjectKey key, SessionManagementImpl sessionManager) throws SQLException {
+	static ExtendableObject materializeObject(ResultSet rs, PropertySet propertySet, IObjectKey key, SessionManagementImpl sessionManager) throws SQLException {
 		// We need to obtain the key for the parent object.
 		// The parent object may be cached or may be uncached.
 		
@@ -829,7 +829,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			parentKey = sessionManager.lookupObject(parentPropertySet, parentId).getObjectKey();
 		}
 		
-		ExtendableObjectHelperImpl extendableObject = JDBCDatastorePlugin.materializeObject(rs, propertySet, key, parentKey, sessionManager);
+		ExtendableObject extendableObject = JDBCDatastorePlugin.materializeObject(rs, propertySet, key, parentKey, sessionManager);
 		
 		return extendableObject;
 	}

@@ -26,7 +26,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
 
-import net.sf.jmoney.model2.ExtendableObjectHelperImpl;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.PropertySet;
 
@@ -90,7 +90,7 @@ class UncachedObjectIterator implements Iterator {
 			int id = resultSet.getInt("_ID");
 			ObjectKeyCached key = new ObjectKeyCached(id, sessionManager);
 			
-			ExtendableObjectHelperImpl extendableObject;
+			ExtendableObject extendableObject;
 			if (parentKey == null) {
 				extendableObject = JDBCDatastorePlugin.materializeObject(resultSet, propertySet, key, sessionManager);
 			} else {

@@ -28,7 +28,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
-import net.sf.jmoney.model2.ExtendableObjectHelperImpl;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionProperties;
 import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.MalformedPluginException;
@@ -52,7 +52,7 @@ public class ListManagerCached extends Vector implements IListManager {
 		this.listProperty = listProperty;
 	}
 
-	public IExtendableObject createNewElement(ExtendableObjectHelperImpl parent, PropertySet propertySet) {
+	public IExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet) {
 
 		// First we insert the new row into the tables.
 
@@ -131,9 +131,9 @@ public class ListManagerCached extends Vector implements IListManager {
 		// to call the constructor.
 		
 		Constructor constructor = propertySet.getConstructor();
-		ExtendableObjectHelperImpl extendableObject;
+		ExtendableObject extendableObject;
 		try {
-			extendableObject = (ExtendableObjectHelperImpl)constructor.newInstance(constructorParameters);
+			extendableObject = (ExtendableObject)constructor.newInstance(constructorParameters);
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			throw new RuntimeException("internal error");
