@@ -342,34 +342,35 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		
 		SAXParserFactory factory = SAXParserFactory.newInstance();
 		try {
-			idToCommodityMap = new HashMap();
-			idToAccountMap = new HashMap();
-			currentSAXEventProcessor = null;
-			
-			sessionManager = new SessionManager(sessionFile);
+            try {
+                idToCommodityMap = new HashMap();
+                idToAccountMap = new HashMap();
+                currentSAXEventProcessor = null;
 
-			factory.setValidating(false);
-			factory.setNamespaceAware(true);
-			SAXParser saxParser = factory.newSAXParser();
-			HandlerForObject handler = new HandlerForObject(sessionManager);
-			saxParser.parse(bin, handler); 
-			Session newSession = handler.getSession();
+                sessionManager = new SessionManager(sessionFile);
 
-			sessionManager.setSession(newSession);
-		} 
-		catch (ParserConfigurationException e) {
-			throw new RuntimeException("Serious XML parser configuration error");
-		} 
-		catch (SAXException e) {
-			e.printStackTrace();
-			throw new RuntimeException("Fatal SAX parser error");
-		}
+                factory.setValidating(false);
+                factory.setNamespaceAware(true);
+                SAXParser saxParser = factory.newSAXParser();
+                HandlerForObject handler = new HandlerForObject(sessionManager);
+                saxParser.parse(bin, handler);
+                Session newSession = handler.getSession();
+
+                sessionManager.setSession(newSession);
+            } catch (ParserConfigurationException e) {
+                throw new RuntimeException("Serious XML parser configuration error");
+            } catch (SAXException e) {
+                // Workaround: OldFormatJMoneyFileException seems to be thrown in
+                // two different ways: Either embedded in a SAXException or
+                // directly as an OldFormatJMoneyFileException.
+                if (e.getException() instanceof OldFormatJMoneyFileException) {
+                    throw (OldFormatJMoneyFileException) e.getException();
+                } else {
+                    throw new RuntimeException("Fatal SAX parser error");
+                }
+            }
+        }
 		catch (OldFormatJMoneyFileException se) {
-//		catch (SAXException e) {
-//			if (!(e.getException() instanceof OldFormatJMoneyFileException)) {
-//				e.printStackTrace();
-//				throw new RuntimeException("Fatal SAX parser error");
-//			} else {
 			// This exception will be throw if the file is old format (0.4.5 or prior).
 			// Try reading as an old format file.
 			if (DEBUG) System.out.println("Now attempting to read file as old format (0.4.5 or prior).");
@@ -428,15 +429,9 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			sessionManager.setSession(newSessionNewFormat);
 			
 			convertModelOneFormat((net.sf.jmoney.model.Session)newSession, newSessionNewFormat);
-//			}
 		}
 		catch (IOException ioe) { 
 			throw new RuntimeException("IO internal exception error");
-/*
-		} catch (SAXException e) {
-			e.printStackTrace();
-			throw new RuntimeException("Fatal SAX parser error");
-*/
 		} finally {
 			bin.close();
 			if (gin != null) gin.close();
