@@ -48,12 +48,7 @@ public class ActivLineChart extends LineChart {
     /**
      * Calculate the values for the all account.
      */
-    protected void createValues() {
-        String[] accountsToShow = { 
-                 "Banques.Postbank",
-                 "Banques.Compte service CA"
-                // "Liquide" 
-                }; 
+    protected void createOrUpdateValues(/*String*/Vector accountsToShow) {
 
         if (data == null)
             data = new TimeSeriesCollection();
@@ -61,8 +56,8 @@ public class ActivLineChart extends LineChart {
             data.removeAllSeries();
         
         
-        for (int i=0; i<accountsToShow.length; i++) {
-            TimeSeries timeSeries = getTimeSerieForAccount(accountsToShow[i], session);
+        for (int i=0; i<accountsToShow.size(); i++) {
+            TimeSeries timeSeries = getTimeSerieForAccount((String)accountsToShow.get(i), session);
             data.addSeries(timeSeries);
 
             // Moving averages
@@ -70,7 +65,7 @@ public class ActivLineChart extends LineChart {
             
             mav = MovingAverage.createMovingAverage(
                     timeSeries, "30 day moving average", 30, 30);
-            data.addSeries(mav);
+            // data.addSeries(mav);
         }
         
         

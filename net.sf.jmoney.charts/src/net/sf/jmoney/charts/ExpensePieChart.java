@@ -29,6 +29,7 @@ import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.entity.PieSectionEntity;
 import org.jfree.chart.plot.PiePlot;
+import org.jfree.chart.title.TextTitle;
 import org.jfree.data.DefaultPieDataset;
 
 import net.sf.jmoney.charts.*;
@@ -152,11 +153,10 @@ public class ExpensePieChart extends PieChart {
 	    // set the title
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
     	title = accounts[0];
-    	subTitle = new LinkedList();
-    	subTitle.add(new String (" from " + df.format(fromDate) + " to " + df.format(toDate)));
+    	subTitle = new String (" from " + df.format(fromDate) + " to " + df.format(toDate));
     	if (chart != null) {
     	    chart.setTitle(title);
-    	    chart.setSubtitles(subTitle);
+    	    chart.addSubtitle(new TextTitle(subTitle));
     	}
     	
 
@@ -166,6 +166,7 @@ public class ExpensePieChart extends PieChart {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
         try {
         	fromDate = df.parse("2004-01-01");
+        	title = title + "\n" + fromDate + " - " + toDate;
         } catch (ParseException e) {
         	System.err.println(e.getStackTrace());
         	Error err = new Error("ParseException");

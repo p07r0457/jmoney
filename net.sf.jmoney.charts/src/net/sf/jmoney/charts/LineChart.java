@@ -1,8 +1,10 @@
 package net.sf.jmoney.charts;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Frame;
 import java.util.Date;
+import java.util.Vector;
 
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -47,8 +49,6 @@ public abstract class LineChart extends JFrame {
         // init the parameters
         initParameters ();
         
-        createValues ();
-
      }
     
     public void setDates(Date fromDate, Date toDate) {
@@ -56,12 +56,17 @@ public abstract class LineChart extends JFrame {
         this.toDate = toDate;
     }
     
-	protected abstract void createValues();
+	protected abstract void createOrUpdateValues(/*String*/Vector accountsToShow);
 
     /**
      * Starting point for the panel.
      */
-    public void run() {
+    public void displayAsWindow() {
+    	this.getContentPane().removeAll();
+    	this.getContentPane().setLayout(new BorderLayout());
+    	this.getContentPane().add(this.getChartPanel());
+    	this.setVisible(true);
+    	this.pack();
     }
     
     /*
@@ -83,7 +88,7 @@ public abstract class LineChart extends JFrame {
                                                        );
 
         // set the background color for the chart...
-        chart.setBackgroundPaint(Color.yellow);
+        //  chart.setBackgroundPaint(Color.yellow);
 
         
         // add the chart to a panel...

@@ -44,12 +44,12 @@ public class StackedAccountChart extends StackedChart {
         long saldo = 0;
         Date[] dates;
         int numberOfAccounts = 0;
-        int numberOfMonths = 10; // TODO: Faucheux - To change (count)
+        int numberOfMonths; // TODO: Faucheux - To change (count)
         Date fromDate = null;
         DateFormat df = new SimpleDateFormat("dd.MM.yyyy");
         List listAccounts;
         long totalValue = 0;
-        int maxLevel = 2; // TODO: Faucheux - as parameter
+        int maxLevel = 1; // TODO: Faucheux - as parameter
         
         try {
         	fromDate = df.parse("01.01.2004");
@@ -60,19 +60,16 @@ public class StackedAccountChart extends StackedChart {
         Date toDate = new Date(); // today
 
         // Calculate the begin and the end of each Time-Gap
+        numberOfMonths = (new Month(toDate)).compareTo(new Month(fromDate)) + 1;
         Date [] dateBegin = new Date[numberOfMonths];
         Date [] dateEnd = new Date[numberOfMonths];
         String[] dateLabels = new String[numberOfMonths];
-        dateBegin[0] = fromDate;
-        for (int i=1; i<numberOfMonths; i++) {
-            GregorianCalendar gc = new GregorianCalendar();
-            gc.setTime(dateBegin[i-1]);
-            gc.add(Calendar.MONTH, 1);
-            dateBegin[i] = gc.getTime();
-            gc.add(Calendar.DAY_OF_MONTH, -1);
-            dateEnd[i-1] = gc.getTime();
+        Month month = new Month (fromDate);
+        for (int i=0; i<numberOfMonths; i++) {
+            dateBegin[i]= new Date(month.getFirstMillisecond());
+            dateEnd[i]  = new Date(month.getLastMillisecond());
+            month = (Month) month.next();
         }
-        dateEnd[numberOfMonths-1] = toDate;
         for (int i=0; i<numberOfMonths; i++) 
             dateLabels[i] = (new SimpleDateFormat("MM.yy")).format(dateBegin[i]);
         

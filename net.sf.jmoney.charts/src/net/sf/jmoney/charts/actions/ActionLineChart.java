@@ -56,7 +56,7 @@ public class ActionLineChart extends Action {
      * have been made. 
      */
     public void doAction (Session session) {
-        (new ActivLineChart("Chart", session)).run();
+        (new ActivLineChart("Chart", session)).displayAsWindow();
     }
 
 }

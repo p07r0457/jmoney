@@ -16,6 +16,7 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.entity.PieSectionEntity;
 import org.jfree.chart.plot.PiePlot;
+import org.jfree.chart.title.TextTitle;
 import org.jfree.data.DefaultPieDataset;
 import org.jfree.data.PieDataset;
 import org.jfree.ui.*;
@@ -30,7 +31,7 @@ import net.sf.jmoney.model2.*;
 public abstract class PieChart extends JFrame implements ChartMouseListener {
 
     protected String title;
-    protected List subTitle;
+    protected String subTitle;
     protected Session session;
     public DefaultPieDataset data;
     protected JFreeChart chart;
@@ -59,17 +60,19 @@ public abstract class PieChart extends JFrame implements ChartMouseListener {
         // set the values
         createValues ();
 
-        /*
         // create the chart...
          chart = ChartFactory.createPieChart(title,  // chart title
                                                        data,   // data
                                                        true,    // include legend
                                                        false,	// tooltips
                                                        false);   // URL
-
+         chart.addSubtitle(new TextTitle(subTitle));
+                                                       
+        /*
         // set the background color for the chart...
         chart.setBackgroundPaint(Color.yellow);
 
+        */
         
         // add the chart to a panel...
         ChartPanel chartPanel = new ChartPanel(chart);
@@ -77,7 +80,6 @@ public abstract class PieChart extends JFrame implements ChartMouseListener {
         this.getContentPane().add(chartPanel);
         this.pack();
         this.setVisible(true);
-        */
         
     }
     
