@@ -312,7 +312,7 @@ private void makeActions() {
 				break;
 			}
 			if (account != null) {
-				session.removeAccount(account);
+				session.deleteAccount(account);
 			}
 		}
 	};
