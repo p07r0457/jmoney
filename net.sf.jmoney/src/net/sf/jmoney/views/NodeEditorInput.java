@@ -27,8 +27,9 @@ import java.util.Vector;
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.PageEntry;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
@@ -56,9 +57,9 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
     IBookkeepingPage pages [];
     
     /**
-     * Create a new account editor input.
+     * Create a new editor input.
      * 
-     * @param nodeObject Account on which this input is based
+     * @param nodeObject An extendable object on which this input is based
      */
     public NodeEditorInput(Object nodeObject, String label, Image image, Vector pageFactories, IMemento memento) {
         this.nodeObject = nodeObject;
@@ -147,7 +148,7 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
     }
 
     /**
-     * @return Returns the account.
+     * @return The input object for this editor
      */
     public Object getNode() {
         return nodeObject;
@@ -185,14 +186,12 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
 		
 		// Save the node.  The node may be either
 		// a TreeNode object or an object in the data model.
-		
-		// If a TreeNode, save the id of the node.
 		if (nodeObject instanceof TreeNode) {
 			memento.putString("treeNode", ((TreeNode)nodeObject).getId());
-		} else if (nodeObject instanceof CapitalAccount) {
-			memento.putString("capitalAccount", ((CapitalAccount)nodeObject).getFullAccountName());
+		} else if (nodeObject instanceof Account) {
+			memento.putString("account", ((Account)nodeObject).getFullAccountName());
 		} else {
-			throw new RuntimeException("");
+			throw new RuntimeException("unknown object type");
 		}
 		
 		// Save the contents of each page.
@@ -204,7 +203,7 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
 			System.out.println("no pages set in " + nodeObject.toString());
 		} else {
 			for (int i = 0; i < pageFactories.size(); i++) {
-				TreeNode.PageEntry entry = (TreeNode.PageEntry)pageFactories.get(i);
+				PageEntry entry = (PageEntry)pageFactories.get(i);
 				String pageId = (String)entry.getPageId();
 				IBookkeepingPageFactory pageListener = (IBookkeepingPageFactory)entry.getPageFactory();
 				pages[i].saveState(memento.createChild(pageId));

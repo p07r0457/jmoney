@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.model2;
 
+
 /**
  *
  * @author  Nigel
@@ -150,4 +151,20 @@ public interface IPropertyRegistrar {
 	 * by this property set must be set by calling this method.
 	 */
 	void setObjectDescription(String description);
+
+	/**
+	 * Allows an optional icon to be associated with this property set.
+	 * Throughout the accounts UI, icons may be displayed next to objects.
+	 * These icons are usually displayed next to the name of the
+	 * object instance.
+	 * <P>
+	 * If no icon is set then the base property sets are searched,
+	 * starting with the property set which this property set extends,
+	 * until an icon is found.  If an icon is not set for this or any
+	 * of the base property sets then no icon is set for the property set
+	 * and the UI will generally not display an icon.
+	 * 
+	 * @param iconFileName
+	 */
+	void setIcon(String iconFileName);
 }

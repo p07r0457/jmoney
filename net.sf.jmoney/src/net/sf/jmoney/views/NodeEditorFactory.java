@@ -22,10 +22,9 @@
 
 package net.sf.jmoney.views;
 
-import net.sf.jmoney.Constants;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.core.runtime.IAdaptable;
@@ -58,6 +57,10 @@ public class NodeEditorFactory implements IElementFactory {
 	public IAdaptable createElement(IMemento memento) {
 		// Get the session from the data in the memento.
 		Session session = JMoneyPlugin.openSession(memento.getChild("session"));
+		if (session == null) {
+			// null indicates the element could not be re-created.
+			return null;
+		}
 		
 		// See if the node is a TreeNode.
 		String nodeId = memento.getString("treeNode");
@@ -67,16 +70,18 @@ public class NodeEditorFactory implements IElementFactory {
 		}
 		
 		// See if the node is an account.
-		String fullAccountName = memento.getString("capitalAccount");
+		String fullAccountName = memento.getString("account");
 		if (fullAccountName != null) {
 			System.out.println("editor factory, session = " + session);
 			Account account = JMoneyPlugin.getDefault().getSession().getAccountByFullName(fullAccountName);
-			if (account instanceof CapitalAccount) {
-				TreeNode accountsRootNode = TreeNode.getAccountsRootNode();
-				
-				// TODO: use same code as in navigation view for label, image etc.
-				
-				return new NodeEditorInput(account, account.toString(), Constants.ACCOUNT_ICON, TreeNode.getPageListeners(account), memento);
+			if (account != null) {
+   				PropertySet propertySet = PropertySet.getPropertySet(account.getClass());
+				return new NodeEditorInput(
+						account, 
+						account.toString(), 
+						propertySet.getIcon(), 
+						propertySet.getPageFactories(), 
+						memento);
 			}
 		}
 		

@@ -72,6 +72,7 @@ public class CapitalAccountInfo implements IPropertySetInfo {
 		commentAccessor = propertyRegistrar.addProperty("comment", JMoneyPlugin.getResourceString("AccountPropertiesPanel.comment"), 5, 150, commentControlFactory, null);
 		
 		propertyRegistrar.setDerivableInfo();
+		propertyRegistrar.setIcon("icons/Account.gif");
 	}
 
 	/**

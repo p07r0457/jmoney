@@ -50,13 +50,6 @@ public abstract class CapitalAccount extends Account {
 	protected String comment = null;
 
 	/**
-	 * This list is maintained for efficiency only.
-	 * The master list is the list of transactions, with each
-	 * transaction containing a list of entries.
-	 */
-	protected Collection entries;
-
-	/**
 	 * The full constructor for a CapitalAccount object.  This constructor is called
 	 * only be the datastore when loading data from the datastore.  The properties
 	 * passed to this constructor must be valid because datastores should only pass back
@@ -77,8 +70,6 @@ public abstract class CapitalAccount extends Account {
 		
         this.abbreviation = abbreviation;
         this.comment = comment;
-        
-		this.entries = objectKey.createIndexValuesList(EntryInfo.getAccountAccessor());
 	}
 
 	/**
@@ -97,8 +88,6 @@ public abstract class CapitalAccount extends Account {
 		
         this.abbreviation = null;
         this.comment = null;
-        
-		this.entries = objectKey.createIndexValuesList(EntryInfo.getAccountAccessor());
 	}
 
 	protected String getExtendablePropertySetId() {
@@ -119,16 +108,6 @@ public abstract class CapitalAccount extends Account {
 		return comment;
 	};
 
-	/**
-	 * Get the entries in the account.
-	 * 
-	 * @return A read-only collection with elements of
-	 * 				type <code>Entry</code>
-	 */
-	public Collection getEntries() {
-		return Collections.unmodifiableCollection(entries);
-	}
-	
 	/**
 	 * Get the entries in this account sorted according to the given
 	 * sort specification.  If the datastore plug-in has implemented
@@ -222,26 +201,6 @@ public abstract class CapitalAccount extends Account {
     	}
 	};
 	
-	/**
-	 * @return true if there are any entries in this account,
-	 * 			false if no entries are in this account
-	 */
-	public boolean hasEntries() {
-		return !entries.isEmpty();
-	}
-	
-	// These methods are used when maintaining the list
-	// of entries in each account.
-	// TODO: remove these methods when indexes are supported.
-	
-	public void addEntry(Entry entry) {
-		entries.add(entry);
-	}
-
-	void removeEntry(Entry entry) {
-		entries.remove(entry);
-	}
-
 	/**
 	 * @param anAbbrevation the abbrevation of this account.
 	 */

@@ -26,11 +26,16 @@ import java.util.Vector;
 
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.PageEntry;
+import net.sf.jmoney.model2.PropertySet;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IMemento;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.editor.FormEditor;
 
@@ -55,7 +60,7 @@ public class NodeEditor extends FormEditor {
         IBookkeepingPage pages [] = new IBookkeepingPage[pageListeners.size()];
         
     	for (int i = 0; i < pageListeners.size(); i++) {
-    		TreeNode.PageEntry entry = (TreeNode.PageEntry)pageListeners.get(i);
+    		PageEntry entry = (PageEntry)pageListeners.get(i);
     		String pageId = (String)entry.getPageId();
     		IBookkeepingPageFactory pageListener = (IBookkeepingPageFactory)entry.getPageFactory();
     		pages[i] = pageListener.createFormPage(this, memento==null?null:memento.getChild(pageId));
@@ -121,5 +126,30 @@ public class NodeEditor extends FormEditor {
 	 */
 	public Object getSelectedObject() {
 		return navigationTreeNode;
+	}
+
+	/**
+	 * @param extendableObject
+	 */
+	public static void openEditor(IWorkbenchWindow window, ExtendableObject extendableObject) {
+		PropertySet propertySet = PropertySet.getPropertySet(extendableObject.getClass());
+		Vector pages = propertySet.getPageFactories();
+		
+		// Create an editor for this node (or active if an editor
+		// is already open).  However, if no pages are registered for this
+		// node then do nothing.
+		if (!pages.isEmpty()) {
+			try {
+				IEditorInput editorInput = new NodeEditorInput(extendableObject,
+						extendableObject.toString(),
+						propertySet.getIcon(),
+						pages,
+						null);
+				window.getActivePage().openEditor(editorInput,
+				"net.sf.jmoney.genericEditor");
+			} catch (PartInitException e) {
+				JMoneyPlugin.log(e);
+			}
+		}
 	}
 }

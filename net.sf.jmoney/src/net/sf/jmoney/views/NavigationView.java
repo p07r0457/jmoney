@@ -25,7 +25,6 @@ package net.sf.jmoney.views;
 import java.util.Iterator;
 import java.util.Vector;
 
-import net.sf.jmoney.Constants;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CapitalAccountInfo;
@@ -158,8 +157,8 @@ public class NavigationView extends ViewPart {
 		public Image getImage(Object obj) {
 			if (obj instanceof TreeNode) {
 				return ((TreeNode)obj).getImage();
-			} else if (obj instanceof CapitalAccount) {
-				return Constants.ACCOUNT_ICON;
+			} else if (obj instanceof ExtendableObject) {
+				return PropertySet.getPropertySet(obj.getClass()).getIcon();
 			} else {
 				throw new RuntimeException("");
 			}
@@ -170,13 +169,11 @@ public class NavigationView extends ViewPart {
 		public int category(Object obj) {
 			if (obj instanceof TreeNode) {
 				return ((TreeNode)obj).getPosition();
-			} else if (obj instanceof CapitalAccount) {
-				return 0;
 			} else {
-				throw new RuntimeException("");
+				assert (obj instanceof ExtendableObject);
+				return 0;
 			}
 		}
-		
 	}
 
 	private SessionChangeListener listener =
@@ -322,7 +319,8 @@ public class NavigationView extends ViewPart {
 			   			if (selectedObject instanceof TreeNode) {
 			   				pageListeners = ((TreeNode)selectedObject).getPageFactories();
 			   			} else if (selectedObject instanceof ExtendableObject) {
-			   				pageListeners = TreeNode.getPageListeners((ExtendableObject)selectedObject);
+			   				PropertySet propertySet = PropertySet.getPropertySet(selectedObject.getClass());
+			   				pageListeners = propertySet.getPageFactories();
 			   			} else {
 			   				pageListeners = new Vector();
 			   			}

@@ -148,9 +148,9 @@ public class Entry extends ExtendableObject {
 	
 	// Called only by datastore after object originally constructed.
 	public void registerWithIndexes() {
-		if (account instanceof CapitalAccount) {
-			CapitalAccount capitalAccount = (CapitalAccount) account;
-			capitalAccount.addEntry(this);
+		// Account should not be null, but just in case...
+		if (account != null) {
+			account.addEntry(this);
 		}
 	}
 	
@@ -304,12 +304,12 @@ public class Entry extends ExtendableObject {
 		Account oldAccount = this.account;
 		this.account = newAccount;
 		
-		// Add to the list of entries in each account.
-		if (oldAccount != null && oldAccount instanceof CapitalAccount) {
-			((CapitalAccount)oldAccount).removeEntry(this);
+		// Update the list of entries in each account.
+		if (oldAccount != null) {
+			oldAccount.removeEntry(this);
 		}
-		if (newAccount != null && newAccount instanceof CapitalAccount) {
-			((CapitalAccount)newAccount).addEntry(this);
+		if (newAccount != null) {
+			newAccount.addEntry(this);
 		}
 		
 		// Notify the change manager.

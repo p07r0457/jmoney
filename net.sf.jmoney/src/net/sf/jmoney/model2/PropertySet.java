@@ -31,12 +31,15 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.swt.graphics.Image;
 
 /**
  * A <code>PropertySet</code> contains information about a
@@ -176,7 +179,19 @@ public class PropertySet {
 	private Vector defaultConstructorProperties;
 	
 	private Method theDefaultPropertiesMethod;
+	
+	/**
+	 * This field is valid for non-derivable property sets only.
+	 */
+	private Vector pageExtensions = null;
+	
+	/**
+	 * This field is valid for extendable property sets only
+	 */
+	private String iconFileName = null;
 
+	/** cached value */
+	private Image iconImage = null;
 	
 	/**
 	 * Loads the property sets.
@@ -283,6 +298,7 @@ public class PropertySet {
 		
 		derivable = false;
 		objectDescription = null;
+		iconFileName = null;
 		
 		// propertySetInfo will be null if data is found in the datastore
 		// but no plug-in exists for the data.  This can happen if a plug-in
@@ -341,6 +357,9 @@ public class PropertySet {
 							objectDescription = description;
 						}
 
+						public void setIcon(String iconFileName) {
+							PropertySet.this.iconFileName = iconFileName;
+						}
 					}
 			);
 		}
@@ -367,6 +386,8 @@ public class PropertySet {
 				throw new MalformedPluginException("More than one property set uses " + implementationClass + " as the Java implementation class.");
 			}
 			classToPropertySetMap.put(implementationClass, this);
+
+			pageExtensions = new Vector();
 		}
 	}
 
@@ -464,8 +485,10 @@ public class PropertySet {
 	/**
 	 * This method is called to complete the initialization of this object.
 	 * Some parts of the initialization require access to a complete list of
-	 * all the PropertySet objects and therefore cannot be done in the
-	 * PropertySet constructor.
+	 * all the PropertySet objects and also require that every property set
+	 * has the reference to the base property set correctly set.
+	 * Therefore the code in this method cannot be executed in
+	 * initPropertiesPass1.
 	 * <P>
 	 * The following are initialized by this method:
 	 * <UL>
@@ -546,6 +569,22 @@ public class PropertySet {
 					propertyAccessor.setIndexIntoScalarProperties(scalarIndex++);
 				}
 			}
+			
+			// Set the icon associated with this property set.
+			// The icon will already have been set in any property set
+			// for which an icon is specifically set.  However, icons
+			// also apply to derived property sets for which no icon
+			// has been set.  So, if the icon is null, go up the list
+			// of base property sets until we find a non-null icon.
+			if (iconFileName == null) {
+				for (PropertySet base = getBasePropertySet(); base != null; base = base.getBasePropertySet()) {
+					if (base.getIconFileName() != null) {
+						iconFileName = base.getIconFileName();
+						break;
+					}
+				}
+			}
+			
 		} else {
 			// This property set is an extension.
 			int parameterIndex = 0;
@@ -1375,6 +1414,50 @@ public class PropertySet {
 	 */
 	public Iterator getDerivedPropertySetIterator() {
 		return derivedPropertySets.iterator();
+	}
+
+	/**
+	 * Returns the set of tabbed pages that are to be shown in the
+	 * editor associated with extendable objects of this property set.
+	 * <P>
+	 * This method is valid only for non-derivable extendable property sets.
+	 * 
+	 * @return a set of objects of type PageEntry
+	 */
+	public Vector getPageFactories() {
+		return pageExtensions;		
+	}
+
+
+	/**
+	 * @param pageEntry
+	 */
+	public void addPage(PageEntry pageEntry) {
+		pageExtensions.add(pageEntry);
+	}
+
+
+	/** used internally */
+	String getIconFileName() {
+		return iconFileName;
+	}
+
+	/**
+	 * This method creates the image on first call.  It is very
+	 * important that the image is not created when the this PropertySet
+	 * object is initialized.  The reason is that this PropertySet is
+	 * initialized by a different thread than the UI thread.  Images
+	 * must be created by UI thread.
+	 * <P>
+	 * This method is valid for extendable property sets only.
+	 * 
+	 * @return the icon associated with objects that implement
+	 * 			this property set.
+	 */
+	public Image getIcon() {
+		if (iconImage == null)
+			iconImage = JMoneyPlugin.createImage(iconFileName);
+		return iconImage;
 	}
 
 

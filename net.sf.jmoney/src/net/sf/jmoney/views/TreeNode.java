@@ -28,13 +28,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
-import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.PageEntry;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
 
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -56,8 +54,6 @@ import org.eclipse.swt.graphics.Image;
 public class TreeNode implements IAdaptable {
 	/** String (the full id of the node) to TreeNode */
 	private static Map idToNodeMap = new HashMap();
-	/** PropertySet to Vector of PageEntry */
-	private static Map objectToPagesMap = new HashMap();
 	private static TreeNode invisibleRoot;
 
 	// TODO: generalize this code
@@ -178,13 +174,7 @@ public class TreeNode implements IAdaptable {
 								
 								for (Iterator iter = pagePropertySet.getDerivedPropertySetIterator(); iter.hasNext(); ) {
 									PropertySet derivedPropertySet = (PropertySet)iter.next();
-									Vector pageList = (Vector)objectToPagesMap.get(derivedPropertySet);
-									if (pageList == null) {
-										pageList = new Vector();
-										objectToPagesMap.put(derivedPropertySet, pageList);
-									}
-									
-									pageList.add(pageEntry);
+									derivedPropertySet.addPage(pageEntry);
 								}
 							} catch (PropertySetNotFoundException e1) {
 								// This is a plug-in error.
@@ -319,40 +309,6 @@ public class TreeNode implements IAdaptable {
 	public Vector getPageFactories() {
 		return pageFactories;
 	}
-
-	public static Vector getPageListeners(ExtendableObject extendableObject) {
-		PropertySet propertySet = PropertySet.getPropertySet(extendableObject.getClass());
-		return (Vector)objectToPagesMap.get(propertySet);		
-	}
-
-	static class PageEntry {
-    	String pageId;
-    	IConfigurationElement pageElement;
-    	IBookkeepingPageFactory pageFactory = null;
-
-    	public PageEntry(String pageId, IConfigurationElement pageElement) {
-    	    this.pageId = pageId;
-            this.pageElement = pageElement;
-    	}
-
-    	public String getPageId() {
-    	    return pageId;
-    	}
-
-    	public IBookkeepingPageFactory getPageFactory() {
-    		if (pageFactory == null) {
-    			try {
-    				pageFactory = (IBookkeepingPageFactory)pageElement.createExecutableExtension("class");
-    			} catch (CoreException e) {
-    				// TODO: handle properly
-    				e.printStackTrace();
-    				throw new RuntimeException("CoreException failure");
-    			}
-    		}
-    	    return pageFactory;
-    	}
-    }
-    
 }
 
 

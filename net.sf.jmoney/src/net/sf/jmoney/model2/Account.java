@@ -23,10 +23,13 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 
 import net.sf.jmoney.fields.AccountInfo;
+import net.sf.jmoney.fields.EntryInfo;
 
 /**
  * An implementation of the Account interface
@@ -39,6 +42,13 @@ public abstract class Account extends ExtendableObject {
 
 	protected IListManager subAccounts;
 	
+	/**
+	 * This list is maintained for efficiency only.
+	 * The master list is the list of transactions, with each
+	 * transaction containing a list of entries.
+	 */
+	protected Collection entries;
+
 	protected Account(
 			IObjectKey objectKey, 
 			Map extensions, 
@@ -46,9 +56,14 @@ public abstract class Account extends ExtendableObject {
 			String name,
 			IListManager subAccounts) {
 		super(objectKey, extensions);
+		if (parentKey == null) {
+			throw new RuntimeException("here");
+		}
 		this.parentKey = parentKey;
 		this.name = name;
 		this.subAccounts = subAccounts;
+        
+		this.entries = objectKey.createIndexValuesList(EntryInfo.getAccountAccessor());
 	}
 	
 	/**
@@ -104,6 +119,36 @@ public abstract class Account extends ExtendableObject {
 		return subAccounts.remove(subAccount);
 	}
 	
+	/**
+	 * Get the entries in the account.
+	 * 
+	 * @return A read-only collection with elements of
+	 * 				type <code>Entry</code>
+	 */
+	public Collection getEntries() {
+		return Collections.unmodifiableCollection(entries);
+	}
+	
+	/**
+	 * @return true if there are any entries in this account,
+	 * 			false if no entries are in this account
+	 */
+	public boolean hasEntries() {
+		return !entries.isEmpty();
+	}
+	
+	// These methods are used when maintaining the list
+	// of entries in each account.
+	// TODO: remove these methods when indexes are supported.
+	
+	public void addEntry(Entry entry) {
+		entries.add(entry);
+	}
+
+	void removeEntry(Entry entry) {
+		entries.remove(entry);
+	}
+
     /**
 	 * This method is used for debugging purposes only.
 	 */

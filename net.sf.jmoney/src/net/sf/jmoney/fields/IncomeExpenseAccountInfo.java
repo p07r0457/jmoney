@@ -72,6 +72,7 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 		// been designed yet, so for time being we have nothing to do.
 		
 		propertyRegistrar.setObjectDescription("Income or Expense Category");
+		propertyRegistrar.setIcon("icons/Category.gif");
 	}
 
 	/**
