@@ -1693,7 +1693,9 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					entry1.setAmount(oldEntry.getAmount());
 					entry2.setAmount(-oldEntry.getAmount());
 					entry1.setAccount(newAccount);
-					entry2.setAccount((Account)accountMap.get(oldEntry.getCategory()));
+					if (oldEntry.getCategory() != null) {
+					    entry2.setAccount((Account)accountMap.get(oldEntry.getCategory()));
+					}
 					
 					// Put the check, memo, valuta, and status into the account entry only.
 					// Assume the creation and description apply to both account and
