@@ -116,6 +116,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 		private Action newAccountAction;
 		private Action newSubAccountAction;
 		private Action deleteAccountAction;
+		private Action editorAction;
 		
 		/**
 		 * The account whose property values are in the edit controls below.
@@ -423,7 +424,16 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			manager.add(newAccountAction);
 			manager.add(newSubAccountAction);
 			manager.add(deleteAccountAction);
+			
 			manager.add(new Separator());
+			
+			// Add a menu item for IncomeExpenseAccount editor
+			if (editorAction != null) {
+				manager.add(editorAction);
+			}
+			
+			manager.add(new Separator());
+			
 			// Other plug-ins can contribute their actions here
 			manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 		}
@@ -431,7 +441,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 		private void makeActions() {
 			newAccountAction = new Action() {
 				public void run() {
-					Session session = JMoneyPlugin.getDefault().getSession();
+					//Session session = JMoneyPlugin.getDefault().getSession();
 					
 					IncomeExpenseAccount account = (IncomeExpenseAccount)session.createAccount(IncomeExpenseAccountInfo.getPropertySet());
 					account.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
@@ -449,7 +459,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			
 			newSubAccountAction = new Action() {
 				public void run() {
-					Session session = JMoneyPlugin.getDefault().getSession();
+					//Session session = JMoneyPlugin.getDefault().getSession();
 					IncomeExpenseAccount account = null;
 					IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 					for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
@@ -475,7 +485,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			
 			deleteAccountAction = new Action() {
 				public void run() {
-					Session session = JMoneyPlugin.getDefault().getSession();
+					//Session session = JMoneyPlugin.getDefault().getSession();
 					IncomeExpenseAccount account = null;
 					IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 					for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
@@ -492,6 +502,27 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			deleteAccountAction.setToolTipText("Delete category tooltip");
 			//	deleteAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
 			//		getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+
+			if (!IncomeExpenseAccountInfo.getPropertySet().getPageFactories().isEmpty()) {
+				editorAction = new Action() {
+					public void run() {
+						IncomeExpenseAccount account = null;
+						IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+						for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
+							Object selectedObject = iterator.next();
+							assert (selectedObject instanceof ExtendableObject); 
+							NodeEditor.openEditor(
+									getSite().getWorkbenchWindow(),
+									(ExtendableObject)selectedObject);
+						}
+					}
+				};
+				editorAction.setText(JMoneyPlugin.getResourceString("Menu.openCategoryAccountEditor"));
+			} else {
+				// No plug-ins have added any pages that display category information,
+				// so do not show a menu item for this.
+				editorAction = null;
+			}
 		}
 		
 	};
