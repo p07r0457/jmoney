@@ -31,7 +31,7 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.copier.CopierPlugin;
-import net.sf.jmoney.model2.ISessionManagement;
+import net.sf.jmoney.model2.ISessionManager;
 
 /**
  * Our sample action implements workbench action delegate.
@@ -56,7 +56,7 @@ public class CutSessionAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		ISessionManagement sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		ISessionManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		
 		if (sessionManager == null) {
 			MessageDialog waitDialog =

@@ -51,7 +51,9 @@ import net.sf.jmoney.model2.PropertyAccessor;
  */
 public class CommodityInfo implements IExtensionPropertySetInfo {
 
-    public CommodityInfo() {
+	private static PropertyAccessor nameAccessor = null;
+
+	public CommodityInfo() {
     }
 
 	public Class getImplementationClass() {
@@ -70,7 +72,14 @@ public class CommodityInfo implements IExtensionPropertySetInfo {
 				}
 		};
 		
-		propertyRegistrar.addProperty("name", JMoneyPlugin.getResourceString("Commodity.name"), 30.0, textControlFactory, null, null);
+		nameAccessor = propertyRegistrar.addProperty("name", JMoneyPlugin.getResourceString("Commodity.name"), 30.0, textControlFactory, null, null);
 		propertyRegistrar.setDerivableInfo("commodityType", "Commodity Type");
 	}
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getNameAccessor() {
+		return nameAccessor;
+	}	
 }

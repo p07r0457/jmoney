@@ -89,6 +89,7 @@ public class SessionImpl extends ExtendableObject implements Session {
     	
         // Set up a hash table that maps currency codes to
         // the currency object.
+    	// It may be that no 
     	this.currencies = new Hashtable();
     	for (Iterator iter = commodities.iterator(); iter.hasNext(); ) {
     		Commodity commodity = (Commodity)iter.next();
@@ -496,7 +497,11 @@ public class SessionImpl extends ExtendableObject implements Session {
 	 * @return
 	 */
 	public Account createAccount(PropertySet propertySet) {
-		return (Account)accounts.createNewElement(this, propertySet);
+		Account newAccount = (Account)accounts.createNewElement(this, propertySet);
+
+		processObjectAddition(accounts, newAccount);
+		
+		return newAccount;
 	}
 
 	/**
@@ -524,13 +529,21 @@ public class SessionImpl extends ExtendableObject implements Session {
 	 * @return
 	 */
 	public Commodity createCommodity(PropertySet propertySet) {
-		return (Commodity)commodities.createNewElement(this, propertySet);
+		Commodity newCommodity = (Commodity)commodities.createNewElement(this, propertySet);
+
+		processObjectAddition(commodities, newCommodity);
+		
+		return newCommodity;
 	}
 
 	public Transaction createTransaction() {
-		return (Transaction)transactions.createNewElement(
+		Transaction newTransaction = (Transaction)transactions.createNewElement(
 					this, 
 					JMoneyPlugin.getTransactionPropertySet()); 
+
+		processObjectAddition(transactions, newTransaction);
+		
+		return newTransaction;
 	}
 	
 	/* (non-Javadoc)
@@ -539,7 +552,7 @@ public class SessionImpl extends ExtendableObject implements Session {
 	public ChangeManager getChangeManager() {
 		if (changeManager == null) {
 			// create a new change manager.
-			ISessionManagement sessionManager = getObjectKey().getSessionManager();
+			ISessionManager sessionManager = getObjectKey().getSessionManager();
 			changeManager = new ChangeManager(sessionManager);
 		}
 		return changeManager;

@@ -44,9 +44,9 @@ import net.sf.jmoney.model2.PropertySet;
  */
 public class SimpleListManager extends Vector implements IListManager {
 
-	private SessionManagementImpl sessionManager;
+	private SessionManager sessionManager;
 
-	public SimpleListManager(SessionManagementImpl sessionManager) {
+	public SimpleListManager(SessionManager sessionManager) {
 	 	this.sessionManager = sessionManager;
 	 }
 
@@ -127,9 +127,6 @@ public class SimpleListManager extends Vector implements IListManager {
 
 		add(extendableObject);
 		
-		// Fire the event.
-        sessionManager.getSession().objectAdded(extendableObject);
-
         // This plug-in needs to know if a session has been
 		// modified so it knows whether the session needs to
 		// be saved.  Mark the session as modified now.

@@ -24,17 +24,11 @@
 package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.*;
+import net.sf.jmoney.fields.TransactionInfo;
 
-import java.io.Serializable;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Vector;
-
-import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.MessageDialog;
 
 /**
  *
@@ -70,7 +64,11 @@ public class TransactionImpl extends ExtendableObject implements Transaction {
     }
     
     public void setDate(Date date) {
+        Date oldDate = this.date;
         this.date = date;
+
+		// Notify the change manager.
+		processPropertyChange(TransactionInfo.getDateAccessor(), oldDate, date);
     }
     
     public Iterator getEntryIterator() {
@@ -78,7 +76,11 @@ public class TransactionImpl extends ExtendableObject implements Transaction {
     }
     
     public Entry createEntry() {
-		return (EntryImpl)entries.createNewElement(this, JMoneyPlugin.getEntryPropertySet());
+		Entry newEntry = (Entry)entries.createNewElement(this, JMoneyPlugin.getEntryPropertySet());
+
+		processObjectAddition(entries, newEntry);
+		
+		return newEntry;
 	}
 
     public boolean deleteEntry(Entry entry) {

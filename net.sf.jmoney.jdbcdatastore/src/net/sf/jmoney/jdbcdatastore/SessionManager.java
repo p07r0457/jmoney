@@ -30,7 +30,7 @@ import java.util.Map;
 
 import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.ISessionManagement;
+import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 
@@ -43,7 +43,7 @@ import org.eclipse.ui.IWorkbenchWindow;
  *
  * @author Nigel Westbury
  */
-public class SessionManagementImpl implements ISessionManagement {
+public class SessionManager implements ISessionManager {
 	
 	private Connection connection;
 	
@@ -64,9 +64,7 @@ public class SessionManagementImpl implements ISessionManagement {
 	 */
 	private Map mapOfCachedObjectMaps = new HashMap();
 	
-	boolean bypassHsqldbBugs = false;
-
-	public SessionManagementImpl(Connection connection, IObjectKey sessionKey) {
+	public SessionManager(Connection connection, IObjectKey sessionKey) {
 		this.connection = connection;
 		this.sessionKey = sessionKey;
 

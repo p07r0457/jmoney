@@ -44,22 +44,23 @@ import net.sf.jmoney.model2.PropertySet;
  * @author Nigel Westbury
  */
 public class ListManagerCached extends Vector implements IListManager {
-	private SessionManagementImpl sessionManager;
+	private SessionManager sessionManager;
 	private PropertyAccessor listProperty;
 	
-	public ListManagerCached(SessionManagementImpl sessionManager, PropertyAccessor listProperty) {
+	public ListManagerCached(SessionManager sessionManager, PropertyAccessor listProperty) {
 		this.sessionManager = sessionManager;
 		this.listProperty = listProperty;
 	}
 
 	public IExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet) {
-
-		// First we insert the new row into the tables.
-
-		Object [] values = propertySet.getDefaultPropertyValues2();
-		int rowId = JDBCDatastorePlugin.insertIntoDatabase(propertySet, values, listProperty, parent, sessionManager);
+		// We must create the object before we persist it to the database.
+		// The reason why we must do this, and not simply write the
+		// default values, is that the constructor only uses the
+		// default values array as a guide.  For example, the constructor
+		// may replace a null timestamp with the current time, or
+		// a null currency with a default currency.
 		
- 		// Now we build the in-memory object.
+ 		// First we build the in-memory object.
 		// This is done here because in this case the object is always cached
 		// in memory.
 		
@@ -70,7 +71,11 @@ public class ListManagerCached extends Vector implements IListManager {
 		}
 		Object[] constructorParameters = new Object[numberOfParameters];
 		
-		ObjectKeyCached objectKey = new ObjectKeyCached(rowId, sessionManager);
+		Object [] values = propertySet.getDefaultPropertyValues2();
+		
+		// A row id of -1 indicates that the object has not yet been
+		// persisted in the database.
+		ObjectKeyCached objectKey = new ObjectKeyCached(-1, sessionManager);
 		
 		constructorParameters[0] = objectKey;
 		constructorParameters[1] = null;
@@ -86,26 +91,8 @@ public class ListManagerCached extends Vector implements IListManager {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 			int index = propertyAccessor.getIndexIntoConstructorParameters();
 			if (propertyAccessor.isScalar()) {
-				// Get the value from the passed object.
-				Object value;
-/*				
-				Object objectWithProperties = values;				
-				
-				try {
-					value = propertyAccessor.getTheGetMethod().invoke(objectWithProperties, null);
-				} catch (IllegalAccessException e) {
-					throw new MalformedPluginException("Method '" + propertyAccessor.getTheGetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' must be public.");
-				} catch (IllegalArgumentException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					throw new RuntimeException("internal error");
-				} catch (InvocationTargetException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					throw new RuntimeException("internal error");
-				}
-*/
-				value = values[propertyAccessor.getIndexIntoScalarProperties()];
+				// Get the value from the array of values.
+				Object value = values[propertyAccessor.getIndexIntoScalarProperties()];
 				
 				if (value != null) {
 					if (propertyAccessor.getValueClass().isPrimitive()
@@ -150,6 +137,11 @@ public class ListManagerCached extends Vector implements IListManager {
 		objectKey.setObject(extendableObject);
 
 		add(extendableObject);
+		
+		// Now we insert the new row into the tables.
+
+		int rowId = JDBCDatastorePlugin.insertIntoDatabase(propertySet, extendableObject, listProperty, parent, sessionManager);
+		objectKey.setRowId(rowId);
 		
 		return extendableObject;
 	}

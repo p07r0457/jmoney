@@ -63,7 +63,7 @@ public class OpenSessionAction implements IWorkbenchWindowActionDelegate {
             if (fileName != null) {
                 File sessionFile = new File(fileName);
 */
-                SessionManagementImpl sessionManager = JDBCDatastorePlugin.getDefault().readSession(/*sessionFile,*/ window);
+                SessionManager sessionManager = JDBCDatastorePlugin.getDefault().readSession(/*sessionFile,*/ window);
                 if (sessionManager != null) {
                     JMoneyPlugin.getDefault().setSessionManager(sessionManager);
                 }

@@ -45,7 +45,7 @@ class UncachedObjectIterator implements Iterator {
 	private ResultSet resultSet;
 	private PropertySet propertySet;
 	private IObjectKey parentKey;
-	private SessionManagementImpl sessionManager;
+	private SessionManager sessionManager;
 	private boolean isAnother;
 
 	/**
@@ -60,7 +60,7 @@ class UncachedObjectIterator implements Iterator {
 	 * 			parents then pass null.
 	 * @param sessionManager
 	 */
-	UncachedObjectIterator(ResultSet resultSet, PropertySet propertySet, IObjectKey parentKey, SessionManagementImpl sessionManager) {
+	UncachedObjectIterator(ResultSet resultSet, PropertySet propertySet, IObjectKey parentKey, SessionManager sessionManager) {
 		this.resultSet = resultSet;
 		this.propertySet = propertySet;
 		this.parentKey = parentKey;

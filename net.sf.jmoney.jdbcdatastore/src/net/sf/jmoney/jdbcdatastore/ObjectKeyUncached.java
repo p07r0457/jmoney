@@ -29,7 +29,7 @@ import java.util.Collection;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionProperties;
 import net.sf.jmoney.model2.IExtendableObject;
-import net.sf.jmoney.model2.ISessionManagement;
+import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
@@ -56,9 +56,9 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 	 * is not passed to the constructor.
 	 */
 	private PropertySet typedPropertySet;
-	private SessionManagementImpl sessionManager;
+	private SessionManager sessionManager;
 	
-	ObjectKeyUncached(int rowId, PropertySet propertySet, SessionManagementImpl sessionManager) {
+	ObjectKeyUncached(int rowId, PropertySet propertySet, SessionManager sessionManager) {
 		this.rowId = rowId;
 		this.typedPropertySet = propertySet;
 		this.sessionManager = sessionManager;
@@ -143,7 +143,7 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 		return sessionManager.getSession();
 	}
 
-	public ISessionManagement getSessionManager() {
+	public ISessionManager getSessionManager() {
 		throw new RuntimeException("should only be called for session keys");
 	}
 }

@@ -27,7 +27,7 @@ import java.util.Collection;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionProperties;
 import net.sf.jmoney.model2.IExtendableObject;
-import net.sf.jmoney.model2.ISessionManagement;
+import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -45,7 +45,7 @@ import net.sf.jmoney.model2.Session;
 public class ObjectKeyCached implements IDatabaseRowKey {
 	private IExtendableObject extendableObject;
 	private int rowId;
-	private SessionManagementImpl sessionManager;
+	private SessionManager sessionManager;
 
 	/**
 	 * The object itself is not passed to the constructor.
@@ -62,7 +62,7 @@ public class ObjectKeyCached implements IDatabaseRowKey {
 	 * 			must be able to provide this id to other code
 	 * 			in this plug-in. 
 	 */
-	ObjectKeyCached(int rowId, SessionManagementImpl sessionManager) {
+	ObjectKeyCached(int rowId, SessionManager sessionManager) {
 		this.rowId = rowId;
 		this.sessionManager = sessionManager;
 	}
@@ -95,7 +95,20 @@ public class ObjectKeyCached implements IDatabaseRowKey {
 		return sessionManager.getSession();
 	}
 
-	public ISessionManagement getSessionManager() {
+	public ISessionManager getSessionManager() {
 		throw new RuntimeException("should only be called for session keys");
+	}
+
+	/**
+	 * Until an object has been persisted to the database, no
+	 * row id is available.  The row id is set to -1 initially.
+	 * When the object is persisted, this method must be called
+	 * to set the row id to the actual row id.
+	 * 
+	 * @param rowId The row id obtained when the object is
+	 * 			persisted in the database.
+	 */
+	public void setRowId(int rowId) {
+		this.rowId = rowId;
 	}
 }

@@ -60,7 +60,7 @@ public class SaveSessionAsAction implements IWorkbenchWindowActionDelegate {
 		if (SerializedDatastorePlugin.checkSessionImplementation(window)) { 
 			File sessionFile = SerializedDatastorePlugin.getDefault().obtainFileName(window);
 			if (sessionFile != null) {
-				SessionManagementImpl sessionManager = (SessionManagementImpl)JMoneyPlugin.getDefault().getSessionManager();
+				SessionManager sessionManager = (SessionManager)JMoneyPlugin.getDefault().getSessionManager();
 				SerializedDatastorePlugin.getDefault().writeSession(sessionManager, sessionFile, window);
 			}
 		}

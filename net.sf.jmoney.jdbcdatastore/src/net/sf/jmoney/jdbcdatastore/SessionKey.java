@@ -27,7 +27,7 @@ import java.util.Collection;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionProperties;
 import net.sf.jmoney.model2.IExtendableObject;
-import net.sf.jmoney.model2.ISessionManagement;
+import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -42,7 +42,7 @@ import net.sf.jmoney.model2.Session;
  */
 public class SessionKey implements IDatabaseRowKey {
 	private IExtendableObject extendableObject;
-	private SessionManagementImpl sessionManager;
+	private SessionManager sessionManager;
 
 	/**
 	 * The object itself is not passed to the constructor.
@@ -58,7 +58,7 @@ public class SessionKey implements IDatabaseRowKey {
 		return extendableObject;
 	}
 
-	void setObject(IExtendableObject extendableObject, SessionManagementImpl sessionManager) {
+	void setObject(IExtendableObject extendableObject, SessionManager sessionManager) {
 		this.extendableObject = extendableObject;
 		this.sessionManager = sessionManager;
 	}
@@ -85,7 +85,7 @@ public class SessionKey implements IDatabaseRowKey {
 		return sessionManager.getSession();
 	}
 
-	public ISessionManagement getSessionManager() {
+	public ISessionManager getSessionManager() {
 		return sessionManager;
 	}
 }

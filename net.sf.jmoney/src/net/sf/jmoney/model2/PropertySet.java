@@ -474,7 +474,7 @@ public class PropertySet {
 		// If this is a derivable property set then no default properties method is needed.
 		if (isExtension || !derivablePropertySet) {
 			
-			Class parameters[] = new Class[] {};
+			Class parameters[] = new Class[] { };
 			
 			try {
 				theDefaultPropertiesMethod =

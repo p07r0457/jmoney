@@ -58,7 +58,7 @@ import java.util.Vector;
  */
 public class ChangeManager {
 
-	ISessionManagement sessionManager;
+	ISessionManager sessionManager;
 	
 	/**
 	 * Maps IExtendableObject to ChangeEntry
@@ -89,7 +89,7 @@ public class ChangeManager {
 		PropertyValues newValues;
 	}
 	
-	public ChangeManager(ISessionManagement sessionManager) {
+	public ChangeManager(ISessionManager sessionManager) {
 		this.sessionManager = sessionManager;
 	}
 	
@@ -207,6 +207,15 @@ public class ChangeManager {
 				newValue);
 	}
 	
+	public void processObjectAddition(
+			ExtendableObject object,
+			IListManager objectList,
+			IExtendableObject newObject) {
+
+		// Fire the event.
+		sessionManager.getSession().objectAdded(newObject);
+	}
+			
 	public void createObject(
 			PropertySet propertySet,
 			ExtendableObject object,

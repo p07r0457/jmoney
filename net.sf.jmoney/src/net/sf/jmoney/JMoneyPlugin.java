@@ -62,7 +62,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	//Resource bundle.
 	private ResourceBundle resourceBundle;
 	
-    private ISessionManagement sessionManager = null;
+    private ISessionManager sessionManager = null;
 
     private Vector sessionChangeListeners = new Vector();
     
@@ -133,7 +133,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 					for (int j = 0; j < elements.length; j++) {
 						if (elements[j].getName().equals("session")) {
 							try {
-								ISessionManagement listener = (ISessionManagement)elements[j].createExecutableExtension("class");
+								ISessionManager listener = (ISessionManager)elements[j].createExecutableExtension("class");
 								
 						    	listener.restore(getWorkbench().getActiveWorkbenchWindow());
 
@@ -200,7 +200,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 		return resourceBundle;
 	}
 	
-    public ISessionManagement getSessionManager() {
+    public ISessionManager getSessionManager() {
         return sessionManager;
     }
     
@@ -240,21 +240,23 @@ public class JMoneyPlugin extends AbstractUIPlugin {
      * both canClose() and close() are called on the previous session.
      * This method will not close any previously set session.
      */
-    public void setSessionManager(ISessionManagement newSessionManager) {
+    public void setSessionManager(ISessionManager newSessionManager) {
         // It is up to the caller to ensure that the previous session
         // has been closed.
 
         if (sessionManager == newSessionManager)
             return;
-        ISessionManagement oldSessionManager = sessionManager;
+        ISessionManager oldSessionManager = sessionManager;
         sessionManager = newSessionManager;
         
     	// If the list of commodities is empty then load
     	// the full list of ISO currencies.
-    	if (!getSession().getCommodityIterator().hasNext()) {
-    		initSystemCurrencies(getSession());
-    		getSession().getChangeManager().applyChanges("add ISO currencies");
-    	}
+        if (newSessionManager != null) {
+        	if (!getSession().getCommodityIterator().hasNext()) {
+        		initSystemCurrencies(getSession());
+        		getSession().getChangeManager().applyChanges("add ISO currencies");
+        	}
+        }
 
         // It is possible, tho I can't think why, that a listener who
         // we tell of a change in the current session will modify either
@@ -529,7 +531,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 								try {
 									IElementFactory listener = (IElementFactory)elements[j].createExecutableExtension("class");
 									
-									ISessionManagement session = (ISessionManagement)listener.createElement(memento.getChild("currentSession"));
+									ISessionManager session = (ISessionManager)listener.createElement(memento.getChild("currentSession"));
 									// The session object has been created and initialized from 
 									// the data stored in the memento.  We need only now
 									// set this session as the current session.

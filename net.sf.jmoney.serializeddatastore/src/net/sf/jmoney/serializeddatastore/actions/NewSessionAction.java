@@ -56,7 +56,7 @@ public class NewSessionAction implements IWorkbenchWindowActionDelegate {
 	 */
 	public void run(IAction action) {
         if (JMoneyPlugin.getDefault().saveOldSession(window)) {
-        	SessionManagementImpl sessionManager = new SessionManagementImpl(null);
+        	SessionManager sessionManager = new SessionManager(null);
         	
         	// Set the initial list of commodities to be the list
         	// of ISO currencies.

@@ -50,12 +50,12 @@ import net.sf.jmoney.model2.PropertySet;
  */
 public class ListManagerUncached implements IListManager {
 	private IDatabaseRowKey parentKey;
-	private SessionManagementImpl sessionManager;
+	private SessionManager sessionManager;
 	private PropertyAccessor listProperty;
 
 	private PropertySet typedPropertySet;
 	
-	public ListManagerUncached(IDatabaseRowKey parentKey, SessionManagementImpl sessionManager, PropertyAccessor listProperty) {
+	public ListManagerUncached(IDatabaseRowKey parentKey, SessionManager sessionManager, PropertyAccessor listProperty) {
 		this.parentKey = parentKey;
 		this.sessionManager = sessionManager;
 		this.listProperty = listProperty;
@@ -105,11 +105,7 @@ public class ListManagerUncached implements IListManager {
 		Object values[] = propertySet.getDefaultPropertyValues2();
 		
 		
-		// First we insert the new row into the tables.
-		
-		int rowId = JDBCDatastorePlugin.insertIntoDatabase(propertySet, propertySet.getDefaultPropertyValues2(), listProperty, parent, sessionManager);
-		
- 		// Now we build the in-memory object.  This object is
+ 		// First build the in-memory object.  This object is
 		// returned to the caller.
 		
 		Vector constructorProperties = propertySet.getConstructorProperties();
@@ -119,7 +115,7 @@ public class ListManagerUncached implements IListManager {
 		}
 		Object[] constructorParameters = new Object[numberOfParameters];
 		
-		ObjectKeyCached objectKey = new ObjectKeyCached(rowId, sessionManager);
+		ObjectKeyCached objectKey = new ObjectKeyCached(-1, sessionManager);
 		
 		constructorParameters[0] = objectKey;
 		constructorParameters[1] = null;
@@ -202,6 +198,11 @@ public class ListManagerUncached implements IListManager {
 		
 		objectKey.setObject(extendableObject);
 
+		// Insert the new object into the tables.
+		
+		int rowId = JDBCDatastorePlugin.insertIntoDatabase(propertySet, extendableObject, listProperty, parent, sessionManager);
+		objectKey.setRowId(rowId);
+		
 		return extendableObject;
 	}
 	

@@ -57,7 +57,7 @@ public class SessionFactory implements IElementFactory {
         if (fileName != null) {
             File sessionFile = new File(fileName);
             try {
-                SessionManagementImpl sessionManager = SerializedDatastorePlugin.getDefault().readSessionQuietly(sessionFile);
+                SessionManager sessionManager = SerializedDatastorePlugin.getDefault().readSessionQuietly(sessionFile);
                 if (sessionManager != null) {
                     JMoneyPlugin.getDefault().setSessionManager(sessionManager);
                 }

@@ -52,7 +52,9 @@ import net.sf.jmoney.model2.TransactionImpl;
  */
 public class TransactionInfo implements IExtensionPropertySetInfo {
 
-    public TransactionInfo() {
+	private static PropertyAccessor dateAccessor = null;
+
+	public TransactionInfo() {
     }
 
 	public Class getImplementationClass() {
@@ -77,6 +79,13 @@ public class TransactionInfo implements IExtensionPropertySetInfo {
 		
 		propertyRegistrar.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), Entry.class, null);
 
-		propertyRegistrar.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), 10.0, textControlFactory, null, null);
+		dateAccessor = propertyRegistrar.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), 10.0, textControlFactory, null, null);
 	}
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getDateAccessor() {
+		return dateAccessor;
+	}	
 }

@@ -46,13 +46,13 @@ import net.sf.jmoney.model2.PropertySet;
  * @author Nigel Westbury
  */
 public class IndexValuesList implements Collection {
-	private SessionManagementImpl sessionManager;
+	private SessionManager sessionManager;
 	private int idOfRequiredPropertyValue;
 	private PropertySet propertySet;
 	private String tableName;
 	private String columnName;
 	
-	public IndexValuesList(SessionManagementImpl sessionManager, int idOfRequiredPropertyValue, PropertyAccessor propertyAccessor) {
+	public IndexValuesList(SessionManager sessionManager, int idOfRequiredPropertyValue, PropertyAccessor propertyAccessor) {
 		this.sessionManager = sessionManager;
 		this.idOfRequiredPropertyValue = idOfRequiredPropertyValue;
 		

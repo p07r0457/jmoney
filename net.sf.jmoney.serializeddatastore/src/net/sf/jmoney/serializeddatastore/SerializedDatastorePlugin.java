@@ -74,7 +74,7 @@ import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionImpl;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IExtendableObject;
-import net.sf.jmoney.model2.ISessionManagement;
+import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.MalformedPluginException;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertyNotFoundException;
@@ -164,15 +164,15 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	public void openDefaultSession(Properties defaultSessionProperties, IWorkbenchWindow window) {
 		String sessionFileName = defaultSessionProperties.getProperty("file");
 		File sessionFile = new File(sessionFileName);
-		SessionManagementImpl sessionManager = readSession(sessionFile, window);
+		SessionManager sessionManager = readSession(sessionFile, window);
 		JMoneyPlugin.getDefault().setSessionManager(sessionManager);
 	}
 	
 	/**
 	 * Read session from file.
 	 */
-	public SessionManagementImpl readSession(File sessionFile, IWorkbenchWindow window) {
-		SessionManagementImpl result;
+	public SessionManager readSession(File sessionFile, IWorkbenchWindow window) {
+		SessionManager result;
 		
 		String title = JMoneyPlugin.getResourceString("Dialog.Wait.Title");
 		String message = SerializedDatastorePlugin.getResourceString("MainFrame.OpeningFile")
@@ -218,8 +218,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		return result;
 	}
 	
-	public SessionManagementImpl readSessionQuietly(File sessionFile) throws FileNotFoundException, IOException, CoreException {
-		SessionManagementImpl sessionManager;
+	public SessionManager readSessionQuietly(File sessionFile) throws FileNotFoundException, IOException, CoreException {
+		SessionManager sessionManager;
 		
 		FileInputStream fin = new FileInputStream(sessionFile);
 		// Patch to aid with testing.  If the extension is 'xml'
@@ -242,7 +242,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			idToAccountMap = new HashMap();
 			currentSAXEventProcessor = null;
 			
-			sessionManager = new SessionManagementImpl(sessionFile);
+			sessionManager = new SessionManager(sessionFile);
 
 			factory.setValidating(false);
 			factory.setNamespaceAware(true);
@@ -256,10 +256,14 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		catch (ParserConfigurationException e) {
 			throw new RuntimeException("Serious XML parser configuration error");
 		} 
-		catch (OldFormatJMoneyFileException se) {
+//		catch (OldFormatJMoneyFileException se) {
+		catch (SAXException e) {
+			if (!(e.getException() instanceof OldFormatJMoneyFileException)) {
+				e.printStackTrace();
+				throw new RuntimeException("Fatal SAX parser error");
+			} else {
 			// This exception will be throw if the file is old format (0.4.5 or prior).
 			// Try reading as an old format file.
-			System.out.println(se.getMessage());
 			System.out.println("Now attempting to read file as old format (0.4.5 or prior).");
 
 			// First close and re-open the file.
@@ -295,7 +299,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 								null));	
 			}
 			
-			sessionManager = new SessionManagementImpl(sessionFile);
+			sessionManager = new SessionManager(sessionFile);
 
 			SimpleObjectKey key = new SimpleObjectKey(sessionManager); 
 			SessionImpl newSessionNewFormat = new SessionImpl(
@@ -311,12 +315,15 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			sessionManager.setSession(newSessionNewFormat);
 			
 			convertModelOneFormat((net.sf.jmoney.model.Session)newSession, newSessionNewFormat);
+			}
 		}
 		catch (IOException ioe) { 
 			throw new RuntimeException("IO internal exception error");
+/*
 		} catch (SAXException e) {
 			e.printStackTrace();
 			throw new RuntimeException("Fatal SAX parser error");
+*/
 		} finally {
 			bin.close();
 			if (gin != null) gin.close();
@@ -330,13 +337,13 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	
 	private class HandlerForObject extends DefaultHandler {
 		
-		protected SessionManagementImpl sessionManager;
+		protected SessionManager sessionManager;
 		/**
 		 * The top level session object.
 		 */
 		private SessionImpl session;
 		
-		HandlerForObject(SessionManagementImpl sessionManager) {
+		HandlerForObject(SessionManager sessionManager) {
 			this.sessionManager = sessionManager;
 		}
 		
@@ -427,7 +434,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	
 	abstract private class SAXEventProcessor {
 		protected SAXEventProcessor parent;
-		protected SessionManagementImpl sessionManager;
+		protected SessionManager sessionManager;
 		
 		/**
 		 * Creates a new SAXEventProcessor object.
@@ -438,7 +445,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 *        found then this original event processor must be restored as
 		 *        the active event processor.
 		 */
-		SAXEventProcessor(SessionManagementImpl sessionManager, SAXEventProcessor parent) {
+		SAXEventProcessor(SessionManager sessionManager, SAXEventProcessor parent) {
 			this.sessionManager = sessionManager;
 			this.parent = parent;
 		}
@@ -559,7 +566,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 *        found then this original event processor must be restored as
 		 *        the active event processor.
 		 */
-		ObjectProcessor(SessionManagementImpl sessionManager, ObjectProcessor parent, String propertySetId) {
+		ObjectProcessor(SessionManager sessionManager, ObjectProcessor parent, String propertySetId) {
 			super(sessionManager, parent);
 			
 			objectKey = new SimpleObjectKey(sessionManager);
@@ -893,7 +900,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 *        found then this original event processor must be restored as
 		 *        the active event processor.
 		 */
-		PropertyProcessor(SessionManagementImpl sessionManager, SAXEventProcessor parent, Class propertyClass) {
+		PropertyProcessor(SessionManager sessionManager, SAXEventProcessor parent, Class propertyClass) {
 			super(sessionManager, parent);
 			this.propertyClass = propertyClass;
 		}
@@ -993,7 +1000,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 * @param parent DOCUMENT ME!
 		 * @param elementName DOCUMENT ME!
 		 */
-		IgnoreElementProcessor(SessionManagementImpl sessionManager, SAXEventProcessor parent, Object value) {
+		IgnoreElementProcessor(SessionManager sessionManager, SAXEventProcessor parent, Object value) {
 			super(sessionManager, parent);
 			this.value = value;
 		}
@@ -1043,7 +1050,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		}
 	}
 	
-	boolean requestSave(SessionManagementImpl session, IWorkbenchWindow window) {
+	boolean requestSave(SessionManager session, IWorkbenchWindow window) {
 		String title = SerializedDatastorePlugin.getResourceString("MainFrame.saveOldSessionTitle");
 		String question =
 			SerializedDatastorePlugin.getResourceString("MainFrame.saveOldSessionQuestion");
@@ -1074,7 +1081,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * Saves the session in the selected file.
 	 */
 	public void saveSession(IWorkbenchWindow window) {
-		SessionManagementImpl sessionManager = (SessionManagementImpl)JMoneyPlugin.getDefault().getSession();
+		SessionManager sessionManager = (SessionManager)JMoneyPlugin.getDefault().getSession();
 		if (sessionManager.getFile() == null) {
 			File sessionFile = obtainFileName(window);
 			if (sessionFile != null) {
@@ -1150,7 +1157,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	/**
 	 * Write session to file.
 	 */
-	public void writeSession(SessionManagementImpl sessionManager, File sessionFile, IWorkbenchWindow window)  {
+	public void writeSession(SessionManager sessionManager, File sessionFile, IWorkbenchWindow window)  {
 		// If there is any modified data in the controls in any of the
 		// views, then commit these to the database now.
 		// TODO: How do we do this?  Should framework call first?
@@ -1624,7 +1631,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * 			another plug-in that also implements a datastore.
 	 */
 	public static boolean checkSessionImplementation(IWorkbenchWindow window) {
-		ISessionManagement sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		ISessionManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		if (sessionManager == null) {
 			MessageDialog waitDialog =
 				new MessageDialog(
@@ -1636,7 +1643,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 						new String[] { IDialogConstants.OK_LABEL }, 0);
 			waitDialog.open();
 			return false;
-		} else if (sessionManager instanceof SessionManagementImpl) {
+		} else if (sessionManager instanceof SessionManager) {
 			return true;
 		} else {
 			MessageDialog waitDialog =

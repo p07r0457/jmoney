@@ -31,7 +31,7 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.copier.CopierPlugin;
-import net.sf.jmoney.model2.ISessionManagement;
+import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.ObjectLockedForEditException;
 
 /**
@@ -57,7 +57,7 @@ public class PasteContentsAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		ISessionManagement destinationSessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		ISessionManager destinationSessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		
 		if (destinationSessionManager == null) {
 			MessageDialog waitDialog =
@@ -74,7 +74,7 @@ public class PasteContentsAction implements IWorkbenchWindowActionDelegate {
 			return;
 		}
 
-		ISessionManagement sourceSessionManager = CopierPlugin.getSessionManager();
+		ISessionManager sourceSessionManager = CopierPlugin.getSessionManager();
 		if (sourceSessionManager == null) {
 			MessageDialog waitDialog =
 				new MessageDialog(

@@ -25,7 +25,7 @@ package net.sf.jmoney.serializeddatastore;
 
 import java.io.File;
 
-import net.sf.jmoney.model2.ISessionManagement;
+import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.ui.IMemento;
@@ -35,7 +35,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 /**
  * Holds the fields that will be saved in a file.
  */
-public class SessionManagementImpl implements ISessionManagement {
+public class SessionManager implements ISessionManager {
 
     protected File sessionFile = null;
 
@@ -50,7 +50,7 @@ public class SessionManagementImpl implements ISessionManagement {
 	 * 
 	 * @param sessionFile
 	 */
-	public SessionManagementImpl(File sessionFile) {
+	public SessionManager(File sessionFile) {
 		this.sessionFile = sessionFile;
 		this.session = null;
 	}
@@ -124,7 +124,7 @@ public class SessionManagementImpl implements ISessionManagement {
     }
 
 	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.ISessionManagement#getFactoryId()
+	 * @see net.sf.jmoney.model2.ISessionManager#getFactoryId()
 	 */
 	public String getFactoryId() {
 		return "net.sf.jmoney.serializeddatastore.factoryid";

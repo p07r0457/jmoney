@@ -26,6 +26,9 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Map;
 
+import net.sf.jmoney.fields.CommodityInfo;
+import net.sf.jmoney.fields.CurrencyInfo;
+
 /**
  * This class was created because the currency support wich comes with the Java
  * SDK is to complicated. Therefore we provide a simpler model which is
@@ -91,7 +94,11 @@ public class CurrencyImpl extends ExtendableObject implements Currency {
 	}
 	
 	public void setName(String name) {
+        String oldName = this.name;
 		this.name = name;
+
+		// Notify the change manager.
+		processPropertyChange(CommodityInfo.getNameAccessor(), oldName, name);
 	}
 	
 	public void setCode(String code) {
@@ -104,6 +111,27 @@ public class CurrencyImpl extends ExtendableObject implements Currency {
 		if (code != null) {
 			((SessionImpl)getObjectKey().getSession()).currencies.put(code, this);
 		}
+
+		// Notify the change manager.
+		processPropertyChange(CurrencyInfo.getCodeAccessor(), oldCode, code);
+	}
+	
+	/**
+	 * @return the number of decimals that this currency has.
+	 */
+	public int getDecimals() {
+		return decimals;
+	}
+	
+	/**
+	 * set the number of decimals that this currency has.
+	 */
+	public void setDecimals(int decimals) {
+		int oldDecimals = this.decimals;
+		this.decimals  = decimals;
+
+		// Notify the change manager.
+		processPropertyChange(CurrencyInfo.getDecimalsAccessor(), new Integer(oldDecimals), new Integer(decimals));
 	}
 	
 	public String toString() {
@@ -133,20 +161,6 @@ public class CurrencyImpl extends ExtendableObject implements Currency {
 	public String format(long amount) {
 		double a = ((double) amount) / getScaleFactor();
 		return getNumberFormat().format(a);
-	}
-	
-	/**
-	 * @return the number of decimals that this currency has.
-	 */
-	public int getDecimals() {
-		return decimals;
-	}
-	
-	/**
-	 * set the number of decimals that this currency has.
-	 */
-	public void setDecimals(int decimals) {
-		this.decimals  = decimals;
 	}
 	
 	/**

@@ -20,15 +20,11 @@
 *
 */
 
-package net.sf.jmoney.preferences;
+package net.sf.jmoney.jdbcdatastore;
 
 import org.eclipse.jface.preference.*;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.eclipse.ui.IWorkbench;
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.VerySimpleDateFormat;
-
-import org.eclipse.jface.preference.IPreferenceStore;
 
 /**
  * This class represents a preference page that
@@ -48,27 +44,34 @@ import org.eclipse.jface.preference.IPreferenceStore;
 public class PreferencePage
 	extends FieldEditorPreferencePage
 	implements IWorkbenchPreferencePage {
-	public static final String P_PATH = "pathPreference";
 
 	public PreferencePage() {
 		super(GRID);
-		setPreferenceStore(JMoneyPlugin.getDefault().getPreferenceStore());
-		setDescription("JMoney preferences");
+		setPreferenceStore(JDBCDatastorePlugin.getDefault().getPreferenceStore());
+		
+		// Set text displayed at the top of the preference page,
+		// underneath the title bar.
+		setDescription("Settings used to connect to a JDBC database containing JMoney accounting data.");
+		
 		initializeDefaults();
 		
 		// The title of this page is picked up and used by the
 		// preference dialog as the text in the preferences
 		// navigation tree.
-		setTitle("core JMoney preferences");
+		setTitle(JDBCDatastorePlugin.getResourceString("preferencePageTitle"));
 	}
 /**
  * Sets the default values of the preferences.
  */
 	private void initializeDefaults() {
 		IPreferenceStore store = getPreferenceStore();
-		store.setDefault("booleanPreference", true);
-		store.setDefault("dateFormat", "yyyy-MM-dd");
-		store.setDefault("stringPreference", "Default value");
+		store.setDefault("promptEachTime", true);
+		store.setDefault("driverOption", "Other");
+		store.setDefault("driver", "");
+		store.setDefault("subProtocol", "");
+		store.setDefault("subProtocolData", "");
+		store.setDefault("user", "sa");
+		store.setDefault("password", "");
 	}
 	
 /**
@@ -79,31 +82,46 @@ public class PreferencePage
  */
 
 	public void createFieldEditors() {
-		addField(new DirectoryFieldEditor(P_PATH, 
-				"&Directory preference:", getFieldEditorParent()));
-		addField(
-			new BooleanFieldEditor(
-					"booleanPreference",
-				"&An example of a boolean preference",
-				getFieldEditorParent()));
-
-		
-		String dateOptions[] = VerySimpleDateFormat.DATE_PATTERNS;
-		String dateOptions2[][] = new String[dateOptions.length][];
-		for (int i = 0; i < dateOptions.length; i++) {
-			dateOptions2[i] = 
-				new String[] { dateOptions[i], dateOptions[i] }; 
-		}
-		
+/* TODO: Add support for these radio buttons so users do not
+ * have to manually enter the values for known drivers.
 		addField(new RadioGroupFieldEditor(
-			"dateFormat",
-			"Date Format",
-			1,
-			dateOptions2,
-			getFieldEditorParent()));
-		
+				"driverOption",
+				"JDBC Driver Selection",
+				1,
+				new String[][] { 
+						{ "HSQLDB", "&HSQL driver for HSQL database" },
+						{ "JTDS", "&JTDS driver for Microsoft SQL Server" },
+						{ "Other", "&Other JDBC Driver" }
+				}, 
+				getFieldEditorParent()));
+*/		
 		addField(
-			new StringFieldEditor("stringPreference", "A &text preference:", getFieldEditorParent()));
+			new StringFieldEditor("driver", "Driver:", getFieldEditorParent()));
+		addField(
+				new StringFieldEditor("subProtocol", "Sub-Protocol:", getFieldEditorParent()));
+		addField(
+				new StringFieldEditor("subProtocolData", "Sub-Protocol Data:", getFieldEditorParent()));
+		addField(
+				new StringFieldEditor("user", "User:", getFieldEditorParent()));
+		addField(
+				new StringFieldEditor("password", "Password:", getFieldEditorParent()));
+
+/*	
+		driver = "org.hsqldb.jdbcDriver";
+		subprotocol = "hsqldb";
+		subprotocolData = "hsql://localhost/accounts";
+		String url = "jdbc:" + subprotocol + ":" + subprotocolData;
+		
+		String user = "sa";
+		String password = "";
+*/	
+	
+		addField(
+				new BooleanFieldEditor(
+						"promptEachTime",
+					"Always &prompt for connection details each open",
+					getFieldEditorParent()));
+
 	}
 	
 	public void init(IWorkbench workbench) {

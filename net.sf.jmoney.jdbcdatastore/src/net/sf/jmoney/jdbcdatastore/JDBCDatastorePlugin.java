@@ -36,6 +36,7 @@ import net.sf.jmoney.model2.SessionImpl;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.plugin.*;
 import org.osgi.framework.BundleContext;
@@ -61,8 +62,6 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	private static JDBCDatastorePlugin plugin;
 	//Resource bundle.
 	private ResourceBundle resourceBundle;
-	
-	boolean bypassHsqldbBugs = false;
 	
 	private class ParentList {
 		ParentList(PropertySet parentPropertySet, PropertyAccessor listProperty) {
@@ -138,29 +137,45 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		return resourceBundle;
 	}
 	
+    // Preferences
+    
+	/** 
+	 * Initializes a preference store with default preference values 
+	 * for this plug-in.
+	 */
+	protected void initializeDefaultPreferences(IPreferenceStore store) {
+    	store.setDefault("promptEachTime", true);
+		store.setDefault("driverOption", "Other");
+		store.setDefault("driver", "org.hsqldb.jdbcDriver");
+		store.setDefault("subProtocol", "hsqldb");
+		store.setDefault("subProtocolData", "hsql://localhost/accounts");
+		store.setDefault("user", "sa");
+		store.setDefault("password", "");
+	}
+	
 	/**
 	 * @param window
 	 * @return
 	 */
-	public SessionManagementImpl readSession(IWorkbenchWindow window) {
-		SessionManagementImpl result;
+	public SessionManager readSession(IWorkbenchWindow window) {
+		SessionManager result = null;
 		
-		String driver;
-		String subprotocol;
-		String subprotocolData;
+    	// The following lines cannot return a null value because if
+    	// no value is set then the default value set in
+    	// the above initializeDefaultPreferences method will be returned.
+		String driver = getPreferenceStore().getString("driver");
+		String subprotocol = getPreferenceStore().getString("subProtocol");
+		String subprotocolData = getPreferenceStore().getString("subProtocolData");
 		
-		driver = "org.hsqldb.jdbcDriver";
-		subprotocol = "hsqldb";
-		subprotocolData = "hsql://localhost/accounts";
-/*		
-		if (driver.equals("org.hsqldb.jdbcDriver")) {
-			bypassHsqldbBugs = true;
-		}
-*/		
 		String url = "jdbc:" + subprotocol + ":" + subprotocolData;
 		
-		String user = "sa";
-		String password = "";
+		String user = getPreferenceStore().getString("user");
+		String password = getPreferenceStore().getString("password");;
+		
+		if (getPreferenceStore().getBoolean("promptEachTime")) {
+			// TODO: Put up a dialog box so the user can change
+			// the connection options for this connection only.
+		}
 		
 		try {
 			Class.forName(driver).newInstance();
@@ -171,8 +186,18 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			// TODO Auto-generated catch block
 			e2.printStackTrace();
 		} catch (ClassNotFoundException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
+			String title = JDBCDatastorePlugin.getResourceString("errorTitle");
+			String message = JDBCDatastorePlugin.getResourceString("driverNotFound");
+			MessageDialog waitDialog =
+				new MessageDialog(
+						window.getShell(), 
+						title, 
+						null, // accept the default window icon
+						message, 
+						MessageDialog.ERROR, 
+						new String[] { IDialogConstants.OK_LABEL }, 0);
+			waitDialog.open();
+			return null;
 		}
 		
 		try {
@@ -194,7 +219,6 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 							MessageDialog.ERROR, 
 							new String[] { IDialogConstants.OK_LABEL }, 0);
 				waitDialog.open();
-				result = null;
 			} else {
 				e3.printStackTrace();
 				throw new RuntimeException(e3.getMessage());
@@ -205,7 +229,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	}
 	
 	
-	SessionManagementImpl initGeneralized(Connection con) throws SQLException {
+	SessionManager initGeneralized(Connection con) throws SQLException {
 		PropertySet commodityPropertySet = JMoneyPlugin.getCommodityPropertySet();
 		PropertySet currencyPropertySet = JMoneyPlugin.getCurrencyPropertySet();
 		PropertySet accountPropertySet = JMoneyPlugin.getAccountPropertySet();
@@ -221,7 +245,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				"Driver: " + dmd.getDriverName() + "\n" +
 				"Version: " + dmd.getDriverVersion());
 		
-		SessionManagementImpl sessionManager = new SessionManagementImpl(con, sessionKey);
+		SessionManager sessionManager = new SessionManager(con, sessionKey);
 
 		sessionManager.addCachedPropertySet(commodityPropertySet);
 		sessionManager.addCachedPropertySet(accountPropertySet);
@@ -418,27 +442,37 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					info.columnName = propertyAccessor.getLocalName();
 				}
 				
+				boolean nullable = true;
 				Class valueClass = propertyAccessor.getValueClass();
 				if (valueClass == Integer.class
 						|| valueClass == Long.class) {
-					info.columnDefinition = "INT NULL";
+					info.columnDefinition = "INT";
+					nullable = true;
 				} else if (valueClass == int.class
 						|| valueClass == long.class) {
-					info.columnDefinition = "INT NOT NULL";
+					info.columnDefinition = "INT";
+					nullable = false;
 				} else if (valueClass == char.class) {
-					info.columnDefinition = "CHAR NOT NULL";
+					info.columnDefinition = "CHAR";
+					nullable = false;
 				} else if (valueClass == boolean.class) {
-					info.columnDefinition = "BIT NOT NULL";
+					info.columnDefinition = "BIT";
+					nullable = false;
 				} else if (valueClass == String.class) {
-					info.columnDefinition = "VARCHAR NULL";
+					info.columnDefinition = "VARCHAR";
+					nullable = true;
 				} else if (valueClass == Character.class) {
-					info.columnDefinition = "CHAR NULL";
+					info.columnDefinition = "CHAR";
+					nullable = true;
 				} else if (valueClass == Boolean.class) {
-					info.columnDefinition = "BIT NULL";
+					info.columnDefinition = "BIT";
+					nullable = true;
 				} else if (valueClass == Date.class) {
-					info.columnDefinition = "DATE NULL";
+					info.columnDefinition = "DATE";
+					nullable = true;
 				} else if (IExtendableObject.class.isAssignableFrom(valueClass)) {
-					info.columnDefinition = "INT NULL";
+					info.columnDefinition = "INT";
+					nullable = true;
 					
 					// This call does not work.  The method works only when the class
 					// is a class of an actual object and only non-derivable property
@@ -457,9 +491,29 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 						}
 					}
 				} else { 
+					// All other types are stored as a string by 
+					// using the String constructor and
+					// the toString method for conversion.
 					info.columnDefinition = "VARCHAR";
+					nullable = true;
 				}
 				
+				// If the property is an extension property then we set
+				// a default value.  This saves us from having to set default
+				// value in every insert statement and is a better solution
+				// if other applications (outside JMoney) access the database.
+					
+				if (propertyAccessor.getPropertySet().isExtension()) {
+					Object defaultValue = propertyAccessor.getPropertySet().getDefaultPropertyValues2()[propertyAccessor.getIndexIntoScalarProperties()];
+					info.columnDefinition +=
+						" DEFAULT " + valueToSQLText(defaultValue);
+				}
+				
+				if (nullable) {
+					info.columnDefinition += " NULL";
+				} else {
+					info.columnDefinition += " NOT NULL";
+				}
 				result.add(info);
 			}
 		}
@@ -614,7 +668,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		columnResultSet.close();
 	}
 
-	static ExtendableObject materializeObjectCached(ResultSet rs, PropertySet propertySet, IObjectKey parentKey, SessionManagementImpl sessionManager) throws SQLException {
+	static ExtendableObject materializeObjectCached(ResultSet rs, PropertySet propertySet, IObjectKey parentKey, SessionManager sessionManager) throws SQLException {
 		int rowId = rs.getInt(1); // '_ID' column
 		ObjectKeyCached key = new ObjectKeyCached(rowId, sessionManager);
 		
@@ -643,7 +697,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @return
 	 * @throws SQLException
 	 */ 
-	static ExtendableObject materializeObject(ResultSet rs, PropertySet propertySet, IObjectKey key, IObjectKey parentKey, SessionManagementImpl sessionManager) throws SQLException {
+	static ExtendableObject materializeObject(ResultSet rs, PropertySet propertySet, IObjectKey key, IObjectKey parentKey, SessionManager sessionManager) throws SQLException {
 		/**
 		 * The list of parameters to be passed to the constructor
 		 * of this object.
@@ -757,7 +811,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @return
 	 * @throws SQLException
 	 */
-	static ExtendableObject materializeObject(ResultSet rs, PropertySet propertySet, IObjectKey key, SessionManagementImpl sessionManager) throws SQLException {
+	static ExtendableObject materializeObject(ResultSet rs, PropertySet propertySet, IObjectKey key, SessionManager sessionManager) throws SQLException {
 		// We need to obtain the key for the parent object.
 		// The parent object may be cached or may be uncached.
 		
@@ -865,22 +919,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			ColumnInfo columnInfo = (ColumnInfo)iter2.next();
 			
 			sql += ", \"" + columnInfo.columnName + "\" " + columnInfo.columnDefinition;
-/* Now done after all tables are created.
-			if (columnInfo.foreignKeyPropertySet != null) {
-				sql += ", FOREIGN KEY (" + columnInfo.columnName 
-					+ ") REFERENCES "
-					+ columnInfo.foreignKeyPropertySet.getId().replace('.', '_')
-					+ " (_id)";
-			}
-*/			
 		}
-/* Now done after all tables are created.
-		if (propertySet.getBasePropertySet() != null) {
-			sql += ", FOREIGN KEY (_id) REFERENCES "
-				+ propertySet.getBasePropertySet().getId().replace('.', '_')
-				+ " (_id)";
-		}
-*/		
 		sql += foreignKeys;
 		
 		sql += ")";
@@ -897,7 +936,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * 
 	 * @return The id of the inserted row
 	 */
-	public static int insertIntoDatabase(PropertySet propertySet, Object [] values, PropertyAccessor listProperty, IExtendableObject parent, SessionManagementImpl sessionManager) {
+	public static int insertIntoDatabase(PropertySet propertySet, ExtendableObject newObject, PropertyAccessor listProperty, IExtendableObject parent, SessionManager sessionManager) {
 		int rowId = -1;
 
 		// We must insert into the base table first, then the table for the objects
@@ -944,7 +983,25 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					}
 					
 					// Get the value from the passed property value array.
-					Object value = values[propertyAccessor.getIndexIntoScalarProperties()];
+//					Object value = values[propertyAccessor.getIndexIntoScalarProperties()];
+					Object objectWithProperties = newObject;				
+					Object value;
+					try {
+						value = propertyAccessor.getTheGetMethod().invoke(objectWithProperties, null);
+					} catch (IllegalAccessException e) {
+						throw new MalformedPluginException("Method '" + propertyAccessor.getTheGetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' must be public.");
+					} catch (IllegalArgumentException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						throw new RuntimeException("internal error");
+					} catch (InvocationTargetException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						throw new RuntimeException("internal error");
+					}
+
+					
+					
 					
 					columnNames += separator + "\"" + columnName + "\"";
 					columnValues += separator + valueToSQLText(value);
@@ -1000,7 +1057,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @param newValues
 	 * @param sessionManager
 	 */
-	public static void updateProperties(PropertySet propertySet, int rowId, Object[] oldValues, Object[] newValues, SessionManagementImpl sessionManager) {
+	public static void updateProperties(PropertySet propertySet, int rowId, Object[] oldValues, Object[] newValues, SessionManager sessionManager) {
 
 		Statement stmt = sessionManager.getReusableStatement();
 
@@ -1086,7 +1143,9 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		
 		if (value != null) {
 			Class valueClass = value.getClass();
-			if (valueClass == String.class) {
+			if (valueClass == String.class
+					|| valueClass == char.class
+					|| valueClass == Character.class) {
 				valueString = '\'' + value.toString().replaceAll("'", "''") + '\'';
 			} else if (valueClass == Date.class) {
 				Date date = (Date)value;
@@ -1120,7 +1179,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
      * 				was not present in the database.
 	 */
 // TODO: throw error if object is referenced.	
-	public static boolean deleteFromDatabase(int rowId, IExtendableObject extendableObject, SessionManagementImpl sessionManager) {
+	public static boolean deleteFromDatabase(int rowId, IExtendableObject extendableObject, SessionManager sessionManager) {
 		PropertySet propertySet = PropertySet.getPropertySet(extendableObject.getClass()); 
 		
 		Statement stmt = sessionManager.getReusableStatement();

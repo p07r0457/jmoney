@@ -77,21 +77,13 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Inc
 	 * @return
 	 */
     public IncomeExpenseAccount createSubAccount() {
-    	IncomeExpenseAccount newAccount = (IncomeExpenseAccount)subAccounts.createNewElement(
+    	IncomeExpenseAccount newSubAccount = (IncomeExpenseAccount)subAccounts.createNewElement(
 				this, 
 				JMoneyPlugin.getIncomeExpenseAccountPropertySet());
 
-		// Fire the event.
-/* how do we get the session???    	
-        final AccountAddedEvent event = new AccountAddedEvent(session, newAccount);
-        session.fireEvent(
-        	new ISessionChangeFirer() {
-        		public void fire(SessionChangeListener listener) {
-        			listener.accountAdded(event);
-        		}
-       		});
-*/
-        return newAccount;
+		processObjectAddition(subAccounts, newSubAccount);
+		
+		return newSubAccount;
     }
     
     static public  Object [] getDefaultProperties() {

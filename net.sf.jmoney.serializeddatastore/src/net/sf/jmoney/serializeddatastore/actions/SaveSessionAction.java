@@ -32,7 +32,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.ISessionManagement;
+import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.SessionImpl;
 import net.sf.jmoney.serializeddatastore.*;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;

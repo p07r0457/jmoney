@@ -366,9 +366,13 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 	 * @return
 	 */
 	public CapitalAccount createSubAccount() {
-		return (CapitalAccount)subAccounts.createNewElement(
+		CapitalAccount newSubAccount = (CapitalAccount)subAccounts.createNewElement(
 				this, 
 				JMoneyPlugin.getCapitalAccountPropertySet()); 
+
+		processObjectAddition(subAccounts, newSubAccount);
+		
+		return newSubAccount;
 	}
         
 	static public Object [] getDefaultProperties() {

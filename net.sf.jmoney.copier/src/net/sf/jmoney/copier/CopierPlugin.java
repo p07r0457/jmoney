@@ -5,7 +5,7 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CapitalAccountImpl;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ISessionManagement;
+import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
 import net.sf.jmoney.model2.ObjectLockedForEditException;
@@ -24,7 +24,7 @@ public class CopierPlugin extends AbstractUIPlugin {
 	private static CopierPlugin plugin;
 	//Resource bundle.
 	private ResourceBundle resourceBundle;
-	private static ISessionManagement savedSessionManager = null;
+	private static ISessionManager savedSessionManager = null;
 	
 	/**
 	 * The constructor.
@@ -83,14 +83,14 @@ public class CopierPlugin extends AbstractUIPlugin {
 	/**
 	 * @param sessionManager
 	 */
-	public static void setSessionManager(ISessionManagement sessionManager) {
+	public static void setSessionManager(ISessionManager sessionManager) {
 		savedSessionManager = sessionManager;
 	}
 
 	/**
 	 * @return
 	 */
-	public static ISessionManagement getSessionManager() {
+	public static ISessionManager getSessionManager() {
 		return savedSessionManager;
 	}
 	

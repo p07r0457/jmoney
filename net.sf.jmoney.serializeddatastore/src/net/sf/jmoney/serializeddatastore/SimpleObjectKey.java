@@ -30,7 +30,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionProperties;
 import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.ISessionManagement;
+import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -44,11 +44,11 @@ import net.sf.jmoney.model2.Session;
  * simply a reference to the object.
  */
 public class SimpleObjectKey implements IObjectKey {
-	private SessionManagementImpl sessionManager;
+	private SessionManager sessionManager;
 	private IExtendableObject extendableObject;
 	
 	// TODO: make this default protection
-	public SimpleObjectKey(SessionManagementImpl sessionManager) {
+	public SimpleObjectKey(SessionManager sessionManager) {
 		this.sessionManager = sessionManager;
 	}
 	
@@ -83,7 +83,7 @@ public class SimpleObjectKey implements IObjectKey {
 		return sessionManager.getSession();
 	}
 
-	public ISessionManagement getSessionManager() {
+	public ISessionManager getSessionManager() {
 		return sessionManager;
 	}
 }

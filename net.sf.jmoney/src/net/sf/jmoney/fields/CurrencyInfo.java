@@ -52,7 +52,10 @@ import net.sf.jmoney.model2.PropertyAccessor;
  */
 public class CurrencyInfo implements IExtensionPropertySetInfo {
 
-    public CurrencyInfo() {
+	private static PropertyAccessor codeAccessor = null;
+	private static PropertyAccessor decimalsAccessor = null;
+
+	public CurrencyInfo() {
     }
 
 	public Class getImplementationClass() {
@@ -71,8 +74,21 @@ public class CurrencyInfo implements IExtensionPropertySetInfo {
 				}
 		};
 		
-		propertyRegistrar.addProperty("code", JMoneyPlugin.getResourceString("Currency.code"), 8.0, textControlFactory, null, null);
-		propertyRegistrar.addProperty("decimals", JMoneyPlugin.getResourceString("Currency.decimals"), 8.0, textControlFactory, null, null);
+		codeAccessor = propertyRegistrar.addProperty("code", JMoneyPlugin.getResourceString("Currency.code"), 8.0, textControlFactory, null, null);
+		decimalsAccessor = propertyRegistrar.addProperty("decimals", JMoneyPlugin.getResourceString("Currency.decimals"), 8.0, textControlFactory, null, null);
 	}
 
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getCodeAccessor() {
+		return codeAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getDecimalsAccessor() {
+		return decimalsAccessor;
+	}	
 }

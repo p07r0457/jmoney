@@ -31,10 +31,10 @@ import org.eclipse.ui.IWorkbenchWindow;
  * framework.  They should not be called directly by other plug-ins and thus
  * these methods are not in the Session interface.
  */
-public interface ISessionManagement extends IAdaptable {
+public interface ISessionManager extends IAdaptable {
 
 	/** Returns the session object.  The session object must be
-	 * non-null.  (If no session is set then no ISessionManagement
+	 * non-null.  (If no session is set then no ISessionManager
 	 * implementation should be set).
 	 * 
 	 * @return

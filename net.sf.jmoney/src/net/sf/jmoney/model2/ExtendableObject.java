@@ -149,6 +149,13 @@ public abstract class ExtendableObject implements IExtendableObject {
 		getObjectKey().getSession().getChangeManager().setProperty(this, propertyAccessor, oldValue, newValue);
 	}
 	
+	// Should allow default package access and protected access
+	// but not public access.  Unfortunately this cannot be done
+	// so for time being allow public access.
+	public void processObjectAddition(IListManager objectList, IExtendableObject newObject) {
+		getObjectKey().getSession().getChangeManager().processObjectAddition(this, objectList, newObject);
+	}
+	
 	/**
 	 * This method may be called by the datastore plug-in immediately
 	 * after it has constructed this object.
