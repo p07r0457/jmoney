@@ -96,13 +96,6 @@ public class DateEditor implements IPropertyControl {
 	static private Image threeDotsImage = null;
 
 	/**
-	 * This field is used when incrementing and decrementing the date using
-	 * the + and the - keys.  There is probably a better way of implementing
-	 * this.
-	 */
-	protected Date dateToSet;
-
-	/**
      * Create a new date editor.
      */
     public DateEditor(final Composite parent, PropertyAccessor propertyAccessor, VerySimpleDateFormat dateFormat) {
@@ -122,22 +115,26 @@ public class DateEditor implements IPropertyControl {
 			public void keyPressed(KeyEvent e) {
 				if (e.character == '+' || e.character == '-') {
 					
-			        String text = textControl.getText();
-			        Date date = fDateFormat.parse(text);
 		            Calendar calendar = Calendar.getInstance();
-	            	calendar.setTime(date);
+		            calendar.setTime(
+		            		fDateFormat.parse(
+		            				textControl.getText()
+		            		)
+		            );
+	            	
 					if (e.character == '+') {
 						calendar.add(Calendar.DAY_OF_MONTH, 1);
 					} else {
 		            	calendar.add(Calendar.DAY_OF_MONTH, -1);
 					}
-					dateToSet = calendar.getTime();
-				}
-			}
-			public void keyReleased(KeyEvent e) {
-				if (e.character == '+' || e.character == '-') {
-					String d = fDateFormat.format(dateToSet);
-					textControl.setText(fDateFormat.format(dateToSet));
+					
+					textControl.setText(
+							fDateFormat.format(
+									calendar.getTime()
+							)
+					);
+
+					e.doit = false;
 				}
 			}
 		});
