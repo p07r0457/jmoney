@@ -252,7 +252,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     	// the full list of ISO currencies.
         if (newSessionManager != null) {
         	if (!getSession().getCommodityIterator().hasNext()) {
-        		initSystemCurrencies(getSession());
+        		initSystemCurrency(getSession());
         		getSession().registerUndoableChange("add ISO currencies");
         	}
         }
@@ -310,6 +310,46 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	}
 
     /**
+     * Get the corresponding ISO currency for "code". If "session" already
+     * contains such a currency this currency is returned. Otherwise, we
+     * check our list of ISO 4217 currencies and we create a new currency
+     * instance for "session".
+     * 
+     * @param session Session object which will contain the currency
+     * @param code ISO currency code
+     * @return Currency for "code"
+     */
+    public static Currency getIsoCurrency(Session session, String code) {
+        // Check if the currency already exists for this session.
+        Currency result = session.getCurrencyForCode(code);
+        if (result != null) return result;
+
+        // Find the currency in our list of ISO 4217 currencies
+        ResourceBundle res = ResourceBundle.getBundle("net.sf.jmoney.resources.Currency");
+        byte decimals = 2;
+        try {
+            InputStream in = JMoneyPlugin.class.getResourceAsStream("Currencies.txt");
+            BufferedReader buffer = new BufferedReader(new InputStreamReader(in));
+            for (String line = buffer.readLine(); line != null; line = buffer.readLine()) {
+                if (line.substring(0, 3).equals(code)) {
+                    decimals = Byte.parseByte(line.substring(4, 5));
+                }
+            }
+        } catch (IOException ioex) {
+            log(ioex);
+        } catch (NumberFormatException nfex) {
+            log(nfex);
+        }
+
+        result = (Currency) session.createCommodity(CurrencyInfo.getPropertySet());
+        result.setCode(code);
+        result.setName(res.getString(code));
+        result.setDecimals(decimals);
+
+        return result;
+    }
+
+    /**
      * Whenever a new session is created, JMoney will set a single initial
      * currency.  The currency is taken from our list of ISO 4217
      * currencies and chosen using information from the default locale.
@@ -322,60 +362,13 @@ public class JMoneyPlugin extends AbstractUIPlugin {
      * 
      * @param session
      */
-	public static void initSystemCurrencies(Session session) {
-	    ResourceBundle NAME =
-	    	ResourceBundle.getBundle("net.sf.jmoney.resources.Currency");
-
-	    Locale defaultLocale = Locale.getDefault();
-	    NumberFormat format = NumberFormat.getCurrencyInstance(defaultLocale);
-	    String defaultLocaleCode = format.getCurrency().getCurrencyCode();
-
-	    String code = null;
-	    int decimals = 0;
-	    
-	    // Find the currency in our list of ISO 4217 currencies
-	    InputStream in = JMoneyPlugin.class.getResourceAsStream("Currencies.txt");
-		BufferedReader buffer = new BufferedReader(new InputStreamReader(in));
-		try {
-			String line = buffer.readLine();
-			while (line != null) {
-				code = line.substring(0, 3);
-				if (code.equals(defaultLocaleCode)) {
-					try {
-						decimals = Byte.parseByte(line.substring(4, 5));
-					} catch (Exception ex) {
-						decimals = 2;
-					}
-					break;
-				}
-				
-				line = buffer.readLine();
-			}
-
-			// Set to US Dollars if the currency code from the user's
-			// locale is not in our list.
-			if (line == null) {
-				code = "USD";
-				decimals = 2;
-			}
-			
-		} catch (IOException ioex) {
-			code = "USD";
-			decimals = 2;
-		}
-		
-		String name = NAME.getString(code);
-		
-		Currency newCurrency = (Currency)session.createCommodity(
-				CurrencyInfo.getPropertySet());
-		
-		newCurrency.setName(name);
-		newCurrency.setCode(code);
-		newCurrency.setDecimals(decimals);
-		
-		// This currency is also the default currency.
-		session.setDefaultCurrency(newCurrency);
-	}
+	public static void initSystemCurrency(Session session) {
+        Locale defaultLocale = Locale.getDefault();
+        NumberFormat format = NumberFormat.getCurrencyInstance(defaultLocale);
+        String code = format.getCurrency().getCurrencyCode();
+        Currency currency = getIsoCurrency(session, code);
+        session.setDefaultCurrency(currency);
+    }
 
 	public void addSessionChangeListener(SessionChangeListener l) {
         sessionChangeListeners.add(l);
