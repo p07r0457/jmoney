@@ -20,13 +20,5 @@
       <import plugin="org.eclipse.ui.forms"/>
    </requires>
 
-   <extension
-         point="org.eclipse.ui.editors">
-      <editor
-            id="net.sf.jmoney.ui.CapitalAccountEditor"
-            name="Capital Account Editor"
-            icon="icons/Account.gif"
-            class="net.sf.jmoney.ui.internal.editors.CapitalAccountEditor">
-      </editor>
-   </extension>
+   <extension         point="net.sf.jmoney.pages">      <pages            extendable-property-set="net.sf.jmoney.capitalAccount"            class="net.sf.jmoney.ui.bookkeepingPages.AccountEntriesPage">      </pages>      <pages            extendable-property-set="net.sf.jmoney.bankAccount"            class="net.sf.jmoney.ui.bookkeepingPages.AccountPropertiesPage">      </pages>   </extension>
 </plugin>
