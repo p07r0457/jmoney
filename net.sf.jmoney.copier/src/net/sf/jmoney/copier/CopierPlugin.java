@@ -1,16 +1,13 @@
 package net.sf.jmoney.copier;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.ObjectLockedForEditException;
-import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.model2.Entry;
 
 import org.eclipse.ui.plugin.*;
 import org.osgi.framework.BundleContext;
@@ -100,8 +97,7 @@ public class CopierPlugin extends AbstractUIPlugin {
      * The two sessions may be interfaces into different implementations.
      * This is therefore more than just a deep copy.  It is a conversion.
      */
-    public void populateSession(Session newSession, Session oldSession)
-    throws ObjectLockedForEditException {    
+    public void populateSession(Session newSession, Session oldSession) {
         Map categoryMap = new Hashtable();
         
         // Add the accounts
@@ -110,10 +106,10 @@ public class CopierPlugin extends AbstractUIPlugin {
             
             if (oldAccount instanceof CapitalAccount) {
             	CapitalAccount newAccount = (CapitalAccount)newSession.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
-            	populateAndCommitAccount(newSession, (CapitalAccount)oldAccount, newAccount, categoryMap);
+            	populateCapitalAccount(newSession, (CapitalAccount)oldAccount, newAccount, categoryMap);
             } else {
                 IncomeExpenseAccount newCategory = (IncomeExpenseAccount)newSession.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
-                populateAndCommitSimpleCategory(newSession, (IncomeExpenseAccount)oldAccount, newCategory, categoryMap);
+                populateIncomeExpenseAccount(newSession, (IncomeExpenseAccount)oldAccount, newCategory, categoryMap);
             }            	
         }
 
@@ -153,8 +149,7 @@ public class CopierPlugin extends AbstractUIPlugin {
         }
     }
     
-    private void populateAndCommitSimpleCategory(Session newSession, IncomeExpenseAccount oldCategory, IncomeExpenseAccount newCategory, Map categoryMap)
-    throws ObjectLockedForEditException {
+    private void populateIncomeExpenseAccount(Session newSession, IncomeExpenseAccount oldCategory, IncomeExpenseAccount newCategory, Map categoryMap) {
         newCategory.setName(oldCategory.getName());
         
         categoryMap.put(oldCategory, newCategory);
@@ -163,12 +158,11 @@ public class CopierPlugin extends AbstractUIPlugin {
         	IncomeExpenseAccount oldSubCategory = (IncomeExpenseAccount)iter.next();
             
             IncomeExpenseAccount newSubCategory = (IncomeExpenseAccount)newCategory.createSubAccount();
-            populateAndCommitSimpleCategory(newSession, oldSubCategory, newSubCategory, categoryMap);
+            populateIncomeExpenseAccount(newSession, oldSubCategory, newSubCategory, categoryMap);
         }
     }
 
-    private void populateAndCommitAccount(Session newSession, CapitalAccount oldAccount, CapitalAccount newAccount, Map categoryMap)
-    throws ObjectLockedForEditException {
+    private void populateCapitalAccount(Session newSession, CapitalAccount oldAccount, CapitalAccount newAccount, Map categoryMap) {
         newAccount.setName(oldAccount.getName());
         newAccount.setAbbreviation(oldAccount.getAbbreviation());
         newAccount.setAccountNumber(oldAccount.getAccountNumber());
@@ -184,7 +178,7 @@ public class CopierPlugin extends AbstractUIPlugin {
             CapitalAccount oldSubAccount = (CapitalAccount)iter.next();
             
             CapitalAccount newSubAccount = (CapitalAccount)newAccount.createSubAccount();
-            populateAndCommitAccount(newSession, oldSubAccount, newSubAccount, categoryMap);
+            populateCapitalAccount(newSession, oldSubAccount, newSubAccount, categoryMap);
         }
     }
 }

@@ -32,7 +32,6 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.copier.CopierPlugin;
 import net.sf.jmoney.model2.ISessionManager;
-import net.sf.jmoney.model2.ObjectLockedForEditException;
 
 /**
  * Our sample action implements workbench action delegate.
@@ -91,13 +90,7 @@ public class PasteContentsAction implements IWorkbenchWindowActionDelegate {
 		}
 
 		// Copy the data across.
-		try {
-			CopierPlugin.getDefault().populateSession(destinationSessionManager.getSession(), sourceSessionManager.getSession());
-		} catch (ObjectLockedForEditException e) {
-			// TODO handle this properly if we end up locking objects
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		}
+		CopierPlugin.getDefault().populateSession(destinationSessionManager.getSession(), sourceSessionManager.getSession());
 		
 		// Confirm copy.
 	}

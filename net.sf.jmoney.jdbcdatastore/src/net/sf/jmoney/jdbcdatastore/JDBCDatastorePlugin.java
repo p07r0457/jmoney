@@ -23,10 +23,10 @@
 package net.sf.jmoney.jdbcdatastore;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.MalformedPluginException;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertyNotFoundException;
 import net.sf.jmoney.model2.PropertySet;
@@ -40,8 +40,6 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.plugin.*;
 import org.osgi.framework.BundleContext;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -285,18 +283,8 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// Any missing tables or columns are created at this time.
 		checkDatabase(con, stmt);
 		
-		PropertyAccessor commodityListProperty;
-		PropertyAccessor accountListProperty;
-		PropertyAccessor transactionListProperty;
-		try {
-			commodityListProperty = PropertySet.getPropertyAccessor("net.sf.jmoney.session.commodity");
-			accountListProperty = PropertySet.getPropertyAccessor("net.sf.jmoney.session.account");
-			transactionListProperty = PropertySet.getPropertyAccessor("net.sf.jmoney.session.transaction");
-		} catch (PropertyNotFoundException e) {
-			throw new RuntimeException("internal error");
-		}
-		ListManagerCached commodityListManager = new ListManagerCached(sessionManager, commodityListProperty);
-		ListManagerCached accountListManager = new ListManagerCached(sessionManager, accountListProperty);
+		ListManagerCached commodityListManager = new ListManagerCached(sessionManager, SessionInfo.getCommoditiesAccessor());
+		ListManagerCached accountListManager = new ListManagerCached(sessionManager, SessionInfo.getAccountsAccessor());
 		
 		// Fetch the currencies
 		rs = stmt.executeQuery("SELECT * FROM net_sf_jmoney_currency JOIN net_sf_jmoney_commodity ON net_sf_jmoney_currency._ID = net_sf_jmoney_commodity._ID");
@@ -345,7 +333,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// interface (an extension of the Collection interface)
 		// and that returns transactions when requested.
 		
-		IListManager transactionListManager = new ListManagerUncached(sessionKey, sessionManager, transactionListProperty);
+		IListManager transactionListManager = new ListManagerUncached(sessionKey, sessionManager, SessionInfo.getTransactionsAccessor());
 		
 		// Create the session object.
 		

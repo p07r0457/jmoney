@@ -27,7 +27,6 @@ import java.sql.SQLException;
 import java.util.Collection;
 
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ExtensionProperties;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
