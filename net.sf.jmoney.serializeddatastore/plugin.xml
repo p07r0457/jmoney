@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+   id="net.sf.jmoney.serializeddatastore"
+   name="Serialized Datastore Plug-in"
+   version="1.0.0"
+   provider-name="Nigel Westbury"
+   class="net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin">
+
+   <runtime>
+      <library name="serializeddatastore.jar">
+         <export name="*"/>
+      </library>
+   </runtime>
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime.compatibility"/>
+      <import plugin="net.sf.jmoney"/>
+      <import plugin="net.sf.jmoney.isocurrencies"/>
+   </requires>
+
+
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            label="Sample Action Set"
+            visible="true"
+            id="net.sf.jmoney.serializeddatastore.actionSet">
+<!--
+         <menu
+               label="&amp;File"
+               id="fileMenu">
+            <separator
+                  name="sampleGroup">
+            </separator>
+         </menu>
+-->         
+         <action
+               label="%MainFrame.new"
+               icon="icons/New16.gif"
+               tooltip="New Session"
+               class="net.sf.jmoney.serializeddatastore.actions.NewSessionAction"
+               menubarPath="file/fileGroup"
+               toolbarPath="fileGroup"
+               id="net.sf.jmoney.serializeddatastore.actions.NewSession">
+         </action>
+         <action
+               label="%MainFrame.open"
+               icon="icons/Open16.gif"
+               tooltip="Open Session..."
+               class="net.sf.jmoney.serializeddatastore.actions.OpenSessionAction"
+               menubarPath="file/fileGroup"
+               toolbarPath="fileGroup"
+               id="net.sf.jmoney.serializeddatastore.actions.OpenSession">
+         </action>
+         <action
+               label="%MainFrame.save"
+               icon="icons/Save16.gif"
+               tooltip="Save Session"
+               class="net.sf.jmoney.serializeddatastore.actions.SaveSessionAction"
+               menubarPath="file/fileGroup"
+               toolbarPath="fileGroup"
+               id="net.sf.jmoney.serializeddatastore.actions.SaveSession">
+         </action>
+         <action
+               label="%MainFrame.saveAs"
+               icon="icons/SaveAs16.gif"
+               tooltip="Save Session As"
+               class="net.sf.jmoney.serializeddatastore.actions.SaveSessionAsAction"
+               menubarPath="file/fileGroup"
+               toolbarPath="fileGroup"
+               id="net.sf.jmoney.serializeddatastore.actions.SaveSessionAs">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="net.sf.jmoney.datastores">
+         <session
+               class="net.sf.jmoney.serializeddatastore.SessionImpl">
+         </session>
+   </extension>
+   <extension
+         point="org.eclipse.ui.elementFactories"
+         id="factoryid"
+         name="Restore Serialized Datastore Session into Workbench">
+         <session
+               class="net.sf.jmoney.serializeddatastore.SessionFactory">
+         </session>
+   </extension>
+
+</plugin>
