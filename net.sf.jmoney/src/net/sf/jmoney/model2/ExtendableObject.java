@@ -181,8 +181,41 @@ public abstract class ExtendableObject {
 
 		// Update the database.
 		IObjectKey key = getObjectKey();
-		PropertySet propertySet = PropertySet.getPropertySet(this.getClass());
-		key.updateProperties(propertySet, propertyAccessor, oldValue, newValue);
+		PropertySet actualPropertySet = PropertySet.getPropertySet(this.getClass());
+		
+		// Build two arrays of old and new values.
+		// Ultimately we will have a layer between that does this
+		// for us, also combining multiple updates to the same row
+		// into a single update.  Until then, we need this code here.
+		
+		// TODO: improve performance here.
+		int count = 0;
+		for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor2 = (PropertyAccessor)iter.next();
+			if (propertyAccessor2.isScalar()) {
+				count++;
+			}
+		}
+		
+		Object [] oldValues = new Object[count];
+		Object [] newValues = new Object[count];
+		
+		int i = 0;
+		for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor2 = (PropertyAccessor)iter.next();
+			if (propertyAccessor2.isScalar()) {
+				if (propertyAccessor2 == propertyAccessor) {
+					oldValues[i] = oldValue;
+					newValues[i] = newValue;
+				} else {
+					// kludge: both null means no change.
+					oldValues[i] = null;
+					newValues[i] = null;
+				}
+				i++;
+			}
+		}
+		key.updateProperties(actualPropertySet, oldValues, newValues);
 
 		// Nofify the change manager.
 		getSession().getChangeManager().processPropertyUpdate(this, propertyAccessor, oldValue, newValue);

@@ -569,12 +569,24 @@ public class Session extends ExtendableObject implements IAdaptable {
     }
 
    	public boolean deleteTransaction(Transaction transaction) {
+   		// Save the list of entries, because once the transaction
+   		// is removed from the collection, neither the transactions
+   		// nor the entries in it are in the database
+   		// and we cannot iterate the entries.  The only methods
+   		// that may be called after an object is removed from the 
+   		// datastore are the equals and hashCode methods.
+   		Vector entriesInTransaction = new Vector();
+    	for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
+    		Entry entry = (Entry)iter.next();
+    		entriesInTransaction.add(entry);
+    	}
+    	
    		boolean found = transactions.remove(transaction);
 
         // For efficiency, we keep a list of entries in each
         // account/category.  We must update this list now.
         if (found) {
-        	for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
+        	for (Iterator iter = entriesInTransaction.iterator(); iter.hasNext(); ) {
         		final Entry entry = (Entry)iter.next();
         		// TODO: at some time, keep these lists for categories too
         		Account category = entry.getAccount();

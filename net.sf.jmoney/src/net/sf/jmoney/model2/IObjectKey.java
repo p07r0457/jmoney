@@ -129,14 +129,6 @@ public interface IObjectKey {
 	void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues);
 
 	/**
-	 * @param propertySet
-	 * @param propertyAccessor
-	 * @param oldValue
-	 * @param newValue
-	 */
-	void updateProperties(PropertySet actualPropertySet, PropertyAccessor propertyAccessor, Object oldValue, Object newValue);
-
-	/**
 	 * Returns the session object.  Objects often need access to the session object.
 	 * For example, the CapitalAccount constructor sets the currency to the default
 	 * currency for the session if a null currency is passed.
