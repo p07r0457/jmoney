@@ -148,9 +148,7 @@ public class IncomeExpenseAccount extends Account {
 	/**
 	 * This method is required by the JMoney framework.
 	 * 
-	 * @param name
-	 * @param extensionProperties
-	 * @return
+	 * @return a new sub-account
 	 */
     public IncomeExpenseAccount createSubAccount() {
     	final IncomeExpenseAccount newSubAccount = (IncomeExpenseAccount)subAccounts.createNewElement(
