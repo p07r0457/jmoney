@@ -74,7 +74,7 @@ public class NodeEditor extends FormEditor {
                         name = "Old Style Page Contents";
                     }
                 	
-                    addPage(new SectionlessPage(this, pageListener, name));
+                    addPage(new SectionlessPageWrapper(this, pageListener, name));
         		}    
         	}
         } catch (PartInitException e) {

@@ -22,12 +22,8 @@
 
 package net.sf.jmoney;
 
-import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.views.NodeEditor;
 
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.IMemento;
 import org.eclipse.ui.forms.editor.IFormPage;
 
 /**

@@ -107,7 +107,7 @@ public class NavigationView extends ViewPart {
 		private TreeNode parent;
 		private String parentId;
 		protected ArrayList children = null;
-		private Vector pageListeners = new Vector();
+		private Vector pageListeners = new Vector(); // element: IBookkeepingPage
 		
 		public TreeNode(String name, Image image, TreeNode parent) {
 			this.name = name;
@@ -171,7 +171,7 @@ public class NavigationView extends ViewPart {
 		/**
 		 * @param pageListener
 		 */
-		public void addPageListener(IBookkeepingPageListener pageListener) {
+		public void addPageListener(IBookkeepingPage pageListener) {
 			pageListeners.add(pageListener);
 		}
 		/**
@@ -587,8 +587,11 @@ private Map idToNodeMap = new HashMap();
 			String nodeId = (String)mapEntry.getValue();
 			TreeNode node = (TreeNode)idToNodeMap.get(nodeId);
 			if (node != null) {
-				IBookkeepingPageListener pageListener = (IBookkeepingPageListener)mapEntry.getKey();
+				// TODO: delete this 'if' test. nrwnrw
+				if (mapEntry.getKey() instanceof IBookkeepingPage) {
+				IBookkeepingPage pageListener = (IBookkeepingPage)mapEntry.getKey();
 				node.addPageListener(pageListener);
+				}
 			} else {
 				// No node found with given id, so the
 				// page listener is dropped.

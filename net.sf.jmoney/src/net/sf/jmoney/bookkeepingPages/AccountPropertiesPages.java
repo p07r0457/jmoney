@@ -32,9 +32,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.ui.IMemento;
+import org.eclipse.ui.forms.editor.IFormPage;
 
-import net.sf.jmoney.IBookkeepingPageListener;
+import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.model2.Account;
@@ -45,22 +45,23 @@ import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
+import net.sf.jmoney.views.NodeEditor;
+import net.sf.jmoney.views.SectionlessPage;
 
 /**
  * @author Nigel Westbury
  */
-public class AccountPropertiesPages implements IBookkeepingPageListener {
+public class AccountPropertiesPages implements IBookkeepingPage {
 	
-	AccountPropertiesControl propertiesControl;
-	
+    private static final String PAGE_ID = "net.sf.jmoney.accountProperties";
+    
 	/**
 	 * The implementation for the composite control that contains
 	 * the account property controls.
 	 */
 	private class AccountPropertiesControl extends Composite {
-		CapitalAccount account = null;
-		Session session = null;
-		
+		CapitalAccount account;
+		Session session;
 		/**
 		 * List of the IPropertyControl objects for the
 		 * properties that can be edited in this panel.
@@ -91,7 +92,7 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 		/**
 		 * @param parent
 		 */
-		public AccountPropertiesControl(Composite parent) {
+		public AccountPropertiesControl(Composite parent, CapitalAccount account) {
 			super(parent, SWT.NULL);
 
 			GridLayout layout = new GridLayout();
@@ -106,18 +107,12 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 			pack();
 			
 			JMoneyPlugin.getDefault().addSessionChangeListener(listener);
-		}
 
-		void setAccount(CapitalAccount account, Session session) {
 			this.account = account;
-			this.session = session;
+			
+			session = account.getSession();
 			
 			// Create the controls to edit the properties.
-			// This is done here and not when this composite
-			// is constructed because the property set depends
-			// on the type of the account object.
-			
-			propertyControlList.clear();
 			
 			// Add the properties for the Account objects.
 			PropertySet extendablePropertySet = PropertySet.getPropertySet(account.getClass());
@@ -180,37 +175,22 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 		}
 	}
 
-	public void init(IMemento memento) {
-		// The user cannot change the way this view is displayed,
-		// so nothing to do here.
-	}
-	
-	public void saveState(IMemento memento) {
-		// The user cannot change the way this view is displayed,
-		// so nothing to do here.
-	}
-	
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.IBookkeepingPageListener#getPageCount(java.lang.Object)
-	 */
-	public int getPageCount(Object selectedObject) {
-		if (selectedObject instanceof CapitalAccount) {
-			return 1;
-		}
-		return 0;
-	}
-	
+
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
-	public BookkeepingPage[] createPages(Object selectedObject, Session session, Composite parent) {
-		if (selectedObject instanceof CapitalAccount) {
-			CapitalAccount account = (CapitalAccount)selectedObject;
-			AccountPropertiesControl propertiesControl = new AccountPropertiesControl(parent);
-			propertiesControl.setAccount(account, session);
-			return new BookkeepingPage[] 
-									   { new BookkeepingPage(propertiesControl, JMoneyPlugin.getResourceString("AccountPropertiesPanel.title")) };
-		}
-		return null;
+	public IFormPage createFormPage(NodeEditor editor) {
+		return new SectionlessPage(
+				editor,
+				PAGE_ID, 
+				"Properties", 
+				"Account Properties") {
+			
+			public Composite createControl(Object nodeObject, Composite parent) {
+				CapitalAccount account = (CapitalAccount)nodeObject;
+				AccountPropertiesControl propertiesControl = new AccountPropertiesControl(parent, account);
+				return propertiesControl;
+			}
+		};
 	}
 }

@@ -23,12 +23,6 @@
 
 package net.sf.jmoney.reports;
 
-/*
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-*/
 import java.awt.BorderLayout;
 import java.io.InputStream;
 import java.net.URL;
@@ -62,21 +56,15 @@ import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.ui.IMemento;
+import org.eclipse.ui.forms.editor.IFormPage;
 
-/*
-import dori.jasper.engine.JRDataSource;
-import dori.jasper.engine.JasperFillManager;
-import dori.jasper.engine.JasperPrint;
-import dori.jasper.engine.data.JRBeanCollectionDataSource;
-import dori.jasper.view.JRViewer;
-*/
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.view.JRViewer;
 
-import net.sf.jmoney.IBookkeepingPageListener;
+import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
 import net.sf.jmoney.model2.Account;
@@ -84,12 +72,16 @@ import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.views.NodeEditor;
+import net.sf.jmoney.views.SectionlessPage;
 
 /**
  * @author Nigel Westbury
  */
-public class IncomeExpensePage implements IBookkeepingPageListener {
+public class IncomeExpensePage implements IBookkeepingPage {
 
+    private static final String PAGE_ID = "net.sf.jmoney.reports.incomeAndExpenses";
+    
 	public static final int THIS_MONTH = 0;
 
 	public static final int THIS_YEAR = 1;
@@ -141,24 +133,17 @@ public class IncomeExpensePage implements IBookkeepingPageListener {
 	private Date toDate;
 
 	public void init(IMemento memento) {
-		// No view state to restore
+		// TODO: initialize controls with values last used.
 	}
 
 	public void saveState(IMemento memento) {
-		// No view state to save
-	}
-
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.IBookkeepingPageListener#getPageCount(java.lang.Object)
-	 */
-	public int getPageCount(Object selectedObject) {
-		return 1;
+		// TODO: save current values of controls.
 	}
 
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
-	public BookkeepingPage[] createPages(Object selectedObject, Session session, Composite parent) {
+	private Composite createContent(Session session, Composite parent) {
 		/**
 		 * topLevelControl is a control with grid layout, 
 		 * onto which all sub-controls should be placed.
@@ -243,8 +228,24 @@ public class IncomeExpensePage implements IBookkeepingPageListener {
 		subtotalsCheckBox.setText(
 				ReportsPlugin.getResourceString("Panel.Report.IncomeExpense.ShowSubtotals"));
 		
-		return new BookkeepingPage[] 
-								   { new BookkeepingPage(topLevelControl, "Income & Expense Report") };
+		return topLevelControl;
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
+	 */
+	public IFormPage createFormPage(NodeEditor editor) {
+		return new SectionlessPage(
+				editor,
+				PAGE_ID, 
+				"Income & Expense Report", 
+				"Income & Expense Report") {
+			
+			public Composite createControl(Object nodeObject, Composite parent) {
+				Session session = JMoneyPlugin.getDefault().getSession();
+				return createContent(session, parent);
+			}
+		};
 	}
 
 	private void updateFromAndTo() {

@@ -34,20 +34,25 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.awt.SWT_AWT;
 import org.eclipse.ui.IMemento;
+import org.eclipse.ui.forms.editor.IFormPage;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.event.ChartChangeEvent;
 import org.w3c.dom.events.MouseEvent;
 
-import net.sf.jmoney.IBookkeepingPageListener;
+import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.views.NodeEditor;
+import net.sf.jmoney.views.SectionlessPage;
 
 /**
  * @author Faucheux
  */
-public class PieChartPage implements IBookkeepingPageListener {
+public class PieChartPage implements IBookkeepingPage {
 
+    private static final String PAGE_ID = "net.sf.jmoney.charts.lineChart";
+    
     protected ExpensePieChart chart;
     protected JSpinner fromDate;
     protected JSpinner toDate;
@@ -65,13 +70,13 @@ public class PieChartPage implements IBookkeepingPageListener {
 	 * @see net.sf.jmoney.IBookkeepingPageListener#getPageCount(java.lang.Object)
 	 */
 	public int getPageCount(Object selectedObject) {
-		return 2;
+		return 1;
 	}
 
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
-	public BookkeepingPage[] createPages(Object selectedObject, Session session, Composite parent) {
+	public Composite createContent(Session session, Composite parent) {
 
 	    
 	    
@@ -127,10 +132,25 @@ public class PieChartPage implements IBookkeepingPageListener {
 
 	    }
 
-		return new BookkeepingPage[] 
-			{ new BookkeepingPage(swingComposite, "Chart") };
+		return swingComposite;
 		
 		
+	}
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
+	 */
+	public IFormPage createFormPage(NodeEditor editor) {
+		return new SectionlessPage(
+				editor,
+				PAGE_ID, 
+				"Chart", 
+				"Pie Chart") {
+			
+			public Composite createControl(Object nodeObject, Composite parent) {
+				Session session = JMoneyPlugin.getDefault().getSession();
+				return createContent(session, parent);
+			}
+		};
 	}
 	
 	public class redrawGraph implements ChangeListener, ActionListener{

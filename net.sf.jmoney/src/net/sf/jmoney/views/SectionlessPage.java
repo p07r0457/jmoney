@@ -1,7 +1,7 @@
 /*
 *
 *  JMoney - A Personal Finance Manager
-*  Copyright (c) 2004 Johann Gyger <jgyger@users.sf.net>
+*  Copyright (c) 2004 Nigel Westbury <westbury@users.sourceforge.net>
 *
 *
 *  This program is free software; you can redistribute it and/or modify
@@ -19,38 +19,120 @@
 *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 *
 */
+
 package net.sf.jmoney.views;
 
-import net.sf.jmoney.IBookkeepingPageListener;
-
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.ui.forms.AbstractFormPart;
+import org.eclipse.ui.forms.IFormPart;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.editor.FormPage;
+import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 
 /**
- * TODO
- * 
- * @author Johann Gyger
+ * Provides an implementation of FormPage suitable for pages
+ * that do not use the sections.
+ * <P>
+ * The net.sf.jmoney.pages extension point require extensions
+ * to provide an implementation of the IBookkeepingPage interface.
+ * This interface has a method called createFormPage.  This method
+ * must be implemented and must return an object that implements IFormPage.
+ * However, there is a significant amount of code involved in creating an 
+ * IFormPage implementation that is the same regardless of the page contents.
+ * This class provides the common code.
+ * <P>
+ * This class requires an implementation of the createControl method.
+ * This method is called to create the control that forms the body of
+ * the page.  This control should contain the controls that are
+ * specific to the page.
+ * <P>
+ * This class does not support sections.  If you wish to create
+ * a page using sections then you cannot use this class.
+ *
+ * @author Nigel Westbury
  */
-public class SectionlessPage extends FormPage {
-
-    public static final String PAGE_ID = "old_style_page";
-
+public abstract class SectionlessPage extends FormPage {
 	protected NodeEditor fEditor;
-    protected IBookkeepingPageListener pageListener;
-	protected OldStyleWrapperFormPart formPart;
+	protected String formHeader;
+	protected IFormPart formPart;
 
-    /**
-     * Create a new page to edit entries.
-     * 
-     * @param editor Parent editor
-     */
-    public SectionlessPage(NodeEditor editor, IBookkeepingPageListener pageListener, String pageName) {
-        super(editor, pageListener.getClass().getName(), pageName);
+	private class GenericFormPart extends AbstractFormPart {
+		protected SectionlessPage page;
+	    protected Composite parent; 
+
+	    public GenericFormPart(SectionlessPage page, Composite parent) {
+	        this.page = page;
+	        this.parent = parent;
+
+	        FormToolkit toolkit = page.getManagedForm().getToolkit();
+
+		Composite propertiesControl = createControl(page.getSelectedObject(), parent);
+			
+	        // TODO: Do this.........
+//toolkit.paintBordersFor(propertiesControl);
+	        
+	        // Modified by Faucheux
+	        // The one and only visible control in the parent
+	        // should fill the entire space.
+	        final Control control = propertiesControl;
+	        control.setBackground(control.getDisplay().getSystemColor(
+	                SWT.COLOR_DARK_BLUE));
+	        control.pack(true);
+
+	        // Force the parent (DARK_BLUE) to be as big as its container
+	        control.addControlListener(new ControlListener() {
+	            public void controlMoved(ControlEvent e) {  }
+	            public void controlResized(ControlEvent e) {
+	                Composite parent = (Composite) e.getSource();
+	                System.out.println("Redraw dark blue " + parent);
+	                System.out.println("  was " + parent.getSize());
+//	              parent.setSize(parent.getParent().getSize());
+	                parent.setSize(parent.getParent().getSize().x * 95 / 100, parent.getParent().getSize().y * 90 / 100);
+	                System.out.println("  is  " + parent.getSize());
+	            }
+	            
+	        });
+
+	        parent.setBackground(control.getDisplay().getSystemColor(
+	                SWT.COLOR_YELLOW));
+	        parent.pack(true);
+	        parent.addControlListener(new ControlListener() {
+	            public void controlMoved(ControlEvent e) {  }
+	            public void controlResized(ControlEvent e) {
+	                Composite parent = (Composite) e.getSource();
+	                System.out.println("Redraw yellow " + parent);
+	                System.out.println("  was " + parent.getSize());
+//	                parent.setSize(parent.getParent().getSize());
+	                
+//	                control.setSize(parent.getSize().x * 95 / 100, parent.getSize().x * 90 / 100);
+	                control.setSize(parent.getSize());
+	                System.out.println("  is  " + parent.getSize());
+	            }
+	        });
+	        
+	        refresh();
+	    }
+
+	    /* (non-Javadoc)
+	     * @see org.eclipse.ui.forms.IFormPart#refresh()
+	     */
+	    public void refresh() {
+	// Not sure what we do here???????
+	        super.refresh();
+	    }
+	}
+
+	public SectionlessPage(NodeEditor editor, String id, String title, String formHeader) {
+        super(editor, id, title);
         fEditor = editor;
-        this.pageListener = pageListener;
-    }
+        this.formHeader = formHeader;
+	}
 
     /* (non-Javadoc)
      * @see org.eclipse.ui.forms.editor.FormPage#createFormContent(org.eclipse.ui.forms.IManagedForm)
@@ -60,26 +142,33 @@ public class SectionlessPage extends FormPage {
         GridLayout layout = new GridLayout();
         form.getBody().setLayout(layout);
 
-        formPart = new OldStyleWrapperFormPart(this, form.getBody(), pageListener);
+        formPart = new GenericFormPart(this, form.getBody());
 
 //        fPropertiesSection.getSection().setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 //        form.getBody().setLayoutData(new GridData(GridData.FILL_BOTH));
 
         managedForm.addPart(formPart);
 
-        if (pageListener.getClass().getName().equals("net.sf.jmoney.bookkeepingPages.EntryListPage")) {
-            form.setText("Account Entries");
-        } else if (pageListener.getClass().getName().equals("net.sf.jmoney.bookkeepingPages.AccountPropertiesPages")) {
-            form.setText("Account Properties");
-        } else {
-        	form.setText("Form for Old Style Page Extension");
-        }
+       	form.setText(formHeader);
     }
 
-	/**
+    /**
 	 * @return
 	 */
 	public Object getSelectedObject() {
 		return fEditor.getSelectedObject();
 	}
+	/**
+	 * 
+	 * @param nodeObject The object representing the node in
+	 * 			the navigation tree.  This may be either a
+	 * 			TreeNode object or an ExtendableObject from
+	 * 			the data model.
+	 * @param parent The parent into which the top level control
+	 * 			is to be created
+	 * @return The control that contains the page specific content
+	 * 			of the page
+	 */
+	public abstract Composite createControl(Object nodeObject, Composite parent);
 }
+

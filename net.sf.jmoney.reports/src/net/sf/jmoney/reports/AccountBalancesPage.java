@@ -55,13 +55,14 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.ui.IMemento;
+import org.eclipse.ui.forms.editor.IFormPage;
 
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 import net.sf.jasperreports.view.JRViewer;
-import net.sf.jmoney.IBookkeepingPageListener;
+import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
 import net.sf.jmoney.model2.CapitalAccount;
@@ -71,12 +72,16 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertyNotFoundException;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.views.NodeEditor;
+import net.sf.jmoney.views.SectionlessPage;
 
 /**
  * @author Nigel Westbury
  */
-public class AccountBalancesPage implements IBookkeepingPageListener {
+public class AccountBalancesPage implements IBookkeepingPage {
 
+    private static final String PAGE_ID = "net.sf.jmoney.reports.accountBalances";
+    
 	public static final int ALL_ENTRIES = 0;
 
 	public static final int CLEARED_ENTRIES = 1;
@@ -150,24 +155,17 @@ public class AccountBalancesPage implements IBookkeepingPageListener {
 	private Date date;
 
 	public void init(IMemento memento) {
-		// No view state to restore
+		// TODO: initialize controls with values last used.
 	}
 
 	public void saveState(IMemento memento) {
-		// No view state to save
-	}
-
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.IBookkeepingPageListener#getPageCount(java.lang.Object)
-	 */
-	public int getPageCount(Object selectedObject) {
-		return 1;
+		// TODO: save current values of controls.
 	}
 
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
-	public BookkeepingPage[] createPages(Object selectedObject, Session session, Composite parent) {
+	private Composite createContent(Session session, Composite parent) {
 		/**
 		 * topLevelControl is a control with grid layout, 
 		 * onto which all sub-controls should be placed.
@@ -243,8 +241,24 @@ public class AccountBalancesPage implements IBookkeepingPageListener {
 
 //		generateButton.setEnabled(true);
 
-			return new BookkeepingPage[] 
-			{ new BookkeepingPage(topLevelControl, "Account Balances Report") };
+		return topLevelControl;
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
+	 */
+	public IFormPage createFormPage(NodeEditor editor) {
+		return new SectionlessPage(
+				editor,
+				PAGE_ID, 
+				"Account Balances Report", 
+				"Account Balances Report") {
+			
+			public Composite createControl(Object nodeObject, Composite parent) {
+				Session session = JMoneyPlugin.getDefault().getSession();
+				return createContent(session, parent);
+			}
+		};
 	}
 
 	private void updateFilter() {

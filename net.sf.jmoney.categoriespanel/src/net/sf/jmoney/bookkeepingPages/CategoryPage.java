@@ -55,9 +55,10 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.forms.editor.IFormPage;
 
 import net.sf.jmoney.Constants;
-import net.sf.jmoney.IBookkeepingPageListener;
+import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.categoriespanel.CategoriesPanelPlugin;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
@@ -66,11 +67,15 @@ import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
+import net.sf.jmoney.views.NodeEditor;
+import net.sf.jmoney.views.SectionlessPage;
 
 /**
  * @author Nigel
  */
-public class CategoryPage implements IBookkeepingPageListener {
+public class CategoryPage implements IBookkeepingPage {
+
+    private static final String PAGE_ID = "net.sf.jmoney.categoriespanel.categories";
 
 	private TreeViewer viewer;
 //	private DrillDownAdapter drillDownAdapter;
@@ -99,115 +104,116 @@ public class CategoryPage implements IBookkeepingPageListener {
 	}
 
 	/* (non-Javadoc)
-	 * @see net.sf.jmoney.IBookkeepingPageListener#getPageCount(java.lang.Object)
-	 */
-	public int getPageCount(Object selectedObject) {
-		return 1;
-	}
-
-	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
-	public BookkeepingPage[] createPages(Object selectedObject, Session session, Composite parent) {
-		this.session = session;
-		
-		/**
-		 * topLevelControl is a control with grid layout, 
-		 * onto which all sub-controls should be placed.
-		 */
-		Composite topLevelControl = new Composite(parent, SWT.NULL);
-		
-		GridLayout layout = new GridLayout();
-		layout.numColumns = 2;
-		topLevelControl.setLayout(layout);
-		
-		viewer = new TreeViewer(topLevelControl, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+	public IFormPage createFormPage(NodeEditor editor) {
+		this.session = JMoneyPlugin.getDefault().getSession();
 
-		GridData gridData = new GridData();
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData.verticalAlignment = GridData.FILL;
-		gridData.grabExcessHorizontalSpace = true;
-		gridData.grabExcessVerticalSpace = true;
-		gridData.horizontalSpan = 2;
-		viewer.getControl().setLayoutData(gridData);
-		
-//		drillDownAdapter = new DrillDownAdapter(viewer);
-		ViewContentProvider contentProvider = new ViewContentProvider();
-		viewer.setContentProvider(contentProvider);
-		viewer.setLabelProvider(new ViewLabelProvider());
-		viewer.setSorter(new NameSorter());
-		
-		viewer.setInput(session);
-		
-		// Listen for changes to the category list.
-		JMoneyPlugin.getDefault().addSessionChangeListener(listener);
-//		viewer.expandAll();
-		
-		// Listen for changes in the selection and update the 
-		// folder view.
-		// TODO: figure out how to get the folder view dynamically.
-		// The static getter is not such a clean interface.
-		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-			public void selectionChanged(SelectionChangedEvent event) {
-				// if the selection is empty clear the label
-				if(event.getSelection().isEmpty()) {
-					selectedAccount = null;
-					nameField.setText("");
-					nameField.setEnabled(false);
-				} else if(event.getSelection() instanceof IStructuredSelection) {
-					IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-					for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-						Object selectedObject = iterator.next();
-						if (selectedObject instanceof IncomeExpenseAccount) {
-							selectedAccount = (IncomeExpenseAccount)selectedObject;
-							// TODO: We should really get a lock on the account object
-							// now.  This ensures we have an edit lock on the account
-							// before the user edits the field.  The field should be
-							// disabled if someone else has the account locked for edit.
-							nameField.setText(selectedAccount.getName());
-							nameField.setEnabled(true);
-						} else {
+		return new SectionlessPage(
+				editor,
+				PAGE_ID, 
+				CategoriesPanelPlugin.getResourceString("NavigationTreeModel.categories"), 
+				"Income and Expense Categories") {
+			
+			public Composite createControl(Object nodeObject, Composite parent) {
+				
+				/**
+				 * topLevelControl is a control with grid layout, 
+				 * onto which all sub-controls should be placed.
+				 */
+				Composite topLevelControl = new Composite(parent, SWT.NULL);
+				
+				GridLayout layout = new GridLayout();
+				layout.numColumns = 2;
+				topLevelControl.setLayout(layout);
+				
+				viewer = new TreeViewer(topLevelControl, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+
+				GridData gridData = new GridData();
+				gridData.horizontalAlignment = GridData.FILL;
+				gridData.verticalAlignment = GridData.FILL;
+				gridData.grabExcessHorizontalSpace = true;
+				gridData.grabExcessVerticalSpace = true;
+				gridData.horizontalSpan = 2;
+				viewer.getControl().setLayoutData(gridData);
+				
+//				drillDownAdapter = new DrillDownAdapter(viewer);
+				ViewContentProvider contentProvider = new ViewContentProvider();
+				viewer.setContentProvider(contentProvider);
+				viewer.setLabelProvider(new ViewLabelProvider());
+				viewer.setSorter(new NameSorter());
+				
+				viewer.setInput(session);
+				
+				// Listen for changes to the category list.
+				JMoneyPlugin.getDefault().addSessionChangeListener(listener);
+//				viewer.expandAll();
+				
+				// Listen for changes in the selection and update the 
+				// folder view.
+				// TODO: figure out how to get the folder view dynamically.
+				// The static getter is not such a clean interface.
+				viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+					public void selectionChanged(SelectionChangedEvent event) {
+						// if the selection is empty clear the label
+						if(event.getSelection().isEmpty()) {
 							selectedAccount = null;
 							nameField.setText("");
 							nameField.setEnabled(false);
+						} else if(event.getSelection() instanceof IStructuredSelection) {
+							IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+							for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
+								Object selectedObject = iterator.next();
+								if (selectedObject instanceof IncomeExpenseAccount) {
+									selectedAccount = (IncomeExpenseAccount)selectedObject;
+									// TODO: We should really get a lock on the account object
+									// now.  This ensures we have an edit lock on the account
+									// before the user edits the field.  The field should be
+									// disabled if someone else has the account locked for edit.
+									nameField.setText(selectedAccount.getName());
+									nameField.setEnabled(true);
+								} else {
+									selectedAccount = null;
+									nameField.setText("");
+									nameField.setEnabled(false);
+								}
+								break;
+							}
 						}
-						break;
 					}
-				}
-			}
-		});
-		
-		nameLabel = new Label(topLevelControl, 0);
-		nameLabel.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.name"));
-		
-		nameField = new Text(topLevelControl, 0);
-		nameField.setText("");
-		nameField.setEnabled(false);
+				});
+				
+				nameLabel = new Label(topLevelControl, 0);
+				nameLabel.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.name"));
+				
+				nameField = new Text(topLevelControl, 0);
+				nameField.setText("");
+				nameField.setEnabled(false);
 
-		nameField.addKeyListener(new KeyAdapter() {
-			public void keyPressed(KeyEvent e) {
-				if (e.keyCode == 13) {
-					updateCategory();
-				}
-			}
-		});
-		nameField.addFocusListener(new FocusAdapter() {
-			public void focusLost(FocusEvent e) {
-				updateCategory();
-			}
-		});
+				nameField.addKeyListener(new KeyAdapter() {
+					public void keyPressed(KeyEvent e) {
+						if (e.keyCode == 13) {
+							updateCategory();
+						}
+					}
+				});
+				nameField.addFocusListener(new FocusAdapter() {
+					public void focusLost(FocusEvent e) {
+						updateCategory();
+					}
+				});
 
-		GridData gridData5 = new GridData();
-		gridData.horizontalAlignment = GridData.FILL;
-		gridData5.grabExcessHorizontalSpace = true;
-		nameField.setLayoutData(gridData5);
+				GridData gridData5 = new GridData();
+				gridData.horizontalAlignment = GridData.FILL;
+				gridData5.grabExcessHorizontalSpace = true;
+				nameField.setLayoutData(gridData5);
 
-		// Set up the context menus.
-		makeActions();
-		hookContextMenu();
-		
-		return new BookkeepingPage[] 
-								   { new BookkeepingPage(topLevelControl, CategoriesPanelPlugin.getResourceString("NavigationTreeModel.categories")) };
+				// Set up the context menus.
+				makeActions();
+				hookContextMenu();
+				
+				return topLevelControl;
+			}};
 	}
 
 	private void updateCategory() {
