@@ -20,7 +20,7 @@ public class GnucashXMLPlugin extends AbstractUIPlugin {
 		super();
 		plugin = this;
 		try {
-			resourceBundle = ResourceBundle.getBundle("net.sf.jmoney.gnucashXML.GnucashXMLPluginResources");
+			resourceBundle = ResourceBundle.getBundle("net.sf.jmoney.gnucashXML.resources.Language");
 		} catch (MissingResourceException x) {
 			resourceBundle = null;
 		}

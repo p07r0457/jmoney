@@ -177,8 +177,8 @@ public class QIF implements FileFormat {
         }
         
         while (true) {
-            MutableTransaction transaction = session.createNewTransaction();
-            Entry entry = transaction.createEntry2();
+            Transaction transaction = session.createTransaction();
+            Entry entry = transaction.createEntry();
             QIFEntry ourEntry = (QIFEntry)entry.getExtension(qifPropertySet);
             
             Account category = null;
@@ -263,13 +263,10 @@ public class QIF implements FileFormat {
                 otherEntry.setAmount(-entry.getAmount());
             }
             
-            transaction.commit();
-//          account.addEntry(entry);
-            
             removeSimilarTransfer(session, entry);
         }
         
-//      account.setEntries(account.getEntries()); // notify listeners
+		session.getChangeManager().applyChanges("import QIF account");
     }
 
 /*    
@@ -594,11 +591,6 @@ public class QIF implements FileFormat {
     }
 
     private CapitalAccount getNewAccount(Session session, String accountName) {
-/*
-    	MutableCapitalAccount account = session.createNewCapitalAccount();
-        account.setName(accountName);
-        return account.commit();
-*/
     	CapitalAccountImpl account = (CapitalAccountImpl)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
         account.setName(accountName);
         return account;
@@ -608,16 +600,10 @@ public class QIF implements FileFormat {
      * Returns the category with the specified name. If it doesn't exist a new
      * category will be created.
      */
-    // TODO: How can we make this thread safe???
     private IncomeExpenseAccount getCategory(String categoryName, Session session) {
         IncomeExpenseAccountImpl category = (IncomeExpenseAccountImpl)
             searchCategory(categoryName, session.getIncomeExpenseAccountIterator());
         if (category == null) {
-/*        	
-            MutableIncomeExpenseAccount mutableCategory = session.createNewIncomeExpenseAccount();
-            mutableCategory.setName(categoryName);
-            category = mutableCategory.commit();
-*/            
         	category = (IncomeExpenseAccountImpl)session.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
         	category.setName(categoryName);
         }
@@ -635,73 +621,12 @@ public class QIF implements FileFormat {
         IncomeExpenseAccount subcategory =
         searchCategory(name, category.getSubAccountIterator());
 
-        // Another thread may have deleted the category.  To be sure,
-        // we should lock the category so that it cannot be deleted.
-        // If, when we attempt to lock it, we find we are already too
-        // late then we continue to create a new category as though
-        // no category was found.
-/* database model is not yet threadsafe
-        try {
-            subcategory.lockExistence();
-        } catch (ObjectDeletedException e) {
-            subcategory = null;
-        }
-*/        
         if (subcategory == null) {
-/*            
-            MutableCategory newSubCategory;
-
-            // Multiple threads cannot be allowed to create a new sub-category
-            // of a given category at the same time because then there would be
-            // no way of ensuring that the sub-category names are unique.
-            
-            // When we get a mutable sub-category for the category, we indicate
-            // that we are holding this short term.  (No user input occurs
-            // while we are holding the object for update).
-            
-            do {
-                try {
-                    newSubCategory = category.createNewSubCategory(false, getClass());
-                } catch (ObjectLockedException e) {
-                    // Someone else is creating a new sub-category to this category
-                    // but has not yet committed it.
-                    // We should wait and retry.
-                    yield();
-                    continue;
-                }
-            } while (false);
-
-            // Search again
-            // because it is possible that the other thread was adding
-            // a category of the same name.  In that situation, we must
-            // be sure we cannot have a race condition which results
-            // in two categories of the same name.
-            subcategory =
-            searchCategory(name, category.getSubCategoryIterator());
-            
-            if (subcategory == null) {
-                newSubCategory.setName(name);
-                subCategory = newSubCategory.commit();
-            } else {
-                newSubCategory.rollback();
-            }
-*/            
-        	
-/*        	
-            MutableIncomeExpenseAccount newSubCategory = category.createNewSubAccount(session);
-            newSubCategory.setName(name);
-            subcategory = newSubCategory.commit();
-*/            
-            IncomeExpenseAccountImpl newSubCategory = (IncomeExpenseAccountImpl)((IncomeExpenseAccountImpl)category).createSubAccount();
-            newSubCategory.setName(name);
+            subcategory = (IncomeExpenseAccountImpl)((IncomeExpenseAccountImpl)category).createSubAccount();
+            ((IncomeExpenseAccountImpl)subcategory).setName(name);
         }
         
         return subcategory;
-        
-        // The category returned by this function may be locked.
-        // This ensures that no one else can delete it.
-        // Once a reference to the category has been committed to
-        // the database, the lock should be removed.
     }
 
     /**

@@ -115,7 +115,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 
 			// set the DTD
 			monitor.beginTask("Reading the file...", 0);   
-			URL urlDTD = this.getClass().getResource("ressources/gnucash.dtd");
+			URL urlDTD = this.getClass().getResource("resources/gnucash.dtd");
 			parser.parseDTD(urlDTD, "gnc-v2");
 			parser.setDoctype(parser.getDoctype());
 			
@@ -135,6 +135,8 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			monitor.beginTask("Importing the transactions...", 3);
 			createTransactions(doc);
 
+			// Commit the changes to the datastore
+			session.getChangeManager().applyChanges(GnucashXMLPlugin.getResourceString("importDescription"));
 		} catch (MalformedURLException e) {
 			System.err.println(e.toString());
 		} catch (IOException e) {
@@ -373,7 +375,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 	 * @throws ParseException
 	 * @author Olivier Faucheux
 	 */
-	private void treatSimpleTransaction(Element propertyElement, MutableTransaction t)
+	private void treatSimpleTransaction(Element propertyElement, Transaction t)
 		throws ParseException {
 
 		String firstAccountName = null;
@@ -444,7 +446,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 	private void treatTransaction(Node transactionElement)
 		throws ParseException {
 
-		    MutableTransaction t = session.createNewTransaction();
+		    Transaction t = session.createTransaction();
 
 			// For each property of the node
 			for (Element propertyElement =
@@ -487,8 +489,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 				}
 				
 			} // Treatement of properties
-			
-			t.commit();
+
 	}
 	
 	
@@ -513,7 +514,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 	 * @throws ParseException
 	 * @author Olivier Faucheux
 	 */
-	private void treatSplittedTransaction(Element propertyElement, MutableTransaction t)
+	private void treatSplittedTransaction(Element propertyElement, Transaction t)
 		throws ParseException {
 
 		String accountName = null;
