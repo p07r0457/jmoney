@@ -71,7 +71,6 @@ public class TextEditor implements IPropertyControl {
      * @see net.sf.jmoney.model2.IPropertyControl#getControl()
      */
     public Control getControl() {
-        propertyControl.dispose();
         return propertyControl;
     }
 
