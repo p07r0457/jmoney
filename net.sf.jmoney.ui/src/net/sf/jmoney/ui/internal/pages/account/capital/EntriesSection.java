@@ -25,11 +25,16 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.Session;
 
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -134,7 +139,7 @@ public class EntriesSection extends SectionPart {
             }
         });
         
-        fViewer.setLabelProvider(new MyLabelProvider());
+        fViewer.setLabelProvider(new MyLabelProvider(fViewer));
         fViewer.setSorter(new mySorter());
     }
 	
@@ -152,14 +157,28 @@ public class EntriesSection extends SectionPart {
             // TODO Auto-generated method stub
         }
 
+        /* 
+         * Returns the elements the table has to display. 
+         * We should give the entry back with other informations the display
+         * needs, for example the saldo.
+         */
         public Object[] getElements(Object parent) {
             CapitalAccount account = (CapitalAccount) parent;
-            Iterator it = account.getEntriesIterator(null);
+
+            List sortedEntries = getEntriesFromAccount(account);
+            sortedEntries = sortChronogicalyEntries(sortedEntries);
 
             // TODO Iterator workaround
             Vector entries = new Vector();
-            while (it.hasNext()) {
-                entries.add(it.next());
+            long saldo = 0;
+            
+            for (int i = 0; i<sortedEntries.size(); i++) {
+                Entry e = (Entry) sortedEntries.get(i);
+                
+                saldo = saldo + e.getAmount();
+                EntryWithInformationForDisplay ewifd = new EntryWithInformationForDisplay (e, saldo);
+                
+                entries.add(ewifd);
             }
             
             return entries.toArray();
@@ -173,15 +192,19 @@ public class EntriesSection extends SectionPart {
 	    
 	    private final DateFormat df;
 	    private final NumberFormat nf;
+	    private final TableViewer attachedViewer;
 	    
-	    public MyLabelProvider() {
+	    public MyLabelProvider(TableViewer attachedViewer) {
 	        df = new SimpleDateFormat("dd.MM.yyyy");
 	        nf = DecimalFormat.getCurrencyInstance();
+	        this.attachedViewer = attachedViewer;
 	    }
 	    
 	    public String getColumnText(Object o, int colnr) {
-	        if (o instanceof Entry) {
-	            Entry e = (Entry) o;
+	        if (o instanceof EntryWithInformationForDisplay) {
+	            Entry e = ((EntryWithInformationForDisplay) o).entry;
+	            long saldo = ((EntryWithInformationForDisplay) o).saldo;
+	            
 	            if (colnr == 1 ) {  
 	                return df.format(e.getTransaction().getDate());
 	            } else if (colnr == 2) { 
@@ -195,7 +218,7 @@ public class EntriesSection extends SectionPart {
 	                   return nf.format( - e.getAmount() / 100); 
 	                   else return new String ();
 	            } else if (colnr == 5) {
-	                return new String ("TODO");  //TODO: How display the saldo?
+	                return nf.format( saldo / 100);
 	            }
 
 	        }
@@ -208,13 +231,58 @@ public class EntriesSection extends SectionPart {
 	
 	private final class mySorter extends ViewerSorter {
 	    public int compare (Viewer notused, Object o1, Object o2) {
-	        if (o1 instanceof Entry && o2 instanceof Entry) {
-	            return ((Entry) o1).getTransaction().getDate()
-	               .compareTo(((Entry) o2).getTransaction().getDate());
+	        if (o1 instanceof EntryWithInformationForDisplay && o2 instanceof EntryWithInformationForDisplay) {
+	            return ((EntryWithInformationForDisplay) o1).entry.getTransaction().getDate()
+	               .compareTo(((EntryWithInformationForDisplay) o2).entry.getTransaction().getDate());
 	        } else {
 	            return super.compare(notused, o1, o2);
 	        }
 	    }
 	}
+	
+	private final class EntryWithInformationForDisplay {
+	    private Entry entry;
+	    private long saldo;
+	    
+	    public EntryWithInformationForDisplay (Entry entry, long saldo) {
+	        this.entry = entry;
+	        this.saldo = saldo;
+	    }
+	}
+	
+	/**
+	 * return the list of the entries of an account, chronlogicaly ordered.
+	 * @param session
+	 * @param a
+	 * @return
+	 */
+	private static List sortChronogicalyEntries(List entries) {
+	    
+
+        Collections.sort(entries, new Comparator() {
+            public int compare(Object a, Object b) {
+                return ((Entry) a).getTransaction().getDate().compareTo(
+                        ((Entry) b).getTransaction().getDate());
+            }
+        });
+
+        return entries;
+    }
+	
+	
+	private static List getEntriesFromAccount (CapitalAccount a) {
+	    
+        List entries = new LinkedList();
+        
+        Iterator it = a.getEntriesIterator(a.getSession());
+        while (it.hasNext()) {
+            entries.add(it.next());
+        }
+
+        return entries;
+	}
+	
+
+
 }
 
