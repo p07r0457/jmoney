@@ -22,14 +22,13 @@
 
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
-import org.eclipse.ui.IMemento;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.forms.editor.IFormPage;
-
-import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.IBookkeepingPage;
+import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.views.NodeEditor;
+
+import org.eclipse.ui.IMemento;
+import org.eclipse.ui.PartInitException;
 
 /**
  * @author Nigel Westbury
