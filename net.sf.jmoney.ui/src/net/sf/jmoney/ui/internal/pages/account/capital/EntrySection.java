@@ -21,10 +21,17 @@
  */
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
+import java.util.Iterator;
+import java.util.Vector;
+
+import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertySet;
+
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -37,42 +44,51 @@ import org.eclipse.ui.forms.widgets.Section;
  */
 public class EntrySection extends SectionPart {
 
-	protected EntriesPage fPage;
-    protected Text fDescription; 
+    protected EntriesPage fPage;
+    protected Text fDescription;
+    protected Vector fPropertyControls = new Vector(); 
 
-	public EntrySection(EntriesPage page, Composite parent) {
+    public EntrySection(EntriesPage page, Composite parent) {
         super(parent, page.getManagedForm().getToolkit(), Section.DESCRIPTION | Section.TITLE_BAR);
+        fPage = page;
         getSection().setText("Selected Entry");
         getSection().setDescription("Edit the currently selected entry.");
-		createClient(page.getManagedForm().getToolkit());
-	}
+        createClient(page.getManagedForm().getToolkit());
+    }
 
-	protected void createClient(FormToolkit toolkit) {
+    /**
+     * Load the values from the given entry into the property controls.
+     *
+     * @param entry Entry whose editable properties are presented to the user
+     */
+    public void update(Entry entry) {
+        for (Iterator iter = fPropertyControls.iterator(); iter.hasNext();) {
+            IPropertyControl control = (IPropertyControl) iter.next();
+            control.load(entry);
+        }
+    }
+
+    protected void createClient(FormToolkit toolkit) {
         Composite container = toolkit.createComposite(getSection());
 
-		GridLayout layout = new GridLayout();
-		layout.numColumns = 10;
-		container.setLayout(layout);
-        
-        toolkit.createLabel(container, "Check:");
-        fDescription = toolkit.createText(container, "");
-        toolkit.createLabel(container, "Date:");
-        fDescription = toolkit.createText(container, "");
-        toolkit.createLabel(container, "Description:");
-        fDescription = toolkit.createText(container, "");
-//        toolkit.createLabel(container, "Debit:");
-//        fDescription = toolkit.createText(container, "");
-//        toolkit.createLabel(container, "Credit:");
-//        fDescription = toolkit.createText(container, "");
-//        toolkit.createLabel(container, "");
-//        toolkit.createLabel(container, "");
-//        toolkit.createLabel(container, "Valuta:");
-//        fDescription = toolkit.createText(container, "");
-//        toolkit.createLabel(container, "Category:");
-//        fDescription = toolkit.createText(container, "");
-//        toolkit.createLabel(container, "Category:");
-//        fDescription = toolkit.createText(container, "");
-        
+        GridLayout layout = new GridLayout();
+        layout.numColumns = 10;
+        container.setLayout(layout);
+
+        PropertySet extendablePropertySet = PropertySet.getPropertySet(Entry.class);
+        for (Iterator iter = extendablePropertySet.getPropertyIterator3(); iter.hasNext();) {
+            PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
+            if (propertyAccessor.isScalar() && propertyAccessor.isEditable()) {
+                Label propertyLabel = new Label(container, 0);
+                propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
+                IPropertyControl propertyControl = propertyAccessor.createPropertyControl(container);
+                toolkit.adapt(propertyLabel, false, false);
+                toolkit.adapt(propertyControl.getControl(), true, true);
+                fPropertyControls.add(propertyControl);
+            }
+
+        }
+
         getSection().setClient(container);
         toolkit.paintBordersFor(container);
         refresh();
