@@ -23,7 +23,6 @@
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableTransaction;
 
 import org.eclipse.jface.viewers.StructuredSelection;
 

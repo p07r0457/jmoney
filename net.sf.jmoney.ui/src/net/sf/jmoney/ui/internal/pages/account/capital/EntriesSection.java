@@ -22,11 +22,9 @@
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
 import java.util.Iterator;
-import java.util.Map;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
-import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -34,6 +32,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableTransaction;
 
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -47,9 +46,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
-
-import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableEntry;
-import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableTransaction;
 
 /**
  * TODO

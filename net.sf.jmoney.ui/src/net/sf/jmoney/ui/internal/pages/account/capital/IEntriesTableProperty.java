@@ -22,14 +22,9 @@
 
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Table;
-
-import net.sf.jmoney.fields.TransactionInfo;
-import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.PropertyAccessor;
+
+import org.eclipse.swt.widgets.Composite;
 
 /**
  * Represents a property that can be displayed in the entries table,
