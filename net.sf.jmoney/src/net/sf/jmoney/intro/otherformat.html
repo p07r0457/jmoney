@@ -1,0 +1,40 @@
+<html><body>
+
+<H2>Extracting Data from an Unsupported File Format</H2>
+<P>
+Even though JMoney has no support for the format of your current
+accounting data, you have a few options:
+
+<UL>
+<LI>Someone may have written a plug-in to support the file format.
+    Try posting a message on the jmoney-user@lists.sourceforge.net mailing list.
+    </LI>
+
+<LI>If you are a developer you may write a plug-in to support your file format.  First you
+	must build JMoney from source (see the JMoney web site for instructions).
+	You should implement an extension to the net.sf.jmoney.serialiseddatastore.filestores
+	extension point.  This extension point required the implementation of two
+	methods: one to read the data from the file and one to write
+	the data out to file.
+    </LI>
+
+<LI>If the accounting software that you currently use supports export to
+	Quicken Interchange Format (QIF) then you can export all your accounts
+	and import them into JMoney by using the Import menu under the File
+	menu.
+    </LI>
+</UL>
+
+<H3>Importing QIF files into JMoney</H3>
+
+Before you can import data into JMoney, you must first create an accounting session.
+To do this, select from the menu File, New.
+<P>
+Now select from the menu Import, QIF format.  The open dialog supports
+multiple file selection so you may select the set of QIF files and they
+will all be imported in one go.  If you prefer to import them in multiple
+goes, that is fine too.  Transactions that have entries in more than one
+account will be correctly merged even if the accounts are imported at
+different times.
+
+</body></html>
