@@ -52,8 +52,10 @@ import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.ui.IMemento;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.editor.IFormPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.eclipse.ui.internal.IWorkbenchConstants;
 
 import com.jasperassistant.designer.viewer.ViewerComposite;
 
@@ -62,6 +64,7 @@ import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.data.JRBeanCollectionDataSource;
 
+import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
@@ -76,9 +79,9 @@ import net.sf.jmoney.views.SectionlessPage;
 /**
  * @author Nigel Westbury
  */
-public class IncomeExpensePage implements IBookkeepingPage {
+public class IncomeExpensePage implements IBookkeepingPageFactory {
 
-    private static final String PAGE_ID = "net.sf.jmoney.reports.incomeAndExpenses";
+    private static final String PAGE_ID = "net.sf.jmoney.reports.incomeAndExpense";
     
 	public static final int THIS_MONTH = 0;
 
@@ -120,14 +123,6 @@ public class IncomeExpensePage implements IBookkeepingPage {
 
 	private Date fromDate;
 	private Date toDate;
-
-	public void init(IMemento memento) {
-		// TODO: initialize controls with values last used.
-	}
-
-	public void saveState(IMemento memento) {
-		// TODO: save current values of controls.
-	}
 
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
@@ -218,18 +213,66 @@ public class IncomeExpensePage implements IBookkeepingPage {
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
-	public IFormPage createFormPage(NodeEditor editor) {
-		return new SectionlessPage(
+	public IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento) {
+		SectionlessPage formPage = new SectionlessPage(
 				editor,
 				PAGE_ID, 
 				"Income & Expense Report", 
 				"Income & Expense Report") {
 			
-			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit) {
+			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
 				Session session = JMoneyPlugin.getDefault().getSession();
-				return createContent(session, parent);
+				Composite control = createContent(session, parent);
+
+				// If a memento is passed, restore the field contents
+				if (memento != null) {
+					Integer periodType = memento.getInteger("period");
+					if (periodType != null) {
+						int periodIndex = periodType.intValue();
+						periodBox.select(periodIndex);
+						if (periodIndex == CUSTOM) {
+							String fromDateString = memento.getString("fromDate");
+							if (fromDateString != null)	{
+								fromDate = dateFormat.parse(fromDateString);
+							}
+							String toDateString = memento.getString("toDate");
+							if (toDateString != null)	{
+								toDate = dateFormat.parse(toDateString);
+							}
+						}
+						
+						updateFromAndTo();
+					}
+					
+					boolean subtotals = new Boolean(memento.getString("subtotals")).booleanValue();
+				}
+				
+				return control;
+			}
+
+			public void saveState(IMemento memento) {
+				int period = periodBox.getSelectionIndex();
+				if (period != -1) {
+					memento.putInteger("period", period);
+					if (period == CUSTOM) {
+						memento.putString("fromDate", fromField.getText());
+						memento.putString("toDate", toField.getText());
+					}
+				}
+				memento.putString(
+						"subtotals",
+						String.valueOf(subtotalsCheckBox.getSelection()));
 			}
 		};
+
+		try {
+			editor.addPage(formPage);
+		} catch (PartInitException e) {
+			JMoneyPlugin.log(e);
+			// TODO: cleanly leave out this page.
+		}
+		
+		return formPage;
 	}
 
 	private void updateFromAndTo() {

@@ -6,12 +6,12 @@
          <meta.schema plugin="net.sf.jmoney" id="pages" name="Bookkeeping Pages"/>
       </appInfo>
       <documentation>
-         Add tabbed pages to the &apos;Folder&apos; view.  
+         Add a page to an editor.  
          A page may be specific to any object type that is listed
          in the navigation view.  When an object is selected in the
-         navigation view, all appropriate tabbed pages that have 
+         navigation view, all appropriate pages that have 
          been added through this extension point will be shown in 
-         the tabbed view.
+         the editor window.
          Filtering may be done not only on the object type, 
          but also on the object id and also may be filtered 
          based on the value of properties in the selected object.
@@ -52,6 +52,14 @@
 
    <element name="pages">
       <complexType>
+         <attribute name="id" type="string">
+            <annotation>
+               <documentation>
+                  An id must be specified and it must be unique
+                  within the set of pages added by a plug-in.
+               </documentation>
+            </annotation>
+         </attribute>
          <attribute name="class" type="string">
             <annotation>
                <documentation>

@@ -47,6 +47,7 @@
          </run>
       </application>
    </extension>
+   
    <extension
          point="org.eclipse.ui.perspectives">
       <perspective
@@ -229,10 +230,19 @@
    </extension>
 
    <extension
+         point="org.eclipse.ui.elementFactories">
+        <factory 
+           id ="net.sf.jmoney.nodeEditor" 
+           class="net.sf.jmoney.views.NodeEditorFactory">
+        </factory> 
+   </extension>
+
+   <extension
          point="net.sf.jmoney.pages">
       <pages
+            class="net.sf.jmoney.bookkeepingPages.AccountPropertiesPages"
             extendable-property-set="net.sf.jmoney.capitalAccount"
-            class="net.sf.jmoney.bookkeepingPages.AccountPropertiesPages">
+            id="accountProperties">
       </pages>
    </extension>
    <extension

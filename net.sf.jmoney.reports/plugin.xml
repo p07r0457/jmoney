@@ -51,8 +51,9 @@
             position="100">
       </node>
       <pages
+            class="net.sf.jmoney.reports.AccountBalancesPage"
             node="net.sf.jmoney.reports.accountBalances"
-            class="net.sf.jmoney.reports.AccountBalancesPage">
+            id="accountBalances">
       </pages>
       <node
             id="incomeExpense"
@@ -62,8 +63,9 @@
             position="200">
       </node>
       <pages
+            class="net.sf.jmoney.reports.IncomeExpensePage"
             node="net.sf.jmoney.reports.incomeExpense"
-            class="net.sf.jmoney.reports.IncomeExpensePage">
+            id="incomeAndExpense">
       </pages>
    </extension>
 
