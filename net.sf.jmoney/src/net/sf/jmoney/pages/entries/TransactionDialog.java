@@ -1,23 +1,8 @@
 /*
+ * Created on Feb 18, 2005
  *
- *  JMoney - A Personal Finance Manager
- *  Copyright (c) 2004 Johann Gyger <jgyger@users.sf.net>
- *
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
+ * TODO To change the template for this generated file go to
+ * Window - Preferences - Java - Code Style - Code Templates
  */
 package net.sf.jmoney.pages.entries;
 
@@ -29,6 +14,7 @@ import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
@@ -51,22 +37,33 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.forms.SectionPart;
-import org.eclipse.ui.forms.widgets.FormToolkit;
-import org.eclipse.ui.forms.widgets.Section;
 
 /**
- * TODO
- * 
- * @author Johann Gyger
+ * @author Nigel
+ *
+ * TODO To change the template for this generated type comment go to
+ * Window - Preferences - Java - Code Style - Code Templates
  */
-public class EntrySection extends SectionPart {
+public class TransactionDialog {
 
     protected static final Color yellow = new Color(Display.getCurrent(), 255, 255, 150);
     protected static final Color green  = new Color(Display.getCurrent(), 200, 255, 200);
 
-    protected EntriesPage fPage;
+    private Shell shell;
+    private Display display;
+
+    public void open() {
+        shell.pack();
+        shell.open();
+        while (!shell.isDisposed()) {
+            if (!display.readAndDispatch()) display.sleep();
+        }
+    }
+Session session;
+    Currency defaultCurrency;
+    
     protected Text fDescription;
     
     protected Entry currentEntry = null;
@@ -97,6 +94,15 @@ public class EntrySection extends SectionPart {
     	private Label creditLabel;
     	private Text creditText;
 
+    	/**
+    	 * Set of all controls in the composite1 area.
+    	 * element: Control (labels and property edit controls)
+    	 */
+//    	private Vector propertyControls = new Vector();
+    	
+        /** element: IPropertyControl */
+//      Vector entryControls = new Vector();
+    	
         /** element: LabelAndEditControlPair */
     	Vector entryPropertyControls = new Vector();
 
@@ -151,15 +157,13 @@ public class EntrySection extends SectionPart {
     		this.entryColor = entryColor;
     		this.entry = null;
     		
-    		FormToolkit toolkit = fPage.getManagedForm().getToolkit();
-
-            composite1 = toolkit.createComposite(entriesArea);
-            composite2 = toolkit.createComposite(entriesArea);
-            composite3 = toolkit.createComposite(entriesArea);
-            composite4 = toolkit.createComposite(entriesArea);
-            composite5 = toolkit.createComposite(entriesArea);
+            composite1 = new Composite(entriesArea, 0);
+            composite2 = new Composite(entriesArea, 0);
+            composite3 = new Composite(entriesArea, 0);
+            composite4 = new Composite(entriesArea, 0);
+            composite5 = new Composite(entriesArea, 0);
              
-            GridLayout layout1 = new GridLayout(6, false);  // was 10 NRW
+            GridLayout layout1 = new GridLayout(10, false);
             composite1.setLayout(layout1);
 
             RowLayout layout2 = new RowLayout();
@@ -184,10 +188,12 @@ public class EntrySection extends SectionPart {
             // If no account is set yet in the entry then use the "Income"
             // and "Expense" labels, because it is more likely that the account
             // will be an income/expense account than a capital account.
-            debitLabel = toolkit.createLabel(composite2, "Income:");
-            debitText = toolkit.createText(composite3, "");
-            creditLabel = toolkit.createLabel(composite4, "Expense:");
-            creditText = toolkit.createText(composite5, "");
+            debitLabel = new Label(composite2, 0);
+            debitLabel.setText("Income:");
+            debitText = new Text(composite3, 0);
+            creditLabel = new Label(composite4, 0);
+            creditLabel.setText("Expense:");
+            creditText = new Text(composite5, 0);
 
             debitLabel.setBackground(entryColor);
             creditLabel.setBackground(entryColor);
@@ -208,7 +214,7 @@ public class EntrySection extends SectionPart {
     							commodityForFormatting = entry.getCommodity();
     						}
     						if (commodityForFormatting == null) {
-    							commodityForFormatting = fPage.getAccount().getCurrency();
+    							commodityForFormatting = defaultCurrency;
     						}
     						
     						String amountString = debitText.getText();
@@ -243,7 +249,7 @@ public class EntrySection extends SectionPart {
     							commodityForFormatting = entry.getCommodity();
     						}
     						if (commodityForFormatting == null) {
-    							commodityForFormatting = fPage.getAccount().getCurrency();
+    							commodityForFormatting = defaultCurrency;
     						}
     						
     						String amountString = creditText.getText();
@@ -269,7 +275,6 @@ public class EntrySection extends SectionPart {
     		// Listen for changes to the account selection.
     		// This changes the set of properties to be shown
     		// for this entry.
-            Session session = fPage.getAccount().getSession();
             session.addSessionChangeListener(new SessionChangeAdapter() {
     			public void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
     				if (propertyAccessor == EntryInfo.getAccountAccessor()
@@ -381,7 +386,7 @@ public class EntrySection extends SectionPart {
 			
 			Commodity commodity = (entry.getAccount() instanceof CapitalAccount) 
 			? entry.getCommodity()
-					: fPage.getAccount().getCurrency();
+					: defaultCurrency;
 			
 			if (commodity != null) {
 				if (amount > 0) {
@@ -414,11 +419,10 @@ public class EntrySection extends SectionPart {
     	 * @param entry
     	 */
     	void addLabelAndEditControl(PropertyAccessor propertyAccessor) {
-    		FormToolkit toolkit = fPage.getManagedForm().getToolkit();
-    		Label propertyLabel = toolkit.createLabel(composite1, propertyAccessor.getShortDescription() + ':');
+    		Label propertyLabel = new Label(composite1, 0);
+    		propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
     		propertyLabel.setBackground(entryColor);
     		IPropertyControl propertyControl = propertyAccessor.createPropertyControl(composite1);
-    		toolkit.adapt(propertyControl.getControl(), true, true);
     		propertyControl.getControl().addFocusListener(
     				new PropertyControlFocusListener(propertyAccessor, propertyControl) {
     					ExtendableObject getExtendableObject() {
@@ -502,8 +506,6 @@ public class EntrySection extends SectionPart {
 				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
 				controlPair.load(entry);
 			}
-			
-	        fPage.getManagedForm().reflow(true);
     	}
     	
 		void dispose() {
@@ -526,25 +528,23 @@ public class EntrySection extends SectionPart {
     /** element: IPropertyControl */
     Vector transactionControls = new Vector();
     
-    public EntrySection(EntriesPage page, Composite parent) {
-        super(parent, page.getManagedForm().getToolkit(), Section.DESCRIPTION | Section.TITLE_BAR);
-        fPage = page;
-        getSection().setText("Selected Entry");
-        getSection().setDescription("Edit the currently selected entry.");
-        createClient(page.getManagedForm().getToolkit());
-    }
-
-    protected void createClient(FormToolkit toolkit) {
-        Composite container = toolkit.createComposite(getSection());
-
+    public TransactionDialog(Shell parent, Session session, Currency defaultCurrency) {
+    	this.session = session;
+    	this.defaultCurrency = defaultCurrency;
+    	
+        this.display = parent.getDisplay();
+        
+        shell = new Shell(parent, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.CLOSE);
+        shell.setLayout(new RowLayout());
+    	
         GridLayout sectionLayout = new GridLayout();
         sectionLayout.numColumns = 1;
         sectionLayout.marginHeight = 0;
         sectionLayout.marginWidth = 0;
-        container.setLayout(sectionLayout);
+        shell.setLayout(sectionLayout);
 
         // Create the transaction property area
-		transactionArea = toolkit.createComposite(container);
+		transactionArea = new Composite(shell, 0);
 		transactionArea.setLayoutData(new GridData(GridData.FILL_BOTH));
 
 		GridLayout transactionAreaLayout = new GridLayout();
@@ -552,7 +552,7 @@ public class EntrySection extends SectionPart {
 		transactionArea.setLayout(transactionAreaLayout);
 
         // Create the entries area
-		entriesArea = toolkit.createComposite(container);
+		entriesArea = new Composite(shell, 0);
 		entriesArea.setLayoutData(new GridData(GridData.FILL_BOTH));
 
 		GridLayout entriesAreaLayout = new GridLayout();
@@ -566,10 +566,10 @@ public class EntrySection extends SectionPart {
         for (Iterator iter = TransactionInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
             final PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
             if (propertyAccessor.isScalar()) {
-        		Label propertyLabel = toolkit.createLabel(transactionArea, propertyAccessor.getShortDescription() + ':');
+        		Label propertyLabel = new Label(transactionArea, 0);
+        		propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
         		IPropertyControl propertyControl = propertyAccessor.createPropertyControl(transactionArea);
         		propertyControl.load(null);
-        		toolkit.adapt(propertyControl.getControl(), true, true);
         		transactionControls.add(propertyControl);
             }
         }
@@ -580,10 +580,11 @@ public class EntrySection extends SectionPart {
         // This row is initially shown with controls that are
         // empty and disabled.
 		selectedEntryControls = new EntryControls(yellow);
-		selectedEntryControls.showDisabledControls(fPage.getAccount());
+		// TODO: Remove this:
+//		selectedEntryControls.showDisabledControls(fPage.getAccount());
 		
     	// Create the button area
-		Composite buttonArea = toolkit.createComposite(container);
+		Composite buttonArea = new Composite(shell, 0);
 		
 		RowLayout layoutOfButtons = new RowLayout();
 		layoutOfButtons.fill = false;
@@ -591,10 +592,10 @@ public class EntrySection extends SectionPart {
 		buttonArea.setLayout(layoutOfButtons);
 		
         // Create the 'add entry' and 'delete entry' buttons.
-        Button addButton = toolkit.createButton(buttonArea, "Split off New Entry", SWT.PUSH);
+        Button addButton = new Button(buttonArea, SWT.PUSH);
+        addButton.setText("Split off New Entry");
         addButton.addSelectionListener(new SelectionAdapter() {
            public void widgetSelected(SelectionEvent event) {
-           		Session session = fPage.getAccount().getSession();
            		Transaction transaction = currentEntry.getTransaction();
            		
            		Entry newEntry = transaction.createEntry();
@@ -628,11 +629,11 @@ public class EntrySection extends SectionPart {
                 createGroupForEntry(newEntry);
 
                 entriesArea.pack(true);
-                fPage.getManagedForm().reflow(true);
            }
         });
 
-        Button deleteButton = toolkit.createButton(buttonArea, "Delete Entries with Zero or Blank Amounts", SWT.PUSH);
+        Button deleteButton = new Button(buttonArea, SWT.PUSH);
+        deleteButton.setText("Delete Entries with Zero or Blank Amounts");
         deleteButton.addSelectionListener(new SelectionAdapter() {
            public void widgetSelected(SelectionEvent event) {
   /*         		
@@ -651,13 +652,6 @@ public class EntrySection extends SectionPart {
 */            
            }
         });
-        
-        // TODO: check if needed
-        container.pack(true);
-        
-        getSection().setClient(container);
-        toolkit.paintBordersFor(container);
-        refresh();
     }
 
     /**
@@ -677,7 +671,6 @@ public class EntrySection extends SectionPart {
         }
         
         // Create the groups for the remaining entries in the transaction.
-		FormToolkit toolkit = fPage.getManagedForm().getToolkit();
         Transaction transaction = currentEntry.getTransaction();
         
         // Dispose all old groups.
@@ -698,7 +691,6 @@ public class EntrySection extends SectionPart {
         }
         
         entriesArea.pack(true);
-        fPage.getManagedForm().reflow(true);
 	}
 	
 	
@@ -706,7 +698,6 @@ public class EntrySection extends SectionPart {
 	 * @param entry
 	 */
 	private void createGroupForEntry(final Entry entry) {
-		FormToolkit toolkit = fPage.getManagedForm().getToolkit();
 
 		final Color entryColor = (entryControlsList.size() % 2) == 0
 		? green 

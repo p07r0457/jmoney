@@ -26,6 +26,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.fields.TransactionInfo;
@@ -41,7 +42,6 @@ import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableTreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
@@ -86,6 +86,14 @@ public class EntriesTree implements IEntriesControl {
     /** Element: EntriesSectionProperty */
     Vector visibleEntryDataObjects = new Vector();
 
+    /**
+	 * Map Entry objects to TableItem objects. This map is needed because an
+	 * efficient refresh of the table requires the TableItem object, whereas the
+	 * listener that listens for changes to the model receives Entry and
+	 * Transaction objects.
+	 */
+	Map entryToContentMap;
+    
 	protected IPropertyControl currentCellPropertyControl = null;
 	
     public EntriesTree(Composite container, EntriesPage page) {
@@ -111,7 +119,7 @@ public class EntriesTree implements IEntriesControl {
             col = new TableColumn(table, SWT.NULL);
             col.setText(entriesSectionProperty.getText());
             
-            tlayout.addColumnData(
+            col.setData("layoutData",
             		new ColumnWeightData(
             				entriesSectionProperty.getWeight(), 
 							entriesSectionProperty.getMinimumWidth()));
@@ -121,17 +129,17 @@ public class EntriesTree implements IEntriesControl {
 
         col = new TableColumn(table, SWT.RIGHT);
         col.setText("Debit");
-        tlayout.addColumnData(new ColumnWeightData(2, 70));
+        col.setData("layoutData", new ColumnWeightData(2, 70));
         visibleEntryDataObjects.add(fPage.debitColumnManager);
 
         col = new TableColumn(table, SWT.RIGHT);
         col.setText("Credit");
-        tlayout.addColumnData(new ColumnWeightData(2, 70));
+        col.setData("layoutData", new ColumnWeightData(2, 70));
         visibleEntryDataObjects.add(fPage.creditColumnManager);
 
         col = new TableColumn(table, SWT.RIGHT);
         col.setText("Balance");
-        tlayout.addColumnData(new ColumnWeightData(2, 70));
+        col.setData("layoutData", new ColumnWeightData(2, 70));
         visibleEntryDataObjects.add(fPage.balanceColumnManager);
 
         
@@ -335,9 +343,17 @@ public class EntriesTree implements IEntriesControl {
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.ui.internal.pages.account.capital.IEntriesControl#setSelection(org.eclipse.jface.viewers.StructuredSelection)
 	 */
-	public void setSelection(StructuredSelection selection) {
+	public void setSelection(Entry entryInAccount, Entry entryToSelect) {
 		// TODO Auto-generated method stub
 
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.ui.internal.pages.account.capital.IEntriesControl#getSelectedEntry()
+	 */
+	public Entry getSelectedEntryInAccount() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	/* (non-Javadoc)
@@ -586,7 +602,7 @@ public class EntriesTree implements IEntriesControl {
             Iterator it = account
 				.getSortedEntries(TransactionInfo.getDateAccessor(), false)
 				.iterator();
-            fPage.entryToContentMap = new HashMap();
+            entryToContentMap = new HashMap();
             Vector d_entries = new Vector();
             long saldo = account.getStartBalance();
             int sequenceNumber = 0;
@@ -594,7 +610,7 @@ public class EntriesTree implements IEntriesControl {
                 Entry e = (Entry) it.next();
                 saldo = saldo + e.getAmount();
                 DisplayableTransaction de = new DisplayableTransaction(e, saldo, sequenceNumber++);
-                fPage.entryToContentMap.put(e, de);
+                entryToContentMap.put(e, de);
                 d_entries.add(de);
              }
             
@@ -686,5 +702,53 @@ public class EntriesTree implements IEntriesControl {
 	 */
 	public void dispose() {
 		fTableTree.dispose();
-	}	
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesControl#addTransaction(net.sf.jmoney.model2.Entry)
+	 */
+	public void addEntryInAccount(Entry entry) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesControl#updateEntry(net.sf.jmoney.model2.Entry)
+	 */
+	public void updateEntry(Entry entryInAccount, Entry entryChanged) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesControl#removeTransaction(net.sf.jmoney.model2.Entry)
+	 */
+	public void removeEntryInAccount(Entry entry) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesControl#updateTransaction(net.sf.jmoney.model2.Entry)
+	 */
+	public void updateTransaction(Entry entry) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesControl#addEntry(net.sf.jmoney.model2.Entry, net.sf.jmoney.model2.Entry)
+	 */
+	public void addEntry(Entry entryInAccount, Entry newEntry) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesControl#removeEntry(net.sf.jmoney.model2.Entry, net.sf.jmoney.model2.Entry)
+	 */
+	public void removeEntry(Entry entryInAccount, Entry oldEntry) {
+		// TODO Auto-generated method stub
+		
+	}
 }

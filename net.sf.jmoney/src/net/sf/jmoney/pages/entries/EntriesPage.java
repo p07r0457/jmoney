@@ -22,7 +22,6 @@
 package net.sf.jmoney.pages.entries;
 
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.IBookkeepingPage;
@@ -65,22 +64,13 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 
 	protected NodeEditor fEditor;
 
-	/** Element: EntriesSectionProperty */
+	/** Element: IEntriesTableProperty */
 	protected Vector allEntryDataObjects = new Vector();
 
 	IEntriesTableProperty debitColumnManager;
 	IEntriesTableProperty creditColumnManager;
 	IEntriesTableProperty balanceColumnManager;
 	
-    /** 
-     * Map Entry objects to DisplayableTransaction objects.
-     * This map is needed because an efficient refresh of the table required the
-     * object used to provide content, ie the DisplayableTransaction object,
-     * whereas the listener that listens for changes to the model receives Entry and Transaction
-     * objects.
-     */
-	Map entryToContentMap;
-    
     protected EntriesFilterSection fEntriesFilterSection;
     protected EntriesSection fEntriesSection;
 	protected EntrySection fEntrySection;

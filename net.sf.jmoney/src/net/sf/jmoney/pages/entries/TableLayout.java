@@ -12,9 +12,6 @@
  *******************************************************************************/
 package net.sf.jmoney.pages.entries;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eclipse.jface.util.Assert;
 import org.eclipse.jface.viewers.ColumnLayoutData;
 import org.eclipse.jface.viewers.ColumnPixelData;
@@ -27,15 +24,13 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 /**
  * A layout for a table.
- * Call <code>addColumnData</code> to add columns.
+ * <P>
+ * <code>TableColumn</code> objects have no setLayoutData method.
+ * Therefore layout data must be set for each column using setData
+ * with a string of "layoutData".  Every column must have layout data
+ * set and the layout data must be of type ColumnLayoutData.
  */
 public class TableLayout extends Layout {
-	
-	/**
-	 * The list of column layout data (element type:
-	 *  <code>ColumnLayoutData</code>).
-	 */
-	private List columns = new ArrayList();
 	
 	/**
 	 * Widths of columns as set by the previous call to <code>layout</code>
@@ -54,15 +49,6 @@ public class TableLayout extends Layout {
 	public TableLayout() {
 	}
 	
-	/**
-	 * Adds a new column of data to this table layout.
-	 *
-	 * @param data the column layout data
-	 */
-	public void addColumnData(ColumnLayoutData data) {
-		columns.add(data);
-	}
-
 	/* (non-Javadoc)
 	 * Method declared on Layout.
 	 */
@@ -78,9 +64,8 @@ public class TableLayout extends Layout {
 		table.setLayout(this);
 		
 		int width = 0;
-		int size = columns.size();
-		for (int i = 0; i < size; ++i) {
-			ColumnLayoutData layoutData = (ColumnLayoutData) columns.get(i);
+		for (int i = 0; i < table.getColumnCount(); i++) {
+			ColumnLayoutData layoutData = (ColumnLayoutData) table.getColumn(i).getData("layoutData");
 			if (layoutData instanceof ColumnPixelData) {
 				ColumnPixelData col = (ColumnPixelData) layoutData;
 				width += col.width;
@@ -122,7 +107,7 @@ public class TableLayout extends Layout {
 			return;
 		
 		TableColumn[] tableColumns = table.getColumns();
-		int size = Math.min(columns.size(), tableColumns.length);
+		int size = tableColumns.length;
 		
 		// If widths is not null then it will contain the column widths
 		// last calculated by this method.  If these do not exactly match
@@ -133,8 +118,8 @@ public class TableLayout extends Layout {
 		if (widths != null && widths.length == size) {
 			for (int i = 0; i < size; i++) {
 				if (tableColumns[i].getWidth() != widths[i]) {
-					userOverride = true;
-					return;
+//nrw					userOverride = true;
+//nrw					return;
 				}
 			}
 		}
@@ -152,7 +137,7 @@ public class TableLayout extends Layout {
 		
 		// First calculate the minimum space
 		for (int i = 0; i < size; i++) {
-			ColumnLayoutData col = (ColumnLayoutData) columns.get(i);
+			ColumnLayoutData col = (ColumnLayoutData) table.getColumn(i).getData("layoutData");
 			if (col instanceof ColumnWeightData) {
 				ColumnWeightData cw = (ColumnWeightData) col;
 				widths[i] = cw.minimumWidth;
@@ -169,7 +154,7 @@ public class TableLayout extends Layout {
 			int rest = width - fixedWidth;
 			int totalDistributed = 0;
 			for (int i = 0; i < size; i++) {
-				ColumnLayoutData col = (ColumnLayoutData) columns.get(i);
+				ColumnLayoutData col = (ColumnLayoutData) table.getColumn(i).getData("layoutData");
 				if (col instanceof ColumnWeightData) {
 					ColumnWeightData cw = (ColumnWeightData) col;
 					int pixels = cw.weight * rest / totalWeight;
@@ -185,7 +170,7 @@ public class TableLayout extends Layout {
 			// number of columns with non-zero weights.
 			int diff = rest - totalDistributed;
 			for (int i = 0; i < size && diff > 0; i++) {
-				ColumnLayoutData col = (ColumnLayoutData) columns.get(i);
+				ColumnLayoutData col = (ColumnLayoutData) table.getColumn(i).getData("layoutData");
 				if (col instanceof ColumnWeightData) {
 					++widths[i];
 					--diff;
