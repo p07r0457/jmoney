@@ -27,6 +27,7 @@ this extension point.
    <element name="extension">
       <complexType>
          <sequence>
+            <element ref="propagator" minOccurs="1" maxOccurs="unbounded"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>

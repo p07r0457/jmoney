@@ -13,6 +13,8 @@
    <element name="extension">
       <complexType>
          <sequence>
+            <element ref="extendable-property-set"/>
+            <element ref="extension-property-set"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -89,9 +91,9 @@
          <attribute name="extendable-property-set" type="string">
             <annotation>
                <documentation>
- 					The fully qualified id of the property set
- 					to which this extension property set is being added.
- 					This id must be the id of an extendable property set.
+                  The fully qualified id of the property set
+      to which this extension property set is being added.
+      This id must be the id of an extendable property set.
                </documentation>
             </annotation>
          </attribute>
