@@ -60,7 +60,7 @@ public class LineChartPage implements IBookkeepingPage {
     private Tree tree;
     private Text fromDate, toDate;
     private final DateFormat df;
-    private Button chkDaily, chkAverage30, chkAverage120;
+    private Button chkDaily, chkAverage30, chkAverage120, chkAverage365;
     private Button chkWithSubaccounts;
     private Button radSaldoAbsolut, radSaldoRelativ, radMouvement;
     
@@ -132,6 +132,9 @@ public class LineChartPage implements IBookkeepingPage {
 
 		chkAverage120 = new Button(actionGroup, SWT.CHECK);
 		chkAverage120.setText("Average 120 days");
+
+		chkAverage365 = new Button(actionGroup, SWT.CHECK);
+		chkAverage365.setText("Average 365 days");
 
 		radSaldoAbsolut = new Button(typeGroup, SWT.RADIO);
 		radSaldoAbsolut.setText("Saldo (absolut)");
@@ -218,6 +221,7 @@ private void createChart() {
     params.setDaily(chkDaily.getSelection());
     params.setAverage30(chkAverage30.getSelection());
     params.setAverage120(chkAverage120.getSelection());
+    params.setAverage365(chkAverage365.getSelection());
     params.setWithSubaccounts(chkWithSubaccounts.getSelection());
     
     if (radMouvement.getSelection()) 	params.setType(LineChartParameters.MOUVEMENT);

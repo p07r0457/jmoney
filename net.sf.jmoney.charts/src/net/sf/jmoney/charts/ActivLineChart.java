@@ -71,14 +71,20 @@ public class ActivLineChart extends LineChart {
             TimeSeries mav;
             
             if (param.average30) {
-                mav = MovingAverage.createMovingAverage(timeSeries, accountFullName + " (30 days)", 30, 0);
+                mav = MovingAverage.createMovingAverage(timeSeries, accountFullName + " (30 days)", 30, 30);
                 data.addSeries(mav);
             }
 
             if (param.average120) {
-                mav = MovingAverage.createMovingAverage(timeSeries, accountFullName + " (120 days)", 120, 0);
+                mav = MovingAverage.createMovingAverage(timeSeries, accountFullName + " (120 days)", 120, 120);
                 data.addSeries(mav);
             }
+
+            if (param.average365) {
+                mav = MovingAverage.createMovingAverage(timeSeries, accountFullName + " (365 days)", 365, 365);
+                data.addSeries(mav);
+            }
+
         }
     }
     
@@ -114,14 +120,15 @@ public class ActivLineChart extends LineChart {
         
         Hashtable saldos = new Hashtable();
         Iterator it = sortedEntries.iterator();
-        long saldo = 0; 
+        long saldo = 0;
+        Day dateOfPreviousMouvement = null; 
         while (it.hasNext()) {
             e = (Entry) it.next();
+            Day date = new Day (e.getTransaction().getDate());
 
             if (params.type == LineChartParameters.MOUVEMENT) {
-                // When calculating the MOUVEMENT, we have to sum the entries on a day only
-                // here, only the las entry is sumed. TODO: correct it
-                saldo = 0;
+                // When calculating the MOUVEMENT, we have to sum the entries on a day only.
+                if (date.compareTo(dateOfPreviousMouvement) != 0) saldo = 0;
             	saldo = saldo + e.getAmount();
             } else  if (params.type == LineChartParameters.SALDO_ABSOLUT) {
                 // Saldo absolut: the entry is added to the last result
@@ -133,8 +140,8 @@ public class ActivLineChart extends LineChart {
                 	saldo = saldo + e.getAmount();
             }
 
-            Day date = new Day (e.getTransaction().getDate());
             saldos.put(date, new Long(saldo));
+            dateOfPreviousMouvement = date;
         }
         
         // Now, enter them in the table
