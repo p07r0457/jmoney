@@ -22,9 +22,11 @@
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
 import java.util.Iterator;
+import java.util.Map;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
+import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -45,6 +47,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
+
+import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableEntry;
+import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableTransaction;
 
 /**
  * TODO
@@ -194,8 +199,11 @@ public class EntriesSection extends SectionPart {
 			public void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 				if (extendableObject instanceof Entry) {
 					Entry entry = (Entry)extendableObject;
+					
 					if (fPage.getAccount().equals(entry.getAccount())) {
-						refresh();
+						DisplayableTransaction de = (DisplayableTransaction)fPage.entryToContentMap.get(entry);
+						assert (de != null);
+				    	fEntriesControl.update(de);
 					}
 					
 					// If the changed entry is in a transaction with
@@ -203,8 +211,25 @@ public class EntriesSection extends SectionPart {
 					// for the table then we also need to refresh.
 					if (entry.getTransaction().hasTwoEntries()
 							&& entry.getTransaction().getOther(entry).getAccount() == fPage.getAccount()) {
-						refresh();
+						Entry otherEntry = entry.getTransaction().getOther(entry);
+						DisplayableTransaction de = (DisplayableTransaction)fPage.entryToContentMap.get(otherEntry); 
+						assert (de != null);
+				    	fEntriesControl.update(de);
 					}
+					
+					// If there are more than two entries in the transaction then each
+					// entry will have its own row.  Update the entry row.
+					// If the changed entry is in a transaction with
+					// two entries, and the other entry is in the account
+					// for the table then we also need to refresh.
+					if (entry.getTransaction().hasMoreThanTwoEntries()
+							&& entry.getTransaction().getOther(entry).getAccount() == fPage.getAccount()) {
+				    	fEntriesControl.update(entry);
+					}
+					
+					// TODO: there are more cases that affect the table view:
+					// Account name changes etc.
+					
 				}
 				
 				if (extendableObject instanceof Transaction) {
@@ -212,7 +237,9 @@ public class EntriesSection extends SectionPart {
 					for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
 						Entry entry = (Entry)iter.next();
 						if (entry.getAccount().equals(fPage.getAccount())) {
-							refresh();
+							DisplayableTransaction de = (DisplayableTransaction)fPage.entryToContentMap.get(entry); 
+							assert (de != null);
+					    	fEntriesControl.update(de);
 						}
 					}
 				}

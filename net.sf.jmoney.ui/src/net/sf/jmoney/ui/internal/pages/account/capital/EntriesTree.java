@@ -25,6 +25,7 @@ package net.sf.jmoney.ui.internal.pages.account.capital;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -32,7 +33,12 @@ import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableItem;
+import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableNewEmptyEntry;
+import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableTransaction;
 
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -52,16 +58,24 @@ import org.eclipse.swt.custom.TableTreeEditor;
 import org.eclipse.swt.custom.TableTreeItem;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 
@@ -85,7 +99,12 @@ public class EntriesTree implements IEntriesControl {
     protected TableTreeViewer fViewer;
     protected EntryLabelProvider fLabelProvider;
     
-	public EntriesTree(Composite container, EntriesPage page) {
+    /** Element: EntriesSectionProperty */
+    Vector visibleEntryDataObjects = new Vector();
+
+	protected IPropertyControl currentCellPropertyControl = null;
+	
+    public EntriesTree(Composite container, EntriesPage page) {
 		this.fPage = page;
 		FormToolkit toolkit = page.getEditor().getToolkit();
     	
@@ -105,7 +124,7 @@ public class EntriesTree implements IEntriesControl {
         TableLayout tlayout = new TableLayout();
         
         for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext(); ) {
-        	EntriesSectionProperty entriesSectionProperty = (EntriesSectionProperty)iter.next();
+        	IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)iter.next();
         	
             col = new TableColumn(table, SWT.NULL);
             col.setText(entriesSectionProperty.getText());
@@ -116,20 +135,24 @@ public class EntriesTree implements IEntriesControl {
             		new ColumnWeightData(
             				entriesSectionProperty.getWeight(), 
 							entriesSectionProperty.getMinimumWidth()));
-//            col.pack();
+            
+            visibleEntryDataObjects.add(entriesSectionProperty);
         }
 
         col = new TableColumn(table, SWT.RIGHT);
         col.setText("Debit");
         tlayout.addColumnData(new ColumnWeightData(2, 70));
+        visibleEntryDataObjects.add(fPage.debitColumnManager);
 
         col = new TableColumn(table, SWT.RIGHT);
         col.setText("Credit");
         tlayout.addColumnData(new ColumnWeightData(2, 70));
+        visibleEntryDataObjects.add(fPage.creditColumnManager);
 
         col = new TableColumn(table, SWT.RIGHT);
         col.setText("Balance");
         tlayout.addColumnData(new ColumnWeightData(2, 70));
+        visibleEntryDataObjects.add(fPage.balanceColumnManager);
 
         
         table.setLayout(tlayout);
@@ -142,18 +165,11 @@ public class EntriesTree implements IEntriesControl {
         fViewer.setLabelProvider(fLabelProvider);
         fViewer.setSorter(new EntrySorter());
 
-        String[] columnProperties = new String[fPage.allEntryDataObjects.size() + 3];
-        {
-        int i = 0;
-        for ( ; i < fPage.allEntryDataObjects.size(); i++) {
-        	columnProperties[i] = ((EntriesSectionProperty)fPage.allEntryDataObjects.get(i)).getId();
-        }
-        columnProperties[i] = "debit";
-        columnProperties[i+1] = "credit";
-        columnProperties[i+2] = "balance";
+        String[] columnProperties = new String[visibleEntryDataObjects.size()];
+        for (int i = 0; i < fPage.allEntryDataObjects.size(); i++) {
+        	columnProperties[i] = ((IEntriesTableProperty)visibleEntryDataObjects.get(i)).getId();
         }
         fViewer.setColumnProperties(columnProperties);
-//        fViewer2.setCellModifier(new CellModifier());
 
         fViewer.addSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
@@ -208,18 +224,45 @@ public class EntriesTree implements IEntriesControl {
     	editor.horizontalAlignment = SWT.LEFT;
     	editor.grabHorizontal = true;
     	editor.minimumWidth = 50;
-    	// editing the second column
-    	final int EDITABLECOLUMN = 1;
     	
-    	fTableTree.addSelectionListener(new SelectionAdapter() {
-    		public void widgetSelected(SelectionEvent e) {
+    	    	fTableTree.getTable().addMouseListener(new MouseAdapter() {
+/*    	    		
+    	    		public void handleEvent(Event e) {
     			// Clean up any previous editor control
     			Control oldEditor = editor.getEditor();
     			if (oldEditor != null) oldEditor.dispose();
     			
-    			// Identify the selected row
-    			TableTreeItem item = (TableTreeItem)e.item;
-    			if (item == null) return;
+    			Rectangle clientArea = fTableTree.getTable().getClientArea ();
+    			Point pt = new Point (e.x, e.y);
+    			//int index = fTableTree.getTable().getTopIndex ();
+    			//while (index < fTableTree.getTable().getItemCount ()) {
+    				boolean visible = false;
+
+    				// Identify the selected row
+        			TableTreeItem item2 = (TableTreeItem)e.item;
+        			if (item2 == null) return;
+        			
+    				final TableTreeItem item = fTableTree.getItem (pt);
+    				for (int i=0; i<fTableTree.getTable().getColumnCount (); i++) {
+    					Rectangle rect = item.getBounds (i);
+    					if (rect.contains (pt)) {
+    						final int column = i;
+    						final Text text = new Text (fTableTree.getTable(), SWT.NONE);
+    			
+    						editor.setEditor (text, item, i);
+    						text.setText (item.getText (i));
+    						text.selectAll ();
+    						text.setFocus ();
+    						return;
+    					}
+    					if (!visible && rect.intersects (clientArea)) {
+    						visible = true;
+    					}
+    				}
+    				if (!visible) return;
+    				//index++;
+    			//}
+    			
     			
     			// The control that will be the editor must be a child of the Table
     			Text newEditor = new Text(fTableTree.getTable(), SWT.NONE);
@@ -234,6 +277,59 @@ public class EntriesTree implements IEntriesControl {
     			newEditor.setFocus();
     			editor.setEditor(newEditor, item, EDITABLECOLUMN);
     		}
+*/
+					public void mouseDoubleClick(MouseEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+
+					public void mouseDown(MouseEvent e) {
+		    			// Clean up any previous editor control
+		    			Control oldEditor = editor.getEditor();
+		    			if (oldEditor != null) oldEditor.dispose();
+		    			
+		    			Rectangle clientArea = fTableTree.getClientArea ();
+		    			Point pt = new Point (e.x, e.y);
+
+		    			boolean visible = false;
+		    			
+		    			final TableTreeItem item = fTableTree.getItem (pt);
+		    			for (int i=0; i<fTableTree.getTable().getColumnCount (); i++) {
+		    				Rectangle rect = item.getBounds (i);
+		    				if (rect.contains (pt)) {
+		    					final int column = i;
+		    					
+		    					IEntriesTableProperty entryData = (IEntriesTableProperty)fPage.allEntryDataObjects.get(column);
+		    					currentCellPropertyControl = entryData.createAndLoadPropertyControl(fTableTree.getTable(), item.getData());
+		    					// If a control was created (i.e. this was not a
+		    					// non-editable column such as the balance column)
+		    					if (currentCellPropertyControl != null) {
+		    						Control c = currentCellPropertyControl.getControl();
+		    						editor.setEditor (c, item, i);
+		    						c.setFocus ();
+		    					}
+		    					
+		    					return;
+		    				}
+
+		    				if (!visible && rect.intersects (clientArea)) {
+		    					visible = true;
+		    				}
+		    			}
+		    			if (!visible) return;
+		    			
+		    			// The control that will be the editor must be a child of the Table
+/*
+		    			Text newEditor = new Text(fTableTree.getTable(), SWT.NONE);
+		    			newEditor.setText(item.getText(EDITABLECOLUMN));
+		    			newEditor.addModifyListener(new ModifyListener() {
+		    				public void modifyText(ModifyEvent e) {
+		    					Text text = (Text)editor.getEditor();
+		    					editor.getItem().setText(EDITABLECOLUMN, text.getText());
+		    				}
+		    			});
+*/		    			
+					}
     	});
     	
         fTableTree.pack(true);
@@ -440,13 +536,15 @@ public class EntriesTree implements IEntriesControl {
             Iterator it = account
 				.getSortedEntries(TransactionInfo.getDateAccessor(), false)
 				.iterator();
+            fPage.entryToContentMap = new HashMap();
             Vector d_entries = new Vector();
             long saldo = account.getStartBalance();
             while (it.hasNext()) {
                 Entry e = (Entry) it.next();
                 saldo = saldo + e.getAmount();
-                d_entries.add(new DisplayableTransaction(e, saldo));
-                
+                DisplayableTransaction de = new DisplayableTransaction(e, saldo);
+                fPage.entryToContentMap.put(e, de);
+                d_entries.add(de);
              }
             
             // an empty line to have the possibility to enter a new entry
@@ -505,33 +603,9 @@ public class EntriesTree implements IEntriesControl {
         public String getColumnText(Object obj, int index) {
             if (obj instanceof DisplayableItem && ! (obj instanceof DisplayableNewEmptyEntry)) {
         		DisplayableItem de = (DisplayableItem) obj;
-        		
-        		if (index < fPage.allEntryDataObjects.size()) {
-        			EntriesSectionProperty entryData = (EntriesSectionProperty)fPage.allEntryDataObjects.get(index);
-
-        			// If this is an entry line, display only the entry properties, no
-            		// transaction properties.
-        			if (!(de instanceof DisplayableTransaction)
-        					&& entryData.getPropertyAccessor().getExtendablePropertySet() == TransactionInfo.getPropertySet()) {
-        				return "";
-        			} else {
-        				return entryData.getValueFormattedForTable(de.getEntry());
-        			}
-        		} else {
-        			Commodity c = fPage.getAccount().getCurrency();
-        			switch (index - fPage.allEntryDataObjects.size()) {
-        			case 0: // debit
-        				return de.getEntry().getAmount() < 0 ? c.format(-de.getEntry().getAmount()) : "";
-        			case 1: // credit
-        				return de.getEntry().getAmount() > 0 ? c.format(de.getEntry().getAmount()) : "";
-        			case 2: // balance
-        			    if (de instanceof DisplayableTransaction) {
-        			        return c.format(((DisplayableTransaction)de).balance);
-        			    } else { 
-        			        return "";
-        			    }
-        			}
-            	}
+        	
+       			IEntriesTableProperty entryData = (IEntriesTableProperty)visibleEntryDataObjects.get(index);
+   				return entryData.getValueFormattedForTable(de);
             }
 
             return ""; //$NON-NLS-1$
@@ -547,6 +621,13 @@ public class EntriesTree implements IEntriesControl {
 	 */
 	public void refresh() {
 		fViewer.refresh();
+	}	
+
+	/**
+	 * Update the viewer.
+	 */
+	public void update(Object element) {
+		fViewer.update(element, null);
 	}	
 
 	/* (non-Javadoc)

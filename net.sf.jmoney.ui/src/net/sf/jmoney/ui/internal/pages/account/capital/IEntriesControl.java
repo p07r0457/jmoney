@@ -23,6 +23,7 @@
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableTransaction;
 
 import org.eclipse.jface.viewers.StructuredSelection;
 
@@ -55,5 +56,11 @@ public interface IEntriesControl {
 	 * The view should be fully refreshed. 
 	 */
 	void refresh();
+
+	/**
+	 * @param de
+	 * @param properties
+	 */
+	void update(Object element);
 
 }

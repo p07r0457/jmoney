@@ -87,7 +87,7 @@ public class EntriesFilterSection extends SectionPart {
         int i = 0;
         filterTypes[i++] = JMoneyUIPlugin.getResourceString("EntryFilter.entry"); 
         for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext(); ) {
-        	EntriesSectionProperty entriesSectionProperty = (EntriesSectionProperty)iter.next();
+        	IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)iter.next();
             filterTypes[i++] = entriesSectionProperty.getText();
         }
         

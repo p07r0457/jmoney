@@ -137,7 +137,7 @@ public class EntriesFilter implements Constants {
 			// 'Entry' selected.  Entry matches if any of the properties
 			// match.
 	        for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext(); ) {
-	        	EntriesSectionProperty entriesSectionProperty = (EntriesSectionProperty)iter.next();
+	        	IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)iter.next();
 	            String text = entriesSectionProperty.getValueFormattedForTable(entry);
 	            if (containsPattern(text)) {
 	            	return true;
@@ -145,7 +145,7 @@ public class EntriesFilter implements Constants {
 	        }
 			return false;
 		} else {
-        	EntriesSectionProperty entriesSectionProperty = (EntriesSectionProperty)fPage.allEntryDataObjects.get(filterType-1);
+        	IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)fPage.allEntryDataObjects.get(filterType-1);
             String text = entriesSectionProperty.getValueFormattedForTable(entry);
             return containsPattern(text);
 		}

@@ -23,21 +23,32 @@
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
 import java.text.DecimalFormat;
+import java.text.MessageFormat;
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
+import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTree.DisplayableEntry;
+import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTree.DisplayableTransaction;
 
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnWeightData;
+import org.eclipse.jface.viewers.DialogCellEditor;
 import org.eclipse.jface.viewers.ICellModifier;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
@@ -52,16 +63,42 @@ import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.custom.TableTreeEditor;
+import org.eclipse.swt.custom.TableTreeItem;
+import org.eclipse.swt.events.KeyAdapter;
+import org.eclipse.swt.events.KeyEvent;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.MouseAdapter;
+import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Item;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.widgets.FormToolkit;
+import org.vafada.swtcalendar.SWTCalendar;
+import org.vafada.swtcalendar.SWTCalendarEvent;
+import org.vafada.swtcalendar.SWTCalendarListener;
+
+import demo.SWTCalendarDialog;
 
 /**
  * An implementation of IEntriesControl that displays the entries
@@ -89,8 +126,12 @@ public class EntriesTable implements IEntriesControl {
 	protected EntriesPage fPage;
 	protected Table fTable;
     protected TableViewer fViewer;
-    protected EntryLabelProvider fLabelProvider;
 
+    /** Element: EntriesSectionProperty */
+    Vector visibleEntryDataObjects = new Vector();
+    
+	protected IPropertyControl currentCellPropertyControl = null;
+	
 	/**
 	 * @param container
 	 * @param page
@@ -107,9 +148,8 @@ public class EntriesTable implements IEntriesControl {
         TableColumn col;
         TableLayout tlayout = new TableLayout();
         
-
         for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext(); ) {
-        	EntriesSectionProperty entriesSectionProperty = (EntriesSectionProperty)iter.next();
+        	IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)iter.next();
         	
             col = new TableColumn(fTable, SWT.NULL);
             col.setText(entriesSectionProperty.getText());
@@ -117,19 +157,24 @@ public class EntriesTable implements IEntriesControl {
             		new ColumnWeightData(
             				entriesSectionProperty.getWeight(), 
 							entriesSectionProperty.getMinimumWidth()));
+            
+            visibleEntryDataObjects.add(entriesSectionProperty);
         }
 
         col = new TableColumn(fTable, SWT.RIGHT);
         col.setText("Debit");
         tlayout.addColumnData(new ColumnWeightData(2, 70));
-
+        visibleEntryDataObjects.add(fPage.debitColumnManager);
+        
         col = new TableColumn(fTable, SWT.RIGHT);
         col.setText("Credit");
         tlayout.addColumnData(new ColumnWeightData(2, 70));
+        visibleEntryDataObjects.add(fPage.creditColumnManager);
 
         col = new TableColumn(fTable, SWT.RIGHT);
         col.setText("Balance");
         tlayout.addColumnData(new ColumnWeightData(2, 70));
+        visibleEntryDataObjects.add(fPage.balanceColumnManager);
 
         fTable.setLayout(tlayout);
         fTable.setHeaderVisible(true);
@@ -137,29 +182,33 @@ public class EntriesTable implements IEntriesControl {
         
         fViewer = new TableViewer(fTable);
         fViewer.setContentProvider(new ContentProvider());
-        fLabelProvider = new EntryLabelProvider();
-        fViewer.setLabelProvider(fLabelProvider);
+        fViewer.setLabelProvider(new EntryLabelProvider());
         fViewer.setSorter(new EntrySorter());
 
-        String[] columnProperties = new String[fPage.allEntryDataObjects.size() + 3];
-        CellEditor[] cellEditors = new CellEditor[fPage.allEntryDataObjects.size() + 3];
+        String[] columnProperties = new String[visibleEntryDataObjects.size()];
+        //CellEditor[] cellEditors = new CellEditor[fPage.allEntryDataObjects.size() + 3];
         {
         int i = 0;
-        for ( ; i < fPage.allEntryDataObjects.size(); i++) {
-        	columnProperties[i] = ((EntriesSectionProperty)fPage.allEntryDataObjects.get(i)).getId();
-        	cellEditors[i] = ((EntriesSectionProperty)fPage.allEntryDataObjects.get(i)).getPropertyAccessor().createCellEditor(fTable);
-
+        for ( ; i < visibleEntryDataObjects.size(); i++) {
+        	columnProperties[i] = ((IEntriesTableProperty)visibleEntryDataObjects.get(i)).getId();
+        	//cellEditors[i] = ((EntriesSectionProperty)fPage.allEntryDataObjects.get(i)).getPropertyAccessor().createCellEditor(fTable);
         }
+        
+/*        
         columnProperties[i] = "debit";
-        cellEditors[i] = new TextCellEditor(fTable);
+        //cellEditors[i] = new TextCellEditor(fTable);
+        //cellEditors[i] = null;
         columnProperties[i+1] = "credit";
-        cellEditors[i+1] = new TextCellEditor(fTable);
+        //cellEditors[i+1] = new TextCellEditor(fTable);
+        //cellEditors[i+ 1] = null;
         columnProperties[i+2] = "balance";
-        cellEditors[i+2] = null;
+        //cellEditors[i+2] = null;
+         * 
+         */
         }
         fViewer.setColumnProperties(columnProperties);
-        fViewer.setCellEditors(cellEditors);
-        fViewer.setCellModifier(new CellModifier());
+        //fViewer.setCellEditors(cellEditors);
+        //fViewer.setCellModifier(new CellModifier());
 
         fViewer.addSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
@@ -207,6 +256,65 @@ public class EntriesTable implements IEntriesControl {
         
 		fTable.setTopIndex(fTable.getItemCount()-5);
 
+        // Create the editor.
+        
+    	final TableEditor editor = new TableEditor(fTable);
+    	
+    	//The editor must have the same size as the cell and must
+    	//not be any smaller than 50 pixels.
+    	editor.horizontalAlignment = SWT.LEFT;
+    	editor.grabHorizontal = true;
+    	editor.minimumWidth = 50;
+
+    	fTable.addMouseListener(new MouseAdapter() {
+    		public void mouseDown(MouseEvent e) {
+    			// Clean up any previous editor control
+    			Control oldEditor = editor.getEditor();
+    			if (oldEditor != null) {
+    				// Save the value from the edit control.
+    				// TODO: figure out the sequence of events that lead to
+    				// these values being null and clean this up.
+    				try {
+    				currentCellPropertyControl.save();
+    				oldEditor.dispose();
+    				currentCellPropertyControl = null;
+    				} catch (NullPointerException e2) {
+    					// Should not happen.
+    				}
+    			}
+    			
+    			Rectangle clientArea = fTable.getClientArea ();
+    			Point pt = new Point (e.x, e.y);
+    			boolean visible = false;
+    			
+    			final TableItem item = fTable.getItem (pt);
+    			for (int i=0; i<fTable.getColumnCount (); i++) {
+    				Rectangle rect = item.getBounds (i);
+    				if (rect.contains (pt)) {
+    					final int column = i;
+    					
+    					IEntriesTableProperty entryData = (IEntriesTableProperty)visibleEntryDataObjects.get(column);
+    					currentCellPropertyControl = entryData.createAndLoadPropertyControl(fTable, item.getData());
+    					// If a control was created (i.e. this was not a
+    					// non-editable column such as the balance column)
+    					if (currentCellPropertyControl != null) {
+    						Control c = currentCellPropertyControl.getControl();
+    						editor.setEditor (c, item, i);
+    						c.setFocus ();
+    					}
+    					
+    					return;
+    				}
+    				if (!visible && rect.intersects (clientArea)) {
+    					visible = true;
+    				}
+    			}
+    			if (!visible) return;
+    		}
+    	});
+    	
+		
+		
 //		fTable.pack();
 	}
 
@@ -367,7 +475,7 @@ public class EntriesTable implements IEntriesControl {
     class DisplayableTransaction extends DisplayableItem { 
         
         private Entry entry;
-        private long balance;
+        long balance;
 
         public DisplayableTransaction(Entry entry, long saldo) {
             this.entry = entry;
@@ -418,12 +526,15 @@ public class EntriesTable implements IEntriesControl {
             Iterator it = account
 				.getSortedEntries(TransactionInfo.getDateAccessor(), false)
 				.iterator();
+            fPage.entryToContentMap = new HashMap();
             Vector d_entries = new Vector();
             long saldo = account.getStartBalance();
             while (it.hasNext()) {
                 Entry e = (Entry) it.next();
                 saldo = saldo + e.getAmount();
-                d_entries.add(new DisplayableTransaction(e, saldo));
+                DisplayableTransaction de = new DisplayableTransaction(e, saldo);
+                fPage.entryToContentMap.put(e, de);
+                d_entries.add(de);
                 if (e.getTransaction().hasMoreThanTwoEntries()) {
                     // Case of an splitted entry. We display the transaction on the first line
                     // and the entries of the transaction on the following ones.
@@ -449,32 +560,8 @@ public class EntriesTable implements IEntriesControl {
             if (obj instanceof DisplayableItem && ! (obj instanceof DisplayableNewEmptyEntry)) {
         		DisplayableItem de = (DisplayableItem) obj;
         	
-        		if (index < fPage.allEntryDataObjects.size()) {
-        			EntriesSectionProperty entryData = (EntriesSectionProperty)fPage.allEntryDataObjects.get(index);
-
-        			// If this is an entry line, display only the entry properties, no
-            		// transaction properties.
-        			if (!(de instanceof DisplayableTransaction)
-        					&& entryData.getPropertyAccessor().getExtendablePropertySet() == TransactionInfo.getPropertySet()) {
-        				return "";
-        			} else {
-        				return entryData.getValueFormattedForTable(de.getEntry());
-        			}
-        		} else {
-        			Commodity c = fPage.getAccount().getCurrency();
-        			switch (index - fPage.allEntryDataObjects.size()) {
-        			case 0: // debit
-        				return de.getEntry().getAmount() < 0 ? c.format(-de.getEntry().getAmount()) : "";
-        			case 1: // credit
-        				return de.getEntry().getAmount() > 0 ? c.format(de.getEntry().getAmount()) : "";
-        			case 2: // balance
-        			    if (de instanceof DisplayableTransaction) {
-        			        return c.format(((DisplayableTransaction)de).balance);
-        			    } else { 
-        			        return "";
-        			    }
-        			}
-            	}
+       			IEntriesTableProperty entryData = (IEntriesTableProperty)visibleEntryDataObjects.get(index);
+   				return entryData.getValueFormattedForTable(de);
             }
 
             return ""; //$NON-NLS-1$
@@ -484,7 +571,7 @@ public class EntriesTable implements IEntriesControl {
             return null;
         }
     }
-
+/*
     class CellModifier implements ICellModifier {
         public boolean canModify(Object element, String property) {
             return !property.equals("balance");
@@ -567,12 +654,19 @@ public class EntriesTable implements IEntriesControl {
     		}
         }
     }
-
+*/
 	/**
 	 * Refresh the viewer.
 	 */
 	public void refresh() {
 		fViewer.refresh();
+	}	
+
+	/**
+	 * Update the viewer.
+	 */
+	public void update(Object element) {
+		fViewer.update(element, null);
 	}	
 
 	/* (non-Javadoc)

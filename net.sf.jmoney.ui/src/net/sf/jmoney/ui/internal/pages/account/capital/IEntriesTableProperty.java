@@ -22,8 +22,13 @@
 
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Table;
+
+import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
 
 /**
@@ -35,47 +40,32 @@ import net.sf.jmoney.model2.PropertyAccessor;
  * 
  * @author Nigel Westbury
  */
-abstract class EntriesSectionProperty {
-	private PropertyAccessor accessor;
-	
-	EntriesSectionProperty(PropertyAccessor accessor) {
-		this.accessor = accessor;
-	}
+interface IEntriesTableProperty {
+	String getText();
 
-	public String getText() {
-		return accessor.getShortDescription();
-	}
+	String getId();
 
-	public String getId() {
-		return accessor.getName();
-	}
+	int getWeight();
 
-	public int getWeight() {
-		return accessor.getWeight();
-	}
-
-	public int getMinimumWidth() {
-		return accessor.getMinimumWidth();
-	}
+	int getMinimumWidth();
 
 	/**
 	 * @param entry
 	 * @return
 	 */
-	public String getValueFormattedForTable(Entry entry) {
-		ExtendableObject object = getObjectContainingProperty(entry);
-		if (object == null) {
-			return "";
-		} else {
-			return accessor.formatValueForTable(object);
-		}
-	}
+	String getValueFormattedForTable(Object o);
 
-	public PropertyAccessor getPropertyAccessor() {
-		return accessor;
-	}
+	/**
+	 * @param table
+	 * @param data
+	 * @return
+	 */
+	IPropertyControl createAndLoadPropertyControl(Composite parent, Object data);
 
-	abstract ExtendableObject getObjectContainingProperty(Entry entry);
+	/**
+	 * @return
+	 */
+	boolean isTransactionProperty();
 }
 
 
