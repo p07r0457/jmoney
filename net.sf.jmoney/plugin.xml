@@ -110,7 +110,6 @@
                label="Preferences..."
                icon="icons/jlfgr/preferences16.gif"
                class="net.sf.jmoney.actions.PreferencesAction"
-               class2="org.eclipse.ui.internal.OpenPreferencesAction"
                tooltip="user preferences"
                menubarPath="options/sampleGroup"
                toolbarPath="optionsGroup"
