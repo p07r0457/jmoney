@@ -52,7 +52,6 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.MissingResourceException;
-import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.Vector;
@@ -72,6 +71,9 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.BankAccountInfo;
+import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
+import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Session;
@@ -154,8 +156,13 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	
 	/**
 	 * Read session from file.
+	 * <P>
+	 * The opened session is set as the current open JMoney session. 
+	 * If no session can be opened then an appropriate message is
+	 * displayed to the user and the previous session, if any, is
+	 * left open.
 	 */
-	public SessionManager readSession(final File sessionFile, final IWorkbenchWindow window) {
+	public void readSession(final File sessionFile, final IWorkbenchWindow window) {
 		try {
 			if (sessionFile.length() < 500000) {
 				// If the file is smaller than 500K then it is
@@ -196,20 +203,23 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				
 				EventLoopProgressMonitor monitor = new EventLoopProgressMonitor(new NullProgressMonitor());
 			}
+
+			// Actually, result should not be null here, as otherwise
+			// an exception would have been thrown.
+			// TODO: cleanup
+			if (result != null) {
+	            JMoneyPlugin.getDefault().setSessionManager(result);
+	        }
 		} catch (InterruptedException e) {
 			// If the user inturrupted the read then no error message is displayed.
 			// Currently this cannot happen because the cancel button is not
 			// enabled in the progress dialog, but if the cancel button is enabled
-			// then we return null which will result in no session being opened and
-			// the previous session, if any, will remain open.
-			result = null;
+			// then we do nothing here, leaving the previous session, if any, open.
 		} catch (Throwable ex) {
 			System.err.println(ex.toString());
 			ex.printStackTrace(System.err);
 			fileReadError(sessionFile, window);
-			result = null;
 		}
-		return result;
 	}
 	
 	/**
@@ -667,7 +677,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				throw new RuntimeException("internal error");
 			}
 			
-			Vector constructorProperties = propertySet.getConstructorProperties();
+			Collection constructorProperties = propertySet.getConstructorProperties();
 			int numberOfParameters = constructorProperties.size();
 			if (!propertySet.isExtension()) {
 				numberOfParameters += 3;
@@ -1545,7 +1555,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			Object obj = node.getUserObject();
 			if (obj instanceof net.sf.jmoney.model.SimpleCategory) {
 				net.sf.jmoney.model.SimpleCategory oldCategory = (net.sf.jmoney.model.SimpleCategory) obj;
-				IncomeExpenseAccount newCategory = (IncomeExpenseAccount)newSession.createAccount(JMoneyPlugin.getIncomeExpenseAccountPropertySet());
+				IncomeExpenseAccount newCategory = (IncomeExpenseAccount)newSession.createAccount(IncomeExpenseAccountInfo.getPropertySet());
 				copyCategoryProperties(oldCategory, newCategory, accountMap);
 			}
 		}
@@ -1555,7 +1565,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		for (Iterator iter = oldAccounts.iterator(); iter.hasNext(); ) {
 			net.sf.jmoney.model.Account oldAccount = (net.sf.jmoney.model.Account)iter.next();
 			
-			CapitalAccount newAccount = (CapitalAccount)newSession.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
+			BankAccount newAccount = (BankAccount)newSession.createAccount(BankAccountInfo.getPropertySet());
 			newAccount.setName(oldAccount.getName());
 			newAccount.setAbbreviation(oldAccount.getAbbrevation());
 			newAccount.setAccountNumber(oldAccount.getAccountNumber());

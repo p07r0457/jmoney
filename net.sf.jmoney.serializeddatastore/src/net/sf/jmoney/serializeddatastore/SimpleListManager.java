@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.serializeddatastore;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -49,15 +50,9 @@ public class SimpleListManager extends Vector implements IListManager {
 	 * @see net.sf.jmoney.model2.IListManager#createNewElement(net.sf.jmoney.model2.ExtendableObject, net.sf.jmoney.model2.PropertySet, java.lang.Object[], net.sf.jmoney.model2.ExtensionProperties[])
 	 */
 	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet/*, Object[] values, ExtensionProperties[] extensionProperties */) {
-		Vector constructorProperties = propertySet.getConstructorProperties();
+		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
-		int numberOfParameters = 0;
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			if (propertyAccessor.isList()) {
-				numberOfParameters++;
-			}
-		}
+		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {
 			numberOfParameters += 3;
 		}
@@ -82,9 +77,7 @@ public class SimpleListManager extends Vector implements IListManager {
 		// Add a list manager for each list property in the object.
 		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			if (propertyAccessor.isList()) {
-				constructorParameters[index++] = new SimpleListManager(sessionManager);
-			}
+			constructorParameters[index++] = new SimpleListManager(sessionManager);
 		}
 		
 		// We can now create the object.
