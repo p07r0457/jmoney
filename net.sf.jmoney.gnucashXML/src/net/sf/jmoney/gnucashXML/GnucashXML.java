@@ -204,7 +204,8 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 	 */
 	private void createAccounts(XMLDocument doc) {
 		Node node; // First child of <gnc-v2>
-		Hashtable childParent = new Hashtable();
+		final Hashtable childParent = new Hashtable();
+		List accountToRecreate = new LinkedList();
 
 		// For each account of the file
 		for (node = doc.getFirstChild().getNextSibling().getFirstChild().getNextSibling().getFirstChild();
@@ -246,8 +247,10 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 					CapitalAccountImpl account = (CapitalAccountImpl)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());;
 					account.setName(accountName);
 					accountsGUIDTable.put(accountGUID, account);
-					if (parentGUID != null)
-						childParent.put(accountGUID, parentGUID);
+					if (parentGUID != null) {
+					    childParent.put(accountGUID, parentGUID);
+					    accountToRecreate.add(accountGUID);
+					}
 
 
 				} else {
@@ -258,11 +261,37 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 
 		}
 
-		// Now link childs and parents
-		// System.out.println("Liaisons Parents-Childs");
-		Enumeration e = childParent.keys();
-		while (e.hasMoreElements()) {
-			String childGUID = (String) e.nextElement();
+		// Now link childs and parents. We have to recreate the parents before the children.
+		// Therefore, first sort the list
+		Collections.sort(accountToRecreate, new Comparator () { 
+		    public int compare(Object a, Object b) {
+		        
+		        String GUIDA = (String) a;
+		        String GUIDB = (String) b;
+		        String GUIDParentOfA = (String) childParent.get(GUIDA);
+		        String GUIDParentOfB = (String) childParent.get(GUIDB);
+		        
+		        // case we compare two root-accounts
+		        if (GUIDParentOfA == null & GUIDParentOfB == null) return 0;
+		        
+		        // case A is root account
+		        if (GUIDParentOfA == null) return compare(GUIDA, GUIDParentOfB);
+		        
+		        // case B is root account
+		        if (GUIDParentOfB == null) return compare(GUIDParentOfA, GUIDB);
+
+		        // case neither A nor B are root accounts
+		        if (GUIDA.equals(GUIDParentOfB)) return -1;
+		        if (GUIDB.equals(GUIDParentOfA)) return 1;
+		        
+		        return compare (GUIDParentOfA, GUIDB);
+		    }
+		});
+		
+		// Now recreate some accounts.
+		Iterator e = accountToRecreate.iterator();
+		while (e.hasNext()) {
+			String childGUID = (String) e.next();
 			String parentGUID = (String) childParent.get(childGUID);
 			String childName;
 			//System.out.println("childGUID:" + childGUID);
@@ -274,17 +303,14 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			CapitalAccountImpl newChild = (CapitalAccountImpl) parent.createSubAccount();
 			accountsGUIDTable.remove(childGUID);
 			accountsGUIDTable.put(childGUID, newChild);
-
 			
 			newChild.setName(child.getName());
-			
-			// child.setParent(parent);
-			// System.out.println("Level of >" + child.getName() + "<:" + child.getLevel());
+			System.out.println("Child: " + newChild + ", Parent: " + parent);
 		}
 
 	}
 
-
+	
   /**
    * Add all the transactions of the XML-File.
    * A transaction looks as following:
@@ -500,7 +526,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
     };
     
     private Account getAccountFromGUID(String GUID) {
-        System.out.println("Looking for an account with the GUID " + GUID);
+        // System.out.println("Looking for an account with the GUID " + GUID);
         return (Account) accountsGUIDTable.get(GUID);
     }
 
