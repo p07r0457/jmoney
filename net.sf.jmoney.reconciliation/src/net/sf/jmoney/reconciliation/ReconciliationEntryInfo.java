@@ -22,8 +22,9 @@
 
 package net.sf.jmoney.reconciliation;
 
-import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.fields.TextControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
+import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
@@ -45,7 +46,8 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 	}
 	
 	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
-		statusAccessor = propertyRegistrar.addProperty("status", ReconciliationPlugin.getResourceString("Entry.statusShort"), 2.0, null, StatusEditor.class, null);
+	    // TODO Provide a PropertyControlFactory.
+		statusAccessor = propertyRegistrar.addProperty("status", ReconciliationPlugin.getResourceString("Entry.statusShort"), 2.0, null, null, null);
 	}
 
 	/**
