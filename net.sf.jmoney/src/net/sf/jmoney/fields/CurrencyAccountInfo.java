@@ -67,8 +67,8 @@ public class CurrencyAccountInfo implements IPropertySetInfo {
 		IPropertyControlFactory amountControlFactory = new AmountInCurrencyAccountControlFactory();
 		IPropertyControlFactory currencyControlFactory = new CurrencyControlFactory();
 		
-		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), 15.0, currencyControlFactory, null);
-		startBalanceAccessor = propertyRegistrar.addProperty("startBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.startBalance"), 15.0, amountControlFactory, null);
+		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), 3, 20, currencyControlFactory, null);
+		startBalanceAccessor = propertyRegistrar.addProperty("startBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.startBalance"), 2, 15, amountControlFactory, null);
 
 		propertyRegistrar.setDerivableInfo();
 	}

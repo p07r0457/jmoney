@@ -129,9 +129,21 @@ public interface PropertyAccessor {
 
     /**
      * The width weighting to be used when this property is displayed
-     * in a table or a grid.
+     * in a table or a grid.  If the width available for the table
+     * or grid is more than the sum of the minimum widths then the
+     * excess width is distributed across the columns.
+     * This weight indicates how much the property
+     * can benefit from being given excess width.  For example
+     * a property containing a description can benefit, whereas
+     * a property containing a date cannot. 
      */
-    double getWidth();
+    int getWeight();
+
+    /**
+     * The minimum width to be used when this property is displayed
+     * in a table or a grid.  
+     */
+    int getMinimumWidth();
 
     /**
      * Indicates whether users are able to sort views based on this property.

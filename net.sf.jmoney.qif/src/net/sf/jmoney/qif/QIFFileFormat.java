@@ -58,7 +58,7 @@ import net.sf.jmoney.qif.format.QIFSplitTransaction;
  * This class is responsible for loading and exporting Quicken interchange
  * format files.
  * 
- * This class is designed to work best when importing complete accounnts.
+ * This class is designed to work best when importing complete accounts.
  * 
  * When dealing with transfers between two bank accounts this QIFFileFormat
  * first creates a single-entry transaction in the originating account. If a

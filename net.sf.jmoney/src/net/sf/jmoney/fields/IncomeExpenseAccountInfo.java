@@ -64,8 +64,8 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
 		subAccountAccessor = propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccount.class, null);
 
-		multiCurrencyAccessor = propertyRegistrar.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.multiCurrency"), 5.0, new CheckBoxControlFactory(), null);
-		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), 15.0, new CurrencyControlFactory(), multiCurrencyAccessor.getFalseValueDependency());
+		multiCurrencyAccessor = propertyRegistrar.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.multiCurrency"), 0, 10, new CheckBoxControlFactory(), null);
+		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), 2, 20, new CurrencyControlFactory(), multiCurrencyAccessor.getFalseValueDependency());
 		
 		// We should define something for the implied enumerated value
 		// that is controlled by the derived class type.  This has not

@@ -314,8 +314,8 @@ public class PropertySet {
 						}
 						
 						// TODO change all shortDescription to displayName
-						public PropertyAccessor addProperty(String name, String displayName, double width, IPropertyControlFactory propertyControlFactory, IPropertyDependency propertyDependency) {
-							PropertyAccessor accessor = new PropertyAccessorImpl(PropertySet.this, name, displayName, width, propertyControlFactory, propertyDependency);
+						public PropertyAccessor addProperty(String name, String displayName, int weight, int minimumWidth, IPropertyControlFactory propertyControlFactory, IPropertyDependency propertyDependency) {
+							PropertyAccessor accessor = new PropertyAccessorImpl(PropertySet.this, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency);
 							properties.add(accessor);
 							return accessor;
 						}

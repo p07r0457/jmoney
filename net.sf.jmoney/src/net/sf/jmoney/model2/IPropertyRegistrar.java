@@ -77,14 +77,16 @@ public interface IPropertyRegistrar {
 	/**
 	 * @param name
 	 * @param displayName localized description of the property
-	 * @param width
+	 * @param weight
+	 * @param minimumWidth
 	 * @param currencyControlFactory
 	 * @param propertyDependency
 	 */
 	PropertyAccessor addProperty(
 			String name, 
 			String displayName, 
-			double width, 
+			int weight,
+			int minimumWidth,
 			IPropertyControlFactory controlFactory,
 			IPropertyDependency propertyDependency);
 	

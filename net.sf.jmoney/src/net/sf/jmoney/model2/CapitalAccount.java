@@ -23,6 +23,7 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -381,17 +382,31 @@ public abstract class CapitalAccount extends Account {
     		
     		long [] totals = new long[numberOfMonths];
 
+    		Calendar calendar = Calendar.getInstance();
+
+    		
+    		
     		// calculate the sum for each month
     		int year = startYear;
     		int month = startMonth; 
             for (int i=0; i<numberOfMonths; i++) {
-            	Date startOfMonth = new Date(year - 1900, month, 1);
-            	month++;
+    			calendar.clear();
+    			calendar.setLenient(false);
+    			calendar.set(year, month - 1, 1, 0, 0, 0);
+    			Date startOfMonth = calendar.getTime();
+            	// Date startOfMonth = new Date(year - 1900, month, 1);
+
+    			month++;
             	if (month == 13) {
             		year++;
             		month = 1;
             	}
-            	Date endOfMonth = new Date(year - 1900, month, 1);
+
+    			calendar.clear();
+    			calendar.setLenient(false);
+    			calendar.set(year, month - 1, 1, 0, 0, 0);
+    			Date endOfMonth = calendar.getTime();
+            	// Date endOfMonth = new Date(year - 1900, month, 1);
             	
             	int total = 0;
             	for (Iterator iter = entriesList.iterator(); iter.hasNext(); ) {

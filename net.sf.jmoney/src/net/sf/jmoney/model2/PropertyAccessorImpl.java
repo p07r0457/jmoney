@@ -45,7 +45,10 @@ public class PropertyAccessorImpl implements PropertyAccessor {
     private String shortDescription;
     
     // Applies only if scalar property
-    private double width;    
+    private int weight;    
+    
+    // Applies only if scalar property
+    private int minimumWidth;    
     
     // Applies only if scalar property
     private boolean sortable;
@@ -92,11 +95,12 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 
 	private IPropertyDependency dependency;
 	
-    public PropertyAccessorImpl(PropertySet propertySet, String localName, String shortDescription, double width, IPropertyControlFactory propertyControlFactory, IPropertyDependency propertyDependency) {
+    public PropertyAccessorImpl(PropertySet propertySet, String localName, String shortDescription, int weight, int minimumWidth, IPropertyControlFactory propertyControlFactory, IPropertyDependency propertyDependency) {
     	this.propertySet = propertySet;
         this.localName = localName;
         this.shortDescription = shortDescription;
-        this.width = width;
+        this.weight = weight;
+        this.minimumWidth = minimumWidth;
         this.sortable = true;
         this.propertyControlFactory = propertyControlFactory;
         this.dependency = propertyDependency;
@@ -431,8 +435,12 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         return shortDescription;
     }
     
-    public double getWidth() {
-        return width;
+    public int getWeight() {
+        return weight;
+    }
+
+    public int getMinimumWidth() {
+        return minimumWidth;
     }
 
     public boolean isSortable() {
