@@ -49,6 +49,23 @@ public abstract class ExtensionObject {
     	return baseObject.getObjectKey();
 	}
 	
+	/**
+	 * Two or more instantiated objects may represent the same object
+	 * in the datastore.  Such objects should be considered
+	 * the same.  Therefore this method overrides the default
+	 * implementation that is based on Java identity.
+	 * <P>
+	 * This method also considers two objects to be the same if either
+	 * or both of the objects are extension objects and the underlying
+	 * objects are the same.
+	 * <P>
+	 * @return true if the two objects represent the same object
+	 * 		in the datastore, false otherwise.
+	 */
+	public boolean equals(Object object) {
+    	return baseObject.equals(object);
+	}
+	
 	public ExtensionObject getExtension(PropertySet propertySet) {
     	return baseObject.getExtension(propertySet);
     }

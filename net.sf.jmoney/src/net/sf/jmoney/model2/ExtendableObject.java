@@ -130,9 +130,16 @@ public abstract class ExtendableObject {
 	 * the same.  Therefore this method overrides the default
 	 * implementation that is based on Java identity.
 	 * <P>
+	 * This method also considers two objects to be the same if the
+	 * other object is an extension object to an object that is
+	 * the same object.
+	 * <P>
 	 * @return true if the two objects represent the same object
 	 * 		in the datastore, false otherwise.
 	 */
+	// If we had an interface with the getObjectKey() method that
+	// both ExtendableObject and ExtensionObject implemented, then
+	// this method would be simpler.
 	public boolean equals(Object object) {
 		// Two objects represent the same object if and only if
 		// the keys from which they were created are the same.
@@ -141,6 +148,9 @@ public abstract class ExtendableObject {
 		if (object instanceof ExtendableObject) {
 			ExtendableObject extendableObject = (ExtendableObject)object;
 			return getObjectKey().equals(extendableObject.getObjectKey());
+		} else if (object instanceof ExtensionObject) {
+			ExtensionObject extensionObject = (ExtensionObject)object;
+			return getObjectKey().equals(extensionObject.getObjectKey());
 		} else {
 			return false;
 		}
@@ -214,6 +224,25 @@ public abstract class ExtendableObject {
 	 * own index information.  However, it makes things simple and efficient.
 	 */
 	public void registerWithIndexes() {
+	}
+	
+	/**
+	 * Get the extension that implements the properties needed by a given
+	 * plug-in.
+	 * 
+	 * @param alwaysReturnNonNullExtensions
+	 *            If true then the return value is guaranteed to be non-null. If false
+	 *            then the return value may be null, indicating that all properties in
+	 *            the extension have default values.
+	 * @return
+	 */
+	// TODO: clean this up.
+	public ExtensionObject getExtension(PropertySet propertySet, boolean alwaysReturnNonNullExtensions) {
+		boolean saveFlag = this.alwaysReturnNonNullExtensions;
+		this.alwaysReturnNonNullExtensions = alwaysReturnNonNullExtensions;
+		ExtensionObject result = getExtension(propertySet);
+		this.alwaysReturnNonNullExtensions = saveFlag;
+		return result;
 	}
 	
 	/**
