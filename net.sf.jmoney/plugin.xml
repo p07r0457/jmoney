@@ -258,9 +258,14 @@
    <extension
          point="net.sf.jmoney.pages">
       <pages
-            class="net.sf.jmoney.bookkeepingPages.AccountPropertiesPages"
+            class="net.sf.jmoney.pages.accountProperties.AccountPropertiesPage"
             extendable-property-set="net.sf.jmoney.capitalAccount"
             id="accountProperties">
+      </pages>
+      <pages
+            class="net.sf.jmoney.pages.entries.EntriesBookkeepingPage"
+            extendable-property-set="net.sf.jmoney.currencyAccount"
+            id="entries">
       </pages>
    </extension>
    <extension
