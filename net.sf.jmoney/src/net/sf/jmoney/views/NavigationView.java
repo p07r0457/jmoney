@@ -105,24 +105,30 @@ public class NavigationView extends ViewPart {
 		private Image image;
 		private TreeNode parent;
 		private String parentId;
+		private int position;
 		protected ArrayList children = null;
 		private Vector pageListeners = new Vector(); // element: IBookkeepingPage
-		
-		public TreeNode(String name, Image image, TreeNode parent) {
+
+		public TreeNode(String name, Image image, TreeNode parent, int position) {
 			this.name = name;
 			this.image = image;
 			this.parent = parent;
+			this.position = position;
 		}
-		public TreeNode(String name, Image image, String parentId) {
+		public TreeNode(String name, Image image, String parentId, int position) {
 			this.name = name;
 			this.image = image;
 			this.parentId = parentId;
+			this.position = position;
 		}
 		public String getName() {
 			return name;
 		}
 		public TreeNode getParent() {
 			return parent;
+		}
+		int getPosition() {
+			return position;
 		}
 		public String toString() {
 			return getName();
@@ -147,7 +153,7 @@ public class NavigationView extends ViewPart {
 			if (children == null) {
 				return new Object[0];
 			} else {
-				return children.toArray(new Object[children.size()]);
+				return children.toArray();
 			}
 		}
 		public boolean hasChildren() {
@@ -188,7 +194,7 @@ public class NavigationView extends ViewPart {
 	// a list of accounts or sub-accounts?
 	class AccountsNode extends TreeNode {
 		public AccountsNode(String name, Image image, TreeNode parent) {
-			super(name, image, parent);
+			super(name, image, parent, 100);
 			setSession(JMoneyPlugin.getDefault().getSession());
 		}
 		
@@ -265,8 +271,8 @@ public class NavigationView extends ViewPart {
 		}
 
 	}
-	class ViewLabelProvider extends LabelProvider {
 
+	class ViewLabelProvider extends LabelProvider {
 		public String getText(Object obj) {
 			return obj.toString();
 		}
@@ -280,7 +286,18 @@ public class NavigationView extends ViewPart {
 			}
 		}
 	}
+
 	class NameSorter extends ViewerSorter {
+		public int category(Object obj) {
+			if (obj instanceof TreeNode) {
+				return ((TreeNode)obj).getPosition();
+			} else if (obj instanceof CapitalAccount) {
+				return 0;
+			} else {
+				throw new RuntimeException("");
+			}
+		}
+		
 	}
 
 	private SessionChangeListener listener =
@@ -441,15 +458,22 @@ private Map idToNodeMap = new HashMap();
 					String icon = elements[j].getAttribute("icon");
 					String id = elements[j].getAttribute("id");
 					String parentNodeId = elements[j].getAttribute("parent");
+					String position = elements[j].getAttribute("position");
 					
 					if (id != null && id.length() != 0) {
 						String fullNodeId = extensions[i].getNamespace() + '.' + id;
+						
 						Image image = null;
 						if (icon != null) {
 							image = JMoneyPlugin.createImage(icon);
 						}
 						
-						TreeNode node = new TreeNode(label, image, parentNodeId);
+						int positionNumber = 800;
+						if (position != null) {
+							positionNumber = Integer.parseInt(position);
+						}
+						
+						TreeNode node = new TreeNode(label, image, parentNodeId, positionNumber);
 						idToNodeMap.put(fullNodeId, node);
 					}
 				}
@@ -519,7 +543,7 @@ private Map idToNodeMap = new HashMap();
 		// thus avoiding hundreds of root nodes in the navigation
 		// tree, each with a single tab view. 
 		
-		TreeNode invisibleRoot = new TreeNode("", null, "");
+		TreeNode invisibleRoot = new TreeNode("", null, "", 0);
 
 		for (Iterator iter = idToNodeMap.values().iterator(); iter.hasNext(); ) {
 			TreeNode treeNode = (TreeNode)iter.next();
