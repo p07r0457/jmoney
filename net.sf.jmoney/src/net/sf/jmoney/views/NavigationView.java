@@ -233,7 +233,7 @@ public class NavigationView extends ViewPart {
 			} else if (parent instanceof CapitalAccount) {
 				CapitalAccount account = (CapitalAccount)parent;
 				int count = 0;
-				for (Iterator iter = account.getSubAccountIterator(); iter.hasNext(); ) {
+				for (Iterator iter = account.getSubAccountIterator(); iter.hasNext(); iter.next() ) {
 					count++;
 				}
 				Object children[] = new Object[count];
@@ -592,9 +592,9 @@ private Map idToNodeMap = new HashMap();
 				Session session = JMoneyPlugin.getDefault().getSession();
 
 				CapitalAccountImpl newAccount = (CapitalAccountImpl)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
-		        newAccount.setName(JMoneyPlugin.getResourceString("Account.newAccount"));
-		        JMoneyPlugin.getChangeManager().applyChanges("add new account");
-		        
+				newAccount.setName(JMoneyPlugin.getResourceString("Account.newAccount"));
+				JMoneyPlugin.getChangeManager().applyChanges("add new account");
+				
 		        // Having added the new account, set it as the selected
 		        // account in the tree viewer.
 		        viewer.setSelection(new StructuredSelection(newAccount), true);
