@@ -312,8 +312,8 @@ public class EntriesSection extends SectionPart {
         }
         fViewer.setColumnProperties(columnProperties);
 
-        fViewer.setCellEditors(createCellEditors());
-        fViewer.setCellModifier(new CellModifier());
+//        fViewer.setCellEditors(createCellEditors());
+//        fViewer.setCellModifier(new CellModifier());
 
         fViewer.addSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
@@ -563,10 +563,11 @@ public class EntriesSection extends SectionPart {
         
     }
     
-
+/*
     class CellModifier implements ICellModifier {
         public boolean canModify(Object element, String property) {
-            return !property.equals("balance");
+        	return false;
+            //return !property.equals("balance");
         }
         public Object getValue(Object element, String property) {
             int index = getColumnIndex(property);
@@ -634,5 +635,5 @@ public class EntriesSection extends SectionPart {
             return index;
         }
     }
-
+*/
 }

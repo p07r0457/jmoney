@@ -24,7 +24,7 @@ package net.sf.jmoney.ui.internal;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import org.eclipse.ui.IWorkbench;
+import org.eclipse.swt.graphics.Color;import org.eclipse.swt.widgets.Display;import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -39,7 +39,7 @@ public class JMoneyUIPlugin extends AbstractUIPlugin {
 	private static JMoneyUIPlugin plugin;
 
 	private ResourceBundle resourceBundle;
-	
+	private Color yellow;	private Color green;	
 	/**
 	 * The constructor.
 	 */
@@ -96,20 +96,19 @@ public class JMoneyUIPlugin extends AbstractUIPlugin {
 	 */
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
-	}
+		Display display = getActiveWorkbenchWindow().getShell().getDisplay();				// A useful site for picking colors: http://www.drpeterjones.com/colorcalc/		yellow = new Color(display, 255, 255, 150);		green = new Color(display, 200, 255, 200);	}
 
 	/**
 	 * This method is called when the plug-in is stopped
 	 */
-	public void stop(BundleContext context) throws Exception {
-		super.stop(context);
-	}
+	public void stop(BundleContext context) throws Exception {		yellow.dispose();		green.dispose();		
+		super.stop(context);	}
 
 	/**
 	 * Returns the plugin's resource bundle,
 	 */
 	public ResourceBundle getResourceBundle() {
 		return resourceBundle;
-	}
+	}	/**	 * @return	 */	public Color getGreenColor() {		return green;	}	/**	 * @return	 */	public Color getYellowColor() {		return yellow;	}
 
 }
