@@ -22,7 +22,7 @@
 package net.sf.jmoney.ui.internal.editors;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CapitalAccount;import net.sf.jmoney.model2.CurrencyAccount;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IEditorInput;
@@ -37,18 +37,18 @@ import org.eclipse.ui.forms.editor.FormEditor;
  */
 public class CapitalAccountEditor extends FormEditor {
 
-    protected CapitalAccount fAccount;
+    protected CurrencyAccount fAccount;
 
     /* (non-Javadoc)
      * @see org.eclipse.ui.forms.editor.FormEditor#addPages()
      */
-    protected void addPages() {
+    protected void addPages() {/* this no longer compiles, so I have commented this out. * This becomes dead code now that support for editors * is added to the navigation view. 
         try {
             addPage(new EntriesPage(this));
             addPage(new CapitalAccountPropertiesPage(this));
         } catch (PartInitException e) {
             JMoneyPlugin.log(e);
-        }
+        }*/
     }
 
     /* (non-Javadoc)

@@ -21,7 +21,7 @@
  */
 package net.sf.jmoney.ui.internal.editors;
 
-import org.eclipse.swt.layout.GridData;
+import net.sf.jmoney.views.NodeEditor;import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.editor.FormPage;
@@ -36,7 +36,7 @@ public class CapitalAccountPropertiesPage extends FormPage {
 
     public static final String PAGE_ID = "account_properties";
 
-	protected CapitalAccountEditor fEditor;
+	protected NodeEditor fEditor;
 	protected CapitalAccountPropertiesSection fPropertiesSection;
 
     /**
@@ -44,7 +44,7 @@ public class CapitalAccountPropertiesPage extends FormPage {
      * 
      * @param editor Parent editor
      */
-    public CapitalAccountPropertiesPage(CapitalAccountEditor editor) {
+    public CapitalAccountPropertiesPage(NodeEditor editor) {
         super(editor, PAGE_ID, "Properties");
         fEditor = editor;
     }

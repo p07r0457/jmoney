@@ -29,6 +29,7 @@ import net.sf.jmoney.Constants;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.ui.internal.JMoneyUIPlugin;
 
@@ -106,7 +107,7 @@ public class EntryFilter implements Constants {
 
 	public boolean filterEntry(
 		Entry entry,
-		CapitalAccount account,
+		CurrencyAccount account,
 		VerySimpleDateFormat dateFormat,
 		int filterType) {
 		switch (filterType) {
@@ -133,7 +134,7 @@ public class EntryFilter implements Constants {
 
 	public boolean checkEntry(
 		Entry entry,
-		CapitalAccount account,
+		CurrencyAccount account,
 		VerySimpleDateFormat df) {
 		return pattern.equals("")
 			|| checkAmount(entry, account)
@@ -145,7 +146,7 @@ public class EntryFilter implements Constants {
 			|| checkValuta(entry, df);
 	}
 
-	public boolean checkAmount(Entry e, CapitalAccount account) {
+	public boolean checkAmount(Entry e, CurrencyAccount account) {
 		return contains(account.getCurrency().format(e.getAmount()));
 	}
 

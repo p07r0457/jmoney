@@ -21,7 +21,7 @@
  */
 package net.sf.jmoney.ui.internal.editors;
 
-import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CapitalAccount;import net.sf.jmoney.model2.CurrencyAccount;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
@@ -34,14 +34,14 @@ import org.eclipse.ui.IPersistableElement;
  */
 public class CapitalAccountEditorInput implements IEditorInput {
 
-    protected CapitalAccount account;
+    protected CurrencyAccount account;
 
     /**
      * Create a new account editor input.
      * 
      * @param account Account on which this input is based
      */
-    public CapitalAccountEditorInput(CapitalAccount account) {
+    public CapitalAccountEditorInput(CurrencyAccount account) {
         this.account = account;
     }
     
@@ -115,7 +115,7 @@ public class CapitalAccountEditorInput implements IEditorInput {
     /**
      * @return Returns the account.
      */
-    public CapitalAccount getAccount() {
+    public CurrencyAccount getAccount() {
         return account;
     }
 

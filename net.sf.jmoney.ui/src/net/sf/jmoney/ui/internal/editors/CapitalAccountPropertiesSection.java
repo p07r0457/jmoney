@@ -21,7 +21,7 @@
  */
 package net.sf.jmoney.ui.internal.editors;
 
-import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.BankAccount;import net.sf.jmoney.model2.CapitalAccount;import net.sf.jmoney.model2.CurrencyAccount;
 
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -85,17 +85,13 @@ public class CapitalAccountPropertiesSection extends SectionPart {
     /* (non-Javadoc)
      * @see org.eclipse.ui.forms.IFormPart#refresh()
      */
-    public void refresh() {
-        CapitalAccount account = fPage.fEditor.fAccount;
+    public void refresh() {    	// When this page was added to the 'pages' extension point,    	// the extendable-object-id was set to net.sf.jmoney.bankAccount.    	// This indicates that this page should only appear when    	// the object selected in the navigation tree is an    	// object of that type.  We can therefore safely cast    	// the selected object to BankAccount.        BankAccount account = (BankAccount)fPage.fEditor.getSelectedObject();
 
         setText(fName, account.getName());
         setText(fCurrency, account.getCurrencyCode());
-        setText(fBank, account.getBank());
-        setText(fAccountNumber, account.getAccountNumber());
-        setText(fStartBalance, "" + account.getStartBalance());
-        setText(fMinBalance, account.getMinBalance());
-        setText(fComment, account.getComment());
-
+        setText(fStartBalance, "" + account.getStartBalance());        setText(fComment, account.getComment());        BankAccount bankAccount = (BankAccount)account;	setText(fBank, bankAccount.getBank());
+        setText(fAccountNumber, bankAccount.getAccountNumber());
+        setText(fMinBalance, bankAccount.getMinBalance());
         super.refresh();
     }
 
