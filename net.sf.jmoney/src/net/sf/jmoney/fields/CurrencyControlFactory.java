@@ -28,7 +28,10 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
 
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.ComboBoxCellEditor;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Table;
 
 /**
  * A control factory to select a currency.
@@ -41,6 +44,21 @@ public class CurrencyControlFactory implements IPropertyControlFactory {
     public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
         return new CurrencyEditor(parent, propertyAccessor);
     }
+
+	public CellEditor createCellEditor(Table table) {
+		// TODO Complete this
+		String[] items = {"currency 1", "currency 2"};
+		return new ComboBoxCellEditor(table, items);
+	}
+
+	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+		// TODO complete this.
+		return new Integer(0);
+	}
+
+	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
+		// TODO complete this.
+	}
 
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
         Currency value = (Currency) extendableObject.getPropertyValue(propertyAccessor);

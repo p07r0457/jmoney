@@ -64,7 +64,7 @@ public class AccountInfo implements IPropertySetInfo {
 		
 		IPropertyControlFactory textControlFactory = new TextControlFactory();
 		
-		nameAccessor = propertyRegistrar.addProperty("name", JMoneyPlugin.getResourceString("AccountPropertiesPanel.name"), 30.0, textControlFactory, null, null);
+		nameAccessor = propertyRegistrar.addProperty("name", JMoneyPlugin.getResourceString("AccountPropertiesPanel.name"), 30.0, textControlFactory, null);
 		propertyRegistrar.setDerivableInfo();
 	}
 

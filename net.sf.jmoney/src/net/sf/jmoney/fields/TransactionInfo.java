@@ -68,7 +68,7 @@ public class TransactionInfo implements IPropertySetInfo {
         IPropertyControlFactory dateControlFactory = new DateControlFactory();
 		
 		entriesAccessor = propertyRegistrar.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), Entry.class, null);
-		dateAccessor = propertyRegistrar.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), 10.0, dateControlFactory, null, null);
+		dateAccessor = propertyRegistrar.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), 10.0, dateControlFactory, null);
 		
 		propertyRegistrar.setObjectDescription("Financial Transaction");
 	}

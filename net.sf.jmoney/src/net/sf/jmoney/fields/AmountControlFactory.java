@@ -22,6 +22,10 @@
 
 package net.sf.jmoney.fields;
 
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.TextCellEditor;
+import org.eclipse.swt.widgets.Table;
+
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControlFactory;
@@ -34,6 +38,33 @@ import net.sf.jmoney.model2.PropertyAccessor;
  * @author Johann Gyger
  */
 public abstract class AmountControlFactory implements IPropertyControlFactory {
+
+	public CellEditor createCellEditor(Table table) {
+		// TODO Complete this
+		return new TextCellEditor(table);
+	}
+
+	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+        Long amount = (Long) extendableObject.getPropertyValue(propertyAccessor);
+        if (amount == null) {
+            return "";
+        } else {
+            return getCommodity(extendableObject).format(amount.longValue());
+        }
+	}
+
+	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
+		String amountString = (String)value;
+        if (amountString.length() == 0 && propertyAccessor.getValueClass() == Long.class) {
+            // The text box is empty and the property is Long
+            // (not long) thus allowing nulls.  Therefore
+            // we set the property value to be null.
+            extendableObject.setPropertyValue(propertyAccessor, null);
+        } else {
+            long amount = getCommodity(extendableObject).parse(amountString);
+            extendableObject.setLongPropertyValue(propertyAccessor, amount);
+        }
+	}
 
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
         Long amount = (Long) extendableObject.getPropertyValue(propertyAccessor);

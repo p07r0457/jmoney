@@ -67,7 +67,7 @@ public class QIFEntryInfo implements IPropertySetInfo {
 	}
 	
 	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
-		reconcilingStateAccessor = propertyRegistrar.addProperty("reconcilingState", "what???", 2.0, null, null, null);
+		reconcilingStateAccessor = propertyRegistrar.addProperty("reconcilingState", "what???", 2.0, null, null);
 	}
 
 	/**

@@ -22,7 +22,10 @@
 
 package net.sf.jmoney.fields;
 
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Table;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
@@ -41,7 +44,24 @@ public class TextControlFactory implements IPropertyControlFactory {
         return new TextEditor(parent, 0, propertyAccessor);
     }
 
-    public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+	public CellEditor createCellEditor(Table table) {
+		return new TextCellEditor(table);
+	}
+
+	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+        String value = extendableObject.getStringPropertyValue(propertyAccessor);
+        if (value == null) {
+            return "";
+        } else {
+        	return value;
+        }
+	}
+
+	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
+        extendableObject.setPropertyValue(propertyAccessor, value);
+	}
+
+   public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
         String value = extendableObject.getStringPropertyValue(propertyAccessor);
         if (value == null || value.length() == 0) {
             return "empty";

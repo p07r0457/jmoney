@@ -31,7 +31,10 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
 
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Table;
 
 /**
  * A control factory to edit date values.
@@ -56,6 +59,20 @@ public class DateControlFactory implements IPropertyControlFactory {
     public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
   		return new DateEditor(parent, propertyAccessor, fDateFormat);
     }
+
+	public CellEditor createCellEditor(Table table) {
+		return new TextCellEditor(table);
+	}
+
+	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+        Date value = (Date) extendableObject.getPropertyValue(propertyAccessor);
+        return fDateFormat.format(value);
+	}
+
+	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
+		String dateText = (String) value;
+        extendableObject.setPropertyValue(propertyAccessor, fDateFormat.parse(dateText));
+	}
 
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
         Date value = (Date) extendableObject.getPropertyValue(propertyAccessor);

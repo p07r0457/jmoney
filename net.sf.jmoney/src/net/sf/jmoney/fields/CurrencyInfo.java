@@ -64,8 +64,8 @@ public class CurrencyInfo implements IPropertySetInfo {
 		CurrencyInfo.propertySet = propertySet;
 		IPropertyControlFactory textControlFactory = new TextControlFactory();
 		
-		codeAccessor = propertyRegistrar.addProperty("code", JMoneyPlugin.getResourceString("Currency.code"), 8.0, textControlFactory, null, null);
-		decimalsAccessor = propertyRegistrar.addProperty("decimals", JMoneyPlugin.getResourceString("Currency.decimals"), 8.0, textControlFactory, null, null);
+		codeAccessor = propertyRegistrar.addProperty("code", JMoneyPlugin.getResourceString("Currency.code"), 8.0, textControlFactory, null);
+		decimalsAccessor = propertyRegistrar.addProperty("decimals", JMoneyPlugin.getResourceString("Currency.decimals"), 8.0, textControlFactory, null);
 		
 		propertyRegistrar.setObjectDescription("Currency");
 	}

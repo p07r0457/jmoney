@@ -80,7 +80,6 @@ public interface IPropertyRegistrar {
 	 * @param displayName localized description of the property
 	 * @param width
 	 * @param currencyControlFactory
-	 * @param editor
 	 * @param propertyDependency
 	 */
 	PropertyAccessor addProperty(
@@ -88,7 +87,6 @@ public interface IPropertyRegistrar {
 			String displayName, 
 			double width, 
 			IPropertyControlFactory controlFactory,
-			Class editor, 
 			IPropertyDependency propertyDependency);
 	
 	/**

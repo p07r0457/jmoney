@@ -27,7 +27,10 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
 
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.ComboBoxCellEditor;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Table;
 
 /**
  * A control factory to select the uncleared/pending/reconciled status
@@ -58,6 +61,23 @@ public class StatusControlFactory implements IPropertyControlFactory {
     public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
         return new StatusEditor(parent, propertyAccessor);
     }
+
+	public CellEditor createCellEditor(Table table) {
+		return new ComboBoxCellEditor(table, statusText);
+	}
+	
+	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+		// The status is stored as an integer that exactly matches the
+		// index into the combo box selections, so return it as is.
+        int status = extendableObject.getIntegerPropertyValue(propertyAccessor);
+        return new Integer(status);
+	}
+
+	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
+		// The status is stored as an integer that exactly matches the
+		// index into the combo box selections, so set it as is.
+        extendableObject.setPropertyValue(propertyAccessor, value);
+	}
 
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
         int status = extendableObject.getIntegerPropertyValue(propertyAccessor);

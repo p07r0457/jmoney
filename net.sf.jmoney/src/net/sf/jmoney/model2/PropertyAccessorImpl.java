@@ -28,9 +28,9 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Vector;
 
-import javax.swing.JComponent;
-
+import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Table;
 
 /**
  * This class contains information about an extension property.
@@ -53,9 +53,6 @@ public class PropertyAccessorImpl implements PropertyAccessor {
     
     // Applies only if scalar property
     private IPropertyControlFactory propertyControlFactory;
-    
-    // Applies only if scalar property
-    private Class editorBeanClass;
     
     /**
      * The class of the property.  It the property is a list
@@ -94,14 +91,13 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 	 */
 	private int indexIntoScalarProperties = -1;
 	
-    public PropertyAccessorImpl(PropertySet propertySet, String localName, String shortDescription, double width, IPropertyControlFactory propertyControlFactory, Class editorBeanClass, IPropertyDependency propertyDependency) {
+    public PropertyAccessorImpl(PropertySet propertySet, String localName, String shortDescription, double width, IPropertyControlFactory propertyControlFactory, IPropertyDependency propertyDependency) {
     	this.propertySet = propertySet;
         this.localName = localName;
         this.shortDescription = shortDescription;
         this.width = width;
         this.sortable = true;
         this.propertyControlFactory = propertyControlFactory;
-        this.editorBeanClass = editorBeanClass;
         
         isList = false;
        
@@ -456,23 +452,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
      * Indicates whether the property may be edited by the user.
      */
     public boolean isEditable() {
-        return (editorBeanClass != null) 
-			|| (propertyControlFactory != null && propertyControlFactory.isEditable());
-    }
-    
-    /**
-     * Gets an instance of a bean that edits this property.
-     *
-     * This method can be called only if isEditable returns true.
-     */
-    public JComponent getEditorBean() {
-        try {
-            return (JComponent)editorBeanClass.newInstance();
-        } catch (InstantiationException e) {
-            throw new RuntimeException("cannot instantiate editor bean");
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException("cannot access editor bean");
-        }
+        return (propertyControlFactory != null && propertyControlFactory.isEditable());
     }
     
     /**
@@ -488,8 +468,25 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 		// When a PropertyAccessor object is created, it is
 		// provided with an interface to a factory that constructs
 		// control objects that edit the property.
-		// We call into that factory to create a control.
+		// We call into that factory to create an edit control.
 		return propertyControlFactory.createPropertyControl(parent, this);
+	}
+
+
+	public CellEditor createCellEditor(Table table) {
+		// When a PropertyAccessor object is created, it is
+		// provided with an interface to a factory that constructs
+		// control objects that edit the property.
+		// We call into that factory to create a cell editor.
+		return propertyControlFactory.createCellEditor(table);
+	}
+
+	public Object getValueTypedForCellEditor(ExtendableObject extendableObject) {
+		return propertyControlFactory.getValueTypedForCellEditor(extendableObject, this);
+	}
+
+	public void setValueTypedForCellEditor(ExtendableObject extendableObject, Object value) {
+		propertyControlFactory.setValueTypedForCellEditor(extendableObject, this, value);
 	}
 
 	public String formatValueForMessage(ExtendableObject object) {

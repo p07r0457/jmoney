@@ -22,9 +22,15 @@
 
 package net.sf.jmoney.fields;
 
+import java.util.Date;
+
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.DialogCellEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Table;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
@@ -49,6 +55,26 @@ public class MultiTextControlFactory implements IPropertyControlFactory {
         multiText.getControl().setLayoutData(gridData);
         return multiText;
     }
+
+	public CellEditor createCellEditor(Table table) {
+		// TODO Complete this
+		return new DialogCellEditor(table) {
+			protected Object openDialogBox(Control cellEditorWindow) {
+				// TODO Implement this if we are to allow editing of
+				// multi-line text properties in-place in tables.
+				return null;
+			}
+			
+		};
+	}
+
+	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+        return extendableObject.getStringPropertyValue(propertyAccessor);
+	}
+
+	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
+        extendableObject.setPropertyValue(propertyAccessor, value);
+	}
 
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
         String value = extendableObject.getStringPropertyValue(propertyAccessor);

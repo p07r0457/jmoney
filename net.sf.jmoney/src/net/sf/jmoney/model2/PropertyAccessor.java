@@ -22,12 +22,11 @@
 
 package net.sf.jmoney.model2;
 
-import java.lang.reflect.Method;
-import java.beans.*;   // for PropertyChangeSupport and PropertyChangeListener
 import java.util.Comparator;
-import javax.swing.JComponent;
 
+import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Table;
 
 /**
  * This class contains information about a property.  The property may be in the base
@@ -157,13 +156,6 @@ public interface PropertyAccessor {
     boolean isEditable();
     
     /**
-     * Gets an instance of a bean that edits this property.
-     *
-     * This method can be called only if isEditable returns true.
-     */
-    JComponent getEditorBean();
-    
-    /**
      * If the bean defines a custom comparator for this property then fetch it.
      * Otherwise return null to indicate that the default comparator for the type
      * should be used.
@@ -177,6 +169,47 @@ public interface PropertyAccessor {
 	 * @return An interface to a wrapper class.
 	 */
 	IPropertyControl createPropertyControl(Composite parent);
+
+
+	/**
+	 * Create a CellEditor object that enables the property to
+	 * be edited in-place in a <code>Table</code>.
+	 * 
+	 * @param table
+	 * @return a cell editor, or null if the property cannot
+	 * 			be edited in-place in a <code>Table</code>
+	 */
+	CellEditor createCellEditor(Table table);
+
+
+	/**
+	 * Get the value of a property and return it typed for
+	 * use in the cell editor.
+	 * <P>
+	 * For example, the ComboBoxCellEditor cell editors require the
+	 * value as an integer index into the selection list.  Therefore,
+	 * if <code>createCellEditor</code> returns a ComboBoxCellEditor
+	 * then this method must return the value as an index into the list
+	 * of possible values.
+	 * 
+	 * @param extendableObject
+	 * @return
+	 */
+	Object getValueTypedForCellEditor(ExtendableObject extendableObject);
+
+	/**
+	 * Set the value of a property given a value returned by the cell editor.
+	 * <P>
+	 * For example, the ComboBoxCellEditor cell editors give the
+	 * value as an integer index into the selection list.  Therefore,
+	 * if <code>createCellEditor</code> returns a ComboBoxCellEditor
+	 * then this method must set the appropriate value as determined from
+	 * the given index.
+	 * 
+	 * @param extendableObject
+	 * @param value
+	 */
+	void setValueTypedForCellEditor(ExtendableObject extendableObject, Object value);
 
 	/**
 	 * Format the value of a property so it can be embedded into a
