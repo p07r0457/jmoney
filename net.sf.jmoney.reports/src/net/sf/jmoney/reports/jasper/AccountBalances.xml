@@ -1,0 +1,189 @@
+<?xml version="1.0"?>
+<!DOCTYPE jasperReport PUBLIC "-//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
+
+<jasperReport
+	      name="AccountBalances"
+	      pageWidth="595"
+	      pageHeight="842"
+	      columnWidth="515"
+	      columnSpacing="0"
+	      leftMargin="40"
+	      rightMargin="40"
+	      topMargin="50"
+	      bottomMargin="50">
+
+  <reportFont name="plain" isDefault="true"/>
+  <reportFont name="bold" isBold="true" pdfFontName="Helvetica-Bold"/>
+  <reportFont name="italic" isItalic="true" pdfFontName="Helvetica-Oblique"/>
+
+  <parameter name="Title" class="java.lang.String"/>
+  <parameter name="Subtitle" class="java.lang.String"/>
+
+  <parameter name="Total" class="java.lang.String"/>
+  <parameter name="Account" class="java.lang.String"/>
+  <parameter name="Balance" class="java.lang.String"/>
+
+  <parameter name="DateToday" class="java.lang.String"/>
+  <parameter name="Page" class="java.lang.String"/>
+
+  <field name="AccountName" class="java.lang.String"/>
+  <field name="Balance" class="java.lang.Long"/>
+  <field name="BalanceString" class="java.lang.String"/>
+  <field name="CurrencyCode" class="java.lang.String"/>
+
+  <variable name="BalanceSum" class="java.lang.Long" resetType="Group" resetGroup="CurrencyGroup" calculation="Sum">
+    <variableExpression>$F{Balance}</variableExpression>
+    <initialValueExpression>new Long(0)</initialValueExpression>
+  </variable>
+
+  <group name="CurrencyGroup" minHeightToStartNewPage="60">
+    <groupExpression>
+      $F{CurrencyCode}
+    </groupExpression>
+
+    <groupHeader>
+      <band height="0">
+      </band>
+    </groupHeader>
+
+    <groupFooter>
+      <band height="35">
+	<line>
+	  <reportElement x="0" y="0" width="515" height="0"/>
+	  <graphicElement/>
+	</line>
+
+	<textField>
+	  <reportElement x="0" y="5" width="415" height="13"/>
+	  <textElement>
+	    <font reportFont="bold"/>
+	  </textElement>
+	  <textFieldExpression class="java.lang.String">
+	    $P{Total} + " " + $F{CurrencyCode}
+	  </textFieldExpression>
+	</textField>
+
+	<textField>
+	  <reportElement x="420" y="5" width="95" height="13"/>
+	  <textElement textAlignment="Right">
+	    <font reportFont="bold"/>
+	  </textElement>
+	  <textFieldExpression class="java.lang.String">
+	    net.sf.jmoney.reports.ReportsPlugin.format($V{BalanceSum}.longValue(), $F{CurrencyCode})
+	  </textFieldExpression>
+	</textField>
+
+	<line>
+	  <reportElement x="0" y="22" width="515" height="0"/>
+	  <graphicElement/>
+	</line>
+      </band>
+    </groupFooter>
+  </group>
+
+  <title>
+    <band height="50">
+      <textField>
+	<reportElement x="0" y="0" width="515" height="16"/>
+	<textElement textAlignment="Center">
+	  <font reportFont="bold" size="12"/>
+	</textElement>
+	<textFieldExpression class="java.lang.String">
+	  $P{Title}
+	</textFieldExpression>
+      </textField>
+
+      <textField>
+	<reportElement x="0" y="17" width="515" height="13"/>
+	<textElement textAlignment="Center"/>
+	<textFieldExpression class="java.lang.String">
+	  $P{Subtitle}
+	</textFieldExpression>
+      </textField>
+    </band>
+  </title>
+
+  <pageHeader>
+    <band height="17">
+      <textField>
+	<reportElement x="0" y="0" width="415" height="13"/>
+	<textElement>
+	  <font reportFont="bold"/>
+	</textElement>
+	<textFieldExpression class="java.lang.String">
+	  $P{Account}
+	</textFieldExpression>
+      </textField>
+
+      <textField>
+	<reportElement x="420" y="0" width="95" height="13"/>
+	<textElement textAlignment="Right">
+	  <font reportFont="bold"/>
+	</textElement>
+	<textFieldExpression class="java.lang.String">
+	  $P{Balance}
+	</textFieldExpression>
+      </textField>
+
+      <line>
+	<reportElement x="0" y="12" width="515" height="0"/>
+	<graphicElement/>
+      </line>
+    </band>
+  </pageHeader>
+
+  <columnHeader>
+    <band height="0"/>
+  </columnHeader>
+
+  <detail>
+    <band height="17">
+      <textField>
+	<reportElement x="0" y="0" width="415" height="13"/>
+	<textFieldExpression class="java.lang.String">
+	  $F{AccountName}
+	</textFieldExpression>
+      </textField>
+
+      <textField>
+	<reportElement x="420" y="0" width="95" height="13"/>
+	<textElement textAlignment="Right"/>
+	<textFieldExpression class="java.lang.String">
+	  $F{BalanceString}
+	</textFieldExpression>
+      </textField>
+    </band>
+  </detail>
+
+  <columnFooter>
+    <band height="0"/>
+  </columnFooter>
+
+  <pageFooter>
+    <band height="30">
+      <textField>
+	<reportElement x="0" y="17" width="200" height="13"/>
+	<textElement>
+	  <font size="10"/>
+	</textElement>
+	<textFieldExpression class="java.lang.String">
+	  $P{DateToday}
+	</textFieldExpression>
+      </textField>
+
+      <textField>
+	<reportElement x="315" y="17" width="200" height="13"/>
+	<textElement textAlignment="Right">
+	  <font size="10"/>
+	</textElement>
+	<textFieldExpression class="java.lang.String">
+	  $P{Page} + " " + String.valueOf($V{PAGE_NUMBER})
+	</textFieldExpression>
+      </textField>
+    </band>
+  </pageFooter>
+
+  <summary>
+    <band height="0" />
+  </summary>
+</jasperReport>

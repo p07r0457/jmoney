@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+   id="net.sf.jmoney.reports"
+   name="Reports Plug-in"
+   version="1.0.0"
+   provider-name="JMoney"
+   class="net.sf.jmoney.reports.ReportsPlugin">
+
+   <runtime>
+      <library name="reports.jar">
+         <export name="*"/>
+      </library>
+      <library name="lib/jasperreports-0.5.3.jar">
+         <export name="*"/>
+      </library>
+      <library name="lib/commons-logging.jar">
+         <export name="*"/>
+      </library>
+   </runtime>
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="net.sf.jmoney"/>
+   </requires>
+
+
+   <extension
+         point="net.sf.jmoney.pages">
+      <node
+            id="reportsNode"
+            label="%NavigationTreeModel.Reports"
+            icon="icon/Reports.gif"
+            position="500">
+      </node>
+      <node
+            id="accountBalances"
+            label="%Report.AccountBalances.Title"
+            icon="icon/Reports.gif"
+            parent="net.sf.jmoney.reports.reportsNode"
+            position="100">
+      </node>
+      <pages
+            node="net.sf.jmoney.reports.accountBalances"
+            class="net.sf.jmoney.reports.AccountBalancesPage">
+      </pages>
+      <node
+            id="incomeExpense"
+            label="%Report.IncomeExpense.Title"
+            icon="icon/Reports.gif"
+            parent="net.sf.jmoney.reports.reportsNode"
+            position="200">
+      </node>
+      <pages
+            node="net.sf.jmoney.reports.incomeExpense"
+            class="net.sf.jmoney.reports.IncomeExpensePage">
+      </pages>
+   </extension>
+
+</plugin>

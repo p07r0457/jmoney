@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+   id="net.sf.jmoney.reconciliation"
+   name="Reconciliation Plug-in"
+   version="1.0.0"
+   provider-name=""
+   class="net.sf.jmoney.reconciliation.ReconciliationPlugin">
+
+   <runtime>
+      <library name="reconciliation.jar">
+         <export name="*"/>
+      </library>
+   </runtime>
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="net.sf.jmoney"/>
+   </requires>
+
+
+   <extension
+         point="net.sf.jmoney.fields">
+      <extension-property-set
+      	id="entryProperties"
+          info-class="net.sf.jmoney.reconciliation.ReconciliationEntryInfo"
+	      extendable-property-set="net.sf.jmoney.entry">
+      </extension-property-set>
+   </extension>
+
+</plugin>

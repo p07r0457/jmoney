@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+   id="net.sf.jmoney.qif"
+   name="Quicken Interchange Format Plug-in"
+   version="1.0.0"
+   provider-name="jmoney.net"
+   class="net.sf.jmoney.qif.QIFPlugin">
+
+   <runtime>
+      <library name="qif.jar">
+         <export name="*"/>
+      </library>
+   </runtime>
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+<!--
+      <import plugin="org.eclipse.core.resources"/>
+      <import plugin="org.eclipse.ui.ide"/>
+-->      
+      <import plugin="net.sf.jmoney"/>
+   </requires>
+
+
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            name="Import/Export Wizards"
+            id="net.sf.jmoney.qif">
+      </category>
+      <wizard
+            name="Quicken Interchange Format file"
+            icon="icons/sample.gif"
+            category="net.sf.jmoney.qif"
+            class="net.sf.jmoney.qif.wizards.QIFExportWizard"
+            id="net.sf.jmoney.qif.wizards.QIFExportWizard">
+      </wizard>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            label="QIF Action Set"
+            visible="true"
+            id="net.sf.jmoney.qif.actionSet">
+         <menu
+               label="%MainFrame.import"
+               id="importMenu">
+            <separator
+                  name="importExportGroup">
+            </separator>
+         </menu>
+         <action
+               label="%MainFrame.import"
+               icon="icons/Import16.gif"
+               class="net.sf.jmoney.qif.actions.QIFImportAction"
+               tooltip="Import Data from QIF File"
+               menubarPath="file/importExportGroup"
+               id="net.sf.jmoney.qif.actions.QIFImport">
+         </action>
+         <action
+               label="%MainFrame.export"
+               icon="icons/Export16.gif"
+               class="net.sf.jmoney.qif.actions.QIFExportAction"
+               tooltip="Export Data to a QIF File"
+               menubarPath="file/importExportGroup"
+               id="net.sf.jmoney.qif.actions.QIFExport">
+         </action>
+      </actionSet>
+   </extension>
+
+   <extension
+         point="net.sf.jmoney.fields">
+      <extension-property-set
+      	id="entryProperties"
+          info-class="net.sf.jmoney.qif.QIFEntryInfo"
+	      extendable-property-set="net.sf.jmoney.entry">
+      </extension-property-set>
+   </extension>
+
+</plugin>
