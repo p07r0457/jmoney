@@ -23,6 +23,7 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Collection;
 import java.util.Iterator;
 
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -47,6 +48,10 @@ public class MutableIncomeExpenseAccountImpl  extends ExtendableObjectHelperImpl
      * Creates an instance of MutableIncomeExpenseAccount that is editing a new sub-account
      */
     public MutableIncomeExpenseAccountImpl(Session session, Account parent, int dummy) {
+    	// Temp code.  The object key is created when
+    	// it is requested.
+    	super(null, null);
+
         this.session = (SessionImpl)session;
         this.parent = (IncomeExpenseAccountImpl)parent;
         this.account = null;
@@ -56,6 +61,10 @@ public class MutableIncomeExpenseAccountImpl  extends ExtendableObjectHelperImpl
      * Creates an instance of MutableIncomeExpenseAccount that is editing a new top level account
      */
     public MutableIncomeExpenseAccountImpl(Session session) {
+    	// Temp code.  The object key is created when
+    	// it is requested.
+    	super(null, null);
+
         this.session = (SessionImpl)session;
         this.parent = null;
         this.account = null;
@@ -66,6 +75,10 @@ public class MutableIncomeExpenseAccountImpl  extends ExtendableObjectHelperImpl
      * that has already been committed to the database.
      */
     public MutableIncomeExpenseAccountImpl(Session session, IncomeExpenseAccount category) {
+    	// Temp code.  The object key is created when
+    	// it is requested.
+    	super(null, null);
+
         this.session = (SessionImpl)session;
         this.parent = (IncomeExpenseAccountImpl)category.getParent();  // TODO: remove cast
         this.account = (IncomeExpenseAccountImpl)category;
@@ -73,6 +86,20 @@ public class MutableIncomeExpenseAccountImpl  extends ExtendableObjectHelperImpl
         this.name = category.getName();
     }
 
+    // Temp method.
+    // No object key is set so create one now.
+	public IObjectKey getObjectKey() {
+    	return new IObjectKey() {
+    		public IExtendableObject getObject() {
+    			return MutableIncomeExpenseAccountImpl.this;
+    		}
+    		
+    		public Collection createIndexValuesList(PropertyAccessor propertyAccessor) {
+    			throw new RuntimeException("internal error");
+    		}
+    	};
+	}
+	
 	protected boolean isMutable() {
 		return true;
 	}

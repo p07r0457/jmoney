@@ -91,11 +91,11 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 	protected abstract IExtendableObject getOriginalObject();
 	
 	protected abstract String getExtendablePropertySetId();
-
+/*
 	// TODO: We probably want to remove this constructor.
 	protected ExtendableObjectHelperImpl() {
 	}
-	
+*/	
 	/**
 	 * @param extensions A map from PropertySet objects representing
 	 * 			extension property sets to the parameter lists from
@@ -136,6 +136,21 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 	
 	public IObjectKey getObjectKey() {
 		return objectKey;
+	}
+	
+	/**
+	 * This method may be called by the datastore plug-in immediately
+	 * after it has constructed this object.
+	 * 
+	 * If the object type is indexed then this method must be overridden
+	 * to add itself to the appropriate indexes.
+	 *
+	 * Some datastores may not bother to call this method.  For example,
+	 * a SQL database updates its indexes itself automatically.  This method
+	 * is not technically necessary because the datastore plug-in could keep it's
+	 * own index information.  However, it makes things simple and efficient.
+	 */
+	public void registerWithIndexes() {
 	}
 	
 	public ExtensionObject getExtension(PropertySet propertySetKey) {
@@ -352,33 +367,14 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 			propertyAccessor.getTheSetMethod().invoke(objectWithProperties, parameters);
 		} catch (IllegalAccessException e) {
 			throw new MalformedPluginException("Method '" + propertyAccessor.getTheSetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' must be public.");
-		} catch (Exception e) {
+		} catch (InvocationTargetException e) {
+			throw new MalformedPluginException("Method '" + propertyAccessor.getTheSetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' threw an exception that was not caught by the plug-in.");
+		} catch (IllegalArgumentException e) {
+			System.out.println(e.getMessage());
 			throw new RuntimeException("An unexpected error occurred in ExtendableObjectHelperImpl.setPropertyValue");
 		}
 	}
 
-	// This method is used by datastore implementations to
-	// initialize the contents of a list property.
-/* method no longer required	
-	public void addPropertyValue(PropertyAccessor propertyAccessor, Object value) {
-		// The problem here is that the XML parser sets the properties directly in
-		// the object, without going through a mutable object.
-		// We cannot therefore rely on this object being mutable, so temporarily
-		// set this flag.
-		alwaysReturnNonNullExtensions = true;
-		Object objectWithProperties = getMutablePropertySetInterface(propertyAccessor.getPropertySet());
-		alwaysReturnNonNullExtensions = false;
-		Object parameters[] = {value};
-		try {
-			propertyAccessor.getTheAddMethod().invoke(objectWithProperties, parameters);
-		} catch (IllegalAccessException e) {
-			throw new MalformedPluginException("Method '" + propertyAccessor.getTheSetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' must be public.");
-		} catch (Exception e) {
-			throw new RuntimeException("An unexpected error occurred in ExtendableObjectHelperImpl.setPropertyValue");
-		}
-	}
-*/	
-	
 	private Object getPropertySetInterface(PropertySet propertySet) {
 		if (!propertySet.isExtension()) {
 			return this;

@@ -31,6 +31,7 @@ import java.beans.PropertyChangeSupport;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
@@ -40,12 +41,7 @@ import java.util.Iterator;
 /**
  * The data model for an account.
  */
-// Kludge:  This implements MutableCapitalAccount.
-// You might think it should be implementing only CapitalAccount,
-// and you would be right.  However, the setters are needed
-// when reading the data from the XML.  Until this whole data
-// storage mess is sorted out, we will leave this as is.
-public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCapitalAccount {
+public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAccount {
 
 	/**
 	 * The entries are ordered by their creation.
@@ -90,9 +86,10 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
          * The master list is the list of transactions, with each
          * transaction containing a list of entries.
          */
-	protected transient Vector entries = new Vector();
+//	protected transient Vector entries = new Vector();
+	protected Collection entries;
 
-	protected transient PropertyChangeSupport changeSupport =
+	protected PropertyChangeSupport changeSupport =
 		new PropertyChangeSupport(this);
 
 	/**
@@ -107,6 +104,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
 	public CapitalAccountImpl(
 			IObjectKey objectKey, 
 			Map extensions, 
+			IObjectKey parent,
 			String name,
 			IListManager subAccounts,
 			IObjectKey currency,
@@ -116,7 +114,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
 			Long minBalance,
 			String abbreviation,
 			String comment) {
-		super(objectKey, extensions, subAccounts);
+		super(objectKey, extensions, parent, subAccounts);
 		
 		this.name = name;
 
@@ -131,6 +129,17 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
         this.minBalance = minBalance;
         this.abbreviation = abbreviation;
         this.comment = comment;
+        
+        PropertyAccessor accountAccessor;
+		try {
+			accountAccessor = PropertySet.getPropertyAccessor("net.sf.jmoney.entry.account");
+		} catch (PropertyNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		}
+		
+		this.entries = objectKey.createIndexValuesList(accountAccessor);
 	}
 
 	protected boolean isMutable() {
@@ -218,68 +227,22 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
             return entries.size() != 0;
         }
 
-/* do not use these.  Add and remove transactions from the session.        
- */
-        // This method is used by the datastore to set the back references.
-    	// TODO: we should be able to do this in the initializers.
-    	// If so then the datastore no longer needs to do this
-    	// and we can remove this public method.
+        // These methods are used when maintaining the list
+        // of entries in each account.
+        // TODO: remove these methods when indexes are supported.
         
 	public void addEntry(Entry entry) {
-		entries.addElement(entry);
+		entries.add(entry);
 	}
 
 	void removeEntry(Entry entry) {
-		entries.removeElement(entry);
+		entries.remove(entry);
 	}
 
-/* do not use these.  Add and remove transactions from the session.        
-	private void cleanupEntry(Entry entry) {
-		if (entry instanceof DoubleEntry)
-			 ((DoubleEntry) entry).removeOther();
-		else if (entry instanceof SplittedEntry)
-			 ((SplittedEntry) entry).removeAllEntries();
-	}
-
-	private void initEntry(Entry entry) {
-		if (entry instanceof DoubleEntry) {
-			DoubleEntry de = (DoubleEntry) entry;
-			de.addOther();
-			de.getOther().setCategory(this);
-		}
-	}
-
-	public void replaceEntry(Entry oldEntry, Entry newEntry) {
-		int index = entries.indexOf(oldEntry);
-		cleanupEntry(oldEntry);
-		initEntry(newEntry);
-		entries.setElementAt(newEntry, index);
-	}
-*/
-	/**
-	 * Parses the amount field.
-	 * @param amountString amount that has to be parsed.
-	 * @return amount
-	 */
-/* moved into the Currency class        
-	public long parseAmount(String amountString) {
-		Number amount = new Double(0);
-		try {
-			amount = getCurrency().getNumberFormat().parse(amountString);
-		} catch (ParseException pex) {
-		}
-		return Math.round(
-			amount.doubleValue() * getCurrency().getScaleFactor());
-	}
- */
-/*
-	public String formatAmount(long amount) {
-		return getCurrency().format(amount);
-	}
-*/
 	/**
 	 * @param aName the name of this account.
 	 */
+	
 	public void setName(String aName) {
 		if (name != null && name.equals(aName))
 			return;
@@ -287,11 +250,6 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
 		changeSupport.firePropertyChange("name", null, name);
 	}
 
-        // TODO: Is this method quite what we want???
-	public void fireBulkChange() {
-		changeSupport.firePropertyChange("entries", null, entries);
-	}
-        
 	public void setCurrency(Currency aCurrency) {
 		if (currency == aCurrency)
 			return;
@@ -303,6 +261,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
 	/**
 	 * @param aBank the name of this account.
 	 */
+
 	public void setBank(String aBank) {
 		if (bank != null && bank.equals(aBank))
 			return;
@@ -314,6 +273,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
 	 * Sets the account number of this account.
 	 * @param anAccountNumber the account number
 	 */
+	
 	public void setAccountNumber(String anAccountNumber) {
 		if (accountNumber != null && accountNumber.equals(anAccountNumber))
 			return;
@@ -325,6 +285,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
 	 * Sets the initial balance of this account.
 	 * @param s the start balance
 	 */
+	
 	public void setStartBalance(long s) {
 		if (startBalance == s)
 			return;
@@ -335,6 +296,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
 	/**
 	 * @param m the minimal balance which may be null.
 	 */
+	
 	public void setMinBalance(Long m) {
 		if (minBalance == m)
 			return;
@@ -345,6 +307,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
 	/**
 	 * @param anAbbrevation the abbrevation of this account.
 	 */
+	
 	public void setAbbreviation(String anAbbreviation) {
 		if (abbreviation != null && abbreviation.equals(anAbbreviation))
 			return;
@@ -355,6 +318,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
 	/**
 	 * @param aComment the comment of this account.
 	 */
+	
 	public void setComment(String aComment) {
 		if (comment != null && comment.equals(aComment))
 			return;
@@ -384,19 +348,14 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
         // TODO: Sorting the entries affects the view of the data.
         // This sort should be done in the view, not the model, otherwise
         // one view might mess up another view of the data.
-        // This must be reviewed if we move over to JDO in any case.
+        // This must be reviewed if we support SQL databases in any case.
+/*	
 	public void sortEntries(Comparator c) {
 		Collections.sort(entries, c);
 	}
-
+*/
 	public String toString() {
 		return name;
-	}
-
-	private void readObject(ObjectInputStream in)
-		throws IOException, ClassNotFoundException {
-		in.defaultReadObject();
-		changeSupport = new PropertyChangeSupport(this);
 	}
 
 	public String getFullAccountName() {
@@ -419,17 +378,4 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
         public MutableCapitalAccount createMutableAccount(Session session) {
             return new MutableCapitalAccountImpl(session, this);
         }
-
-		/* (non-Javadoc)
-		 * @see net.sf.jmoney.model2.MutableCapitalAccount#commit()
-		 */
-		public CapitalAccount commit() {
-			throw new RuntimeException("should never be called");
-		}
-	    
-	    // This method is used by the datastore implementations.
-	    // TODO: Should this be moved to a separate initialization interface?
-		public void addSubAccount(CapitalAccount subAccount) {
-			super.addSubAccount(subAccount);
-		}
 }

@@ -23,6 +23,7 @@
 
 package net.sf.jmoney.model2;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.*;
 
 import java.io.Serializable;
@@ -32,16 +33,14 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
+
 /**
  *
  * @author  Nigel
  */
-//Kludge:  This implements MutableTransaction.
-//You might think it should be implementing only Transaction,
-//and you would be right.  However, the setters are needed
-//when reading the data from the XML.  Until this whole data
-//storage mess is sorted out, we will leave this as is.
-public class TransactionImpl extends ExtendableObjectHelperImpl implements MutableTransaction {
+public class TransactionImpl extends ExtendableObjectHelperImpl implements Transaction {
     
     protected Date date = null;
     
@@ -50,6 +49,7 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Mutab
 	public TransactionImpl(
 			IObjectKey objectKey,
     		Map extensions,
+			IObjectKey parent,
     		IListManager entries,
     		Date date) {
 		super(objectKey, extensions);
@@ -58,16 +58,6 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Mutab
 		this.date = date;
 	}
     
-    /** Creates a new instance of Transaction */
-	// TODO: We must remove this constructor.
-	// It will not work with most datastore plug-ins.
-/*
-	public TransactionImpl() {
-    	super(null, null);
-    	
-    	entries = null;
-    }
-*/    
 	protected boolean isMutable() {
 		return false;
 	}
@@ -150,6 +140,11 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Mutab
         this.date = date;
     }
     
+    // Changes must not be fired until all the changes have been committed.
+    // Hence the lists of added and removed entries is returned.
+    // TODO: We could return a single list of events to be fired,
+    // and this could be generalized so all changes keep up the
+    // events to be fired and only fire them when the change is committed.
     public void updateEntries(Vector newEntryList, Vector newEntries, Vector deletedEntries) {
         // We want to keep the Java identity of entries the same whereever an entry
         // exists in both the original and the updated state of the tranaction.
@@ -183,13 +178,12 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Mutab
         // If the entry does not exist then add it.
         for (Iterator iter = newEntryList.iterator(); iter.hasNext(); ) {
             EntryImpl mutableEntry = (EntryImpl)iter.next();
+            
             if (mutableEntry.getOriginalEntry() != null) {
                 //                  assert(this.entries.contains(mutableEntry.getOriginalEntry());
                 ((EntryImpl)mutableEntry.getOriginalEntry()).copyProperties(mutableEntry);
             } else {
-                EntryImpl entry = new EntryImpl(this);
-                entry.copyProperties(mutableEntry);
-                this.entries.add(entry);
+                EntryImpl entry = this.createNewEntry(mutableEntry);
                 newEntries.add(entry);
             }
         }
@@ -214,46 +208,31 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Mutab
         }
         
     }
-/*    
-    // TODO remove these two methods
-    public void setEntries(Vector entries) {
-        this.entries = entries;
-    }
-    
-    public Vector getEntries() {
-        return entries;
-    }
-*/
-    // Used by XML reader only
-    public void addEntry(Entry entry) {
-        entries.add(entry);
-    }
-  
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.MutableIncomeExpenseAccount#commit()
-	 */
-	public Transaction commit() {
-		throw new RuntimeException("should never be called");
-	}
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.MutableTransaction#getOriginalTransaxion()
-	 */
-	public Transaction getOriginalTransaxion() {
-		throw new RuntimeException("should never be called");
-	}
+    public EntryImpl createNewEntry(Entry entry) {
+    	PropertySet entryPropertySet;
+		try {
+			entryPropertySet = PropertySet.getPropertySet("net.sf.jmoney.entry");
+		} catch (PropertySetNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		}
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.MutableTransaction#createEntry()
-	 */
-	public Entry createEntry() {
-		throw new RuntimeException("should never be called");
-	}
+		EntryImpl newEntry = (EntryImpl)entries.createNewElement(this, entryPropertySet, entry);
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.MutableTransaction#removeEntry(net.sf.jmoney.model2.Entry)
-	 */
-	public void removeEntry(Entry e) {
-		throw new RuntimeException("should never be called");
+		// Fire the event.
+/* no - fire events only when the change has been committed.
+ * otherwise a listener will see an incomplete transaction.
+ 		
+        final EntryAddedEvent event = new EntryAddedEvent(newEntry);
+        session.fireEvent(
+        	new ISessionChangeFirer() {
+        		public void fire(SessionChangeListener listener) {
+        			listener.entryAdded(event);
+        		}
+       		});
+ */       
+        return newEntry;
 	}
 }

@@ -39,7 +39,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 	
     protected Entry originalEntry = null;
 	
-	protected Transaction transaction = null;
+	protected IObjectKey transactionKey = null;
 	
 	protected long creation = Calendar.getInstance().getTime().getTime();
 	
@@ -58,13 +58,21 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
     /**
      * Constructor used by datastore plug-ins to create
      * an entry object.
+     * 
+     * @param parent The key to a Transaction object.
+     * 		This parameter must be non-null.
+     * 		The getObject method must not be called on this
+     * 		key from within this constructor because the
+     * 		key may not yet be in a state in which it is
+     * 		capable of materializing an object.   
      */
 	public EntryImpl(
 				IObjectKey objectKey,
 	    		Map extensions,
+				IObjectKey parent,
 	    		String check,
 	    		String description,
-	    		IObjectKey account,
+	    		IObjectKey accountKey,
 	    		Date valuta,
 	    		String memo,
 	    		long amount,
@@ -75,18 +83,21 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 		this.check = check;
 		this.valuta = valuta;
 		this.description = description;
-		this.account = (Account)account.getObject();
+		this.account = (Account)accountKey.getObject();
 		this.amount = amount;
 		this.memo = memo;
+		
+        this.transactionKey = parent;
 	}
 	
 	/**
 	 * Creates a new entry in a transaction.
 	 * This constructor should be called from MutableTransaction.createEntry() only.
 	 */
+
 	EntryImpl(Transaction transaction) {
 		super(null, null);
-		this.transaction = transaction;
+		this.transactionKey = transaction.getObjectKey();
 	}
 	
 	/**
@@ -96,7 +107,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 	EntryImpl(MutableTransactionImpl transaction, EntryImpl originalEntry) {
 		super(null, null);  // TODO: I don't think this is correct.
 
-		this.transaction = transaction;
+		this.transactionKey = transaction.getObjectKey();
 		this.originalEntry = originalEntry;
 		
 		creation = originalEntry.getCreation();
@@ -108,6 +119,14 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 		memo = originalEntry.getMemo();
 	}
 
+	// Called only by datastore after object originally constructed.
+	public void registerWithIndexes() {
+		if (account instanceof CapitalAccountImpl) {
+			CapitalAccountImpl capitalAccount = (CapitalAccountImpl) account;
+			capitalAccount.addEntry(this);
+		}
+	}
+	
 	public boolean isMutable() {
 		return getTransaxion() instanceof MutableTransaction;
 	}
@@ -150,7 +169,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 	 * Returns the creation.
 	 */
 	public Transaction getTransaxion() {
-		return transaction;
+		return (Transaction)transactionKey.getObject();
 	}
 	
 	public Entry getOriginalEntry() {
@@ -163,7 +182,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 	 * the given mutable entry.
 	 */
 	void setOriginalEntry(EntryImpl originalEntry) {
-		if (!(transaction instanceof MutableTransaction)) { 
+		if (!(getTransaxion() instanceof MutableTransaction)) { 
 			throw new RuntimeException("internal error");
 		}
 		if (this.originalEntry != null) { 
@@ -208,14 +227,14 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 	}
 	
 	public String getFullAccountName() {
-		if (transaction.hasTwoEntries()) {
-			Account category = transaction.getOther(this).getAccount();
+		if (getTransaxion().hasTwoEntries()) {
+			Account category = getTransaxion().getOther(this).getAccount();
 			if (category == null) {
 				return null;
 			} else {
 				return category.getFullAccountName();
 			}
-		} else if (transaction.hasMoreThanTwoEntries()) {
+		} else if (getTransaxion().hasMoreThanTwoEntries()) {
 			// TODO: get rid of this message from here,
 			// and move text from jmoney to jmoney.accountentriespanel
 			return JMoneyPlugin.getResourceString("SplitCategory.name");
@@ -341,11 +360,12 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry, Seri
 	// TODO: we should be able to do this in the initializers.
 	// If so then the datastore no longer needs to do this
 	// and we can remove this public method.
+/*	
 	public void setTransaxion(Transaction transaction) {
-		this.transaction = transaction;
+		this.transactionKey = transaction.getObjectKey();
 	}
 	
 	protected void postLoad() {
 	}
-	
+*/	
 }

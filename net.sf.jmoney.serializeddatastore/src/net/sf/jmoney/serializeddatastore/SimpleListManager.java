@@ -38,17 +38,18 @@ import net.sf.jmoney.model2.PropertySet;
 /**
  * @author Nigel
  *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
+ * Every datastore implementation must provide an implementation
+ * of the IListManager interface.  This implementation simply
+ * uses the Vector class to keep a list of objects.
  */
 public class SimpleListManager extends Vector implements IListManager {
 
-	public IExtendableObject createNewElement(PropertySet propertySet, IExtendableObject values) {
+	public IExtendableObject createNewElement(ExtendableObjectHelperImpl parent, PropertySet propertySet, IExtendableObject values) {
 
 		Vector constructorProperties = propertySet.getConstructorProperties();
 		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {
-			numberOfParameters += 2;
+			numberOfParameters += 3;
 		}
 		Object[] constructorParameters = new Object[numberOfParameters];
 		
@@ -56,6 +57,7 @@ public class SimpleListManager extends Vector implements IListManager {
 		
 		constructorParameters[0] = objectKey;
 		constructorParameters[1] = null;
+		constructorParameters[2] = parent.getObjectKey();
 		
 		// For all lists, set the Collection object to be a Vector.
 		// For all primative properties, get the value from the passed object.
@@ -122,6 +124,7 @@ public class SimpleListManager extends Vector implements IListManager {
 		} catch (IllegalAccessException e) {
 			throw new MalformedPluginException("Constructor must be public.");
 		} catch (InvocationTargetException e) {
+			e.printStackTrace();
 			throw new MalformedPluginException("An exception occured within a constructor in a plug-in.");
 		}
 		

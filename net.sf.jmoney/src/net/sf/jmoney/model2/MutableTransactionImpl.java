@@ -26,6 +26,7 @@ package net.sf.jmoney.model2;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.*;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
@@ -48,6 +49,10 @@ public class MutableTransactionImpl extends ExtendableObjectHelperImpl implement
      * Creates an instance of MutableTransaction that is editing a new transaction.
      */
     public MutableTransactionImpl(Session session) {
+    	// Temp code.  The object key is created when
+    	// it is requested.
+    	super(null, null);
+    	
         this.session = (SessionImpl)session;
         this.transaction = null;
     }
@@ -57,7 +62,11 @@ public class MutableTransactionImpl extends ExtendableObjectHelperImpl implement
      * that has already been committed to the database.
      */
     public MutableTransactionImpl(Session session, Transaction transaction) {
-        this.session = (SessionImpl)session;
+    	// Temp code.  The object key is created when
+    	// it is requested.
+    	super(null, null);
+
+    	this.session = (SessionImpl)session;
         this.transaction = (TransactionImpl)transaction;
         
         this.date = transaction.getDate();
@@ -69,6 +78,20 @@ public class MutableTransactionImpl extends ExtendableObjectHelperImpl implement
         }
     }
 
+    // Temp method.
+    // No object key is set so create one now.
+	public IObjectKey getObjectKey() {
+    	return new IObjectKey() {
+    		public IExtendableObject getObject() {
+    			return MutableTransactionImpl.this;
+    		}
+    		
+    		public Collection createIndexValuesList(PropertyAccessor propertyAccessor) {
+    			throw new RuntimeException("internal error");
+    		}
+    	};
+	}
+	
 	protected boolean isMutable() {
 		return true;
 	}

@@ -22,8 +22,12 @@
 
 package net.sf.jmoney.serializeddatastore;
 
+import java.util.Collection;
+import java.util.Vector;
+
 import net.sf.jmoney.model2.IExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.PropertyAccessor;
 
 /**
  * This class provides the IObjectKey implementation.
@@ -45,5 +49,16 @@ public class SimpleObjectKey implements IObjectKey {
 
 	void setObject(IExtendableObject extendableObject) {
 		this.extendableObject = extendableObject;
+	}
+
+	public Collection createIndexValuesList(PropertyAccessor propertyAccessor) {
+		// For time being, the Vector class supports all we need.
+		// It may be that this will have to be changed to a class
+		// that extends Vector and provides more methods.
+		// TO DO: update above comment when design complete.
+		return new IndexValuesList();
+	}
+	
+	private class IndexValuesList extends Vector {
 	}
 }

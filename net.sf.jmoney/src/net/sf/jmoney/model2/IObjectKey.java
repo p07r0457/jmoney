@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Collection;
+
 /**
  * Interface into a key object that holds the data required to
  * obtain an extendable data object.
@@ -56,4 +58,10 @@ package net.sf.jmoney.model2;
  */
 public interface IObjectKey {
 	IExtendableObject getObject();
+
+	/**
+	 * @param accountAccessor
+	 * @return
+	 */
+	Collection createIndexValuesList(PropertyAccessor propertyAccessor);
 }

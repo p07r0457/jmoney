@@ -46,5 +46,5 @@ public interface IListManager extends Collection {
 	 * @return the newly created object.
 	 */
 	// TODO: Decide if we should initialize multi-valued properties too.
-	IExtendableObject createNewElement(PropertySet propertySet, IExtendableObject values);
+	IExtendableObject createNewElement(ExtendableObjectHelperImpl parent, PropertySet propertySet, IExtendableObject values);
 }

@@ -332,9 +332,9 @@ public class PropertySet {
 		} else if (basePropertySet != null) {
 			Vector baseParameterAccessors = basePropertySet.getConstructorProperties();
 			constructorProperties.addAll(baseParameterAccessors);
-			index = 2 + baseParameterAccessors.size();
+			index = 3 + baseParameterAccessors.size();
 		} else {
-			index = 2;
+			index = 3;
 		}
 		
 		// For the time being, we simply
@@ -357,15 +357,18 @@ public class PropertySet {
 			int i = 0;
 			int parameterCount = constructorProperties.size();
 			if (!isExtension) {
-				parameterCount += 2;
+				parameterCount += 3;
 			}
 			Class parameters[] = new Class[parameterCount];
 
-			// In the extendable objects, the first parameter is always
-			// a map of extensions.
+			// In the extendable objects, the first parameters are always:
+			// - the key to this object
+			// - a map of extensions
+			// - the key to the object which is the parent of this object
 			if (!isExtension) {
 				parameters[i++] = IObjectKey.class;
 				parameters[i++] = Map.class;
+				parameters[i++] = IObjectKey.class;
 			}
 			
 			for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {

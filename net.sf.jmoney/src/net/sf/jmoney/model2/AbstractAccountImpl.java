@@ -33,59 +33,50 @@ import net.sf.jmoney.model2.*;
  * An implementation of the Account interface
  */
 public abstract class AbstractAccountImpl extends ExtendableObjectHelperImpl implements Account {
-
-        protected Account parent;
-  
-        protected IListManager subAccounts;
-        
-        protected AbstractAccountImpl(
-        		IObjectKey objectKey, 
-				Map extensions, 
-				IListManager subAccounts) {
-        	super(objectKey, extensions);
-			this.subAccounts = subAccounts;
-        }
-        
+	
+	protected IObjectKey parentKey;
+	
+	protected IListManager subAccounts;
+	
+	protected AbstractAccountImpl(
+			IObjectKey objectKey, 
+			Map extensions, 
+			IObjectKey parent,
+			IListManager subAccounts) {
+		super(objectKey, extensions);
+		this.parentKey = parent;
+		this.subAccounts = subAccounts;
+	}
+	
 	public String getFullAccountName() {
 		return getName();
 	}
-
-        public Account getParent() {
-            return parent;
-        }
-
-        // This method is used when setting the back references
-    	// TODO: we should be able to do this in the initializers.
-    	// If so then the datastore no longer needs to do this
-    	// and we can remove this public method.
-        public void setParent(Account parent) {
-            this.parent = parent;
-        }
-        
-        /**
-         * This method is called by the MutableAccount class,
-         * and also by the datastore during object initialization.
-         */
-        public void addSubAccount(Account subAccount) {
-            subAccounts.add(subAccount);
-        }
-        
-        void removeSubAccount(Account subAccount) {
-            subAccounts.remove(subAccount);
-        }
-
-        public Iterator getSubAccountIterator() {
-            return subAccounts == null
-                ? new EmptyIterator()
-                : subAccounts.iterator();
-        }
-     
-    	public String toString() {
-    		return getName();
-    	}
-
-    	public int compareTo(Object o) {
-    		Account c = (Account) o;
-    		return getName().compareTo(c.getName());
-    	}
+	
+	public Account getParent() {
+		IExtendableObject parent = parentKey.getObject();
+		if (parent instanceof Account) {
+			return (Account)parent;
+		} else {
+			return null;
+		}
+	}
+	
+	void removeSubAccount(Account subAccount) {
+		subAccounts.remove(subAccount);
+	}
+	
+	public Iterator getSubAccountIterator() {
+		return subAccounts == null
+		? new EmptyIterator()
+				: subAccounts.iterator();
+	}
+	
+	public String toString() {
+		return getName();
+	}
+	
+	public int compareTo(Object o) {
+		Account c = (Account) o;
+		return getName().compareTo(c.getName());
+	}
 }

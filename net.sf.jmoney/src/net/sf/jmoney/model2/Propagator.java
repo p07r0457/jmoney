@@ -242,6 +242,11 @@ public class Propagator {
 			topLevelPropagatorFirer = false;
 		}
 		
+		// 'updatedProperties' must be reset to null even in the case where
+		// an exception is throw.  We therefore wrap all the following in a
+		// 'try' - 'finally' block.
+		try {
+		
 		PropertySet sourcePropertySetKey = propertyAccessor.getPropertySet();
 		
 		if (updatedProperties.contains(propertyAccessor)) {
@@ -291,8 +296,10 @@ public class Propagator {
 			}
 		}
 		
+		} finally {
 		if (topLevelPropagatorFirer) {
 			updatedProperties = null;
+		}
 		}
 	}
 }

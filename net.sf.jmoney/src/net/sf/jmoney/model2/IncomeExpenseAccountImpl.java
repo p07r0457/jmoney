@@ -30,12 +30,7 @@ import net.sf.jmoney.model2.*;
 /**
  * An implementation of the IncomeExpenseAccount interface
  */
-//Kludge:  This implements MutableIncomeExpenseAccount.
-//You might think it should be implementing only IncomeExpenseAccount,
-//and you would be right.  However, the setters are needed
-//when reading the data from the XML.  Until this whole data
-//storage mess is sorted out, we will leave this as is.
-public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements MutableIncomeExpenseAccount {
+public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements IncomeExpenseAccount {
 
 	private String accountName;
 
@@ -44,9 +39,10 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Mut
 	public IncomeExpenseAccountImpl(
 			IObjectKey objectKey, 
 			Map extensions, 
+			IObjectKey parent,
 			String accountName,
 			IListManager subAccounts) {
-		super(objectKey, extensions, subAccounts);
+		super(objectKey, extensions, parent, subAccounts);
 		setName(accountName);
 	}
 
@@ -91,9 +87,7 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Mut
 	 * @return
 	 */
 	public Account createNewSubAccount(Session session, PropertySet propertySet, IncomeExpenseAccount account) {
-		AbstractAccountImpl newAccount = (AbstractAccountImpl)subAccounts.createNewElement(propertySet, account);
-
-		newAccount.setParent(this);
+		AbstractAccountImpl newAccount = (AbstractAccountImpl)subAccounts.createNewElement(this, propertySet, account);
 
 		// Fire the event.
         final AccountAddedEvent event = new AccountAddedEvent(session, newAccount);
@@ -115,17 +109,4 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Mut
         public MutableIncomeExpenseAccount createMutableAccount(Session session) throws ObjectLockedForEditException {
             return new MutableIncomeExpenseAccountImpl(session, this);
         }
-
-		/* (non-Javadoc)
-		 * @see net.sf.jmoney.model2.MutableIncomeExpenseAccount#commit()
-		 */
-		public IncomeExpenseAccount commit() {
-			throw new RuntimeException("should never be called");
-		}
-	    
-	    // This method is used by the datastore implementations.
-	    // TODO: Should this be moved to a separate initialization interface?
-		public void addSubAccount(IncomeExpenseAccount subAccount) {
-			super.addSubAccount(subAccount);
-		}
 }

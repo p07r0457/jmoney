@@ -78,6 +78,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
     public SessionImpl(
     		IObjectKey objectKey,
     		Map extensions,
+			IObjectKey parent,
     		IListManager commodities,
 			IListManager accounts,
 			IListManager transactions,
@@ -191,6 +192,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
 				// TODO: Sort out what should really be in the Currency interface and remove
 				// most of the methods in the following implementation.
 				Currency newCurrency = (Currency)commodities.createNewElement(
+						this,
 						currencyPropertySet, 
 						new Currency() {
 
@@ -622,7 +624,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
     }
 */
     /**
-     *  In practice it is likely that the only listener will be the
+     * In practice it is likely that the only listener will be the
      * JMoneyPlugin object.  Views should all listen to the JMoneyPlugin
      * class for changes to the model.  The JMoneyPlugin object will pass
      * on events from this session object.
@@ -688,9 +690,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
 	 * @return
 	 */
 	public Account createNewAccount(PropertySet propertySet, Account account) {
-		AbstractAccountImpl newAccount = (AbstractAccountImpl)accounts.createNewElement(propertySet, account);
-
-		newAccount.setParent(null);  // null indicates a top-level account
+		AbstractAccountImpl newAccount = (AbstractAccountImpl)accounts.createNewElement(this, propertySet, account);
 
 		// Fire the event.
         final AccountAddedEvent event = new AccountAddedEvent(this, newAccount);
@@ -729,7 +729,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
 	 * @return
 	 */
 	public Commodity createNewCommodity(PropertySet propertySet, Commodity commodity) {
-		Commodity newCommodity = (Commodity)commodities.createNewElement(propertySet, commodity);
+		Commodity newCommodity = (Commodity)commodities.createNewElement(this, propertySet, commodity);
 
 		if (newCommodity instanceof Currency) {
 			Currency newCurrency = (Currency)newCommodity;
@@ -749,7 +749,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
 	}
 
 	public Transaction createNewTransaction(PropertySet propertySet, Transaction transaction) {
-		TransactionImpl newTransaction = (TransactionImpl)transactions.createNewElement(propertySet, transaction);
+		TransactionImpl newTransaction = (TransactionImpl)transactions.createNewElement(this, propertySet, transaction);
 
 		// Fire the event.
 /* Do we need notification of new transactions, or are the notifications
@@ -765,15 +765,4 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
 */        
         return newTransaction;
 	}
-
-/*
-    public TransactionImpl[] getTransaxions() {
-        result = new TransactionImpl[transa
-        return accounts;
-    }
-    
-    public void setAccounts(Vector accounts) {
-        this.accounts = accounts;
-    }
-*/
 }

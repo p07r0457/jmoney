@@ -44,8 +44,29 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import net.sf.jmoney.model2.*;
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.SessionImpl;
+import net.sf.jmoney.model2.ExtendableObjectHelperImpl;
+import net.sf.jmoney.model2.IExtendableObject;
+import net.sf.jmoney.model2.ISessionManagement;
+import net.sf.jmoney.model2.MalformedPluginException;
+import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertyNotFoundException;
+import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.PropertySetNotFoundException;
+// The following are treated specially by this datastore plug-in
+// so that we get more friendly idref names.
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.Currency;
+// The following are required so that we can convert
+// old format files.
+import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.MutableCapitalAccount;
+import net.sf.jmoney.model2.MutableIncomeExpenseAccount;
+import net.sf.jmoney.model2.MutableTransaction;
 
 //SAX classes.
 import org.xml.sax.helpers.*;
@@ -54,13 +75,11 @@ import javax.xml.transform.*;
 import javax.xml.transform.stream.*;
 import javax.xml.transform.sax.*;
 
-/** @author Nigel
+/** 
+ * The main class for the plug-in that implements the data storage
+ * in an XML file.
  *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
- */
-/**
- * The main plugin class to be used in the desktop.
+ * @author Nigel Westbury
  */
 public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	//The shared instance.
@@ -206,7 +225,6 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			HandlerForObject handler = new HandlerForObject();
 			saxParser.parse(bin, handler); 
 			SessionImpl newSession = handler.getSession();
-			setRedundantReferences(newSession);
 			result = new SessionManagementImpl(sessionFile, newSession);
 		} 
 		catch (ParserConfigurationException e) {
@@ -214,10 +232,10 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		} 
 		catch (SAXException se) {
 			// This exception will be throw if the file is old format (0.4.5 or prior).
-			// Read as an old format file.
-			System.out.println(se.toString());
+			// Try reading as an old format file.
 			System.out.println(se.getMessage());
-			se.printStackTrace();
+			System.out.println("Now attempting to read file as old format (0.4.5 or prior).");
+
 			// First close and re-open the file.
 			bin.close();
 			if (gin != null) gin.close();
@@ -251,7 +269,9 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 								null));	
 			}
 			
+			SimpleObjectKey key = new SimpleObjectKey(); 
 			SessionImpl newSessionNewFormat = new SessionImpl(
+				key,
 				null,
 				null,
 				new SimpleListManager(),
@@ -259,6 +279,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				new SimpleListManager(),
 				null
 			);
+			key.setObject(newSessionNewFormat);
+			
 			convertModelOneFormat((net.sf.jmoney.model.Session)newSession, newSessionNewFormat);
 			result = new SessionManagementImpl(sessionFile, newSessionNewFormat);
 		}
@@ -453,14 +475,6 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * elements representing the properties of the object.
 	 */
 	private class ObjectProcessor extends SAXEventProcessor {
-		// This is a bit of a kludge.  We know that all of our
-		// own objects are implemented using the
-		// ExtendableObjectHelperImpl helper class,
-		// so this gives us access to the methods in this class.
-		// In particular, this class supports the setPropertyValue
-		// method even though this method is not exposed through
-		// the interfaces for the non-mutable objects.
-//		ExtendableObjectHelperImpl extendableObject;
 		
 		private PropertySet propertySet;
 		
@@ -508,7 +522,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 *        found then this original event processor must be restored as
 		 *        the active event processor.
 		 */
-		ObjectProcessor(SAXEventProcessor parent, String propertySetId) {
+		ObjectProcessor(ObjectProcessor parent, String propertySetId) {
 			super(parent);
 			
 			objectKey = new SimpleObjectKey();
@@ -522,12 +536,17 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			Vector constructorProperties = propertySet.getConstructorProperties();
 			int numberOfParameters = constructorProperties.size();
 			if (!propertySet.isExtension()) {
-				numberOfParameters += 2;
+				numberOfParameters += 3;
 			}
 			constructorParameters = new Object[numberOfParameters];
 			extensionMap = new HashMap();
 			constructorParameters[0] = objectKey;
 			constructorParameters[1] = extensionMap;
+			if (parent == null) {
+				constructorParameters[2] = null;
+			} else {
+				constructorParameters[2] = parent.objectKey;
+			}
 			
 			// For all lists, set the Collection object to be a Vector.
 			// For all other parameters, the value is set when the property
@@ -713,25 +732,9 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				throw new MalformedPluginException("An exception occured within a constructor in a plug-in.");
 			}
 			
-			/*			
-			if (propertySetId.equals("net.sf.jmoney.session")) {
-				this.extendableObject = new SessionImpl();
-			} else if (propertySetId.equals("net.sf.jmoney.currency")) {
-				this.extendableObject = new CurrencyImpl();
-				idToCurrencyMap.put(atts.getValue("id"), extendableObject);
-			} else if (propertySetId.equals("net.sf.jmoney.capitalAccount")) {
-				this.extendableObject = new CapitalAccountImpl();
-				idToAccountMap.put(atts.getValue("id"), extendableObject);
-			} else if (propertySetId.equals("net.sf.jmoney.categoryAccount")) {
-				this.extendableObject = new IncomeExpenseAccountImpl();
-				idToAccountMap.put(atts.getValue("id"), extendableObject);
-			} else if (propertySetId.equals("net.sf.jmoney.transaction")) {
-				this.extendableObject = new TransactionImpl();
-			} else if (propertySetId.equals("net.sf.jmoney.entry")) {
-				this.extendableObject = new EntryImpl();
-			} 
-*/			
 			objectKey.setObject(extendableObject);
+			
+			extendableObject.registerWithIndexes();
 			
 			// Pass the value back up to the outer element processor.
 			if (parent != null) {
@@ -1371,50 +1374,6 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				window.getShell(),
 				title,
 				message);
-	}
-	
-	/**
-	 * Not everything is serialized to disk.  Redundant information is
-	 * not saved.  This method sets up these pointers and should be
-	 * called after a session is de-serialized.
-	 *
-	 * The following need to be set up:
-	 * <UL>
-	 * <LI>The list of entries in each account</LI>
-	 * <LI>The back-pointers from sub-categories to their parents</LI>
-	 * <LI>The back-pointers from entries to the transaction</LI>
-	 * </UL>
-	 */
-	private void setRedundantReferences(SessionImpl session) {
-		
-		// Add the back-references from sub-categories to the parent category
-		setParentAccountReferences(session.getAccountIterator(), null);
-		
-		// Add the back-references from entries to the transactions and also
-		// add each entry in an account to the list for that account.
-		for (Iterator iter = session.getTransactionIterator(); iter.hasNext(); ) {
-			Transaction transaction = (Transaction)iter.next();
-			
-			for (Iterator entryIter = transaction.getEntryIterator(); entryIter.hasNext(); ) {
-				EntryImpl entry = (EntryImpl)entryIter.next();
-				
-				entry.setTransaxion(transaction);
-				
-				if (entry.getAccount() instanceof CapitalAccountImpl) {
-					CapitalAccountImpl account = (CapitalAccountImpl) entry.getAccount();
-					account.addEntry(entry);
-				}
-			}
-		}
-	}
-	
-	
-	private void setParentAccountReferences(Iterator iter, Account parent) {
-		while (iter.hasNext()) {
-			AbstractAccountImpl category = (AbstractAccountImpl) iter.next();
-			category.setParent(parent);
-			setParentAccountReferences(category.getSubAccountIterator(), category);
-		}
 	}
 	
 	/**

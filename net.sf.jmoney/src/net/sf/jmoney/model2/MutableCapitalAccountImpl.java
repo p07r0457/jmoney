@@ -25,6 +25,7 @@ package net.sf.jmoney.model2;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.util.Collection;
 import java.util.Iterator;
 
 import net.sf.jmoney.model2.*;
@@ -64,7 +65,11 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 	 * Creates an instance of MutableCapitalAccount that is editing a new top level account
 	 */
 	public MutableCapitalAccountImpl(Session session) {
-		this.session = (SessionImpl)session;
+    	// Temp code.  The object key is created when
+    	// it is requested.
+    	super(null, null);
+
+    	this.session = (SessionImpl)session;
 		this.parent = null;
 		this.account = null;
 		this.currency = this.session.getDefaultCurrency();
@@ -75,7 +80,11 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 	 * that has already been committed to the database.
 	 */
 	public MutableCapitalAccountImpl(Session session, CapitalAccount account) {
-		this.session = (SessionImpl)session;
+    	// Temp code.  The object key is created when
+    	// it is requested.
+    	super(null, null);
+
+    	this.session = (SessionImpl)session;
 		this.parent = (CapitalAccountImpl)account.getParent();
 		this.account = (CapitalAccountImpl)account;
 		
@@ -97,10 +106,28 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 	 * parent account.
 	 */
 	public MutableCapitalAccountImpl(Session session, CapitalAccount parent, int dummy) {
-		this.session = (SessionImpl)session;
+    	// Temp code.  The object key is created when
+    	// it is requested.
+    	super(null, null);
+
+    	this.session = (SessionImpl)session;
 		this.parent = (CapitalAccountImpl)parent;
 		this.account = null;
 		this.currency = parent.getCurrency();
+	}
+	
+    // Temp method.
+    // No object key is set so create one now.
+	public IObjectKey getObjectKey() {
+    	return new IObjectKey() {
+    		public IExtendableObject getObject() {
+    			return MutableCapitalAccountImpl.this;
+    		}
+    		
+    		public Collection createIndexValuesList(PropertyAccessor propertyAccessor) {
+    			throw new RuntimeException("internal error");
+    		}
+    	};
 	}
 	
 	protected boolean isMutable() {

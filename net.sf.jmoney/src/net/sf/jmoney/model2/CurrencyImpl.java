@@ -61,6 +61,7 @@ public class CurrencyImpl extends ExtendableObjectHelperImpl implements Currency
 	public CurrencyImpl(
 				IObjectKey objectKey,
 	    		Map extensions,
+				IObjectKey parent,
 				String name,
 				String code,
 				int decimals) {

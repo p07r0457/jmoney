@@ -39,6 +39,11 @@ public class EntryAddedEvent extends EventObject {
         this.newEntry = newEntry;
     }
 
+    public EntryAddedEvent(Entry newEntry) {
+        super(JMoneyPlugin.getDefault());
+        this.newEntry = newEntry;
+    }
+
     public Entry getNewEntry() {
         return newEntry;
     }

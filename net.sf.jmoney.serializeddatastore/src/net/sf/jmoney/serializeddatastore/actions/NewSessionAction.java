@@ -68,6 +68,7 @@ public class NewSessionAction implements IWorkbenchWindowActionDelegate {
         	Session newSession = new SessionImpl(
         			null,
         			null,
+					null,
 					commodities,
 					new SimpleListManager(),
 					new SimpleListManager(),

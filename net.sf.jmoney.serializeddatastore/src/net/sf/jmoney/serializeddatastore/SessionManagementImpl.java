@@ -24,15 +24,10 @@
 package net.sf.jmoney.serializeddatastore;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
-import net.sf.jmoney.model2.ISessionChangeFirer;
 import net.sf.jmoney.model2.ISessionManagement;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.SessionChangeListener;
 
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPersistableElement;
 import org.eclipse.ui.IWorkbenchWindow;
