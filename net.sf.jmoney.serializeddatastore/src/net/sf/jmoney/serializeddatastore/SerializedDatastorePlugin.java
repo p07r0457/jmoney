@@ -83,6 +83,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPluginDescriptor;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -104,6 +105,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author Nigel Westbury
  */
 public class SerializedDatastorePlugin extends AbstractUIPlugin {
+
+	public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney.qif/debug"));
+
 	//The shared instance.
 	private static SerializedDatastorePlugin plugin;
 	//Resource bundle.
@@ -364,7 +368,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			} else {
 			// This exception will be throw if the file is old format (0.4.5 or prior).
 			// Try reading as an old format file.
-			System.out.println("Now attempting to read file as old format (0.4.5 or prior).");
+			if (DEBUG) System.out.println("Now attempting to read file as old format (0.4.5 or prior).");
 
 			// First close and re-open the file.
 			bin.close();
@@ -723,7 +727,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 */
 		public void startElement(String uri, String localName, Attributes atts)
 		throws SAXException {
-System.out.println("start " + localName);			
+            if (DEBUG) System.out.println("start " + localName);			
 			// We set propertyAccessor to be the property accessor
 			// for the property whose value is contained in this
 			// element.  This property may be a scalar or a list

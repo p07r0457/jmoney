@@ -21,12 +21,15 @@
  */
 package net.sf.jmoney.ui.internal;
 
-import java.net.MalformedURLException;import java.net.URL;import java.util.MissingResourceException;import java.util.ResourceBundle;import org.eclipse.jface.resource.ImageDescriptor;import org.eclipse.swt.graphics.Color;import org.eclipse.swt.widgets.Display;import org.eclipse.ui.IWorkbench;import org.eclipse.ui.IWorkbenchPage;import org.eclipse.ui.IWorkbenchWindow;import org.eclipse.ui.PlatformUI;import org.eclipse.ui.plugin.AbstractUIPlugin;import org.osgi.framework.BundleContext;
+import java.net.MalformedURLException;import java.net.URL;import java.util.MissingResourceException;import java.util.ResourceBundle;import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.resource.ImageDescriptor;import org.eclipse.swt.graphics.Color;import org.eclipse.swt.widgets.Display;import org.eclipse.ui.IWorkbench;import org.eclipse.ui.IWorkbenchPage;import org.eclipse.ui.IWorkbenchWindow;import org.eclipse.ui.PlatformUI;import org.eclipse.ui.plugin.AbstractUIPlugin;import org.osgi.framework.BundleContext;
 
 /**
  * The main plugin class to be used in the desktop.
  */
 public class JMoneyUIPlugin extends AbstractUIPlugin {
+
+    public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney.qif/debug"));
 
 	private static JMoneyUIPlugin plugin;
 

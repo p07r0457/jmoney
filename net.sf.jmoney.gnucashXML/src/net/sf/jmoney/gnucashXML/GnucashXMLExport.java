@@ -166,7 +166,7 @@ public class GnucashXMLExport {
    * @author Faucheux
    */
   void exportAccount (Account account) {
-      System.out.println("Export account " + account.getFullAccountName());
+  	if (GnucashXMLPlugin.DEBUG) System.out.println("Export account " + account.getFullAccountName());
 
       // create the entry for the account
       Element e = doc.createElement("gnc:account");
@@ -214,7 +214,7 @@ public class GnucashXMLExport {
    * @author Faucheux
    */
   void exportTransaction (Transaction transaction) {
-      System.out.println("Export transaction " + transaction.hashCode());
+  	if (GnucashXMLPlugin.DEBUG) System.out.println("Export transaction " + transaction.hashCode());
 
       // create the entry for the transaction
       Element e = doc.createElement("gnc:transaction");
@@ -261,7 +261,7 @@ public class GnucashXMLExport {
    * @author Olivier Faucheux
    */
   void exportEntry (Element splitsElement, Entry entry) {
-      System.out.println("Export entry " + entry.hashCode());
+  	if (GnucashXMLPlugin.DEBUG) System.out.println("Export entry " + entry.hashCode());
 
       Element entryElement;
       Element e;

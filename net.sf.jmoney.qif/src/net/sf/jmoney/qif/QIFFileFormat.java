@@ -162,7 +162,7 @@ public class QIFFileFormat implements FileFormat {
 				Account account = getAccount(accountName, session);
 				if (!(account instanceof CurrencyAccount)) {
 					// TODO: process error properly
-					System.out.println("account is not a currency account");
+					if (QIFPlugin.DEBUG) System.out.println("account is not a currency account");
 					throw new RuntimeException("account is not a currency account");
 				}
 				
@@ -204,7 +204,7 @@ public class QIFFileFormat implements FileFormat {
 				StringTokenizer st = new StringTokenizer(line, "D/\'");
 				int month = Integer.parseInt(st.nextToken().trim());
 				if (month > 12) {
-					System.out.println("Non-US dates:" + line);
+					if (QIFPlugin.DEBUG) System.out.println("Non-US dates:" + line);
 					return false;
 				}
 			}

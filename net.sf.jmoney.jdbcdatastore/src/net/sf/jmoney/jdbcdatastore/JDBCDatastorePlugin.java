@@ -55,6 +55,7 @@ import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -68,6 +69,9 @@ import org.osgi.framework.BundleContext;
  * @author Nigel Westbury
  */
 public class JDBCDatastorePlugin extends AbstractUIPlugin {
+
+	public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney.jdbcdatastore/debug"));
+
 	//The shared instance.
 	private static JDBCDatastorePlugin plugin;
 	//Resource bundle.
@@ -260,7 +264,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		ResultSet rs;	
 		
 		DatabaseMetaData dmd = con.getMetaData();
-		System.out.println("Connected to: " + dmd.getURL() + "\n" +
+		if (DEBUG) System.out.println("Connected to: " + dmd.getURL() + "\n" +
 				"Driver: " + dmd.getDriverName() + "\n" +
 				"Version: " + dmd.getDriverVersion());
 		
@@ -564,12 +568,12 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			for (int i = 1; i <= cols; i++) {
 				x += rsmd.getColumnLabel(i) + ", ";
 			}
-			System.out.println(x);
+			if (DEBUG) System.out.println(x);
 			
 		} catch (Exception SQLException) {
 			throw new RuntimeException("database error");
 		}
-		System.out.println("");
+		if (DEBUG) System.out.println("");
 	}
 
 	private void traceResultSet(ResultSet rs) {
@@ -580,19 +584,19 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			for (int i = 1; i <= cols; i++) {
 				x += rsmd.getColumnLabel(i) + ", ";
 			}
-			System.out.println(x);
+			if (DEBUG) System.out.println(x);
 			
 			while (rs.next()) {
 				x = "";
 				for (int i = 1; i <= cols; i++) {
 					x += rs.getString(i) + ", ";
 				}
-				System.out.println(x);
+				if (DEBUG) System.out.println(x);
 			}
 		} catch (Exception SQLException) {
 			throw new RuntimeException("database error");
 		}
-		System.out.println("");
+		if (DEBUG) System.out.println("");
 	}
 
 	/**

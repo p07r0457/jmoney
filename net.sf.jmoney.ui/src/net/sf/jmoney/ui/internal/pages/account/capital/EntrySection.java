@@ -737,7 +737,7 @@ public class EntrySection extends SectionPart {
 		}
 		
 		public void focusLost(FocusEvent e) {
-			System.out.println("Focus lost: " + propertyAccessor.getLocalName());
+			if (JMoneyUIPlugin.DEBUG) System.out.println("Focus lost: " + propertyAccessor.getLocalName());
 	
 			ExtendableObject object = getExtendableObject();
 			
@@ -756,7 +756,7 @@ public class EntrySection extends SectionPart {
 			object.getSession().registerUndoableChange(description);
 		}
 		public void focusGained(FocusEvent e) {
-			System.out.println("Focus gained: " + propertyAccessor.getLocalName());
+			if (JMoneyUIPlugin.DEBUG) System.out.println("Focus gained: " + propertyAccessor.getLocalName());
 			// Save the old value of this property for use in our 'undo' message.
 			ExtendableObject object = getExtendableObject();
 			oldValueText = propertyAccessor.formatValueForMessage(object);

@@ -220,7 +220,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			node != null;
 			node = (Element) node.getNextSibling()) {
 
-			System.out.println("Node: " + node.getNodeName());
+			if (GnucashXMLPlugin.DEBUG) System.out.println("Node: " + node.getNodeName());
 			if (node.getNodeName().compareToIgnoreCase("gnc:Account") == 0) {
 				String accountName = null;
 				String accountGUID = null;
@@ -229,7 +229,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 
 				NodeList childNodes = node.getChildNodes();
 				for (int j = 0; j < childNodes.getLength(); j++) {
-					// System.out.println("  Subnode : " + childNodes.item(j).getNodeName() + ": " + childNodes.item(j).getFirstChild().getNodeValue());
+					// if (GnucashXMLPlugin.DEBUG) System.out.println("  Subnode : " + childNodes.item(j).getNodeName() + ": " + childNodes.item(j).getFirstChild().getNodeValue());
 					if (childNodes
 						.item(j)
 						.getNodeName()
@@ -251,7 +251,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 
 				// Create the account
 				if (accountName != null) {
-					System.out.println("I'm creating the account >" + accountName + "< with guid >" + accountGUID + "<");
+					if (GnucashXMLPlugin.DEBUG) System.out.println("I'm creating the account >" + accountName + "< with guid >" + accountGUID + "<");
 					CapitalAccount account = (CapitalAccount)session.createAccount(BankAccountInfo.getPropertySet());;
 					account.setName(accountName);
 					accountsGUIDTable.put(accountGUID, account);
@@ -301,8 +301,8 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			String childGUID = (String) e.next();
 			String parentGUID = (String) childParent.get(childGUID);
 			String childName;
-			//System.out.println("childGUID:" + childGUID);
-			//System.out.println("parentGUID:" + parentGUID);
+			// if (GnucashXMLPlugin.DEBUG) System.out.println("childGUID:" + childGUID);
+			// if (GnucashXMLPlugin.DEBUG) System.out.println("parentGUID:" + parentGUID);
 			CapitalAccount child = (CapitalAccount) getAccountFromGUID(childGUID);
 			CapitalAccount parent = (CapitalAccount) getAccountFromGUID(parentGUID);
 			
@@ -312,7 +312,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			accountsGUIDTable.put(childGUID, newChild);
 			
 			newChild.setName(child.getName());
-			System.out.println("Child: " + newChild + ", Parent: " + parent);
+			if (GnucashXMLPlugin.DEBUG) System.out.println("Child: " + newChild + ", Parent: " + parent);
 		}
 
 	}
@@ -377,13 +377,13 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			transactionElement =
 				(Element) transactionElement.getNextSibling()) {
 
-			System.out.println("Node: " + transactionElement.getNodeName());
+			if (GnucashXMLPlugin.DEBUG) System.out.println("Node: " + transactionElement.getNodeName());
 
 			if (transactionElement
 				.getNodeName()
 				.equalsIgnoreCase("gnc:transaction")) {
 
-				// System.out.println("New Transaction");
+				// if (GnucashXMLPlugin.DEBUG) System.out.println("New Transaction");
 				treatTransaction(transactionElement);
 				
 			}
@@ -494,7 +494,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 					? null
 					: propertyElement.getFirstChild().getNodeValue();
 
-				// System.out.println("New property : >" + propertyElementName + "<" + " Value >" + propertyElementValue + "<");
+				// if (GnucashXMLPlugin.DEBUG) System.out.println("New property : >" + propertyElementName + "<" + " Value >" + propertyElementValue + "<");
 
 				if (propertyElementName
 					.equalsIgnoreCase("trn:date-posted")) {
@@ -533,7 +533,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
     };
     
     private Account getAccountFromGUID(String GUID) {
-        // System.out.println("Looking for an account with the GUID " + GUID);
+        // if (GnucashXMLPlugin.DEBUG) System.out.println("Looking for an account with the GUID " + GUID);
         return (Account) accountsGUIDTable.get(GUID);
     }
 
@@ -594,7 +594,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 				e.setAccount(account);
 				e.setDescription(transactionDescription);
 				
-			    // System.out.println("Added amount: " + getLong(value) + " for " + account.toString() + " for >" + transactionDescription + "<" );
+			    // if (GnucashXMLPlugin.DEBUG) System.out.println("Added amount: " + getLong(value) + " for " + account.toString() + " for >" + transactionDescription + "<" );
 			}
 
 		}
