@@ -35,6 +35,9 @@ import net.sf.jmoney.fields.TransactionInfo;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IWorkbenchWindow;
 
 /**
@@ -312,6 +315,31 @@ public class Session extends ExtendableObject implements IAdaptable {
     
     public void addSessionChangeListener(SessionChangeListener l) {
         sessionChangeListeners.add(l);
+    }
+    
+	/**
+	 * Adds a change listener.
+	 * <P>
+	 * The listener is active only for as long as the given control exists.  When the
+	 * given control is disposed, the listener is removed and will receive no more
+	 * notifications.
+	 * <P>
+	 * This method is generally used when a listener is used to update contents in a
+	 * control.  Typically multiple controls are updated by a listener and the parent
+	 * composite control is passed to this method.
+	 * 
+	 * @param listener
+	 * @param control
+	 */
+	public void addSessionChangeListener(final SessionChangeListener listener, Control control) {
+        sessionChangeListeners.add(listener);
+        
+		// Remove the listener when the given control is disposed.
+		control.addDisposeListener(new DisposeListener() {
+			public void widgetDisposed(DisposeEvent e) {
+				JMoneyPlugin.getDefault().removeSessionChangeListener(listener);
+			}
+		});
     }
     
     public void removeSessionChangeListener(SessionChangeListener l) {
