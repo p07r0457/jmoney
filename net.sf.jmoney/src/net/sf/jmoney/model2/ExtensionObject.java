@@ -73,11 +73,6 @@ public abstract class ExtensionObject {
         return baseObject.getCharacterPropertyValue(propertyAccessor);
     }
     
-    // TODO: check whether we need this method.
-    public String getPropertyValueAsString(PropertyAccessor propertyAccessor) {
-        return baseObject.getPropertyValueAsString(propertyAccessor);
-    }
-    
     public void setPropertyValue(PropertyAccessor propertyAccessor, Object value) {
     	baseObject.setPropertyValue(propertyAccessor, value);
     }

@@ -417,60 +417,6 @@ public abstract class ExtendableObject {
 		}
 	}
 	
-	// TODO: check whether we need this method.
-	public String getPropertyValueAsString(PropertyAccessor propertyAccessor) {
-		Object objectWithProperties = getPropertySetInterface(propertyAccessor.getPropertySet());
-		
-		// If there is no extension then we use a default extension
-		// obtained from the propertySet object.  This extension object
-		// was constructed using the default constructor.
-		// This default extension is never passed outside this package
-		// because plugins have no need for it and can cause chaos if
-		// they alter it.  However it is useful for use inside the
-		// package such as here.
-		if (objectWithProperties == null) {
-			objectWithProperties = propertyAccessor.getPropertySet().getDefaultPropertyValues();
-		}
-		
-		String result = "";
-		
-		// Now we use introspection on the interface to find this property
-		String localName = propertyAccessor.getLocalName();
-		String theGetStringMethodName 
-          = "get"
-        	+ localName.toUpperCase().charAt(0)
-			+ localName.substring(1, localName.length())
-			+ "String";
-		
-		try {
-			Method theGetStringMethod = objectWithProperties.getClass().getDeclaredMethod(theGetStringMethodName, null);
-			
-			if (theGetStringMethod.getReturnType() != String.class) {
-				throw new MalformedPluginException("Method '" + theGetStringMethodName + "' must return a String.");
-			}
-			
-			try {
-			    result = (String) theGetStringMethod.invoke(objectWithProperties, null);
-			} catch (RuntimeException e) {
-			    e.printStackTrace(System.err);
-			} catch (InvocationTargetException e) {
-			    e.printStackTrace(System.err);
-			} catch (IllegalAccessException e) {
-			    e.printStackTrace(System.err);
-			}
-			
-		} catch (NoSuchMethodException e) {
-			// No special method to get the value as a string, so use the method to
-			// get in native type and convert to a string.
-			Object value = propertyAccessor.invokeGetMethod(objectWithProperties);
-			if (value != null) {
-				result = value.toString();
-			}
-		}
-
-		return result;
-	}
-	
 	public void setIntegerPropertyValue(PropertyAccessor propertyAccessor, int value) {
 		setPropertyValue(propertyAccessor, new Integer(value));
 	}
