@@ -27,27 +27,27 @@
   <parameter name="DateToday" class="java.lang.String"/>
   <parameter name="Page" class="java.lang.String"/>
 
-  <field name="CurrencyCode" class="java.lang.String"/>
-  <field name="BaseCategory" class="java.lang.String"/>
-  <field name="Category" class="java.lang.String"/>
-  <field name="Income" class="java.lang.Long"/>
-  <field name="IncomeString" class="java.lang.String"/>
-  <field name="Expense" class="java.lang.Long"/>
-  <field name="ExpenseString" class="java.lang.String"/>
+  <field name="currencyCode" class="java.lang.String"/>
+  <field name="baseCategory" class="java.lang.String"/>
+  <field name="category" class="java.lang.String"/>
+  <field name="income" class="java.lang.Long"/>
+  <field name="incomeString" class="java.lang.String"/>
+  <field name="expense" class="java.lang.Long"/>
+  <field name="expenseString" class="java.lang.String"/>
 
   <variable name="CurrencyIncome" class="java.lang.Long" resetType="Group" resetGroup="CurrencyGroup" calculation="Sum">
-    <variableExpression>$F{Income}</variableExpression>
+    <variableExpression>$F{income}</variableExpression>
     <initialValueExpression>new Long(0)</initialValueExpression>
   </variable>
 
   <variable name="CurrencyExpense" class="java.lang.Long" resetType="Group" resetGroup="CurrencyGroup" calculation="Sum">
-    <variableExpression>$F{Expense}</variableExpression>
+    <variableExpression>$F{expense}</variableExpression>
     <initialValueExpression>new Long(0)</initialValueExpression>
   </variable>
 
   <group name="CurrencyGroup">
     <groupExpression>
-      $F{CurrencyCode}
+      $F{currencyCode}
     </groupExpression>
 
     <groupHeader>
@@ -68,7 +68,7 @@
 	    <font reportFont="bold"/>
 	  </textElement>
 	  <textFieldExpression class="java.lang.String">
-	    $P{Total} + " " + $F{CurrencyCode}
+	    $P{Total} + " " + $F{currencyCode}
 	  </textFieldExpression>
 	</textField>
 
@@ -78,7 +78,7 @@
 	    <font reportFont="bold"/>
 	  </textElement>
 	  <textFieldExpression class="java.lang.String">
-	    net.sf.jmoney.reports.ReportsPlugin.format($V{CurrencyIncome}.longValue(), $F{CurrencyCode})
+	    net.sf.jmoney.reports.ReportsPlugin.format($V{CurrencyIncome}.longValue(), $F{currencyCode})
 	  </textFieldExpression>
 	</textField>
 
@@ -88,7 +88,7 @@
 	    <font reportFont="bold"/>
 	  </textElement>
 	  <textFieldExpression class="java.lang.String">
-	    net.sf.jmoney.reports.ReportsPlugin.format($V{CurrencyExpense}.longValue(), $F{CurrencyCode})
+	    net.sf.jmoney.reports.ReportsPlugin.format($V{CurrencyExpense}.longValue(), $F{currencyCode})
 	  </textFieldExpression>
 	</textField>
 
@@ -108,7 +108,7 @@
 	    <font reportFont="bold"/>
 	  </textElement>
 	  <textFieldExpression class="java.lang.String">
-	    net.sf.jmoney.JMoneyPlugin.getDefault().getSession().getCurrencyForCode($F{CurrencyCode}).format(
+	    net.sf.jmoney.JMoneyPlugin.getDefault().getSession().getCurrencyForCode($F{currencyCode}).format(
 	      $V{CurrencyIncome}.longValue() -
 	      $V{CurrencyExpense}.longValue())
 	  </textFieldExpression>
@@ -192,7 +192,7 @@
       <textField>
 	<reportElement x="0" y="0" width="315" height="13"/>
 	<textFieldExpression class="java.lang.String">
-	  $F{Category}
+	  $F{category}
 	</textFieldExpression>
       </textField>
 
@@ -200,7 +200,7 @@
 	<reportElement x="320" y="0" width="95" height="13"/>
 	<textElement textAlignment="Right"/>
 	<textFieldExpression class="java.lang.String">
-	  $F{IncomeString}
+	  $F{incomeString}
 	</textFieldExpression>
       </textField>
 
@@ -208,7 +208,7 @@
 	<reportElement x="420" y="0" width="95" height="13"/>
 	<textElement textAlignment="Right"/>
 	<textFieldExpression class="java.lang.String">
-	  $F{ExpenseString}
+	  $F{expenseString}
 	</textFieldExpression>
       </textField>
     </band>

@@ -26,19 +26,19 @@
   <parameter name="DateToday" class="java.lang.String"/>
   <parameter name="Page" class="java.lang.String"/>
 
-  <field name="AccountName" class="java.lang.String"/>
-  <field name="Balance" class="java.lang.Long"/>
-  <field name="BalanceString" class="java.lang.String"/>
-  <field name="CurrencyCode" class="java.lang.String"/>
+  <field name="accountName" class="java.lang.String"/>
+  <field name="balance" class="java.lang.Long"/>
+  <field name="balanceString" class="java.lang.String"/>
+  <field name="currencyCode" class="java.lang.String"/>
 
   <variable name="BalanceSum" class="java.lang.Long" resetType="Group" resetGroup="CurrencyGroup" calculation="Sum">
-    <variableExpression>$F{Balance}</variableExpression>
+    <variableExpression>$F{balance}</variableExpression>
     <initialValueExpression>new Long(0)</initialValueExpression>
   </variable>
 
   <group name="CurrencyGroup" minHeightToStartNewPage="60">
     <groupExpression>
-      $F{CurrencyCode}
+      $F{currencyCode}
     </groupExpression>
 
     <groupHeader>
@@ -59,7 +59,7 @@
 	    <font reportFont="bold"/>
 	  </textElement>
 	  <textFieldExpression class="java.lang.String">
-	    $P{Total} + " " + $F{CurrencyCode}
+	    $P{Total} + " " + $F{currencyCode}
 	  </textFieldExpression>
 	</textField>
 
@@ -69,7 +69,7 @@
 	    <font reportFont="bold"/>
 	  </textElement>
 	  <textFieldExpression class="java.lang.String">
-	    net.sf.jmoney.reports.ReportsPlugin.format($V{BalanceSum}.longValue(), $F{CurrencyCode})
+	    net.sf.jmoney.reports.ReportsPlugin.format($V{BalanceSum}.longValue(), $F{currencyCode})
 	  </textFieldExpression>
 	</textField>
 
@@ -141,7 +141,7 @@
       <textField>
 	<reportElement x="0" y="0" width="415" height="13"/>
 	<textFieldExpression class="java.lang.String">
-	  $F{AccountName}
+	  $F{accountName}
 	</textFieldExpression>
       </textField>
 
@@ -149,7 +149,7 @@
 	<reportElement x="420" y="0" width="95" height="13"/>
 	<textElement textAlignment="Right"/>
 	<textFieldExpression class="java.lang.String">
-	  $F{BalanceString}
+	  $F{balanceString}
 	</textFieldExpression>
       </textField>
     </band>

@@ -7,18 +7,24 @@
   <property name="src" location="src"/>
   <property name="build" location="bin"/>
   <property name="lib" location="lib"/>
-  <property name="eclipse" location="/eclipse-SDK-3.0M8-win32/eclipse"/>
+  <property name="eclipse" location="/eclipse-SDK-3.0-win32/eclipse"/>
 
-  <taskdef name="jrc" classname="dori.jasper.ant.JRAntCompileTask"> 
+  <taskdef name="jrc" classname="net.sf.jasperreports.ant.JRAntCompileTask"> 
     <classpath>
       <fileset dir=".">
         <include name="**/*.jar"/>
       </fileset>
+    <dirset dir="../net.sf.jmoney.reports">
+      <include name="bin"/>
+    </dirset>
     </classpath>
   </taskdef>
 
   <path id="classpath">
     <dirset dir="../net.sf.jmoney">
+      <include name="src"/>
+    </dirset>
+    <dirset dir="../net.sf.jmoney.isocurrencies">
       <include name="src"/>
     </dirset>
     <dirset dir="../net.sf.jmoney.reports">
@@ -49,5 +55,10 @@
     </jrc>
 
   </target>
+
+
+
+
+
 
 </project>

@@ -11,10 +11,16 @@
       <library name="reports.jar">
          <export name="*"/>
       </library>
-      <library name="lib/jasperreports-0.5.3.jar">
+      <library name="lib/jasperreports-0.6.1.jar">
          <export name="*"/>
       </library>
       <library name="lib/commons-logging.jar">
+         <export name="*"/>
+      </library>
+      <library name="lib/commons-beanutils.jar">
+         <export name="*"/>
+      </library>
+      <library name="lib/commons-collections-3.0.jar">
          <export name="*"/>
       </library>
    </runtime>
