@@ -223,7 +223,7 @@
       <editor
             id="net.sf.jmoney.genericEditor"
             name="Generic Node Editor"
-            icon="icons/Account.gif"
+            icon="icons/sample.gif"
             class="net.sf.jmoney.views.NodeEditor">
       </editor>
    </extension>

@@ -73,18 +73,8 @@ public class NodeEditor extends FormEditor {
         navigationTreeNode = cInput.getNode();
     	pageListeners = cInput.getPageListeners();
 
-        // TODO: Get name from navigation tree label provider?
-       	setPartName(navigationTreeNode.toString());
-
-/*       	
-		if (obj instanceof TreeNode) {
-			return ((TreeNode)obj).getImage();
-		} else if (obj instanceof CapitalAccount) {
-			return Constants.ACCOUNT_ICON;
-		} else {
-			throw new RuntimeException("");
-		}
-*/
+       	setPartName(cInput.getName());
+		setTitleImage(cInput.getImage());
     }
 
     /* (non-Javadoc)

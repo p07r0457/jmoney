@@ -27,8 +27,11 @@ import java.util.Vector;
 import net.sf.jmoney.model2.Account;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IPersistableElement;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
 
 /**
  * TODO
@@ -38,6 +41,8 @@ import org.eclipse.ui.IPersistableElement;
 public class NodeEditorInput implements IEditorInput {
 
     protected Object nodeObject;
+    protected String label;
+    protected Image image;
     protected Vector pageListeners;
 
     /**
@@ -45,8 +50,10 @@ public class NodeEditorInput implements IEditorInput {
      * 
      * @param nodeObject Account on which this input is based
      */
-    public NodeEditorInput(Object nodeObject, Vector pageListeners) {
+    public NodeEditorInput(Object nodeObject, String label, Image image, Vector pageListeners) {
         this.nodeObject = nodeObject;
+        this.label = label;
+        this.image = image;
         this.pageListeners = pageListeners;
     }
 
@@ -57,38 +64,30 @@ public class NodeEditorInput implements IEditorInput {
         return false;
     }
 
-
-
     /* (non-Javadoc)
      * @see org.eclipse.ui.IEditorInput#getImageDescriptor()
      */
     public ImageDescriptor getImageDescriptor() {
-/*
-		if (account instanceof TreeNode) {
-			return ((TreeNode)account).getImage();
-		} else if (account instanceof CapitalAccount) {
-			return Constants.ACCOUNT_ICON;
-		} else {
-			throw new RuntimeException("");
-		}
-*/
-        return null;
-
+    	// This method is never called.
+    	// TODO: figure out when this method is supposed to be called
+    	// and what we should return here.
+    	return null;
     }
 
     /* (non-Javadoc)
      * @see org.eclipse.ui.IEditorInput#getName()
      */
     public String getName() {
-//        return account.getName();
-        // TODO: Get name from navigation tree
-        if (nodeObject instanceof Account) {
-        	return ((Account)nodeObject).getName();
-        } else {
-        	return "Some Object";
-        }
+    	return label;
     }
-
+    
+    // Or should we be using getImageDescriptor???
+    // Because the editor input is created only when the editor is created,
+    // this is not a performance issue.
+    public Image getImage() {
+    	return image;
+    }
+    
     /* (non-Javadoc)
      * @see org.eclipse.ui.IEditorInput#getPersistable()
      */

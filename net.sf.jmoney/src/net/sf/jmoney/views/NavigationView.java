@@ -79,6 +79,7 @@ public class NavigationView extends ViewPart {
 
 	private TreeViewer viewer;
 	private DrillDownAdapter drillDownAdapter;
+	private ILabelProvider labelProvider; 
 	private Vector newAccountActions = new Vector();  // Element type: Action
 	private Action deleteAccountAction;
 
@@ -465,7 +466,15 @@ private Map idToNodeMap = new HashMap();
 						
 						Image image = null;
 						if (icon != null) {
-							image = JMoneyPlugin.createImage(icon);
+							// Try getting the image from this plug-in.
+							ImageDescriptor descriptor = JMoneyPlugin.imageDescriptorFromPlugin(extensions[i].getNamespace(), icon); 
+							if (descriptor == null) {
+								// try getting the image from the JMoney plug-in. 
+								descriptor = JMoneyPlugin.imageDescriptorFromPlugin("net.sf.jmoney", icon);
+							}
+							if (descriptor != null) {
+								image = descriptor.createImage(); 
+							}
 						}
 						
 						int positionNumber = 800;
@@ -578,9 +587,10 @@ private Map idToNodeMap = new HashMap();
 
 		viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		drillDownAdapter = new DrillDownAdapter(viewer);
+		labelProvider = new ViewLabelProvider();
 		ViewContentProvider contentProvider = new ViewContentProvider();
 		viewer.setContentProvider(contentProvider);
-		viewer.setLabelProvider(new ViewLabelProvider());
+		viewer.setLabelProvider(labelProvider);
 		viewer.setSorter(new NameSorter());
 
 		AccountsNode accountsObject = new AccountsNode(JMoneyPlugin.getResourceString("NavigationTreeModel.accounts"), Constants.ACCOUNTS_ICON, invisibleRoot);
@@ -626,7 +636,10 @@ private Map idToNodeMap = new HashMap();
 			   			// is already open).
 			   			try {
 			   				IWorkbenchWindow window = getSite().getWorkbenchWindow();
-			   				IEditorInput editorInput = new NodeEditorInput(selectedObject, pageListeners);
+			   				IEditorInput editorInput = new NodeEditorInput(selectedObject,
+									labelProvider.getText(selectedObject),
+			   						labelProvider.getImage(selectedObject),
+									pageListeners);
 			   				window.getActivePage().openEditor(editorInput,
 			   				"net.sf.jmoney.genericEditor");
 			   			} catch (PartInitException e) {

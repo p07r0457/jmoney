@@ -40,13 +40,13 @@
       <node
             id="reportsNode"
             label="%NavigationTreeModel.Reports"
-            icon="icons/sample.gif"
+            icon="icons/report.gif"
             position="500">
       </node>
       <node
             id="accountBalances"
             label="%Report.AccountBalances.Title"
-            icon="icons/sample.gif"
+            icon="icons/report.gif"
             parent="net.sf.jmoney.reports.reportsNode"
             position="100">
       </node>
@@ -57,7 +57,7 @@
       <node
             id="incomeExpense"
             label="%Report.IncomeExpense.Title"
-            icon="icons/sample.gif"
+            icon="icons/report.gif"
             parent="net.sf.jmoney.reports.reportsNode"
             position="200">
       </node>
