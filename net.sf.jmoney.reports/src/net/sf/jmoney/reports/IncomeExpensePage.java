@@ -43,6 +43,8 @@ import java.util.Vector;
 
 import javax.swing.JPanel;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
@@ -84,12 +86,7 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Session;
 
 /**
- * @author Nigel
- *
- * As each folder view will load its own instances of the extension classes,
- * and each folder view will only display the tab items for a single
- * object at any point of time, this class can cache the tab items
- * and re-use them for each selected object.
+ * @author Nigel Westbury
  */
 public class IncomeExpensePage implements IBookkeepingPageListener {
 
@@ -325,6 +322,28 @@ public class IncomeExpensePage implements IBookkeepingPageListener {
 					? "resources/IncomeExpenseSubtotals.jasper"
 					: "resources/IncomeExpense.jasper";
 			URL url = ReportsPlugin.class.getResource(reportFile);
+			if (url == null) {
+				Object [] messageArgs = new Object[] {
+						reportFile
+				};
+				
+				String errorText = new java.text.MessageFormat(
+						"{0} not found.  A manual build of the net.sf.jmoney.reports project may be necessary.", 
+								java.util.Locale.US)
+								.format(messageArgs);
+				
+				System.err.println(errorText);
+				JMoneyPlugin.log(new Status(IStatus.ERROR, ReportsPlugin.PLUGIN_ID, IStatus.ERROR, errorText, null));
+	            MessageDialog errorDialog = new MessageDialog(
+	                    shell,
+	                    "JMoney Build Error",
+	                    null, // accept the default window icon
+	                    errorText,
+	                    MessageDialog.ERROR,
+	                    new String[] { IDialogConstants.OK_LABEL }, 0);
+	            errorDialog.open();
+				return;
+			}
 			InputStream is = url.openStream();
 
 			Map params = new HashMap();

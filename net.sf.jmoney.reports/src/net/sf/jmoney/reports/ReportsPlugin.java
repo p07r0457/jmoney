@@ -36,6 +36,9 @@ import org.osgi.framework.BundleContext;
  * The main plugin class to be used in the desktop.
  */
 public class ReportsPlugin extends AbstractUIPlugin {
+
+	public static final String PLUGIN_ID = "net.sf.jmoney.reports";
+
 	//The shared instance.
 	private static ReportsPlugin plugin;
 	//Resource bundle.

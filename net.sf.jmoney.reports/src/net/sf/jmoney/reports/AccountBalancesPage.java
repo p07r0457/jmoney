@@ -36,6 +36,8 @@ import java.util.Vector;
 
 import javax.swing.JPanel;
 
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
@@ -71,11 +73,6 @@ import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 
 /**
- * As each folder view will load its own instances of the extension classes,
- * and each folder view will only display the tab items for a single
- * object at any point of time, this class can cache the tab items
- * and re-use them for each selected object.
- *
  * @author Nigel Westbury
  */
 public class AccountBalancesPage implements IBookkeepingPageListener {
@@ -269,6 +266,19 @@ public class AccountBalancesPage implements IBookkeepingPageListener {
 		try {
 			URL url =
 				ReportsPlugin.class.getResource("resources/AccountBalances.jasper");
+			if (url == null) {
+				System.err.println("resources/AccountBalances.jasper not found.  A manual build of the net.sf.jmoney.reports project may be necessary.");
+				JMoneyPlugin.log(new Status(IStatus.ERROR, ReportsPlugin.PLUGIN_ID, IStatus.ERROR, "resources/AccountBalances.jasper not found.  A manual build of the net.sf.jmoney.reports project may be necessary.", null));
+	            MessageDialog errorDialog = new MessageDialog(
+	                    shell,
+	                    "JMoney Build Error",
+	                    null, // accept the default window icon
+	                    "resources/AccountBalances.jasper not found.  A manual build of the net.sf.jmoney.reports project may be necessary.",
+	                    MessageDialog.ERROR,
+	                    new String[] { IDialogConstants.OK_LABEL }, 0);
+	            errorDialog.open();
+				return;
+			}
 			InputStream is = url.openStream();
 
 			Map params = new HashMap();
