@@ -21,6 +21,7 @@
  */
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.views.NodeEditor;import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.ui.forms.IManagedForm;
@@ -72,6 +73,10 @@ public class EntriesPage extends FormPage {
         managedForm.addPart(fEntriesSection);
 
         form.setText("Accounting Entries");
+    }
+    
+    public Account getAccount () {
+        return (Account) fEditor.getSelectedObject();
     }
 
 }
