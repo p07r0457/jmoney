@@ -23,7 +23,9 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Date;
 import java.util.Map;
+import java.util.Vector;
 
 import net.sf.jmoney.model2.*;
 
@@ -36,6 +38,8 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Inc
 
 	private String fullAccountName = null;
 
+	protected Vector children;
+	
 	public IncomeExpenseAccountImpl(
 			IObjectKey objectKey, 
 			Map extensions, 
@@ -44,6 +48,7 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Inc
 			IListManager subAccounts) {
 		super(objectKey, extensions, parent, subAccounts);
 		setName(accountName);
+		children = new Vector();
 	}
 
 	protected boolean isMutable() {
@@ -108,5 +113,32 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Inc
         
         public MutableIncomeExpenseAccount createMutableAccount(Session session) throws ObjectLockedForEditException {
             return new MutableIncomeExpenseAccountImpl(session, this);
+        }
+        
+        public int getLevel () {
+            if (parentKey == null) {
+                return 0;
+            } else {
+                System.err.println("Warning: ParentKey is not null! > Level is false"); // TODO
+                return 1;
+            }
+        }
+        
+        /**
+         * @author Faucheux
+         */
+     	public long getBalance(Session session, Date fromDate, Date toDate) {
+     	   return 0;
+     	}
+
+        /**
+         * @author Faucheux
+         */
+     	public long getBalanceWithSubAccounts(Session session, Date fromDate, Date toDate) {
+     	    return 0;
+     	}
+
+        public void addChild(Account a) {
+            children.add(a);
         }
 }

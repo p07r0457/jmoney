@@ -25,6 +25,8 @@ package net.sf.jmoney.bookkeepingPages;
 import java.util.Iterator;
 import java.util.Vector;
 
+import javax.swing.tree.TreeNode;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -36,6 +38,7 @@ import org.eclipse.ui.IMemento;
 
 import net.sf.jmoney.IBookkeepingPageListener;
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.MutableCapitalAccount;
@@ -43,6 +46,7 @@ import net.sf.jmoney.model2.ObjectLockedForEditException;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.views.AccountNode;
 
 /**
  * @author Nigel
@@ -178,8 +182,17 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 	 * @see net.sf.jmoney.IBookkeepingPageListener#getPageCount(java.lang.Object)
 	 */
 	public int getPageCount(Object selectedObject) {
+	    /**
+	     * He! I don't have an account, but an AccountNode...
+	     */
 		if (selectedObject instanceof CapitalAccount) {
 			return 1;
+		}
+		if (selectedObject instanceof AccountNode) {
+			if (((AccountNode)selectedObject).account instanceof CapitalAccount
+			        | ((AccountNode)selectedObject).account instanceof MutableCapitalAccount) {
+			    return 1;
+			}
 		}
 		return 0;
 	}
@@ -188,12 +201,20 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
 	public BookkeepingPage[] createPages(Object selectedObject, Session session, Composite parent) {
-		if (selectedObject instanceof CapitalAccount) {
-			CapitalAccount account = (CapitalAccount)selectedObject;
-			AccountPropertiesControl propertiesControl = new AccountPropertiesControl(parent);
-			propertiesControl.setAccount(account, session);
-			return new BookkeepingPage[] 
+	    // TODO Add support for other accounts type.
+		if (selectedObject instanceof AccountNode) {
+		    Account account = ((AccountNode)selectedObject).account;
+
+		    if (account instanceof MutableCapitalAccount) {
+		         account = ((MutableCapitalAccount)account).getRealAccount();
+		     } 
+		        
+		    if (account instanceof CapitalAccount) {
+		        AccountPropertiesControl propertiesControl = new AccountPropertiesControl(parent);
+		        propertiesControl.setAccount((CapitalAccount)account, session);
+		        return new BookkeepingPage[] 
 									   { new BookkeepingPage(propertiesControl, JMoneyPlugin.getResourceString("AccountPropertiesPanel.title")) };
+		    }
 		}
 		return null;
 	}

@@ -202,7 +202,7 @@ public class TransactionImpl extends ExtendableObjectHelperImpl implements Trans
             Entry entry = (Entry)iter.next();
             // TODO: at some time, keep these lists for categories too
             Account category = entry.getAccount();
-            if (category instanceof CapitalAccount) {
+            if (category instanceof CapitalAccountImpl) {
                 ((CapitalAccountImpl)category).addEntry(entry);
             }
         }

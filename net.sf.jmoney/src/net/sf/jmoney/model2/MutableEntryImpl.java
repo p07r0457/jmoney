@@ -76,7 +76,7 @@ public class MutableEntryImpl extends ExtendableObjectHelperImpl implements Entr
 		check = originalEntry.getCheck();
 		valuta = originalEntry.getValuta();
 		description = originalEntry.getDescription();
-		account = (AbstractAccountImpl)originalEntry.getAccount();
+		account = originalEntry.getAccount();
 		amount = originalEntry.getAmount();
 		memo = originalEntry.getMemo();
 	}

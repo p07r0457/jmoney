@@ -23,6 +23,7 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Date;
 import java.util.Iterator;
 
 /**
@@ -50,4 +51,14 @@ public interface Account extends Comparable, IExtendableObject {
 	String getFullAccountName();
 	
 	public int getLevel();
+	public long getBalance(Session session, Date fromDate, Date toDate);
+	public long getBalanceWithSubAccounts(Session session, Date fromDate, Date toDate);
+	
+	/**
+	 * add the given account to the list of the children accounts of this account.
+	 * Remarque: this will not set in the child account where the parent is!
+	 * @author Faucheux
+	 */
+	void addChild (Account a);
+	
 }

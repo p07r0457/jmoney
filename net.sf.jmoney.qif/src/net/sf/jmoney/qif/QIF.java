@@ -500,9 +500,9 @@ public class QIF implements FileFormat {
 
                 // status
                 QIFEntry ourEntry = (QIFEntry)entry.getExtension(qifPropertySet);
-                if (ourEntry.getReconcilingState() == '*')
+                if (ourEntry.getReconcilingState() == "*")
                     writeln(writer, "C*");
-                else if (ourEntry.getReconcilingState() == 'X')
+                else if (ourEntry.getReconcilingState() == "X")
                     writeln(writer, "CX");
 
                 // amount

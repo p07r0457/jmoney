@@ -34,6 +34,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Map;
 import java.util.Vector;
 import java.util.Iterator;
@@ -81,13 +82,15 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 
 	protected String comment = null;
 
+	protected Vector children;
+	
         /**
          * This list is maintained for efficiency only.
          * The master list is the list of transactions, with each
          * transaction containing a list of entries.
          */
 //	protected transient Vector entries = new Vector();
-	protected Collection entries;
+	public Collection entries;
 
 	protected PropertyChangeSupport changeSupport =
 		new PropertyChangeSupport(this);
@@ -140,6 +143,7 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 		}
 		
 		this.entries = objectKey.createIndexValuesList(accountAccessor);
+		this.children = new Vector();
 	}
 
 	protected boolean isMutable() {
@@ -359,9 +363,11 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 	}
 
 	public String getFullAccountName() {
-		return JMoneyPlugin.getResourceString("TransferCategory.name")
-			+ ":"
-			+ getName();
+	    if (getParent() == null) {
+	       return name;
+	    } else {
+	        return getParent().getFullAccountName() + "." + this.name;
+	    }
 	}
 
 	public int compareTo(Object o) {
@@ -380,10 +386,64 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
         }
         
      public int getLevel () {
+         int level;
          if (parentKey == null)
-             return 0;
+             level = 0;
          else 
-             // TODO: should be levelparent + 1
-             return 1;
+             level = getParent().getLevel() + 1;
+         System.out.println("Level from " + this.name + ", child of " + getParent() +" is " + level);
+         return level;
      }
+
+ 	/**
+ 	 * Get the balance at a given date
+ 	 * 
+ 	 * @param date
+ 	 * @return the balance
+     * @author Faucheux
+ 	 */
+ 	public long getBalance(Session session, Date fromDate, Date toDate) {
+ 		System.out.println("Calculing the Balance for >" + name + "< (without sub-accounts) between " + fromDate + " and " + toDate);
+
+ 		long bal = getStartBalance();
+ 		Iterator eIt = null;
+ 		
+ 		// Sum each entry the entry between the two dates 
+ 		eIt = entries.iterator();
+ 		while (eIt.hasNext()) {
+ 			Entry e = (Entry) eIt.next();
+ 			if ((e.getTransaxion().getDate().compareTo(fromDate) >= 0)
+ 					&& e.getTransaxion().getDate().compareTo(toDate) <= 0){
+ 				bal += e.getAmount();
+ 			    
+ 			}
+ 		}
+
+ 		return bal;
+ 	}
+
+ 	/**
+ 	 * Get the balance between two dates , inclusive sub-accounts
+ 	 * 
+ 	 * @param date
+ 	 * @return the balance
+ 	 * @author Faucheux
+ 	 */
+ 	public long getBalanceWithSubAccounts(Session session, Date fromDate, Date toDate) {
+ 		System.out.println("Calculing the Balance for >" + name + "< (with sub-accounts) between " + fromDate + " and " + toDate);
+ 		long bal = getBalance(session, fromDate, toDate);
+ 	
+ 		Iterator aIt = children.iterator();
+
+ 		while (aIt.hasNext()) {
+ 			bal += ((Account) aIt.next()).getBalanceWithSubAccounts(session, fromDate, toDate);
+ 		}
+ 		return bal;
+ 	}
+ 	
+
+    public void addChild(Account a) {
+        children.add(a);
+    }
+
 }

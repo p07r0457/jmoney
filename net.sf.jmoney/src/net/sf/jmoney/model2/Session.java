@@ -25,6 +25,7 @@ package net.sf.jmoney.model2;
 
 import java.beans.PropertyChangeListener;
 import java.util.Iterator;
+import java.util.Vector;
 
 import org.eclipse.core.runtime.IAdaptable;
 
@@ -85,4 +86,13 @@ public interface Session extends IExtendableObject {
     // However, this interface should be merged with the implementation
     // so this issue will then go away.
     void fireEvent(ISessionChangeFirer firer);
+    
+    /**
+     * get all Accounts from level 0 (accounts without any parent) until the given level  
+     * @author Faucheux
+     */
+    Vector getAccountsUntilLevel (int level);
+    
+	Account getAccountByFullName(String name);
+
 }

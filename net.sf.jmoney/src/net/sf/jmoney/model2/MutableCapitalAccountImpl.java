@@ -26,7 +26,11 @@ package net.sf.jmoney.model2;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.Vector;
+
+import net.sf.jmoney.model2.*;
 
 import org.eclipse.jface.util.PropertyChangeEvent;
 
@@ -64,6 +68,8 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 	protected transient PropertyChangeSupport changeSupport =
 		new PropertyChangeSupport(this);
 
+	protected Vector children;
+	
 	/** 
 	 * Creates an instance of MutableCapitalAccount that is editing a new top level account
 	 */
@@ -76,6 +82,7 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 		this.parent = null;
 		this.account = null;
 		this.currency = this.session.getDefaultCurrency();
+		this.children = new Vector();
 	}
 	
 	/** 
@@ -90,6 +97,7 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
     	this.session = (SessionImpl)session;
     	Account parentAccount = account.getParent();
 		this.parent = parentAccount;
+		if (parent!=null) parent.addChild(this);
 		this.account = account;
 		
 		this.name = account.getName();
@@ -100,6 +108,7 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 		this.minBalance = account.getMinBalance();
 		this.abbreviation = account.getAbbreviation();
 		this.comment = account.getComment();
+		this.children = new Vector();
 	}
 	
 	/** 
@@ -116,6 +125,7 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 
     	this.session = (SessionImpl)session;
 		this.parent = (CapitalAccountImpl)parent;
+		if (parent!=null) parent.addChild(this);
 		this.account = null;
 		this.currency = parent.getCurrency();
 	}
@@ -428,6 +438,8 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 	        throw new Error ("The account " + name + " can't become the account " + newParent.getName() + " as parent: it already have a parent (" + oldParent + ").");
 	    
 	    parent = newParent;
+		parent.addChild(this);
+		System.out.println("Add a parent to " + this.getName());
 	    account.parentKey = newParent.getObjectKey();
 
 	    // Fire the event
@@ -457,4 +469,22 @@ public class MutableCapitalAccountImpl extends ExtendableObjectHelperImpl implem
 	public Account getRealAccount () {
 	    return account;
 	}
+	
+    /**
+     * @author Faucheux
+     */
+ 	public long getBalance(Session session, Date fromDate, Date toDate) {
+ 	   return account.getBalance(session, fromDate, toDate);
+ 	}
+
+    /**
+     * @author Faucheux
+     */
+ 	public long getBalanceWithSubAccounts(Session session, Date fromDate, Date toDate) {
+  	   return account.getBalanceWithSubAccounts(session, fromDate, toDate);
+ 	}
+
+    public void addChild(Account a) {
+        children.add(a);
+    }
 }

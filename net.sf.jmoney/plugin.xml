@@ -165,7 +165,7 @@
             id="net.sf.jmoney.preferences.PreferencePage">
       </page>
    </extension>
-<!--   
+   
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
@@ -175,7 +175,7 @@
             id="net.sf.jmoney.properties.accountPropertyPage">
       </page>
    </extension>
--->   
+   
    <extension
          point="org.eclipse.ui.views">
       <category

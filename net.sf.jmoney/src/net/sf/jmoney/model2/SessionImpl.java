@@ -782,4 +782,35 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session, 
 */        
         return newTransaction;
 	}
+	
+	/**
+	 * @author Faucheux
+	 */
+    public Vector getAccountsUntilLevel(int level) {
+    	Iterator i = accounts.iterator();
+    	Vector v = new Vector();
+    	while (i.hasNext()) {
+    		Account a = (Account) i.next();
+    		if (a.getLevel() <= level) v.add(a);
+    	}
+    	
+    	return v;
+    }
+
+    /**
+     * @author Faucheux
+     * TODO: Faucheux - not the better algorythm!
+     */
+	public Account getAccountByFullName(String name) {
+	    Account a = null;
+	    Iterator it = getAccountIterator();
+	    while (it.hasNext()) {
+	        a = (Account) it.next();
+	        System.out.println("Compare " + name + " to " + a.getFullAccountName());
+	        if (a.getFullAccountName().equals(name))
+	            return a;
+	    }
+	    return null;
+	}
+
 }

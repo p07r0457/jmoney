@@ -24,6 +24,7 @@
 package net.sf.jmoney.model2;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 import org.eclipse.jface.util.PropertyChangeEvent;
@@ -253,4 +254,22 @@ public class MutableIncomeExpenseAccountImpl  extends ExtendableObjectHelperImpl
 	    return account;
 	}
 
+    /**
+     * @author Faucheux
+     */
+ 	public long getBalance(Session session, Date fromDate, Date toDate) {
+ 	   return 0;
+ 	}
+
+    /**
+     * @author Faucheux
+     */
+ 	public long getBalanceWithSubAccounts(Session session, Date fromDate, Date toDate) {
+ 	    return 0;
+ 	}
+
+
+    public void addChild(Account a) {
+        account.addChild(a);
+    }
 }

@@ -440,39 +440,48 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 	public String getPropertyValueAsString(PropertyAccessor propertyAccessor) {
 		Object objectWithProperties = getPropertySetInterface(propertyAccessor.getPropertySet());
 		
+		String result = "";
+		
 		// Now we use introspection on the interface to find this property
+		String theGetStringMethodName 
+		= propertyAccessor.getTheGetMethod().getName()
+		+ "String";
+		
 		try {
-			String theGetStringMethodName 
-			= propertyAccessor.getTheGetMethod().getName()
-			+ "String";
+			Method theGetStringMethod = objectWithProperties.getClass().getDeclaredMethod(theGetStringMethodName, null);
+			
+			if (theGetStringMethod.getReturnType() != String.class) {
+				throw new MalformedPluginException("Method '" + theGetStringMethodName + "' must return a String.");
+			}
 			
 			try {
-				Method theGetStringMethod = objectWithProperties.getClass().getDeclaredMethod(theGetStringMethodName, null);
-				
-				if (theGetStringMethod.getReturnType() != String.class) {
-					throw new MalformedPluginException("Method '" + theGetStringMethodName + "' must return a String.");
-				}
-				
-				Object result = theGetStringMethod.invoke(objectWithProperties, null);
-				return (String)result;
-			} catch (NoSuchMethodException e) {
-				// No special method to get the value as a string, so use the method to
-				// get in native type and then we must convert to a string.
-				Object result = propertyAccessor.getTheGetMethod().invoke(objectWithProperties, null);
-				if (result == null) {
-					return "";
-				} else {
-					return result.toString();
-				}
+			    result = (String) theGetStringMethod.invoke(objectWithProperties, null);
+			} catch (RuntimeException e) {
+			    e.printStackTrace(System.err);
+			} catch (InvocationTargetException e) {
+			    e.printStackTrace(System.err);
+			} catch (IllegalAccessException e) {
+			    e.printStackTrace(System.err);
 			}
-			// Plugin error
-		} catch (IllegalAccessException e) {
-			// Plugin error
-		} catch (InvocationTargetException e) {
-			// Plugin error
+			
+		} catch (NoSuchMethodException e) {
+			// No special method to get the value as a string, so use the method to
+			// get in native type and then we must convert to a string.
+		    try {
+		        result = (String) propertyAccessor.getTheGetMethod().invoke(objectWithProperties, null);
+			} catch (RuntimeException e2) {
+			    e2.printStackTrace(System.err);
+			} catch (InvocationTargetException e2) {
+			    e2.printStackTrace(System.err);
+			} catch (IllegalAccessException e2) {
+			    e2.printStackTrace(System.err);
+			}
+			
+			if (result == null) {
+				result = "";
+			}
 		}
-		
-		return null;  // TODO: remove this
+		return (String)result;
 	}
 	
 	public void setIntegerPropertyValue(PropertyAccessor propertyAccessor, int value) {

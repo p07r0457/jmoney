@@ -65,22 +65,32 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
      */
 	public EntryImpl(
 				IObjectKey objectKey,
-	    		Map extensions,
+	    		Map        extensions,
 				IObjectKey parent,
-	    		String check,
-	    		String description,
+	    		String     check,
+	    		String     description,
 	    		IObjectKey accountKey,
-	    		Date valuta,
-	    		String memo,
-	    		long amount,
-	    		long creation) {
+	    		Date       valuta,
+	    		String     memo,
+	    		long       amount,
+	    		long       creation) {
 		super(objectKey, extensions);
 
+		/*
+
+		System.out.println("Creating an Entry with" 
+		        + "\nobjectKey: " + objectKey
+		        + "\nparent:" + parent
+		        + "\naccountKey:" + accountKey);
+		*/
+		
 		this.creation = creation;
 		this.check = check;
 		this.valuta = valuta;
 		this.description = description;
-		this.account = (Account)accountKey.getObject();
+		this.account = accountKey.getObject() instanceof Account 
+			? (Account)accountKey.getObject()
+			: null;
 		this.amount = amount;
 		this.memo = memo;
 		
@@ -121,7 +131,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 		check = sourceEntry.getCheck();
 		valuta = sourceEntry.getValuta();
 		description = sourceEntry.getDescription();
-		account = (AbstractAccountImpl)sourceEntry.getAccount();
+		account = sourceEntry.getAccount();
 		amount = sourceEntry.getAmount();
 		memo = sourceEntry.getMemo();
 		
