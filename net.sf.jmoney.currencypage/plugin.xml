@@ -24,7 +24,7 @@
       <node
           id="currencyNode"
 	      label="%NavigationTreeModel.currencies"
-    	  icon="icons/Currency.gif"
+    	  icon="icons/currencies.gif"
     	  position="210">
       </node>
       <pages
