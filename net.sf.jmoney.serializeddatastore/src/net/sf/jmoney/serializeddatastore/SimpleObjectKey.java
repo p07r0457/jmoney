@@ -76,13 +76,6 @@ public class SimpleObjectKey implements IObjectKey {
 		sessionManager.setModified(true);
 	}
 
-	public void updateProperties(PropertySet actualPropertySet, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-		// There is no backend datastore that needs updating, so we
-		// have nothing to do except to mark the session as modified.
-		
-		sessionManager.setModified(true);
-	}
-
 	public Session getSession() {
 		return sessionManager.getSession();
 	}
