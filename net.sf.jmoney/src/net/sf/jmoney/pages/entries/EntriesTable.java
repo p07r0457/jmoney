@@ -193,7 +193,7 @@ public class EntriesTable implements IEntriesControl {
                 // The selected object might be null.  This occurs when the table is refreshed.
                 // I don't understand this so I am simply bypassing the update
                 // in this case.  Nigel
-                if (selectedObject != null) {
+                if (EntriesPage.IS_ENTRY_SECTION_TO_DISPLAY && selectedObject != null) {
                 	IDisplayableItem data = (IDisplayableItem)selectedObject;
                 	DisplayableTransaction transactionData = null;
                 	if (selectedObject instanceof DisplayableTransaction) {
