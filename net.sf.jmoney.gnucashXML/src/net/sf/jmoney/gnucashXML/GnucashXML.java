@@ -299,7 +299,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			CapitalAccount child = (CapitalAccount) getAccountFromGUID(childGUID);
 			CapitalAccountImpl parent = (CapitalAccountImpl) getAccountFromGUID(parentGUID);
 			
-			session.removeAccount(child);
+			session.deleteAccount(child);
 			CapitalAccountImpl newChild = (CapitalAccountImpl) parent.createSubAccount();
 			accountsGUIDTable.remove(childGUID);
 			accountsGUIDTable.put(childGUID, newChild);
