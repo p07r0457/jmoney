@@ -337,7 +337,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 		// Remove the listener when the given control is disposed.
 		control.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {
-				JMoneyPlugin.getDefault().removeSessionChangeListener(listener);
+				sessionChangeListeners.remove(listener);
 			}
 		});
     }

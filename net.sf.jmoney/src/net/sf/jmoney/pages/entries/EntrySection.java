@@ -39,15 +39,14 @@ import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
@@ -63,8 +62,8 @@ import org.eclipse.ui.forms.widgets.Section;
  */
 public class EntrySection extends SectionPart {
 
-    protected static final Color yellow = new Color(Display.getCurrent(), 255, 255, 150);
-    protected static final Color green  = new Color(Display.getCurrent(), 200, 255, 200);
+    protected static final Color yellow = new Color(Display.getCurrent(), 255, 255, 200);
+    protected static final Color green  = new Color(Display.getCurrent(), 225, 255, 225);
 
     protected EntriesPage fPage;
     protected Text fDescription;
@@ -100,22 +99,55 @@ public class EntrySection extends SectionPart {
         /** element: LabelAndEditControlPair */
     	Vector entryPropertyControls = new Vector();
 
-        class LabelAndEditControlPair {
-        	private Label label;
+        abstract class LabelAndEditControlPair {
+        	//private Label label;
         	private IPropertyControl propertyControl;
+			private PropertyAccessor propertyAccessor;
+			private Composite pairComposite;
         	
-        	/**
+			/**
+			 * Creates both a label and an edit control.
+			 * 
+			 * Adds both to the propertyControls array so that they can
+			 * later be disposed (they will be disposed if the account or
+			 * some other property is changed so that this property is
+			 * no longer applicable).
+			 * <P>
+			 * The caller must call the <code>IPropertyControl.load()</code>
+			 * method to either set the entry object or to disable the
+			 * control.
 			 * @param propertyLabel
 			 * @param propertyControl
 			 */
-			public LabelAndEditControlPair(Label label, IPropertyControl propertyControl) {
-				this.label = label;
-				this.propertyControl = propertyControl;
+			public LabelAndEditControlPair(PropertyAccessor propertyAccessor) {
+				this.propertyAccessor = propertyAccessor;
+				
+				FormToolkit toolkit = fPage.getManagedForm().getToolkit();
+
+				pairComposite = toolkit.createComposite(composite1);
+				pairComposite.setBackground(entryColor);
+				RowLayout layout = new RowLayout();
+				layout.marginTop = 0;
+				layout.marginBottom = 0;
+				layout.marginLeft = 0;
+				layout.marginRight = 0;
+				pairComposite.setLayout(layout);
+				
+	    		Label label = toolkit.createLabel(pairComposite, propertyAccessor.getShortDescription() + ':');
+	    		label.setBackground(entryColor);
+	    		propertyControl = propertyAccessor.createPropertyControl(pairComposite);
+	    		toolkit.adapt(propertyControl.getControl(), true, true);
+	    		propertyControl.getControl().addFocusListener(
+	    				new PropertyControlFocusListener(propertyAccessor, propertyControl) {
+	    					ExtendableObject getExtendableObject() {
+	    						return entry;
+	    					}
+	    				});
+	    		
 			}
 
 			void dispose() {
-        		label.dispose();
-        		propertyControl.getControl().dispose();
+				pairComposite.dispose();
         	}
 
 			/**
@@ -124,14 +156,65 @@ public class EntrySection extends SectionPart {
 			public void load(Entry entry) {
 				propertyControl.load(entry);
 			}
+
+			/**
+			 * @param entry
+			 * @param isEntryChanging true if this method is being called because
+			 * 			a different Entry is being shown in the control, false if
+			 * 			the entry has not changed but a property in the entry has
+			 * 			changed and that property may affect whether this property
+			 * 			is applicable
+			 */
+			public void refreshState(Entry entry, boolean isEntryChanging) {
+	    		Account account = entry.getAccount();
+				boolean isApplicable = isApplicable(account);
+				
+				// Controls with the visability set to false still
+				// take up space in the grid.  We must dispose controls
+				// if they do not apply.
+				if (isApplicable) {
+					boolean mustLoadEntry = isEntryChanging;
+					
+					if (pairComposite == null) {
+						FormToolkit toolkit = fPage.getManagedForm().getToolkit();
+
+						pairComposite = toolkit.createComposite(composite1);
+						pairComposite.setBackground(entryColor);
+						RowLayout layout = new RowLayout();
+						layout.marginTop = 0;
+						layout.marginBottom = 0;
+						layout.marginLeft = 0;
+						layout.marginRight = 0;
+						pairComposite.setLayout(layout);
+						
+			    		Label label = toolkit.createLabel(pairComposite, propertyAccessor.getShortDescription() + ':');
+			    		label.setBackground(entryColor);
+			    		propertyControl = propertyAccessor.createPropertyControl(pairComposite);
+			    		toolkit.adapt(propertyControl.getControl(), true, true);
+			    		propertyControl.getControl().addFocusListener(
+			    				new PropertyControlFocusListener(propertyAccessor, propertyControl) {
+			    					ExtendableObject getExtendableObject() {
+			    						return EntryControls.this.entry;
+			    					}
+			    				});
+			    		
+			    		mustLoadEntry = true;
+					}
+
+					if (mustLoadEntry) {
+						load(entry);
+					}
+					
+				} else {
+					if (pairComposite != null) {
+						pairComposite.dispose();
+						pairComposite = null;
+					}
+				}
+			}
+			
+			abstract boolean isApplicable(Account account);
         }
-        
-        /**
-         * The account for which the appropriate set of entry
-         * properties exist.  If null then the account list 
-         * property only exists.
-         */
-        private Account account;
         
         /** The object actually being edited.
     	 * This will be null if no entry is selected in the table.
@@ -159,7 +242,8 @@ public class EntrySection extends SectionPart {
             composite4 = toolkit.createComposite(entriesArea);
             composite5 = toolkit.createComposite(entriesArea);
              
-            GridLayout layout1 = new GridLayout(6, false);  // was 10 NRW
+            RowLayout layout1 = new RowLayout(SWT.HORIZONTAL);
+            layout1.spacing = 5;
             composite1.setLayout(layout1);
 
             RowLayout layout2 = new RowLayout();
@@ -170,15 +254,17 @@ public class EntrySection extends SectionPart {
             composite4.setLayout(layout2);
             composite5.setLayout(layout2);
 
-            composite1.setLayoutData(new GridData(GridData.FILL_BOTH));
+            GridData gd = new GridData(SWT.FILL, SWT.FILL, true, false);
+            gd.widthHint = 100;
+            composite1.setLayoutData(gd);
             composite1.setBackground(entryColor);
-    		composite2.setLayoutData(new GridData(GridData.FILL_BOTH));
+    		composite2.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
             composite2.setBackground(entryColor);
-    		composite3.setLayoutData(new GridData(GridData.FILL_BOTH));
+    		composite3.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
             composite3.setBackground(entryColor);
-    		composite4.setLayoutData(new GridData(GridData.FILL_BOTH));
+    		composite4.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
             composite4.setBackground(entryColor);
-    		composite5.setLayoutData(new GridData(GridData.FILL_BOTH));
+    		composite5.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
             composite5.setBackground(entryColor);
 
             // If no account is set yet in the entry then use the "Income"
@@ -262,9 +348,43 @@ public class EntrySection extends SectionPart {
     					}
     				});
     		
-    		// The account combo always exists and always comes first,
-            // so we add that ourselves.
-    		addLabelAndEditControl(EntryInfo.getAccountAccessor());
+    		// The account combo is always applicable, and must come
+            // first, so add this first specifically.
+            entryPropertyControls.add(
+            		new LabelAndEditControlPair(EntryInfo.getAccountAccessor()) {
+            			boolean isApplicable(Account account) {
+            				return true;
+            			}
+            		});
+    		
+    		// The other controls depend on the type of account.
+    		// This needs to be generalized in the metadata, but until
+    		// that work is done, the description applies to entries in
+    		// income/expense accounts and all other properties apply
+    		// to capital accounts.
+    		entryPropertyControls.add(
+    				new LabelAndEditControlPair(EntryInfo.getDescriptionAccessor()) {
+    					boolean isApplicable(Account account) {
+    						return account instanceof IncomeExpenseAccount;
+    					}
+    				});
+    		
+    		
+    		for (Iterator iter = EntryInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
+    			PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
+    			if (propertyAccessor.isEditable()
+    					&& propertyAccessor.isScalar()
+						&& propertyAccessor != EntryInfo.getAccountAccessor() 
+						&& propertyAccessor != EntryInfo.getAmountAccessor()
+						&& propertyAccessor != EntryInfo.getDescriptionAccessor()) {
+    				entryPropertyControls.add(
+    						new LabelAndEditControlPair(propertyAccessor) {
+    							boolean isApplicable(Account account) {
+    								return account instanceof CapitalAccount;
+    							}
+    						});
+    			}
+    		}
     		
     		// Listen for changes to the account selection.
     		// This changes the set of properties to be shown
@@ -281,97 +401,17 @@ public class EntrySection extends SectionPart {
     	}
 
     	/**
-    	 * Create the set of controls that are appropriate for
-    	 * entries in the given account.  This method is to be
-    	 * called when controls are to be shown, but no entry is
-    	 * selected and the controls are to be disabled.
-    	 * <P>
-    	 * This method is used to create a view of the entry
-    	 * edit area when no entry is selected. 
-    	 * 
-		 * @param account The set of disabled controls are as
-		 * 			appropriate for entries in this account.
-		 * 			May be null in which case just the account
-		 * 			selection control is shown. 
-		 */
-		public void showDisabledControls(Account account) {
-			Account oldAccount = this.account;
-			this.account = account;
-			this.entry = null;
-
-			boolean isAccountSet = true;
-			
-			if ((account == null && oldAccount == null)
-					|| (account != null && account.equals(oldAccount))) {
-				// TODO: Clean this out.
-			} else {
-				((LabelAndEditControlPair)entryPropertyControls.get(0)).load(null);
-				
-				// Remove all the old controls after the account.
-				for (int i=1; i < entryPropertyControls.size(); i++) {
-					LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
-					controlPair.dispose();
-				}
-				entryPropertyControls.setSize(1);
-				
-				addFurtherControls(account);
-				
-				creditLabel.setVisible(isAccountSet);
-				creditText.setVisible(isAccountSet);
-				debitLabel.setVisible(isAccountSet);
-				debitText.setVisible(isAccountSet);
-
-				debitText.setEnabled(false);
-	            creditText.setEnabled(false);
-			}
-			
-			// Clear and disable the controls.
-			for (Iterator iter = entryPropertyControls.iterator(); iter.hasNext();) {
-				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)iter.next();
-				controlPair.load(null);
-			}
-		}
-		
-    	/**
 		 * @param entry The entry to show.  Cannot be null - 
 		 * 			if no entry is selected then call the
 		 * 			showDisabledControls method.
 		 */
 		public void setEntry(final Entry entry) {
-			Entry oldEntry = this.entry;
 			this.entry = entry;
-
-			boolean isAccountSet = (entry.getAccount() != null);
-
-			// If the account is the same, we simply re-load.
-			if ((account == null && entry.getAccount() == null)
-					|| (account != null && account.equals(entry.getAccount()))) {
-				// TODO tidy up
-			} else {
-				// Remove all the old controls after the account.
-				for (int i = 1; i < entryPropertyControls.size(); i++) {
-					LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
-					controlPair.dispose();
-				}
-				entryPropertyControls.setSize(1);
-				
-				addFurtherControls(entry.getAccount());
-				
-				creditLabel.setVisible(isAccountSet);
-				creditText.setVisible(isAccountSet);
-				debitLabel.setVisible(isAccountSet);
-				debitText.setVisible(isAccountSet);
-			}
-
-			// Update the contents of the controls to the values from the entry
-			// and ensure the controls are enabled.
-			for (Iterator iter = entryPropertyControls.iterator(); iter.hasNext();) {
-				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)iter.next();
-				controlPair.load(entry);
-			}
 			
-			debitText.setEnabled(true);
-            creditText.setEnabled(true);
+			for (int i = 0; i < entryPropertyControls.size(); i++) {
+				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
+				controlPair.refreshState(entry, true);
+			}
 			
 			// Set the amount in the credit and debit controls.
 			long amount = entry.getAmount();
@@ -395,44 +435,16 @@ public class EntrySection extends SectionPart {
 					debitText.setText("");
 				}
 			}
+
+			layoutSection();
 		}
 
     	/**
-    	 * Creates both a label and an edit control.
+    	 * Some entry properties may be inapplicable, depending on the
+    	 * value of other properties.  This method is called when the value
+    	 * of a property changes and the change may make other properties
+    	 * applicable or inapplicable.
     	 * 
-    	 * Adds both to the propertyControls array so that they can
-    	 * later be disposed (they will be disposed if the account or
-    	 * some other property is changed so that this property is
-    	 * no longer applicable).
-    	 * <P>
-    	 * The caller must call the <code>IPropertyControl.load()</code>
-    	 * method to either set the entry object or to disable the
-    	 * control.
-    	 * 
-    	 * @param composite1
-    	 * @param propertyAccessor
-    	 * @param entry
-    	 */
-    	void addLabelAndEditControl(PropertyAccessor propertyAccessor) {
-    		FormToolkit toolkit = fPage.getManagedForm().getToolkit();
-    		Label propertyLabel = toolkit.createLabel(composite1, propertyAccessor.getShortDescription() + ':');
-    		propertyLabel.setBackground(entryColor);
-    		IPropertyControl propertyControl = propertyAccessor.createPropertyControl(composite1);
-    		toolkit.adapt(propertyControl.getControl(), true, true);
-    		propertyControl.getControl().addFocusListener(
-    				new PropertyControlFocusListener(propertyAccessor, propertyControl) {
-    					ExtendableObject getExtendableObject() {
-    						return entry;
-    					}
-    				});
-    		
-    		LabelAndEditControlPair controlPair = new LabelAndEditControlPair(propertyLabel, propertyControl);
-    		entryPropertyControls.add(controlPair);
-    	}
-
-
-    	/**
-    	 * Adds the controls that are dependent on the selected account.
     	 * This method is called when the row of controls for an entry are
     	 * first constructed, and also called when the user changes the
     	 * account selected in the entry.
@@ -443,32 +455,15 @@ public class EntrySection extends SectionPart {
     	 * @param account If null then no controls are added beyond the
     	 * 			account list control.
     	 */
-    	void addFurtherControls(Account account) {
-    		this.account = account;
+    	void updateSetOfEntryControls() {
+			for (int i = 1; i < entryPropertyControls.size(); i++) {
+				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
+				controlPair.refreshState(entry, false);
+			}
+
+    		Account account = entry.getAccount();
     		
-    		// The other controls depend on the type of account.
-    		// This needs to be generalized in the metadata, but until
-    		// that work is done, the description applies to entries in
-    		// income/expense accounts and all other properties apply
-    		// to capital accounts.
-    		if (account != null) {
-    			if (account instanceof IncomeExpenseAccount) {
-    				addLabelAndEditControl(EntryInfo.getDescriptionAccessor());
-    			} else {
-    				for (Iterator iter = EntryInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
-    					PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
-    					if (propertyAccessor.isEditable()
-    							&& propertyAccessor.isScalar()
-    							&& propertyAccessor != EntryInfo.getAccountAccessor() 
-    							&& propertyAccessor != EntryInfo.getAmountAccessor()
-    							&& propertyAccessor != EntryInfo.getDescriptionAccessor()) {
-    						addLabelAndEditControl(propertyAccessor);
-    					}
-    				}
-    			}
-    		}
-    		
-    		// The choice of labels for the two amount controls also depend
+			// The choice of labels for the two amount controls also depend
     		// on the type of account that is selected.
     		String debitText = "";
     		String creditText = "";
@@ -483,27 +478,9 @@ public class EntrySection extends SectionPart {
     		}
     		debitLabel.setText(debitText);
     		creditLabel.setText(creditText);
-    	}
-
-    	void updateSetOfEntryControls() {
-			// Remove all the old controls after the account.
-			for (int i = 1; i < entryPropertyControls.size(); i++) {
-				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
-				controlPair.dispose();
-			}
-			entryPropertyControls.setSize(1);
 			
-			// Add the new controls
-			addFurtherControls(entry.getAccount());
-
-			// Set the further controls so they are editing
-			// this entry.
-			for (int i=1; i < entryPropertyControls.size(); i++) {
-				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
-				controlPair.load(entry);
-			}
-			
-	        fPage.getManagedForm().reflow(true);
+    		// Pack so that the new controls become visible
+			entriesArea.pack();
     	}
     	
 		void dispose() {
@@ -513,6 +490,14 @@ public class EntrySection extends SectionPart {
         	composite4.dispose();
         	composite5.dispose();
 		}
+
+		void setVisible(boolean visible) {
+        	composite1.setVisible(visible);
+        	composite2.setVisible(visible);
+        	composite3.setVisible(visible);
+        	composite4.setVisible(visible);
+        	composite5.setVisible(visible);
+		}
     }
     
     /** Controls for the selected entry (the first entry listed
@@ -520,47 +505,42 @@ public class EntrySection extends SectionPart {
      */
     EntryControls selectedEntryControls;
     
-    /** Element: EntryControls */
-    Vector entryControlsList = new Vector();
+    /** Controls for the other entry if the row represents a
+     * simple transaction.  (Two entries in a transaction, both
+     * merged into a single row in the table).
+     */
+    EntryControls otherEntryControls;
     
     /** element: IPropertyControl */
     Vector transactionControls = new Vector();
+
+    private Composite container;
+	private Composite filler = null;
     
     public EntrySection(EntriesPage page, Composite parent) {
-        super(parent, page.getManagedForm().getToolkit(), Section.DESCRIPTION | Section.TITLE_BAR);
+        super(parent, page.getManagedForm().getToolkit(), Section.DESCRIPTION | Section.TITLE_BAR | Section.TWISTIE | Section.EXPANDED);
         fPage = page;
         getSection().setText("Selected Entry");
-        getSection().setDescription("Edit the currently selected entry.");
         createClient(page.getManagedForm().getToolkit());
     }
 
     protected void createClient(FormToolkit toolkit) {
-        Composite container = toolkit.createComposite(getSection());
+        container = toolkit.createComposite(getSection());
 
         GridLayout sectionLayout = new GridLayout();
         sectionLayout.numColumns = 1;
         sectionLayout.marginHeight = 0;
         sectionLayout.marginWidth = 0;
         container.setLayout(sectionLayout);
-
+        
         // Create the transaction property area
+        // The area is initially set to a zero size so it is not visible.
+        // It will be set to the appropriate size when an entry is selected.
 		transactionArea = toolkit.createComposite(container);
-		transactionArea.setLayoutData(new GridData(GridData.FILL_BOTH));
+		transactionArea.setLayoutData(new GridData(0, 0));
 
-		GridLayout transactionAreaLayout = new GridLayout();
-		transactionAreaLayout.numColumns = 7;
-		transactionArea.setLayout(transactionAreaLayout);
-
-        // Create the entries area
-		entriesArea = toolkit.createComposite(container);
-		entriesArea.setLayoutData(new GridData(GridData.FILL_BOTH));
-
-		GridLayout entriesAreaLayout = new GridLayout();
-        entriesAreaLayout.numColumns = 5;
-        entriesAreaLayout.horizontalSpacing = 0;  // Ensures no uncolored gaps between items in same row
-        entriesAreaLayout.verticalSpacing = 0;  // Ensures no uncolored gaps between items in same column
-        entriesAreaLayout.marginWidth = 0;
-        entriesArea.setLayout(entriesAreaLayout);
+        RowLayout layout1 = new RowLayout(SWT.HORIZONTAL);
+        transactionArea.setLayout(layout1);
 
         // Add properties from the transaction.
         for (Iterator iter = TransactionInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
@@ -574,87 +554,41 @@ public class EntrySection extends SectionPart {
             }
         }
 
+        // Create the entries area
+		entriesArea = toolkit.createComposite(container);
+		entriesArea.setLayoutData(new GridData(0, 0));
+
+		GridLayout entriesAreaLayout = new GridLayout();
+        entriesAreaLayout.numColumns = 5;
+        entriesAreaLayout.horizontalSpacing = 0;  // Ensures no uncolored gaps between items in same row
+        entriesAreaLayout.verticalSpacing = 0;  // Ensures no uncolored gaps between items in same column
+        entriesAreaLayout.marginWidth = 0;
+        entriesArea.setLayout(entriesAreaLayout);
+
+        // This must be on the container (if on the entriesArea, recursion occurs)
+        container.addControlListener(new ControlAdapter() {
+			public void controlResized(ControlEvent e) {
+				layoutSection();
+			}
+        	});
+        
         // Create the row of controls for the current entry
         // (The entry from the transaction that was shown and
         // selected in the account entries list).
-        // This row is initially shown with controls that are
-        // empty and disabled.
 		selectedEntryControls = new EntryControls(yellow);
-		selectedEntryControls.showDisabledControls(fPage.getAccount());
+		otherEntryControls = new EntryControls(green);
 		
-    	// Create the button area
-		Composite buttonArea = toolkit.createComposite(container);
+		// The filler is used to set the entry section to a fixed size.
+		// When we want to display some data in the section, the filler is destroyed
+		// and the appropriate controls are set to the required non-zero sizes.
+		// By keeping the sections a constant size, we avoid reflowing the sections
+		// which does not look good.  
 		
-		RowLayout layoutOfButtons = new RowLayout();
-		layoutOfButtons.fill = false;
-		layoutOfButtons.justify = true;
-		buttonArea.setLayout(layoutOfButtons);
-		
-        // Create the 'add entry' and 'delete entry' buttons.
-        Button addButton = toolkit.createButton(buttonArea, "Split off New Entry", SWT.PUSH);
-        addButton.addSelectionListener(new SelectionAdapter() {
-           public void widgetSelected(SelectionEvent event) {
-           		Session session = fPage.getAccount().getSession();
-           		Transaction transaction = currentEntry.getTransaction();
-           		
-           		Entry newEntry = transaction.createEntry();
-           		
-           		// If all entries so far are in the same currency then set the
-           		// amount of the new entry to be the amount that takes the balance
-           		// to zero.
-           		// FIXME Some lines are commented out because I don't know how to
-           		// determine the currency used in an income/expense category.
-           		//Commodity commodity = currentEntry.getCommodity();
-           		boolean mismatchedCommodities = false;
-           		long totalAmount = 0;
-                for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
-                	Entry entry = (Entry)iter.next();
-                	/* We need to sort this out.  Can income and expense accounts
-                	 * contain entries of differing currencies?
-                	 * The following call fails on the income/expense entries.
-                	 
-                	if (!currentEntry.getCommodity().equals(entry.getCommodity())) {
-                		mismatchedCommodities = true;
-                		break;
-                	}
-                	*/
-                	totalAmount += entry.getAmount();
-                }
-                
-                if (!mismatchedCommodities) {
-                	newEntry.setAmount(-totalAmount);
-                }
-                
-                createGroupForEntry(newEntry);
-
-                entriesArea.pack(true);
-                fPage.getManagedForm().reflow(true);
-           }
-        });
-
-        Button deleteButton = toolkit.createButton(buttonArea, "Delete Entries with Zero or Blank Amounts", SWT.PUSH);
-        deleteButton.addSelectionListener(new SelectionAdapter() {
-           public void widgetSelected(SelectionEvent event) {
-  /*         		
-            if (fViewer.getSelection() instanceof IStructuredSelection) {
-                IStructuredSelection s = (IStructuredSelection) fViewer.getSelection();
-                Object selectedObject = s.getFirstElement();
-                // The selected object cannot be null because the 'delete tranaction'
-                // button would be disabled if no entry were selected.
-               	if (selectedObject instanceof DisplayableEntry) {
-               		DisplayableEntry de = (DisplayableEntry) selectedObject;
-               		Transaction transaction = de.entry.getTransaction();
-               		transaction.getSession().deleteTransaction(transaction);
-               		transaction.getSession().registerUndoableChange("Delete Transaction");
-                }
-            }
-*/            
-           }
-        });
-        
-        // TODO: check if needed
-        container.pack(true);
-        
+		// A size of 130 is sufficient on the Windows platform for one line of
+		// transaction properties and two entries each with two rows of properties.
+		// TODO: Find a better way of setting the fixed size for the section.
+		filler = toolkit.createComposite(container);
+		filler.setLayoutData(new GridData(SWT.DEFAULT, 130));
         getSection().setClient(container);
         toolkit.paintBordersFor(container);
         refresh();
@@ -665,58 +599,85 @@ public class EntrySection extends SectionPart {
      *
      * @param entry Entry whose editable properties are presented to the user
      */
-    public void update(Entry newCurrentEntry) {
-    	currentEntry = newCurrentEntry;
+    public void update(Entry accountEntry, Entry selectedEntry) {
+    	currentEntry = accountEntry;
 
-    	selectedEntryControls.setEntry(newCurrentEntry);
+    	if (filler != null) {
+    		filler.dispose();
+    		filler = null;
+    	}
+    	
+		GridData entriesAreaLayoutData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		entriesAreaLayoutData.widthHint = 200;
+		entriesArea.setLayoutData(entriesAreaLayoutData);
+
+		selectedEntryControls.setEntry(selectedEntry);
 
     	// Update transaction property controls.
-        for (Iterator iter = transactionControls.iterator(); iter.hasNext();) {
-            IPropertyControl control = (IPropertyControl)iter.next();
-           	control.load(newCurrentEntry.getTransaction());
+        if (selectedEntry.equals(accountEntry)) {
+            getSection().setDescription("Edit the currently selected entry.");
+            
+    		transactionArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+    		
+    		for (Iterator iter = transactionControls.iterator(); iter.hasNext();) {
+            	IPropertyControl control = (IPropertyControl)iter.next();
+            	control.load(accountEntry.getTransaction());
+            }
+        } else {
+            getSection().setDescription("Edit the currently selected split.");
+    		transactionArea.setLayoutData(new GridData(0, 0));
         }
         
         // Create the groups for the remaining entries in the transaction.
 		FormToolkit toolkit = fPage.getManagedForm().getToolkit();
         Transaction transaction = currentEntry.getTransaction();
         
-        // Dispose all old groups.
-        for (Iterator iter = entryControlsList.iterator(); iter.hasNext(); ) {
-        	EntryControls controls = (EntryControls)iter.next();
-        	controls.dispose();
+        if (selectedEntry.equals(accountEntry)
+         && transaction.hasTwoEntries()) {
+        	Entry otherEntry = transaction.getOther(currentEntry);
+       		otherEntryControls.setEntry(otherEntry);
+       		otherEntryControls.setVisible(true);
+        } else {
+       		otherEntryControls.setVisible(false);
         }
-        entryControlsList.clear();
-        
-        
-        // Create and set the controls for the other entries in
-        // the transaction.
-        for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
-        	Entry entry = (Entry)iter.next();
-        	if (!entry.equals(currentEntry)) {
-        		createGroupForEntry(entry);
-        	}
-        }
-        
-        entriesArea.pack(true);
-        fPage.getManagedForm().reflow(true);
+
+        layoutSection();
 	}
 	
 	
 	/**
-	 * @param entry
+	 * Layout the entry section.  This is not done correctly by the grid and
+	 * row layouts.  The problem is as follows:  The entriesArea grid gets
+	 * the preferred sizes from each of the child controls.  The composite1
+	 * controls (each of row layout) return the fixed preferred width and then calculates the height
+	 * required to contain the child controls.  The grid layout that allocates
+	 * any excess width to the column containing the composite1 controls.  The
+	 * controls in the composite1 composites are then re-flowed by the row layout.
+	 * However, the height is not reduced, resulting in the controls being too high
+	 * and a lot of empty space at the bottom of each row.
+	 * <P>
+	 * The solution is to first layout the grid with a small size set for the
+	 * preferred width of the composite1 controls.  Then the actual width allocated
+	 * by the grid layout is set as the preferred width, then the grid is layed out
+	 * again.  This results in the correct heights.
 	 */
-	private void createGroupForEntry(final Entry entry) {
-		FormToolkit toolkit = fPage.getManagedForm().getToolkit();
+	private void layoutSection() {
+        GridData gd1 = new GridData(SWT.FILL, SWT.FILL, true, false);
+        gd1.widthHint = 100;
+        selectedEntryControls.composite1.setLayoutData(gd1);
 
-		final Color entryColor = (entryControlsList.size() % 2) == 0
-		? green 
-		: yellow;
+        GridData gd2 = new GridData(SWT.FILL, SWT.FILL, true, false);
+        gd2.widthHint = 100;
+        otherEntryControls.composite1.setLayoutData(gd2);
 
-		final EntryControls entryControls = new EntryControls(entryColor);
-		entryControls.setEntry(entry);
-		
-		entryControlsList.add(entryControls);
+        container.layout();
+        
+        otherEntryControls.composite1.setLayoutData(new GridData(otherEntryControls.composite1.getSize().x, SWT.DEFAULT));
+        selectedEntryControls.composite1.setLayoutData(new GridData(selectedEntryControls.composite1.getSize().x, SWT.DEFAULT));
+
+        entriesArea.pack(true);
 	}
+
 
 	abstract private class PropertyControlFocusListener extends FocusAdapter {
 

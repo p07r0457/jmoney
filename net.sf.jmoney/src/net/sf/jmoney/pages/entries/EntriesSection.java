@@ -93,7 +93,7 @@ public class EntriesSection extends SectionPart {
         containerOfEntriesControl.setLayout(layout2);
         
         GridData gridData = new GridData(GridData.FILL_BOTH);
-        gridData.heightHint = 300;
+        gridData.heightHint = 200;
         layout2.marginHeight = 0;
         layout2.marginWidth = 0;
 		gridData.grabExcessHorizontalSpace = true;
@@ -188,7 +188,6 @@ public class EntriesSection extends SectionPart {
         });
         
         fPage.getAccount().getSession().addSessionChangeListener(new SessionChangeAdapter() {
-
 			public void entryAdded(Entry newEntry) {
 				// if the entry is in this account, tell the entries list control
 				// that the transaction for this entry should be added to the list.
@@ -291,7 +290,7 @@ public class EntriesSection extends SectionPart {
 					fEntriesControl.refresh();
 				}
 			}
-        });
+        }, container);
         
         getSection().setClient(container);
         toolkit.paintBordersFor(container);

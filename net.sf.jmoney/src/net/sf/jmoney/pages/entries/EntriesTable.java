@@ -198,11 +198,10 @@ public class EntriesTable implements IEntriesControl {
                 	DisplayableTransaction transactionData = null;
                 	if (selectedObject instanceof DisplayableTransaction) {
                 		transactionData = (DisplayableTransaction) data;
+                		fPage.fEntrySection.update(transactionData.getEntryForAccountFields(), transactionData.getEntryForAccountFields());
                 	} else if (selectedObject instanceof DisplayableEntry) {
                 		transactionData = ((DisplayableEntry)data).getDisplayableTransaction();
-                	}
-                	if (transactionData != null) {
-                		fPage.fEntrySection.update(transactionData.getEntryForAccountFields());
+                		fPage.fEntrySection.update(transactionData.getEntryForAccountFields(), ((DisplayableEntry)data).entry);
                 	}
                 }
 			}
@@ -575,22 +574,16 @@ public class EntriesTable implements IEntriesControl {
         	int itemIndex = 0;
 			public TableItem getNextItem() {
 				if (itemIndex < fTable.getItemCount()) {
-					System.out.println("  returning number: " + itemIndex);
 					return fTable.getItem(itemIndex++);
 				} else {
 					itemIndex++;
-					System.out.println("  creating new at : " + fTable.getItemCount());
 					return new TableItem(fTable, SWT.NULL);
 				}
 			}
 		}
 
-		System.out.println("item count before: " + fTable.getItemCount());
-		
 		ItemFetcher itemFetcher = new ItemFetcher();
         setTableItems(itemFetcher);
-		System.out.println("item count after: " + fTable.getItemCount());
-		System.out.println("number used: " + itemFetcher.itemIndex);
         
         // If there were more items in the table than needed,
         // dispose of the excess.
@@ -989,7 +982,6 @@ public class EntriesTable implements IEntriesControl {
 									return i;
 								}
 							} else {
-								System.out.println("no matching entry item found");
 								break;
 							}
 						} while (true);
@@ -1091,8 +1083,10 @@ public class EntriesTable implements IEntriesControl {
 	 * @see net.sf.jmoney.pages.entries.IEntriesControl#updateTransaction(net.sf.jmoney.model2.Entry)
 	 */
 	public void updateTransaction(Entry entry) {
-		// TODO Auto-generated method stub
-		
+		int index = lookupItem(entry, entry);
+		if (index >= 0) {
+			updateItem(fTable.getItem(index));
+		}
 	}
 
 	/* (non-Javadoc)

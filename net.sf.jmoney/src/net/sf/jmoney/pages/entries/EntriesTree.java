@@ -175,11 +175,10 @@ public class EntriesTree implements IEntriesControl {
                     	DisplayableTransaction transactionData = null;
                     	if (selectedObject instanceof DisplayableTransaction) {
                     		transactionData = (DisplayableTransaction) data;
+                    		fPage.fEntrySection.update(transactionData.getEntryForAccountFields(), transactionData.getEntryForAccountFields());
                     	} else if (selectedObject instanceof DisplayableEntry) {
                     		transactionData = ((DisplayableEntry)data).getDisplayableTransaction();
-                    	}
-                    	if (transactionData != null) {
-                    		fPage.fEntrySection.update(transactionData.getEntryForAccountFields());
+                    		fPage.fEntrySection.update(transactionData.getEntryForAccountFields(), ((DisplayableEntry)data).entry);
                     	}
                     }
                 }

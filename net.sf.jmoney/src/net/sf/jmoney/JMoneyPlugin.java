@@ -400,10 +400,10 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	public void addSessionChangeListener(final SessionChangeListener listener, Control control) {
         sessionChangeListeners.add(listener);
         
-		// Remove the listener when this page is disposed.
+		// Remove the listener when the given control is disposed.
 		control.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {
-				JMoneyPlugin.getDefault().removeSessionChangeListener(listener);
+				sessionChangeListeners.remove(listener);
 			}
 		});
     }
