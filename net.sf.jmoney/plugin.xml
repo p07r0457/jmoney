@@ -76,7 +76,8 @@
    <extension
          point="org.eclipse.ui.perspectives">
       <perspective
-            name="perspectiveNameOfJMoney"
+            name="JMoney Accounting"
+      		icon="icons\Accounts.gif"
             class="net.sf.jmoney.JMoneyPerspective"
             id="net.sf.jmoney.JMoneyPerspective">
       </perspective>
