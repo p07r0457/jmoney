@@ -79,11 +79,6 @@ public class SessionKey implements IDatabaseRowKey {
 		JDBCDatastorePlugin.updateProperties(actualPropertySet, 0, oldValues, newValues, sessionManager);
 	}
 
-	public void updateProperties(PropertySet actualPropertySet, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-		// actualPropertySet is always the session property set.
-		JDBCDatastorePlugin.updateProperties(actualPropertySet, 0, propertyAccessor, oldValue, newValue, sessionManager);
-	}
-
 	public Session getSession() {
 		return sessionManager.getSession();
 	}

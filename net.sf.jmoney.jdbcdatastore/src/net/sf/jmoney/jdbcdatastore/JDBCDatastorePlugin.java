@@ -29,6 +29,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -71,6 +73,15 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	//Resource bundle.
 	private ResourceBundle resourceBundle;
 	
+	/**
+	 * Date format used for embedding dates in SQL statements:
+	 * yyyy-MM-dd
+	 */
+	private static SimpleDateFormat dateFormat = (SimpleDateFormat) DateFormat.getDateInstance();
+	static {
+		dateFormat.applyPattern("yyyy-MM-dd");
+	}
+
 	private class ParentList {
 		ParentList(PropertySet parentPropertySet, PropertyAccessor listProperty) {
 			this.parentPropertySet = parentPropertySet;
@@ -1147,52 +1158,6 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	}
 
 	/**
-	 * @param actualPropertySet
-	 * @param rowId
-	 * @param propertyAccessor
-	 * @param oldValue
-	 * @param newValue
-	 * @param sessionManager
-	 */
-	public static void updateProperties(PropertySet actualPropertySet, int rowId, PropertyAccessor propertyAccessor, Object oldValue, Object newValue, SessionManager sessionManager) {
-	
-	// Build two arrays of old and new values.
-	// Ultimately we will have a layer between that does this
-	// for us, also combining multiple updates to the same row
-	// into a single update.  Until then, we need this code here.
-
-		// TODO: improve performance here.
-		int count = 0;
-		for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor2 = (PropertyAccessor)iter.next();
-			if (propertyAccessor2.isScalar()) {
-				count++;
-			}
-		}
-		
-		Object [] oldValues = new Object[count];
-		Object [] newValues = new Object[count];
-		
-		int i = 0;
-		for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor2 = (PropertyAccessor)iter.next();
-			if (propertyAccessor2.isScalar()) {
-				if (propertyAccessor2 == propertyAccessor) {
-				oldValues[i] = oldValue;
-				newValues[i] = newValue;
-				} else {
-					// kludge: both null means no change.
-				oldValues[i] = null;
-				newValues[i] = null;
-				}
-				i++;
-			}
-		}
-		updateProperties(actualPropertySet, rowId, oldValues, newValues, sessionManager);
-	}
-
-	
-	/**
 	 * Given a value of a property as an Object, return the text that 
 	 * represents the value in an SQL statement.
 	 * 
@@ -1210,13 +1175,9 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					|| valueClass == char.class
 					|| valueClass == Character.class) {
 				valueString = '\'' + value.toString().replaceAll("'", "''") + '\'';
-			} else if (valueClass == Date.class) {
+			} else if (value instanceof Date) {
 				Date date = (Date)value;
-				valueString = '\''
-					+ new Integer(date.getYear() + 1900).toString() + "-"
-					+ new Integer(date.getMonth()).toString() + "-"
-					+ new Integer(date.getDay()).toString()
-					+ '\'';
+				valueString = '\'' + dateFormat.format(date) + '\'';
 			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
 				ExtendableObject extendableObject = (ExtendableObject)value;
 				IDatabaseRowKey key = (IDatabaseRowKey)extendableObject.getObjectKey();

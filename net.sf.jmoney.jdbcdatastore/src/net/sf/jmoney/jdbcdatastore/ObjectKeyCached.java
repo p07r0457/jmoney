@@ -89,10 +89,6 @@ public class ObjectKeyCached implements IDatabaseRowKey {
 		JDBCDatastorePlugin.updateProperties(actualPropertySet, rowId, oldValues, newValues, sessionManager);
 	}
 
-	public void updateProperties(PropertySet actualPropertySet, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-		JDBCDatastorePlugin.updateProperties(actualPropertySet, rowId, propertyAccessor, oldValue, newValue, sessionManager);
-	}
-
 	public Session getSession() {
 		return sessionManager.getSession();
 	}
