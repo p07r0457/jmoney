@@ -456,9 +456,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
      * Indicates whether the property may be edited by the user.
      */
     public boolean isEditable() {
-        // The property is considered editable if and only if a bean is
-        // available to do the editing.
-        return editorBeanClass != null;
+        return (editorBeanClass != null) || (propertyControlFactory != null);
     }
     
     /**
