@@ -66,9 +66,9 @@ public class EntriesSection extends SectionPart {
         createClient(page.getManagedForm().getToolkit());
     }
 
-    public void refresh() {
+    public void refreshEntryList() {
     	fEntriesControl.refresh();
-        super.refresh();
+//        super.refresh();
     }
 
     protected void createClient(FormToolkit toolkit) {

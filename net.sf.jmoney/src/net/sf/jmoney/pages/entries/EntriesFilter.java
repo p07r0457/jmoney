@@ -72,7 +72,7 @@ public class EntriesFilter implements Constants {
         if (!aPattern.equals(pattern)) {
             pattern = aPattern;
             changeSupport.firePropertyChange("pattern", null, null);
-			fPage.fEntriesSection.refresh();
+			fPage.fEntriesSection.refreshEntryList();
         }
     }
 
@@ -96,7 +96,7 @@ public class EntriesFilter implements Constants {
         filterColumnIndex = aType;
         changeSupport.firePropertyChange("type", null, null);
         if (!pattern.equals("")) {
-        	fPage.fEntriesSection.refresh();
+        	fPage.fEntriesSection.refreshEntryList();
         }
     }
 

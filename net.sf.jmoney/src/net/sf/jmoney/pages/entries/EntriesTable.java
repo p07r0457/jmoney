@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.TransactionInfo;
@@ -508,25 +509,21 @@ public class EntriesTable implements IEntriesControl {
         			? alternateTransactionColor
         					: transactionColor);
 
-            Transaction trans = data.getTransactionForTransactionFields(); 
-            if (trans.hasMoreThanTwoEntries()) {
-        		// Case of an splitted entry. We display the transaction on the first line
-        		// and the entries of the transaction on the following ones.
-        		// However, the transaction line also holds the properties for the entry
-        		// in this account, so display just the other entries underneath.
-        		Iterator itSubEntries = trans.getEntryIterator();
+            if (data.hasSplitEntries()) {
+        		// Case of an splitted entry. We display the transaction and
+				// account entry on the first line and the other entries of the
+				// transaction on the following ones.
+        		Iterator itSubEntries = data.getSplitEntryIterator();
         		while (itSubEntries.hasNext()) {
         			Entry entry2 = (Entry) itSubEntries.next();
-        			if (!entry2.equals(data.getEntryForAccountFields())) {
-        	        	TableItem item2 = itemFetcher.getNextItem();
-        				DisplayableEntry entryData = new DisplayableEntry(entry2, data);
-        				item2.setData(entryData);
-        				updateItem(item2);
-
-        	        	item2.setBackground(isAlternated 
-        	        			? alternateEntryColor
-        	        					: entryColor);
-        			}
+    				DisplayableEntry entryData = new DisplayableEntry(entry2, data);
+        			TableItem item2 = itemFetcher.getNextItem();
+        			item2.setData(entryData);
+        			updateItem(item2);
+        			
+        			item2.setBackground(isAlternated 
+        					? alternateEntryColor
+        							: entryColor);
         		}
         	}
         }
@@ -703,13 +700,38 @@ public class EntriesTable implements IEntriesControl {
 	
     class DisplayableTransaction implements IDisplayableItem {
         private Entry entry;
+        private Vector otherEntries = new Vector();
         private long balance;
 
         public DisplayableTransaction(Entry entry, long saldo) {
             this.entry = entry;
             this.balance = saldo;
+            
+            // Cache the set of all other entries in this transaction because a query
+            // to the datastore to get it may have non-trivial cost.
+            Iterator itSubEntries = entry.getTransaction().getEntryIterator(); 
+            while (itSubEntries.hasNext()) {
+            	Entry entry2 = (Entry) itSubEntries.next();
+            	if (!entry2.equals(entry)) {
+            		otherEntries.add(entry2);
+            	}
+            }
         }
     	
+		/**
+		 * @return
+		 */
+		public boolean hasSplitEntries() {
+			return otherEntries.size() > 1;
+		}
+
+		/**
+		 * @return
+		 */
+		public Iterator getSplitEntryIterator() {
+			return otherEntries.iterator();
+		}
+
 		public Transaction getTransactionForTransactionFields() {
 			return entry.getTransaction();
 		}
@@ -719,10 +741,10 @@ public class EntriesTable implements IEntriesControl {
 		}
 
 		public Entry getEntryForOtherFields() {
-			if (entry.getTransaction().hasMoreThanTwoEntries()) {
-				return null;
+			if (otherEntries.size() == 1) {
+				return (Entry)otherEntries.get(0);
 			} else {
-				return entry.getTransaction().getOther(entry);
+				return null;
 			}
 		}
 
