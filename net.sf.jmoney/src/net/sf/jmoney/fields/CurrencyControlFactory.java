@@ -47,6 +47,8 @@ import org.eclipse.swt.widgets.Table;
  */
 public class CurrencyControlFactory implements IPropertyControlFactory {
 
+    private Vector usedCurrencies;
+    
     public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
         return new CurrencyEditor(parent, propertyAccessor);
     }
@@ -54,29 +56,50 @@ public class CurrencyControlFactory implements IPropertyControlFactory {
 	public CellEditor createCellEditor(Table table) {
         Session session = JMoneyPlugin.getDefault().getSession();
 
-        Vector items = new Vector();
+        // Load all the currencies the user uses
+        usedCurrencies = new Vector();
         for (Iterator iter = session.getCommodityIterator(); iter.hasNext();) {
             Commodity commodity = (Commodity) iter.next();
             if (commodity instanceof Currency) {
-                items.add(commodity.getName());
+                usedCurrencies.add(commodity);
             }
         }
+        
+        // Extract their names
+        String currencyNames[] = new String[usedCurrencies.size()];
+        for (int i = 0; i<usedCurrencies.size(); i++)
+            currencyNames[i] = ((Currency) usedCurrencies.get(i)).getName();
 
-		return new ComboBoxCellEditor(table, (String[])items.toArray(new String[0]));
+		return new ComboBoxCellEditor(table, currencyNames);
 	}
 
+	/*
+	 * @author Faucheux
+	 */
 	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        Currency currency = (Currency) extendableObject.getPropertyValue(propertyAccessor);
-		// TODO complete this.
+        
+	    Currency currency = (Currency) extendableObject.getPropertyValue(propertyAccessor);
+        if (currency == null) return new Integer(0); 
+        
+        // Search the index of the choosen entry
         int index = 0;
+        while (index<usedCurrencies.size() && usedCurrencies.get(index) != currency  ) 
+            index++;
+        
 		return new Integer(index);
 	}
 
+	/*
+	 * @author Faucheux
+	 */
 	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
 		int index = ((Integer)value).intValue();
-		// TODO complete this.
-		Currency currency = null;
-        extendableObject.setPropertyValue(propertyAccessor, currency);
+		if (index > usedCurrencies.size()) 
+		    System.out.println("Can't find the " + index + " currency of " + usedCurrencies.size());
+		else { 
+		    Currency currency = (Currency) usedCurrencies.get(index);
+        	extendableObject.setPropertyValue(propertyAccessor, currency);
+		}
 	}
 
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
