@@ -37,7 +37,7 @@ import org.eclipse.jface.action.*;
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
 public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
-	    public String getInitialWindowPerspectiveId() {
+		public String getInitialWindowPerspectiveId() {
 	    	// This method will not be called if 
 	    	// org.eclipse.ui/defaultPerspectiveId is set in
 	    	// plugin_customization.ini in org.eclipse.platform
@@ -47,6 +47,14 @@ public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
 	    	// TODO sort this out
 	        return "net.sf.jmoney.JMoneyPerspective";
 	    }
+
+		public void initialize(IWorkbenchConfigurer configurer) {
+			super.initialize(configurer);
+
+			// Turn on support for the saving and restoring of
+			// view states through IMemento interfaces.
+			configurer.setSaveAndRestore(true);
+		}
 
 	    public void preWindowOpen(IWorkbenchWindowConfigurer configurer) {
 			super.preWindowOpen(configurer);
@@ -116,4 +124,21 @@ public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
 		    return menu;
 		}
 
+		public boolean preWindowShellClose(IWorkbenchWindowConfigurer configurer) {
+			// If a session is open, ensure we have all the information we
+			// need to close it.  Some datastores need additional information
+			// to save the session.  For example the serialized XML datastore
+			// requires a file name which will not have been requested from the
+			// user if the datastore has not yet been saved.
+			
+			// This call must be done here for two reasons.
+			// 1. It ensures that the session data can be saved.
+			// 2. The navigation view saves, as part of its state,
+			//    the datastore which was open when the workbench was
+			//    last shut down, allowing it to open the same session
+			//    when the workbench is next opened.  In order to do this,
+			//    the navigation view saves the session details.
+
+			return JMoneyPlugin.getDefault().saveOldSession(configurer.getWindow());
+		}
 }

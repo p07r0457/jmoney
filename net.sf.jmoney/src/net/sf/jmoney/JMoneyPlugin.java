@@ -112,45 +112,6 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	 */
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
-
-		// Load the session that was last loaded, if any.
-		// Get the plug-in id, if any, that was saved in the preferences when JMoney
-		// was last closed, search the 'datastor.es' extensions for this plug-in and
-		// create an appropriate session object, then set this session as the current
-		// session.
-/*		
-		String pluginId2 = getPreferenceStore().getString("currentSessionPlugin");
-		String pluginId = getPluginPreferences().getString("currentSessionPlugin");
-		IPersistableElement;
-		if (pluginId.length() != 0) {
-			IExtensionRegistry registry = Platform.getExtensionRegistry();
-			IExtensionPoint extensionPoint = registry.getExtensionPoint("net.sf.jmoney.datastores");
-			IExtension[] extensions = extensionPoint.getExtensions();
-			for (int i = 0; i < extensions.length; i++) {
-				if (extensions[i].getNamespace().equals(pluginId)) {
-					IConfigurationElement[] elements =
-						extensions[i].getConfigurationElements();
-					for (int j = 0; j < elements.length; j++) {
-						if (elements[j].getName().equals("session")) {
-							try {
-								ISessionManager listener = (ISessionManager)elements[j].createExecutableExtension("class");
-								
-						    	listener.restore(getWorkbench().getActiveWorkbenchWindow());
-
-						    	// The session object will have initialized itself from 
-								// data stored in the preferences.  We need only now
-								// set this session as the current session.
-								JMoneyPlugin.getDefault().setSession(listener);
-								break;
-							} catch (CoreException e) {
-								e.printStackTrace();
-							}
-						}
-					}
-				}
-			}
-		}
-*/		
 	}
 
 	/**
@@ -484,71 +445,6 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 		
 		return entryPropertySet;
 	}
-
-	
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPersistableElement#getFactoryId()
-	 */
-/*    
-	public String getFactoryId() {
-		if (session != null) {
-			return session.getFactoryId();
-		}
-		return null;
-	}
-*/
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPersistableElement#saveState(org.eclipse.ui.IMemento)
-	 */
-/*    
-	public void saveState(IMemento memento) {
-		if (session != null) {
-			IPersistableElement pe = (IPersistableElement)session.getAdapter(IPersistableElement.class);
-			memento.putString("currentSessionFactoryId", pe.getFactoryId());
-			pe.saveState(memento.createChild("currentSession"));
-		}
-	}
-		*/
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPersistableElement#saveState(org.eclipse.ui.IMemento)
-	 */
-/*
-    public void init(IMemento memento) {
-		if (memento != null) {
-			String factoryId = memento.getString("currentSessionFactoryId"); 
-			if (factoryId != null && factoryId.length() != 0) {
-				// Search for the factory.
-				IExtensionRegistry registry = Platform.getExtensionRegistry();
-				IExtensionPoint extensionPoint = registry.getExtensionPoint("org.eclipse.ui.elementFactories");
-				IExtension[] extensions = extensionPoint.getExtensions();
-				for (int i = 0; i < extensions.length; i++) {
-					IConfigurationElement[] elements =
-						extensions[i].getConfigurationElements();
-					for (int j = 0; j < elements.length; j++) {
-						if (elements[j].getName().equals("factory")) {
-							if (elements[j].getAttribute("id").equals(factoryId)) {
-								try {
-									IElementFactory listener = (IElementFactory)elements[j].createExecutableExtension("class");
-									
-									ISessionManager session = (ISessionManager)listener.createElement(memento.getChild("currentSession"));
-									// The session object has been created and initialized from 
-									// the data stored in the memento.  We need only now
-									// set this session as the current session.
-									// TODO set this directly???
-									JMoneyPlugin.getDefault().setSession(session);
-									break;
-								} catch (CoreException e) {
-									e.printStackTrace();
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-		*/
 
     /**
      * If there is any modified data in the controls in any of the

@@ -100,6 +100,40 @@ public class Entry extends ExtendableObject {
         this.transactionKey = parent;
 	}
 	
+    /**
+     * Constructor used by datastore plug-ins to create
+     * an entry object.
+     *
+     * Note that the entry constructed by this constructor
+     * may be invalid.  For example, it is possible that a
+     * null account is set.  It is the callers responsibility
+     * to ensure that an account is set before it relinquishes
+     * control to other plug-ins.
+     *  
+     * @param parent The key to a Transaction object.
+     * 		This parameter must be non-null.
+     * 		The getObject method must not be called on this
+     * 		key from within this constructor because the
+     * 		key may not yet be in a state in which it is
+     * 		capable of materializing an object.   
+     */
+	public Entry(
+			IObjectKey objectKey,
+    		Map        extensions,
+			IObjectKey parent) {
+		super(objectKey, extensions);
+		
+		this.creation = Calendar.getInstance().getTime().getTime();
+		this.check = null;
+		this.valuta = null;
+		this.description = null;
+		this.account = null;
+		this.amount = 0;
+		this.memo = null;
+		
+        this.transactionKey = parent;
+	}
+	
 	// Called only by datastore after object originally constructed.
 	public void registerWithIndexes() {
 		if (account instanceof CapitalAccount) {

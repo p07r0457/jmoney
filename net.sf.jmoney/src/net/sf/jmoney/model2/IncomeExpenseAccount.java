@@ -26,9 +26,7 @@ package net.sf.jmoney.model2;
 import java.util.Map;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.CapitalAccountInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
-import net.sf.jmoney.model2.*;
 
 /**
  * An implementation of the IncomeExpenseAccount interface
@@ -43,8 +41,15 @@ public class IncomeExpenseAccount extends Account {
 			IObjectKey parent,
 			String name,
 			IListManager subAccounts) {
-		super(objectKey, extensions, parent, subAccounts);
-		this.name = name;
+		super(objectKey, extensions, parent, name, subAccounts);
+	}
+
+	public IncomeExpenseAccount(
+			IObjectKey objectKey, 
+			Map extensions, 
+			IObjectKey parent,
+			IListManager subAccounts) {
+		super(objectKey, extensions, parent, null, subAccounts);
 	}
 
 	protected String getExtendablePropertySetId() {

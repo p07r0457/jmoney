@@ -29,7 +29,6 @@ import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.events.SelectionEvent;

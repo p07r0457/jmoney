@@ -33,7 +33,6 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
-import net.sf.jmoney.model2.Transaction;
 
 /**
  * @author Nigel

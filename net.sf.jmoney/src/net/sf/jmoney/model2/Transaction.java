@@ -24,7 +24,6 @@
 package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 
 import java.util.Date;
@@ -52,8 +51,20 @@ public class Transaction extends ExtendableObject {
 		this.entries = entries;
 		this.date = date;
 	}
-    
-		protected String getExtendablePropertySetId() {
+	
+	public Transaction(
+			IObjectKey objectKey,
+    		Map extensions,
+			IObjectKey parent,
+    		IListManager entries) {
+		super(objectKey, extensions);
+
+		this.entries = entries;
+		// TODO: Check that this sets the date to the current date.
+		this.date = new Date();
+	}
+	
+	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.transaction";
 	}
 	

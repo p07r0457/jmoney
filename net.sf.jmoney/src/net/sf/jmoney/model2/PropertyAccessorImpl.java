@@ -226,20 +226,22 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 			return getDeclaredMethodRecursively(propertySet.getImplementationClass(), methodName, parameters);
 		} catch (NoSuchMethodException e) {
 			String parameterText = "";
-			for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
-				if (paramIndex > 0) {
-					parameterText = parameterText + ", ";
-				}
-				String className = parameters[paramIndex].getName();
-				if (parameters[paramIndex].isArray()) {
-					// The returned class name seems to be a mess when the class is an array,
-					// so we tidy it up.
-					parameterText = parameterText + className.substring(2, className.length()-1) + "[]";
-				} else {
-					parameterText = parameterText + className;
+			if (parameters != null) {
+				for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
+					if (paramIndex > 0) {
+						parameterText = parameterText + ", ";
+					}
+					String className = parameters[paramIndex].getName();
+					if (parameters[paramIndex].isArray()) {
+						// The returned class name seems to be a mess when the class is an array,
+						// so we tidy it up.
+						parameterText = parameterText + className.substring(2, className.length()-1) + "[]";
+					} else {
+						parameterText = parameterText + className;
+					}
 				}
 			}
-			throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a '" + methodName + "' method that takes parameters of types (" + parameterText + ").");
+			throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a method with a signature of " + methodName + "(" + parameterText + ").");
 		}
 	}
 
@@ -564,36 +566,4 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 		this.indexIntoScalarProperties = indexIntoScalarProperties;
 	}
 
-	// You may wonder why this code is here when it is also
-	// in the ExtendableObject class.
-	// The reason is that callers can provide a very basic
-	// implementation, often an inline implementation, of
-	// the property set getter interface.  There would thus
-	// be no code supplied to do all of this logic, and nor
-	// do we want to require users to provide this code.
-/* nrwnrw
-	public Object getValue(IExtendableObject values) {
-		Object value;
-		Object objectWithProperties = values;				
-
-		// TODO: Return the value of an extension property if
-		// neccessary.
-		
-		try {
-			value = getTheGetMethod().invoke(objectWithProperties, null);
-		} catch (IllegalAccessException e) {
-			throw new MalformedPluginException("Method '" + getTheGetMethod().getName() + "' in '" + getPropertySet().getImplementationClass().getName() + "' must be public.");
-		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		}
-		
-		return value;
-	}
-*/	
 }

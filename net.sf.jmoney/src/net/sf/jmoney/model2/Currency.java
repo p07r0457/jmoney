@@ -26,7 +26,6 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Map;
 
-import net.sf.jmoney.fields.CommodityInfo;
 import net.sf.jmoney.fields.CurrencyInfo;
 
 /**
@@ -70,6 +69,20 @@ public class Currency extends Commodity {
 
 		this.code = code;
 		this.decimals = decimals;
+	}
+
+    /**
+     * Constructor used by datastore plug-ins to create
+     * a currency object.
+     */
+	public Currency(
+				IObjectKey objectKey,
+	    		Map extensions,
+				IObjectKey parentKey) {
+		super(objectKey, extensions, parentKey, "New Currency");
+		
+		this.code = null;
+		this.decimals = 2;
 	}
 
 	protected String getExtendablePropertySetId() {

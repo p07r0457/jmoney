@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,10 +35,6 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.CoreException;
 
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -105,6 +100,10 @@ public class PropertySet {
 	// Valid for all property sets except those that are
 	// extendable and must be derived from.
 	private Constructor implementationClassConstructor;
+	
+	// Valid for all property sets except those that are
+	// extendable and must be derived from.
+	private Constructor defaultImplementationClassConstructor;
 	
 	/**
 	 * All properties in this and base property sets that are
@@ -402,6 +401,8 @@ public class PropertySet {
 			
 			constructorProperties = new Vector();
 			constructorProperties.setSize(totalPropertyCount);
+
+			int listCount = 0;
 			
 			// The properties must be added in the same order as they
 			// were registered, which is the same order as they are
@@ -414,6 +415,9 @@ public class PropertySet {
 					for (Iterator iter = propertySet2.getPropertyIterator1(); iter.hasNext(); ) {
 						PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 						constructorProperties.setElementAt(propertyAccessor, index2++);
+						if (propertyAccessor.isList()) {
+							listCount++;
+						}
 					}
 				}
 			} else {
@@ -421,59 +425,114 @@ public class PropertySet {
 				for (Iterator iter = properties.iterator(); iter.hasNext(); ) {
 					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 					constructorProperties.setElementAt(propertyAccessor, index2++);
+					if (propertyAccessor.isList()) {
+						listCount++;
+					}
 				}
 			}
 			
 			// Build the list of types of the constructor parameters.
-			int i = 0;
-			int parameterCount = constructorProperties.size();
-			if (!isExtension) {
-				parameterCount += 3;
-			}
-			Class parameters[] = new Class[parameterCount];
-
-			// In the extendable objects, the first parameters are always:
-			// - the key to this object
-			// - a map of extensions
-			// - the key to the object which is the parent of this object
-			if (!isExtension) {
-				parameters[i++] = IObjectKey.class;
-				parameters[i++] = Map.class;
-				parameters[i++] = IObjectKey.class;
-			}
-			
-			for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-				if (propertyAccessor.isScalar()) {
-					if (propertyAccessor.getValueClass().isPrimitive()
-					 || propertyAccessor.getValueClass() == String.class
-					 || propertyAccessor.getValueClass() == Long.class
-					 || propertyAccessor.getValueClass() == Date.class) {
-						parameters[i] = propertyAccessor.getValueClass();
+			{
+				int i = 0;
+				int parameterCount = constructorProperties.size();
+				if (!isExtension) {
+					parameterCount += 3;
+				}
+				Class parameters[] = new Class[parameterCount];
+				
+				// In the extendable objects, the first parameters are always:
+				// - the key to this object
+				// - a map of extensions
+				// - the key to the object which is the parent of this object
+				if (!isExtension) {
+					parameters[i++] = IObjectKey.class;
+					parameters[i++] = Map.class;
+					parameters[i++] = IObjectKey.class;
+				}
+				
+				for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
+					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+					if (propertyAccessor.isScalar()) {
+						if (ExtendableObject.class.isAssignableFrom(propertyAccessor.getValueClass())) { 		
+							// For extendable objects, we pass not the object
+							// but a key to the object.  This is so that we do not
+							// have to read the object from the database unless it
+							// is necessary.
+							parameters[i] = IObjectKey.class; 
+						} else {
+							// The property type is either a primative (int, boolean etc),
+							// or a non-extendable class (Long, String, Date)
+							// or a non-extendable class added by a plug-in.
+							parameters[i] = propertyAccessor.getValueClass();
+						}
 					} else {
-						parameters[i] = IObjectKey.class; 
+						parameters[i] = IListManager.class; 
 					}
-				} else {
-					parameters[i] = IListManager.class; 
+					i++;
 				}
-				i++;
+				
+				try {
+					implementationClassConstructor =
+						propertySetInfo.getImplementationClass().getConstructor(parameters);
+				} catch (SecurityException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (NoSuchMethodException e) {
+					String parameterText = "";
+					for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
+						if (paramIndex > 0) {
+							parameterText = parameterText + ", ";
+						}
+						parameterText = parameterText + parameters[paramIndex].getName();
+					}
+					throw new MalformedPluginException("The " + propertySetInfo.getImplementationClass().getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
+				}
 			}
-			
-			try {
-				implementationClassConstructor =
-					propertySetInfo.getImplementationClass().getConstructor(parameters);
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchMethodException e) {
-				String parameterText = "";
-				for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
-					if (paramIndex > 0) {
-						parameterText = parameterText + ", ";
-					}
-					parameterText = parameterText + parameters[paramIndex].getName();
+		
+			// Find the constructor which sets the default values for
+			// the scalar properties.
+			// Build the list of types of the constructor parameters.
+			{
+				int i = 0;
+				int parameterCount = listCount;
+				if (!isExtension) {
+					parameterCount += 3;
 				}
-				throw new MalformedPluginException("The " + propertySetInfo.getImplementationClass().getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
+				Class parameters[] = new Class[parameterCount];
+				
+				// In the extendable objects, the first parameters are always:
+				// - the key to this object
+				// - a map of extensions
+				// - the key to the object which is the parent of this object
+				if (!isExtension) {
+					parameters[i++] = IObjectKey.class;
+					parameters[i++] = Map.class;
+					parameters[i++] = IObjectKey.class;
+				}
+				
+				for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
+					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+					if (propertyAccessor.isList()) {
+						parameters[i++] = IListManager.class; 
+					}
+				}
+				
+				try {
+					defaultImplementationClassConstructor =
+						propertySetInfo.getImplementationClass().getConstructor(parameters);
+				} catch (SecurityException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (NoSuchMethodException e) {
+					String parameterText = "";
+					for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
+						if (paramIndex > 0) {
+							parameterText = parameterText + ", ";
+						}
+						parameterText = parameterText + parameters[paramIndex].getName();
+					}
+					throw new MalformedPluginException("The " + propertySetInfo.getImplementationClass().getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
+				}
 			}
 		}
 		
@@ -1068,6 +1127,33 @@ public class PropertySet {
 		// TODO: tidy up error processing
 		try {
 			return implementationClassConstructor.newInstance(constructorParameters);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		} catch (IllegalAccessException e) {
+			throw new MalformedPluginException("Constructor must be public.");
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+			throw new MalformedPluginException("An exception occured within a constructor in a plug-in.", e);
+		}
+	}
+
+
+	/**
+	 * This method should be used only by plug-ins that implement
+	 * a datastore.
+	 * 
+	 * @return A newly constructed object, constructed from the given
+	 * 		parameters.  This object may be an ExtendableObject or
+	 * 		may be an ExtensionObject.
+	 */
+	public Object constructDefaultImplementationObject(Object [] constructorParameters) {
+		// TODO: tidy up error processing
+		try {
+			return defaultImplementationClassConstructor.newInstance(constructorParameters);
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
 			throw new RuntimeException("internal error");

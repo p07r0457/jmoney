@@ -23,29 +23,13 @@
 
 package net.sf.jmoney.model2;
 
-import java.beans.PropertyChangeEvent;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 import java.util.Iterator;
-import java.util.Properties;
 import java.util.Hashtable;
-import java.util.ResourceBundle;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.File;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.CommodityInfo;
-import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.fields.SessionInfo;
-import net.sf.jmoney.isocurrencies.IsoCurrenciesPlugin;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IMemento;
@@ -101,7 +85,9 @@ public class Session extends ExtendableObject {
     		Commodity commodity = (Commodity)iter.next();
     		if (commodity instanceof Currency) {
     			Currency currency = (Currency)commodity;
-    			this.currencies.put(currency.getCode(), currency);
+    			if (currency.getCode() != null) {
+    				this.currencies.put(currency.getCode(), currency);
+    			}
     		}
     	}
     	
@@ -110,6 +96,40 @@ public class Session extends ExtendableObject {
         } else {
        		this.defaultCurrency = null;
         }
+    }
+
+    /**
+     * Constructor used by datastore plug-ins to create
+     * a session object.
+     */
+    public Session(
+    		IObjectKey objectKey,
+    		Map extensions,
+			IObjectKey parent,
+    		IListManager commodities,
+			IListManager accounts,
+			IListManager transactions) {
+    	super(objectKey, extensions);
+
+    	this.commodities = commodities;
+    	this.accounts = accounts;
+    	this.transactions = transactions;
+    	
+        // Set up a hash table that maps currency codes to
+        // the currency object.
+    	// It may be that no 
+    	this.currencies = new Hashtable();
+    	for (Iterator iter = commodities.iterator(); iter.hasNext(); ) {
+    		Commodity commodity = (Commodity)iter.next();
+    		if (commodity instanceof Currency) {
+    			Currency currency = (Currency)commodity;
+    			if (currency.getCode() != null) {
+    				this.currencies.put(currency.getCode(), currency);
+    			}
+    		}
+    	}
+    	
+   		this.defaultCurrency = null;
     }
 
 	protected String getExtendablePropertySetId() {

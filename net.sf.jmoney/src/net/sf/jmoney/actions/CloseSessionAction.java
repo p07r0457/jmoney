@@ -22,6 +22,9 @@
 
 package net.sf.jmoney.actions;
 
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.ISessionManager;
+
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -51,10 +54,18 @@ public class CloseSessionAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		MessageDialog.openInformation(
-			window.getShell(),
-			"Jmoney Plug-in",
-			"Close the Session");
+		ISessionManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		if (sessionManager == null) {
+			MessageDialog.openWarning(
+					window.getShell(),
+					"Jmoney Plug-in",
+					"No session is open!");
+		} else {
+			if (sessionManager.canClose(window)) {
+				sessionManager.close();
+				JMoneyPlugin.getDefault().setSessionManager(null);
+			}
+		}
 	}
 
 	/**

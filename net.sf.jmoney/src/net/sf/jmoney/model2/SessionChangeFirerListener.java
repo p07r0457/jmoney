@@ -24,8 +24,6 @@ package net.sf.jmoney.model2;
 
 import java.util.EventListener;
 
-import org.eclipse.jface.util.PropertyChangeEvent;
-
 /**
  * Listener interface for changes to a session.
  * <P>

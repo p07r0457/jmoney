@@ -23,7 +23,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.io.Serializable;
 import java.util.Iterator;
 
 /**

@@ -235,7 +235,7 @@ public class FolderView extends ViewPart {
     public void setFocus() {
         if (singleItemViewer != null) {
             singleItemViewer.setFocus();
-        } else if (tabFolderViewer.getItemCount() != 0) {
+        } else if (tabFolderViewer != null) {
             tabFolderViewer.setFocus();
         }
     }

@@ -24,8 +24,6 @@ package net.sf.jmoney.model2;
 
 import java.util.EventListener;
 
-import org.eclipse.jface.util.PropertyChangeEvent;
-
 /**
  * Listener interface for addition and deletion of <code>Entry</code>
  * objects.  Entry objects are added to a session when either a transaction

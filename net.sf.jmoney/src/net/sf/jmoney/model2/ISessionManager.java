@@ -28,8 +28,10 @@ import org.eclipse.ui.IWorkbenchWindow;
 /**
  * This interface must be implemented by all plug-ins that implement a
  * datastore.  The methods in this interface are called only from the
- * framework.  They should not be called directly by other plug-ins and thus
- * these methods are not in the Session interface.
+ * framework.  They should not be called directly by other plug-ins.
+ * <P>
+ * There will always be one SessionManager object for each Session
+ * object.
  */
 public interface ISessionManager extends IAdaptable {
 
@@ -51,32 +53,6 @@ public interface ISessionManager extends IAdaptable {
      * not yet been saved to a file).
      */
     String getBriefDescription();
-    
-    /**
-     * Restores this session is the same condition as a previous session
-     * that had saved its state in the preferences.
-     */
-//    void restore(IWorkbenchWindow window);
-    
-    /**
-     * Returns the properties that were used to create this session.
-     * These properties can be used to re-open the session at a later
-     * time.  This mechanism is used by the framework to open the
-     * framework with the same session that was loaded when the framework
-     * last closed.  The properties returned by this method will be
-     * passed to the openCurrentSession method in the plugin at a later
-     * time.
-     *
-     * The properties in this property set are in their own namespace so
-     * need be unique only among themselves.
-     *
-     * There must be a property called 'plugin' that contains the id
-     * (class name) of the plugin.  Other than that, it is entirely up
-     * to the plug-in to decide what properties it needs.  If there is
-     * only one possible datastore that the plug-in can open then no
-     * properties are necessary.
-     */
-    //Properties getProperties();
     
     /**
      * Obtain confirmation and/or information from the user so that this
@@ -108,9 +84,4 @@ public interface ISessionManager extends IAdaptable {
      * opportunity to cancel the operation.
      */
     void close();
-
-	/**
-	 * @return
-	 */
-	String getFactoryId();
 }

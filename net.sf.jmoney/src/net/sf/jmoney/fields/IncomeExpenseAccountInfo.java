@@ -26,7 +26,6 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
 
 /**

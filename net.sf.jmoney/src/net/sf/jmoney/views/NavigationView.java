@@ -56,7 +56,11 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ISessionFactory;
+import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
@@ -350,16 +354,51 @@ private Map idToNodeMap = new HashMap();
 
     public void init(IViewSite site, IMemento memento) throws PartInitException {
         init(site);
-        
-    	// Some objects owned by the JMoneyPlugin object need to have
-    	// their state preserved across sessions.  However, Eclipse
-    	// allows only views to preserve state.
-    	// We get around this by making it the responsibility of this
-    	// navigation view to create a child memento and pass that
-    	// on to the plug-in object so that the plug-in object can
-    	// preserve its state.
+
         if (memento != null) {
-//        	JMoneyPlugin.getDefault().init(memento.getChild("JMoneyPlugin"));
+        	// Restore any session that was open when the workbench
+        	// was last closed.
+        	ISessionManager sessionManager = null;
+        	
+        	String factoryId = memento.getString("currentSessionFactoryId"); 
+        	if (factoryId != null && factoryId.length() != 0) {
+        		// Search for the factory.
+        		IExtensionRegistry registry = Platform.getExtensionRegistry();
+        		IExtensionPoint extensionPoint = registry.getExtensionPoint("org.eclipse.ui.elementFactories");
+        		IExtension[] extensions = extensionPoint.getExtensions();
+        		for (int i = 0; i < extensions.length; i++) {
+        			IConfigurationElement[] elements =
+        				extensions[i].getConfigurationElements();
+        			for (int j = 0; j < elements.length; j++) {
+        				if (elements[j].getName().equals("factory")) {
+        					if (elements[j].getAttribute("id").equals(factoryId)) {
+        						try {
+        							ISessionFactory listener = (ISessionFactory)elements[j].createExecutableExtension("class");
+        							
+        							// Create and initialize the session object from 
+        							// the data stored in the memento.
+        							sessionManager = (ISessionManager)listener.createElement(memento.getChild("currentSession"), getSite().getWorkbenchWindow());
+        							break;
+        						} catch (CoreException e) {
+        							e.printStackTrace();
+        						}
+        					}
+        				}
+        			}
+        		}
+        	}
+        	
+        	// If the plug-in that had originally created the session is not
+        	// installed or if an error occurred while opening the session
+        	// then sessionManager will be null and we start
+        	// the workbench with no open session.  Otherwise set the
+			// returned session as the current session.
+            if (sessionManager != null) {
+                JMoneyPlugin.getDefault().setSessionManager(sessionManager);
+                session = sessionManager.getSession();
+            }
+        } else {
+        	session = null;
         }
     	
         // init is called before createPartControl,
@@ -370,29 +409,23 @@ private Map idToNodeMap = new HashMap();
     }
     
     public void saveState(IMemento memento) {
-    	// Some objects owned by the JMoneyPlugin object need to have
-    	// their state preserved across sessions.  However, Eclipse
-    	// allows only views to preserve state.
-    	// We get around this by making it the responsibility of this
-    	// navigation view to create a child memento and pass that
-    	// on to the plug-in object so that the plug-in object can
-    	// preserve its state.
-
-    	// Ideally plug-in objects should themselves
-    	// be able to save and restore state, because objects affect
-    	// many views and so it is not clear which view should save
-    	// the object.  Anyway, this is an Eclipse design issue and
-    	// does not affect us because we always have this navigation
-    	// view.
-//    	JMoneyPlugin.getDefault().saveState(memento.createChild("JMoneyPlugin"));
+    	// Save the information required to re-open any open session.
+    	ISessionManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		if (sessionManager != null) {
+			IPersistableElement pe = (IPersistableElement)sessionManager.getAdapter(IPersistableElement.class);
+			memento.putString("currentSessionFactoryId", pe.getFactoryId());
+			pe.saveState(memento.createChild("currentSession"));
+		}
     	
     	// Give each extension a child memento into which it can
     	// save state.
+/* TODO: get this working when the GUI design has been completed.   	
 		for (Iterator iter = pageListenerAndNodeIdMap.keySet().iterator(); iter.hasNext(); ) {
 			IBookkeepingPageListener pageListener = (IBookkeepingPageListener)iter.next();
             IMemento childMemento = memento.createChild(pageListener.getClass().getName());
             pageListener.saveState(childMemento);
 		}
+*/		
     }
     
 	/**

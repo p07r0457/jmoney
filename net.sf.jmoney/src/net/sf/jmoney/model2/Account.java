@@ -25,11 +25,8 @@ package net.sf.jmoney.model2;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
-import net.sf.jmoney.model2.*;
 
 /**
  * An implementation of the Account interface
@@ -46,9 +43,11 @@ public abstract class Account extends ExtendableObject {
 			IObjectKey objectKey, 
 			Map extensions, 
 			IObjectKey parentKey,
+			String name,
 			IListManager subAccounts) {
 		super(objectKey, extensions);
 		this.parentKey = parentKey;
+		this.name = name;
 		this.subAccounts = subAccounts;
 	}
 	

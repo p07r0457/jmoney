@@ -24,21 +24,14 @@
 package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CapitalAccountInfo;
-import net.sf.jmoney.model2.*;
+import net.sf.jmoney.fields.EntryInfo;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Map;
-import java.util.Vector;
 import java.util.Iterator;
 
 /**
@@ -114,10 +107,8 @@ public class CapitalAccount extends Account {
 			Long minBalance,
 			String abbreviation,
 			String comment) {
-		super(objectKey, extensions, parent, subAccounts);
+		super(objectKey, extensions, parent, name, subAccounts);
 		
-		this.name = name;
-
 		// This account is being loaded from the datastore and therefore a currency
 		// must be set.  We store internally the Currency object itself, not the 
 		// key used to fetch the Currency object.
@@ -134,16 +125,34 @@ public class CapitalAccount extends Account {
         this.abbreviation = abbreviation;
         this.comment = comment;
         
-        PropertyAccessor accountAccessor;
-		try {
-			accountAccessor = PropertySet.getPropertyAccessor("net.sf.jmoney.entry.account");
-		} catch (PropertyNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		}
+		this.entries = objectKey.createIndexValuesList(EntryInfo.getAccountAccessor());
+	}
+
+	/**
+	 * The default constructor for a CapitalAccount object.  This constructor is called
+	 * when a new CapitalAccount object is created.  The properties are set to default
+	 * values.  The list properties are set to empty lists.  The parameter list for this
+	 * constructor is the same as the full constructor except that there are no parameters
+	 * for the scalar properties.
+	 */
+	public CapitalAccount(
+			IObjectKey objectKey, 
+			Map extensions, 
+			IObjectKey parent,
+			IListManager subAccounts) {
+		super(objectKey, extensions, parent, JMoneyPlugin.getResourceString("Account.newAccount"), subAccounts);
 		
-		this.entries = objectKey.createIndexValuesList(accountAccessor);
+		// Set the currency to the session default currency.
+		this.currency = objectKey.getSession().getDefaultCurrency();
+		
+        this.bank = null;
+        this.accountNumber = null;
+        this.startBalance = 0;
+        this.minBalance = null;
+        this.abbreviation = null;
+        this.comment = null;
+        
+		this.entries = objectKey.createIndexValuesList(EntryInfo.getAccountAccessor());
 	}
 
 	protected String getExtendablePropertySetId() {

@@ -23,8 +23,6 @@
 package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
