@@ -3,63 +3,161 @@
  */
 package net.sf.jmoney.charts;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Container;
 import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.security.InvalidParameterException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.TreeSet;
+import java.util.Vector;
+
+import javax.swing.JDialog;
+
+import org.jfree.chart.ChartMouseEvent;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.entity.PieSectionEntity;
+import org.jfree.chart.plot.PiePlot;
+import org.jfree.data.DefaultPieDataset;
 
 import net.sf.jmoney.charts.*;
 import net.sf.jmoney.model2.*;
 
-import com.jrefinery.data.DefaultPieDataset;
 
 public class ExpensePieChart extends PieChart {
-
-	protected Date fromDate; 
+ 
+    protected Date fromDate; 
 	protected Date toDate;
+	protected int  maxLevel;
+	String[] accounts;
+	Container containerForSeveralGraphics;
 	
-	public ExpensePieChart(String title, Session session) {
+	public ExpensePieChart(String title, Session session, int maxLevel, String[] accounts) {
         super(title, session);
+	    this.accounts = accounts;
+	    this.maxLevel = maxLevel;
+	}
+
+	public ExpensePieChart(String title, Session session, int maxLevel, String account) {
+		this(title, session, maxLevel, new String[1]);
+		accounts[0] = account;
+	}
+
+	public ExpensePieChart(String title, Session session, int maxLevel) {
+		this(title, session, maxLevel, "Dépenses");
 	}
 	
-	protected void setValues(Session session, DefaultPieDataset data) {
+	public void setAccount (String account) {
+	    accounts[0] = account;
+	}
+	
+	public void setDates (Date from, Date to) {
+	  fromDate = from;
+	  toDate = to;
+	}
+
+	public void setMaxLevel(String newMaxLevel) {
+	    try {
+	        maxLevel = Integer.parseInt(newMaxLevel);
+	    } catch (NumberFormatException e ) {}
+	}
+	
+	protected void createValues() {
 
 		// TODO: Faucheux - der gewählte Level sollte  parametrisierbar sein.
-		int  maxLevel = 1;
+		long totalBalance = 0;
 
 		// collect the values
 		TreeSet values = new TreeSet ();
 		
-	    Iterator aIt = session.getAccountsUntilLevel(maxLevel).iterator();
+		// TODO: Faucheux - The list of accounts should be parametrisabled.
+        List listAccounts = new LinkedList();
+        for (int i=0; i<accounts.length; i++) {
+            CapitalAccount theAccount = (CapitalAccount) util.getAccountByFullName(session, accounts[i]);
+            listAccounts.add(theAccount);
+            if (maxLevel > theAccount.getLevel())
+                listAccounts.addAll(util.getSubAccountsUntilLevel(theAccount, maxLevel));
+            else
+                listAccounts.addAll(util.getSubAccounts(theAccount));
+        }
+        Iterator aIt = listAccounts.iterator(); 
+	    // Iterator aIt = util.getAccountsUntilLevel(session,maxLevel).iterator();
 	    while (aIt.hasNext()) {
 	        Account currentAccount = (Account) aIt.next();
 	        if (currentAccount instanceof CapitalAccount) {
 		        CapitalAccount currentCapitalAccount = (CapitalAccount) currentAccount;
- 	        long balance;
+		        long balance;
 	        
-	        if (currentAccount.getLevel() < maxLevel) {
-	        	// If the account has sub accounts, they will have their own entry -> we don't have to include them here
-	        	balance = currentCapitalAccount.getBalance(session, fromDate, toDate);
-	        } else {
-	        	// If the account has sub accounts, they won't have their own entry -> we have to include them here
-	        	balance = currentCapitalAccount.getBalanceWithSubAccounts(session, fromDate, toDate);
-	        }
-	        
-	        System.out.println(currentAccount.getName() + " : " + balance +".");
-		    values.add(new CoupleStringNumber(currentAccount.getName(), balance));
+		        if (currentAccount.getLevel() < maxLevel) {
+		        	// If the account has sub accounts, they will have their own entry -> we don't have to include them here
+		        	balance = currentCapitalAccount.getBalance(session, fromDate, toDate);
+		        } else {
+		        	// If the account has sub accounts, they won't have their own entry -> we have to include them here
+		        	balance = currentCapitalAccount.getBalanceWithSubAccounts(session, fromDate, toDate);
+		        }
+		        
+			    if (balance >= 0) {
+			        System.out.println(currentAccount.getName() + " : " + balance/100 +".");
+			        values.add(new CoupleStringNumber(currentAccount.getFullAccountName(), currentAccount.getName(), balance/100));
+			    	totalBalance += balance /100 ;
+			    }
 	        }
 	    }
+	    
+	    // Calculate the 5 % of the graph and group the values which generate it.
+	    long smallBalance = 0;
+	    boolean finished = false;
+	    String nameRest = new String();
+	    while (! finished) {
+	        CoupleStringNumber csn=null ;
+	        try { csn = (CoupleStringNumber) values.last(); } catch (NoSuchElementException e) {}; 
+	        if (csn!=null && smallBalance + csn.n < (totalBalance * 0.05)) {
+	            nameRest = nameRest + " + " + csn.s;
+	            smallBalance += csn.n;
+	            values.remove(csn);
+	        } else {
+	            finished = true;
+	        }
+	    }
+	    if (nameRest.length() > 3) nameRest = nameRest.substring(3);    // to avoid to begin with a +
+	    if (nameRest.length() > 60) nameRest = nameRest.substring(0, 60) + "...";
+	    nameRest = "Reste";
+
+	    // create a new Dataset
+	    data = new DefaultPieDataset();
+	    if (chart!=null) ((PiePlot) chart.getPlot()).setDataset(data);
 	    
 	    // set the (sorted) values in the graph
 	    Iterator it = values.iterator();
 	    while (it.hasNext()) {
 	    	CoupleStringNumber csn = (CoupleStringNumber) it.next();
-		    data.setValue(csn.s, new Long(csn.n));
+		    data.setValue(csn, new Long(csn.n));
 	    }
-	    
+	    if (smallBalance > 0) 
+		    data.setValue(nameRest, smallBalance);
+
+	    // set the title
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+    	title = accounts[0];
+    	subTitle = new LinkedList();
+    	subTitle.add(new String (" from " + df.format(fromDate) + " to " + df.format(toDate)));
+    	if (chart != null) {
+    	    chart.setTitle(title);
+    	    chart.setSubtitles(subTitle);
+    	}
+    	
+
     }
 
 	protected void initParameters() {
@@ -72,8 +170,6 @@ public class ExpensePieChart extends PieChart {
         	throw err;
         }
     	toDate = new Date();
-
-    	setTitle("Expenses from " + df.format(fromDate) + " to " + df.format(toDate));
 	}
 
 	/**
@@ -82,12 +178,24 @@ public class ExpensePieChart extends PieChart {
 	 */
 	private class CoupleStringNumber implements Comparable {
 		public String s;
+		public String longName;
 		public long n;
 		
 		
 		public CoupleStringNumber(String s, long n) {
 			this.s = s;
 			this.n = n;
+			this.longName = s;
+		}
+		
+		public CoupleStringNumber(String longName, String s, long n) {
+			this(s,n);
+			this.longName = longName;
+		}
+
+		
+		public String toString () {
+		    return s;
 		}
 		
 		public int compareTo (Object csn2) {
@@ -104,10 +212,41 @@ public class ExpensePieChart extends PieChart {
 			    if (difference == 0) difference = s.hashCode() - s2.hashCode();
 			    return - difference;
 			} else {
-				throw new Error("A CoupleStringNumber object can't be compared to an other typ of object.");
+				throw new InvalidParameterException("A CoupleStringNumber object can't be compared to an other typ of object.");
 			}
 			
 		}
 
 }
+	
+	public void chartMouseClicked (ChartMouseEvent e) {
+	    System.out.println("in chartMouseClicked");
+	    if (e.getEntity() != null) {
+	        PieSectionEntity pieSection = (PieSectionEntity) e.getEntity();
+	        String accountClicked = ((CoupleStringNumber) pieSection.getSectionKey()).longName;
+	        System.out.println("Im Entity : " + accountClicked);
+	        PieChart newChart = new ExpensePieChart(accountClicked, this.session, this.maxLevel + 1, accountClicked);
+	        newChart.run();
+	        ChartPanel chartPanel = newChart.getChartPanel();
+	        if (containerForSeveralGraphics != null) {
+	            GridBagConstraints gbConstraints = new GridBagConstraints();
+				gbConstraints.fill = GridBagConstraints.BOTH;
+				gbConstraints.weightx = 1; gbConstraints.weighty = 1;
+				gbConstraints.gridy = 2;
+				((GridBagLayout) containerForSeveralGraphics.getLayout()).setConstraints(chartPanel, gbConstraints);
+	            containerForSeveralGraphics.add(chartPanel);
+	            containerForSeveralGraphics.setBackground(Color.MAGENTA);
+	            containerForSeveralGraphics.validate();
+	        }
+	    }
+	}
+
+
+    /**
+     * @param containerForSeveralGraphics The containerForSeveralGraphics to set.
+     */
+    public void setContainerForSeveralGraphics(
+            Container containerForSeveralGraphics) {
+        this.containerForSeveralGraphics = containerForSeveralGraphics;
+    }
 }

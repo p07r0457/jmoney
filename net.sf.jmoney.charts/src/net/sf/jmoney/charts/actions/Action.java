@@ -44,9 +44,12 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
  * the action, this delegate will be created and execution will be delegated to
  * it.
  * 
+ * This class is an abstract one. The real implementation of the action is coded
+ * in the abstract doAction(session) method
+ * 
  * @see IWorkbenchWindowActionDelegate
  */
-public class Action implements IWorkbenchWindowActionDelegate {
+public abstract class Action implements IWorkbenchWindowActionDelegate {
     private IWorkbenchWindow window;
 
     /**
@@ -81,12 +84,11 @@ public class Action implements IWorkbenchWindowActionDelegate {
                 waitDialog.open();
                 return;
             }
-
-            (new ExpensePieChart("Chart", session)).run();
             
+            doAction(session);
 
         } catch (Exception e) {
-            System.err.println(e.getStackTrace());
+            e.printStackTrace();
         }
     }
 
@@ -117,4 +119,13 @@ public class Action implements IWorkbenchWindowActionDelegate {
     public void init(IWorkbenchWindow window) {
         this.window = window;
     }
+
+    /**
+     * This abstract method has to be implemented in the sub-classes
+     * to create the chart.
+     * @param session
+     */
+    public abstract void doAction (Session session);
+
+
 }

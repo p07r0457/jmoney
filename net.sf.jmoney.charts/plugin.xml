@@ -11,10 +11,10 @@
       <library name="charts.jar">
          <export name="*"/>
       </library>
-      <library name="jcommon-0.6.4.jar">
+      <library name="jcommon-0.9.4.jar">
          <export name="*"/>
       </library>
-      <library name="jfreechart-0.9.2.jar">
+      <library name="jfreechart-0.9.19.jar">
          <export name="*"/>
       </library>
    </runtime>
@@ -30,22 +30,53 @@
             label="net.sf.jmoney.charts"
             visible="true"
             id="net.sf.jmoney.charts">
-         <menu
-               label="%MainFrame.charts"
-               id="chartsMenu">
-            <separator name="net.sf.jmoney.charts.separator2"/>
-         </menu>
          <action
-               label="%MainFrame.charts"
+               label="PieChart"
+               class="net.sf.jmoney.charts.actions.ActionPieChart"
                tooltip="Draw charts"
-               class="net.sf.jmoney.charts.actions.Action"
                menubarPath="file/chartsGroup"
-               id="net.sf.jmoney.charts.actions.Action"/>
+               id="net.sf.jmoney.charts.actions.ActionPieChart"/>
          <action
-               label="LineCharts"
-               class="net.sf.jmoney.charts.actions.ActionLineGraph"
-               id="net.sf.jmoney.charts.action1"/>
+               label="StapeldChart"
+               class="net.sf.jmoney.charts.actions.ActionStappeldChart"
+               menubarPath="file/chartsGroup"
+               id="net.sf.jmoney.charts.actions.ActionStappeldChart"/>
+         <action
+               label="LineChart"
+               class="net.sf.jmoney.charts.actions.ActionLineChart"
+               menubarPath="file/chartsGroup"
+               id="net.sf.jmoney.charts.actions.ActionLineChart"/>
       </actionSet>
+   </extension>
+
+
+   <extension
+         point="net.sf.jmoney.pages">
+      <node
+            id="chartsNode"
+            label="%NavigationTreeModel.Charts"
+            position="500">
+      </node>
+      <node
+            id="pieChart"
+            label="%Chart.pieChart"
+            parent="net.sf.jmoney.charts.chartsNode"
+            position="100">
+      </node>
+      <pages
+            node="net.sf.jmoney.charts.pieChart"
+            class="net.sf.jmoney.charts.PieChartPage">
+      </pages>
+      <node
+            id="lineChart"
+            label="%Chart.lineChart"
+            parent="net.sf.jmoney.charts.chartsNode"
+            position="100">
+      </node>
+      <pages
+            node="net.sf.jmoney.charts.lineChart"
+            class="net.sf.jmoney.charts.LineChartPage">
+      </pages>
    </extension>
 
 </plugin>
