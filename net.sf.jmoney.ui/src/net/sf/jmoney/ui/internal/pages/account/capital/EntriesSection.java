@@ -51,10 +51,12 @@ import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.forms.SectionPart;
@@ -69,6 +71,7 @@ import org.eclipse.ui.forms.widgets.Section;
 public class EntriesSection extends SectionPart {
 
     protected static final String[] PROPERTIES = { "check", "date", "valuta", "description", "debit", "credit", "balance"};
+    private static final Color alternateEntryColor = new Color(Display.getCurrent(), 255, 255, 0);
 
     protected EntriesPage fPage;
     protected Table fTable;
@@ -152,14 +155,24 @@ public class EntriesSection extends SectionPart {
         fViewer.setColumnProperties(PROPERTIES);
         fViewer.setCellEditors(createCellEditors());
         fViewer.setCellModifier(new CellModifier());
-
+        
         fViewer.addSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
                 handleSelectionChanged();
             }
         });
-
+        
         fViewer.setInput(fPage.getAccount());
+        
+        /*
+         * Alternate the color of the entries to improve the readibility 
+         * Remark: I'm not sure it's the better implementation. Not sure too
+         * that it's works when the entries are changed (inserted or deleted)...
+         */
+        for (int i=0; i<fViewer.getTable().getItemCount(); i += 2) {
+            fViewer.getTable().getItem(i).setBackground(alternateEntryColor);
+        }
+        
     }
 
     // TODO This is not implemnted properly yet.
