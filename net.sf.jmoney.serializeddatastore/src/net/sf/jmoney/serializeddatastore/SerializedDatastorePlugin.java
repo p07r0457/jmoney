@@ -106,7 +106,7 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class SerializedDatastorePlugin extends AbstractUIPlugin {
 
-	public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney.qif/debug"));
+	public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney.serializeddatastore/debug"));
 
 	//The shared instance.
 	private static SerializedDatastorePlugin plugin;

@@ -29,7 +29,7 @@ import org.eclipse.jface.resource.ImageDescriptor;import org.eclipse.swt.graphi
  */
 public class JMoneyUIPlugin extends AbstractUIPlugin {
 
-    public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney.qif/debug"));
+    public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney.ui/debug"));
 
 	private static JMoneyUIPlugin plugin;
 
