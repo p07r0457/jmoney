@@ -54,7 +54,7 @@ public class SessionFactory implements ISessionFactory {
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IElementFactory#createElement(org.eclipse.ui.IMemento)
 	 */
-	public void openSession(IMemento memento, IWorkbenchWindow window) {
+	public void openSession(IMemento memento) {
 		// TODO: Write this for JDBC databases and get it working.
 /*		
 		String fileName = memento.getString("fileName");
