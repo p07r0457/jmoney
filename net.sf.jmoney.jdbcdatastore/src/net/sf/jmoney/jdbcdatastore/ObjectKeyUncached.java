@@ -145,6 +145,21 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 		return rowId;
 	}
 
+	public boolean equals(Object object) {
+		if (object instanceof ObjectKeyUncached) {
+			ObjectKeyUncached otherKey = (ObjectKeyUncached)object; 
+			return this.rowId == otherKey.getRowId()
+			    && this.typedPropertySet == otherKey.typedPropertySet
+			    && this.sessionManager == otherKey.sessionManager;
+		} else {
+			return false;
+		}
+	}
+	
+	public int hashCode() {
+		return rowId;
+	}
+	
 	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
 		JDBCDatastorePlugin.updateProperties(actualPropertySet, rowId, oldValues, newValues, sessionManager);
 	}
