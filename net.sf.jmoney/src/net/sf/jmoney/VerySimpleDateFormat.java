@@ -45,12 +45,20 @@ public class VerySimpleDateFormat {
 	private SimpleDateFormat formatter;
 	
 	private int dayIndex, monthIndex, yearIndex;
+    private String delimiter;
 
 	public VerySimpleDateFormat(String pattern) {
 		formatter = new SimpleDateFormat(pattern);
 		dayIndex = pattern.indexOf("dd");
 		monthIndex = pattern.indexOf("MM");
 		yearIndex = pattern.indexOf("yyyy");
+        if (pattern.indexOf(".") > -1) {
+            delimiter = ".";
+        } else if (pattern.indexOf("/") > -1) {
+            delimiter = "/";
+        } else if (pattern.indexOf("-") > -1) {
+            delimiter = "-";
+        }
 	}
 
 	public String format(Date d) {
@@ -64,38 +72,49 @@ public class VerySimpleDateFormat {
 			int month = cl.get(Calendar.MONTH);
 			int year = cl.get(Calendar.YEAR);
 			cl.clear();
-			StringTokenizer st = new StringTokenizer(dateString, "/.-");
+            cl.setLenient(false);
+			StringTokenizer st = new StringTokenizer(dateString, delimiter, true);
 			switch (st.countTokens()) {
 				case 1 :
 					day = Integer.parseInt(st.nextToken());
 					break;
-				case 2 :
+				case 3 :
 					if (dayIndex < monthIndex) {
 						day = Integer.parseInt(st.nextToken());
+                        st.nextToken();   // ignore the delimiter
 						month = Integer.parseInt(st.nextToken()) - 1;
 					} else if (dayIndex > monthIndex) {
 						month = Integer.parseInt(st.nextToken()) - 1;
+                        st.nextToken();   // ignore the delimiter
 						day = Integer.parseInt(st.nextToken());
 					}
 					break;
-				case 3 :
+				case 5 :
 					String d = null, m = null, y = null;
 					if (dayIndex < monthIndex && monthIndex < yearIndex) {
 						d = st.nextToken();
+                        st.nextToken();   // ignore the delimiter
 						m = st.nextToken();
+                        st.nextToken();   // ignore the delimiter
 						y = st.nextToken();
 					} else if (monthIndex < dayIndex && dayIndex < yearIndex) {
 						m = st.nextToken();
+                        st.nextToken();   // ignore the delimiter
 						d = st.nextToken();
+                        st.nextToken();   // ignore the delimiter
 						y = st.nextToken();
 					} else if (
 						yearIndex < monthIndex && monthIndex < dayIndex) {
 						y = st.nextToken();
+                        st.nextToken();   // ignore the delimiter
 						m = st.nextToken();
+                        st.nextToken();   // ignore the delimiter
 						d = st.nextToken();
 					} else if (yearIndex < dayIndex && dayIndex < monthIndex) {
 						y = st.nextToken();
+                        st.nextToken();   // ignore the delimiter
 						d = st.nextToken();
+                        st.nextToken();   // ignore the delimiter
 						m = st.nextToken();
 					}
 					day = Integer.parseInt(d);
@@ -105,12 +124,15 @@ public class VerySimpleDateFormat {
 						year += year < 30 ? 2000 : 1900;
 					break;
 				default :
-					throw new IllegalArgumentException("No valid date");
+					throw new IllegalArgumentException("No valid date: " + dateString);
 			}
 			cl.set(year, month, day);
 			return cl.getTime();
 		} catch (Exception e) {
-			return null;
+            if (e instanceof IllegalArgumentException) {
+                throw new IllegalArgumentException("No valid date: " + dateString);
+            }
+            return null;
 		}
 	}
 }
