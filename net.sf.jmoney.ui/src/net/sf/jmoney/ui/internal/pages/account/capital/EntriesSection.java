@@ -205,7 +205,7 @@ public class EntriesSection extends SectionPart {
 			public void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 				if (extendableObject instanceof Entry) {
 					Entry entry = (Entry)extendableObject;
-					if (entry.getAccount().equals(fPage.getAccount())) {
+					if (fPage.getAccount().equals(entry.getAccount())) {
 						refresh();
 					}
 					

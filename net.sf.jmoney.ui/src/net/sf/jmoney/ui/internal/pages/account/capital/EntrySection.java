@@ -104,11 +104,40 @@ public class EntrySection extends SectionPart {
     	 * Set of all controls in the composite1 area.
     	 * element: Control (labels and property edit controls)
     	 */
-    	private Vector propertyControls = new Vector();
+//    	private Vector propertyControls = new Vector();
     	
         /** element: IPropertyControl */
-        Vector entryControls = new Vector();
+//      Vector entryControls = new Vector();
+    	
+        /** element: LabelAndEditControlPair */
+    	Vector entryPropertyControls = new Vector();
 
+        class LabelAndEditControlPair {
+        	private Label label;
+        	private IPropertyControl propertyControl;
+        	
+        	/**
+			 * @param propertyLabel
+			 * @param propertyControl
+			 */
+			public LabelAndEditControlPair(Label label, IPropertyControl propertyControl) {
+				this.label = label;
+				this.propertyControl = propertyControl;
+			}
+
+			void dispose() {
+        		label.dispose();
+        		propertyControl.getControl().dispose();
+        	}
+
+			/**
+			 * @param entry
+			 */
+			public void load(Entry entry) {
+				propertyControl.load(entry);
+			}
+        }
+        
         /**
          * The account for which the appropriate set of entry
          * properties exist.  If null then the account list 
@@ -168,13 +197,83 @@ public class EntrySection extends SectionPart {
             // and "Expense" labels, because it is more likely that the account
             // will be an income/expense account than a capital account.
             debitLabel = toolkit.createLabel(composite2, "Income:");
-            debitText = toolkit.createText(composite3, "0.00");
+            debitText = toolkit.createText(composite3, "");
             creditLabel = toolkit.createLabel(composite4, "Expense:");
-            creditText = toolkit.createText(composite5, "0.00");
+            creditText = toolkit.createText(composite5, "");
 
             debitLabel.setBackground(entryColor);
             creditLabel.setBackground(entryColor);
             
+            debitText.addFocusListener(
+    				new FocusAdapter() {
+    					public void focusLost(FocusEvent e) {
+    						// We need a currency so that we can format the amount.
+    						// Get the currency from this entry if possible.
+    						// However, the user may not have yet entered enough information
+    						// to determine the currency for this entry, in which case
+    						// use the currency for the account being listed in this editor.
+    						// FIXME change this when we can get the currency for income/expense
+    						// accounts.
+    						Commodity commodityForFormatting = null;
+    						if (entry.getAccount() != null
+    								&& entry.getAccount() instanceof CapitalAccount) {
+    							commodityForFormatting = entry.getCommodity();
+    						}
+    						if (commodityForFormatting == null) {
+    							commodityForFormatting = fPage.getAccount().getCurrency();
+    						}
+    						
+    						String amountString = debitText.getText();
+    						long amount = commodityForFormatting.parse(amountString);
+    						if (amount != 0) {
+    							entry.setAmount(-amount);
+    							debitText.setText(commodityForFormatting.format(amount));
+    							// When a debit is entered, clear out any credit.
+    							creditText.setText("");
+    						} else {
+    							if (creditText.getText().equals("")) { 
+    								entry.setAmount(0);
+    							}
+								debitText.setText("");
+    						}
+    					}
+    				});
+    		
+            creditText.addFocusListener(
+    				new FocusAdapter() {
+    					public void focusLost(FocusEvent e) {
+    						// We need a currency so that we can format the amount.
+    						// Get the currency from this entry if possible.
+    						// However, the user may not have yet entered enough information
+    						// to determine the currency for this entry, in which case
+    						// use the currency for the account being listed in this editor.
+    						// FIXME change this when we can get the currency for income/expense
+    						// accounts.
+    						Commodity commodityForFormatting = null;
+    						if (entry.getAccount() != null
+    								&& entry.getAccount() instanceof CapitalAccount) {
+    							commodityForFormatting = entry.getCommodity();
+    						}
+    						if (commodityForFormatting == null) {
+    							commodityForFormatting = fPage.getAccount().getCurrency();
+    						}
+    						
+    						String amountString = creditText.getText();
+    						long amount = commodityForFormatting.parse(amountString);
+    						if (amount != 0) {
+    							entry.setAmount(amount);
+    							creditText.setText(commodityForFormatting.format(amount));
+    							// When a debit is entered, clear out any credit.
+    							debitText.setText("");
+    						} else {
+    							if (debitText.getText().equals("")) { 
+    								entry.setAmount(0);
+    							}
+								creditText.setText("");
+    						}
+    					}
+    				});
+    		
     		// The account combo always exists and always comes first,
             // so we add that ourselves.
     		addLabelAndEditControl(EntryInfo.getAccountAccessor());
@@ -218,14 +317,14 @@ public class EntrySection extends SectionPart {
 					|| (account != null && account.equals(oldAccount))) {
 				// TODO: Clean this out.
 			} else {
-				((IPropertyControl)entryControls.get(0)).load(null);
+				((LabelAndEditControlPair)entryPropertyControls.get(0)).load(null);
 				
 				// Remove all the old controls after the account.
-				for (int i=2; i < propertyControls.size(); i++) {
-					Control control = (Control)propertyControls.get(i);
-					control.dispose();
+				for (int i=1; i < entryPropertyControls.size(); i++) {
+					LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
+					controlPair.dispose();
 				}
-				propertyControls.setSize(2);
+				entryPropertyControls.setSize(1);
 				
 				addFurtherControls(account);
 				
@@ -233,12 +332,15 @@ public class EntrySection extends SectionPart {
 				creditText.setVisible(isAccountSet);
 				debitLabel.setVisible(isAccountSet);
 				debitText.setVisible(isAccountSet);
+
+				debitText.setEnabled(false);
+	            creditText.setEnabled(false);
 			}
 			
 			// Clear and disable the controls.
-			for (Iterator iter = entryControls.iterator(); iter.hasNext();) {
-				IPropertyControl control = (IPropertyControl)iter.next();
-				control.load(null);
+			for (Iterator iter = entryPropertyControls.iterator(); iter.hasNext();) {
+				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)iter.next();
+				controlPair.load(null);
 			}
 		}
 		
@@ -259,11 +361,11 @@ public class EntrySection extends SectionPart {
 				// TODO tidy up
 			} else {
 				// Remove all the old controls after the account.
-				for (int i=2; i < propertyControls.size(); i++) {
-					Control control = (Control)propertyControls.get(i);
-					control.dispose();
+				for (int i = 1; i < entryPropertyControls.size(); i++) {
+					LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
+					controlPair.dispose();
 				}
-				propertyControls.setSize(2);
+				entryPropertyControls.setSize(1);
 				
 				addFurtherControls(entry.getAccount());
 				
@@ -272,13 +374,16 @@ public class EntrySection extends SectionPart {
 				debitLabel.setVisible(isAccountSet);
 				debitText.setVisible(isAccountSet);
 			}
-			
+
 			// Update the contents of the controls to the values from the entry
 			// and ensure the controls are enabled.
-			for (Iterator iter = entryControls.iterator(); iter.hasNext();) {
-				IPropertyControl control = (IPropertyControl)iter.next();
-				control.load(entry);
+			for (Iterator iter = entryPropertyControls.iterator(); iter.hasNext();) {
+				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)iter.next();
+				controlPair.load(entry);
 			}
+			
+			debitText.setEnabled(true);
+            creditText.setEnabled(true);
 			
 			// Set the amount in the credit and debit controls.
 			long amount = entry.getAmount();
@@ -302,23 +407,6 @@ public class EntrySection extends SectionPart {
 					debitText.setText("");
 				}
 			}
-			
-/* This certainly should not be here.			
-			// Listen to changes to the account property in the entry.
-			// TODO: Should this be done by the controls themselves?
-			Session session = fPage.getAccount().getSession();
-			session.addSessionChangeListener(new SessionChangeAdapter() {
-				public void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-					if (extendableObject.equals(entry)) {
-						// If the 'account' property changed in the entry then
-						// we re-do the controls in this entry.
-						if (propertyAccessor == EntryInfo.getAccountAccessor()) {
-							// TODO: remove old controls and build new ones.
-						}
-					}	
-				} 
-			});
-*/			
 		}
 
     	/**
@@ -350,9 +438,8 @@ public class EntrySection extends SectionPart {
     					}
     				});
     		
-    		propertyControls.add(propertyLabel);
-    		propertyControls.add(propertyControl.getControl());
-    		entryControls.add(propertyControl);
+    		LabelAndEditControlPair controlPair = new LabelAndEditControlPair(propertyLabel, propertyControl);
+    		entryPropertyControls.add(controlPair);
     	}
 
 
@@ -385,6 +472,7 @@ public class EntrySection extends SectionPart {
     					if (propertyAccessor.isEditable()
     							&& propertyAccessor.isScalar()
     							&& propertyAccessor != EntryInfo.getAccountAccessor() 
+    							&& propertyAccessor != EntryInfo.getAmountAccessor()
     							&& propertyAccessor != EntryInfo.getDescriptionAccessor()) {
     						addLabelAndEditControl(propertyAccessor);
     					}
@@ -411,21 +499,20 @@ public class EntrySection extends SectionPart {
 
     	void updateSetOfEntryControls() {
 			// Remove all the old controls after the account.
-			for (int i=2; i < propertyControls.size(); i++) {
-				Control control = (Control)propertyControls.get(i);
-				control.dispose();
+			for (int i = 1; i < entryPropertyControls.size(); i++) {
+				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
+				controlPair.dispose();
 			}
-			propertyControls.setSize(2);
-			entryControls.setSize(1);
+			entryPropertyControls.setSize(1);
 			
 			// Add the new controls
 			addFurtherControls(entry.getAccount());
 
 			// Set the further controls so they are editing
 			// this entry.
-			for (int i=1; i < entryControls.size(); i++) {
-				IPropertyControl control = (IPropertyControl)entryControls.get(i);
-				control.load(entry);
+			for (int i=1; i < entryPropertyControls.size(); i++) {
+				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
+				controlPair.load(entry);
 			}
 			
 	        fPage.getManagedForm().reflow(true);
