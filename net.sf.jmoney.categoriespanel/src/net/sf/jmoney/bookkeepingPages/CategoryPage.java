@@ -331,8 +331,6 @@ public class CategoryPage implements IBookkeepingPageFactory {
 								String oldValueText;
 								
 								public void focusLost(FocusEvent e) {
-									if (CategoriesPanelPlugin.DEBUG) System.out.println("Focus lost: " + propertyAccessor.getLocalName());
-									
 									if (session.isSessionFiring()) {
 										return;
 									}
@@ -356,7 +354,6 @@ public class CategoryPage implements IBookkeepingPageFactory {
 									session.registerUndoableChange(description);
 								}
 								public void focusGained(FocusEvent e) {
-									if (CategoriesPanelPlugin.DEBUG) System.out.println("Focus gained: " + propertyAccessor.getLocalName());
 									// Save the old value of this property for use in our 'undo' message.
 									oldValueText = propertyAccessor.formatValueForMessage(
 											selectedAccount);

@@ -45,8 +45,7 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
 		ReconciliationEntryInfo.propertySet = propertySet;
 
-		// TODO Provide a PropertyControlFactory.
-		statusAccessor = propertyRegistrar.addProperty("status", ReconciliationPlugin.getResourceString("Entry.statusShort"), 2, 2, new StatusControlFactory(), null);
+		statusAccessor = propertyRegistrar.addProperty("status", ReconciliationPlugin.getResourceString("Entry.statusShort"), 1, 20, new StatusControlFactory(), null);
 	}
 
 	/**

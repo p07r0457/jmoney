@@ -334,7 +334,14 @@ public class JMoneyPlugin extends AbstractUIPlugin {
             BufferedReader buffer = new BufferedReader(new InputStreamReader(in));
             for (String line = buffer.readLine(); line != null; line = buffer.readLine()) {
                 if (line.substring(0, 3).equals(code)) {
-                    decimals = Byte.parseByte(line.substring(4, 5));
+                	// The Currencies.txt file does not contain the number of decimals
+                	// for every currency.  If no number is in the file then a StringIndexOutOfBoundsException
+                	// will be thrown and we assume two decimal places.
+                	try {
+                		decimals = Byte.parseByte(line.substring(4, 5));
+                	} catch (StringIndexOutOfBoundsException e) {
+                		decimals = 2;
+                	}
                 }
             }
         } catch (IOException ioex) {
