@@ -110,6 +110,7 @@
                label="Preferences..."
                icon="icons/jlfgr/preferences16.gif"
                class="net.sf.jmoney.actions.PreferencesAction"
+               class2="org.eclipse.ui.internal.OpenPreferencesAction"
                tooltip="user preferences"
                menubarPath="options/sampleGroup"
                toolbarPath="optionsGroup"
@@ -221,17 +222,7 @@
             id="net.sf.jmoney.preferences.PreferencePage">
       </page>
    </extension>
-<!--   
-   <extension
-         point="org.eclipse.ui.propertyPages">
-      <page
-            objectClass="net.sf.jmoney.model2.CapitalAccount"
-            name="Account Properties"
-            class="net.sf.jmoney.properties.AccountPropertyPage"
-            id="net.sf.jmoney.properties.accountPropertyPage">
-      </page>
-   </extension>
--->   
+
    <extension
          point="org.eclipse.ui.views">
       <category
