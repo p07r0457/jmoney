@@ -22,20 +22,25 @@
 
 package net.sf.jmoney;
 
+import net.sf.jmoney.views.NodeEditor;
+
 import org.eclipse.ui.IMemento;
 
 /**
- * An implementation of this interface is returned by all implementations
- * of the createFormPage method in the IBookkeepingPageFactory interface.
+ * Interface that must be implemented by all classes that
+ * implement an extension to the net.sf.jmoney.pages extension
+ * point.
  *
  * @author Nigel Westbury
  */
-public interface IBookkeepingPage {
+public interface IBookkeepingPageFactory {
 	/**
-	 * Save the state of the page in a memento.  This method
-	 * is called when the editor containing this page is closed.
-	 * If the editor is re-created, the memento will be passed
-	 * to the <code>createFormPage</code> method.
+	 * Create the form page.
+	 * 
+	 * @param editor The editor to which the page is added.
+	 * @param memento A memento containing the state of the page
+	 * 			when the page was last closed.  If no prior state
+	 * 			is available then <code>memento</code> will be null.
 	 */
-	void saveState(IMemento memento);
+	IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento);
 }

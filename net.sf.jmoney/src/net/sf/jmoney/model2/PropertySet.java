@@ -60,7 +60,8 @@ import java.lang.reflect.Method;
  * can be called to determine in which of the above three categories
  * a property set lies.
  * 
- * @see propertySets.html
+ * @see <a href="propertySets.html">Property Set Documentation</a>
+ * @see <a href="extendingDatamodel.html#propertySets">Property Set Documentation</a>
  * @author Nigel Westbury
 */
 

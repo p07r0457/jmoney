@@ -36,18 +36,27 @@ import net.sf.jmoney.fields.CurrencyInfo;
 import net.sf.jmoney.isocurrencies.IsoCurrenciesPlugin;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ISessionChangeFirer;
+import net.sf.jmoney.model2.ISessionFactory;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.Propagator;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeFirerListener;
 import net.sf.jmoney.model2.SessionChangeListener;
+import net.sf.jmoney.views.TreeNode;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -96,9 +105,6 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 		} catch (MissingResourceException x) {
 			resourceBundle = null;
 		}
-		
-		PropertySet.init();
-		Propagator.init();
 	}
 
 	/**
@@ -106,6 +112,10 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	 */
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
+		
+		PropertySet.init();
+		Propagator.init();
+		TreeNode.init();
 	}
 
 	/**
@@ -145,6 +155,20 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 		} catch (MalformedURLException e) {
 			// should not happen
 			return ImageDescriptor.getMissingImageDescriptor().createImage();
+		}
+	}
+
+	public static ImageDescriptor createImageDescriptor(String name) {
+		// Make above call this, or remove above
+//		String iconPath = "icons/";
+		String iconPath = "";
+		try {
+			URL installURL = getDefault().getBundle().getEntry("/");
+			URL url = new URL(installURL, iconPath + name);
+			return ImageDescriptor.createFromURL(url);
+		} catch (MalformedURLException e) {
+			// should not happen
+			return ImageDescriptor.getMissingImageDescriptor();
 		}
 	}
 
@@ -343,4 +367,60 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     	// the above initializeDefaultPreferences method will be returned.
     	return getPreferenceStore().getString("dateFormat");
     }
+
+	/**
+	 * Given a memento containing the data needed to open a session,
+	 * return the session.  If the session is already open
+	 * then return the session, otherwise the session is opened
+	 * by this method and returned.
+	 *  
+	 * @param memento
+	 * @return
+	 */
+	public static Session openSession(IMemento memento) {
+		if (memento != null) {
+			// This is a kludge.  Only one session can be open at a time,
+			// therefore all views that need a session will save the same
+			// data in the session memento.  Therefore, if a session is open,
+			// just return that.  We know it is the right session.
+			if (getDefault().getSession() != null) {
+				System.out.println("creating session - subsequent time");
+				return getDefault().getSession();
+			}
+			
+			System.out.println("creating session - first time");
+			String factoryId = memento.getString("currentSessionFactoryId"); 
+			if (factoryId != null && factoryId.length() != 0) {
+				// Search for the factory.
+				IExtensionRegistry registry = Platform.getExtensionRegistry();
+				IExtensionPoint extensionPoint = registry.getExtensionPoint("org.eclipse.ui.elementFactories");
+				IExtension[] extensions = extensionPoint.getExtensions();
+				for (int i = 0; i < extensions.length; i++) {
+					IConfigurationElement[] elements =
+						extensions[i].getConfigurationElements();
+					for (int j = 0; j < elements.length; j++) {
+						if (elements[j].getName().equals("factory")) {
+							if (elements[j].getAttribute("id").equals(factoryId)) {
+								try {
+									ISessionFactory listener = (ISessionFactory)elements[j].createExecutableExtension("class");
+									
+									// Create and initialize the session object from 
+									// the data stored in the memento.
+									listener.openSession(memento.getChild("currentSession"));
+									return getDefault().getSession();
+								} catch (CoreException e) {
+									// Could not create the factory given by the 'class' attribute
+									// Log the error and start JMoney with no open session.
+									e.printStackTrace();
+								}
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+		
+    	return null;
+	}
 }

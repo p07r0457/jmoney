@@ -22,13 +22,20 @@
 
 package net.sf.jmoney.views;
 
+import java.util.Map;
 import java.util.Vector;
 
+import net.sf.jmoney.IBookkeepingPageFactory;
+import net.sf.jmoney.IBookkeepingPage;
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.ISessionManager;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPersistableElement;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
@@ -38,23 +45,32 @@ import org.eclipse.ui.PlatformUI;
  * 
  * @author Johann Gyger
  */
-public class NodeEditorInput implements IEditorInput {
+public class NodeEditorInput implements IEditorInput, IPersistableElement {
 
     protected Object nodeObject;
     protected String label;
     protected Image image;
-    protected Vector pageListeners;
+    
+	/** Element: PageEntry */
+    protected Vector pageFactories;
 
+    protected IMemento memento;
+    
+    // Set when addPages called.
+    IBookkeepingPage pages [];
+    
     /**
      * Create a new account editor input.
      * 
      * @param nodeObject Account on which this input is based
      */
-    public NodeEditorInput(Object nodeObject, String label, Image image, Vector pageListeners) {
+    public NodeEditorInput(Object nodeObject, String label, Image image, Vector pageFactories, IMemento memento) {
         this.nodeObject = nodeObject;
         this.label = label;
         this.image = image;
-        this.pageListeners = pageListeners;
+        this.pageFactories = pageFactories;
+        this.memento = memento;
+		System.out.println("number of pages set in " + nodeObject.toString() + ": " + (pageFactories==null?-1:pageFactories.size()));
     }
 
     /* (non-Javadoc)
@@ -92,8 +108,9 @@ public class NodeEditorInput implements IEditorInput {
      * @see org.eclipse.ui.IEditorInput#getPersistable()
      */
     public IPersistableElement getPersistable() {
-        // TODO Auto-generated method stub
-        return null;
+        // This class implements the IPersistableElement
+    	// methods, so return a pointer to this object.
+        return this;
     }
 
     /* (non-Javadoc)
@@ -141,6 +158,65 @@ public class NodeEditorInput implements IEditorInput {
     }
 
     public Vector getPageListeners() {
-        return pageListeners;
+        return pageFactories;
     }
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.ui.IPersistableElement#getFactoryId()
+	 */
+	public String getFactoryId() {
+		return "net.sf.jmoney.nodeEditor";
+	}
+
+	/**
+	 * @param memento
+	 */
+	public void saveState(IMemento memento) {
+		System.out.println("saveState called for input editor " + label);
+		// Views and editors can be restored in any order, and
+		// all must be able to be restored independently of the
+		// others.  Therefore the session memento must be saved in the memento 
+		// for every view and editor.
+		
+    	// Save the details of the session.
+    	ISessionManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		if (sessionManager != null) {
+			IMemento sessionMemento = memento.createChild("session");
+			IPersistableElement pe = (IPersistableElement)sessionManager.getAdapter(IPersistableElement.class);
+			sessionMemento.putString("currentSessionFactoryId", pe.getFactoryId());
+			pe.saveState(sessionMemento.createChild("currentSession"));
+		}
+		
+		// Save the node.  The node may be either
+		// a TreeNode object or an object in the data model.
+		
+		// If a TreeNode, save the id of the node.
+		if (nodeObject instanceof TreeNode) {
+			memento.putString("treeNode", ((TreeNode)nodeObject).getId());
+		} else if (nodeObject instanceof CapitalAccount) {
+			memento.putString("capitalAccount", ((CapitalAccount)nodeObject).getFullAccountName());
+		} else {
+			throw new RuntimeException("");
+		}
+		
+		// Save the contents of each page.
+		if (pages == null) {
+			// Seems to happen if page were never displayed???
+			System.out.println("no pages set in " + nodeObject.toString());
+			return;
+		}
+		for (int i = 0; i < pageFactories.size(); i++) {
+			TreeNode.PageEntry entry = (TreeNode.PageEntry)pageFactories.get(i);
+			String pageId = (String)entry.getPageId();
+			IBookkeepingPageFactory pageListener = (IBookkeepingPageFactory)entry.getPageFactory();
+			pages[i].saveState(memento.createChild(pageId));
+		}
+	}
+
+	/**
+	 * @return
+	 */
+	public IMemento getMemento() {
+		return memento;
+	}
 }

@@ -22,8 +22,10 @@
 
 package net.sf.jmoney.views;
 
+import java.util.Map;
 import java.util.Vector;
 
+import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 
@@ -31,6 +33,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
+import org.eclipse.ui.IMemento;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.editor.FormEditor;
 
@@ -48,18 +51,20 @@ public class NodeEditor extends FormEditor {
      * @see org.eclipse.ui.forms.editor.FormEditor#addPages()
      */
     protected void addPages() {
-        try {
-        	for (int i = 0; i < pageListeners.size(); i++) {
-        		if (pageListeners.get(i) instanceof IBookkeepingPage) {
-        			// The extension listener is a new-style editor page.
-                    IBookkeepingPage pageListener = (IBookkeepingPage)pageListeners.get(i);
-
-                    addPage(pageListener.createFormPage(this));
-        		}    
-        	}
-        } catch (PartInitException e) {
-            JMoneyPlugin.log(e);
-        }
+    	System.out.println("adding pages");
+        NodeEditorInput cInput = (NodeEditorInput)this.getEditorInput();
+        IMemento memento = cInput.getMemento();
+        
+        IBookkeepingPage pages [] = new IBookkeepingPage[pageListeners.size()];
+        
+    	for (int i = 0; i < pageListeners.size(); i++) {
+    		TreeNode.PageEntry entry = (TreeNode.PageEntry)pageListeners.get(i);
+    		String pageId = (String)entry.getPageId();
+    		IBookkeepingPageFactory pageListener = (IBookkeepingPageFactory)entry.getPageFactory();
+    		pages[i] = pageListener.createFormPage(this, memento==null?null:memento.getChild(pageId));
+    	}
+    	
+    	cInput.pages = pages;
     }
 
     /* (non-Javadoc)

@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.fields;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
@@ -115,7 +116,7 @@ public class AmountEditor implements IPropertyControl {
     public void setListener(final SessionChangeListener commodityChangeListener) {
 		// We must listen for changes to the currency so that
 		// we can change the format of the amount.
-		fObject.getSession().addSessionChangeListener(commodityChangeListener);
+		JMoneyPlugin.getDefault().getSession().addSessionChangeListener(commodityChangeListener);
     	
 		propertyControl.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {

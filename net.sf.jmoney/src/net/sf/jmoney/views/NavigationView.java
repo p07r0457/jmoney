@@ -22,47 +22,30 @@
 
 package net.sf.jmoney.views;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Vector;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.*;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.*;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.jface.action.*;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.*;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.SWT;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.Platform;
 
 import net.sf.jmoney.Constants;
-import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CapitalAccountInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ISessionFactory;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
@@ -83,138 +66,8 @@ public class NavigationView extends ViewPart {
 	private Vector newAccountActions = new Vector();  // Element type: Action
 	private Action deleteAccountAction;
 
-	private AccountsNode accountsRootNode;
-	
 	private Session session;
 	
-	/*
-	 * The content provider class is responsible for
-	 * providing objects to the view. It can wrap
-	 * existing objects in adapters or simply return
-	 * objects as-is. These objects may be sensitive
-	 * to the current input of the view, or ignore
-	 * it and always show the same content 
-	 * (like Task List, for example).
-	 */
-	 
-	
-	
-	
-	
-	class TreeNode implements IAdaptable {
-		private String name;
-		private Image image;
-		private TreeNode parent;
-		private String parentId;
-		private int position;
-		protected ArrayList children = null;
-		private Vector pageListeners = new Vector(); // element: IBookkeepingPage
-
-		public TreeNode(String name, Image image, TreeNode parent, int position) {
-			this.name = name;
-			this.image = image;
-			this.parent = parent;
-			this.position = position;
-		}
-		public TreeNode(String name, Image image, String parentId, int position) {
-			this.name = name;
-			this.image = image;
-			this.parentId = parentId;
-			this.position = position;
-		}
-		public String getName() {
-			return name;
-		}
-		public TreeNode getParent() {
-			return parent;
-		}
-		int getPosition() {
-			return position;
-		}
-		public String toString() {
-			return getName();
-		}
-		public Object getAdapter(Class key) {
-			return null;
-		}
-		public Image getImage() {
-			return image;
-		}
-		public void addChild(Object child) {
-			if (children == null) {
-				children = new ArrayList();
-			}
-			children.add(child);
-		}
-		
-		public void removeChild(Object child) {
-			children.remove(child);
-		}
-		public Object [] getChildren() {
-			if (children == null) {
-				return new Object[0];
-			} else {
-				return children.toArray();
-			}
-		}
-		public boolean hasChildren() {
-			return children != null && children.size()>0;
-		}
-		/**
-		 * @return
-		 */
-		public Object getParentId() {
-			return parentId;
-		}
-
-		/**
-		 * @param parentNode
-		 */
-		public void setParent(TreeNode parent) {
-			this.parent = parent;
-		}
-
-		/**
-		 * @param pageListener
-		 */
-		public void addPageListener(IBookkeepingPage pageListener) {
-			pageListeners.add(pageListener);
-		}
-		/**
-		 * @return An array of objects that implement the IBookkeepingPageListener
-		 * 		interface.  The returned value is never null but the Vector may
-		 * 		be empty if there are no listeners for this node.
-		 */
-		public Vector getPageListeners() {
-			return pageListeners;
-		}
-	}
-
-	// TODO: Should the list of accounts be cached by the TreeNode object?
-	// Or should we change this code and send the request to the datastore each time the tree view requests
-	// a list of accounts or sub-accounts?
-	class AccountsNode extends TreeNode {
-		public AccountsNode(String name, Image image, TreeNode parent) {
-			super(name, image, parent, 100);
-			setSession(JMoneyPlugin.getDefault().getSession());
-		}
-		
-		private void setSession(Session session) {
-			// Initialize with list of top level accounts from the session.
-			if (children == null) {
-				children = new ArrayList();
-			} else {
-				children.clear();
-			}
-			if (session != null) {
-				for (Iterator iter = session.getCapitalAccountIterator(); iter.hasNext(); ) {
-					CapitalAccount account = (CapitalAccount)iter.next();
-					children.add(account);
-				}
-			}
-		}
-	}
-
 	class ViewContentProvider implements IStructuredContentProvider, 
 										   ITreeContentProvider {
 		/**
@@ -238,7 +91,7 @@ public class NavigationView extends ViewPart {
 				if (account.getParent() != null) {
 					return account.getParent();
 				} else {
-					return accountsRootNode;
+					return TreeNode.getAccountsRootNode();
 				}
 			}
 			return null;
@@ -305,14 +158,14 @@ public class NavigationView extends ViewPart {
 		new SessionChangeAdapter() {
 		public void sessionReplaced(Session oldSession, Session newSession) {
 			NavigationView.this.session = newSession;
-			accountsRootNode.setSession(newSession);
+			TreeNode.getAccountsRootNode().setSession(newSession);
 			refreshViewer();
 		}
 		public void accountAdded(Account newAccount) {
 			if (newAccount instanceof CapitalAccount) {
 				if (newAccount.getParent() == null) {
 					// An array of top level accounts is cached, so we add it now.
-					accountsRootNode.addChild(newAccount);
+					TreeNode.getAccountsRootNode().addChild(newAccount);
 				} else {
 					// Sub-accounts are not cached in any tree node, so there is
 					// nothing to do except to refresh the viewer.
@@ -324,7 +177,7 @@ public class NavigationView extends ViewPart {
 			if (oldAccount instanceof CapitalAccount) {
 				if (oldAccount.getParent() == null) {
 					// An array of top level accounts is cached, so we add it now.
-					accountsRootNode.removeChild(oldAccount);
+					TreeNode.getAccountsRootNode().removeChild(oldAccount);
 				} else {
 					// Sub-accounts are not cached in any tree node, so there is
 					// nothing to do except to refresh the viewer.
@@ -354,15 +207,10 @@ public class NavigationView extends ViewPart {
 	private void refreshViewer () {
         Display.getDefault().syncExec( new Runnable() {
             public void run() {
-                viewer.refresh(accountsRootNode, false);
+                viewer.refresh(TreeNode.getAccountsRootNode(), false);
             }
         });
 	}
-
-private Map idToNodeMap = new HashMap();
-	private Map pageListenerAndNodeIdMap = new HashMap();
-//	private Vector accountPageListeners = new Vector();
-	private Map objectToPagesMap = new HashMap();  // PropertySet to Vector of IBookkeepingPage
 
 	private IMemento memento;
 		
@@ -376,41 +224,19 @@ private Map idToNodeMap = new HashMap();
     public void init(IViewSite site, IMemento memento) throws PartInitException {
         init(site);
 
+		System.out.println("navigation view initialized");
         if (memento != null) {
         	// Restore any session that was open when the workbench
         	// was last closed.
-        	String factoryId = memento.getString("currentSessionFactoryId"); 
-        	if (factoryId != null && factoryId.length() != 0) {
-        		// Search for the factory.
-        		IExtensionRegistry registry = Platform.getExtensionRegistry();
-        		IExtensionPoint extensionPoint = registry.getExtensionPoint("org.eclipse.ui.elementFactories");
-        		IExtension[] extensions = extensionPoint.getExtensions();
-        		for (int i = 0; i < extensions.length; i++) {
-        			IConfigurationElement[] elements =
-        				extensions[i].getConfigurationElements();
-        			for (int j = 0; j < elements.length; j++) {
-        				if (elements[j].getName().equals("factory")) {
-        					if (elements[j].getAttribute("id").equals(factoryId)) {
-        						try {
-        							ISessionFactory listener = (ISessionFactory)elements[j].createExecutableExtension("class");
-        							
-        							// Create and initialize the session object from 
-        							// the data stored in the memento.
-        							listener.openSession(memento.getChild("currentSession"), getSite().getWorkbenchWindow());
-        						} catch (CoreException e) {
-        							// Could not create the factory given by the 'class' attribute
-        							// Log the error and start JMoney with no open session.
-        							e.printStackTrace();
-        						}
-        						break;
-        					}
-        				}
-        			}
-        		}
-        	}
+    		session = JMoneyPlugin.openSession(memento.getChild("session"));
+        } else {
+        	session = null;
         }
-    	
-        session = JMoneyPlugin.getDefault().getSession();
+
+        // The accounts root node caches the top level accounts, so set
+        // the session so this can be done.
+        // TODO: change this when the accounts are no longer cached in the node.
+        TreeNode.getAccountsRootNode().setSession(session);
         
         // init is called before createPartControl,
         // and the objects that need the memento are not
@@ -420,23 +246,16 @@ private Map idToNodeMap = new HashMap();
     }
     
     public void saveState(IMemento memento) {
-    	// Save the information required to re-open any open session.
+    	// Save the information required to re-create this navigation view.
+    	
+    	// Save the details of the session.
     	ISessionManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		if (sessionManager != null) {
+			IMemento sessionMemento = memento.createChild("session");
 			IPersistableElement pe = (IPersistableElement)sessionManager.getAdapter(IPersistableElement.class);
-			memento.putString("currentSessionFactoryId", pe.getFactoryId());
-			pe.saveState(memento.createChild("currentSession"));
+			sessionMemento.putString("currentSessionFactoryId", pe.getFactoryId());
+			pe.saveState(sessionMemento.createChild("currentSession"));
 		}
-    	
-    	// Give each extension a child memento into which it can
-    	// save state.
-/* TODO: get this working when the GUI design has been completed.   	
-		for (Iterator iter = pageListenerAndNodeIdMap.keySet().iterator(); iter.hasNext(); ) {
-			IBookkeepingPageListener pageListener = (IBookkeepingPageListener)iter.next();
-            IMemento childMemento = memento.createChild(pageListener.getClass().getName());
-            pageListener.saveState(childMemento);
-		}
-*/		
     }
     
 	/**
@@ -444,147 +263,6 @@ private Map idToNodeMap = new HashMap();
 	 * to create the viewer and initialize it.
 	 */
 	public void createPartControl(Composite parent) {
-
-		// Load the extensions
-		IExtensionRegistry registry = Platform.getExtensionRegistry();
-		IExtensionPoint extensionPoint = registry.getExtensionPoint("net.sf.jmoney.pages");
-		IExtension[] extensions = extensionPoint.getExtensions();
-		for (int i = extensions.length-1; i>=0; i--) {
-			IConfigurationElement[] elements =
-				extensions[i].getConfigurationElements();
-			for (int j = 0; j < elements.length; j++) {
-				if (elements[j].getName().equals("node")) {
-					
-					String label = elements[j].getAttribute("label");
-					String icon = elements[j].getAttribute("icon");
-					String id = elements[j].getAttribute("id");
-					String parentNodeId = elements[j].getAttribute("parent");
-					String position = elements[j].getAttribute("position");
-					
-					if (id != null && id.length() != 0) {
-						String fullNodeId = extensions[i].getNamespace() + '.' + id;
-						
-						Image image = null;
-						if (icon != null) {
-							// Try getting the image from this plug-in.
-							ImageDescriptor descriptor = JMoneyPlugin.imageDescriptorFromPlugin(extensions[i].getNamespace(), icon); 
-							if (descriptor == null) {
-								// try getting the image from the JMoney plug-in. 
-								descriptor = JMoneyPlugin.imageDescriptorFromPlugin("net.sf.jmoney", icon);
-							}
-							if (descriptor != null) {
-								image = descriptor.createImage(); 
-							}
-						}
-						
-						int positionNumber = 800;
-						if (position != null) {
-							positionNumber = Integer.parseInt(position);
-						}
-						
-						TreeNode node = new TreeNode(label, image, parentNodeId, positionNumber);
-						idToNodeMap.put(fullNodeId, node);
-					}
-				}
-				if (elements[j].getName().equals("pages")) {
-					try {
-						Object listener = elements[j].createExecutableExtension("class");
-						IBookkeepingPage pageListener = (IBookkeepingPage)listener;
-/* not sure about this code
-    	 					IMemento pageMemento = null; 
-    	 					if (memento != null) {
-    	 						pageMemento = memento.getChild(pageListener.getClass().getName());
-    	 					}
-    	 					pageListener.init(pageMemento);
-*/
-						String nodeId = elements[j].getAttribute("node");
-						if (nodeId != null && nodeId.length() != 0) {
-							pageListenerAndNodeIdMap.put(pageListener, nodeId);
-						} else {
-							// No 'node' attribute so see if we have
-							// an 'extendable-property-set' attribute.
-							// (This means the page should be supplied if
-							// the node represents an object that contains
-							// the given property set).
-							String propertySetId = elements[j].getAttribute("extendable-property-set");
-							if (propertySetId != null) {
-								try {
-									PropertySet pagePropertySet = PropertySet.getPropertySet(propertySetId);
-									
-									for (Iterator iter = pagePropertySet.getDerivedPropertySetIterator(); iter.hasNext(); ) {
-										PropertySet derivedPropertySet = (PropertySet)iter.next();
-										Vector pageList = (Vector)objectToPagesMap.get(derivedPropertySet);
-										if (pageList == null) {
-											pageList = new Vector();
-											objectToPagesMap.put(derivedPropertySet, pageList);
-										}
-										
-										pageList.add(pageListener);
-									}
-								} catch (PropertySetNotFoundException e1) {
-									// This is a plug-in error.
-									// TODO implement properly.
-									e1.printStackTrace();
-								}
-							}
-						}
-					} catch (CoreException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-		
-		// Pass two does two things:
-		// 1. Set each node's parent.  If no node exists
-		// with the given parent node id then the node
-		// is placed at the root.
-		// 2. Set the list of page constructors in each node.
-
-		// If a node has no child nodes and no page listeners
-		// then the node is removed.  This allows nodes to be
-		// created by the framework or the more general plug-ins
-		// that have no functionality provided by the plug-in that
-		// created the node but that can be extended by other
-		// plug-ins.  By doing this, rather than expecting plug-ins
-		// to create their own nodes, it is more likely that
-		// different plug-in developers will share nodes, and
-		// thus avoiding hundreds of root nodes in the navigation
-		// tree, each with a single tab view. 
-		
-		TreeNode invisibleRoot = new TreeNode("", null, "", 0);
-
-		for (Iterator iter = idToNodeMap.values().iterator(); iter.hasNext(); ) {
-			TreeNode treeNode = (TreeNode)iter.next();
-			TreeNode parentNode;
-			if (treeNode.getParentId() != null) {
-				// TODO: check if map works like this:
-				parentNode = (TreeNode)idToNodeMap.get(treeNode.getParentId());
-				if (parentNode == null) {
-					parentNode = invisibleRoot;
-				}
-			} else {
-				parentNode = invisibleRoot;
-			}
-			treeNode.setParent(parentNode);
-			parentNode.addChild(treeNode);
-		}	
-		
-		for (Iterator iter = pageListenerAndNodeIdMap.entrySet().iterator(); iter.hasNext(); ) {
-			Map.Entry mapEntry = (Map.Entry)iter.next();
-			String nodeId = (String)mapEntry.getValue();
-			TreeNode node = (TreeNode)idToNodeMap.get(nodeId);
-			if (node != null) {
-				IBookkeepingPage pageListener = (IBookkeepingPage)mapEntry.getKey();
-				node.addPageListener(pageListener);
-			} else {
-				// No node found with given id, so the
-				// page listener is dropped.
-				// TODO Log missing node.
-			}
-		}
-
-
 		viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		drillDownAdapter = new DrillDownAdapter(viewer);
 		labelProvider = new ViewLabelProvider();
@@ -593,13 +271,7 @@ private Map idToNodeMap = new HashMap();
 		viewer.setLabelProvider(labelProvider);
 		viewer.setSorter(new NameSorter());
 
-		AccountsNode accountsObject = new AccountsNode(JMoneyPlugin.getResourceString("NavigationTreeModel.accounts"), Constants.ACCOUNTS_ICON, invisibleRoot);
-
-		invisibleRoot.addChild(accountsObject);
-		
-		// Certain nodes must be saved in this class so that they can be updated.
-		this.accountsRootNode = accountsObject;
-	
+		TreeNode invisibleRoot = TreeNode.getInvisibleRoot();
 		viewer.setInput(invisibleRoot);
 
 		// Listen for changes to the account list.
@@ -623,11 +295,9 @@ private Map idToNodeMap = new HashMap();
 			   			Object selectedObject = iterator.next();
 			   			Vector pageListeners;
 			   			if (selectedObject instanceof TreeNode) {
-			   				pageListeners = ((TreeNode)selectedObject).getPageListeners();
+			   				pageListeners = ((TreeNode)selectedObject).getPageFactories();
 			   			} else if (selectedObject instanceof ExtendableObject) {
-			   				
-			   				PropertySet propertySet = PropertySet.getPropertySet(selectedObject.getClass());
-			   				pageListeners = (Vector)objectToPagesMap.get(propertySet);
+			   				pageListeners = TreeNode.getPageListeners((ExtendableObject)selectedObject);
 			   			} else {
 			   				pageListeners = new Vector();
 			   			}
@@ -639,7 +309,8 @@ private Map idToNodeMap = new HashMap();
 			   				IEditorInput editorInput = new NodeEditorInput(selectedObject,
 									labelProvider.getText(selectedObject),
 			   						labelProvider.getImage(selectedObject),
-									pageListeners);
+									pageListeners,
+									null);
 			   				window.getActivePage().openEditor(editorInput,
 			   				"net.sf.jmoney.genericEditor");
 			   			} catch (PartInitException e) {

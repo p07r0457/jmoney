@@ -32,9 +32,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.ui.IMemento;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.editor.IFormPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 
+import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
@@ -52,7 +55,7 @@ import net.sf.jmoney.views.SectionlessPage;
 /**
  * @author Nigel Westbury
  */
-public class AccountPropertiesPages implements IBookkeepingPage {
+public class AccountPropertiesPages implements IBookkeepingPageFactory {
 	
     private static final String PAGE_ID = "net.sf.jmoney.accountProperties";
     
@@ -184,18 +187,35 @@ public class AccountPropertiesPages implements IBookkeepingPage {
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
-	public IFormPage createFormPage(NodeEditor editor) {
-		return new SectionlessPage(
+	public IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento)
+	{
+		SectionlessPage formPage = new SectionlessPage(
 				editor,
 				PAGE_ID, 
 				"Properties", 
 				"Account Properties") {
 			
-			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit) {
+			AccountPropertiesControl propertiesControl;
+			
+			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
 				CapitalAccount account = (CapitalAccount)nodeObject;
-				AccountPropertiesControl propertiesControl = new AccountPropertiesControl(parent, account, toolkit);
+				propertiesControl = new AccountPropertiesControl(parent, account, toolkit);
 				return propertiesControl;
 			}
+
+			public void saveState(IMemento memento) {
+				// The user cannot change the view of the account properties
+				// so there is no 'view state' to save.
+			}
 		};
+
+		try {
+			editor.addPage(formPage);
+		} catch (PartInitException e) {
+			JMoneyPlugin.log(e);
+			// TODO: cleanly leave out this page.
+		}
+		
+		return formPage;
 	}
 }

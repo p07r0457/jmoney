@@ -65,5 +65,5 @@ public interface ISessionFactory {
 	 * @param memento a memento containing the state for the object
 	 * @param window the window to which message are to be displayed
 	 */
-	public void openSession(IMemento memento, IWorkbenchWindow window);
+	public void openSession(IMemento memento);
 }

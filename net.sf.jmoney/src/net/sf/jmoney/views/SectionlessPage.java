@@ -24,6 +24,8 @@ package net.sf.jmoney.views;
 
 import java.awt.BorderLayout;
 
+import net.sf.jmoney.IBookkeepingPage;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
@@ -31,6 +33,7 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.ui.IMemento;
 import org.eclipse.ui.forms.AbstractFormPart;
 import org.eclipse.ui.forms.IFormPart;
 import org.eclipse.ui.forms.IManagedForm;
@@ -43,7 +46,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
  * that do not use the sections.
  * <P>
  * The net.sf.jmoney.pages extension point require extensions
- * to provide an implementation of the IBookkeepingPage interface.
+ * to provide an implementation of the IBookkeepingPageFactory interface.
  * This interface has a method called createFormPage.  This method
  * must be implemented and must return an object that implements IFormPage.
  * However, there is a significant amount of code involved in creating an 
@@ -60,7 +63,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
  *
  * @author Nigel Westbury
  */
-public abstract class SectionlessPage extends FormPage {
+public abstract class SectionlessPage extends FormPage implements IBookkeepingPage {
 	protected NodeEditor fEditor;
 	protected String formHeader;
 	protected IFormPart formPart;
@@ -75,9 +78,13 @@ public abstract class SectionlessPage extends FormPage {
 	        
 	        FormToolkit toolkit = page.getManagedForm().getToolkit();
 	        
+	        NodeEditorInput cInput = (NodeEditorInput)fEditor.getEditorInput();
+	        
+	        String id = SectionlessPage.this.getId();
+	        
 	        // Modified by Faucheux
 	        parent.setLayout(new FillLayout());
-	        Composite propertiesControl = createControl(page.getSelectedObject(), parent, toolkit);
+	        Composite propertiesControl = createControl(page.getSelectedObject(), parent, toolkit, cInput.getMemento()==null?null:cInput.getMemento().getChild(id));
 	        
 	        toolkit.adapt(propertiesControl);
 	        
@@ -132,6 +139,6 @@ public abstract class SectionlessPage extends FormPage {
 	 * @return The control that contains the page specific content
 	 * 			of the page
 	 */
-	public abstract Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit);
+	public abstract Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento);
 }
 
