@@ -22,20 +22,33 @@
 
 package net.sf.jmoney.ui.internal.pages.account.bank;
 
+import org.eclipse.ui.IMemento;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.editor.IFormPage;
 
+import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.IBookkeepingPage;
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.views.NodeEditor;
 
 /**
  * @author Nigel Westbury
  */
-public class PropertiesBookkeepingPage implements IBookkeepingPage {
+public class PropertiesBookkeepingPage implements IBookkeepingPageFactory {
 
     /* (non-Javadoc)
      * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
      */
-    public IFormPage createFormPage(NodeEditor editor) {
-        return new PropertiesPage(editor);
+    public IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento) {
+    	PropertiesPage formPage = new PropertiesPage(editor);
+
+        try {
+			editor.addPage(formPage);
+		} catch (PartInitException e) {
+			JMoneyPlugin.log(e);
+			// TODO: cleanly leave out this page.
+		}
+		
+		return formPage;
     }
 }

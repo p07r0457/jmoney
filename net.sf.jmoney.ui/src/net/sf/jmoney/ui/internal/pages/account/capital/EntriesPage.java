@@ -21,9 +21,11 @@
  */
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
+import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.views.NodeEditor;import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.ui.IMemento;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.editor.FormPage;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
@@ -33,7 +35,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
  * 
  * @author Johann Gyger
  */
-public class EntriesPage extends FormPage {
+public class EntriesPage extends FormPage implements IBookkeepingPage {
 
     public static final String PAGE_ID = "entries";
 
@@ -78,5 +80,10 @@ public class EntriesPage extends FormPage {
     public Account getAccount () {
         return (Account) fEditor.getSelectedObject();
     }
+
+	public void saveState(IMemento memento) {
+		// Save view state (e.g. the sort order, the set of extension properties that are
+		// displayed in the table).
+	}
 
 }

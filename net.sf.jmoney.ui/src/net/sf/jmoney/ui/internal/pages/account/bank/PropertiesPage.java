@@ -21,8 +21,10 @@
  */
 package net.sf.jmoney.ui.internal.pages.account.bank;
 
+import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.views.NodeEditor;import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.ui.IMemento;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.editor.FormPage;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
@@ -32,7 +34,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
  * 
  * @author Johann Gyger
  */
-public class PropertiesPage extends FormPage {
+public class PropertiesPage extends FormPage implements IBookkeepingPage {
 
     public static final String PAGE_ID = "account_properties";
 
@@ -64,4 +66,8 @@ public class PropertiesPage extends FormPage {
         form.setText("Account Properties");
     }
 
+	public void saveState(IMemento memento) {
+		// No view state information to save
+		
+	}
 }
