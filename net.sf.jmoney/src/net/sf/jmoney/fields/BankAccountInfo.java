@@ -65,7 +65,7 @@ public class BankAccountInfo implements IPropertySetInfo {
 		BankAccountInfo.propertySet = propertySet;
 		
 		IPropertyControlFactory textControlFactory = new TextControlFactory();
-		IPropertyControlFactory amountControlFactory = new AmountControlFactory();
+		IPropertyControlFactory amountControlFactory = new AmountInCurrencyAccountControlFactory();
 		
 		bankAccessor = propertyRegistrar.addProperty("bank", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), 30.0, textControlFactory, null, null);
 		accountNumberAccessor = propertyRegistrar.addProperty("accountNumber", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), 15.0, textControlFactory, null, null);

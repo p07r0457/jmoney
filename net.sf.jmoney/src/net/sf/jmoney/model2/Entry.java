@@ -223,7 +223,7 @@ public class Entry extends ExtendableObject {
 	 * @return The commodity for this entry
 	 */
 	public Commodity getCommodity() {
-	    return getAccount().getCommodity();
+	    return getAccount().getCommodity(this);
 	}
 	
 	/**

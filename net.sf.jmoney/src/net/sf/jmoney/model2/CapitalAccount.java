@@ -37,7 +37,7 @@ import java.util.Iterator;
 /**
  * The data model for an account.
  */
-public class CapitalAccount extends Account {
+public abstract class CapitalAccount extends Account {
 
 	protected String abbreviation = null;
 

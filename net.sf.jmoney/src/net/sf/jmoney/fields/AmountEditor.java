@@ -22,13 +22,14 @@
 
 package net.sf.jmoney.fields;
 
-import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
-import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.SessionChangeListener;
 
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
@@ -62,14 +63,17 @@ public class AmountEditor implements IPropertyControl {
     
     private PropertyAccessor amountPropertyAccessor;
     
+    private AmountControlFactory factory;
+    
     private Text propertyControl;
 
     /**
      * Create a new amount editor.
      */
-    public AmountEditor(Composite parent, PropertyAccessor propertyAccessor) {
+    public AmountEditor(Composite parent, PropertyAccessor propertyAccessor, AmountControlFactory factory) {
     	propertyControl = new Text(parent, 0);
     	this.amountPropertyAccessor = propertyAccessor;
+    	this.factory = factory;
     }
     
     /**
@@ -77,12 +81,8 @@ public class AmountEditor implements IPropertyControl {
      */
     public void load(ExtendableObject object) {
         fObject = object;
-        if (object instanceof Account)
-            fCommodity = ((Account) object).getCommodity();
-    	else if (object instanceof Entry)
-    	    fCommodity = ((Entry) object).getCommodity();
-    	else
-    	    throw new IllegalArgumentException(object.toString());
+        
+        fCommodity = factory.getCommodity(fObject);
 		
 		// Some amounts may be of type Long, not long, so that 
 		// they can be null, so we must get the property
@@ -93,42 +93,61 @@ public class AmountEditor implements IPropertyControl {
 		} else {
 			propertyControl.setText(fCommodity.format(amount.longValue()));
 		}
-
-		// TODO Find a generic way to handle currency changes.
+    }
+    
+    /**
+     * Set a listener that listens for changes to properties
+     * that affect the display of the amount.
+     * <P>
+     * The format of amounts depends on the currency being
+     * represented by the amount.  If it is possible that the
+     * commodity may change while this control exists then a
+     * listener must be set using this method.  The listener
+     * must call the updateCommodity method in this amount editor
+     * whenever the commodity changes.
+     * <P>
+     * This method must not be called more than once.
+     * This class takes responsibility for adding and
+     * removing the listener to/from the session.
+     *  
+     * @param commodityChangeListener
+     */
+    public void setListener(final SessionChangeListener commodityChangeListener) {
 		// We must listen for changes to the currency so that
 		// we can change the format of the amount.
-		//account.getSession().addSessionChangeListener(new SessionChangeAdapter() {
-		//    public void accountChanged(Account changedAccount, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
-		//        if (changedAccount == AmountEditor.this.account && changedProperty == CurrencyAccountInfo.getCurrencyAccessor()) {
-		//            // Get the current text from the control and try to re-format
-		//            // it for the new currency.
-		//            // However, if the property can take null values and the control
-		//            // contains the empty string then set the amount to null.
-		//            // (The currency amount parser returns a zero amount for the
-		//            // empty string).
-		//            // Amounts can be represented by 'Long' or by 'long'.
-		//            // 'Long' values can be null, 'long' values cannot be null.
-		//            // If the text in the control now translates to a different long
-		//            // value as a result of the new currency, update the new long value
-		//            // in the datastore.
-		//
-		//            // It is probably not necessary for us to set the control text here,
-		//            // because this will be done by our listener if we are changing
-		//            // the amount.  However, to protect against a future possibility
-		//            // that a currency change may change the format without changing the amount,
-		//            // we set the control text ourselves first.
-		//
-		//            String amountString = propertyControl.getText();
-		//            if (!amountString.equals("")) {
-		//                Currency newCurrency = (Currency) newValue;
-		//                long amount = newCurrency.parse(amountString);
-		//                propertyControl.setText(newCurrency.format(amount));
-		//                changedAccount.setLongPropertyValue(amountPropertyAccessor, amount);
-		//            }
-		//        }
-		//
-		//    }
-		//});
+		fObject.getSession().addSessionChangeListener(commodityChangeListener);
+    	
+		propertyControl.addDisposeListener(new DisposeListener() {
+			public void widgetDisposed(DisposeEvent e) {
+				fObject.getSession().removeSessionChangeListener(commodityChangeListener);
+			}});
+    }
+    
+    protected void updateCommodity(Commodity newCommodity) {
+    	// Get the current text from the control and try to re-format
+    	// it for the new currency.
+    	// However, if the property can take null values and the control
+    	// contains the empty string then set the amount to null.
+    	// (The currency amount parser returns a zero amount for the
+    	// empty string).
+    	// Amounts can be represented by 'Long' or by 'long'.
+    	// 'Long' values can be null, 'long' values cannot be null.
+    	// If the text in the control now translates to a different long
+    	// value as a result of the new currency, update the new long value
+    	// in the datastore.
+    	
+    	// It is probably not necessary for us to set the control text here,
+    	// because this will be done by our listener if we are changing
+    	// the amount.  However, to protect against a future possibility
+    	// that a currency change may change the format without changing the amount,
+    	// we set the control text ourselves first.
+    	
+    	String amountString = propertyControl.getText();
+    	if (!amountString.equals("")) {
+    		long amount = newCommodity.parse(amountString);
+    		propertyControl.setText(newCommodity.format(amount));
+    		fObject.setLongPropertyValue(amountPropertyAccessor, amount);
+    	}
     }
     
     /**
@@ -154,6 +173,13 @@ public class AmountEditor implements IPropertyControl {
         }
     }
 
+	/**
+	 * @return The object containing the property being edited.
+	 */
+    public ExtendableObject getObject() {
+		return fObject;
+	}
+    
 	/**
 	 * @return The underlying SWT widget.
 	 */

@@ -22,13 +22,19 @@
 
 package net.sf.jmoney.fields;
 
+import org.eclipse.swt.widgets.Composite;
+
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.SessionChangeAdapter;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -69,7 +75,46 @@ public class EntryInfo implements IPropertySetInfo {
 		EntryInfo.propertySet = propertySet;
 		
 		IPropertyControlFactory textControlFactory = new TextControlFactory();
-		IPropertyControlFactory amountControlFactory = new AmountControlFactory();
+		
+		IPropertyControlFactory amountControlFactory = new AmountControlFactory() {
+
+			protected Commodity getCommodity(ExtendableObject object) {
+	    	        return ((Entry) object).getCommodity();
+			}
+
+			public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
+		    	final AmountEditor editor = new AmountEditor(parent, propertyAccessor, this);
+		        
+		    	// The format of the amount will change if either
+		    	// the account property of the entry changes or if
+		    	// the commodity property of the account changes.
+		        editor.setListener(new SessionChangeAdapter() {
+		        		public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+		        			Entry entry = (Entry)editor.getObject();
+		        			// Has the account property changed?
+		        			if (changedObject == entry && changedProperty == EntryInfo.getAccountAccessor()) {
+		        				editor.updateCommodity(entry.getCommodity());	
+		        			}
+		        			// Has the commodity property of the account changed?
+		        			if (changedObject ==  entry.getAccount() && changedProperty == CurrencyAccountInfo.getCurrencyAccessor()) {
+		        				editor.updateCommodity(entry.getCommodity());	
+		        			}
+		        			// If any property in the commodity object changed then
+		        			// the format of the amount might also change.
+		        			if (changedObject ==  entry.getCommodity()) {
+		        				editor.updateCommodity(entry.getCommodity());	
+		        			}
+		        			// TODO: All the above tests are still not complete.
+		        			// If the account for the entry can contain multiple
+		        			// commodities then the commodity may depend on properties
+		        			// in the entry object.  We really need a special listener
+		        			// that listens for any changes that would affect the
+		        			// Entry.getCommodity() value.
+		        		}
+		        	});   	
+		        
+		        return editor;
+			}};
 
 		checkAccessor       = propertyRegistrar.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),        8.0, textControlFactory, null, null);
 		descriptionAccessor = propertyRegistrar.addProperty("description", JMoneyPlugin.getResourceString("Entry.description"), 30.0, textControlFactory, null, null);

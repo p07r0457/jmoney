@@ -137,7 +137,10 @@ public class CurrencyAccount extends CapitalAccount {
             return currency;
 	}
 
-	public Commodity getCommodity() {
+	public Commodity getCommodity(Entry entry) {
+		// All entries in this account must be in the
+		// same currency, so return the currency for this
+		// account.
 	    return getCurrency();
 	}
 	

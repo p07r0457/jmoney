@@ -22,8 +22,8 @@
 
 package net.sf.jmoney.fields;
 
-import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
@@ -38,11 +38,7 @@ import org.eclipse.swt.widgets.Composite;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class AmountControlFactory implements IPropertyControlFactory {
-
-    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
-        return new AmountEditor(parent, propertyAccessor);
-    }
+public abstract class AmountControlFactory implements IPropertyControlFactory {
 
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
         Long amount = (Long) extendableObject.getPropertyValue(propertyAccessor);
@@ -62,15 +58,5 @@ public class AmountControlFactory implements IPropertyControlFactory {
         }
     }
 
-    protected Commodity getCommodity(ExtendableObject object) {
-        Commodity result = null;
-        if (object instanceof Account)
-            result = ((Account) object).getCommodity();
-        else if (object instanceof Entry)
-            result = ((Entry) object).getCommodity();
-        else
-            throw new IllegalArgumentException(object.toString());
-        return result;
-    }
-
+    protected abstract Commodity getCommodity(ExtendableObject object);
 }

@@ -64,7 +64,7 @@ public class CurrencyAccountInfo implements IPropertySetInfo {
 		CurrencyAccountInfo.propertySet = propertySet;
 		
 		IPropertyControlFactory textControlFactory = new TextControlFactory();
-		IPropertyControlFactory amountControlFactory = new AmountControlFactory();
+		IPropertyControlFactory amountControlFactory = new AmountInCurrencyAccountControlFactory();
 		IPropertyControlFactory currencyControlFactory = new CurrencyControlFactory();
 		
 		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), 15.0, currencyControlFactory, null, null);

@@ -77,6 +77,16 @@ public class IncomeExpenseAccount extends Account {
 	}
 
 	/**
+	 * @return Commodity represented by the amount in the given entry
+	 */
+	// TODO: Can income and expense categories contain
+	// mixed currencies?  This method probably needs to
+	// be implemented.
+	public Commodity getCommodity(Entry entry) {
+	    throw new RuntimeException("Illegal invocation");
+	}
+
+	/**
 	 * This method is required by the JMoney framework.
 	 * 
 	 * @param name

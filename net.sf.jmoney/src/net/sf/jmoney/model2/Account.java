@@ -84,11 +84,17 @@ public abstract class Account extends ExtendableObject {
 	}
 
 	/**
-	 * @return Commodity for this account
+	 * Returns the commodity that the amount in an entry
+	 * represents.  If the account for the entry is an account
+	 * that can store only one commodity (usually a currency)
+	 * then the commodity is a property of the account.  If,
+	 * however, the account can hold multiple commodities (such
+	 * as a stock account) then information from the entry is
+	 * required in order to get the commodity involved.
+	 * 
+	 * @return Commodity for the given entry
 	 */
-	public Commodity getCommodity() {
-	    throw new RuntimeException("Illegal invocation");
-	}
+	public abstract Commodity getCommodity(Entry entry);
 
 	public Iterator getSubAccountIterator() {
 		return subAccounts.iterator();
