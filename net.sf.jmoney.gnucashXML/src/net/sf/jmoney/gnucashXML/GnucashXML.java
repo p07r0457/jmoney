@@ -241,11 +241,13 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 				// Create the account
 				if (accountName != null) {
 					System.out.println("I'm creating the account >" + accountName + "< with guid >" + accountGUID + "<");
-					MutableCapitalAccount account = new MutableCapitalAccount();
+					CapitalAccountImpl account = (CapitalAccountImpl)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());;
 					account.setName(accountName);
 					accountsGUIDTable.put(accountGUID, account);
 					if (parentGUID != null)
 						childParent.put(accountGUID, parentGUID);
+
+
 				} else {
 					System.err.println(
 						"Error while importing: Account without any name found !");
@@ -260,11 +262,21 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 		while (e.hasMoreElements()) {
 			String childGUID = (String) e.nextElement();
 			String parentGUID = (String) childParent.get(childGUID);
+			String childName;
 			//System.out.println("childGUID:" + childGUID);
 			//System.out.println("parentGUID:" + parentGUID);
-			MutableCapitalAccount child = (MutableCapitalAccount) getAccountFromGUID(childGUID);
-			MutableAccount parent = getAccountFromGUID(parentGUID);
-			child.setParent(parent);
+			CapitalAccount child = (CapitalAccount) getAccountFromGUID(childGUID);
+			CapitalAccountImpl parent = (CapitalAccountImpl) getAccountFromGUID(parentGUID);
+			
+			session.removeAccount(child);
+			CapitalAccountImpl newChild = (CapitalAccountImpl) parent.createSubAccount();
+			accountsGUIDTable.remove(childGUID);
+			accountsGUIDTable.put(childGUID, newChild);
+
+			
+			newChild.setName(child.getName());
+			
+			// child.setParent(parent);
 			// System.out.println("Level of >" + child.getName() + "<:" + child.getLevel());
 		}
 
@@ -393,7 +405,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 				.item(0)
 				.getFirstChild()
 				.getNodeValue();
-		Account firstAccount = getAccountFromGUID(firstAccountGUID).getRealAccount();
+		Account firstAccount = getAccountFromGUID(firstAccountGUID);
 		Element secondAccoutElement =
 			(Element) propertyElement.getElementsByTagName(
 				"split").item(
@@ -404,7 +416,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 				.item(0)
 				.getFirstChild()
 				.getNodeValue();
-		Account secondAccount = getAccountFromGUID(secondAccountGUID).getRealAccount();
+		Account secondAccount = getAccountFromGUID(secondAccountGUID);
 
 		String Value =
 			firstAccoutElement
@@ -486,8 +498,9 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
     	throw new RuntimeException("exportAccount for GnucashXML not implemented !");
     };
     
-    private MutableAccount getAccountFromGUID(String GUID) {
-        return (MutableAccount) accountsGUIDTable.get(GUID);
+    private Account getAccountFromGUID(String GUID) {
+        System.out.println("Looking for an account with the GUID " + GUID);
+        return (Account) accountsGUIDTable.get(GUID);
     }
 
     
@@ -531,7 +544,6 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 					.item(0)
 					.getFirstChild()
 					.getNodeValue();
-			Account account = getAccountFromGUID(accountGUID).getRealAccount();
 
 			String value = accountElement
 				.getElementsByTagName("value")
@@ -542,12 +554,13 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			if (getLong(value) != 0) {
 			    // Yes, I found entries with an amount = 0 and as accountGUID "0000000000000000000"
 			    // I have to protect against it --  Faucheux
+				Account account = getAccountFromGUID(accountGUID);
 				Entry e = t.createEntry();
 				e.setAmount(getLong(value));
 				e.setAccount(account);
 				e.setDescription(transactionDescription);
 				
-			    System.out.println("Added amount: " + getLong(value) + " for " + account.toString() + " for >" + transactionDescription + "<" );
+			    // System.out.println("Added amount: " + getLong(value) + " for " + account.toString() + " for >" + transactionDescription + "<" );
 			}
 
 		}
@@ -555,75 +568,5 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 		// TODO: Faucheux to check
 	}
 
-	private abstract class MutableAccount {
 
-		/**
-		 * If this account is a sub-account then
-		 * parent must be set before this account is
-		 * added to the datastore.  If no parent is
-		 * set when the account is added to the datastore
-		 * then the account is added as a top level account.
-		 */
-		protected MutableAccount parent = null;
-
-		/**
-		 * The real Account object in the datastore.
-		 * Null if this account has not yet been added
-		 * to the datastore.
-		 */
-		protected Account realAccount = null;
-		
-		protected String name = null;
-		
-		Account getRealAccount() {
-			return realAccount;
-		}
-
-		public void setParent(MutableAccount parent) {
-			this.parent = parent;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-		
-		// The code to write CapitalAccount objects and
-		// IncomeExpenseAccount objects is different,
-		// so abstract this method here and implement for
-		// each account type.
-		public abstract void commit();
-	}
-	
-	private class MutableCapitalAccount extends MutableAccount {
-
-		public void commit() {
-			if (parent == null) {
-				// top level account, so add to session.
-				CapitalAccountImpl account = (CapitalAccountImpl)session.createAccount(JMoneyPlugin.getCapitalAccountPropertySet());
-				account.setName(name);
-				realAccount = account;
-			} else {
-				Account realParent = parent.getRealAccount();
-				
-				if (realParent == null) {
-					// Parents must be added to the datastore before
-					// children can be added.  Note that this method
-					// will recurse up the ancestors.
-					parent.commit();
-
-					// Try again.  This time realParent must be non-null.
-					realParent = parent.getRealAccount();
-				}
-				
-				// Now we have the parent, add this account to the datastore.
-				
-				// Parents of capital accounts are always themselves capital accounts.
-				CapitalAccountImpl realCapitalAccountParent = ((CapitalAccountImpl)realParent);
-				
-				CapitalAccountImpl subAccount = (CapitalAccountImpl)realCapitalAccountParent.createSubAccount();
-				subAccount.setName(name);
-				realAccount = subAccount;
-			}
-		}
-	}
 }
