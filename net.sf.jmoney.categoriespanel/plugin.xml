@@ -28,8 +28,9 @@
     	  position="200">
       </node>
       <pages
+            node="net.sf.jmoney.categoriespanel.categoriesNode"
             class="net.sf.jmoney.bookkeepingPages.CategoryPage"
-            node="net.sf.jmoney.categoriespanel.categoriesNode">
+            id="categories">
       </pages>
    </extension>
 

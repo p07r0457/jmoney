@@ -55,10 +55,12 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.editor.IFormPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 
 import net.sf.jmoney.Constants;
+import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.categoriespanel.CategoriesPanelPlugin;
@@ -74,7 +76,7 @@ import net.sf.jmoney.views.SectionlessPage;
 /**
  * @author Nigel
  */
-public class CategoryPage implements IBookkeepingPage {
+public class CategoryPage implements IBookkeepingPageFactory {
 
     private static final String PAGE_ID = "net.sf.jmoney.categoriespanel.categories";
 
@@ -107,16 +109,16 @@ public class CategoryPage implements IBookkeepingPage {
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
-	public IFormPage createFormPage(NodeEditor editor) {
+	public IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento) {
 		this.session = JMoneyPlugin.getDefault().getSession();
 
-		return new SectionlessPage(
+		SectionlessPage formPage = new SectionlessPage(
 				editor,
 				PAGE_ID, 
 				CategoriesPanelPlugin.getResourceString("NavigationTreeModel.categories"), 
 				"Income and Expense Categories") {
 			
-			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit) {
+			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
 				
 				/**
 				 * topLevelControl is a control with grid layout, 
@@ -214,7 +216,23 @@ public class CategoryPage implements IBookkeepingPage {
 				hookContextMenu();
 				
 				return topLevelControl;
-			}};
+			}
+
+			public void saveState(IMemento memento) {
+				// We could save the current category selection
+				// and the expand/collapse state of each node
+				// but it is not worthwhile.
+			}
+		};
+
+		try {
+			editor.addPage(formPage);
+		} catch (PartInitException e) {
+			JMoneyPlugin.log(e);
+			// TODO: cleanly leave out this page.
+		}
+		
+		return formPage;
 	}
 
 	private void updateCategory() {

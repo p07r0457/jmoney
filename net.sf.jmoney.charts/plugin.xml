@@ -65,8 +65,9 @@
             position="100">
       </node>
       <pages
-            node="net.sf.jmoney.charts.pieChart"
-            class="net.sf.jmoney.charts.PieChartPage">
+            id="pieChart"
+            class="net.sf.jmoney.charts.PieChartPage"
+            node="net.sf.jmoney.charts.pieChart">
       </pages>
       <node
             id="lineChart"
@@ -75,8 +76,9 @@
             position="100">
       </node>
       <pages
+            class="net.sf.jmoney.charts.LineChartPage"
             node="net.sf.jmoney.charts.lineChart"
-            class="net.sf.jmoney.charts.LineChartPage">
+            id="lineChart">
       </pages>
    </extension>
 

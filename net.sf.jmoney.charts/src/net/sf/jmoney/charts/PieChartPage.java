@@ -34,6 +34,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.awt.SWT_AWT;
 import org.eclipse.ui.IMemento;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.editor.IFormPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.jfree.chart.ChartMouseListener;
@@ -41,6 +42,7 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.event.ChartChangeEvent;
 import org.w3c.dom.events.MouseEvent;
 
+import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Session;
@@ -50,32 +52,17 @@ import net.sf.jmoney.views.SectionlessPage;
 /**
  * @author Faucheux
  */
-public class PieChartPage implements IBookkeepingPage {
+public class PieChartPage implements IBookkeepingPageFactory {
 
-    private static final String PAGE_ID = "net.sf.jmoney.charts.lineChart";
+    private static final String PAGE_ID = "net.sf.jmoney.charts.pieChart";
     
     protected ExpensePieChart chart;
     protected JSpinner fromDate;
     protected JSpinner toDate;
     protected JTextField maxLevel;
     
-	public void init(IMemento memento) {
-		// No view state to restore
-	}
-
-	public void saveState(IMemento memento) {
-		// No view state to save
-	}
-
 	/* (non-Javadoc)
-	 * @see net.sf.jmoney.IBookkeepingPageListener#getPageCount(java.lang.Object)
-	 */
-	public int getPageCount(Object selectedObject) {
-		return 1;
-	}
-
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
+	 * @see net.sf.jmoney.IBookkeepingPageFactory#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
 	public Composite createContent(Session session, Composite parent) {
 
@@ -140,24 +127,31 @@ public class PieChartPage implements IBookkeepingPage {
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
-	public IFormPage createFormPage(NodeEditor editor) {
-		return new SectionlessPage(
+	public IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento) {
+		SectionlessPage formPage = new SectionlessPage(
 				editor,
 				PAGE_ID, 
 				"Chart", 
 				"Pie Chart") {
 			
-			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit) {
-				Session session = JMoneyPlugin.getDefault().getSession();
-				return createContent(session, parent);
-			}
-			
-			public Composite createControl(Object nodeObject, Composite parent) {
+			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
 				Session session = JMoneyPlugin.getDefault().getSession();
 				return createContent(session, parent);
 			}
 
+			public void saveState(IMemento memento) {
+				// TODO Save the chart options selected by the user
+			}
 		};
+
+		try {
+			editor.addPage(formPage);
+		} catch (PartInitException e) {
+			JMoneyPlugin.log(e);
+			// TODO: cleanly leave out this page.
+		}
+		
+		return formPage;
 	}
 	
 	public class redrawGraph implements ChangeListener, ActionListener{

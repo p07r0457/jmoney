@@ -27,6 +27,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.ui.IMemento;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.editor.IFormPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ColumnLayout;
@@ -42,6 +43,7 @@ import org.w3c.dom.events.MouseEvent;
 
 import sun.awt.AWTAutoShutdown;
 
+import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
@@ -53,7 +55,7 @@ import net.sf.jmoney.views.SectionlessPage;
 /**
  * @author Faucheux
  */
-public class LineChartPage implements IBookkeepingPage {
+public class LineChartPage implements IBookkeepingPageFactory {
 
     private static final String PAGE_ID = "net.sf.jmoney.charts.lineChart";
     private Session session;
@@ -73,25 +75,10 @@ public class LineChartPage implements IBookkeepingPage {
 		df = new SimpleDateFormat();
     }
     
-	public void init(IMemento memento) {
-		// No view state to restore
-	}
-
-	public void saveState(IMemento memento) {
-		// No view state to save
-	}
-
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.IBookkeepingPageListener#getPageCount(java.lang.Object)
-	 */
-	public int getPageCount(Object selectedObject) {
-		return 1;
-	}
-
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
-	public Composite createContent(final Session session, Composite parent) {
+	public Composite createContent(final Session session, Composite parent, Vector selectedAccounts, Vector selectedTreeItems) {
 	    
 	    this.session = session;
 	    Composite swingComposite = new Composite(parent, SWT.EMBEDDED);
@@ -105,7 +92,7 @@ public class LineChartPage implements IBookkeepingPage {
 	    tree = new Tree(accountGroup, SWT.CHECK | SWT.MULTI | SWT.VERTICAL);
 	    TreeItem treeItem = new TreeItem(tree, SWT.NULL);
 	    treeItem.setText("Accounts");  // TODO - Faucheux Internationlization
-	    addAccountsInTree(treeItem, session.getCapitalAccountIterator());
+	    addAccountsInTree(treeItem, session.getCapitalAccountIterator(), selectedAccounts, selectedTreeItems);
 
 	    // Add other components
 	    Group typeGroup = new Group(swingComposite, SWT.NULL);
@@ -164,11 +151,18 @@ public class LineChartPage implements IBookkeepingPage {
 
 /**
  * Add each element (account) of the Iterator in the tree and 
- * add all its subaccounts too as subtree  
+ * add all its subaccounts too as subtree
+ * <P>
+ * This method also checks if the account is in the list of
+ * selected accounts and, if so, adds the TreeItem to the list of
+ * selected tree items.  This must be done so that the set of
+ * selected accounts are persisted when the workbench is closed and
+ * re-opened.
+ *   
  * @param tn TreeItem the accounts are to add to.
  * @param it accounts to add
  */
-private void addAccountsInTree(TreeItem tn, Iterator it) {
+	private void addAccountsInTree(TreeItem tn, Iterator it, Vector selectedAccounts, Vector selectedTreeItems) {
 	while (it.hasNext()) {
 	    CapitalAccount a2 = (CapitalAccount) it.next();
 	    TreeItem treeItem = new TreeItem(tn, SWT.NULL);
@@ -178,31 +172,79 @@ private void addAccountsInTree(TreeItem tn, Iterator it) {
 	        treeItem.setText(a2.getName() + " (no entries)");
 	        treeItem.setGrayed(true);
 	    }
-	    addAccountsInTree(treeItem, a2.getSubAccountIterator());
+	    
+	    // If the account is in the list of selected accounts
+	    // then add the tree item to the list of selected tree items.
+	    if (selectedAccounts.indexOf(a2) != -1) {
+	    	selectedTreeItems.add(treeItem);
+	    }
+	    
+	    addAccountsInTree(treeItem, a2.getSubAccountIterator(), selectedAccounts, selectedTreeItems);
 	}
 }
 	
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
-	public IFormPage createFormPage(NodeEditor editor) {
-		return new SectionlessPage(
+	public IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento) {
+		SectionlessPage formPage = new SectionlessPage(
 				editor,
 				PAGE_ID, 
 				"Chart", 
 				"Line Chart") {
 			
-			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit) {
+			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
 				Session session = JMoneyPlugin.getDefault().getSession();
-				return createContent(session, parent);
+
+				Vector selectedAccounts = new Vector();
+				Vector selectedTreeItems = new Vector();
+				if (memento != null) {
+					IMemento[] accountMementos = memento.getChildren("selectedAccount");
+					for (int i = 0; i < accountMementos.length; i++) {
+						String fullAccountName = accountMementos[i].getString("name");
+						if (fullAccountName != null) {
+							Account account = session.getAccountByFullName(fullAccountName);
+							if (account != null) {
+								selectedAccounts.add(account);
+							}
+						}
+					}
+				}
+				
+				Composite control = createContent(session, parent, selectedAccounts, selectedTreeItems);
+				
+				// Check the selected accounts
+				TreeItem[] array = (TreeItem[])selectedTreeItems.toArray(new TreeItem[selectedTreeItems.size()]);
+				for (int j=0; j<array.length; j++) {
+					System.out.println(array[j].toString());
+					array[j].setChecked(true);
+				}
+				// Also select them.  This causes the tree to be expanded so that
+				// the user can see the selection.
+				tree.setSelection(array);
+				
+				return control;
 			}
 
-			public Composite createControl(Object nodeObject, Composite parent) {
-				Session session = JMoneyPlugin.getDefault().getSession();
-				return createContent(session, parent);
+			public void saveState(IMemento memento) {
+				// Save the selected accounts
+			    Vector accounts = new Vector();
+			    addChosenAccountsToVector(tree.getItems()[0],accounts);
+			    for (Iterator iter = accounts.iterator(); iter.hasNext(); ) {
+			    	String selectedAccountName = (String)iter.next();
+			    	memento.createChild("selectedAccount").putString("name", selectedAccountName);
+			    }
 			}
-
 		};
+
+		try {
+			editor.addPage(formPage);
+		} catch (PartInitException e) {
+			JMoneyPlugin.log(e);
+			// TODO: cleanly leave out this page.
+		}
+		
+		return formPage;
 	}
 
 /**
