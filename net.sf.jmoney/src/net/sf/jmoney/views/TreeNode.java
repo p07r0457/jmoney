@@ -302,7 +302,7 @@ public class TreeNode implements IAdaptable {
 	}
 
 	/**
-	 * @return An array of objects that implement the IBookkeepingPageListener
+	 * @return An array of objects that implement the IBookkeepingPage
 	 * 		interface.  The returned value is never null but the Vector may
 	 * 		be empty if there are no pages for this node.
 	 */

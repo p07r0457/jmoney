@@ -48,10 +48,12 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ILabelProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
@@ -68,6 +70,7 @@ import org.eclipse.ui.IPersistableElement;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
@@ -87,6 +90,8 @@ public class NavigationView extends ViewPart {
 	private TreeViewer viewer;
 	private DrillDownAdapter drillDownAdapter;
 	private ILabelProvider labelProvider; 
+
+	private Action openEditorAction;
 	private Vector newAccountActions = new Vector();  // Element type: Action
 	private Action deleteAccountAction;
 
@@ -305,8 +310,8 @@ public class NavigationView extends ViewPart {
 		hookContextMenu();
 		contributeToActionBars();
 		
-		viewer.addDoubleClickListener(new IDoubleClickListener() {
-		   public void doubleClick(DoubleClickEvent event) {
+		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			public void selectionChanged(SelectionChangedEvent event) {
 			   	// if the selection is empty clear the label
 			   	if (event.getSelection().isEmpty()) {
 			   		// I don't see how this can happen.
@@ -314,32 +319,18 @@ public class NavigationView extends ViewPart {
 			   		IStructuredSelection selection = (IStructuredSelection)event.getSelection();
 			   		for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
 			   			Object selectedObject = iterator.next();
-			   			Vector pageListeners;
-			   			if (selectedObject instanceof TreeNode) {
-			   				pageListeners = ((TreeNode)selectedObject).getPageFactories();
-			   			} else if (selectedObject instanceof ExtendableObject) {
-			   				PropertySet propertySet = PropertySet.getPropertySet(selectedObject.getClass());
-			   				pageListeners = propertySet.getPageFactories();
-			   			} else {
-			   				pageListeners = new Vector();
-			   			}
 			   			
-			   			// Create an editor for this node (or active if an editor
-			   			// is already open).  However, if no pages are registered for this
-			   			// node then do nothing.
-			   			if (!pageListeners.isEmpty()) {
-			   				try {
+			   			// Find and activate the editor for this node (if any)
+			   			Vector pageFactories = getPageFactories(selectedObject);
+			   			if (!pageFactories.isEmpty()) {
 			   					IWorkbenchWindow window = getSite().getWorkbenchWindow();
 			   					IEditorInput editorInput = new NodeEditorInput(selectedObject,
 			   							labelProvider.getText(selectedObject),
 										labelProvider.getImage(selectedObject),
-										pageListeners,
+										pageFactories,
 										null);
-			   					window.getActivePage().openEditor(editorInput,
-			   					"net.sf.jmoney.genericEditor");
-			   				} catch (PartInitException e) {
-			   					JMoneyPlugin.log(e);
-			   				}
+			   					IWorkbenchPart editor = window.getActivePage().findEditor(editorInput);
+			   					window.getActivePage().activate(editor);
 			   			}
 			   			
 			   			break;
@@ -347,9 +338,68 @@ public class NavigationView extends ViewPart {
 			   	}
 		   }
 		});
+
+		viewer.addDoubleClickListener(new IDoubleClickListener() {
+			   public void doubleClick(DoubleClickEvent event) {
+				   	// if the selection is empty clear the label
+				   	if (event.getSelection().isEmpty()) {
+				   		// I don't see how this can happen.
+				   	} else if (event.getSelection() instanceof IStructuredSelection) {
+				   		IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+				   		for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
+				   			Object selectedObject = iterator.next();
+				   			
+				   			Vector pageFactories = getPageFactories(selectedObject);
+				   			
+				   			// Create an editor for this node (or active if an editor
+				   			// is already open).  However, if no pages are registered for this
+				   			// node then do nothing.
+				   			if (!pageFactories.isEmpty()) {
+				   				try {
+				   					IWorkbenchWindow window = getSite().getWorkbenchWindow();
+				   					IEditorInput editorInput = new NodeEditorInput(selectedObject,
+				   							labelProvider.getText(selectedObject),
+											labelProvider.getImage(selectedObject),
+											pageFactories,
+											null);
+				   					window.getActivePage().openEditor(editorInput,
+				   					"net.sf.jmoney.genericEditor");
+				   				} catch (PartInitException e) {
+				   					JMoneyPlugin.log(e);
+				   				}
+				   			}
+				   			
+				   			break;
+				   		}
+				   	}
+			   }
+			});
 	}
 
 	
+	/**
+	 * Given a node in the navigation view, returns an array
+	 * containing the page factories that create each tabbed
+	 * page in the editor.
+	 * <P>
+	 * If there are no pages to be displayed for this node
+	 * then an empty array is returned and no editor is opened
+	 * for the node.
+	 * 
+	 * @param selectedObject
+	 * @return a vector of elements of type IBookkeepingPage
+	 */
+	protected Vector getPageFactories(Object selectedObject) {
+		if (selectedObject instanceof TreeNode) {
+			return ((TreeNode)selectedObject).getPageFactories();
+		} else if (selectedObject instanceof ExtendableObject) {
+			PropertySet propertySet = PropertySet.getPropertySet(selectedObject.getClass());
+			return propertySet.getPageFactories();
+		} else {
+			return new Vector();
+		}
+	}
+
 	private void hookContextMenu() {
 		MenuManager menuMgr = new MenuManager("#PopupMenu");
 		menuMgr.setRemoveAllWhenShown(true);
@@ -379,12 +429,33 @@ public class NavigationView extends ViewPart {
 	}
 
 	private void fillContextMenu(IMenuManager manager) {
-		for (Iterator iter = newAccountActions.iterator(); iter.hasNext(); ) {
-			Action newAccountAction = (Action)iter.next();
-			manager.add(newAccountAction);
+		// Get the current node
+		Object selectedObject = null;
+		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
+			selectedObject = iterator.next();
+			break;
 		}
-		manager.add(deleteAccountAction);
+		
+		if (!getPageFactories(selectedObject).isEmpty()) {
+			manager.add(openEditorAction);
+		}
+		
 		manager.add(new Separator());
+
+		if (selectedObject instanceof AccountsNode 
+				|| selectedObject instanceof Account) {
+			for (Iterator iter = newAccountActions.iterator(); iter.hasNext(); ) {
+				Action newAccountAction = (Action)iter.next();
+				manager.add(newAccountAction);
+			}
+			if (selectedObject instanceof Account) {
+				manager.add(deleteAccountAction);
+			}
+		}
+
+		manager.add(new Separator());
+
 		drillDownAdapter.addNavigationActions(manager);
 		// Other plug-ins can contribute there actions here
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -401,6 +472,37 @@ public class NavigationView extends ViewPart {
 	}
 
 	private void makeActions() {
+		openEditorAction = new Action() {
+			public void run() {
+				Object selectedObject = null;
+				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
+					selectedObject = iterator.next();
+					break;
+				}
+				
+	   			Vector pageFactories = getPageFactories(selectedObject);
+	   			JMoneyPlugin.myAssert (!pageFactories.isEmpty());
+	   			
+	   			// Create an editor for this node (or active if an editor
+	   			// is already open).
+	   			try {
+	   				IWorkbenchWindow window = getSite().getWorkbenchWindow();
+	   				IEditorInput editorInput = new NodeEditorInput(selectedObject,
+	   						labelProvider.getText(selectedObject),
+							labelProvider.getImage(selectedObject),
+							pageFactories,
+							null);
+	   				window.getActivePage().openEditor(editorInput,
+	   				"net.sf.jmoney.genericEditor");
+	   			} catch (PartInitException e) {
+	   				JMoneyPlugin.log(e);
+	   			}
+			}
+		};
+		openEditorAction.setText(JMoneyPlugin.getResourceString("MainFrame.openEditor"));
+		openEditorAction.setToolTipText("Open");
+		
 		// For each class of object derived (directly or indirectly)
 		// from the capital account class, and that is not itself
 		// derivable, add a menu item to create a new account of
