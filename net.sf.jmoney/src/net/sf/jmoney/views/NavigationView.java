@@ -59,9 +59,12 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlAdapter;
+import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
@@ -87,6 +90,12 @@ public class NavigationView extends ViewPart {
     public static final String ID_VIEW =
         "net.sf.jmoney.views.NavigationView"; //$NON-NLS-1$
 
+    /**
+     * Control for the text that is displayed when no session
+     * is open.
+     */
+    private Label noSessionMessage;
+    
 	private TreeViewer viewer;
 	private DrillDownAdapter drillDownAdapter;
 	private ILabelProvider labelProvider; 
@@ -184,10 +193,36 @@ public class NavigationView extends ViewPart {
 	private SessionChangeListener listener =
 		new SessionChangeAdapter() {
 		public void sessionReplaced(Session oldSession, Session newSession) {
+			// Close all editors
+			IWorkbenchWindow window = getSite().getWorkbenchWindow();
+			boolean allClosed = window.getActivePage().closeAllEditors(true);
+			if (!allClosed) {
+				// User hit 'cancel' when prompted to save some
+				// unsaved data or perhaps an error occurred.
+				// We probably should veto the session replacement,
+				// but by this time it is too late.
+				// This is not an immediate problem but may become
+				// a problem as JMoney is further developed.
+			}
+		
+			// Make either the label or the tree control visible, depending
+			// on whether the new session is null or not.
+			if (JMoneyPlugin.getDefault().getSession() == null) {
+				noSessionMessage.setSize(noSessionMessage.getParent().getSize());
+				viewer.getControl().setSize(0, 0);
+			} else {
+				noSessionMessage.setSize(0, 0);
+				viewer.getControl().setSize(viewer.getControl().getParent().getSize());
+			}
+
+			// Update the viewer (if new session is null then the
+			// viewer will not be visible but it is good to release the
+			// references to the account objects in the dead session).
 			NavigationView.this.session = newSession;
 			TreeNode.getAccountsRootNode().setSession(newSession);
 			refreshViewer();
 		}
+		
 		public void accountAdded(Account newAccount) {
 			if (newAccount instanceof CapitalAccount) {
 				if (newAccount.getParent() == null) {
@@ -288,8 +323,21 @@ public class NavigationView extends ViewPart {
 	 * This is a callback that will allow us
 	 * to create the viewer and initialize it.
 	 */
-	public void createPartControl(Composite parent) {
-		viewer = new TreeViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+	public void createPartControl(final Composite parent) {
+		// The parent will have fill layout set by default.
+		// We manage the layout ourselves because we want either
+		// the navigation tree to be visible or the 'no session'
+		// message to be visible.  There is no suitable layout for
+		// this.  Therefore clear out the layout manager.
+		parent.setLayout(null);
+
+		// Create the control that will be visible if no session is open
+		noSessionMessage = new Label(parent, SWT.WRAP);
+		noSessionMessage.setText(JMoneyPlugin.getResourceString("NavigationView.noSessionMessage"));
+		noSessionMessage.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED));
+		
+		// Create the tree viewer
+		viewer = new TreeViewer(parent, SWT.H_SCROLL | SWT.V_SCROLL);
 		drillDownAdapter = new DrillDownAdapter(viewer);
 		labelProvider = new ViewLabelProvider();
 		ViewContentProvider contentProvider = new ViewContentProvider();
@@ -374,6 +422,25 @@ public class NavigationView extends ViewPart {
 				   	}
 			   }
 			});
+
+		// There is no layout set on the navigation view.
+		// Therefore we must listen for changes to the size of
+		// the navigation view and adjust the size of the visible
+		// control to match.
+		parent.addControlListener(new ControlAdapter() {
+			public void controlResized(ControlEvent e) {
+				if (JMoneyPlugin.getDefault().getSession() == null) {
+					noSessionMessage.setSize(parent.getSize());
+					viewer.getControl().setSize(0, 0);
+				} else {
+					noSessionMessage.setSize(0, 0);
+					viewer.getControl().setSize(parent.getSize());
+				}
+			}
+			
+		});
+		
+		JMoneyPlugin.getDefault().addSessionChangeListener(listener);
 	}
 
 	
