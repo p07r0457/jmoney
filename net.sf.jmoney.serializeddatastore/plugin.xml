@@ -16,7 +16,6 @@
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime.compatibility"/>
       <import plugin="net.sf.jmoney"/>
-      <import plugin="net.sf.jmoney.isocurrencies"/>
    </requires>
 
 

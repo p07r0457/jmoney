@@ -140,7 +140,11 @@ public class Session extends ExtendableObject implements IAdaptable {
     }
     
     public void setDefaultCurrency(Currency defaultCurrency) {
+        Currency oldDefaultCurrency = this.defaultCurrency;
         this.defaultCurrency = defaultCurrency;
+
+		// Notify the change manager.
+		processPropertyChange(SessionInfo.getDefaultCurrencyAccessor(), oldDefaultCurrency, defaultCurrency);
     }
     
 	/**
@@ -492,6 +496,10 @@ public class Session extends ExtendableObject implements IAdaptable {
     public boolean deleteCommodity(Commodity commodity) {
         boolean found = commodities.remove(commodity);
 		if (found) {
+			if (commodity instanceof Currency) {
+				getSession().currencies.remove(((Currency)commodity).getCode());
+			}
+
 			processObjectDeletion(SessionInfo.getCommoditiesAccessor(), commodity);
 		}
 		return found;

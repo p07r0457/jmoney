@@ -56,6 +56,7 @@ public class SessionInfo implements IPropertySetInfo {
 	private static PropertyAccessor commoditiesAccessor = null;
 	private static PropertyAccessor accountsAccessor = null;
 	private static PropertyAccessor transactionsAccessor = null;
+	private static PropertyAccessor defaultCurrencyAccessor = null;
 
 	public SessionInfo() {
     }
@@ -73,7 +74,7 @@ public class SessionInfo implements IPropertySetInfo {
 		accountsAccessor = propertyRegistrar.addPropertyList("account", JMoneyPlugin.getResourceString("<not used???>"), Account.class, null);
 		transactionsAccessor = propertyRegistrar.addPropertyList("transaction", JMoneyPlugin.getResourceString("<not used???>"), Transaction.class, null);
 		
-		propertyRegistrar.addProperty("defaultCurrency", JMoneyPlugin.getResourceString("Session.defaultCurrency"), 2, 20, currencyControlFactory, null);
+		defaultCurrencyAccessor = propertyRegistrar.addProperty("defaultCurrency", JMoneyPlugin.getResourceString("Session.defaultCurrency"), 2, 20, currencyControlFactory, null);
 		
 		propertyRegistrar.setObjectDescription("JMoney Session");
 	}
@@ -104,5 +105,12 @@ public class SessionInfo implements IPropertySetInfo {
 	 */
 	public static PropertyAccessor getTransactionsAccessor() {
 		return transactionsAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getDefaultCurrencyAccessor() {
+		return defaultCurrencyAccessor;
 	}	
 }

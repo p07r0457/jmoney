@@ -28,12 +28,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.NumberFormat;
+import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Vector;
 
 import net.sf.jmoney.fields.CurrencyInfo;
-import net.sf.jmoney.isocurrencies.IsoCurrenciesPlugin;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ISessionChangeFirer;
 import net.sf.jmoney.model2.ISessionFactory;
@@ -55,7 +56,10 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -305,46 +309,101 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         }
 	}
 
+    /**
+     * Whenever a new session is created, JMoney will set a single initial
+     * currency.  The currency is taken from our list of ISO 4217
+     * currencies and chosen using information from the default locale.
+     * This currency is also set as the default currency.
+     * <P>
+     * By doing this, we minimize the number of steps that a new JMoney
+     * user must take to get started.  If a user only ever uses a single
+     * currency then the user may never have to worry about currencies
+     * and may never see a currency selection control.
+     * 
+     * @param session
+     */
 	public static void initSystemCurrencies(Session session) {
 	    ResourceBundle NAME =
-	    	ResourceBundle.getBundle("net.sf.jmoney.isocurrencies.Currency");
+	    	ResourceBundle.getBundle("net.sf.jmoney.resources.Currency");
 
-		InputStream in = IsoCurrenciesPlugin.class.getResourceAsStream("Currencies.txt");
+	    Locale defaultLocale = Locale.getDefault();
+	    NumberFormat format = NumberFormat.getCurrencyInstance(defaultLocale);
+	    String defaultLocaleCode = format.getCurrency().getCurrencyCode();
+
+	    String code = null;
+	    int decimals = 0;
+	    
+	    // Find the currency in our list of ISO 4217 currencies
+	    InputStream in = JMoneyPlugin.class.getResourceAsStream("Currencies.txt");
 		BufferedReader buffer = new BufferedReader(new InputStreamReader(in));
 		try {
 			String line = buffer.readLine();
 			while (line != null) {
-				String code = line.substring(0, 3);
-				byte d;
-				try {
-					d = Byte.parseByte(line.substring(4, 5));
-				} catch (Exception ex) {
-					d = 2;
-				}
-				byte decimals = d;
-				String name = NAME.getString(code);
-				
-				Currency newCurrency = (Currency)session.createCommodity(
-						CurrencyInfo.getPropertySet());
-				
-				newCurrency.setName(name);
-				newCurrency.setCode(code);
-				newCurrency.setDecimals(decimals);
-
-		        // Set the default currency to "USD".
-				if (code.equals("USD")) {
-					session.setDefaultCurrency(newCurrency);
+				code = line.substring(0, 3);
+				if (code.equals(defaultLocaleCode)) {
+					try {
+						decimals = Byte.parseByte(line.substring(4, 5));
+					} catch (Exception ex) {
+						decimals = 2;
+					}
+					break;
 				}
 				
 				line = buffer.readLine();
 			}
+
+			// Set to US Dollars if the currency code from the user's
+			// locale is not in our list.
+			if (line == null) {
+				code = "USD";
+				decimals = 2;
+			}
 			
 		} catch (IOException ioex) {
+			code = "USD";
+			decimals = 2;
 		}
+		
+		String name = NAME.getString(code);
+		
+		Currency newCurrency = (Currency)session.createCommodity(
+				CurrencyInfo.getPropertySet());
+		
+		newCurrency.setName(name);
+		newCurrency.setCode(code);
+		newCurrency.setDecimals(decimals);
+		
+		// This currency is also the default currency.
+		session.setDefaultCurrency(newCurrency);
 	}
 
 	public void addSessionChangeListener(SessionChangeListener l) {
         sessionChangeListeners.add(l);
+    }
+    
+	/**
+	 * Adds a change listener.
+	 * <P>
+	 * The listener is active only for as long as the given control exists.  When the
+	 * given control is disposed, the listener is removed and will receive no more
+	 * notifications.
+	 * <P>
+	 * This method is generally used when a listener is used to update contents in a
+	 * control.  Typically multiple controls are updated by a listener and the parent
+	 * composite control is passed to this method.
+	 * 
+	 * @param listener
+	 * @param control
+	 */
+	public void addSessionChangeListener(final SessionChangeListener listener, Control control) {
+        sessionChangeListeners.add(listener);
+        
+		// Remove the listener when this page is disposed.
+		control.addDisposeListener(new DisposeListener() {
+			public void widgetDisposed(DisposeEvent e) {
+				JMoneyPlugin.getDefault().removeSessionChangeListener(listener);
+			}
+		});
     }
     
     public void removeSessionChangeListener(SessionChangeListener l) {

@@ -15,7 +15,6 @@
    <requires>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="net.sf.jmoney.isocurrencies"/>
       <import plugin="org.eclipse.ui.forms"/>
    </requires>
 <!-- These two only should be here with Eclipse RC1
