@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.TreeSet;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrencyAccount;
@@ -168,9 +169,7 @@ public class ExpensePieChart extends PieChart {
         	fromDate = df.parse("2004-01-01");
         	title = title + "\n" + fromDate + " - " + toDate;
         } catch (ParseException e) {
-        	System.err.println(e.getStackTrace());
-        	Error err = new Error("ParseException");
-        	throw err;
+        	JMoneyPlugin.log(e);
         }
     	toDate = new Date();
 	}
