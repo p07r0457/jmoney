@@ -220,10 +220,15 @@ public class Entry extends ExtendableObject {
 	}
 
 	/**
-	 * @return The commodity for this entry
+	 * @return The commodity for this entry, or null if not enough
+	 * 			information has been set to determine the commodity.
 	 */
 	public Commodity getCommodity() {
-	    return getAccount().getCommodity(this);
+		if (getAccount() == null) {
+			return null;
+		} else {
+			return getAccount().getCommodity(this);
+		}
 	}
 	
 	/**

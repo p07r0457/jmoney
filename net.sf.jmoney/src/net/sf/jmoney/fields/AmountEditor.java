@@ -121,11 +121,14 @@ public class AmountEditor implements IPropertyControl {
     public void setListener(final SessionChangeListener commodityChangeListener) {
 		// We must listen for changes to the currency so that
 		// we can change the format of the amount.
+
+    	// Note that we cannot get the session from fObject because fObject
+		// may be null.
 		JMoneyPlugin.getDefault().getSession().addSessionChangeListener(commodityChangeListener);
     	
 		propertyControl.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {
-				fObject.getSession().removeSessionChangeListener(commodityChangeListener);
+				JMoneyPlugin.getDefault().getSession().removeSessionChangeListener(commodityChangeListener);
 			}});
     }
     

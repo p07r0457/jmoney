@@ -97,7 +97,9 @@ public class EntryInfo implements IPropertySetInfo {
 		        			}
 		        			// Has the account property changed?
 		        			if (changedObject == entry && changedProperty == EntryInfo.getAccountAccessor()) {
-		        				editor.updateCommodity(entry.getCommodity());	
+		        				// FIXME I don't know how to get the commodity for an
+		        				// income and expense account.
+		        				//editor.updateCommodity(entry.getCommodity());	
 		        			}
 		        			// Has the commodity property of the account changed?
 		        			if (changedObject ==  entry.getAccount() && changedProperty == CurrencyAccountInfo.getCurrencyAccessor()) {
@@ -105,9 +107,13 @@ public class EntryInfo implements IPropertySetInfo {
 		        			}
 		        			// If any property in the commodity object changed then
 		        			// the format of the amount might also change.
-		        			if (changedObject ==  entry.getCommodity()) {
-		        				editor.updateCommodity(entry.getCommodity());	
-		        			}
+
+	        				// FIXME I don't know how to get the commodity for an
+	        				// income and expense account.
+		        			//if (changedObject ==  entry.getCommodity()) {
+		        			//	  editor.updateCommodity(entry.getCommodity());	
+		        			//}
+		        			
 		        			// TODO: All the above tests are still not complete.
 		        			// If the account for the entry can contain multiple
 		        			// commodities then the commodity may depend on properties
