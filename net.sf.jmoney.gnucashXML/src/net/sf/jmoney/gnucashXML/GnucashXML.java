@@ -11,8 +11,6 @@ import java.util.*;
 import javax.swing.filechooser.FileFilter;
 
 import net.sf.jmoney.Constants;
-import net.sf.jmoney.qif.FileFormat;
-import net.sf.jmoney.qif.AccountChooser;
 
 import net.sf.jmoney.model2.*;
 
@@ -134,7 +132,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 
 			// Create the transactions
 			monitor.beginTask("Importing the transactions...", 3);
-			createTransactions(doc);
+			// createTransactions(doc);
 
 		} catch (MalformedURLException e) {
 			System.err.println(e.toString());
@@ -142,12 +140,14 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			System.err.println(e.toString());
 		} catch (SAXException e) {
 			System.err.println(e.toString());
+		/*
 		} catch (LessThanTwoSplitsException e) {
 			System.err.println(e.toString());
 		} catch (MoreThanTwoSplitsException e) {
 			System.err.println(e.toString());
 		} catch (ParseException e) {
 			System.err.println(e.toString());
+		*/
 		} catch (Error e) {
 		    System.err.println(e.getStackTrace());
 		    throw e;
@@ -262,8 +262,8 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			String parentGUID = (String) childParent.get(childGUID);
 			//System.out.println("childGUID:" + childGUID);
 			//System.out.println("parentGUID:" + parentGUID);
-			MutableCapitalAccount child = getAccountFromGUID(childGUID);
-			MutableCapitalAccount parent = getAccountFromGUID(parentGUID);
+			MutableCapitalAccount child = (MutableCapitalAccount) getAccountFromGUID(childGUID);
+			CapitalAccount parent = getAccountFromGUID(parentGUID);
 			child.setParent(parent);
 			// System.out.println("Level of >" + child.getName() + "<:" + child.getLevel());
 		}
@@ -348,7 +348,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 		long l1 = Long.parseLong(s.substring(0, posDivision));
 		long l2 = Long.parseLong(s.substring(posDivision + 1));
 
-		return (l1);
+		return (l1/l2);
 
 	}
 
@@ -468,8 +468,8 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
     	throw new RuntimeException("exportAccount for GnucashXML not implemented !");
     };
     
-    private MutableCapitalAccount getAccountFromGUID(String GUID) {
-        return (MutableCapitalAccount) accountsGUIDTable.get(GUID);
+    private CapitalAccount getAccountFromGUID(String GUID) {
+        return (CapitalAccount) accountsGUIDTable.get(GUID);
     }
 
 }
