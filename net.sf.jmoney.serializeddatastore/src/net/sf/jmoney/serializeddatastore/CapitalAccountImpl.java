@@ -396,5 +396,10 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements MutableCa
 		public CapitalAccount commit() {
 			throw new RuntimeException("should never be called");
 		}
-        
+	    
+	    // This method is used by the datastore implementations.
+	    // TODO: Should this be moved to a separate initialization interface?
+		public void addSubAccount(CapitalAccount subAccount) {
+			super.addSubAccount(subAccount);
+		}
 }

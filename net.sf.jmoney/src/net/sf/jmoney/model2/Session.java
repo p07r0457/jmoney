@@ -37,12 +37,16 @@ public interface Session {
     
     Iterator getCommodityIterator();
 
+    Iterator getAccountIterator();
+    
     Iterator getCapitalAccountIterator();
    
     Iterator getIncomeExpenseAccountIterator();
     
     Iterator getTransaxionIterator();
  
+    Iterator getTransactionIterator();
+    
     MutableIncomeExpenseAccount createNewIncomeExpenseAccount();
         
     MutableCapitalAccount createNewCapitalAccount();
@@ -74,4 +78,13 @@ public interface Session {
     void addSessionChangeFirerListener(SessionChangeFirerListener listener);
     
     void removeSessionChangeFirerListener(SessionChangeFirerListener listener);
+    
+    // These methods are used by the datastore implementations.
+    // TODO: Should these be moved to a separate initialization interface?
+
+    void addCommodity(Commodity commodity);
+
+    void addAccount(Account account);
+    
+    void addTransaction(Transaxion transaction);
 }

@@ -25,6 +25,8 @@ package net.sf.jmoney.model2;
 import java.lang.reflect.*;
 import java.beans.*;   // for PropertyChangeSupport and PropertyChangeListener
 import java.util.Comparator;
+import java.util.Iterator;
+
 import javax.swing.JComponent;
 
 import org.eclipse.swt.widgets.Composite;
@@ -42,34 +44,55 @@ public class PropertyAccessorImpl implements PropertyAccessor {
     
     private String shortDescription;
     
+    // Applies only if scalar property
     private double width;    
     
+    // Applies only if scalar property
     private boolean sortable;
     
+    // Applies only if scalar property
     private IPropertyControlFactory propertyControlFactory;
     
+    // Applies only if scalar property
     private Class editorBeanClass;
     
+    /**
+     * The class of the property.  It the property is a list
+     * property then the class of the elements in the list.
+     */
     private Class propertyClass;
     
+    // If a list property, this is the iterator getter.
     private Method theGetMethod;
     
+    // Applies only if scalar property
     private Method theSetMethod;
     
+    // Applies only if list property
+    private Method theAddMethod;
+    
+	/**
+	 * true if property is a list property, i.e. can contain
+	 * multiple values.  false otherwise.
+	 */
+	private boolean isList;
+	
     /**
      * List of listeners that are listening for changes to the value of this property
      * in any entry.
      */
     private PropertyChangeSupport propertySupport;
 
-    public PropertyAccessorImpl(PropertySet propertySet, String localName, String descriptionShort, double width, IPropertyControlFactory propertyControlFactory, Class editorBeanClass, IPropertyDependency propertyDependency) {
+    public PropertyAccessorImpl(PropertySet propertySet, String localName, String shortDescription, double width, IPropertyControlFactory propertyControlFactory, Class editorBeanClass, IPropertyDependency propertyDependency) {
     	this.propertySet = propertySet;
         this.localName = localName;
-        this.shortDescription = descriptionShort;
+        this.shortDescription = shortDescription;
         this.width = width;
         this.sortable = true;
         this.propertyControlFactory = propertyControlFactory;
         this.editorBeanClass = editorBeanClass;
+        
+        isList = false;
         
         // Use introspection on the interface to find the getter method.
         Class interfaceClass = propertySet.getInterfaceClass();
@@ -112,7 +135,89 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         propertySupport = new PropertyChangeSupport(this);
     }
 
-    public PropertySet getPropertySet() {
+    /**
+     * Create a property accessor for a list property.
+     * 
+	 * @param set
+	 * @param name
+	 * @param listItemClass
+	 * @param shortDescription
+	 * @param propertyDependency
+	 */
+	public PropertyAccessorImpl(PropertySet propertySet, String localName, String shortDescription, Class listItemClass, IPropertyDependency propertyDependency) {
+    	this.propertySet = propertySet;
+        this.localName = localName;
+        this.propertyClass = listItemClass;
+        this.shortDescription = shortDescription;
+        
+        isList = true;
+        
+        // Use introspection on the interface to find the getXxxIterator method.
+        Class interfaceClass = propertySet.getInterfaceClass();
+        
+        String theGetMethodName	= "get"
+        	+ localName.toUpperCase().charAt(0)
+			+ localName.substring(1, localName.length())
+			+ "Iterator";
+        
+        try {
+            this.theGetMethod = getDeclaredMethodRecursively(interfaceClass, theGetMethodName, null);
+        } catch (NoSuchMethodException e) {
+            throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + interfaceClass.getName() + "' was not found.");
+        }
+        
+        if (theGetMethod.getReturnType() != Iterator.class) {
+            throw new MalformedPluginException("Method '" + theGetMethodName + "' in '" + interfaceClass.getName() + "' must return an Iterator type.");
+        }
+        
+        // Use introspection on the interface to find the setter method.
+        // This must be done on the mutable interface.
+   
+        Class mutableInterfaceClass = propertySet.getMutableInterfaceClass();
+        
+        String theAddMethodName	= "add"
+			+ localName.toUpperCase().charAt(0)
+			+ localName.substring(1, localName.length());
+        Class parameterTypes[] = {propertyClass};
+        
+        try {
+            this.theAddMethod = mutableInterfaceClass.getDeclaredMethod(theAddMethodName, parameterTypes);
+        } catch (NoSuchMethodException e) {
+            throw new MalformedPluginException("Method '" + theAddMethodName + "' in '" + mutableInterfaceClass.getName() + "' was not found.");
+        }
+        
+        if (theAddMethod.getReturnType() != void.class) {
+            throw new MalformedPluginException("Method '" + theAddMethodName + "' in '" + mutableInterfaceClass.getName() + "' must return void type .");
+        }
+     
+        propertySupport = new PropertyChangeSupport(this);
+	}
+
+	/**
+	 * Gets a method from an interface.  
+	 * Whereas Class.getDeclaredMethod finds a method from an
+	 * interface, it will not find the method if the method is
+	 * defined in an interface which the given interface extends.
+	 * This method will find the method if an of the interfaces
+	 * extended by this interface define the method. 
+	 */
+	private Method getDeclaredMethodRecursively(Class interfaceClass, String methodName, Class[] arguments)
+		throws NoSuchMethodException {
+        try {
+    		return interfaceClass.getDeclaredMethod(methodName, arguments);
+        } catch (NoSuchMethodException e) {
+    		Class[] interfaces = interfaceClass.getInterfaces();
+    		for (int i = 0; i < interfaces.length; i++) {
+    	        try {
+    	        	return getDeclaredMethodRecursively(interfaces[i], methodName, arguments);
+    	        } catch (NoSuchMethodException e2) {
+    	        }
+    		}
+            throw new NoSuchMethodException("Method '" + methodName + "' was not found in '" + interfaceClass.getName() + "' nor in any of the interfaces extended by it.");
+        }
+	}
+	
+	public PropertySet getPropertySet() {
         return propertySet;
     }
     
@@ -122,6 +227,10 @@ public class PropertyAccessorImpl implements PropertyAccessor {
     
     public Method getTheSetMethod() {
         return theSetMethod;
+    }
+    
+    public Method getTheAddMethod() {
+        return theAddMethod;
     }
     
     public Class getValueClass() {
@@ -164,6 +273,14 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 
     public boolean isSortable() {
         return sortable;
+    }
+    
+    public boolean isList() {
+        return isList;
+    }
+    
+    public boolean isScalar() {
+        return !isList;
     }
     
     /**

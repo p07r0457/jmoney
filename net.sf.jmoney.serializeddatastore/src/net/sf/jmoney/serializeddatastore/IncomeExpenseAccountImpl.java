@@ -96,21 +96,10 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Mut
 		public IncomeExpenseAccount commit() {
 			throw new RuntimeException("should never be called");
 		}
-        
-/*        
-        public int compareTo(Object o) {
-        }
-        
-        public int getLevel() {
-        }
-        
-        public Category getParent() {
-        }
-        
-        public Session getSession() {
-        }
-        
-        public java.util.Iterator getSubCategoryIterator() {
-        }
-*/        
+	    
+	    // This method is used by the datastore implementations.
+	    // TODO: Should this be moved to a separate initialization interface?
+		public void addSubAccount(IncomeExpenseAccount subAccount) {
+			super.addSubAccount(subAccount);
+		}
 }

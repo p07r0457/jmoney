@@ -66,4 +66,9 @@ public interface MutableCapitalAccount extends CapitalAccount, MutableAccount {
     void setComment(String aComment);
     
     CapitalAccount commit();
+    
+    // This method is used by the datastore implementations.
+    // TODO: Should this be moved to a separate initialization interface?
+
+    void addSubAccount(CapitalAccount subAccount);
 }

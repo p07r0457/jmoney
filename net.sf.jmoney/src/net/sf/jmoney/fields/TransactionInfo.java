@@ -25,6 +25,8 @@ package net.sf.jmoney.fields;
 import org.eclipse.swt.widgets.Composite;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.MutableTransaxion;
@@ -74,6 +76,8 @@ public class TransactionInfo implements IExtensionPropertySetInfo {
 				}
 		};
 		
+		propertyRegistrar.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), Entry.class, null);
+
 		propertyRegistrar.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), 10.0, textControlFactory, null, null);
 	}
 

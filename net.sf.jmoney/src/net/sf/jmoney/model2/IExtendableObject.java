@@ -21,6 +21,8 @@
  */
 package net.sf.jmoney.model2;
 
+import java.util.Iterator;
+
 /**
  * @author Nigel
  *
@@ -52,6 +54,16 @@ public interface IExtendableObject {
 	long getLongPropertyValue(PropertyAccessor propertyAccessor);
 	
 	String getStringPropertyValue(PropertyAccessor propertyAccessor);
+
+	/**
+	 * Obtain an iterator that iterates over the values of a
+	 * list property.
+	 * 
+	 * @param propertyAccessor The property accessor for the property
+	 * 			whose values are to be iterated.  The property
+	 * 			must be a list property (and not a scalar property).
+	 */
+	Iterator getPropertyIterator(PropertyAccessor propertyAccessor);
 	
 	// TODO: check whether we need this method.
 	String getPropertyValueAsString(PropertyAccessor propertyAccessor);

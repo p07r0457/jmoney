@@ -49,6 +49,18 @@ public interface PropertyAccessor {
     
     Method getTheSetMethod();
     
+    Method getTheAddMethod();
+    
+    /**
+     * Returns the property class.
+     * The value of this property must be an object of this class.
+     * The value of this property may be an object of a class
+     * that is derived from this class.
+     * If this property is a list property then this method
+     * returns the class of the elements of the list.
+     * 
+     * @return
+     */
     Class getValueClass();
     
     /**
@@ -86,6 +98,17 @@ public interface PropertyAccessor {
      * Indicates whether users are able to sort views based on this property.
      */
     boolean isSortable();
+    
+    /**
+     * Indicates if the property is a single intrinsic value or object
+     * (not a list of values)
+     */
+    boolean isScalar();
+    
+    /**
+     * Indicates if the property is a list of intrinsic values or objects.
+     */
+    boolean isList();
     
     /**
      * Indicates whether the property may be edited by the user.

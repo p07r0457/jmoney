@@ -45,4 +45,9 @@ public interface MutableTransaxion extends Transaxion, IMutableExtendableObject 
     void removeEntry(Entry e);
     
     Transaxion commit();
+    
+    // This method is used by the datastore implementations.
+    // TODO: Should this be moved to a separate initialization interface?
+
+    void addEntry(Entry entry);
 }

@@ -185,6 +185,31 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
 		return currencies.values().iterator();
     }
    
+    public Iterator getAccountIterator() {
+        return new Iterator() {
+        	Iterator iter = accounts.iterator();
+        	boolean inAccounts = true;
+        	
+			public boolean hasNext() {
+				if (iter.hasNext()) {
+					return true;
+				} else if (inAccounts) {
+					inAccounts = false;
+					iter = categories.iterator();
+					return iter.hasNext();
+				} else {
+					return false; 
+				}
+			}
+			public Object next() {
+				return iter.next();
+			}
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+        };
+    }
+   
     public Iterator getCapitalAccountIterator() {
         return accounts.iterator();
     }
@@ -194,6 +219,10 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
     }
    
     public Iterator getTransaxionIterator() {
+        return transactions.iterator();
+    }
+   
+    public Iterator getTransactionIterator() {
         return transactions.iterator();
     }
    
@@ -267,13 +296,15 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
         return new MutableTransaxionImpl(this, transaction);
     }
     
-    // Used by MutableTransaxionImpl only
-    void addTransaxion(Transaxion transaction) {
+    // Used by MutableTransaxionImpl.
+    // Also this is the implementation of the addXxx pattern
+    // required for list properties.
+    public void addTransaxion(Transaxion transaction) {
         transactions.add(transaction);
        
         // For efficiency, we keep a list of entries in each
         // account/category.  We must update this list now.
-        for (Iterator iter = transaction.getEntriesIterator(); iter.hasNext(); ) {
+        for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
             Entry entry = (Entry)iter.next();
             // TODO: at some time, keep these lists for categories too
             Account category = entry.getAccount();
@@ -284,12 +315,16 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements ISessionM
         modified();
     }
     
-    public void removeTransaxion(Transaxion transaction) {
+    public void addTransaction(Transaxion transaction) {
+    	addTransaxion(transaction);
+    }
+    	
+   	public void removeTransaxion(Transaxion transaction) {
         transactions.remove(transaction);
 
         // For efficiency, we keep a list of entries in each
         // account/category.  We must update this list now.
-        for (Iterator iter = transaction.getEntriesIterator(); iter.hasNext(); ) {
+        for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
             Entry entry = (Entry)iter.next();
             // TODO: at some time, keep these lists for categories too
             Account category = entry.getAccount();

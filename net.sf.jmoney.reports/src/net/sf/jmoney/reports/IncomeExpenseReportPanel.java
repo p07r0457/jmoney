@@ -214,7 +214,7 @@ public class IncomeExpenseReportPanel extends JPanel implements Constants {
 				}
 			}
 */
-                        for (Iterator iter = e.getTransaxion().getEntriesIterator(); iter.hasNext(); ) {
+                        for (Iterator iter = e.getTransaxion().getEntryIterator(); iter.hasNext(); ) {
                             Entry e2 = (Entry)iter.next();
                             if (e2 != e) {
 				Account c = e.getAccount();

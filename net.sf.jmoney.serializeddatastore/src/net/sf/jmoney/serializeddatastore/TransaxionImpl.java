@@ -70,7 +70,7 @@ public class TransaxionImpl extends ExtendableObjectHelperImpl implements Mutabl
         return date;
     }
     
-    public Iterator getEntriesIterator() {
+    public Iterator getEntryIterator() {
         return entries.iterator();
     }
     
@@ -186,7 +186,7 @@ public class TransaxionImpl extends ExtendableObjectHelperImpl implements Mutabl
     }
 
     // Used by XML reader only
-    void addEntry(Entry entry) {
+    public void addEntry(Entry entry) {
         entries.add(entry);
     }
     

@@ -184,6 +184,12 @@ public class MutableIncomeExpenseAccountImpl  extends ExtendableObjectHelperImpl
 		return 0;
 	}
 
+	// This method probably should not be here.  We can remove
+	// it is we provide a seperate interface for object initialization.
+	public void addSubAccount(IncomeExpenseAccount subAccount) {
+		throw new RuntimeException("internal error");
+	}
+	
 /* not needed until multi-threading taken into consideration    
     public void rollback() {
         // remove this mutable object from the map.

@@ -37,7 +37,7 @@ public interface Transaxion extends IExtendableObject {
      */
     Date getDate();
     
-    Iterator getEntriesIterator();
+    Iterator getEntryIterator();
     
     // Helper methods:
     

@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.fields;
 
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
@@ -57,7 +59,9 @@ public class IncomeExpenseAccountInfo implements IExtensionPropertySetInfo {
     }
     
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		// There are no properties actually defined in this property set!
+		propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccount.class, null);
+
+		// There are no scalar properties actually defined in this property set!
 		
 		// We should define something for the implied enumerated value
 		// that is controlled by the derived class type.  This has no

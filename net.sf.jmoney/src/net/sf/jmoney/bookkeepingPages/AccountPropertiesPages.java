@@ -104,22 +104,24 @@ public class AccountPropertiesPages implements IBookkeepingPageListener {
 			PropertySet extendablePropertySet = PropertySet.getPropertySet(account.getClass());
 			for (Iterator iter = extendablePropertySet.getPropertyIterator3(); iter.hasNext(); ) {
 				final PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-				Label propertyLabel = new Label(this, 0);
-				propertyLabel.setText(propertyAccessor.getShortDescription());
-				final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(this);
-				propertyControl.getControl().addFocusListener(
-						new FocusAdapter() {
-							public void focusLost(FocusEvent e) {
-								propertyControl.save();
-								updateAndReleaseAccount();
-							}
-							public void focusGained(FocusEvent e) {
-								lockAccountForEdit();
-							}
-						});
-				
-				// Add to our list of controls.
-				propertyControlList.add(propertyControl);
+				if (propertyAccessor.isScalar()) {
+					Label propertyLabel = new Label(this, 0);
+					propertyLabel.setText(propertyAccessor.getShortDescription());
+					final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(this);
+					propertyControl.getControl().addFocusListener(
+							new FocusAdapter() {
+								public void focusLost(FocusEvent e) {
+									propertyControl.save();
+									updateAndReleaseAccount();
+								}
+								public void focusGained(FocusEvent e) {
+									lockAccountForEdit();
+								}
+							});
+					
+					// Add to our list of controls.
+					propertyControlList.add(propertyControl);
+				}
 			}
 			
 			// Get a lock on the account and set the property

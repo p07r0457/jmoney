@@ -30,4 +30,9 @@ package net.sf.jmoney.model2;
 public interface MutableIncomeExpenseAccount extends IncomeExpenseAccount, MutableAccount {
     
     IncomeExpenseAccount commit();
+    
+    // This method is used by the datastore implementations.
+    // TODO: Should this be moved to a separate initialization interface?
+
+    void addSubAccount(IncomeExpenseAccount subAccount);
 }

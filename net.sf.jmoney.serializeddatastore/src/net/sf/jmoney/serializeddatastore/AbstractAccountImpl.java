@@ -51,10 +51,8 @@ public abstract class AbstractAccountImpl extends ExtendableObjectHelperImpl imp
         }
         
         /**
-         * Because this method is called only by the MutableAccount class,
-         * and only one MutableAccount class object can exist for this object,
-         * and the MutableAccount class is not thread safe, this method
-         * does not need to be thread safe.
+         * This method is called by the MutableAccount class,
+         * and also by the datastore during object initialization.
          */
         public void addSubAccount(Account subAccount) {
             if (subAccounts == null) {

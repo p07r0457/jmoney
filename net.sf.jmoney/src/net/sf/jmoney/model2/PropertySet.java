@@ -263,6 +263,12 @@ public class PropertySet {
 							return accessor;
 						}
 
+						public PropertyAccessor addPropertyList(String name, String shortDescription, Class listItemClass, IPropertyDependency propertyDependency) {
+							PropertyAccessor accessor = new PropertyAccessorImpl(PropertySet.this, name, shortDescription, listItemClass, propertyDependency);
+							properties.add(accessor);
+							return accessor;
+						}
+						
 						public PropertyAccessor setDerivableInfo(String name, String displayName) {
 							derivablePropertySet = true;
 							// TODO Auto-generated method stub
@@ -273,7 +279,7 @@ public class PropertySet {
 							derivablePropertySet = true;
 							return null;
 						}
-						
+
 					}
 			);
 		}

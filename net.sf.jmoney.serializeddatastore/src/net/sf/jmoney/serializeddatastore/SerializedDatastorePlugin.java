@@ -445,11 +445,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 * a property but have not yet processed the end of the element
 		 * then this field is the property accessor.  Otherwise this
 		 * field is null.
-		 * One or other but not both of the following can be non-null.
 		 */
 		PropertyAccessor propertyAccessor = null;
-		String listType = null;
-		String propertyName = null;
 		
 		/**
 		 *
@@ -482,23 +479,27 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		public void startElement(String uri, String localName, Attributes atts)
 		throws SAXException {
 			
-			// We must set up either:
-			// - propertyAccessor
-			// - listType and propertyName
+			// We set propertyAccessor to be the property accessor
+			// for the property whose value is contained in this
+			// element.  This property may be a scalar or a list
+			// property.
+			
+			// If the property is not found then we currently drop
+			// the value.
+			// TODO: Keep values even for unknown properties in
+			// case plug-ins are installed later that can use the data.
 		
 			// All elements are expected to be in a namespace beginning
 			// "http://jmoney.sf.net".  If the element is a property in an
 			// extension property set then the id of the extension property
 			// set will be appended.
 			
-			propertyName = localName;
 			String namespace = null;
 			if (uri.length() == 20) {
 				namespace = null;
 			} else {
 				namespace = uri.substring(21);
 			}
-			listType = null;
 			
 			try {
 				// Find the property accessor for this property.
@@ -511,52 +512,15 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				if (namespace == null) {
 					// Search this property set and base property sets,
 					// but exclude extensions.  
-					propertyAccessor = propertySet.getPropertyAccessorGivenLocalNameAndExcludingExtensions(propertyName);
+					propertyAccessor = propertySet.getPropertyAccessorGivenLocalNameAndExcludingExtensions(localName);
 				} else {
 					// Get the property based on the fully qualified name.
 					// TODO this is not very efficient.  We combine the propertySetId
 					// and the local name, but the first thing the following method
 					// does is to split them apart again!
-					propertyAccessor = PropertySet.getPropertyAccessor(namespace + "." + propertyName);
+					propertyAccessor = PropertySet.getPropertyAccessor(namespace + "." + localName);
 				}
 			} catch (PropertyNotFoundException e) {
-				// See if this is in fact a list, as lists are not
-				// currently registered.
-			
-				// Must set to null if a list.
-				propertyAccessor = null;
-				
-				if (propertySet.getId().equals("net.sf.jmoney.session")
-						&& propertyName.equals("commodity")) {
-					listType = "net.sf.jmoney.commodity";
-				} else
-				
-				if (propertySet.getId().equals("net.sf.jmoney.session")
-						&& propertyName.equals("account")) {
-					listType = "net.sf.jmoney.account";
-				} else
-				
-				if (propertySet.getId().equals("net.sf.jmoney.session")
-						&& propertyName.equals("transaction")) {
-					listType = "net.sf.jmoney.transaction";
-				} else
-				
-				if (propertySet.getId().equals("net.sf.jmoney.capitalAccount")
-						&& propertyName.equals("subAccount")) {
-					listType = "net.sf.jmoney.capitalAccount";
-				} else
-				
-				if (propertySet.getId().equals("net.sf.jmoney.categoryAccount")
-						&& propertyName.equals("subAccount")) {
-					listType = "net.sf.jmoney.categoryAccount";
-				} else
-				
-				if (propertySet.getId().equals("net.sf.jmoney.transaction")
-						&& propertyName.equals("entry")) {
-					listType = "net.sf.jmoney.entry";
-				}
-				
-				if (listType == null) {
 					// The property no longer exists.
 					// TODO: Log this.  When changing the properties,
 					// one is supposed to provide upgrader properties
@@ -565,20 +529,10 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					// Ignore content
 					currentSAXEventProcessor = new IgnoreElementProcessor(this, null);
 					return;
-				}
 			}
 			
-			Class propertyClass;
-			if (propertyAccessor != null) {
-				propertyClass = propertyAccessor.getValueClass();
-			} else {
-				try {
-					propertyClass = PropertySet.getPropertySet(listType).getInterfaceClass();
-				} catch (PropertySetNotFoundException e) {
-					throw new RuntimeException("internal error");
-				}
-			}
-			
+			Class propertyClass = propertyAccessor.getValueClass();
+
 			// See if the 'idref' attribute is specified.
 			String idref = atts.getValue("idref");
 			if (idref != null) {
@@ -682,43 +636,18 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				throw new RuntimeException("null value");
 			}
 			
+			if (propertyAccessor == null) {
+				throw new RuntimeException("internal error");
+			}
+
 			// Set the value in our object.  If the property
 			// is a list property then the object is added to
 			// the list.
-			if (propertyAccessor != null) {
+			if (propertyAccessor.isScalar()) {
 				extendableObject.setPropertyValue(propertyAccessor, value);
 			} else {
 				// Must be an element in an array.
-				if (propertySet.getId().equals("net.sf.jmoney.session")
-						&& propertyName.equals("commodity")) {
-					((SessionImpl)extendableObject).addCommodity((Commodity)value);
-				} else
-				
-				if (propertySet.getId().equals("net.sf.jmoney.session")
-						&& propertyName.equals("account")) {
-					((SessionImpl)extendableObject).addAccount((Account)value);
-				} else
-				
-				if (propertySet.getId().equals("net.sf.jmoney.session")
-						&& propertyName.equals("transaction")) {
-					((SessionImpl)extendableObject).addTransaxion((Transaxion)value);
-				} else
-				
-				if (propertySet.getId().equals("net.sf.jmoney.capitalAccount")
-						&& propertyName.equals("subAccount")) {
-					((CapitalAccountImpl)extendableObject).addSubAccount((CapitalAccount)value);
-				} else
-				
-				if (propertySet.getId().equals("net.sf.jmoney.categoryAccount")
-						&& propertyName.equals("subAccount")) {
-					((IncomeExpenseAccountImpl)extendableObject).addSubAccount((IncomeExpenseAccount)value);
-				} else
-				
-				if (propertySet.getId().equals("net.sf.jmoney.transaction")
-						&& propertyName.equals("entry")) {
-					((TransaxionImpl)extendableObject).addEntry((Entry)value);
-				}
-				
+				extendableObject.addPropertyValue(propertyAccessor, value);
 			}
 		}
 	}
@@ -1060,7 +989,6 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 
 				
 				try {
-//					FileWriter out = new FileWriter(sessionFile);
 					StreamResult streamResult = new StreamResult(bout);
 					SAXTransformerFactory tf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
 //					SAX2.0 ContentHandler.
@@ -1071,7 +999,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 					serializer.setOutputProperty(OutputKeys.INDENT,"no");
 					hd.setResult(streamResult);
 					hd.startDocument();
-					writeObjectSafe(hd, session, "session", "net.sf.jmoney.session");
+					writeObjectSafe(hd, session, "session", Session.class);
 					hd.endDocument();
 				} catch (SAXException e) {
 					// TODO Auto-generated catch block
@@ -1095,40 +1023,20 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		}
 	}
 	
-/* SAMPLE CODE FOR XML WRITING
-//	PrintWriter from a Servlet
-	PrintWriter out = response.getWriter();
-	StreamResult streamResult = new StreamResult(out);
-	SAXTransformerFactory tf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
-//	SAX2.0 ContentHandler.
-	TransformerHandler hd = tf.newTransformerHandler();
-	Transformer serializer = hd.getTransformer();
-	serializer.setOutputProperty(OutputKeys.ENCODING,"ISO-8859-1");
-	serializer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM,"users.dtd");
-	serializer.setOutputProperty(OutputKeys.INDENT,"yes");
-	hd.setResult(streamResult);
-	hd.startDocument();
-	AttributesImpl atts = new AttributesImpl();
-//	USERS tag.
-	hd.startElement("","","USERS",atts);
-//	USER tags.
-	String[] id = {"PWD122","MX787","A4Q45"};
-	String[] type = {"customer","manager","employee"};
-	String[] desc = {"Tim@Home","Jack&Moud","John D'oé"};
-	for (int i=0;i<id.length;i++)
-	{
-	atts.clear();
-	atts.addAttribute("","","ID","CDATA",id[i]);
-	atts.addAttribute("","","TYPE","CDATA",type[i]);
-	hd.startElement("","","USER",atts);
-	hd.characters(desc[i].toCharArray(),0,desc[i].length());
-	hd.endElement("","","USER");
-	}
-	hd.endElement("","","USERS");
-	hd.endDocument();
-*/
 
-	void writeObjectSafe(TransformerHandler hd, IExtendableObject object, String elementName, String typedPropertySetId) throws SAXException {
+	/**
+	 * 
+	 * @param hd
+	 * @param object
+	 * @param elementName
+	 * @param propertyType The typed class of the property.  The property may be an object
+	 * 			of a class that is derived from this typed class.  If the property is a
+	 * 			scalar property then the property type is determined by inspecting the
+	 * 			getter and setter methods.  If the property is a list property then the
+	 * 			type is determined by inspecting the adder and remover methods. 
+	 * @throws SAXException
+	 */
+	void writeObjectSafe(TransformerHandler hd, IExtendableObject object, String elementName, Class propertyType) throws SAXException {
 		// Find the property set information for this object.
 		PropertySet propertySet = PropertySet.getPropertySet(object.getClass());
 
@@ -1140,7 +1048,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		// unique within each object, so are all put in the
 		// default namespace.
 		atts.clear();
-		if (typedPropertySetId.equals("net.sf.jmoney.session")) {
+		if (propertyType == Session.class) {
 			atts.addAttribute("", "", "xmlns", "CDATA", "http://jmoney.sf.net");
 
 			int suffix = 1;
@@ -1169,7 +1077,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			atts.addAttribute("", "", "id", "CDATA", id);
 		}
 
-		if (!propertySet.getId().equals(typedPropertySetId)) {
+		if (propertySet.getInterfaceClass() != propertyType) {
 			atts.addAttribute("", "", "propertySet", "CDATA", propertySet.getId());
 		}
 
@@ -1203,98 +1111,68 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		// no problems due to the single pass.
 		// TODO: we cannot rely on this mechanism to ensure all idref's are written
 		// before they are used.
-		if (propertySet.getId().equals("net.sf.jmoney.session")) {
-			Session session = (Session)object;
-			
-			for (Iterator iter = session.getCommodityIterator(); iter.hasNext(); ) {
-				Commodity commodity = (Commodity)iter.next();
-				writeObjectSafe(hd, commodity, "commodity", "net.sf.jmoney.commodity");
-			}
-
-			// Write the accounts
-			for (Iterator iter = session.getCapitalAccountIterator(); iter.hasNext(); ) {
-				Account account = (Account)iter.next();
-				writeObjectSafe(hd, account, "account", "net.sf.jmoney.account");
-				
-			}
-			for (Iterator iter = session.getIncomeExpenseAccountIterator(); iter.hasNext(); ) {
-				Account account = (Account)iter.next();
-				writeObjectSafe(hd, account, "account", "net.sf.jmoney.account");
-			}
-			
-			for (Iterator iter = session.getTransaxionIterator(); iter.hasNext(); ) {
-				Transaxion transaction = (Transaxion)iter.next();
-				writeObjectSafe(hd, transaction, "transaction", "net.sf.jmoney.transaction");
-			}
-		} else if (propertySet.getId().equals("net.sf.jmoney.capitalAccount")) {
-			Account account = (Account)object;
-			
-			for (Iterator iter = account.getSubAccountIterator(); iter.hasNext(); ) {
-				Account subAccount = (Account)iter.next();
-				writeObjectSafe(hd, subAccount, "subAccount", "net.sf.jmoney.capitalAccount");
-			}
-		} else if (propertySet.getId().equals("net.sf.jmoney.categoryAccount")) {
-			Account account = (Account)object;
-			
-			for (Iterator iter = account.getSubAccountIterator(); iter.hasNext(); ) {
-				Account subAccount = (Account)iter.next();
-				writeObjectSafe(hd, subAccount, "subAccount", "net.sf.jmoney.incomeExpenseAccount");
-			}
-		} else if (propertySet.getId().equals("net.sf.jmoney.transaction")) {
-			Transaxion transaction = (Transaxion)object;
-			
-			for (Iterator iter = transaction.getEntriesIterator(); iter.hasNext(); ) {
-				Entry entry = (Entry)iter.next();
-				writeObjectSafe(hd, entry, "entry", "net.sf.jmoney.entry");
-			}
-			
-		}
-
 		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			PropertySet propertySet2 = propertyAccessor.getPropertySet(); 
-			if (!propertySet2.isExtension()
-					|| object.getExtension(propertySet2) != null) {
-				String name = propertyAccessor.getLocalName();
-				Object value = object.getPropertyValue(propertyAccessor);
-				// No element means null value.
-				if (value != null) {
-					
-					atts.clear();
-
-					String idref = null;
-					if (propertyAccessor.getValueClass() == Currency.class) {
-						idref = ((Currency)value).getCode();
-					} else if (value instanceof Account) {
-						idref = (String)accountIdMap.get(value);
+			if (propertyAccessor.isList()) {
+				PropertySet propertySet2 = propertyAccessor.getPropertySet(); 
+				if (!propertySet2.isExtension()
+						|| object.getExtension(propertySet2) != null) {
+					String name = propertyAccessor.getLocalName();
+					for (Iterator elementIter = object.getPropertyIterator(propertyAccessor); elementIter.hasNext(); ) {
+						IExtendableObject listElement = (IExtendableObject)elementIter.next();
+						writeObjectSafe(hd, listElement, propertyAccessor.getLocalName(), propertyAccessor.getValueClass());
 					}
-					if (idref != null) {
-						atts.addAttribute("", "", "idref", "CDATA", idref);
-					}
-
-					String qName;
-					if (propertySet2.isExtension()) {
-						String namespacePrefix = (String)namespaceMap.get(propertySet2); 
-						qName = namespacePrefix + ":" + name;
-					} else {
-						qName = name;
-					}
-					hd.startElement("", "", qName, atts);
-
-					if (idref == null) {
-						String text;
-						if (value instanceof Date) {
-							Date date = (Date)value;
-							text = new Integer(date.getYear() + 1900).toString() + "."
-							+ new Integer(date.getMonth()).toString() + "."
-							+ new Integer(date.getDay()).toString();
-						} else {
-							text = value.toString();
+				}
+			}
+		}
+		
+		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+			if (propertyAccessor.isScalar()) {
+				PropertySet propertySet2 = propertyAccessor.getPropertySet(); 
+				if (!propertySet2.isExtension()
+						|| object.getExtension(propertySet2) != null) {
+					String name = propertyAccessor.getLocalName();
+					Object value = object.getPropertyValue(propertyAccessor);
+					// No element means null value.
+					if (value != null) {
+						
+						atts.clear();
+						
+						String idref = null;
+						if (propertyAccessor.getValueClass() == Currency.class) {
+							idref = ((Currency)value).getCode();
+						} else if (value instanceof Account) {
+							idref = (String)accountIdMap.get(value);
 						}
-						hd.characters(text.toCharArray(), 0, text.length());
+						if (idref != null) {
+							atts.addAttribute("", "", "idref", "CDATA", idref);
+						}
+						
+						String qName;
+						if (propertySet2.isExtension()) {
+							String namespacePrefix = (String)namespaceMap.get(propertySet2); 
+							qName = namespacePrefix + ":" + name;
+						} else {
+							qName = name;
+						}
+						hd.startElement("", "", qName, atts);
+						
+						if (idref == null) {
+							String text;
+							if (value instanceof Date) {
+								Date date = (Date)value;
+								text = new Integer(date.getYear() + 1900).toString() + "."
+								+ new Integer(date.getMonth()).toString() + "."
+								+ new Integer(date.getDay()).toString();
+							} else {
+								text = value.toString();
+							}
+							hd.characters(text.toCharArray(), 0, text.length());
+						}
+						
+						hd.endElement("", "", qName);
 					}
-
-					hd.endElement("", "", qName);
 				}
 			}
 		}
@@ -1423,7 +1301,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		} else if (propertySet.getId().equals("net.sf.jmoney.transaction")) {
 			Transaxion transaction = (Transaxion)object;
 			
-			for (Iterator iter = transaction.getEntriesIterator(); iter.hasNext(); ) {
+			for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
 				Entry entry = (Entry)iter.next();
 				writeObjectFast(bout, entry, "entry", "net.sf.jmoney.entry");
 			}
@@ -1542,7 +1420,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		for (Iterator iter = session.getTransaxionIterator(); iter.hasNext(); ) {
 			Transaxion transaction = (Transaxion)iter.next();
 			
-			for (Iterator entryIter = transaction.getEntriesIterator(); entryIter.hasNext(); ) {
+			for (Iterator entryIter = transaction.getEntryIterator(); entryIter.hasNext(); ) {
 				EntryImpl entry = (EntryImpl)entryIter.next();
 				
 				entry.setTransaxion(transaction);

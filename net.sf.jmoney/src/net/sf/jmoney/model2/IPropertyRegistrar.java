@@ -87,8 +87,29 @@ public interface IPropertyRegistrar {
 				String name, 
 				String shortDescription, 
 				double width, 
-				IPropertyControlFactory currencyControlFactory,
+				IPropertyControlFactory controlFactory,
 				Class editor, 
+				IPropertyDependency propertyDependency);
+		
+		/**
+		 * This method should be called if the property contains
+		 * a list of properties.  If an object contains a list
+		 * of properties then the object implementation must contain
+		 * a method of the form getFooIterator() that returns an
+		 * Iterator, where 'foo' is the name of the list property.   
+		 *
+		 * @param name
+		 * @param listItemClass The class for all items in the list.
+		 * 			Items in the list may be of a class derived from
+		 * 			this class.
+		 * @param shortDescription
+		 * @param width
+		 * @param propertyDependency
+		 */
+		PropertyAccessor addPropertyList(
+				String name,
+				String shortDescription, 
+				Class listItemClass,
 				IPropertyDependency propertyDependency);
 		
 		/**

@@ -274,6 +274,19 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 		}
 	}
 	
+	public Iterator getPropertyIterator(PropertyAccessor propertyAccessor) {
+		Object objectWithProperties = getPropertySetInterface(propertyAccessor.getPropertySet());
+		
+		try {
+			return  (Iterator)propertyAccessor.getTheGetMethod().invoke(objectWithProperties, null);
+		} catch (IllegalAccessException e) {
+			throw new MalformedPluginException("Method '" + propertyAccessor.getTheGetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' must be public.");
+		} catch (Exception e) {
+			// TODO:
+			return null;
+		}
+	}
+	
 	public void setPropertyValue(PropertyAccessor propertyAccessor, Object value) {
 		// The problem here is that the XML parser sets the properties directly in
 		// the object, without going through a mutable object.
@@ -285,6 +298,26 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 		Object parameters[] = {value};
 		try {
 			propertyAccessor.getTheSetMethod().invoke(objectWithProperties, parameters);
+		} catch (IllegalAccessException e) {
+			throw new MalformedPluginException("Method '" + propertyAccessor.getTheSetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' must be public.");
+		} catch (Exception e) {
+			throw new RuntimeException("An unexpected error occurred in ExtendableObjectHelperImpl.setPropertyValue");
+		}
+	}
+
+	// This method is used by datastore implementations to
+	// initialize the contents of a list property.
+	public void addPropertyValue(PropertyAccessor propertyAccessor, Object value) {
+		// The problem here is that the XML parser sets the properties directly in
+		// the object, without going through a mutable object.
+		// We cannot therefore rely on this object being mutable, so temporarily
+		// set this flag.
+		alwaysReturnNonNullExtensions = true;
+		Object objectWithProperties = getMutablePropertySetInterface(propertyAccessor.getPropertySet());
+		alwaysReturnNonNullExtensions = false;
+		Object parameters[] = {value};
+		try {
+			propertyAccessor.getTheAddMethod().invoke(objectWithProperties, parameters);
 		} catch (IllegalAccessException e) {
 			throw new MalformedPluginException("Method '" + propertyAccessor.getTheSetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' must be public.");
 		} catch (Exception e) {

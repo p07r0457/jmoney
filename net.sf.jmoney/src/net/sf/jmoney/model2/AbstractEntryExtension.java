@@ -25,6 +25,7 @@ package net.sf.jmoney.model2;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Iterator;
 
 /**
  *
@@ -183,6 +184,10 @@ public abstract class AbstractEntryExtension extends ExtensionPropertySet implem
         
         public String getStringPropertyValue(PropertyAccessor propertyAccessor) {
             return getStringPropertyValue(propertyAccessor);
+        }
+        
+        public Iterator getPropertyIterator(PropertyAccessor propertyAccessor) {
+            return entry.getPropertyIterator(propertyAccessor);
         }
         
         // TODO: check whether we need this method.

@@ -62,7 +62,7 @@ public class MutableTransaxionImpl extends ExtendableObjectHelperImpl implements
         
         this.date = transaction.getDate();
         
-        for (Iterator iter = transaction.getEntriesIterator(); iter.hasNext(); ) {
+        for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
             EntryImpl entry = (EntryImpl)iter.next();
             EntryImpl mutableEntry = new EntryImpl(this, entry);
             this.entries.add(mutableEntry);
@@ -98,7 +98,7 @@ public class MutableTransaxionImpl extends ExtendableObjectHelperImpl implements
         return date;
     }
 
-    public Iterator getEntriesIterator() {
+    public Iterator getEntryIterator() {
         return entries.iterator();
     }
 
@@ -196,6 +196,10 @@ public class MutableTransaxionImpl extends ExtendableObjectHelperImpl implements
             throw new RuntimeException("Double entry error");
         }
     }
-    
-    
+
+	// This method probably should not be here.  We can remove
+	// it is we provide a seperate interface for object initialization.
+	public void addEntry(Entry entry) {
+		throw new RuntimeException("internal error");
+	}
 }

@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.MutableCapitalAccount;
@@ -103,6 +104,8 @@ public class CapitalAccountInfo implements IExtensionPropertySetInfo {
 				}
 		};
 		
+		propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), CapitalAccount.class, null);
+
 		propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), 15.0, currencyControlFactory, null, null);
 		propertyRegistrar.addProperty("bank", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), 30.0, textControlFactory, null, null);
 		propertyRegistrar.addProperty("accountNumber", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), 15.0, textControlFactory, null, null);
