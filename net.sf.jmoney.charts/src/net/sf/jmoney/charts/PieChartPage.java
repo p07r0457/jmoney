@@ -45,11 +45,6 @@ import net.sf.jmoney.model2.Session;
 
 /**
  * @author Faucheux
- *
- * As each folder view will load its own instances of the extension classes,
- * and each folder view will only display the tab items for a single
- * object at any point of time, this class can cache the tab items
- * and re-use them for each selected object.
  */
 public class PieChartPage implements IBookkeepingPageListener {
 

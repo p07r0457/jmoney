@@ -66,15 +66,9 @@ import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
-import net.sf.jmoney.views.FolderView;
 
 /**
  * @author Nigel
- *
- * As each folder view will load its own instances of the extension classes,
- * and each folder view will only display the tab items for a single
- * object at any point of time, this class can cache the tab items
- * and re-use them for each selected object.
  */
 public class CategoryPage implements IBookkeepingPageListener {
 
@@ -243,7 +237,10 @@ public class CategoryPage implements IBookkeepingPageListener {
 		});
 		Menu menu = menuMgr.createContextMenu(viewer.getControl());
 		viewer.getControl().setMenu(menu);
+		
+/* How do we register context menus now that FolderView does not exist????		
 		FolderView.getDefault().getSite().registerContextMenu(menuMgr, viewer);
+*/		
 	}
 
 private void fillContextMenu(IMenuManager manager) {
