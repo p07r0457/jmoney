@@ -569,14 +569,14 @@ public class Session extends ExtendableObject implements IAdaptable {
         }
     }
 
-   	public boolean deleteTransaction(Transaction transaction) {
+   	public boolean deleteTransaction(final Transaction transaction) {
    		// Save the list of entries, because once the transaction
    		// is removed from the collection, neither the transactions
    		// nor the entries in it are in the database
    		// and we cannot iterate the entries.  The only methods
    		// that may be called after an object is removed from the 
    		// datastore are the equals and hashCode methods.
-   		Vector entriesInTransaction = new Vector();
+   		final Vector entriesInTransaction = new Vector();
     	for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
     		Entry entry = (Entry)iter.next();
     		entriesInTransaction.add(entry);
@@ -584,10 +584,10 @@ public class Session extends ExtendableObject implements IAdaptable {
     	
    		boolean found = transactions.remove(transaction);
 
-        // For efficiency, we keep a list of entries in each
-        // account/category.  We must update this list now.
         if (found) {
         	for (Iterator iter = entriesInTransaction.iterator(); iter.hasNext(); ) {
+                // For efficiency, we keep a list of entries in each
+                // account/category.  We must update this list now.
         		final Entry entry = (Entry)iter.next();
         		// TODO: at some time, keep these lists for categories too
         		Account category = entry.getAccount();
@@ -595,14 +595,33 @@ public class Session extends ExtendableObject implements IAdaptable {
         			((CapitalAccount)category).removeEntry(entry);
         		}
 
-        		// Send notification of the deletion of the entries.
-        		// This code is identical to the code in Transaction.deleteEntry().
-    			processObjectDeletion(TransactionInfo.getEntriesAccessor(), entry);
+        		// When deleting a transaction, we do not send notifications
+        		// of deletion of the entries inside the transaction.
+        		// To understand the reason for this, consider the account
+        		// entries list.  It is notified that an entry has been deleted.
+        		// It looks at the transaction to see what other entries are
+        		// in the transaction so it can update the entries list correctly.
+        		// However, the entire transaction has been deleted together
+        		// with the entries in it.  For the logic in the account entries list
+        		// to work, it would have to see the transaction with the remaining
+        		// entries each time an entry is deleted.  Also, it is not valid
+        		// to have a transaction with less than two entries, so we cannot
+        		// notify each object's removal and have each removal leave the
+        		// remaining objects in a valid state.
+        		
+        		// When it comes to the undo/redo change manager, however,
+        		// we must notify the change manager of each individual object
+        		// that is added or removed.
+        		// Notify the change manager.
+        		getSession().getChangeManager().processObjectDeletion(this, TransactionInfo.getEntriesAccessor(), entry);
+        		//processObjectDeletion(TransactionInfo.getEntriesAccessor(), entry);
 
     			// In addition to the generic object deletion event, we also fire an event
     			// specifically for entry deletion.  The entryDeleted event is superfluous 
     			// and it may be simpler if we removed it, so that listeners receive the generic
     			// objectDeleted event only.
+        		// This version is called when transactions are deleted, so
+        		// may be useful, but there is no current use.
     			getSession().fireEvent(
     		            	new ISessionChangeFirer() {
     		            		public void fire(SessionChangeListener listener) {
@@ -613,6 +632,17 @@ public class Session extends ExtendableObject implements IAdaptable {
         	}
         	
 			processObjectDeletion(SessionInfo.getTransactionsAccessor(), transaction);
+			
+			// Fire the special transaction deletion event.
+			// This event is useful because the list of entries
+			// that were in the transaction is provided.
+			getSession().fireEvent(
+	            	new ISessionChangeFirer() {
+	            		public void fire(SessionChangeListener listener) {
+	            			listener.transactionDeleted(transaction, entriesInTransaction);
+	            		}
+	           		});
+			
         }
         
         return found;

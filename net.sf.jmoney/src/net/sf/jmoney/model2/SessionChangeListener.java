@@ -23,6 +23,7 @@
 package net.sf.jmoney.model2;
 
 import java.util.EventListener;
+import java.util.Vector;
 
 /**
  * Listener interface for addition and deletion of <code>Entry</code>
@@ -105,5 +106,11 @@ public interface SessionChangeListener extends EventListener {
 	 * has been changed.
 	 */
     void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue);
+
+	/**
+	 * @param transaction
+	 * @param entriesInTransaction
+	 */
+	void transactionDeleted(Transaction oldTransaction, Vector entriesInTransaction);
 
 }

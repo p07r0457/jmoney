@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Vector;
+
 /**
  * Empty implementation of the SessionChangeListener interface.
  * Listeners implementing the SessionChangeListener interface may
@@ -85,6 +87,13 @@ public class SessionChangeAdapter implements SessionChangeListener {
     public void entryDeleted(Entry oldEntry) {
     }
 
+	/**
+	 * @param transaction
+	 * @param entriesInTransaction
+	 */
+	public void transactionDeleted(Transaction oldTransaction, Vector entriesInTransaction) {
+	}
+	
 	public void objectAdded(ExtendableObject extendableObject) {
 	}
 
