@@ -53,7 +53,7 @@ import org.eclipse.swt.widgets.Control;
  */
 public class CurrencyEditor implements IPropertyControl {
 
-    private CurrencyAccount fAccount;
+    private ExtendableObject extendableObject;
 
     private PropertyAccessor currencyPropertyAccessor;
 
@@ -94,15 +94,15 @@ public class CurrencyEditor implements IPropertyControl {
     }
 
     /**
-     * Load the control with the value from the given account.
+     * Load the control with the value from the given model object.
      */
-    public void load(ExtendableObject object) {
-        fAccount = (CurrencyAccount) object;
-
-    	if (object == null) {
+    public void load(ExtendableObject extendableObject) {
+    	this.extendableObject = extendableObject;
+    	
+    	if (extendableObject == null) {
             propertyControl.setText("");
     	} else {
-            Currency currency = (Currency) fAccount.getPropertyValue(currencyPropertyAccessor);
+            Currency currency = (Currency) extendableObject.getPropertyValue(currencyPropertyAccessor);
             propertyControl.setText(currency.getName() == null ? "" : currency.getName());
 
             // If the currency property being edited is the currency
@@ -113,11 +113,11 @@ public class CurrencyEditor implements IPropertyControl {
             // changes.  If so then this may be better implemented
             // using such an extension point.
             if (currencyPropertyAccessor == CurrencyAccountInfo.getCurrencyAccessor()) {
-                CurrencyAccount currencyAccount = (CurrencyAccount) fAccount;
+                CurrencyAccount currencyAccount = (CurrencyAccount) extendableObject;
                 propertyControl.setEnabled(!currencyAccount.hasEntries());
             }
     	}
-    	propertyControl.setEnabled(object != null);
+    	propertyControl.setEnabled(extendableObject != null);
     }
 
     /**
@@ -139,7 +139,7 @@ public class CurrencyEditor implements IPropertyControl {
         for (Iterator iter = JMoneyPlugin.getDefault().getSession().getCommodityIterator(); iter.hasNext();) {
             Commodity commodity = (Commodity) iter.next();
             if (commodity instanceof Currency && commodity.getName().equals(currencyName)) {
-                fAccount.setPropertyValue(currencyPropertyAccessor, (Currency) commodity);
+                extendableObject.setPropertyValue(currencyPropertyAccessor, (Currency) commodity);
             }
         }
     }

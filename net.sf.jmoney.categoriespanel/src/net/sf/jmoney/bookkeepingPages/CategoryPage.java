@@ -1,36 +1,36 @@
 /*
-*
-*  JMoney - A Personal Finance Manager
-*  Copyright (c) 2002 Johann Gyger <johann.gyger@switzerland.org>
-*  Copyright (c) 2004 Nigel Westbury <westbury@users.sourceforge.net>
-*
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with this program; if not, write to the Free Software
-*  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*
-*/
+ *
+ *  JMoney - A Personal Finance Manager
+ *  Copyright (c) 2002 Johann Gyger <johann.gyger@switzerland.org>
+ *  Copyright (c) 2004 Nigel Westbury <westbury@users.sourceforge.net>
+ *
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ */
 
 package net.sf.jmoney.bookkeepingPages;
 
 import java.util.Iterator;
+import java.util.Vector;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -47,16 +47,13 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.forms.editor.IFormPage;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 
 import net.sf.jmoney.Constants;
@@ -64,9 +61,15 @@ import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.categoriespanel.CategoriesPanelPlugin;
+import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.IPropertyDependency;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
@@ -74,157 +77,29 @@ import net.sf.jmoney.views.NodeEditor;
 import net.sf.jmoney.views.SectionlessPage;
 
 /**
- * @author Nigel
+ * @author Nigel Westbury
  */
 public class CategoryPage implements IBookkeepingPageFactory {
-
-    private static final String PAGE_ID = "net.sf.jmoney.categoriespanel.categories";
-
-	private TreeViewer viewer;
-//	private DrillDownAdapter drillDownAdapter;
-	private Action newAccountAction;
-	private Action newSubAccountAction;
-	private Action deleteAccountAction;
-
-	/**
-	 * The account for which the name in the name Text field
-	 * applies.  If selectedAccount is null then the  name
-	 * Text field should be disabled.
-	 */
-	private IncomeExpenseAccount selectedAccount = null;
 	
-	private Label nameLabel;
-	private Text nameField;
+	private static final String PAGE_ID = "net.sf.jmoney.categoriespanel.categories";
 	
-	private Session session;
-
+	
 	public void init(IMemento memento) {
 		// No view state to restore
 	}
-
+	
 	public void saveState(IMemento memento) {
 		// No view state to save
 	}
-
+	
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
 	public IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento) {
-		this.session = JMoneyPlugin.getDefault().getSession();
-
-		SectionlessPage formPage = new SectionlessPage(
+		SectionlessPage formPage = new CategoryFormPage(
 				editor,
-				PAGE_ID, 
-				CategoriesPanelPlugin.getResourceString("NavigationTreeModel.categories"), 
-				"Income and Expense Categories") {
-			
-			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
-				
-				/**
-				 * topLevelControl is a control with grid layout, 
-				 * onto which all sub-controls should be placed.
-				 */
-				Composite topLevelControl = new Composite(parent, SWT.NULL);
-				
-				GridLayout layout = new GridLayout();
-				layout.numColumns = 2;
-				topLevelControl.setLayout(layout);
-				
-				viewer = new TreeViewer(topLevelControl, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-
-				GridData gridData = new GridData();
-				gridData.horizontalAlignment = GridData.FILL;
-				gridData.verticalAlignment = GridData.FILL;
-				gridData.grabExcessHorizontalSpace = true;
-				gridData.grabExcessVerticalSpace = true;
-				gridData.horizontalSpan = 2;
-				viewer.getControl().setLayoutData(gridData);
-				
-//				drillDownAdapter = new DrillDownAdapter(viewer);
-				ViewContentProvider contentProvider = new ViewContentProvider();
-				viewer.setContentProvider(contentProvider);
-				viewer.setLabelProvider(new ViewLabelProvider());
-				viewer.setSorter(new NameSorter());
-				
-				viewer.setInput(session);
-				
-				// Listen for changes to the category list.
-				JMoneyPlugin.getDefault().addSessionChangeListener(listener);
-//				viewer.expandAll();
-				
-				// Listen for changes in the selection and update the 
-				// folder view.
-				// TODO: figure out how to get the folder view dynamically.
-				// The static getter is not such a clean interface.
-				viewer.addSelectionChangedListener(new ISelectionChangedListener() {
-					public void selectionChanged(SelectionChangedEvent event) {
-						// if the selection is empty clear the label
-						if(event.getSelection().isEmpty()) {
-							selectedAccount = null;
-							nameField.setText("");
-							nameField.setEnabled(false);
-						} else if(event.getSelection() instanceof IStructuredSelection) {
-							IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-							for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-								Object selectedObject = iterator.next();
-								if (selectedObject instanceof IncomeExpenseAccount) {
-									selectedAccount = (IncomeExpenseAccount)selectedObject;
-									// TODO: We should really get a lock on the account object
-									// now.  This ensures we have an edit lock on the account
-									// before the user edits the field.  The field should be
-									// disabled if someone else has the account locked for edit.
-									nameField.setText(selectedAccount.getName());
-									nameField.setEnabled(true);
-								} else {
-									selectedAccount = null;
-									nameField.setText("");
-									nameField.setEnabled(false);
-								}
-								break;
-							}
-						}
-					}
-				});
-				
-				nameLabel = new Label(topLevelControl, 0);
-				nameLabel.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.name"));
-				
-				nameField = new Text(topLevelControl, 0);
-				nameField.setText("");
-				nameField.setEnabled(false);
-
-				nameField.addKeyListener(new KeyAdapter() {
-					public void keyPressed(KeyEvent e) {
-						if (e.keyCode == 13) {
-							updateCategory();
-						}
-					}
-				});
-				nameField.addFocusListener(new FocusAdapter() {
-					public void focusLost(FocusEvent e) {
-						updateCategory();
-					}
-				});
-
-				GridData gridData5 = new GridData();
-				gridData.horizontalAlignment = GridData.FILL;
-				gridData5.grabExcessHorizontalSpace = true;
-				nameField.setLayoutData(gridData5);
-
-				// Set up the context menus.
-				makeActions();
-				hookContextMenu();
-				
-				return topLevelControl;
-			}
-
-			public void saveState(IMemento memento) {
-				// We could save the current category selection
-				// and the expand/collapse state of each node
-				// but it is not worthwhile.
-			}
-		};
-
+				PAGE_ID);
+		
 		try {
 			editor.addPage(formPage);
 		} catch (PartInitException e) {
@@ -234,116 +109,393 @@ public class CategoryPage implements IBookkeepingPageFactory {
 		
 		return formPage;
 	}
-
-	private void updateCategory() {
-		if (selectedAccount == null) {
-			throw new RuntimeException("selected account null when it should not be null.");
+	
+	private class CategoryFormPage extends SectionlessPage {
+		private TreeViewer viewer;
+		//	private DrillDownAdapter drillDownAdapter;
+		private Action newAccountAction;
+		private Action newSubAccountAction;
+		private Action deleteAccountAction;
+		
+		/**
+		 * The account whose property values are in the edit controls below.
+		 * If selectedAccount is null then the property controls should
+		 * should be disabled.
+		 */
+		private IncomeExpenseAccount selectedAccount = null;
+		
+		private Session session;
+		
+		private class PropertyControls {
+			
+			private PropertyAccessor propertyAccessor;
+			private Label propertyLabel;
+			private IPropertyControl propertyControl;
+			
+			PropertyControls(PropertyAccessor propertyAccessor, 
+					Label propertyLabel,
+					IPropertyControl propertyControl) {
+				this.propertyAccessor = propertyAccessor;
+				this.propertyLabel = propertyLabel;
+				this.propertyControl = propertyControl;
+			}
+			
+			void load(ExtendableObject object) {
+				IPropertyDependency dependency = propertyAccessor.getDependency();
+				if (dependency != null) {
+					boolean isApplicable = dependency.isSelected(selectedAccount);
+					if (isApplicable) {
+						propertyControl.load(object);
+					}
+					propertyLabel.setVisible(isApplicable);
+					propertyControl.getControl().setVisible(isApplicable);
+				} else {
+					propertyControl.load(object);
+				}
+			}
+			
+			/**
+			 * Called whenever a property changes.
+			 * The visability of all property controls with dependencies are updated. 
+			 */
+			public void setVisibility() {
+				IPropertyDependency dependency = propertyAccessor.getDependency();
+				if (dependency != null) {
+					boolean isApplicable = dependency.isSelected(selectedAccount);
+					propertyLabel.setVisible(isApplicable);
+					propertyControl.getControl().setVisible(isApplicable);
+					
+					// We don't load controls if the property does not apply.
+					// That is probably not the correct thing to do, but until
+					// it is designed better, that means we must load now.
+					if (isApplicable) {
+						propertyControl.load(selectedAccount);
+					}
+				}
+			}
 		}
 		
-//		try {
-			((IncomeExpenseAccount)selectedAccount).setName(nameField.getText());
-			session.registerUndoableChange("rename category");
-//			} catch (ObjectLockedForEditException e) {
-			// The edit could not be made because someone else is editing
-			// the properties of this category.
-			// TODO: deal with this properly.  Should be control be
-			// disabled, or should the user be told some other way
-			// that the properties cannot be changed?
-//		}
-	}
-	
-	private void hookContextMenu() {
-		MenuManager menuMgr = new MenuManager("#PopupMenu");
-		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			public void menuAboutToShow(IMenuManager manager) {
-				CategoryPage.this.fillContextMenu(manager);
-			}
-		});
-		Menu menu = menuMgr.createContextMenu(viewer.getControl());
-		viewer.getControl().setMenu(menu);
+		/**
+		 * List of the PropertyControls objects for the
+		 * properties that can be edited in this panel.
+		 * element: PropertyControls
+		 */
+		Vector propertyList = new Vector();
 		
-/* How do we register context menus now that FolderView does not exist????		
-		FolderView.getDefault().getSite().registerContextMenu(menuMgr, viewer);
-*/		
-	}
-
-private void fillContextMenu(IMenuManager manager) {
-		manager.add(newAccountAction);
-		manager.add(newSubAccountAction);
-		manager.add(deleteAccountAction);
-		manager.add(new Separator());
-		// Other plug-ins can contribute there actions here
-		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
-	}
-	
-private void makeActions() {
-	newAccountAction = new Action() {
-		public void run() {
-			Session session = JMoneyPlugin.getDefault().getSession();
-	        
-	        IncomeExpenseAccount account = (IncomeExpenseAccount)session.createAccount(IncomeExpenseAccountInfo.getPropertySet());
-	        account.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-			session.registerUndoableChange("add new category");
-	        
-	        // Having added the new account, set it as the selected
-	        // account in the tree viewer.
-	        viewer.setSelection(new StructuredSelection(account), true);
-		}
-	};
-	newAccountAction.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-	newAccountAction.setToolTipText("New category tooltip");
-//	newAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-//			getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
-
-	newSubAccountAction = new Action() {
-		public void run() {
-			Session session = JMoneyPlugin.getDefault().getSession();
-			IncomeExpenseAccount account = null;
-			IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-			for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-				Object selectedObject = iterator.next();
-				account = (IncomeExpenseAccount)selectedObject;
-				break;
+		private SessionChangeListener listener =
+			new SessionChangeAdapter() {
+			public void sessionReplaced(Session oldSession, Session newSession) {
+				// When the session is replaced, this view will be disposed
+				// and possibly re-built, so do nothing here.
 			}
-			if (account != null) {
-				IncomeExpenseAccount subAccount = (IncomeExpenseAccount)((IncomeExpenseAccount)account).createSubAccount();
-				subAccount.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-				session.registerUndoableChange("add new category");
+			
+			public void accountAdded(Account newAccount) {
+				if (newAccount instanceof IncomeExpenseAccount) {
+					Account parent = newAccount.getParent();
+					if (parent == null) {
+						viewer.refresh(session, false);
+					} else {
+						viewer.refresh(parent, false);
+					}
+				}
+			}
+			
+			public void accountDeleted(Account oldAccount) {
+				if (oldAccount instanceof IncomeExpenseAccount) {
+					Account parent = oldAccount.getParent();
+					if (parent == null) {
+						viewer.refresh(session, false);
+					} else {
+						viewer.refresh(parent, false);
+					}
+				}
+			}
+			
+			public void accountChanged(Account account, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+				if (account instanceof IncomeExpenseAccount
+						&& propertyAccessor == AccountInfo.getNameAccessor()) {
+					Account parent = account.getParent();
+					// We refresh the parent node because the name change
+					// in this node may affect the order of the child nodes.
+					if (parent == null) {
+						viewer.refresh(session, true);
+					} else {
+						viewer.refresh(parent, true);
+					}
+				}
 				
-				// Having added the new account, set it as the selected
-				// account in the tree viewer.
-				viewer.setSelection(new StructuredSelection(subAccount), true);
+				if (account.equals(selectedAccount)) {
+					// Update the visibility of controls.
+					for (Iterator iter = propertyList.iterator(); iter.hasNext(); ) {
+						PropertyControls propertyControls = (PropertyControls)iter.next();
+						propertyControls.setVisibility();
+					}
+				}
 			}
+		};
+		
+		CategoryFormPage(
+				NodeEditor editor,
+				String pageId) {
+			super(editor,
+					pageId, 
+					CategoriesPanelPlugin.getResourceString("NavigationTreeModel.categories"), 
+			"Income and Expense Categories");
+			
+			this.session = JMoneyPlugin.getDefault().getSession();
 		}
-	};
-	newSubAccountAction.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.newSubcategory"));
-	newSubAccountAction.setToolTipText("New category tooltip");
-//	newSubAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-//			getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
-
-	deleteAccountAction = new Action() {
-		public void run() {
-			Session session = JMoneyPlugin.getDefault().getSession();
-			IncomeExpenseAccount account = null;
-			IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-			for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-				Object selectedObject = iterator.next();
-				account = (IncomeExpenseAccount)selectedObject;
-				break;
+		
+		public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
+			
+			/**
+			 * topLevelControl is a control with grid layout, 
+			 * onto which all sub-controls should be placed.
+			 */
+			Composite topLevelControl = new Composite(parent, SWT.NULL);
+			
+			GridLayout layout = new GridLayout();
+			layout.numColumns = 2;
+			topLevelControl.setLayout(layout);
+			
+			viewer = new TreeViewer(topLevelControl, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+			
+			GridData gridData = new GridData();
+			gridData.horizontalAlignment = GridData.FILL;
+			gridData.verticalAlignment = GridData.FILL;
+			gridData.grabExcessHorizontalSpace = true;
+			gridData.grabExcessVerticalSpace = true;
+			gridData.horizontalSpan = 2;
+			viewer.getControl().setLayoutData(gridData);
+			
+			//		drillDownAdapter = new DrillDownAdapter(viewer);
+			ViewContentProvider contentProvider = new ViewContentProvider();
+			viewer.setContentProvider(contentProvider);
+			viewer.setLabelProvider(new ViewLabelProvider());
+			viewer.setSorter(new NameSorter());
+			
+			viewer.setInput(session);
+			
+			// Listen for changes to the category list.
+			JMoneyPlugin.getDefault().addSessionChangeListener(listener);
+			//		viewer.expandAll();
+			
+			// Listen for changes in the selection and update the 
+			// edit controls.
+			viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+				public void selectionChanged(SelectionChangedEvent event) {
+					// If a selection already selected, commit any changes
+					if (selectedAccount != null) {
+						session.registerUndoableChange("change category properties");
+					}
+					
+					// Set the new selection
+					if(event.getSelection().isEmpty()) {
+						selectedAccount = null;
+					} else if(event.getSelection() instanceof IStructuredSelection) {
+						IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+						for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
+							Object selectedObject = iterator.next();
+							if (selectedObject instanceof IncomeExpenseAccount) {
+								selectedAccount = (IncomeExpenseAccount)selectedObject;
+							} else {
+								selectedAccount = null;
+							}
+							break;
+						}
+					}
+					
+					// Set the values from the account object into the control fields,
+					// or disable the controls if the account is null.
+					for (Iterator iter = propertyList.iterator(); iter.hasNext(); ) {
+						PropertyControls propertyControls = (PropertyControls)iter.next();
+						
+						propertyControls.load(selectedAccount);
+					}
+				}
+			});
+			
+			// Add the properties for category.
+			PropertySet extendablePropertySet = IncomeExpenseAccountInfo.getPropertySet();
+			for (Iterator iter = extendablePropertySet.getPropertyIterator3(); iter.hasNext(); ) {
+				final PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+				if (propertyAccessor.isScalar()) {
+					final Label propertyLabel = new Label(topLevelControl, 0);
+					propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
+					final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(topLevelControl);
+					propertyControl.getControl().addFocusListener(
+							new FocusAdapter() {
+								
+								// When a control gets the focus, save the old value here.
+								// This value is used in the change message.
+								String oldValueText;
+								
+								public void focusLost(FocusEvent e) {
+									System.out.println("Focus lost: " + propertyAccessor.getLocalName());
+									
+									if (session.isSessionFiring()) {
+										return;
+									}
+									
+									propertyControl.save();
+									String newValueText = propertyAccessor.formatValueForMessage(
+											selectedAccount);
+									
+									String description;
+									if (propertyAccessor == AccountInfo.getNameAccessor()) {
+										description = 
+											"rename account from " + oldValueText
+											+ " to " + newValueText;
+									} else {
+										description = 
+											"change " + propertyAccessor.getShortDescription() + " property"
+											+ " in '" + selectedAccount.getName() + "' account"
+											+ " from " + oldValueText
+											+ " to " + newValueText;
+									}
+									session.registerUndoableChange(description);
+								}
+								public void focusGained(FocusEvent e) {
+									System.out.println("Focus gained: " + propertyAccessor.getLocalName());
+									// Save the old value of this property for use in our 'undo' message.
+									oldValueText = propertyAccessor.formatValueForMessage(
+											selectedAccount);
+								}
+							});
+					
+					// No account is initially set.  It is not really
+					// obvious in what state the controls should be when no
+					// account is set, so let's leave any that could be
+					// inapplicable as invisible, and the others visible
+					// but disabled.
+					if (propertyAccessor.getDependency() != null) {
+						propertyLabel.setVisible(false);
+						propertyControl.getControl().setVisible(false);
+					}
+					
+					// Add to our list of controls.
+					propertyList.add(
+							new PropertyControls(propertyAccessor, propertyLabel, propertyControl));
+					
+					toolkit.adapt(propertyLabel, false, false);
+					toolkit.adapt(propertyControl.getControl(), true, true);
+					
+					// Make the control take up the full width
+					GridData gridData5 = new GridData();
+					gridData.horizontalAlignment = GridData.FILL;
+					gridData5.grabExcessHorizontalSpace = true;
+					propertyControl.getControl().setLayoutData(gridData5);
+					
+					// Set the control to have no account set (control
+					// is disabled)
+					propertyControl.load(null);
+				}
 			}
-			if (account != null) {
-				session.deleteAccount(account);
-			}
+			
+			
+			// Set up the context menus.
+			makeActions();
+			hookContextMenu(fEditor.getSite());
+			
+			return topLevelControl;
 		}
+		
+		public void saveState(IMemento memento) {
+			// We could save the current category selection
+			// and the expand/collapse state of each node
+			// but it is not worthwhile.
+		}
+
+		private void hookContextMenu(IWorkbenchPartSite site) {
+			MenuManager menuMgr = new MenuManager("#PopupMenu");
+			menuMgr.setRemoveAllWhenShown(true);
+			menuMgr.addMenuListener(new IMenuListener() {
+				public void menuAboutToShow(IMenuManager manager) {
+					CategoryFormPage.this.fillContextMenu(manager);
+				}
+			});
+			Menu menu = menuMgr.createContextMenu(viewer.getControl());
+			viewer.getControl().setMenu(menu);
+			
+			site.registerContextMenu(menuMgr, viewer);
+		}
+		
+		private void fillContextMenu(IMenuManager manager) {
+			manager.add(newAccountAction);
+			manager.add(newSubAccountAction);
+			manager.add(deleteAccountAction);
+			manager.add(new Separator());
+			// Other plug-ins can contribute their actions here
+			manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
+		}
+		
+		private void makeActions() {
+			newAccountAction = new Action() {
+				public void run() {
+					Session session = JMoneyPlugin.getDefault().getSession();
+					
+					IncomeExpenseAccount account = (IncomeExpenseAccount)session.createAccount(IncomeExpenseAccountInfo.getPropertySet());
+					account.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
+					session.registerUndoableChange("add new category");
+					
+					// Having added the new account, set it as the selected
+					// account in the tree viewer.
+					viewer.setSelection(new StructuredSelection(account), true);
+				}
+			};
+			newAccountAction.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
+			newAccountAction.setToolTipText("New category tooltip");
+			//	newAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
+			//			getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+			
+			newSubAccountAction = new Action() {
+				public void run() {
+					Session session = JMoneyPlugin.getDefault().getSession();
+					IncomeExpenseAccount account = null;
+					IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+					for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
+						Object selectedObject = iterator.next();
+						account = (IncomeExpenseAccount)selectedObject;
+						break;
+					}
+					if (account != null) {
+						IncomeExpenseAccount subAccount = (IncomeExpenseAccount)((IncomeExpenseAccount)account).createSubAccount();
+						subAccount.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
+						session.registerUndoableChange("add new category");
+						
+						// Having added the new account, set it as the selected
+						// account in the tree viewer.
+						viewer.setSelection(new StructuredSelection(subAccount), true);
+					}
+				}
+			};
+			newSubAccountAction.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.newSubcategory"));
+			newSubAccountAction.setToolTipText("New category tooltip");
+			//	newSubAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
+			//			getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+			
+			deleteAccountAction = new Action() {
+				public void run() {
+					Session session = JMoneyPlugin.getDefault().getSession();
+					IncomeExpenseAccount account = null;
+					IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+					for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
+						Object selectedObject = iterator.next();
+						account = (IncomeExpenseAccount)selectedObject;
+						break;
+					}
+					if (account != null) {
+						session.deleteAccount(account);
+					}
+				}
+			};
+			deleteAccountAction.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.deleteCategory"));
+			deleteAccountAction.setToolTipText("Delete category tooltip");
+			//	deleteAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
+			//		getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+		}
+		
 	};
-	deleteAccountAction.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.deleteCategory"));
-	deleteAccountAction.setToolTipText("Delete category tooltip");
-//	deleteAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-//		getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
-}
-
-
+	
 	class ViewContentProvider implements IStructuredContentProvider, 
 	ITreeContentProvider {
 		/**
@@ -352,7 +504,7 @@ private void makeActions() {
 		 * their data from the model.  The accountsNode object does this.
 		 */
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-//			The input never changes so we don't do anything here.
+			//			The input never changes so we don't do anything here.
 		}
 		public void dispose() {
 		}
@@ -363,7 +515,7 @@ private void makeActions() {
 			if (child instanceof Account) {
 				Account parent = ((Account)child).getParent();
 				if (parent == null) {
-					return session;
+					return ((Account)child).getSession();
 				} else {
 					return parent;
 				}
@@ -374,7 +526,7 @@ private void makeActions() {
 		public Object [] getChildren(Object parent) {
 			// TODO: The nodes are not currently ordered, but they
 			// should be.  
-
+			
 			Iterator iter;
 			if (parent instanceof Session) {
 				iter = ((Session)parent).getIncomeExpenseAccountIterator();
@@ -431,47 +583,5 @@ private void makeActions() {
 	
 	class NameSorter extends ViewerSorter {
 	}
-	
-	private SessionChangeListener listener =
-		new SessionChangeAdapter() {
-		public void sessionReplaced(Session oldSession, Session newSession) {
-			// When the session is replaced, this view will be disposed
-			// and possibly re-built, so do nothing here.
-		}
-		public void accountAdded(Account newAccount) {
-			if (newAccount instanceof IncomeExpenseAccount) {
-				Account parent = newAccount.getParent();
-				if (parent == null) {
-					viewer.refresh(session, false);
-				} else {
-					viewer.refresh(parent, false);
-				}
-			}
-		}
-		public void accountDeleted(Account oldAccount) {
-			if (oldAccount instanceof IncomeExpenseAccount) {
-				Account parent = oldAccount.getParent();
-				if (parent == null) {
-					viewer.refresh(session, false);
-				} else {
-					viewer.refresh(parent, false);
-				}
-			}
-		}
-		public void accountChange(PropertyChangeEvent event) {
-			if (event.getSource() instanceof IncomeExpenseAccount
-					&& event.getProperty().equals("name")) {
-				IncomeExpenseAccount account = (IncomeExpenseAccount)event.getSource();
-				Account parent = account.getParent();
-				// We refresh the parent node because the name change
-				// in this node may affect the order of the child nodes.
-				if (parent == null) {
-					viewer.refresh(session, true);
-				} else {
-					viewer.refresh(parent, true);
-				}
-			}
-		}
-	};
 	
 }

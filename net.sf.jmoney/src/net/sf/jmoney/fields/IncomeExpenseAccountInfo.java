@@ -43,7 +43,7 @@ import net.sf.jmoney.model2.PropertySet;
  * including oneself), these are registered through the same extension
  * point that plug-ins must also use to register their properties.
  * 
- * @author Nigel
+ * @author Nigel Westbury
  */
 public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
@@ -64,11 +64,11 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
 		subAccountAccessor = propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccount.class, null);
 
-		multiCurrencyAccessor = propertyRegistrar.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), 5.0, new CheckBoxControlFactory(), null);
-		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), 15.0, new CurrencyControlFactory(), null);
+		multiCurrencyAccessor = propertyRegistrar.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.multiCurrency"), 5.0, new CheckBoxControlFactory(), null);
+		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), 15.0, new CurrencyControlFactory(), multiCurrencyAccessor.getFalseValueDependency());
 		
 		// We should define something for the implied enumerated value
-		// that is controlled by the derived class type.  This has no
+		// that is controlled by the derived class type.  This has not
 		// been designed yet, so for time being we have nothing to do.
 		
 		propertyRegistrar.setObjectDescription("Income or Expense Category");

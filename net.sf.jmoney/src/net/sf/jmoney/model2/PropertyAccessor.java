@@ -284,4 +284,32 @@ public interface PropertyAccessor {
 	 * @param i
 	 */
 	void setIndexIntoScalarProperties(int indexIntoScalarIndex);
+
+	/**
+	 * Create a dependency that can be used when the applicability of another
+	 * property depends on this property.
+	 * 
+	 * This method may only be called if this property is a boolean property.
+	 * 
+	 * @return
+	 */
+	IPropertyDependency getTrueValueDependency();
+
+	/**
+	 * Create a dependency that can be used when the applicability of another
+	 * property depends on this property.
+	 * 
+	 * This method may only be called if this property is a boolean property.
+	 * 
+	 * @return
+	 */
+	IPropertyDependency getFalseValueDependency();
+
+	/**
+	 * Returns an object that indicates whether this property is applicable,
+	 * given the values of other properties on which this property depends.
+	 * 
+	 * @return
+	 */
+	IPropertyDependency getDependency();
 }

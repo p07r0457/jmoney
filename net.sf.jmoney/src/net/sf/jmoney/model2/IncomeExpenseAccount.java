@@ -25,7 +25,6 @@ package net.sf.jmoney.model2;
 
 import java.util.Map;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 
 /**
@@ -106,11 +105,30 @@ public class IncomeExpenseAccount extends Account {
 	}
 	
 	public void setMultiCurrency(boolean multiCurrency) {
+        boolean oldMultiCurrency = this.multiCurrency;
 		this.multiCurrency = multiCurrency;
+
+		// When turning off multi-currency, we must set an appropriate 
+		// currency.
+		if (!multiCurrency && currency == null) {
+			// TODO: Look at the entries in the account and set the
+			// account as appropriate.
+			// For time being, set to default currency.
+			currency = getSession().getDefaultCurrency();
+		}
+		
+		// Notify the change manager.
+		processPropertyChange(IncomeExpenseAccountInfo.getMultiCurrencyAccessor(), new Boolean(oldMultiCurrency), new Boolean(multiCurrency));
+		
+		
 	}
 	
 	public void setCurrency(Currency currency) {
+        Currency oldCurrency = this.currency;
 		this.currency = currency;
+
+		// Notify the change manager.
+		processPropertyChange(IncomeExpenseAccountInfo.getCurrencyAccessor(), oldCurrency, currency);
 	}
 	
 	/**

@@ -75,7 +75,6 @@ public interface IPropertyRegistrar {
 			Class derivedClass);
 	
 	/**
-	 * @param location Entry, CapitalAccount, Commodity or Transaction
 	 * @param name
 	 * @param displayName localized description of the property
 	 * @param width
@@ -97,11 +96,10 @@ public interface IPropertyRegistrar {
 	 * Iterator, where 'foo' is the name of the list property.   
 	 *
 	 * @param name
+	 * @param shortDescription
 	 * @param listItemClass The class for all items in the list.
 	 * 			Items in the list may be of a class derived from
 	 * 			this class.
-	 * @param shortDescription
-	 * @param width
 	 * @param propertyDependency
 	 */
 	PropertyAccessor addPropertyList(

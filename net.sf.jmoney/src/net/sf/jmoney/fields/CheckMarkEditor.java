@@ -22,12 +22,13 @@
 
 package net.sf.jmoney.fields;
 
-import net.sf.jmoney.VerySimpleDateFormat;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -49,6 +50,17 @@ public class CheckMarkEditor implements IPropertyControl {
     public CheckMarkEditor(Composite parent, PropertyAccessor propertyAccessor) {
         fPropertyControl = new Button(parent, SWT.CHECK);
         fPropertyAccessor = propertyAccessor;
+
+        // Selection changes are reflected immediately in the
+        // datastore.  This allows controls for other properties,
+        // which may depend on this property, to be immediately made
+        // visible or invisible.
+
+        fPropertyControl.addSelectionListener(new SelectionAdapter() {
+            public void widgetSelected(SelectionEvent e) {
+                save();
+            }
+        });
     }
 
     /* (non-Javadoc)

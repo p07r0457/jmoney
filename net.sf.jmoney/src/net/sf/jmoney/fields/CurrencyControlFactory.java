@@ -22,11 +22,18 @@
 
 package net.sf.jmoney.fields;
 
+import java.util.Date;
+import java.util.Iterator;
+import java.util.Vector;
+
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.Session;
 
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ComboBoxCellEditor;
@@ -46,18 +53,31 @@ public class CurrencyControlFactory implements IPropertyControlFactory {
     }
 
 	public CellEditor createCellEditor(Table table) {
-		// TODO Complete this
-		String[] items = {"currency 1", "currency 2"};
-		return new ComboBoxCellEditor(table, items);
+        Session session = JMoneyPlugin.getDefault().getSession();
+
+        Vector items = new Vector();
+        for (Iterator iter = session.getCommodityIterator(); iter.hasNext();) {
+            Commodity commodity = (Commodity) iter.next();
+            if (commodity instanceof Currency) {
+                items.add(commodity.getName());
+            }
+        }
+
+		return new ComboBoxCellEditor(table, (String[])items.toArray(new String[0]));
 	}
 
 	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+        Currency currency = (Currency) extendableObject.getPropertyValue(propertyAccessor);
 		// TODO complete this.
-		return new Integer(0);
+        int index = 0;
+		return new Integer(index);
 	}
 
 	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
+		int index = ((Integer)value).intValue();
 		// TODO complete this.
+		Currency currency = null;
+        extendableObject.setPropertyValue(propertyAccessor, currency);
 	}
 
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {

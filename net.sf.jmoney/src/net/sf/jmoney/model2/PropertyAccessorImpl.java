@@ -90,6 +90,8 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 	 * Index into the array of scalar properties.
 	 */
 	private int indexIntoScalarProperties = -1;
+
+	private IPropertyDependency dependency;
 	
     public PropertyAccessorImpl(PropertySet propertySet, String localName, String shortDescription, double width, IPropertyControlFactory propertyControlFactory, IPropertyDependency propertyDependency) {
     	this.propertySet = propertySet;
@@ -98,6 +100,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         this.width = width;
         this.sortable = true;
         this.propertyControlFactory = propertyControlFactory;
+        this.dependency = propertyDependency;
         
         isList = false;
        
@@ -295,7 +298,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 			theSetMethod.invoke(invocationTarget, parameters);
 		} catch (InvocationTargetException e) {
 			// TODO Process this properly
-			e.printStackTrace();
+			e.getCause().printStackTrace();
 			throw new RuntimeException("Plugin error");
 		} catch (Exception e) {
 			// IllegalAccessException and IllegalArgumentException exceptions should
@@ -557,6 +560,45 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 
 	public void setIndexIntoScalarProperties(int indexIntoScalarProperties) {
 		this.indexIntoScalarProperties = indexIntoScalarProperties;
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.model2.PropertyAccessor#getTrueValueDependency()
+	 */
+	// TODO: Should this be a member of PropertyAssessor, or should it
+	// be outside?????
+	public IPropertyDependency getTrueValueDependency() {
+		if (propertyClass != boolean.class) {
+			throw new MalformedPluginException("getTrueValueDependency called on property that is not a boolean.");
+		}
+		
+		return new IPropertyDependency() {
+			public boolean isSelected(ExtendableObject object) {
+				return object.getBooleanPropertyValue(PropertyAccessorImpl.this);
+			}
+		};
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.model2.PropertyAccessor#getFalseValueDependency()
+	 */
+	public IPropertyDependency getFalseValueDependency() {
+		if (propertyClass != boolean.class) {
+			throw new MalformedPluginException("getTrueValueDependency called on property that is not a boolean.");
+		}
+		
+		return new IPropertyDependency() {
+			public boolean isSelected(ExtendableObject object) {
+				return !object.getBooleanPropertyValue(PropertyAccessorImpl.this);
+			}
+		};
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.model2.PropertyAccessor#getDependency()
+	 */
+	public IPropertyDependency getDependency() {
+		return dependency;
 	}
 
 }

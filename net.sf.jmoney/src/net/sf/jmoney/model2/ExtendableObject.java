@@ -313,6 +313,10 @@ public abstract class ExtendableObject {
         return ((Character)getPropertyValue(propertyAccessor)).charValue();
     }
     
+    public boolean getBooleanPropertyValue(PropertyAccessor propertyAccessor) {
+        return ((Boolean)getPropertyValue(propertyAccessor)).booleanValue();
+    }
+    
     /**
      * Returns the value of a given property.
      * <P>
