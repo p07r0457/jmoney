@@ -43,6 +43,15 @@
    </extension>
 
    <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            name="JDBC Connection"
+            class="net.sf.jmoney.jdbcdatastore.PreferencePage"
+            id="net.sf.jmoney.jdbcdatastore.preferencepage">
+      </page>
+   </extension>
+
+   <extension
          point="org.eclipse.ui.elementFactories">
         <factory 
            id ="net.sf.jmoney.jdbcdatastore.SessionFactory" 
