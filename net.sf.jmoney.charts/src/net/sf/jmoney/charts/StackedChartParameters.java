@@ -8,6 +8,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Button;
 import org.jfree.data.time.RegularTimePeriod;
 
 /**
@@ -22,8 +24,9 @@ public class StackedChartParameters {
     public int maxLevel = 1;
     
     // Frequences of the dataes
-    public static final int MONTH = 0;
-    public static final int YEAR  = 1;
+    public static final int DAY = 0;
+    public static final int MONTH = 1;
+    public static final int YEAR  = 2;
     public int frequence = YEAR;
     
     // Contructor for the Object which represents the choosen TimePeriod: Month, Year...
@@ -123,5 +126,11 @@ public class StackedChartParameters {
             e.printStackTrace();
         }
         return re;
+    }
+    /**
+     * @param maxLevel The maxLevel to set.
+     */
+    public void setMaxLevel(int maxLevel) {
+        this.maxLevel = maxLevel;
     }
 }

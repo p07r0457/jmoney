@@ -60,11 +60,9 @@ public class StackedChartPage implements IBookkeepingPageFactory {
     private static final String PAGE_ID = "net.sf.jmoney.charts.lineChart";
     private Session session;
     private Tree tree;
-    private Text fromDate, toDate;
+    private Text fromDate, toDate, maxLevel;
     private final DateFormat df;
-    private Button chkDaily, chkAverage30, chkAverage120, chkAverage365;
-    private Button chkWithSubaccounts;
-    private Button radSaldoAbsolut, radSaldoRelativ, radMouvement;
+    private Button radPeriodDay, radPeriodMonth, radPeriodYear;
     
     /**
      * Constructor
@@ -99,9 +97,9 @@ public class StackedChartPage implements IBookkeepingPageFactory {
 	    Composite parameterContainer = new  Composite(swingComposite, SWT.EMBEDDED);
 	    parameterContainer.setLayout(new FillLayout(SWT.VERTICAL));
 	    
-	    Group typeGroup = new Group(parameterContainer, SWT.NULL);
-	    typeGroup.setText("Type");
-	    typeGroup.setLayout(new CellLayout(2));
+	    Group groupPeriod = new Group(parameterContainer, SWT.NULL);
+	    groupPeriod.setText("Period");
+	    groupPeriod.setLayout(new CellLayout(2));
 	    
 	    Group actionGroup = new Group(parameterContainer, SWT.NULL);
 	    actionGroup.setText("Actions");
@@ -115,30 +113,19 @@ public class StackedChartPage implements IBookkeepingPageFactory {
 		toDate = new Text (actionGroup, SWT.NULL);
 		toDate.setText(df.format(new Date()));
 
-		chkDaily = new Button(actionGroup, SWT.CHECK);
-		chkDaily.setText("Daily");
+		(new Label(actionGroup, SWT.NULL)).setText("Maximal level:");
+		maxLevel = new Text (actionGroup, SWT.NULL);
+		maxLevel.setText("2");
+
+		radPeriodDay = new Button(groupPeriod, SWT.RADIO);
+		radPeriodDay.setText("Day");
 		
-		chkAverage30 = new Button(actionGroup, SWT.CHECK);
-		chkAverage30.setText("Average 30 days");
+		radPeriodMonth = new Button(groupPeriod, SWT.RADIO);
+		radPeriodMonth.setText("Month");
 
-		chkAverage120 = new Button(actionGroup, SWT.CHECK);
-		chkAverage120.setText("Average 120 days");
-
-		chkAverage365 = new Button(actionGroup, SWT.CHECK);
-		chkAverage365.setText("Average 365 days");
-
-		radSaldoAbsolut = new Button(typeGroup, SWT.RADIO);
-		radSaldoAbsolut.setText("Saldo (absolut)");
-		
-		radSaldoRelativ = new Button(typeGroup, SWT.RADIO);
-		radSaldoRelativ.setText("Saldo (relativ)");
-
-		radMouvement = new Button(typeGroup, SWT.RADIO);
-		radMouvement.setText("Mouvement");
+		radPeriodYear = new Button(groupPeriod, SWT.RADIO);
+		radPeriodYear.setText("Years");
 	
-		chkWithSubaccounts = new Button(actionGroup, SWT.CHECK);
-		chkWithSubaccounts.setText("Include the sub-accounts");
-
 		// Add the "Draw" Button
 		
 		Button drawButton = new Button(actionGroup, SWT.NULL);
@@ -264,7 +251,13 @@ private void createChart() {
     addChosenAccountsToVector(tree.getItems()[0],accounts);
     params.setAccountList(accounts);
 
-    params.setDates(fromDate.getText(),toDate.getText()); 
+    params.setDates(fromDate.getText(),toDate.getText());
+    System.out.println("maxLevel: " + maxLevel.getText() );
+    params.setMaxLevel(Integer.parseInt(maxLevel.getText()));
+    
+    if (radPeriodDay.getSelection())   params.setFrequence(StackedChartParameters.DAY);
+    if (radPeriodMonth.getSelection()) params.setFrequence(StackedChartParameters.MONTH);
+    if (radPeriodYear.getSelection())  params.setFrequence(StackedChartParameters.YEAR);
     
     chart = new StackedAccountChart("Chart", session, params);
     final ChartPanel chartPanel = chart.getChartPanel();

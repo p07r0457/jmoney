@@ -41,7 +41,6 @@ public class StackedAccountChart extends StackedChart {
         Date[] dates;
         int numberOfAccounts = 0;
         int numberOfPeriods;
-        DateFormat df = new SimpleDateFormat("dd.MM.yyyy");
         List listAccounts;
         long totalValue = 0;
         
