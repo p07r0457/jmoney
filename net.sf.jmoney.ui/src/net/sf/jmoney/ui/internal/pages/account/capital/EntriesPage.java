@@ -24,20 +24,21 @@ package net.sf.jmoney.ui.internal.pages.account.capital;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
-
 import net.sf.jmoney.IBookkeepingPage;
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableEntry;
-import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableTransaction;
+import net.sf.jmoney.ui.internal.JMoneyUIPlugin;
 import net.sf.jmoney.views.NodeEditor;
 
 import org.eclipse.jface.action.Action;
@@ -106,9 +107,9 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         for (Iterator iter = TransactionInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
             final PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
             if (propertyAccessor.isScalar()) {
-            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "this") {
-					public ExtendableObject getObjectContainingProperty(Entry entry) {
-						return entry.getTransaction();
+            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "transaction") {
+					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
+						return data.getTransactionForTransactionFields();
 					}
             	});
             }
@@ -124,9 +125,9 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
            		&& propertyAccessor != EntryInfo.getDescriptionAccessor()
         		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
             	if (propertyAccessor.isScalar() && propertyAccessor.isEditable()) {
-            		allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "other") {
-    					public ExtendableObject getObjectContainingProperty(Entry entry) {
-    						return entry;
+            		allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "this") {
+    					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
+    						return data.getEntryForAccountFields();
     					}
                 	});
             	}
@@ -139,13 +140,18 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         for (Iterator iter = extendablePropertySet.getPropertyIterator3(); iter.hasNext();) {
             PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
             if (propertyAccessor == EntryInfo.getAccountAccessor() || propertyAccessor == EntryInfo.getDescriptionAccessor()) {
-            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "transaction") {
-					public ExtendableObject getObjectContainingProperty(Entry entry) {
-						if (entry.getTransaction().hasMoreThanTwoEntries()) {
+            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "other") {
+					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
+						Entry entry = data.getEntryForAccountFields();
+						if (entry == null) {
+							// May be the new entry.
 							return null;
-						} else {
-							return entry.getTransaction().getOther(entry);
 						}
+						Account account = entry.getAccount();
+						if (account instanceof IncomeExpenseAccount) {
+							return data.getEntryForAccountFields();
+						}
+						return data.getEntryForOtherFields();
 					}
             	});
             }
@@ -179,21 +185,25 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         
         IToolBarManager toolBarManager = form.getToolBarManager();
 
-        toolBarManager.add(new Action("tree", IAction.AS_RADIO_BUTTON) {
-			public void run() {
-				if (isChecked()) {
-					fEntriesSection.setTreeView();
-				}
-			}
-        });
+        toolBarManager.add(
+        		new Action("tree", JMoneyUIPlugin.createImageDescriptor("icons/TreeView.gif")) {
+        			public void run() {
+        				if (isChecked()) {
+        					fEntriesSection.setTreeView();
+        				}
+        			}
+        		}
+        );
 
-        toolBarManager.add( new Action("table", IAction.AS_RADIO_BUTTON) {
-			public void run() {
-				if (isChecked()) {
-					fEntriesSection.setTableView();
-				}
-			}
-        });
+        toolBarManager.add(
+        		new Action("table", JMoneyUIPlugin.createImageDescriptor("icons/TableView.gif")) {
+        			public void run() {
+        				if (isChecked()) {
+        					fEntriesSection.setTableView();
+        				}
+        			}
+        		}
+        );
 
         toolBarManager.update(false);
     }
@@ -245,54 +255,37 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		 * @param entry
 		 * @return
 		 */
-		public String getValueFormattedForTable(Object o) {
-			ExtendableObject object = null;
-			if (o instanceof DisplayableTransaction) {
-				Entry entry = ((DisplayableTransaction)o).getEntry();
-				object = getObjectContainingProperty(entry);
-			} else {
-				// If this is an entry line, display only the entry properties, no
-	    		// transaction properties.
-				if (isTransactionProperty()) {
-					return "";
-				}
-				// All properties are taken from this entry object.
-				object = ((DisplayableEntry)o).getEntry();
-			}
-			
-			if (object == null) {
+		public String getValueFormattedForTable(IDisplayableItem data) {
+			ExtendableObject extendableObject = getObjectContainingProperty(data);
+			if (extendableObject == null) {
 				return "";
 			} else {
-				return accessor.formatValueForTable(object);
+				return accessor.formatValueForTable(extendableObject);
 			}
 		}
 
-		public abstract ExtendableObject getObjectContainingProperty(Entry entry);
+		public abstract ExtendableObject getObjectContainingProperty(IDisplayableItem data);
 
 		/**
 		 * @param table
 		 * @return
 		 */
-		public IPropertyControl createAndLoadPropertyControl(Composite parent, Object o) {
+		public IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data) {
 			IPropertyControl propertyControl = accessor.createPropertyControl(parent); 
 				
-			if (o instanceof DisplayableEntry) {
-				// If this is a transaction property (e.g. the date) then no value is displayed
-				// or can be edited on this line.
-				if (isTransactionProperty()) {
+			ExtendableObject extendableObject = getObjectContainingProperty(data);
+
+			// If the returned object is null, that means this column contains a property
+			// that does not apply to this row.  Perhaps the property is the transaction date
+			// and this is a split entry, or perhaps the property is
+			// a property for an income and expense category but this row 
+			// is a transfer transaction.
+			// We return null to indicate that the cell is not editable.
+			if (extendableObject == null) {
 					return null;
-				}
+			}
 				
-				DisplayableEntry de = (DisplayableEntry)o;
-				Entry entry = de.getEntry();
-				ExtendableObject extendableObject = getObjectContainingProperty(entry);
-				propertyControl.load(extendableObject);
-			} else if (o instanceof DisplayableTransaction) {
-				DisplayableTransaction de = (DisplayableTransaction)o;
-				Entry entry = de.getEntry();
-				ExtendableObject extendableObject = getObjectContainingProperty(entry);
-				propertyControl.load(extendableObject);
-			} 
+			propertyControl.load(extendableObject);
 			
 			return propertyControl;
 		}
@@ -339,16 +332,13 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 			return 70;
 		}
 
-		public String getValueFormattedForTable(Object o) {
-			long amount = 0;
-			if (o instanceof DisplayableEntry) {
-				DisplayableEntry de = (DisplayableEntry)o;
-				amount = de.getEntry().getAmount();
-			} else if (o instanceof DisplayableTransaction) {
-				DisplayableTransaction de = (DisplayableTransaction)o;
-				amount = de.getEntry().getAmount();
+		public String getValueFormattedForTable(IDisplayableItem data) {
+			Entry entry = data.getEntryForAccountFields();
+			if (entry == null) {
+				return "";
 			}
-
+			
+			long amount = entry.getAmount();
 			Commodity commodity = EntriesPage.this.getAccount().getCurrency();
 
 			if (isDebit) {
@@ -358,27 +348,13 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 			}
 		}
 
-		public IPropertyControl createAndLoadPropertyControl(Composite parent, Object o) {
-			// Credit or debit column.
-			Entry entry1 = null;
-			if (o instanceof DisplayableEntry) {
-				DisplayableEntry de = (DisplayableEntry)o;
-				entry1 = de.getEntry();
-			} else if (o instanceof DisplayableTransaction) {
-				DisplayableTransaction de = (DisplayableTransaction)o;
-				entry1 = de.getEntry();
-			}
-			
-			// I am not sure this can ever happen, but just in case
-			// the content is not an object with an Entry object,
-			// we return null indicating the column is not editable.
-			if (entry1 == null) {
-				return null;
-			}
-
+		public IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data) {
 			// This is the entry whose amount is being edited by
 			// this control.
-			final Entry entry = entry1;
+			final Entry entry = data.getEntryForAccountFields();
+			if (entry == null) {
+				return null;
+			}
 			
 			long amount = entry.getAmount();
 
@@ -472,17 +448,17 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 			return 70;
 		}
 
-		public String getValueFormattedForTable(Object o) {
-		    if (o instanceof DisplayableTransaction) {
+		public String getValueFormattedForTable(IDisplayableItem data) {
+		    if (data.isBalanceAffected()) {
 				Commodity commodity = EntriesPage.this.getAccount().getCurrency();
-		        return commodity.format(((DisplayableTransaction)o).balance);
+		        return commodity.format(data.getBalance());
 		    } else { 
 				// Display an empty cell in this column for the entry rows
 		        return "";
 		    }
 		}
 
-		public IPropertyControl createAndLoadPropertyControl(Composite parent, Object o) {
+		public IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data) {
 			// This column is not editable so return null
 			return null;
 		}

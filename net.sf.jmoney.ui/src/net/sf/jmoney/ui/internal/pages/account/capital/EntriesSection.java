@@ -1,8 +1,6 @@
 /*
- *
  *  JMoney - A Personal Finance Manager
  *  Copyright (c) 2004 Johann Gyger <jgyger@users.sf.net>
- *
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,14 +15,15 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- *
  */
 package net.sf.jmoney.ui.internal.pages.account.capital;
 
+import java.util.Date;
 import java.util.Iterator;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
+import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -32,7 +31,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
-import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableTransaction;
+import net.sf.jmoney.ui.internal.pages.account.capital.EntriesSection.DisplayableTransaction;
 
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -148,10 +147,14 @@ public class EntriesSection extends SectionPart {
         fPage.getAccount().getSession().addSessionChangeListener(new SessionChangeAdapter() {
 
 			public void accountChanged(Account account, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-				// An account name will change this view if the account
-				// is listed.
+				// An account name change will change this view if the account
+				// is listed.  Changes of other account properties may effect which
+				// entry properties are applicable, so to be totally safe, do a
+				// complete refresh.
 				
-				
+				//if (propertyAccessor == AccountInfo.getNameAccessor()) {
+					refresh();
+				//}
 			}
 
 			public void entryAdded(Entry newEntry) {
@@ -162,10 +165,16 @@ public class EntriesSection extends SectionPart {
 				
 				// Even if this entry is not in this account, if one of
 				// the other entries in the transaction is in this account
-				// then it is possible that the table view may need updating
-				// because the table view is slightly different for split
-				// entries.
-				// TODO:
+				// then the table view will need updating because the split
+				// entry rows will need updating.
+				
+				for (Iterator iter = newEntry.getTransaction().getEntryIterator(); iter.hasNext(); ) {
+					Entry entry = (Entry)iter.next();
+					if (entry.getAccount() == fPage.getAccount()) {
+						refresh();
+						break;
+					}
+				}
 			}
 
 			public void entryDeleted(Entry oldEntry) {
@@ -188,8 +197,9 @@ public class EntriesSection extends SectionPart {
 			}
 
 			public void objectDeleted(ExtendableObject extendableObject) {
-				// TODO Auto-generated method stub
-				
+				// Nothing to do here.  When a transaction is deleted, an event is
+				// fired for each entry in the transaction and we process those so there
+				// is no additional processing for the case where the transaction is deleted.
 			}
 
 			public void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
@@ -288,4 +298,19 @@ public class EntriesSection extends SectionPart {
 //        refresh();
         containerOfEntriesControl.pack(true);
     }
+
+    class DisplayableTransaction { 
+        private Entry entry;
+        long balance;
+
+        public DisplayableTransaction(Entry entry, long saldo) {
+            this.entry = entry;
+            this.balance = saldo;
+        }
+        
+        long  getBalance () { return balance ; }
+        Entry getEntry() { return entry; }
+        Transaction getTransaction () {return entry.getTransaction(); }
+    }
+
 }

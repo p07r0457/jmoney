@@ -48,14 +48,14 @@ interface IEntriesTableProperty {
 	 * @param entry
 	 * @return
 	 */
-	String getValueFormattedForTable(Object o);
+	String getValueFormattedForTable(IDisplayableItem data);
 
 	/**
 	 * @param table
 	 * @param data
 	 * @return
 	 */
-	IPropertyControl createAndLoadPropertyControl(Composite parent, Object data);
+	IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data);
 
 	/**
 	 * @return

@@ -21,7 +21,7 @@
  */
 package net.sf.jmoney.ui.internal;
 
-import java.util.MissingResourceException;import java.util.ResourceBundle;import org.eclipse.swt.graphics.Color;import org.eclipse.swt.widgets.Display;import org.eclipse.ui.IWorkbench;import org.eclipse.ui.IWorkbenchPage;import org.eclipse.ui.IWorkbenchWindow;import org.eclipse.ui.PlatformUI;import org.eclipse.ui.plugin.AbstractUIPlugin;import org.osgi.framework.BundleContext;
+import java.net.MalformedURLException;import java.net.URL;import java.util.MissingResourceException;import java.util.ResourceBundle;import org.eclipse.jface.resource.ImageDescriptor;import org.eclipse.swt.graphics.Color;import org.eclipse.swt.widgets.Display;import org.eclipse.ui.IWorkbench;import org.eclipse.ui.IWorkbenchPage;import org.eclipse.ui.IWorkbenchWindow;import org.eclipse.ui.PlatformUI;import org.eclipse.ui.plugin.AbstractUIPlugin;import org.osgi.framework.BundleContext;
 
 /**
  * The main plugin class to be used in the desktop.
@@ -101,6 +101,6 @@ public class JMoneyUIPlugin extends AbstractUIPlugin {
 	 */
 	public ResourceBundle getResourceBundle() {
 		return resourceBundle;
-	}	/**	 * @return	 */	public Color getGreenColor() {		return green;	}	/**	 * @return	 */	public Color getYellowColor() {		return yellow;	}
+	}	public static ImageDescriptor createImageDescriptor(String name) {		String iconPath = "";		try {			URL installURL = getDefault().getBundle().getEntry("/");			URL url = new URL(installURL, iconPath + name);			return ImageDescriptor.createFromURL(url);		} catch (MalformedURLException e) {			// should not happen			return ImageDescriptor.getMissingImageDescriptor();		}	}	/**	 * @return	 */	public Color getGreenColor() {		return green;	}	/**	 * @return	 */	public Color getYellowColor() {		return yellow;	}
 
 }

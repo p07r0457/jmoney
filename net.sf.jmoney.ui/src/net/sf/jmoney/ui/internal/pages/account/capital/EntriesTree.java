@@ -34,6 +34,7 @@ import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.ui.internal.pages.account.capital.EntriesTable.DisplayableTransaction;
 
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -164,13 +165,20 @@ public class EntriesTree implements IEntriesControl {
                 if (event.getSelection() instanceof IStructuredSelection) {
                     IStructuredSelection s = (IStructuredSelection) event.getSelection();
                     Object selectedObject = s.getFirstElement();
+                    // TODO: This code is duplicated below.
                     // The selected object might be null.  This occurs when the table is refreshed.
                     // I don't understand this so I am simply bypassing the update
                     // in this case.  Nigel
                     if (selectedObject != null) {
+                    	IDisplayableItem data = (IDisplayableItem)selectedObject;
+                    	DisplayableTransaction transactionData = null;
                     	if (selectedObject instanceof DisplayableTransaction) {
-                    		DisplayableTransaction de = (DisplayableTransaction) selectedObject;
-                    		fPage.fEntrySection.update(de.entry);
+                    		transactionData = (DisplayableTransaction) data;
+                    	} else if (selectedObject instanceof DisplayableEntry) {
+                    		transactionData = ((DisplayableEntry)data).getDisplayableTransaction();
+                    	}
+                    	if (transactionData != null) {
+                    		fPage.fEntrySection.update(transactionData.getEntryForAccountFields());
                     	}
                     }
                 }
@@ -195,10 +203,10 @@ public class EntriesTree implements IEntriesControl {
             
             if (isAlternated) {
                 if (data instanceof DisplayableTransaction) item.setBackground(alternateTransactionColor);
-                if (data instanceof DisplayableEntry)       item.setBackground(alternateEntryColor);
+                if (data instanceof Entry)                  item.setBackground(alternateEntryColor);
             } else {
                 if (data instanceof DisplayableTransaction) item.setBackground(transactionColor);
-                if (data instanceof DisplayableEntry)       item.setBackground(entryColor);                
+                if (data instanceof Entry)                  item.setBackground(entryColor);                
             }
         }
 
@@ -272,7 +280,18 @@ public class EntriesTree implements IEntriesControl {
 					public void mouseDown(MouseEvent e) {
 		    			// Clean up any previous editor control
 		    			Control oldEditor = editor.getEditor();
-		    			if (oldEditor != null) oldEditor.dispose();
+		    			if (oldEditor != null) {
+		    				// Save the value from the edit control.
+		    				// TODO: figure out the sequence of events that lead to
+		    				// these values being null and clean this up.
+		    				try {
+		    				currentCellPropertyControl.save();
+		    				oldEditor.dispose();
+		    				currentCellPropertyControl = null;
+		    				} catch (NullPointerException e2) {
+		    					// Should not happen.
+		    				}
+		    			}
 		    			
 		    			Rectangle clientArea = fTableTree.getClientArea ();
 		    			Point pt = new Point (e.x, e.y);
@@ -286,7 +305,8 @@ public class EntriesTree implements IEntriesControl {
 		    					final int column = i;
 		    					
 		    					IEntriesTableProperty entryData = (IEntriesTableProperty)fPage.allEntryDataObjects.get(column);
-		    					currentCellPropertyControl = entryData.createAndLoadPropertyControl(fTableTree.getTable(), item.getData());
+		    					IDisplayableItem data = (IDisplayableItem)item.getData();
+		    					currentCellPropertyControl = entryData.createAndLoadPropertyControl(fTableTree.getTable(), data);
 		    					// If a control was created (i.e. this was not a
 		    					// non-editable column such as the balance column)
 		    					if (currentCellPropertyControl != null) {
@@ -349,157 +369,210 @@ public class EntriesTree implements IEntriesControl {
      */
     class EntrySorter extends ViewerSorter {
         public int compare(Viewer notused, Object o1, Object o2) {
-            
-            assert (o1 instanceof DisplayableItem);
-            assert (o2 instanceof DisplayableItem);
-            
             // The case of a new Entry
             if (o1 instanceof DisplayableNewEmptyEntry) return 1;
             if (o2 instanceof DisplayableNewEmptyEntry) return -1;
 
-            // Compare the transactions
-            DisplayableItem di1 = (DisplayableItem)o1;
-            DisplayableItem di2 = (DisplayableItem)o2;
+            // Elements must be either both DisplayableTransaction
+            // objects or both Entry objects.
             
-            // Case of two items of the same transaction
-            if (di1.getTransaction() == (di2.getTransaction())) {
-                if (di1 instanceof DisplayableTransaction) return -1;
-                if (di2 instanceof DisplayableTransaction) return 1;
-                return (di1.getAmount() - di2.getAmount() > 0) ? -1 : 1;
+            // Compare transactions
+            if (o1 instanceof DisplayableTransaction) {
+            	DisplayableTransaction t1 = (DisplayableTransaction)o1;
+            	DisplayableTransaction t2 = (DisplayableTransaction)o2;
+            	return t1.getSequenceNumber() - t2.getSequenceNumber();
             }
             
-            // Case of two different transactions
-            Date d1 = di1.getTransaction().getDate();
-            Date d2 = di2.getTransaction().getDate();
-            // TODO Taken from EntryComparator as a quick fix
-            if (d1 == null && d2 == null) return 0;
-            if (d1 == null) return 1;
-            if (d2 == null) return -1;
-            int difference = d1.compareTo(d2); 
-            if (difference != 0) return difference;
-            // TODO perhaps an other test for transactions with the same date?
-            return di1.getTransaction().hashCode() - di2.getTransaction().hashCode(); 
+            // Compare entries
+            if (o1 instanceof Entry) {
+            	Entry e1 = (Entry)o1;
+            	Entry e2 = (Entry)o2;
+                return (e1.getAmount() - e2.getAmount() > 0) ? -1 : 1;
+            }
+            
+            // We should not get here
+            return 0;
         }
     }
 
-    abstract class DisplayableItem {
-        abstract String getCheck ();
-        abstract Date   getDate ();
-        abstract Date   getValuta ();
-        abstract String getDescription ();
-        abstract long   getAmount ();
-        
-        abstract void setCheck (String check);
-        abstract void setDate (Date date);
-        abstract void setValuta (Date valuata);
-        abstract void setDescription (String description);
-        abstract void setAmount (long amount);
+    class DisplayableTransaction implements IDisplayableItem {
+        private Entry entry;
+        private long balance;
+        private int sequenceNumber;
 
-        // abstract String getOtherAccountName ();
-        // abstract long   getBalance ();
-        abstract Transaction getTransaction ();
-        abstract Entry       getEntry ();
+        public DisplayableTransaction(Entry entry, long saldo, int sequenceNumber) {
+            this.entry = entry;
+            this.balance = saldo;
+            this.sequenceNumber = sequenceNumber;
+        }
+    	
+		public Transaction getTransactionForTransactionFields() {
+			return entry.getTransaction();
+		}
 
-        //TODO: abstract void set/getCommodity();
+		public Entry getEntryForAccountFields() {
+			return entry;
+		}
+
+		public Entry getEntryForOtherFields() {
+			if (entry.getTransaction().hasMoreThanTwoEntries()) {
+				return null;
+			} else {
+				return entry.getTransaction().getOther(entry);
+			}
+		}
+
+		public long getAmount() {
+			return entry.getAmount();
+		}
+
+		public boolean blankTransactionFields() {
+			return false;
+		}
+
+		public boolean isBalanceAffected() {
+			return true;
+		}
+
+		public long getBalance() {
+			return balance;
+		}
+    	
+		/**
+		 * @return a number that is assigned sequentially to
+		 * 		DisplayableTransaction objects in the order
+		 * 		in which the balance was calculated
+		 */
+		public int getSequenceNumber() {
+			return sequenceNumber;
+		}
+
+		/**
+		 * @return
+		 */
+		public Transaction getTransaction() {
+			return entry.getTransaction();
+		}
     }
     
-    class DisplayableEntry extends DisplayableItem { 
+    class DisplayableEntry implements IDisplayableItem { 
         
         private Entry entry;
+        private DisplayableTransaction transactionData;
 
-        public DisplayableEntry(Entry entry) {
+        public DisplayableEntry(Entry entry, DisplayableTransaction transactionData) {
             this.entry = entry;
+            this.transactionData = transactionData;
         }
         
-        /* Trivial functions */
-        String getCheck ()        { return entry.getCheck(); }
-        Date   getDate ()         { return entry.getTransaction().getDate(); }
-        Date   getValuta ()       { return entry.getValuta(); }
-        String getDescription ()  { return entry.getDescription(); }
-        long   getAmount ()       { return entry.getAmount(); }
+		public DisplayableTransaction getDisplayableTransaction() {
+			return this.transactionData;
+		}
 
-        void setCheck (String check)              { entry.setCheck(check); }
-        void setDate (Date date)                  { entry.getTransaction().setDate(date); }
-        void setValuta (Date valuta)              { entry.setValuta(valuta); }
-        void setDescription (String description)  { entry.setDescription(description); }
-        void setAmount (long amount)              { entry.setAmount(amount); }
+		Entry getEntry() { return entry; }
 
-        String      getAccountName () {return entry.getAccount().getName(); }
-        Transaction getTransaction () {return entry.getTransaction(); }
-        Entry getEntry() { return entry; }
+        public Transaction getTransactionForTransactionFields() {
+        	return null;
+        }
+
+        public Entry getEntryForAccountFields() {
+			return entry;
+		}
+
+		public Entry getEntryForOtherFields() {
+			return null;
+		}
+
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.ui.internal.pages.account.capital.IDisplayableItem#getAmount()
+		 */
+		public long getAmount() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		public boolean blankTransactionFields() {
+			// All transaction fields are blank on split-entry rows.
+			return true;
+		}
+
+		public boolean isBalanceAffected() {
+			// The amounts on the split-entry fields do not affect the
+			// balance shown in the balance column.
+			return false;
+		}
+
+		public long getBalance() {
+			throw new RuntimeException("");
+		}
     }
-    
     
     /**
      * This class is to be used for new entries which are currently filled in by the
      * user, before they are comited and transformed in real entries
      * @author Faucheux
      */
-    class DisplayableNewEmptyEntry extends DisplayableItem {
-        
-        String check = null;
-        Date   date = null;
-        Date   valuta = null;
-        String description = null;
-        long   amount = 0;
+    class DisplayableNewEmptyEntry implements IDisplayableItem {
         
         public DisplayableNewEmptyEntry(){
             // 	constructor to define a new, empty entry which we be filled in by the user
         }
 
-        String getCheck ()        { return check; }
-        Date   getDate ()         { return date; }
-        Date   getValuta ()       { return valuta; }
-        String getDescription ()  { return description; }
-        long   getAmount ()       { return amount;}
-        
-        void setCheck (String check)              { this.check = check; }
-        void setDate (Date date)                  { this.date = date; }
-        void setValuta (Date valuta)              { this.valuta = valuta; }
-        void setDescription (String description)  { this.description = description; }
-        void setAmount (long amount)              { this.amount = amount; }
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.ui.internal.pages.account.capital.IDisplayableItem#getTransaction()
+		 */
+		public Transaction getTransactionForTransactionFields() {
+			// TODO Auto-generated method stub
+			return null;
+		}
 
-        String getOtherAccountName () { return null; }
-        long   getBalance () { return 0; }
-        Transaction getTransaction () {return null; }
-        Entry getEntry () { return null ; }
-    }
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.ui.internal.pages.account.capital.IDisplayableItem#getEntryForAccountFields()
+		 */
+		public Entry getEntryForAccountFields() {
+			// TODO Auto-generated method stub
+			return null;
+		}
 
-    class DisplayableTransaction extends DisplayableItem { 
-        
-        private Entry entry;
-        private long balance;
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.ui.internal.pages.account.capital.IDisplayableItem#getEntryForOtherFields()
+		 */
+		public Entry getEntryForOtherFields() {
+			// TODO Auto-generated method stub
+			return null;
+		}
 
-        public DisplayableTransaction(Entry entry, long saldo) {
-            this.entry = entry;
-            this.balance = saldo;
-        }
-        
-        /* Trivial functions */
-        String getCheck ()        { return entry.getCheck(); }
-        Date   getDate ()         { return entry.getTransaction().getDate(); }
-        Date   getValuta ()       { return entry.getValuta(); }
-        String getDescription ()  { return entry.getDescription(); }
-        long   getAmount ()       { return entry.getAmount(); }
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.ui.internal.pages.account.capital.IDisplayableItem#getAmount()
+		 */
+		public long getAmount() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
 
-        void setCheck (String check)              { entry.setCheck(check); }
-        void setDate (Date date)                  { entry.getTransaction().setDate(date); }
-        void setValuta (Date valuta)              { entry.setValuta(valuta); }
-        void setDescription (String description)  { entry.setDescription(description); }
-        void setAmount (long amount)              { entry.setAmount(amount); }
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.ui.internal.pages.account.capital.IDisplayableItem#blankTransactionFields()
+		 */
+		public boolean blankTransactionFields() {
+			// TODO Auto-generated method stub
+			return false;
+		}
 
-        String getOtherAccountName () {
-            Transaction t = entry.getTransaction();
-            if (t.hasMoreThanTwoEntries())
-                return "-- splitted --";
-            else
-                return t.getOther(entry).getAccount().getName();
-        }
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.ui.internal.pages.account.capital.IDisplayableItem#isBalanceAffected()
+		 */
+		public boolean isBalanceAffected() {
+			// TODO Auto-generated method stub
+			return false;
+		}
 
-        long  getBalance () { return balance ; }
-        Entry getEntry() { return entry; }
-        Transaction getTransaction () {return entry.getTransaction(); }
-        
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.ui.internal.pages.account.capital.IDisplayableItem#getBalance()
+		 */
+		public long getBalance() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
     }
 
     private class ContentProvider implements ITreeContentProvider {
@@ -525,10 +598,11 @@ public class EntriesTree implements IEntriesControl {
             fPage.entryToContentMap = new HashMap();
             Vector d_entries = new Vector();
             long saldo = account.getStartBalance();
+            int sequenceNumber = 0;
             while (it.hasNext()) {
                 Entry e = (Entry) it.next();
                 saldo = saldo + e.getAmount();
-                DisplayableTransaction de = new DisplayableTransaction(e, saldo);
+                DisplayableTransaction de = new DisplayableTransaction(e, saldo, sequenceNumber++);
                 fPage.entryToContentMap.put(e, de);
                 d_entries.add(de);
              }
@@ -547,16 +621,17 @@ public class EntriesTree implements IEntriesControl {
         	Vector d_entries = new Vector();
         	
         	if (parent instanceof DisplayableTransaction) {
-        		// Case of an splitted entry. We display the transaction on the first line
-        		// and the entries of the transaction on the following ones.
+                // Case of an splitted entry. We display the transaction on the first line
+                // and the entries of the transaction on the following ones.
+            	// However, the transaction line also holds the properties for the entry
+            	// in this account, so display just the other entries underneath.
         		DisplayableTransaction dTrans = (DisplayableTransaction)parent; 
         		Iterator itSubEntries = dTrans.getTransaction().getEntryIterator();
         		while (itSubEntries.hasNext()) {
-        			// TODO: create a new class for this usage.
-        			Entry entry = (Entry) itSubEntries.next();
-        			if (entry != dTrans.getEntry()) {
-        				d_entries.add(new DisplayableEntry(entry));
-        			}
+                    Entry entry2 = (Entry) itSubEntries.next();
+                    if (!entry2.equals(dTrans.getEntryForAccountFields())) {
+                    	d_entries.add(new DisplayableEntry(entry2, dTrans));
+                    }
         		}
         	}
 
@@ -587,11 +662,10 @@ public class EntriesTree implements IEntriesControl {
         protected NumberFormat nf = DecimalFormat.getCurrencyInstance();
 
         public String getColumnText(Object obj, int index) {
-            if (obj instanceof DisplayableItem && ! (obj instanceof DisplayableNewEmptyEntry)) {
-        		DisplayableItem de = (DisplayableItem) obj;
-        	
+            if (obj instanceof IDisplayableItem) {
        			IEntriesTableProperty entryData = (IEntriesTableProperty)visibleEntryDataObjects.get(index);
-   				return entryData.getValueFormattedForTable(de);
+            	IDisplayableItem data = (IDisplayableItem)obj;
+   				return entryData.getValueFormattedForTable(data);
             }
 
             return ""; //$NON-NLS-1$

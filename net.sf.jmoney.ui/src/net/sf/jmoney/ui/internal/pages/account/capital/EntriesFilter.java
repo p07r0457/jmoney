@@ -132,13 +132,13 @@ public class EntriesFilter implements Constants {
      * @param filterType Filter type to use for filtering
      * @return True, if "entry" matches the filter criteria; false, else
      */
-	public boolean filterEntry(Entry entry, CurrencyAccount account, VerySimpleDateFormat dateFormat, int filterType) {
+	public boolean filterEntry(IDisplayableItem data, CurrencyAccount account, VerySimpleDateFormat dateFormat, int filterType) {
 		if (filterType == 0) {
 			// 'Entry' selected.  Entry matches if any of the properties
 			// match.
 	        for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext(); ) {
 	        	IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)iter.next();
-	            String text = entriesSectionProperty.getValueFormattedForTable(entry);
+	            String text = entriesSectionProperty.getValueFormattedForTable(data);
 	            if (containsPattern(text)) {
 	            	return true;
 	            }
@@ -146,7 +146,7 @@ public class EntriesFilter implements Constants {
 			return false;
 		} else {
         	IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)fPage.allEntryDataObjects.get(filterType-1);
-            String text = entriesSectionProperty.getValueFormattedForTable(entry);
+            String text = entriesSectionProperty.getValueFormattedForTable(data);
             return containsPattern(text);
 		}
 /*		
