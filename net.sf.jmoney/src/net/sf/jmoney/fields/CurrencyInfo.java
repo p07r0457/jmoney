@@ -63,10 +63,6 @@ public class CurrencyInfo implements IExtensionPropertySetInfo {
         return Currency.class;
     }
     
-    public Class getMutableInterfaceClass() {
-        return Currency.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		IPropertyControlFactory textControlFactory =
 			new IPropertyControlFactory() {

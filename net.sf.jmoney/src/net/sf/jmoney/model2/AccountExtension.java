@@ -30,19 +30,13 @@ import java.util.Iterator;
  *
  * @author  Nigel
  *
- * To add fields and methods to an Entry object, one should
- * derive a class on AbstractEntryExtension.  This mechanism
- * allows multiple extensions to an Entry object to be added
+ * To add fields and methods to an Account object, one should
+ * derive a class on AccountExtension.  This mechanism
+ * allows multiple extensions to an Account object to be added
  * and maintained at runtime.
  *
  */
 public abstract class AccountExtension extends ExtensionObject implements Account, Serializable {
-    
-	/**
-	 * following two are set by setBaseAccount
-	 */
-    /* protected */ public Account account;
-    protected PropertySet propertySet;
     
     /** Creates a new instance of AbstractEntryExtension */
     public AccountExtension() {
@@ -59,77 +53,26 @@ public abstract class AccountExtension extends ExtensionObject implements Accoun
 	 * @return the name of the category.
 	 */
 	public String getName() {
-            return account.getName();
+            return getBaseObject().getName();
         }
 
 	/**
 	 * @return the full qualified name of the category.
 	 */
 	public String getFullAccountName() {
-            return account.getFullAccountName();
+            return getBaseObject().getFullAccountName();
         }
 
         public Account getParent() {
-            return account.getParent();
+            return getBaseObject().getParent();
         }
         
         public Iterator getSubAccountIterator() {
-            return account.getSubAccountIterator();
+            return getBaseObject().getSubAccountIterator();
         }
 
-        public ExtensionObject getExtension(PropertySet propertySet) {
-        	return account.getExtension(propertySet);
-        }
-        
-        public Object getPropertyValue(PropertyAccessor propertyAccessor) {
-            return account.getPropertyValue(propertyAccessor);
-        }
-        
-        public int getIntegerPropertyValue(PropertyAccessor propertyAccessor) {
-            return account.getIntegerPropertyValue(propertyAccessor);
-        }
-        
-        // TODO: check whether we need this method.
-        public String getPropertyValueAsString(PropertyAccessor propertyAccessor) {
-            return account.getPropertyValueAsString(propertyAccessor);
-        }
-        
-        public void setPropertyValue(PropertyAccessor propertyAccessor, Object value) {
-        	if (account instanceof MutableAccount) {
-        		((MutableAccount)account).setPropertyValue(propertyAccessor, value);
-        	} else {
-        		throw new RuntimeException("Setting value in a non-mutable extension.");
-        	}
-        }
-
-        public void setIntegerPropertyValue(PropertyAccessor propertyAccessor, int value) {
-        	if (account instanceof MutableAccount) {
-        		((MutableAccount)account).setIntegerPropertyValue(propertyAccessor, value);
-        	} else {
-        		throw new RuntimeException("Setting value in a non-mutable extension.");
-        	}
-        }
-        
-        public void setCharacterPropertyValue(PropertyAccessor propertyAccessor, char value) {
-        	if (account instanceof MutableAccount) {
-        		((MutableAccount)account).setCharacterPropertyValue(propertyAccessor, value);
-        	} else {
-        		throw new RuntimeException("Setting value in a non-mutable extension.");
-        	}
-        }
-
-        // TODO: check whether we need this method.
-        public void setPropertyValueFromString(PropertyAccessor propertyAccessor, String value) {
-        	if (account instanceof MutableAccount) {
-        		((MutableAccount)account).setPropertyValueFromString(propertyAccessor, value);
-        	} else {
-        		throw new RuntimeException("Setting value in a non-mutable extension.");
-        	}
-        }
-
-        // Required to be implemented in all classes derived from ExtensionObject
-    	void setBaseObject(IExtendableObject baseObject) {
-    		this.account = (Account)baseObject;
+    	public Account getBaseObject() {
+    		return (Account)baseObject;
     	}
 
   
@@ -138,7 +81,7 @@ public abstract class AccountExtension extends ExtensionObject implements Accoun
             if (!newValue.equals(oldValue)) {
             	try {
             		propertySet.getProperty(propertyLocalName).firePropertyChange(
-            				account, oldValue, newValue);
+            				baseObject, oldValue, newValue);
             	} catch (PropertyNotFoundException e) {
             		throw new RuntimeException("no such property registered " + propertyLocalName);
             	}

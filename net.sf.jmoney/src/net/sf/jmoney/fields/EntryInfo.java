@@ -58,10 +58,6 @@ public class EntryInfo implements IExtensionPropertySetInfo {
         return Entry.class;
     }
     
-    public Class getMutableInterfaceClass() {
-        return Entry.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		// TODO: implement the SWT control factories here.
 		// This must be done before we can convert the account entries panel

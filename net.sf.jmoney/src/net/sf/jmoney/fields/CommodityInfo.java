@@ -62,10 +62,6 @@ public class CommodityInfo implements IExtensionPropertySetInfo {
         return Commodity.class;
     }
     
-    public Class getMutableInterfaceClass() {
-        return Commodity.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		IPropertyControlFactory textControlFactory =
 			new IPropertyControlFactory() {

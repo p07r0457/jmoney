@@ -44,10 +44,6 @@ public class ReconciliationEntryInfo implements IExtensionPropertySetInfo {
         return ReconciliationEntry.class;
     }
     
-    public Class getMutableInterfaceClass() {
-        return ReconciliationEntry.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar extensionRegistrar) {
 		extensionRegistrar.addProperty("status", ReconciliationPlugin.getResourceString("Entry.statusShort"), 2.0, null, StatusEditor.class, null);
 	}

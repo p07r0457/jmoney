@@ -21,6 +21,8 @@
  */
 package net.sf.jmoney.model2;
 
+import java.util.Iterator;
+
 /**
  * @author Nigel
  *
@@ -28,11 +30,71 @@ package net.sf.jmoney.model2;
  * extension property sets should be derived.
  */
 public abstract class ExtensionObject {
+	protected IExtendableObject baseObject;
 	protected PropertySet propertySet;
+	
+	void setBaseObject(IExtendableObject baseObject) {
+		this.baseObject = baseObject;
+	}
 	
 	void setPropertySet(PropertySet propertySet) {
 		this.propertySet = propertySet;
 	}
+
+	public Iterator getPropertyIterator(PropertyAccessor propertyAccessor) {
+    	return baseObject.getPropertyIterator(propertyAccessor);
+	}
 	
-	abstract void setBaseObject(IExtendableObject baseObject);
+	public IObjectKey getObjectKey() {
+    	return baseObject.getObjectKey();
+	}
+	
+	public ExtensionObject getExtension(PropertySet propertySet) {
+    	return baseObject.getExtension(propertySet);
+    }
+    
+    public Object getPropertyValue(PropertyAccessor propertyAccessor) {
+        return baseObject.getPropertyValue(propertyAccessor);
+    }
+    
+    public int getIntegerPropertyValue(PropertyAccessor propertyAccessor) {
+        return baseObject.getIntegerPropertyValue(propertyAccessor);
+    }
+    
+    public long getLongPropertyValue(PropertyAccessor propertyAccessor) {
+        return getLongPropertyValue(propertyAccessor);
+    }
+    
+    public String getStringPropertyValue(PropertyAccessor propertyAccessor) {
+        return getStringPropertyValue(propertyAccessor);
+    }
+    
+    public char getCharacterPropertyValue(PropertyAccessor propertyAccessor) {
+        return baseObject.getCharacterPropertyValue(propertyAccessor);
+    }
+    
+    // TODO: check whether we need this method.
+    public String getPropertyValueAsString(PropertyAccessor propertyAccessor) {
+        return baseObject.getPropertyValueAsString(propertyAccessor);
+    }
+    
+    public void setPropertyValue(PropertyAccessor propertyAccessor, Object value) {
+    	baseObject.setPropertyValue(propertyAccessor, value);
+    }
+
+    public void setIntegerPropertyValue(PropertyAccessor propertyAccessor, int value) {
+    	baseObject.setIntegerPropertyValue(propertyAccessor, value);
+    }
+    
+    public void setLongPropertyValue(PropertyAccessor propertyAccessor, long value) {
+    	baseObject.setLongPropertyValue(propertyAccessor, value);
+    }
+    
+    public void setStringPropertyValue(PropertyAccessor propertyAccessor, String value) {
+    	baseObject.setStringPropertyValue(propertyAccessor, value);
+    }
+    
+    public void setCharacterPropertyValue(PropertyAccessor propertyAccessor, char value) {
+    	baseObject.setCharacterPropertyValue(propertyAccessor, value);
+    }
 }

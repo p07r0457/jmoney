@@ -360,6 +360,10 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
         return (String)getPropertyValue(propertyAccessor);
     }
     
+    public char getCharacterPropertyValue(PropertyAccessor propertyAccessor) {
+        return ((Character)getPropertyValue(propertyAccessor)).charValue();
+    }
+    
 	public Object getPropertyValue(PropertyAccessor propertyAccessor) {
 		Object objectWithProperties = getPropertySetInterface(propertyAccessor.getPropertySet());
 		

@@ -37,7 +37,7 @@ import java.util.Iterator;
  * <LI>Entry</LI>
  * </UL>
  * <P>
- * Plug-ins are also able to create new classes of extensible
+ * Plug-ins are also able to create new classes of extendable
  * objects by deriving classes from this class.
  */
 public interface IExtendableObject {
@@ -53,8 +53,22 @@ public interface IExtendableObject {
 	
 	long getLongPropertyValue(PropertyAccessor propertyAccessor);
 	
-	String getStringPropertyValue(PropertyAccessor propertyAccessor);
-
+    String getStringPropertyValue(PropertyAccessor propertyAccessor);
+    
+	char getCharacterPropertyValue(PropertyAccessor propertyAccessor);
+	
+	void setPropertyValue(PropertyAccessor propertyAccessor, Object value);
+	
+	void setIntegerPropertyValue(PropertyAccessor propertyAccessor, int value);
+	
+    void setLongPropertyValue(PropertyAccessor propertyAccessor, long value);
+    
+    void setStringPropertyValue(PropertyAccessor propertyAccessor, String value);
+    
+	void setCharacterPropertyValue(PropertyAccessor propertyAccessor, char value);
+	
+//	void setPropertyValueFromString(PropertyAccessor propertyAccessor, String value);
+	
 	/**
 	 * Obtain an iterator that iterates over the values of a
 	 * list property.

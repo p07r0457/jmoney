@@ -66,10 +66,6 @@ public class QIFEntryInfo implements IExtensionPropertySetInfo {
         return QIFEntry.class;
     }
     
-    public Class getMutableInterfaceClass() {
-        return QIFEntry.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar extensionRegistrar) {
 		extensionRegistrar.addProperty("reconcilingState", "what???", 2.0, null, null, null);
 	}

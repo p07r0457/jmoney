@@ -37,22 +37,6 @@ public interface Entry extends IExtendableObject {
 	Transaction getTransaxion();
 	
 	/**
-	 * Indicate is this entry object may be modified by
-	 * calling the setters.
-	 */
-	boolean isMutable();
-	
-	/**
-	 * If this entry is a mutable entry then return the original
-	 * entry which is being edited, or, if this mutable entry is
-	 * a new entry that has never been committed to the datastore
-	 * then return null.
-	 *
-	 * @exception RuntimeException This entry is not mutable.
-	 */
-//	Entry getOriginalEntry();
-	
-	/**
 	 * Returns the creation.
 	 */
 	long getCreation();
@@ -124,11 +108,4 @@ public interface Entry extends IExtendableObject {
 	 * Sets the memo.
 	 */
 	void setMemo(String aMemo);
-
-	/**
-	 * @return
-	 */
-	// TODO: Decide if we really need this method in its
-	// current form.
-	Map getExtensionsAsIs();
 }

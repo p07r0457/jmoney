@@ -66,10 +66,6 @@ public class SessionInfo implements IExtensionPropertySetInfo {
         return Session.class;
     }
     
-    public Class getMutableInterfaceClass() {
-        return Session.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		IPropertyControlFactory currencyControlFactory =
 			new IPropertyControlFactory() {

@@ -123,9 +123,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         
         this.propertyClass = theGetMethod.getReturnType();
         
-        // Use introspection on the interface to find the setter method.
-        // This must be done on the mutable interface.
-//      Class mutableInterfaceClass = propertySet.getMutableInterfaceClass();
+        // Use introspection on the implementation class to find the setter method.
         Class implementationClass = propertySet.getImplementationClass();
         
         String theSetMethodName	= "set"

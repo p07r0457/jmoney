@@ -95,19 +95,15 @@ public class FolderView extends ViewPart {
         parent.getParent().setLayout(new FillLayout());
         parent.getParent().pack(false);
 
+        // Modified by Faucheux
         // The one and only visible control in the parent
         // should fill the entire space.
         parent.setBackground(parent.getDisplay().getSystemColor(
                 SWT.COLOR_DARK_BLUE));
         parent.pack(false);
 
-        // Modified by Faucheux
-        tabFolderViewer = new TabFolder(parent, SWT.TOP);
-        tabFolderViewer.setBackground(tabFolderViewer.getDisplay()
-                .getSystemColor(SWT.COLOR_GREEN));
-
         // Force the parent (DARK_BLUE) to be as big as its container
-        tabFolderViewer.getParent().addControlListener(new ControlListener() {
+        parent.addControlListener(new ControlListener() {
             public void controlMoved(ControlEvent e) { /* nothing */ }
             public void controlResized(ControlEvent e) {
                 Composite parent = (Composite) e.getSource();
@@ -118,19 +114,6 @@ public class FolderView extends ViewPart {
                 System.out.println("  is  " + parent.getSize());
             }
             
-        });
-
-        // Force the tabFolderView (the Register, GREEN) to be as big as its
-        // container.
-        tabFolderViewer.getParent().addControlListener(new ControlListener() {
-            public void controlMoved(ControlEvent e) { /* nothing */ }
-            public void controlResized(ControlEvent e) {
-                System.out.println("Redraw tabFolderViewer " + tabFolderViewer
-                        + " from 'FolderView.java'");
-                System.out.println("  was " + tabFolderViewer.getSize());
-                tabFolderViewer.setSize(tabFolderViewer.getParent().getSize());
-                System.out.println("  is  " + tabFolderViewer.getSize());
-            }
         });
 
     }
@@ -154,12 +137,12 @@ public class FolderView extends ViewPart {
         // Dispose of all the items in the tab folder.
         // The array returned by getItems is a copy so can
         // be safely iterated while we dispose the items.
-        TabItem items[] = tabFolderViewer.getItems();
-        for (int i = 0; i < items.length; i++) {
-            items[i].dispose();
+        if (tabFolderViewer != null) {
+        	TabItem items[] = tabFolderViewer.getItems();
+        	for (int i = 0; i < items.length; i++) {
+        		items[i].dispose();
+        	}
         }
-
-        tabFolderViewer.setVisible(false);
 
         if (selectedObject != null) {
             // First count the pages. If there are no pages then
@@ -175,6 +158,12 @@ public class FolderView extends ViewPart {
             }
 
             if (pageCount == 1) {
+            	if (tabFolderViewer != null) {
+            		// unfortunately we need to completely dispose the tab viewer.
+            		tabFolderViewer.dispose();
+            		tabFolderViewer = null;
+            	}
+            	
                 for (Iterator iter = pageListeners.iterator(); iter.hasNext();) {
                     IBookkeepingPageListener pageListener = (IBookkeepingPageListener) iter
                             .next();
@@ -199,7 +188,26 @@ public class FolderView extends ViewPart {
                     }
                 }
             } else if (pageCount > 1) {
-                tabFolderViewer.setVisible(true);
+            	if (tabFolderViewer == null) {
+                    tabFolderViewer = new TabFolder(parent, SWT.TOP);
+                    tabFolderViewer.setBackground(tabFolderViewer.getDisplay()
+                            .getSystemColor(SWT.COLOR_GREEN));
+
+                    // Force the parent (DARK_BLUE) to be as big as its container
+                    tabFolderViewer.getParent().addControlListener(new ControlListener() {
+                        public void controlMoved(ControlEvent e) { /* nothing */ }
+                        public void controlResized(ControlEvent e) {
+                            Composite parent = (Composite) e.getSource();
+                            System.out.println("Redraw parent " + parent
+                                    + " from 'FolderView.java'");
+                            System.out.println("  was " + parent.getSize());
+                            parent.setSize(parent.getParent().getSize());
+                            System.out.println("  is  " + parent.getSize());
+                        }
+                        
+                    });
+            	}
+            	
 
                 for (Iterator iter = pageListeners.iterator(); iter.hasNext();) {
                     IBookkeepingPageListener pageListener = (IBookkeepingPageListener) iter

@@ -134,7 +134,7 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	 * This method is used when a new entry or changes to an existing
 	 * entry are to be committed to the database.
 	 */
-	void copyProperties(Entry sourceEntry) {
+	void copyProperties(MutableEntryImpl sourceEntry) {
 		creation = sourceEntry.getCreation();
 		check = sourceEntry.getCheck();
 		valuta = sourceEntry.getValuta();
@@ -144,16 +144,6 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 		memo = sourceEntry.getMemo();
 		
 		copyExtensions(sourceEntry.getExtensionsAsIs());
-	}
-	
-	/*
-	 * Used by the above to get extension info from mutable entry.
-	 */
-	public Map getExtensionsAsIs() {
-		// Entry interface, but called only from mutable
-		// entries.
-		// TODO: can we tidy this up???
-		throw new RuntimeException("internal error");
 	}
 	
 	/**

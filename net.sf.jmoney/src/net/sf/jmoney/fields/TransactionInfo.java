@@ -66,10 +66,6 @@ public class TransactionInfo implements IExtensionPropertySetInfo {
         return Transaction.class;
     }
     
-    public Class getMutableInterfaceClass() {
-        return MutableTransaction.class;
-    }
-    
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		// TODO implement a date control factory.
 		// For time being this does not matter because the transaction

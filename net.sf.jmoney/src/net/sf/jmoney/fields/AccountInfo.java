@@ -29,7 +29,6 @@ import net.sf.jmoney.model2.AbstractAccountImpl;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.MutableAccount;
 import net.sf.jmoney.model2.IExtensionPropertySetInfo;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -63,10 +62,6 @@ public class AccountInfo implements IExtensionPropertySetInfo {
 
     public Class getInterfaceClass() {
         return Account.class;
-    }
-    
-    public Class getMutableInterfaceClass() {
-        return MutableAccount.class;
     }
     
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
