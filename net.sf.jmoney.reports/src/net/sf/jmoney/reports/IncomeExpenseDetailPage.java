@@ -357,8 +357,8 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 		try {
 			String reportFile =
 				subtotalsCheckBox.getSelection()
-					? "resources/IncomeExpenseSubtotals.jasper"
-					: "resources/IncomeExpense.jasper";
+					? "resources/ItemizedIncomeExpense.jasper"
+					: "resources/ItemizedIncomeExpense.jasper";
 			URL url = ReportsPlugin.class.getResource(reportFile);
 			if (url == null) {
 				Object [] messageArgs = new Object[] {
@@ -438,20 +438,8 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 			for (Iterator eIt = account.getEntries().iterator(); eIt.hasNext(); ) {
 				Entry e = (Entry) eIt.next();
 				if (accept(e)) {
-					HashMap items = (HashMap) byCurrency.get(e.getCommodity());
-					if (items == null) {
-						items = new HashMap();
-						byCurrency.put(e.getCommodity(), items);
-					}
-					
-					Item i = (Item) items.get(account);
-					if (i == null) {
-						i = new Item(account, e.getCommodity(), e.getAmount());
-						items.put(e.getAccount(), i);
+						Item i = new Item(account, e);
 						allItems.add(i);
-					} else {
-						i.addToSum(e.getAmount());
-					}
 				}
 			}
 
@@ -481,14 +469,10 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 
 	public class Item implements Comparable {
 
-		private Account category;
-		private Commodity commodity;
-		private long sum;
+		private Entry entry;
 
-		public Item(Account aCategory, Commodity commodity, long aSum) {
-			category = aCategory;
-			this.commodity = commodity;
-			sum = aSum;
+		public Item(Account aCategory, Entry entry) {
+			this.entry = entry;
 		}
 
 		/**
@@ -498,13 +482,13 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 		// TODO: rename this method
 		public String getCurrencyCode() {
 			
-			return ((Currency)commodity).getCode();
+			return ((Currency)entry.getCommodity()).getCode();
 		}
 
 		public String getBaseCategory() {
-			if (category == null)
+			if (entry.getAccount() == null)
 				return ReportsPlugin.getResourceString("Report.IncomeExpense.NoCategory");
-                        Account baseCategory = category;
+                        Account baseCategory = entry.getAccount();
                         while (baseCategory.getParent() != null) {
                             baseCategory = baseCategory.getParent();
                         }
@@ -512,25 +496,29 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 		}
 
 		public String getCategory() {
-			return category == null
+			return entry.getAccount() == null
 				? ReportsPlugin.getResourceString("Report.IncomeExpense.NoCategory")
-				: category.getFullAccountName();
+				: entry.getAccount().getFullAccountName();
 		}
 
 		public Long getIncome() {
-			return sum >= 0 ? new Long(sum) : null;
+			return new Long(entry.getAmount());
 		}
 
 		public String getIncomeString() {
-                    return formatAmount(commodity, getIncome());
+                    return formatAmount(entry.getCommodity(), getIncome());
 		}
 
 		public Long getExpense() {
-			return sum < 0 ? new Long(-sum) : null;
+			return entry.getAmount() < 0 ? new Long(-entry.getAmount()) : null;
 		}
 
 		public String getExpenseString() {
-			return formatAmount(commodity, getExpense());
+			return formatAmount(entry.getCommodity(), getExpense());
+		}
+		
+		public String getDescription() {
+			return entry.getDescription();
 		}
 		
 		private String formatAmount(Commodity commodity, Long amount) {
@@ -541,12 +529,8 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 			}
 		}
 		
-		public void addToSum(long amount) {
-			sum += amount;
-		}
-
 		public boolean noCategory() {
-			return category == null;
+			return entry.getAccount() == null;
 		}
 
 		public int compareTo(Object o) {
