@@ -21,6 +21,7 @@
  */
 package net.sf.jmoney.test;
 
+
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
