@@ -214,7 +214,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			node != null;
 			node = (Element) node.getNextSibling()) {
 
-			// System.out.println("Node: " + node.getNodeName());
+			System.out.println("Node: " + node.getNodeName());
 			if (node.getNodeName().compareToIgnoreCase("gnc:Account") == 0) {
 				String accountName = null;
 				String accountGUID = null;
@@ -372,7 +372,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			transactionElement =
 				(Element) transactionElement.getNextSibling()) {
 
-			// System.out.println("Node: " + transactionElement.getNodeName());
+			System.out.println("Node: " + transactionElement.getNodeName());
 
 			if (transactionElement
 				.getNodeName()

@@ -83,7 +83,7 @@ public class GnucashXMLImportAction implements IWorkbenchWindowActionDelegate {
 		xmlFileChooser.setFilterExtensions(new String[] { "*.xml;*.xac" });
 		xmlFileChooser.setFilterNames(new String[] { "XML Gnucash Files (*.xml; *.xac)" });
 		// TODO: Faucheux - delete Directory 
-		xmlFileChooser.setFilterPath("D:\\Program Files\\Eclipse\\eclipse\\workspace\\ReadGnucashFile");
+		xmlFileChooser.setFilterPath("D:\\Documents and Settings\\Administrateur\\Mes documents\\Mes comptes");
 		String fileName = xmlFileChooser.open();
 
 	    if (fileName != null) {
@@ -91,6 +91,11 @@ public class GnucashXMLImportAction implements IWorkbenchWindowActionDelegate {
 	        GnucashXML gnucashXML = new GnucashXML(window);
 			gnucashXML.importFile(session, qifFile);
 		}
+	    
+	    // TODO Faucheux - delete this
+	    // Now export
+	    GnucashXMLExport export = new GnucashXMLExport(session);
+	    export.export();
 	}
 
 	/**
