@@ -55,9 +55,7 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IMemento;
-import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.PlatformUI;
 
 import net.sf.jmoney.Constants;
 import net.sf.jmoney.IBookkeepingPageListener;
@@ -68,7 +66,6 @@ import net.sf.jmoney.model2.AccountDeletedEvent;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccountImpl;
-import net.sf.jmoney.model2.ObjectLockedForEditException;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
@@ -104,24 +101,11 @@ public class CategoryPage implements IBookkeepingPageListener {
 	private Session session;
 
 	public void init(IMemento memento) {
-		if (memento != null) {
-//			entryOrder = memento.getString("entryOrder");
-		} else {
-		}
-        
-/*        
-        // Set the grid position of all columns in the grid.
-        String customLayoutProperty = properties.getProperty("AccountEntriesPanel.customLayouts", "no");
-        if (customLayoutProperty.equals("yes")) {
-            // Read the layouts for the simple and extended layouts.
-        } else {
-            // Set default layouts.
-        }
-*/        
+		// No view state to restore
 	}
 
 	public void saveState(IMemento memento) {
-//      memento.createChild("entryOrderField", entryOrderFieldName);
+		// No view state to save
 	}
 
 	/* (non-Javadoc)
@@ -144,7 +128,7 @@ public class CategoryPage implements IBookkeepingPageListener {
 		Composite topLevelControl = new Composite(parent, SWT.NULL);
 		
 		GridLayout layout = new GridLayout();
-		layout.numColumns = 3;
+		layout.numColumns = 2;
 		topLevelControl.setLayout(layout);
 		
 		viewer = new TreeViewer(topLevelControl, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
@@ -156,8 +140,6 @@ public class CategoryPage implements IBookkeepingPageListener {
 		gridData.grabExcessVerticalSpace = true;
 		gridData.horizontalSpan = 2;
 		viewer.getControl().setLayoutData(gridData);
-		
-		
 		
 //		drillDownAdapter = new DrillDownAdapter(viewer);
 		ViewContentProvider contentProvider = new ViewContentProvider();
@@ -205,39 +187,6 @@ public class CategoryPage implements IBookkeepingPageListener {
 			}
 		});
 		
-		List sampleCheckButton2 = new List(topLevelControl, 0);
-		sampleCheckButton2.add("t");
-		sampleCheckButton2.add("h");
-		sampleCheckButton2.add("i");
-		sampleCheckButton2.add("s");
-		sampleCheckButton2.add(" ");
-		sampleCheckButton2.add("c");
-		sampleCheckButton2.add("o");
-		sampleCheckButton2.add("n");
-		sampleCheckButton2.add("t");
-		sampleCheckButton2.add("r");
-		sampleCheckButton2.add("o");
-		sampleCheckButton2.add("l");
-		sampleCheckButton2.add(" ");
-		sampleCheckButton2.add("f");
-		sampleCheckButton2.add("o");
-		sampleCheckButton2.add("r");
-		sampleCheckButton2.add("c");
-		sampleCheckButton2.add("e");
-		sampleCheckButton2.add("s");
-		sampleCheckButton2.add(" ");
-		sampleCheckButton2.add("t");
-		sampleCheckButton2.add("h");
-		sampleCheckButton2.add("e");
-		sampleCheckButton2.add(" ");
-		sampleCheckButton2.add("h");
-		sampleCheckButton2.add("e");
-		sampleCheckButton2.add("i");
-		sampleCheckButton2.add("g");
-		sampleCheckButton2.add("h");
-		sampleCheckButton2.add("t");
-		sampleCheckButton2.add(".");
-
 		nameLabel = new Label(topLevelControl, 0);
 		nameLabel.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.name"));
 		
@@ -261,15 +210,7 @@ public class CategoryPage implements IBookkeepingPageListener {
 		GridData gridData5 = new GridData();
 		gridData.horizontalAlignment = GridData.FILL;
 		gridData5.grabExcessHorizontalSpace = true;
-		gridData.horizontalSpan = 2;
 		nameField.setLayoutData(gridData5);
-
-		Label wideLabel = new Label(topLevelControl, 0);
-		wideLabel.setText("This control forces up the width of this column in the grid.  Without it, the Swing control would be very thin.");
-
-		GridData gridData3 = new GridData();
-		gridData3.horizontalSpan = 2;
-		wideLabel.setLayoutData(gridData3);
 
 		// Set up the context menus.
 		makeActions();
