@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+   id="net.sf.jmoney.jdbcdatastore"
+   name="SQL Server Datastore Plug-in"
+   version="1.0.0"
+   provider-name=""
+   class="net.sf.jmoney.jdbcdatastore.JDBCDatastorePlugin">
+
+   <runtime>
+      <library name="jdbcdatastore.jar">
+         <export name="*"/>
+      </library>
+      <library name="hsqldb.jar">
+         <export name="*"/>
+      </library>
+
+   </runtime>
+
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="net.sf.jmoney"/>
+   </requires>
+
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            label="Sample Action Set"
+            visible="true"
+            id="net.sf.jmoney.jdbcdatastore.actionSet">
+
+         <action
+               label="%MainFrame.open"
+               icon="icons/Open16.gif"
+               tooltip="Open SQL Server Session"
+               class="net.sf.jmoney.jdbcdatastore.actions.OpenSessionAction"
+               menubarPath="file/fileGroup"
+               toolbarPath="fileGroup"
+               id="net.sf.jmoney.jdbcdatastore.actions.OpenSession">
+         </action>
+      </actionSet>
+   </extension>
+
+</plugin>
