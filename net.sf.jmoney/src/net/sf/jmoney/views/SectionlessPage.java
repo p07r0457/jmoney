@@ -22,9 +22,12 @@
 
 package net.sf.jmoney.views;
 
+import java.awt.BorderLayout;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.ControlListener;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -72,6 +75,7 @@ public abstract class SectionlessPage extends FormPage {
 
 	        FormToolkit toolkit = page.getManagedForm().getToolkit();
 
+	    parent.setLayout(new FillLayout());
 		Composite propertiesControl = createControl(page.getSelectedObject(), parent);
 			
 	        // TODO: Do this.........
@@ -85,36 +89,9 @@ public abstract class SectionlessPage extends FormPage {
 	                SWT.COLOR_DARK_BLUE));
 	        control.pack(true);
 
-	        // Force the parent (DARK_BLUE) to be as big as its container
-	        control.addControlListener(new ControlListener() {
-	            public void controlMoved(ControlEvent e) {  }
-	            public void controlResized(ControlEvent e) {
-	                Composite parent = (Composite) e.getSource();
-	                System.out.println("Redraw dark blue " + parent);
-	                System.out.println("  was " + parent.getSize());
-//	              parent.setSize(parent.getParent().getSize());
-	                parent.setSize(parent.getParent().getSize().x * 95 / 100, parent.getParent().getSize().y * 90 / 100);
-	                System.out.println("  is  " + parent.getSize());
-	            }
-	            
-	        });
-
 	        parent.setBackground(control.getDisplay().getSystemColor(
 	                SWT.COLOR_YELLOW));
 	        parent.pack(true);
-	        parent.addControlListener(new ControlListener() {
-	            public void controlMoved(ControlEvent e) {  }
-	            public void controlResized(ControlEvent e) {
-	                Composite parent = (Composite) e.getSource();
-	                System.out.println("Redraw yellow " + parent);
-	                System.out.println("  was " + parent.getSize());
-//	                parent.setSize(parent.getParent().getSize());
-	                
-//	                control.setSize(parent.getSize().x * 95 / 100, parent.getSize().x * 90 / 100);
-	                control.setSize(parent.getSize());
-	                System.out.println("  is  " + parent.getSize());
-	            }
-	        });
 	        
 	        refresh();
 	    }
