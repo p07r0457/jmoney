@@ -204,8 +204,16 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     public ISessionManager getSessionManager() {
         return sessionManager;
     }
+   
+    // TODO: remove this method when Java 1.4 becomes a requirement
+    public static void myAssert(boolean assertion) {
+    	if (!assertion) {
+    		IStatus status = null;
+    		JMoneyPlugin.log(status);
+    	}
+    }
     
-	/**
+    /**
 	 * Saves the old session.
 	 * Returns false if canceled by user or the save fails.
 	 */

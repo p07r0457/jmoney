@@ -438,7 +438,7 @@ public class PropertySet {
 			// We have already checked that all property sets have unique ids, so a
 			// property set with the same id cannot already exist as an extension
 			// to the extendable property set.
-			assert (!extendablePropertySet.extensionPropertySets.containsKey(propertySetId));
+			JMoneyPlugin.myAssert (!extendablePropertySet.extensionPropertySets.containsKey(propertySetId));
 			extendablePropertySet.extensionPropertySets.put(propertySetId, this);
 
 			// Set up the extension that contains the default property values.

@@ -170,7 +170,7 @@ public class NavigationView extends ViewPart {
 			if (obj instanceof TreeNode) {
 				return ((TreeNode)obj).getPosition();
 			} else {
-				assert (obj instanceof ExtendableObject);
+				JMoneyPlugin.myAssert (obj instanceof ExtendableObject);
 				return 0;
 			}
 		}
