@@ -73,19 +73,13 @@
          </action>
       </actionSet>
    </extension>
+
    <extension
-         point="net.sf.jmoney.datastores">
-         <session
-               class="net.sf.jmoney.serializeddatastore.SessionImpl">
-         </session>
-   </extension>
-   <extension
-         point="org.eclipse.ui.elementFactories"
-         id="factoryid"
-         name="Restore Serialized Datastore Session into Workbench">
-         <session
-               class="net.sf.jmoney.serializeddatastore.SessionFactory">
-         </session>
+         point="org.eclipse.ui.elementFactories">
+        <factory 
+           id ="net.sf.jmoney.serializeddatastore.SessionFactory" 
+           class="net.sf.jmoney.serializeddatastore.SessionFactory">
+        </factory> 
    </extension>
 
 </plugin>
