@@ -62,6 +62,11 @@ public class AccountEditor implements IPropertyControl {
     private Combo propertyControl;
 
     private Vector allAccounts = new Vector();
+
+    /**
+     * The session whose accounts are listed in the combo box
+     */
+    private Session session = null;
     
     /** 
      * @param propertyAccessor the accessor for the property to be edited
@@ -70,26 +75,6 @@ public class AccountEditor implements IPropertyControl {
     public AccountEditor(Composite parent, PropertyAccessor propertyAccessor) {
         propertyControl = new Combo(parent, 0);
         this.accountPropertyAccessor = propertyAccessor;
-
-        Session session = JMoneyPlugin.getDefault().getSession();
-
-        // We keep an array of accounts, the order of the array matches
-        // the order in the combo box.  This allows easy lookup of the 
-        // account given the selected index in the combo.
-        
-        addAccounts(session.getAccountIterator(), allAccounts);
-
-        // Sort the accounts by name.
-        Collections.sort(allAccounts, new Comparator() {
-			public int compare(Object arg0, Object arg1) {
-				return ((Account)arg0).getName().compareTo(((Account)arg1).getName());
-			}
-        });
-        
-        for (Iterator iter = allAccounts.iterator(); iter.hasNext();) {
-        	Account account = (Account) iter.next();
-            propertyControl.add(getLabel(account));
-        }
 
         // Selection changes are reflected immediately in the
         // mutable account object.  This allows other properties
@@ -135,7 +120,31 @@ public class AccountEditor implements IPropertyControl {
     	
     	if (object == null) {
             propertyControl.setText("");
+            propertyControl.removeAll();
     	} else {
+    		if (session != object.getSession()) {
+    			session = object.getSession();
+    			
+    			// We keep an array of accounts, the order of the array matches
+    			// the order in the combo box.  This allows easy lookup of the 
+    			// account given the selected index in the combo.
+    			
+    			addAccounts(session.getAccountIterator(), allAccounts);
+    			
+    			// Sort the accounts by name.
+    			Collections.sort(allAccounts, new Comparator() {
+    				public int compare(Object arg0, Object arg1) {
+    					return ((Account)arg0).getName().compareTo(((Account)arg1).getName());
+    				}
+    			});
+    			
+                propertyControl.removeAll();
+    			for (Iterator iter = allAccounts.iterator(); iter.hasNext();) {
+    				Account account = (Account) iter.next();
+    				propertyControl.add(getLabel(account));
+    			}
+    		}
+    		
     		Account account = (Account) object.getPropertyValue(accountPropertyAccessor);
     		if (account != null) {
     			propertyControl.setText(getLabel(account));

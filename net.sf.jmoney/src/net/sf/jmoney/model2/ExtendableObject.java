@@ -241,7 +241,7 @@ public abstract class ExtendableObject {
 				// It is important that this is done before the property
 				// values are set in it.  The property may be propagated
 				// to other extensions, and back to this extension, through
-				// adaptors.  We could get infinite recursion if the propagation
+				// adapters.  We could get infinite recursion if the propagation
 				// got back to this extension and the extension was not set.
 				extension.setBaseObject(this);
 				extension.setPropertySet(propertySet);
@@ -276,7 +276,7 @@ public abstract class ExtendableObject {
 				// It is important that this is done before the property
 				// values are set in it.  The property may be propagated
 				// to other extensions, and back to this extension, through
-				// adaptors.  We could get infinite recursion if the propagation
+				// adapters.  We could get infinite recursion if the propagation
 				// got back to this extension and the extension was not set.
 				
 				// TODO: We really should not be propagating properties now.
@@ -555,7 +555,7 @@ public abstract class ExtendableObject {
 		// extension will always return a non-null extension.
 		// This is necessary when setting properties here, and also
 		// necessary that the code that propagates property changes
-		// through the adaptors get non-null extensions.
+		// through the propagators get non-null extensions.
 		alwaysReturnNonNullExtensions = true;
 		
 		PropertySet propertySet = PropertySet.getPropertySetCreatingIfNecessary(propertySetId, getExtendablePropertySetId());

@@ -132,7 +132,7 @@ public class AmountEditor implements IPropertyControl {
 			}});
     }
     
-    protected void updateCommodity(Commodity newCommodity) {
+    public void updateCommodity(Commodity newCommodity) {
     	// Get the current text from the control and try to re-format
     	// it for the new currency.
     	// However, if the property can take null values and the control
