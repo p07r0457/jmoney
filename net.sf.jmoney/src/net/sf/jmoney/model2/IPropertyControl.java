@@ -38,39 +38,31 @@ import org.eclipse.swt.widgets.Control;
  * @see IPropertyControlFactory
  * @see org.eclipse.swt.widgets.Control
  * @author Nigel Westbury
+ * @author Johann Gyger
  */
 public interface IPropertyControl {
-	/**
-	 * This method gives access to the underlying control.
-	 * Do not use this method to get the control for the
-	 * purposes of getting and setting property values
-	 * to and from the control.  Instead use the methods in
-	 * this interface.  Use this method to get the control
-	 * for the purpose of adding focus listeners and other
-	 * such functionality. 
-	 * 
-	 * @return The underlying control.
-	 */
-	Control getControl();
-	
-	/**
-	 * Load the value into the control object.
-	 * 
-	 * @param object The object that contains the value of
-	 * the property.
-	 */
-	void load(Object object);
-	
-	/**
-	 * Load the value into the control object.  This method should
-	 * be used when someone else has the object locked and
-	 * so the control object should be disabled.  The value of the
-	 * property should be shown in the control object.
-	 * 
-	 * @param object The object that contains the value of
-	 * the property.
-	 */
-	void loadDisabled(Object object);
-	
-	void save();
+
+    /**
+     * This method gives access to the underlying control.
+     * Do not use this method to get the control for the
+     * purposes of getting and setting property values
+     * to and from the control.  Instead use the methods in
+     * this interface.  Use this method to get the control
+     * for the purpose of adding focus listeners and other
+     * such functionality. 
+     * 
+     * @return The underlying control.
+     */
+    Control getControl();
+
+    /**
+     * Load the value into the control object.
+     * 
+     * @param object The object that contains the value of
+     * the property.
+     */
+    void load(ExtendableObject object);
+
+    void save();
+
 }
