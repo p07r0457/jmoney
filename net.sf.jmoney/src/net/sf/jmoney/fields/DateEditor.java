@@ -22,11 +22,8 @@
 
 package net.sf.jmoney.fields;
 
-import java.text.DateFormat;
-import java.text.MessageFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Locale;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
@@ -35,17 +32,13 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.resource.ImageRegistry;
-import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.jface.viewers.CellEditor;
-import org.eclipse.jface.viewers.DialogCellEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -54,11 +47,7 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.vafada.swtcalendar.SWTCalendar;
@@ -95,6 +84,8 @@ public class DateEditor implements IPropertyControl {
 
 	static private Image threeDotsImage = null;
 
+	SWTCalendar swtcal = null;
+	
 	/**
      * Create a new date editor.
      */
@@ -148,8 +139,9 @@ public class DateEditor implements IPropertyControl {
 
 		button.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent event) {
-
-                final SWTCalendarDialog cal = new SWTCalendarDialog(parent.getDisplay());
+				final Shell shell = new Shell(parent.getShell(), SWT.NONE);
+		        shell.setLayout(new RowLayout());
+    	        swtcal = new SWTCalendar(shell);
                 
                 // Set the currently set date into the calendar control
                 // (If the parse method returned null then the text control did not
@@ -157,17 +149,49 @@ public class DateEditor implements IPropertyControl {
                 // date picker).
                 Date date = fDateFormat.parse(textControl.getText());
                 if (date != null) {
-                	cal.setDate(date);
+        	        Calendar calendar = Calendar.getInstance();
+        	        calendar.setTime(date);
+        	        swtcal.setCalendar(calendar);
                 }
                 
-                cal.addDateChangedListener(new SWTCalendarListener() {
-                    public void dateChanged(SWTCalendarEvent calendarEvent) {
-                        Date date = calendarEvent.getCalendar().getTime();
-                        textControl.setText(fDateFormat.format(date));
-                    }
-                });
+                swtcal.addSWTCalendarListener(
+                		new SWTCalendarListener() {
+                			public void dateChanged(SWTCalendarEvent calendarEvent) {
+                				Date date = calendarEvent.getCalendar().getTime();
+                				textControl.setText(fDateFormat.format(date));
+                			}
+                		});
 
-                cal.open();
+    	        shell.pack();
+    	        
+    	        // This is an attempt to locate the calendar control beneath
+    	        // the date control.  This is not trivial because the calendar
+    	        // control is a shell.  We cannot make it a control with the same
+    	        // parent as the date control because then it would not overlap
+    	        // the lower controls outside the parent control.
+    	        // We go back through the ancestors to try to get the co-ordinates
+    	        // of the date control relative to the shell.  This works reasonably
+    	        // well except that on Windows we need a fudge factor of 50
+    	        // (perhaps because of window trimmings).
+    	        // There is probably a better way of doing this.
+    	        
+    	        Point size = fPropertyControl.getSize();
+    	        int x = 0;
+    	        int y = size.y + 2 + 50;
+    	        for (Composite ancestor = fPropertyControl; ancestor != null; ancestor = ancestor.getParent()) {
+    	        	Point location = ancestor.getLocation();
+    	        	x += location.x;
+    	        	y += location.y;
+    	        }
+    	        shell.setLocation(x, y);
+    	        shell.open();
+    	        
+    	        shell.addShellListener(new ShellAdapter() {
+    	        	public void shellDeactivated(ShellEvent e) {
+    	        		shell.close();
+    	        		swtcal = null;
+    	        	}
+    	        });
 			}
 		});
     }
@@ -201,42 +225,7 @@ public class DateEditor implements IPropertyControl {
         return fPropertyControl;
     }
 
-	public class SWTCalendarDialog {
-	    private Shell shell;
-	    private SWTCalendar swtcal;
-	    private Display display;
-
-	    public SWTCalendarDialog(Display display) {
-	        this.display = display;
-	        shell = new Shell(display, SWT.APPLICATION_MODAL | SWT.CLOSE);
-	        shell.setLayout(new RowLayout());
-	        swtcal = new SWTCalendar(shell);
-	    }
-
-	    public void open() {
-	        shell.pack();
-	        shell.open();
-	        while (!shell.isDisposed()) {
-	            if (!display.readAndDispatch()) display.sleep();
-	        }
-	    }
-
-	    public Calendar getCalendar() {
-	        return swtcal.getCalendar();
-	    }
-
-	    public void setDate(Date date) {
-	        Calendar calendar = Calendar.getInstance();
-	        calendar.setTime(date);
-	        swtcal.setCalendar(calendar);
-	    }
-
-	    public void addDateChangedListener(SWTCalendarListener listener) {
-	        swtcal.addSWTCalendarListener(listener);
-	    }
-	}
-
-	/**
+    /**
 	 * Internal class for laying out the dialog.
 	 */
 	private class DialogCellLayout extends Layout {
