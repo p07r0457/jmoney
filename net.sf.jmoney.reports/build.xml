@@ -50,6 +50,7 @@
   <target name="init">
     <tstamp/>
     <mkdir dir="${build}/net/sf/jmoney/reports/jasper"/>
+    <mkdir dir="${build}/net/sf/jmoney/reports/resources"/>
   </target>
 
   <target name="reports" depends="init"
