@@ -47,7 +47,6 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.views.NodeEditor;
 import net.sf.jmoney.views.SectionlessPage;
 
@@ -75,9 +74,18 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 import com.jasperassistant.designer.viewer.ViewerComposite;
 
 /**
+ * This page displays the detailed income and expense items for a
+ * particular income and expense account.  Each entry is itemized.
+ * <P>
+ * This page requires an income and expense account.  It is therefore
+ * opened not an a page under reports, but is a page in the editor
+ * for the account.  This allows multiple instances of this report
+ * to be open in the editor at the same time, which may or may not
+ * be a good thing.
+ * 
  * @author Nigel Westbury
  */
-public class IncomeExpensePage implements IBookkeepingPageFactory {
+public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 
     private static final String PAGE_ID = "net.sf.jmoney.reports.incomeAndExpense";
     
@@ -122,16 +130,19 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 	private Date fromDate;
 	private Date toDate;
 
+	private IncomeExpenseAccount account = null;
+
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
-	private Composite createContent(Session session, Composite parent) {
+	private Composite createContent(IncomeExpenseAccount account, Composite parent) {
+		this.account = account;
+		
 		/**
 		 * topLevelControl is a control with grid layout, 
 		 * onto which all sub-controls should be placed.
 		 */
 		Composite topLevelControl = new Composite(parent, SWT.NULL);
-		
 		GridLayout layout = new GridLayout();
 		layout.numColumns = 1;
 		topLevelControl.setLayout(layout);
@@ -217,10 +228,14 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 				PAGE_ID, 
 				"Income & Expense Report", 
 				"Income & Expense Report") {
-			
+
+			/**
+			 * @param nodeObject this page is displayed only for node objects
+			 * 			that are IncomeExpenseAccount instances.  Therefore
+			 * 			<code>nodeObject</code> will always be an IncomeExpenseAccount instance.
+			 */
 			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
-				Session session = JMoneyPlugin.getDefault().getSession();
-				Composite control = createContent(session, parent);
+				Composite control = createContent((IncomeExpenseAccount)nodeObject, parent);
 
 				// If a memento is passed, restore the field contents
 				if (memento != null) {
@@ -420,11 +435,7 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 		 */
 		HashMap byCurrency = new HashMap();
 
-		Session session = JMoneyPlugin.getDefault().getSession();
-		Iterator aIt = session.getIncomeExpenseAccountIterator();
-		while (aIt.hasNext()) {
-			IncomeExpenseAccount a = (IncomeExpenseAccount) aIt.next();
-			for (Iterator eIt = a.getEntries().iterator(); eIt.hasNext(); ) {
+			for (Iterator eIt = account.getEntries().iterator(); eIt.hasNext(); ) {
 				Entry e = (Entry) eIt.next();
 				if (accept(e)) {
 					HashMap items = (HashMap) byCurrency.get(e.getCommodity());
@@ -433,9 +444,9 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 						byCurrency.put(e.getCommodity(), items);
 					}
 					
-					Item i = (Item) items.get(a);
+					Item i = (Item) items.get(account);
 					if (i == null) {
-						i = new Item(a, e.getCommodity(), e.getAmount());
+						i = new Item(account, e.getCommodity(), e.getAmount());
 						items.put(e.getAccount(), i);
 						allItems.add(i);
 					} else {
@@ -443,7 +454,6 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 					}
 				}
 			}
-		}
 
 		Collections.sort(allItems);
 		return allItems;
