@@ -23,9 +23,8 @@
 package net.sf.jmoney.serializeddatastore.actions;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.serializeddatastore.*;
+import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
+import net.sf.jmoney.serializeddatastore.SessionManager;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;

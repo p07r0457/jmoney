@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.model;
 
-import java.util.*;
+import java.util.Date;
 
 /**
  * The data model for a double entry.

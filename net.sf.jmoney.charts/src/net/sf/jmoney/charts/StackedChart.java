@@ -1,36 +1,25 @@
 package net.sf.jmoney.charts;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Frame;
-import java.util.Vector;
 
-import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JWindow;
 
-import org.eclipse.osgi.framework.debug.Debug;
+import net.sf.jmoney.model2.Session;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
-import org.jfree.chart.axis.CategoryLabelPosition;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.entity.CategoryItemEntity;
-import org.jfree.chart.labels.ItemLabelAnchor;
-import org.jfree.chart.labels.ItemLabelPosition;
 import org.jfree.chart.labels.StandardCategoryLabelGenerator;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.BarRenderer;
 import org.jfree.data.CategoryDataset;
-import org.jfree.ui.TextAnchor;
-
-import net.sf.jmoney.model2.*;
 
 
 

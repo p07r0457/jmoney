@@ -22,20 +22,12 @@
 
 package net.sf.jmoney.serializeddatastore.actions;
 
-import java.io.File;
+import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
 
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
-
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.ISessionManager;
-import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.serializeddatastore.*;
-import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
 
 /**
  * Our sample action implements workbench action delegate.

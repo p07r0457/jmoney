@@ -23,19 +23,16 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
-import java.util.Iterator;
-import java.util.Hashtable;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.ui.IMemento;
-import org.eclipse.ui.IPersistableElement;
 import org.eclipse.ui.IWorkbenchWindow;
 
 /**

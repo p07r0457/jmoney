@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.model;
 
-import java.io.*;
+import java.io.Serializable;
 
 /**
  * Interface for those classes that can be a category of an entry.

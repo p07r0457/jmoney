@@ -24,11 +24,10 @@ package net.sf.jmoney.views;
 
 import java.util.Vector;
 
-import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.IBookkeepingPage;
+import net.sf.jmoney.IBookkeepingPageFactory;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IMemento;

@@ -23,10 +23,10 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Map;
+
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.BankAccountInfo;
-
-import java.util.Map;
 
 /**
  * The data model for an bank account.

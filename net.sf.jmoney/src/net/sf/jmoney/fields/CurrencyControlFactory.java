@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.fields;
 
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 

@@ -24,14 +24,14 @@ package net.sf.jmoney.serializeddatastore.actions;
 
 import java.io.File;
 
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
+
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
-import org.eclipse.swt.widgets.FileDialog;
-
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.serializeddatastore.*;
 
 /**
  * Our sample action implements workbench action delegate.

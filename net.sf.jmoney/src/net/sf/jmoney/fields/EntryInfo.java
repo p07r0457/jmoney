@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.fields;
 
-import org.eclipse.swt.widgets.Composite;
-
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
@@ -35,6 +33,8 @@ import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.SessionChangeAdapter;
+
+import org.eclipse.swt.widgets.Composite;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields

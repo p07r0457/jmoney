@@ -22,11 +22,10 @@
 
 package net.sf.jmoney.model2;
 
-import java.lang.reflect.*;
-import java.beans.*;   // for PropertyChangeSupport and PropertyChangeListener
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Vector;
 
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.widgets.Composite;

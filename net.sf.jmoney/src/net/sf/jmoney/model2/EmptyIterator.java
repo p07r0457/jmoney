@@ -22,7 +22,8 @@
 
 package net.sf.jmoney.model2;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  *

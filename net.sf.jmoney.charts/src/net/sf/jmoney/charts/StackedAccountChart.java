@@ -1,34 +1,19 @@
 package net.sf.jmoney.charts;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
 import java.util.Vector;
+
+import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.Session;
 
 import org.jfree.data.CategoryDataset;
 import org.jfree.data.DefaultCategoryDataset;
-import org.jfree.data.statistics.Statistics;
 import org.jfree.data.time.Month;
 import org.jfree.data.time.RegularTimePeriod;
-import org.jfree.data.time.Year;
-
-import sun.util.calendar.CalendarDate;
-
-import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.Session;
 
 public class StackedAccountChart extends StackedChart {
 

@@ -22,7 +22,8 @@
 
 package net.sf.jmoney.model;
 
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Vector;
 
 public class SplittedEntry extends Entry {
 

@@ -4,34 +4,46 @@
 
 package net.sf.jmoney.gnucashXML;
 
-import java.io.*;
-import java.text.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.DateFormat;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
 
 import javax.swing.filechooser.FileFilter;
 
-import net.sf.jmoney.Constants;
-import net.sf.jmoney.JMoneyPlugin;
-
 import net.sf.jmoney.fields.BankAccountInfo;
-import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.model2.*;
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.Transaction;
+import oracle.xml.parser.v2.DOMParser;
+import oracle.xml.parser.v2.XMLDocument;
+import oracle.xml.parser.v2.XMLElement;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.internal.dialogs.EventLoopProgressMonitor;
 import org.eclipse.ui.internal.progress.ProgressMonitorJobsDialog;
-
-// all for xml
-import org.w3c.dom.*;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import oracle.xml.parser.v2.*;
-
-import java.lang.reflect.InvocationTargetException;
-import java.net.*;
 
 /** 
  * @author Faucheux

@@ -1,7 +1,6 @@
 
 package net.sf.jmoney.charts;
 
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -11,13 +10,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
-import org.jfree.data.time.RegularTimePeriod;
-
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IEntryQueries;
 import net.sf.jmoney.model2.Session;
+
+import org.jfree.data.time.RegularTimePeriod;
 
 /**
  * Toolbox-Class for the access to the dataes.

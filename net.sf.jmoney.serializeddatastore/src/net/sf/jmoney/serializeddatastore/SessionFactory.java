@@ -25,13 +25,8 @@ package net.sf.jmoney.serializeddatastore;
 import java.io.File;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
 import net.sf.jmoney.model2.ISessionFactory;
-import net.sf.jmoney.model2.ISessionManager;
-import net.sf.jmoney.model2.Session;
 
-import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.ui.IElementFactory;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;

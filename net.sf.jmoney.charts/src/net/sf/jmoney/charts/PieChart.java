@@ -1,27 +1,17 @@
 package net.sf.jmoney.charts;
 
-import java.awt.Color;
-import java.awt.Frame;
-import java.util.List;
-
-import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JWindow;
 
-import org.eclipse.osgi.framework.debug.Debug;
+import net.sf.jmoney.model2.Session;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartMouseListener;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.entity.PieSectionEntity;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.DefaultPieDataset;
-import org.jfree.data.PieDataset;
-import org.jfree.ui.*;
-
-import net.sf.jmoney.model2.*;
 
 
 /**

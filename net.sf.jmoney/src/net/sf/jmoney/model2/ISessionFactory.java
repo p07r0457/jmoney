@@ -23,10 +23,8 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
-
 import org.eclipse.ui.IMemento;
-import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.IPersistableElement;
 
 /**
  * A factory for re-creating sessions from a previously saved memento.

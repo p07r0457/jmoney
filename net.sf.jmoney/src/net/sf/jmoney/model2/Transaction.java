@@ -23,13 +23,12 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.TransactionInfo;
-
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
+
+import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.fields.TransactionInfo;
 
 /**
  *

@@ -22,8 +22,10 @@
 
 package net.sf.jmoney.propagators.reconciliation;
 
-import org.eclipse.core.runtime.*;
-import java.util.*;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+
+import org.eclipse.core.runtime.Plugin;
 
 /**
  * The main plugin class to be used in the desktop.

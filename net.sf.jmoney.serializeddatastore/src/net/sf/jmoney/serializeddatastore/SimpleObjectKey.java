@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ExtensionProperties;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertyAccessor;

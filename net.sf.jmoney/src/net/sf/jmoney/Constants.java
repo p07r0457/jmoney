@@ -22,7 +22,8 @@
 
 package net.sf.jmoney;
 
-import java.util.*;
+import java.util.ResourceBundle;
+
 import org.eclipse.swt.graphics.Image;
 
 /**

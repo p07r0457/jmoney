@@ -23,14 +23,14 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.CurrencyAccountInfo;
-
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.Date;
-import java.util.Map;
 import java.util.Iterator;
+import java.util.Map;
+
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.CurrencyAccountInfo;
 
 /**
  * The data model for an account.

@@ -22,7 +22,9 @@
 
 package net.sf.jmoney.model2;
 
-import java.lang.reflect.*; // for introspection
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import javax.swing.JComponent;
 
 /**

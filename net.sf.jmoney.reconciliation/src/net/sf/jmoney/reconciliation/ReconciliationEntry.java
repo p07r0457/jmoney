@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.reconciliation;
 
-import net.sf.jmoney.model2.*;
+import net.sf.jmoney.model2.EntryExtension;
 
 /**
  *

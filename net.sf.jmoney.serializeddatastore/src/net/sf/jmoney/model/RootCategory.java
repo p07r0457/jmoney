@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.model;
 
-import net.sf.jmoney.Constants;
 
 public class RootCategory extends AbstractCategory {
 

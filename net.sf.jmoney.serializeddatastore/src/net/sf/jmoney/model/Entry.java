@@ -22,10 +22,13 @@
 
 package net.sf.jmoney.model;
 
-import java.beans.*;
-import java.io.*;
-import java.util.*;
-import net.sf.jmoney.*;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.util.Calendar;
+import java.util.Date;
 
 /**
  * The data model for an entry.

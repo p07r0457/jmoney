@@ -23,10 +23,7 @@
 
 package net.sf.jmoney.model2;
 
-import java.io.Serializable;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  *

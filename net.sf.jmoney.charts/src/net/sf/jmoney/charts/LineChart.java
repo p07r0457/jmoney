@@ -2,32 +2,19 @@ package net.sf.jmoney.charts;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Frame;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Vector;
 
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JSplitPane;
-import javax.swing.JWindow;
 
-import org.eclipse.osgi.framework.debug.Debug;
+import net.sf.jmoney.model2.Session;
 
-import net.sf.jmoney.model2.*;  
-
-
-import org.jfree.data.*;
-import org.jfree.data.time.TimeSeriesCollection;
-import org.jfree.ui.RectangleAnchor;
-import org.jfree.ui.Spacer;
-import org.jfree.chart.*;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.data.time.TimeSeriesCollection;
 
 /**
  * A simple PieChart

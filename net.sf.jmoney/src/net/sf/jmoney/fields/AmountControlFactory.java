@@ -22,14 +22,14 @@
 
 package net.sf.jmoney.fields;
 
-import org.eclipse.jface.viewers.CellEditor;
-import org.eclipse.jface.viewers.TextCellEditor;
-import org.eclipse.swt.widgets.Table;
-
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
+
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.TextCellEditor;
+import org.eclipse.swt.widgets.Table;
 
 /**
  * A control factory to edit an amount of a commodity.

@@ -27,7 +27,6 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendableObject;

@@ -27,11 +27,9 @@ import java.beans.PropertyChangeSupport;
 import java.util.Iterator;
 
 import net.sf.jmoney.Constants;
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.ui.internal.JMoneyUIPlugin;
 
 /**
  * TODO Move to non-UI plug-in

@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.model;
 
-import net.sf.jmoney.*;
 import net.sf.jmoney.gui.SortedTreeNode;
 
 public class CategoryNode extends SortedTreeNode {

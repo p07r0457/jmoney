@@ -22,17 +22,11 @@
 
 package net.sf.jmoney.views;
 
-import java.awt.BorderLayout;
-
 import net.sf.jmoney.IBookkeepingPage;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ControlEvent;
-import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.forms.AbstractFormPart;
 import org.eclipse.ui.forms.IFormPart;

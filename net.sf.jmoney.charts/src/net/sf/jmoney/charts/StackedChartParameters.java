@@ -8,8 +8,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Button;
 import org.jfree.data.time.RegularTimePeriod;
 
 /**

@@ -22,8 +22,10 @@
 
 package net.sf.jmoney.reconciliation;
 
-import org.eclipse.ui.plugin.*;
-import java.util.*;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 /**
  * The main plugin class to be used in the desktop.

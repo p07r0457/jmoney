@@ -22,13 +22,16 @@
 
 package net.sf.jmoney;
 
-import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.actions.ActionFactory;
-import org.eclipse.ui.application.WorkbenchAdvisor;
+import org.eclipse.ui.application.IActionBarConfigurer;
+import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
-import org.eclipse.ui.application.*;
-import org.eclipse.jface.action.*;
+import org.eclipse.ui.application.WorkbenchAdvisor;
 
 /**
  * @author Nigel

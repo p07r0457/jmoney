@@ -22,8 +22,14 @@
 
 package net.sf.jmoney.model2;
 
-import java.lang.reflect.*; // for introspection
-import java.util.*; // for collections
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;

@@ -23,12 +23,12 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.EntryInfo;
-
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
+
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.EntryInfo;
 
 /**
  * The data model for an entry.

@@ -30,10 +30,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 
-import org.eclipse.jface.viewers.CellEditor;
-import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Table;
 
 /**
  * A control factory to edit an amount of a commodity.

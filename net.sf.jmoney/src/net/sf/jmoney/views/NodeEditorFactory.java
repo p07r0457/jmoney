@@ -23,14 +23,12 @@
 package net.sf.jmoney.views;
 
 import net.sf.jmoney.Constants;
-import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IElementFactory;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;

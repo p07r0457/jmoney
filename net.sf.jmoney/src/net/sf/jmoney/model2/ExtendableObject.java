@@ -22,18 +22,24 @@
 
 package net.sf.jmoney.model2;
 
-import java.util.Iterator;
-import java.util.Hashtable;
-import java.util.Map;
-
-//Required for converting extensions to and from strings
-import java.beans.*;
-import java.lang.reflect.*;
-
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import javax.xml.parsers.*;
-import org.xml.sax.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**

@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.model;
 
-import net.sf.jmoney.Constants;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +31,8 @@ import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.ResourceBundle;
+
+import net.sf.jmoney.Constants;
 
 /**
  * This class was created because the currency support wich comes with the Java

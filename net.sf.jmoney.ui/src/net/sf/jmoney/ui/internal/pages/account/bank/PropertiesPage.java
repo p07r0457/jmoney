@@ -22,7 +22,9 @@
 package net.sf.jmoney.ui.internal.pages.account.bank;
 
 import net.sf.jmoney.IBookkeepingPage;
-import net.sf.jmoney.views.NodeEditor;import org.eclipse.swt.layout.GridData;
+import net.sf.jmoney.views.NodeEditor;
+
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.forms.IManagedForm;

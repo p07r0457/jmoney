@@ -23,25 +23,15 @@
 
 package net.sf.jmoney.serializeddatastore;
 
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.internal.dialogs.EventLoopProgressMonitor;
-import org.eclipse.ui.internal.progress.ProgressMonitorJobsDialog;
-import org.eclipse.ui.plugin.*;
-import org.eclipse.core.runtime.*;
-import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.ProgressBar;
-
+import java.beans.XMLDecoder;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Date;
@@ -55,51 +45,55 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.Vector;
-import java.util.zip.GZIPOutputStream;
 import java.util.zip.GZIPInputStream;
-import java.beans.XMLDecoder;
-import java.beans.XMLEncoder;
+import java.util.zip.GZIPOutputStream;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.BankAccountInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ISessionManager;
-import net.sf.jmoney.model2.MalformedPluginException;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertyNotFoundException;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
+import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
-// The following are treated specially by this datastore plug-in
-// so that we get more friendly idref names.
-import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.Currency;
-// The following are required so that we can convert
-// old format files.
-import net.sf.jmoney.model2.Entry;
 
-//SAX classes.
-import org.xml.sax.helpers.*;
-//JAXP 1.1
-import javax.xml.transform.*;
-import javax.xml.transform.stream.*;
-import javax.xml.transform.sax.*;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPluginDescriptor;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.internal.dialogs.EventLoopProgressMonitor;
+import org.eclipse.ui.internal.progress.ProgressMonitorJobsDialog;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
+import org.xml.sax.helpers.DefaultHandler;
 
 /** 
  * The main class for the plug-in that implements the data storage

@@ -3,28 +3,25 @@
  */
 package net.sf.jmoney.charts;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Container;
-import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.security.InvalidParameterException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.TreeSet;
-import java.util.Vector;
 
-import javax.swing.JDialog;
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CurrencyAccount;
+import net.sf.jmoney.model2.Session;
 
 import org.jfree.chart.ChartMouseEvent;
 import org.jfree.chart.ChartPanel;
@@ -32,10 +29,6 @@ import org.jfree.chart.entity.PieSectionEntity;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.DefaultPieDataset;
-import org.jfree.data.time.Day;
-
-import net.sf.jmoney.charts.*;
-import net.sf.jmoney.model2.*;
 
 
 public class ExpensePieChart extends PieChart {

@@ -22,13 +22,14 @@
 
 package net.sf.jmoney.jdbcdatastore.actions;
 
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.jdbcdatastore.JDBCDatastorePlugin;
+import net.sf.jmoney.jdbcdatastore.SessionManager;
+
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
-
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.jdbcdatastore.*;
 
 /**
  * Our sample action implements workbench action delegate.
