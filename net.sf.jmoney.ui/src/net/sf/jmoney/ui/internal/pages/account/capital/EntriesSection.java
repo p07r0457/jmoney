@@ -47,6 +47,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
@@ -59,7 +60,10 @@ import org.eclipse.ui.forms.widgets.Section;
 public class EntriesSection extends SectionPart {
 
 //    protected static final String[] PROPERTIES = { "check", "date", "valuta", "description", "debit", "credit", "balance"};
-    protected static final Color alternateEntryColor = new Color(Display.getCurrent(), 191, 191, 191);
+    protected static final Color transactionColor          = new Color(Display.getCurrent(), 125, 215, 060);
+    protected static final Color alternateTransactionColor = new Color(Display.getCurrent(), 100, 160, 200);
+    protected static final Color entryColor                = new Color(Display.getCurrent(), 180, 225, 140);
+    protected static final Color alternateEntryColor       = new Color(Display.getCurrent(), 135, 185, 205);
 
     protected VerySimpleDateFormat fDateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
     protected EntriesPage fPage;
@@ -320,13 +324,19 @@ public class EntriesSection extends SectionPart {
          * Remark: I'm not sure it's the better implementation. Not sure too
          * that it's works when the entries are changed (inserted or deleted)...
          */
-        boolean isOdd = true;
+        boolean isAlternated = true;
         for (int i = 0; i < fViewer.getTable().getItemCount(); i++) {
-            if (fViewer.getTable().getItem(i).getData() instanceof DisplayableTransaction) {
-                isOdd = ! isOdd;
-            } 
-            if (isOdd) {
-                fViewer.getTable().getItem(i).setBackground(alternateEntryColor);
+            TableItem item = fViewer.getTable().getItem(i);
+            Object data = item.getData();
+            // alternate the color
+            if (data instanceof DisplayableTransaction) isAlternated = ! isAlternated;
+            
+            if (isAlternated) {
+                if (data instanceof DisplayableTransaction) item.setBackground(alternateTransactionColor);
+                if (data instanceof DisplayableEntry)       item.setBackground(alternateEntryColor);
+            } else {
+                if (data instanceof DisplayableTransaction) item.setBackground(transactionColor);
+                if (data instanceof DisplayableEntry)       item.setBackground(entryColor);                
             }
         }
 
