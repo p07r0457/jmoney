@@ -137,6 +137,10 @@ public class CurrencyAccount extends CapitalAccount {
             return currency;
 	}
 
+	public Commodity getCommodity() {
+	    return getCurrency();
+	}
+	
 	/**
 	 * @return the initial balance of this account.
 	 */
