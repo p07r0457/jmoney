@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.ui.forms.editor.IFormPage;
+import org.eclipse.ui.forms.widgets.FormToolkit;
 
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
@@ -92,7 +93,7 @@ public class AccountPropertiesPages implements IBookkeepingPage {
 		/**
 		 * @param parent
 		 */
-		public AccountPropertiesControl(Composite parent, CapitalAccount account) {
+		public AccountPropertiesControl(Composite parent, CapitalAccount account, FormToolkit toolkit) {
 			super(parent, SWT.NULL);
 
 			GridLayout layout = new GridLayout();
@@ -120,7 +121,7 @@ public class AccountPropertiesPages implements IBookkeepingPage {
 				final PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 				if (propertyAccessor.isScalar()) {
 					Label propertyLabel = new Label(this, 0);
-					propertyLabel.setText(propertyAccessor.getShortDescription());
+					propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
 					final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(this);
 					propertyControl.getControl().addFocusListener(
 							new FocusAdapter() {
@@ -164,7 +165,11 @@ public class AccountPropertiesPages implements IBookkeepingPage {
 					
 					// Add to our list of controls.
 					propertyControlList.add(propertyControl);
+
+					toolkit.adapt(propertyLabel, false, false);
+					toolkit.adapt(propertyControl.getControl(), true, true);
 				}
+				
 			}
 			
 			// Set the values from the account object into the control fields.
@@ -186,9 +191,9 @@ public class AccountPropertiesPages implements IBookkeepingPage {
 				"Properties", 
 				"Account Properties") {
 			
-			public Composite createControl(Object nodeObject, Composite parent) {
+			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit) {
 				CapitalAccount account = (CapitalAccount)nodeObject;
-				AccountPropertiesControl propertiesControl = new AccountPropertiesControl(parent, account);
+				AccountPropertiesControl propertiesControl = new AccountPropertiesControl(parent, account, toolkit);
 				return propertiesControl;
 			}
 		};
