@@ -22,11 +22,15 @@
 
 package net.sf.jmoney.fields;
 
+import java.util.Date;
+
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.Session;
 
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ComboBoxCellEditor;
@@ -40,24 +44,44 @@ import org.eclipse.swt.widgets.Table;
  * @author Johann Gyger
  */
 public class AccountControlFactory implements IPropertyControlFactory {
-
+    
+    private Account[] allAccounts;
+    
     public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
         return new AccountEditor(parent, propertyAccessor);
     }
 
+    /*
+     * @author Faucheux
+     */
 	public CellEditor createCellEditor(Table table) {
-		// TODO complete this.
-		String[] items = {"account1", "account2"};
-		return new ComboBoxCellEditor(table, items);
+	    // Collect the accounts and extract the list of their names
+	    Session session = JMoneyPlugin.getDefault().getSession();
+	    allAccounts = session.getAccountList();
+	    
+	    String[] proposedItems = new String [allAccounts.length];
+	    for (int i = 0; i<allAccounts.length; i++) proposedItems[i] = allAccounts[i].getFullAccountName();
+		return new ComboBoxCellEditor(table, proposedItems);
 	}
 	
+	/*
+	 * @author Faucheux
+	 */
 	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-		// TODO complete this.
-		return new Integer(0);
+		// The entry has a reference to the account. We have to find in the list of the accounts
+	    // "proposedItems" the name if this account and returns the index of this name.
+	    Account account = (Account) extendableObject.getPropertyValue(propertyAccessor);
+	    int i = 0;
+	    while (i<allAccounts.length && ! (account == allAccounts[i])) i++;
+        return new Integer(i);
 	}
 
+	/*
+	 * @author Faucheux
+	 */
 	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
-		// TODO complete this.
+	    int index = ((Integer) value).intValue();
+	    extendableObject.setPropertyValue(propertyAccessor, allAccounts[index]);
 	}
 
 	public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {

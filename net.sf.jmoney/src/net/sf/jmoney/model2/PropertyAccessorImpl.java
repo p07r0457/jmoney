@@ -489,6 +489,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 	}
 
 	public Object getValueTypedForCellEditor(ExtendableObject extendableObject) {
+	    if (extendableObject == null) return new Integer (0); // I don't know why -- Faucheux
 		return propertyControlFactory.getValueTypedForCellEditor(extendableObject, this);
 	}
 

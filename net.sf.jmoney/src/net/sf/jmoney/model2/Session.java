@@ -23,6 +23,7 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
@@ -175,7 +176,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 		}
 */		
 		return currencies.values().iterator();
-    }
+    } 
 /*   
     public Iterator getAccountIterator() {
         return new Iterator() {
@@ -205,6 +206,17 @@ public class Session extends ExtendableObject implements IAdaptable {
     public Iterator getAccountIterator() {
         return accounts.iterator();
     }
+    
+    public Collection getAllAccounts() {
+        Vector all = new Vector();
+        Iterator rootIt = getAccountIterator();
+        while (rootIt.hasNext()) {
+            Account a = (Account) rootIt.next();
+            all.add(a);
+            all.addAll(a.getAllSubAccounts());
+        }
+        return all;
+    }
    
     public Iterator getCapitalAccountIterator() {
         return new Iterator() {
@@ -229,6 +241,18 @@ public class Session extends ExtendableObject implements IAdaptable {
         };
     }
    
+    public Account[] getAccountList () {
+        Collection allAccounts = getAllAccounts();
+        
+        Account list[]  = new Account [allAccounts.size()];
+        Iterator it = allAccounts.iterator();
+
+        int i = 0;
+        while (it.hasNext()) 
+            list[i++] = (Account) it.next();
+        
+        return list;
+    }
     
     /**
      * @author Faucheux

@@ -27,6 +27,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Vector;
 
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.EntryInfo;
@@ -114,7 +115,18 @@ public abstract class Account extends ExtendableObject {
 	public Iterator getSubAccountIterator() {
 		return subAccounts.iterator();
 	}
-	
+
+	public Collection getAllSubAccounts() {
+	    Collection all = new Vector();
+	    Iterator it = getSubAccountIterator();
+	    while (it.hasNext()) {
+	        Account a = (Account) it.next();
+	        all.add(a);
+	        all.addAll(a.getAllSubAccounts());
+	    }
+		return all;
+	}
+
 	boolean deleteSubAccount(Account subAccount) {
 		return subAccounts.remove(subAccount);
 	}
