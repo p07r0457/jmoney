@@ -90,7 +90,7 @@ public class SimpleListManager extends Vector implements IListManager {
         // This plug-in needs to know if a session has been
 		// modified so it knows whether the session needs to
 		// be saved.  Mark the session as modified now.
-		sessionManager.setModified(true);
+		sessionManager.setModified();
 		
 		return extendableObject;
 	}

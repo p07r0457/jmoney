@@ -51,16 +51,21 @@ public class SessionFactory implements ISessionFactory {
 	 * @see org.eclipse.ui.IElementFactory#createElement(org.eclipse.ui.IMemento)
 	 */
 	public void openSession(IMemento memento) {
+		String fileFormatId = memento.getString("fileFormatId");
 		String fileName = memento.getString("fileName");
-        if (fileName != null) {
+        if (fileFormatId != null && fileName != null) {
+            IFileDatastore fileDatastore = SerializedDatastorePlugin.getFileDatastoreImplementation(fileFormatId);
             File sessionFile = new File(fileName);
             IWorkbenchWindow window = JMoneyPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow();
-			SerializedDatastorePlugin.getDefault().readSession(sessionFile, window);
+            SessionManager sessionManager = new SessionManager(fileFormatId, fileDatastore, sessionFile);
+			fileDatastore.readSession(sessionFile, sessionManager, window);
+            JMoneyPlugin.getDefault().setSessionManager(sessionManager);
         } else {
-        	// No file name is set.  This can happen if the workbench was last closed
-        	// with a session that had never been saved.  Although the user was prompted
-        	// to save the session when the workbench closed, the user may have pressed
-        	// the 'no' button.  We create an new empty session.
+        	// No file name is set. This can happen if the workbench was last
+			// closed with a session that had never been saved. Although the
+			// user would have been prompted to save the session when the
+			// workbench closed, the user must have pressed the 'no' button. We
+			// create a new empty session.
             JMoneyPlugin.getDefault().setSessionManager(
             		SerializedDatastorePlugin.getDefault().newSession());
         }

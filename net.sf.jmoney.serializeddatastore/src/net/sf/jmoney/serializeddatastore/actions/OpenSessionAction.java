@@ -25,8 +25,12 @@ package net.sf.jmoney.serializeddatastore.actions;
 import java.io.File;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.serializeddatastore.IFileDatastore;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
+import net.sf.jmoney.serializeddatastore.SessionManager;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.widgets.FileDialog;
@@ -59,13 +63,43 @@ public class OpenSessionAction implements IWorkbenchWindowActionDelegate {
         if (JMoneyPlugin.getDefault().saveOldSession(window)) {
             
             FileDialog dialog = new FileDialog(window.getShell());
-            dialog.setFilterExtensions(new String[] { "*.jmx", "*.xml" });
-            dialog.setFilterNames(new String[] { "jmoney files (*.jmx)", "jmoney in uncompressed xml (*.xml)" });
+            dialog.setFilterExtensions(SerializedDatastorePlugin.getFilterExtensions());
+            dialog.setFilterNames(SerializedDatastorePlugin.getFilterNames());
             String fileName = dialog.open();
             
             if (fileName != null) {
                 File sessionFile = new File(fileName);
-                SerializedDatastorePlugin.getDefault().readSession(sessionFile, window);
+                
+                String fileExtension = null;
+                for (int i=fileName.length()-1; i>=0; i--) {
+                	if (fileName.charAt(i) == '.') {
+                		fileExtension = fileName.substring(i+1);
+                		break;
+                	}
+                }
+                
+                IConfigurationElement elements[] = SerializedDatastorePlugin.getElements(fileExtension);
+                
+                // TODO: It is possible that multiple plug-ins may
+                // use the same file extension.  There are two possible
+                // approaches to this: either ask the user which is
+                // the format of the file, or we try to load the file
+                // using each in turn until one works. 
+
+                // For time being, we simply use the first entry.
+                IFileDatastore fileDatastore;
+                String fileFormatId;
+				try {
+					fileDatastore = (IFileDatastore)elements[0].createExecutableExtension("class");
+					fileFormatId = elements[0].getDeclaringExtension().getNamespace() + '.' + elements[0].getAttribute("id");
+				} catch (CoreException e) {
+					e.printStackTrace();
+					throw new RuntimeException("internal error");
+				}
+
+				SessionManager sessionManager = new SessionManager(fileFormatId, fileDatastore, sessionFile);
+				fileDatastore.readSession(sessionFile, sessionManager, window);
+	            JMoneyPlugin.getDefault().setSessionManager(sessionManager);
             }
         }
 		

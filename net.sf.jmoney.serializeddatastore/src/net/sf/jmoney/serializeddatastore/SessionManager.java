@@ -28,6 +28,11 @@ import java.io.File;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.Session;
 
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPersistableElement;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -40,20 +45,34 @@ import org.eclipse.ui.IWorkbenchWindow;
  */
 public class SessionManager implements ISessionManager {
 
-    protected File sessionFile = null;
+	private Session session = null;
 
-    protected transient boolean modified = false;
+	private String fileDatastoreId = null;
+	
+	private IFileDatastore fileDatastore = null;
+	
+    private File sessionFile = null;
 
-	private Session session;
+    private boolean modified = false;
 
-	/** This version is used to solve a 'chicken and egg' problem.
-	 * The session object constructor may need to SessionManagement object.
-	 * Therefore we allow a SessionManagement object to be created
-	 * first and the Session object to be set later.
+	/**
+	 * Construct the session manager.
+	 * <P>
+	 * Note that the session manager is constructed without a session. A session
+	 * must be created and set using the <code>setSession</code> method before
+	 * this session manager is usable. You may think that the session should be
+	 * passed to the constructor. However this is not done because then we would
+	 * have a 'chicken and egg' problem. The session object constructor needs
+	 * the SessionManager object. Hence the two part initialization of the
+	 * session manager.
 	 * 
+	 * @param fileDatastore
+	 * @param fileFormatId
 	 * @param sessionFile
 	 */
-	public SessionManager(File sessionFile) {
+	public SessionManager(String fileFormatId, IFileDatastore fileDatastore, File sessionFile) {
+		this.fileDatastoreId = fileFormatId;
+		this.fileDatastore = fileDatastore;
 		this.sessionFile = sessionFile;
 		this.session = null;
 	}
@@ -89,23 +108,140 @@ public class SessionManager implements ISessionManager {
 */       		
     }
 
-    boolean isModified() {
+    private boolean isModified() {
         return modified;
     }
 
     /**
      * This plug-in needs to know if a session has been modified so
      * that it knows whether to save the session.  This method must
-     * be called with a 'true' value whenever the session is modified and
-     * must be called with a 'false' value whenever the session is saved.
+     * be called whenever the session is modified.
      */
-    void setModified(boolean modified) {
-        this.modified = modified;
+    void setModified() {
+        modified = true;
     }
 
+	boolean requestSave(IWorkbenchWindow window) {
+		String title = SerializedDatastorePlugin.getResourceString("MainFrame.saveOldSessionTitle");
+		String question =
+			SerializedDatastorePlugin.getResourceString("MainFrame.saveOldSessionQuestion");
+		MessageDialog dialog = new MessageDialog(
+				window.getShell(),
+				title,
+				null,	// accept the default window icon
+				question, 
+				MessageDialog.QUESTION, 
+				new String[] {IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL, IDialogConstants.CANCEL_LABEL}, 
+				2); 	// CANCEL is the default
+		
+		int answer = dialog.open();
+		switch (answer) {
+		case 0: // YES
+			saveSession(window);
+			return true;
+		case 1: // NO
+			return true;
+		case 2: // CANCEL
+			return false;
+		default:
+			throw new RuntimeException("bad switch value");
+		}
+	}
+	
+	/**
+	 * Saves the session in the selected file.
+	 */
+	public void saveSession(IWorkbenchWindow window) {
+		if (getFile() == null) {
+			saveSessionAs(window);
+		} else {
+			fileDatastore.writeSession(this, getFile(), window);
+	        modified = false;
+		}
+	}
+	
+	/**
+	 * Prompt the user for a file name and save the session
+	 * to that file.  The user is prompted for a file even
+	 * if a file is already set in this session manager.
+	 *
+	 * @param window the workbench window to be used for UI
+	 */
+    public void saveSessionAs(IWorkbenchWindow window) {
+    	File sessionFile = obtainFileName(window);
+    	if (sessionFile != null) {
+    		String fileName = sessionFile.getName();
+            String fileExtension = null;
+            for (int i=fileName.length()-1; i>=0; i--) {
+            	if (fileName.charAt(i) == '.') {
+            		fileExtension = fileName.substring(i+1);
+            		break;
+            	}
+            }
+            
+            IConfigurationElement elements[] = SerializedDatastorePlugin.getElements(fileExtension);
+            
+            // TODO: It is possible that multiple plug-ins may
+            // use the same file extension.  The only solution to
+            // this is to ask the user which format to use.
+
+            // For time being, we simply use the first entry.
+			try {
+				fileDatastore = (IFileDatastore)elements[0].createExecutableExtension("class");
+				fileDatastoreId = elements[0].getDeclaringExtension().getNamespace() + '.' + elements[0].getAttribute("id");
+			} catch (CoreException e) {
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			}
+    		
+			fileDatastore.writeSession(this, getFile(), window);
+	        modified = false;
+    	}
+    }
+	
+	/**
+	 * Obtain the file name if a file is not already associated with this session.
+	 *
+	 * @return true if a file name was obtained from the user,
+	 *      false if no file name was obtained.
+	 */
+	public File obtainFileName(IWorkbenchWindow window) {
+		FileDialog dialog = new FileDialog(window.getShell());
+		dialog.setFilterExtensions(SerializedDatastorePlugin.getFilterExtensions());
+		dialog.setFilterNames(SerializedDatastorePlugin.getFilterNames());
+		String fileName = dialog.open();
+		
+		if (fileName != null) {
+			File file = new File(fileName);
+			if (dontOverwrite(file, window))
+				return null;
+			
+			return file;
+		}
+		return null;
+	}
+	
+	private boolean dontOverwrite(File file, IWorkbenchWindow window) {
+		if (file.exists()) {
+			String question = SerializedDatastorePlugin.getResourceString("MainFrame.OverwriteExistingFile")
+			+ " "
+			+ file.getPath()
+			+ "?";
+			String title = SerializedDatastorePlugin.getResourceString("MainFrame.FileExists");
+			
+			boolean answer = MessageDialog.openQuestion(
+					window.getShell(),
+					title,
+					question);
+			return !answer;
+		} else {
+			return false;
+		}
+	}
+	
     public boolean canClose(IWorkbenchWindow window) {
         if (isModified()) {
-            return SerializedDatastorePlugin.getDefault().requestSave(this, window);
+            return requestSave(window);
         } else {
             return true;
         }
@@ -137,6 +273,7 @@ public class SessionManager implements ISessionManager {
 			// in this situation and the code to re-create the session will, in this case,
 			// re-create an empty session.
 			if (sessionFile != null) {
+				memento.putString("fileFormatId", fileDatastoreId);
 				memento.putString("fileName", sessionFile.getPath());
 			}
 		}

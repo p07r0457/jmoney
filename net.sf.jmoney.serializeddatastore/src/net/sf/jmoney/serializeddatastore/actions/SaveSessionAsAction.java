@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.serializeddatastore.actions;
 
-import java.io.File;
-
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
 import net.sf.jmoney.serializeddatastore.SessionManager;
@@ -57,11 +55,8 @@ public class SaveSessionAsAction implements IWorkbenchWindowActionDelegate {
 	 */
 	public void run(IAction action) {
 		if (SerializedDatastorePlugin.checkSessionImplementation(window)) { 
-			File sessionFile = SerializedDatastorePlugin.getDefault().obtainFileName(window);
-			if (sessionFile != null) {
-				SessionManager sessionManager = (SessionManager)JMoneyPlugin.getDefault().getSessionManager();
-				SerializedDatastorePlugin.getDefault().writeSession(sessionManager, sessionFile, window);
-			}
+			SessionManager sessionManager = (SessionManager)JMoneyPlugin.getDefault().getSessionManager();
+			sessionManager.saveSessionAs(window);
 		}
 	}
 

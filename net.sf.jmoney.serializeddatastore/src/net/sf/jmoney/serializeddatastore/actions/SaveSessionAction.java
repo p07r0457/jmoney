@@ -22,7 +22,9 @@
 
 package net.sf.jmoney.serializeddatastore.actions;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
+import net.sf.jmoney.serializeddatastore.SessionManager;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -53,7 +55,8 @@ public class SaveSessionAction implements IWorkbenchWindowActionDelegate {
 	 */
 	public void run(IAction action) {
 		if (SerializedDatastorePlugin.checkSessionImplementation(window)) { 
-			SerializedDatastorePlugin.getDefault().saveSession(window);
+			SessionManager sessionManager = (SessionManager)JMoneyPlugin.getDefault().getSessionManager();
+			sessionManager.saveSession(window);
 		}
 	}
 

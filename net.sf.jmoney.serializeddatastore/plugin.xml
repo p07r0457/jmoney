@@ -18,6 +18,7 @@
       <import plugin="net.sf.jmoney"/>
    </requires>
 
+   <extension-point id="filestores" name="File Storage Formats" schema="schema/filestores.exsd"/>
 
    <extension
          point="org.eclipse.ui.actionSets">
@@ -25,15 +26,7 @@
             label="Sample Action Set"
             visible="true"
             id="net.sf.jmoney.serializeddatastore.actionSet">
-<!--
-         <menu
-               label="&amp;File"
-               id="fileMenu">
-            <separator
-                  name="sampleGroup">
-            </separator>
-         </menu>
--->         
+
          <action
                label="%MainFrame.new"
                icon="icons/New16.gif"
@@ -79,6 +72,22 @@
            id ="net.sf.jmoney.serializeddatastore.SessionFactory" 
            class="net.sf.jmoney.serializeddatastore.SessionFactory">
         </factory> 
+   </extension>
+
+   <extension
+         point="net.sf.jmoney.serializeddatastore.filestores">
+        <file-format
+           id="xmlFormat" 
+           file-extension="xml" 
+           format-description="JMoney in uncompressed xml" 
+           class="net.sf.jmoney.serializeddatastore.formats.JMoneyXmlFormat">
+        </file-format> 
+        <file-format
+           id="jmxFormat" 
+           file-extension="jmx" 
+           format-description="JMoney files" 
+           class="net.sf.jmoney.serializeddatastore.formats.JMoneyXmlFormat">
+        </file-format> 
    </extension>
 
 </plugin>
