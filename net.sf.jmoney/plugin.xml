@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin
+   id="net.sf.jmoney"
+   name="Jmoney Plug-in"
+   version="1.0.0"
+   provider-name=""
+   class="net.sf.jmoney.JMoneyPlugin">
+
+   <runtime>
+      <library name="jmoney.jar">
+         <export name="*"/>
+      </library>
+   </runtime>
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+   </requires>
+<!-- These two only should be here with Eclipse RC1
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime.compatibility"/>
+      <import plugin="org.eclipse.help"/>
+      <import plugin="org.eclipse.core.resources"/>
+< ! - -  These are needed at run-time but not at build-time 
+  - ->
+      <import plugin="org.eclipse.help.ui"/>
+      <import plugin="org.eclipse.help.webapp"/>
+      <import plugin="org.eclipse.tomcat"/>
+   </requires>
+-->   
+
+   <extension-point id="pages" name="Bookkeeping Pages" schema="schema/bookkeepingPages.exsd"/>
+   <extension-point id="fields" name="Extension Fields in Datastore Objects" schema="schema/fields.exsd"/>
+   <extension-point id="propagators" name="Property Propagators" schema="schema/propagators.exsd"/>
+   <extension-point id="datastores" name="Datastore Implementations" schema="schema/datastores.exsd"/>
+
+   <extension
+         id="JMoneyApplication"
+         name="JMoneyName"
+         point="org.eclipse.core.runtime.applications">
+      <application>
+         <run
+               class="net.sf.jmoney.JMoneyApplication">
+         </run>
+      </application>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            name="perspectiveNameOfJMoney"
+            class="net.sf.jmoney.JMoneyPerspective"
+            id="net.sf.jmoney.JMoneyPerspective">
+      </perspective>
+   </extension>
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            label="Sample Action Set"
+            visible="true"
+            id="net.sf.jmoney.actionSet">
+         <action
+               label="&amp;Close"
+               icon="icons/sample.gif"
+               class="net.sf.jmoney.actions.CloseSessionAction"
+               tooltip="Close current session"
+               menubarPath="file/sessionGroup"
+               toolbarPath="fileGroup"
+               id="net.sf.jmoney.actions.CloseSessionAction">
+         </action>
+         <menu
+               label="&amp;Options"
+               id="options">
+            <separator
+                  name="sampleGroup">
+            </separator>
+         </menu>
+         <action
+               label="Preferences..."
+               icon="icons/jlfgr/preferences16.gif"
+               class="net.sf.jmoney.actions.PreferencesAction"
+               tooltip="user preferences"
+               menubarPath="options/sampleGroup"
+               toolbarPath="optionsGroup"
+               id="net.sf.jmoney.actions.PreferencesAction">
+         </action>
+      </actionSet>
+   </extension>
+   <extension
+         point="org.eclipse.help.toc">
+      <toc
+            file="toc.xml">
+      </toc>
+      <toc
+            file="testToc.xml"
+            primary="true">
+      </toc>
+   </extension>
+<!--
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="org.eclipse.ui.resourcePerspective">
+         <newWizardShortcut
+               id="org.eclipse.jdt.ui.wizards.NewProjectCreationWizard">
+         </newWizardShortcut>
+         <viewShortcut
+               id="org.eclipse.jdt.ui.TypeHierarchy">
+         </viewShortcut>
+         <perspectiveShortcut
+               id="org.eclipse.debug.ui.DebugPerspective">
+         </perspectiveShortcut>
+         <actionSet
+               id="org.eclipse.jdt.ui.JavaActionSet">
+         </actionSet>
+         <view
+               relative="org.eclipse.ui.views.ResourceNavigator"
+               relationship="stack"
+               id="org.eclipse.jdt.ui.PackageExplorer">
+         </view>
+      </perspectiveExtension>
+      <perspectiveExtension
+            targetID="org.eclipse.ui.resourcePerspective">
+         <view
+               ratio="0.5"
+               relative="org.eclipse.ui.views.TaskList"
+               relationship="right"
+               id="net.sf.jmoney.views.NavigationView">
+         </view>
+      </perspectiveExtension>
+   </extension>
+-->
+
+<!--
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            objectClass="org.eclipse.core.resources.IFile"
+            nameFilter="plugin.xml"
+            id="net.sf.jmoney.contribution1">
+         <menu
+               label="New Submenu"
+               path="additions"
+               id="net.sf.jmoney.menu1">
+            <separator
+                  name="group1">
+            </separator>
+         </menu>
+         <action
+               label="New Account"
+               class="net.sf.jmoney.popup.actions.NewAccountAction"
+               menubarPath="net.sf.jmoney.menu1/group1"
+               enablesFor="1"
+               id="net.sf.jmoney.newAction">
+         </action>
+      </objectContribution>
+   </extension>
+-->   
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            name="Preferences"
+            class="net.sf.jmoney.preferences.PreferencePage"
+            id="net.sf.jmoney.preferences.PreferencePage">
+      </page>
+   </extension>
+<!--   
+   <extension
+         point="org.eclipse.ui.propertyPages">
+      <page
+            objectClass="net.sf.jmoney.model2.CapitalAccount"
+            name="Account Properties"
+            class="net.sf.jmoney.properties.AccountPropertyPage"
+            id="net.sf.jmoney.properties.accountPropertyPage">
+      </page>
+   </extension>
+-->   
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            name="Sample Category"
+            id="net.sf.jmoney.viewCategory">
+      </category>
+      <view
+            name="Navigation"
+            icon="icons/sample.gif"
+            category="net.sf.jmoney.viewCategory"
+            class="net.sf.jmoney.views.NavigationView"
+            id="net.sf.jmoney.views.NavigationView">
+      </view>
+      <view
+            name="Folder"
+            icon="icons/sample.gif"
+            category="net.sf.jmoney.viewCategory"
+            class="net.sf.jmoney.views.FolderView"
+            id="net.sf.jmoney.views.FolderView">
+      </view>
+   </extension>
+   <extension
+         point="net.sf.jmoney.pages">
+      <pages
+            extendable-property-set="net.sf.jmoney.capitalAccount"
+            class="net.sf.jmoney.bookkeepingPages.AccountPropertiesPages">
+      </pages>
+   </extension>
+   <extension
+         point="net.sf.jmoney.fields">
+      <extendable-property-set
+      	id="session"
+          info-class="net.sf.jmoney.fields.SessionInfo">
+      </extendable-property-set>
+      <extendable-property-set
+      	id="commodity"
+          info-class="net.sf.jmoney.fields.CommodityInfo">
+      </extendable-property-set>
+      <extendable-property-set
+      	id="currency"
+          info-class="net.sf.jmoney.fields.CurrencyInfo"
+          base-property-set="net.sf.jmoney.commodity">
+      </extendable-property-set>
+      <extendable-property-set
+      	id="account"
+          info-class="net.sf.jmoney.fields.AccountInfo">
+      </extendable-property-set>
+      <extendable-property-set
+      	id="categoryAccount"
+          info-class="net.sf.jmoney.fields.IncomeExpenseAccountInfo"
+          base-property-set="net.sf.jmoney.account">
+      </extendable-property-set>
+      <extendable-property-set
+      	id="capitalAccount"
+          info-class="net.sf.jmoney.fields.CapitalAccountInfo"
+          base-property-set="net.sf.jmoney.account">
+      </extendable-property-set>
+      <extendable-property-set
+      	id="transaction"
+          info-class="net.sf.jmoney.fields.TransactionInfo">
+      </extendable-property-set>
+      <extendable-property-set
+      	id="entry"
+          info-class="net.sf.jmoney.fields.EntryInfo">
+      </extendable-property-set>
+   </extension>
+
+</plugin>
