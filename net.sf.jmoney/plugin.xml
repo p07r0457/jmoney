@@ -79,7 +79,6 @@
             id="net.sf.jmoney.actionSet">
          <action
                label="&amp;Close"
-               icon="icons/sample.gif"
                class="net.sf.jmoney.actions.CloseSessionAction"
                tooltip="Close current session"
                menubarPath="file/sessionGroup"
@@ -183,7 +182,7 @@
       </category>
       <view
             name="Navigation"
-            icon="icons/sample.gif"
+            icon="icons/accounts.gif"
             category="net.sf.jmoney.viewCategory"
             class="net.sf.jmoney.views.NavigationView"
             id="net.sf.jmoney.views.NavigationView">
