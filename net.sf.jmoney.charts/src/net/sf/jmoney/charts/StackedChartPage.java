@@ -55,7 +55,7 @@ import net.sf.jmoney.views.SectionlessPage;
 /**
  * @author Faucheux
  */
-public class LineChartPage implements IBookkeepingPageFactory {
+public class StackedChartPage implements IBookkeepingPageFactory {
 
     private static final String PAGE_ID = "net.sf.jmoney.charts.lineChart";
     private Session session;
@@ -70,7 +70,7 @@ public class LineChartPage implements IBookkeepingPageFactory {
      * Constructor
      *
      */
-    public LineChartPage () {
+    public StackedChartPage () {
         super();
 		df = new SimpleDateFormat();
     }
@@ -141,10 +141,10 @@ public class LineChartPage implements IBookkeepingPageFactory {
 
 		// Add the "Draw" Button
 		
-		Button redraw = new Button(actionGroup, SWT.NULL);
-		redraw.setText("Draw!");
+		Button drawButton = new Button(actionGroup, SWT.NULL);
+		drawButton.setText("Draw!");
 
-		redraw.addSelectionListener(new SelectionAdapter () {
+		drawButton.addSelectionListener(new SelectionAdapter () {
 		    public void widgetSelected (SelectionEvent e) { createChart(); }
 		});
 
@@ -255,31 +255,21 @@ public class LineChartPage implements IBookkeepingPageFactory {
  * 
  */
 private void createChart() {
-    final LineChart chart;
+    final StackedChart chart;
     // Prepare the parameters
-    LineChartParameters params = new LineChartParameters();
+    
+    StackedChartParameters params = new StackedChartParameters();
 
     Vector accounts = new Vector();
     addChosenAccountsToVector(tree.getItems()[0],accounts);
     params.setAccountList(accounts);
 
     params.setDates(fromDate.getText(),toDate.getText()); 
-    params.setDaily(chkDaily.getSelection());
-    params.setAverage30(chkAverage30.getSelection());
-    params.setAverage120(chkAverage120.getSelection());
-    params.setAverage365(chkAverage365.getSelection());
-    params.setWithSubaccounts(chkWithSubaccounts.getSelection());
     
-    if (radMouvement.getSelection()) 	params.setType(LineChartParameters.MOUVEMENT);
-    if (radSaldoAbsolut.getSelection()) 		params.setType(LineChartParameters.SALDO_ABSOLUT);
-    if (radSaldoRelativ.getSelection()) 		params.setType(LineChartParameters.SALDO_RELATIV);
-    
-    
-    
-    chart = new  ActivLineChart("myChart", session, params);
+    chart = new StackedAccountChart("Chart", session, params);
     final ChartPanel chartPanel = chart.getChartPanel();
     chartPanel.setPreferredSize(new Dimension(500,270));
-    chart.createOrUpdateValues(params);
+    // chart.createOrUpdateValues(params);
     chart.displayAsWindow();
 }
 

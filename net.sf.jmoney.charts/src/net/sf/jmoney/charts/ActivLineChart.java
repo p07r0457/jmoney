@@ -101,17 +101,17 @@ public class ActivLineChart extends LineChart {
         TimeSeries bts = new TimeSeries(acccount);
         if (params.withSubaccounts) bts.setName(bts.getName() + " (and sub.)");
         
-        CapitalAccount a = (CapitalAccount) util.getAccountByFullName(session, acccount);
+        CapitalAccount a = (CapitalAccount) Util.getAccountByFullName(session, acccount);
         Entry e = null;
         
         // Sort the entries chronologicaly
         List sortedEntries; 
         if (params.withSubaccounts) 
-            sortedEntries = util.getEntriesFromAccountAndSubaccounts(session, a);
+            sortedEntries = Util.getEntriesFromAccountAndSubaccounts(session, a);
         else
-            sortedEntries = util.getEntriesFromAccount(session, a);
+            sortedEntries = Util.getEntriesFromAccount(session, a);
         
-        sortedEntries = util.sortChronogicalyEntries(sortedEntries);
+        sortedEntries = Util.sortChronogicalyEntries(sortedEntries);
         
         // If the first movement is after fromDate, set fromDate to this one
         e = (Entry)sortedEntries.get(0) ;

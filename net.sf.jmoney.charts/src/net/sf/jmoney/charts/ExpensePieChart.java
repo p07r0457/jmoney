@@ -15,6 +15,7 @@ import java.security.InvalidParameterException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -31,6 +32,7 @@ import org.jfree.chart.entity.PieSectionEntity;
 import org.jfree.chart.plot.PiePlot;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.DefaultPieDataset;
+import org.jfree.data.time.Day;
 
 import net.sf.jmoney.charts.*;
 import net.sf.jmoney.model2.*;
@@ -85,12 +87,12 @@ public class ExpensePieChart extends PieChart {
 		// TODO: Faucheux - The list of accounts should be parametrisabled.
         List listAccounts = new LinkedList();
         for (int i=0; i<accounts.length; i++) {
-            CapitalAccount theAccount = (CapitalAccount) util.getAccountByFullName(session, accounts[i]);
+            CapitalAccount theAccount = (CapitalAccount) Util.getAccountByFullName(session, accounts[i]);
             listAccounts.add(theAccount);
             if (maxLevel > theAccount.getLevel())
-                listAccounts.addAll(util.getSubAccountsUntilLevel(theAccount, maxLevel));
+                listAccounts.addAll(Util.getSubAccountsUntilLevel(theAccount, maxLevel));
             else
-                listAccounts.addAll(util.getSubAccounts(theAccount));
+                listAccounts.addAll(Util.getSubAccounts(theAccount));
         }
         Iterator aIt = listAccounts.iterator(); 
 	    // Iterator aIt = util.getAccountsUntilLevel(session,maxLevel).iterator();
@@ -143,12 +145,17 @@ public class ExpensePieChart extends PieChart {
 	    
 	    // set the (sorted) values in the graph
 	    Iterator it = values.iterator();
+	    // TODO: Variant -> Do not display the value for the all time, but per day
+	    long intervallInDays = (toDate.getTime() - fromDate.getTime()) / 1000 / 60 / 60 / 24;
+	    intervallInDays = intervallInDays / 100; // To have Cent and not Euro
 	    while (it.hasNext()) {
 	    	CoupleStringNumber csn = (CoupleStringNumber) it.next();
-		    data.setValue(csn, new Long(csn.n));
+		    // data.setValue(csn, new Long(csn.n));
+	    	data.setValue(csn, new Long(csn.n / intervallInDays));
 	    }
-	    if (smallBalance > 0) 
-		    data.setValue(nameRest, smallBalance);
+	    if (smallBalance > 0)
+	        // data.setValue(nameRest, smallBalance); 
+		    data.setValue(nameRest, smallBalance / intervallInDays);
 
 	    // set the title
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd");

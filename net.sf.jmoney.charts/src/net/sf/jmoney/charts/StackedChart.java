@@ -1,7 +1,9 @@
 package net.sf.jmoney.charts;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Frame;
+import java.util.Vector;
 
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -38,16 +40,20 @@ import net.sf.jmoney.model2.*;
  */
 public abstract class StackedChart extends JFrame {
 
+    protected String title;
+    protected Session session;
+    protected StackedChartParameters params; 
+
     /**
      * Default constructor.
      */
-    public StackedChart(String[] accounts, Session session) {
-        super();
-        String title = accounts.toString();
+    public StackedChart(String title, Session session, StackedChartParameters params) {
+        this.title = title;
+        this.session = session;
+        this.params = params;
+    }
 
-
-        // init the parameters
-        initParameters (accounts, session);
+    public ChartPanel getChartPanel() {
         
         // create a dataset...
         CategoryDataset data = createValues (session);
@@ -81,7 +87,7 @@ public abstract class StackedChart extends JFrame {
         this.getContentPane().add(chartPanel);
         
         chartPanel.addChartMouseListener(new clickListener());
-        
+        return chartPanel;
      }
     
 	protected abstract CategoryDataset createValues(Session session);
@@ -89,18 +95,15 @@ public abstract class StackedChart extends JFrame {
     /**
      * Starting point for the panel.
      */
-    public void run() {
-    	this.pack();
+    public void displayAsWindow() {
+    	this.getContentPane().removeAll();
+    	this.getContentPane().setLayout(new BorderLayout());
+    	this.getContentPane().add(this.getChartPanel());
     	this.setVisible(true);
+    	this.pack();
     }
-    
-    /*
-     * initialize the parameters. This initialization will be called before "setValues"
-     * @author Faucheux
-     */
-    protected void initParameters (String[] accounts, Session session) {};
 
-    
+   
     /**
      * A custom label generator.
      * (copied from BarChartDemo7)
@@ -125,7 +128,6 @@ public abstract class StackedChart extends JFrame {
     private class clickListener implements ChartMouseListener {
         public void chartMouseMoved (ChartMouseEvent e) {}
         public void chartMouseClicked (ChartMouseEvent e) {
-            System.out.println("Clicked in " + e.getEntity());
             if (e.getEntity() instanceof CategoryItemEntity) {
                 System.out.println("It is in " + ((CategoryItemEntity) e.getEntity()).getSeries());
             }

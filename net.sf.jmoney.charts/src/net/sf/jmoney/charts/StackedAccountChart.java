@@ -20,6 +20,8 @@ import org.jfree.data.CategoryDataset;
 import org.jfree.data.DefaultCategoryDataset;
 import org.jfree.data.statistics.Statistics;
 import org.jfree.data.time.Month;
+import org.jfree.data.time.RegularTimePeriod;
+import org.jfree.data.time.Year;
 
 import sun.util.calendar.CalendarDate;
 
@@ -30,57 +32,51 @@ import net.sf.jmoney.model2.Session;
 
 public class StackedAccountChart extends StackedChart {
 
-    private String accounts[];
-    
-    public StackedAccountChart(String accounts[], Session session) {
-        super(accounts, session);
+    public StackedAccountChart(String title, Session session, StackedChartParameters params) {
+        super(title, session, params);
     }
-
-    protected void initParameters (String accounts[], Session session) {
-        this.accounts = accounts;
-    };
 
     protected CategoryDataset createValues(Session session) {
         long saldo = 0;
         Date[] dates;
         int numberOfAccounts = 0;
-        int numberOfMonths; // TODO: Faucheux - To change (count)
-        Date fromDate = null;
+        int numberOfPeriods;
         DateFormat df = new SimpleDateFormat("dd.MM.yyyy");
         List listAccounts;
         long totalValue = 0;
-        int maxLevel = 1; // TODO: Faucheux - as parameter
         
-        try {
-        	fromDate = df.parse("01.01.2004");
-        } catch (ParseException e) {
-            e.printStackTrace();
+        params.instanciateConstructor();
+        
+        // Calculate the number of Periods
+        numberOfPeriods = 0;
+        for (RegularTimePeriod period = params.createPeriod(params.fromDate);
+             period.getFirstMillisecond() < params.toDate.getTime();
+             period = period.next()) {
+            
+            numberOfPeriods++;
         }
         
-        Date toDate = new Date(); // today
-
         // Calculate the begin and the end of each Time-Gap
-        numberOfMonths = (new Month(toDate)).compareTo(new Month(fromDate)) + 1;
-        Date [] dateBegin = new Date[numberOfMonths];
-        Date [] dateEnd = new Date[numberOfMonths];
-        String[] dateLabels = new String[numberOfMonths];
-        Month month = new Month (fromDate);
-        for (int i=0; i<numberOfMonths; i++) {
-            dateBegin[i]= new Date(month.getFirstMillisecond());
-            dateEnd[i]  = new Date(month.getLastMillisecond());
-            month = (Month) month.next();
+        Date [] dateBegin = new Date[numberOfPeriods];
+        Date [] dateEnd = new Date[numberOfPeriods];
+        String[] dateLabels = new String[numberOfPeriods];
+        RegularTimePeriod period = params.createPeriod(params.fromDate);
+        for (int i=0; i<numberOfPeriods; i++) {
+            dateBegin[i]= new Date(period.getFirstMillisecond());
+            dateEnd[i]  = new Date(period.getLastMillisecond());
+            period = period.next();
         }
-        for (int i=0; i<numberOfMonths; i++) 
-            dateLabels[i] = (new SimpleDateFormat("MM.yy")).format(dateBegin[i]);
+        for (int i=0; i<numberOfPeriods; i++) 
+            dateLabels[i] = params.dateformat.format(dateBegin[i]);
         
         
         // Get the accounts
         listAccounts = new LinkedList();
-        for (int i=0; i<accounts.length; i++) {
-            CapitalAccount acc = (CapitalAccount) util.getAccountByFullName(session, accounts[i]);
+        for (int i=0; i<params.accountList.size(); i++) {
+            CapitalAccount acc = (CapitalAccount) Util.getAccountByFullName(session, (String) params.accountList.get(i));
             listAccounts.add(acc);
             listAccounts.addAll(
-                    util.getSubAccountsUntilLevel(acc, maxLevel)
+                    Util.getSubAccountsUntilLevel(acc, params.maxLevel)
                     );
         }
         
@@ -98,7 +94,7 @@ public class StackedAccountChart extends StackedChart {
             accountCategory accountCategory = new accountCategory(a.getName(), 0);
             // get the entries
             boolean includeSubAccounts;
-            if (a.getLevel() < maxLevel) {
+            if (a.getLevel() < params.maxLevel) {
 	        	// If the account has sub accounts, they will have their own entry -> we don't have to include them here
 	            includeSubAccounts = false;
 	        } else {
@@ -106,16 +102,16 @@ public class StackedAccountChart extends StackedChart {
 	            includeSubAccounts = true;
 	        }
             
-            long [] totals = a.getEntryTotalsByMonth(fromDate.getMonth(), fromDate.getYear()+1900, numberOfMonths, includeSubAccounts); 
+            long [] totals = Util.getEntryTotalsByPeriod(a,params.createPeriod(params.fromDate), numberOfPeriods, includeSubAccounts); 
 	        
-            // calculate the sum for each month
-            for (int i=0; i<numberOfMonths; i++) {
+            // calculate the sum for each period
+            for (int i=0; i<numberOfPeriods; i++) {
                 accountCategory.setLong(i, totals[i]);
                 accountCategory.orderingValue += accountCategory.getLong(i);
                 accountCategory.totalValue += accountCategory.getLong(i);
             }
-            // add an Entry for the "moyenne"
-            accountCategory.setLong(numberOfMonths, accountCategory.totalValue / numberOfMonths);
+            // add an Entry for the "average"
+            accountCategory.setLong(numberOfPeriods, accountCategory.totalValue / numberOfPeriods);
             
             currentAccount ++ ;
             accounts.add(accountCategory);
@@ -128,7 +124,7 @@ public class StackedAccountChart extends StackedChart {
         
         // remove the last ones
         boolean maximumReached = false;
-        while (!maximumReached) {
+        while (!maximumReached && accounts.size()>2) {
             accountCategory last = (accountCategory) accounts.get(accounts.size()-1);
             accountCategory antelast = (accountCategory) accounts.get(accounts.size()-2);
             if (last.totalValue + antelast.totalValue < (totalValue/10)) {
@@ -150,12 +146,12 @@ public class StackedAccountChart extends StackedChart {
         itAccounts = accounts.iterator();
         while (itAccounts.hasNext()) {
             accountCategory a = (accountCategory) itAccounts.next();
-            for (int i = 0; i < numberOfMonths; i++) {
+            for (int i = 0; i < numberOfPeriods; i++) {
                 dataset.setValue(a.getLong(i),
                      a, new Month(dateBegin[i]));
             }
             // don't forget the middle value
-            dataset.setValue(a.getLong(numberOfMonths), a, "Moyenne");
+            dataset.setValue(a.getLong(numberOfPeriods), a, "Moyenne");
 
             currentAccount++;
         }

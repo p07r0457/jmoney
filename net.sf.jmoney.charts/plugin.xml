@@ -27,27 +27,6 @@
    </requires>
    <extension
          point="org.eclipse.ui.actionSets">
-      <actionSet
-            label="net.sf.jmoney.charts"
-            visible="true"
-            id="net.sf.jmoney.charts">
-         <action
-               label="PieChart"
-               class="net.sf.jmoney.charts.actions.ActionPieChart"
-               tooltip="Draw charts"
-               menubarPath="file/chartsGroup"
-               id="net.sf.jmoney.charts.actions.ActionPieChart"/>
-         <action
-               label="StapeldChart"
-               class="net.sf.jmoney.charts.actions.ActionStappeldChart"
-               menubarPath="file/chartsGroup"
-               id="net.sf.jmoney.charts.actions.ActionStappeldChart"/>
-         <action
-               label="LineChart"
-               class="net.sf.jmoney.charts.actions.ActionLineChart"
-               menubarPath="file/chartsGroup"
-               id="net.sf.jmoney.charts.actions.ActionLineChart"/>
-      </actionSet>
    </extension>
 
 
@@ -79,6 +58,17 @@
             class="net.sf.jmoney.charts.LineChartPage"
             node="net.sf.jmoney.charts.lineChart"
             id="lineChart">
+      </pages>
+      <node
+            id="stackedChart"
+            label="%Chart.stackedChart"
+            parent="net.sf.jmoney.charts.chartsNode"
+            position="100">
+      </node>
+      <pages
+            class="net.sf.jmoney.charts.StackedChartPage"
+            node="net.sf.jmoney.charts.stackedChart"
+            id="StackedChart">
       </pages>
    </extension>
 
