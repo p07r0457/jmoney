@@ -24,7 +24,6 @@ package net.sf.jmoney.ui.internal.pages.account.capital;
 
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
 
 /**
@@ -38,7 +37,6 @@ import net.sf.jmoney.model2.PropertyAccessor;
  */
 abstract class EntriesSectionProperty {
 	private PropertyAccessor accessor;
-	private IPropertyControl propertyControl = null;
 	
 	EntriesSectionProperty(PropertyAccessor accessor) {
 		this.accessor = accessor;
@@ -73,33 +71,11 @@ abstract class EntriesSectionProperty {
 		}
 	}
 
-	abstract ExtendableObject getObjectContainingProperty(Entry entry);
-/*        
-	case 0: // check
-        String s = de.entry.getCheck();
-        return s == null ? "" : s;
-    case 1: // date
-        Date d = de.entry.getTransaction().getDate();
-        return d == null ? "" : fDateFormat.format(d);
-    case 2: // valuta
-        d = de.entry.getValuta();
-        return d == null ? "" : fDateFormat.format(d);
-    case 3: // description
-        s = de.entry.getDescription();
-        return s == null ? "" : s;
-*/
-
-	public void setControl(IPropertyControl propertyControl) {
-		this.propertyControl = propertyControl;
-	}
-
-	public IPropertyControl getControl() {
-		return propertyControl;
-	}
-
 	public PropertyAccessor getPropertyAccessor() {
 		return accessor;
 	}
+
+	abstract ExtendableObject getObjectContainingProperty(Entry entry);
 }
 
 

@@ -71,7 +71,6 @@ public class EntriesSection extends SectionPart {
     protected TableViewer fViewer;
     protected EntryLabelProvider fLabelProvider;
     
-
     public EntriesSection(EntriesPage page, Composite parent) {
         super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
         getSection().setText("All Entries");
@@ -282,20 +281,25 @@ public class EntriesSection extends SectionPart {
         fViewer.setLabelProvider(fLabelProvider);
         fViewer.setSorter(new EntrySorter());
 
-        String columnProperties[] = new String[fPage.allEntryDataObjects.size() + 3];
+        String[] columnProperties = new String[fPage.allEntryDataObjects.size() + 3];
+        CellEditor[] cellEditors = new CellEditor[fPage.allEntryDataObjects.size() + 3];
         {
         int i = 0;
         for ( ; i < fPage.allEntryDataObjects.size(); i++) {
         	columnProperties[i] = ((EntriesSectionProperty)fPage.allEntryDataObjects.get(i)).getId();
+        	cellEditors[i] = ((EntriesSectionProperty)fPage.allEntryDataObjects.get(i)).getPropertyAccessor().createCellEditor(fTable);
+
         }
-        columnProperties[i++] = "debit";
-        columnProperties[i++] = "credit";
-        columnProperties[i++] = "balance";
+        columnProperties[i] = "debit";
+        cellEditors[i] = new TextCellEditor(fTable);
+        columnProperties[i+1] = "credit";
+        cellEditors[i+1] = new TextCellEditor(fTable);
+        columnProperties[i+2] = "balance";
+        cellEditors[i+2] = null;
         }
         fViewer.setColumnProperties(columnProperties);
-
-//        fViewer.setCellEditors(createCellEditors());
-//        fViewer.setCellModifier(new CellModifier());
+        fViewer.setCellEditors(cellEditors);
+        fViewer.setCellModifier(new CellModifier());
 
         fViewer.addSelectionChangedListener(new ISelectionChangedListener() {
             public void selectionChanged(SelectionChangedEvent event) {
@@ -340,20 +344,6 @@ public class EntriesSection extends SectionPart {
             }
         }
 
-    }
-
-    // TODO This is not implemnted properly yet.
-    protected CellEditor[] createCellEditors() {
-        CellEditor[] result = new CellEditor[8];
-        result[0] = new TextCellEditor(fTable); // check
-        result[1] = new TextCellEditor(fTable); // date
-        result[2] = new TextCellEditor(fTable); // valuta
-        result[3] = new TextCellEditor(fTable); // description
-        result[4] = new TextCellEditor(fTable); // to account
-        result[5] = new TextCellEditor(fTable); // debit
-        result[6] = new TextCellEditor(fTable); // credit
-        result[7] = new TextCellEditor(fTable); // balance
-        return result;
     }
 
     class ContentProvider implements IStructuredContentProvider {
@@ -410,10 +400,10 @@ public class EntriesSection extends SectionPart {
         		} else {
         			Commodity c = fPage.getAccount().getCurrency();
         			switch (index - fPage.allEntryDataObjects.size()) {
-        			case 0: // income
-        				return de.getEntry().getAmount() >= 0 ? c.format(de.getEntry().getAmount()) : "";
-        			case 1: // expense
+        			case 0: // debit
         				return de.getEntry().getAmount() < 0 ? c.format(-de.getEntry().getAmount()) : "";
+        			case 1: // credit
+        				return de.getEntry().getAmount() > 0 ? c.format(de.getEntry().getAmount()) : "";
         			case 2: // balance
         			    if (de instanceof DisplayableTransaction) {
         			        return c.format(((DisplayableTransaction)de).balance);
@@ -595,7 +585,88 @@ public class EntriesSection extends SectionPart {
         long   getBalance () { return 0; }
         Transaction getTransaction () {return null; }
         Entry getEntry () { return null ; }
-
-    }
 }
     
+    class CellModifier implements ICellModifier {
+        public boolean canModify(Object element, String property) {
+            return !property.equals("balance");
+        }
+        public Object getValue(Object element, String property) {
+        	if (element instanceof DisplayableTransaction) {
+        		DisplayableTransaction de = (DisplayableTransaction) element;
+        		
+        		// The value is not always the String being displayed,
+        		// nor is it as stored in the datastore.  For example,
+        		// the ComboBoxCellEditor requires that the value is
+        		// the index of the selection.  We therefore pass the
+        		// request on to the PropertyAccessor which knows the
+        		// correct format.
+        		EntriesSectionProperty entriesSectionProperty = null;
+        		int i = 0;
+        		for ( ; i < fPage.allEntryDataObjects.size(); i++ ) {
+        			entriesSectionProperty = (EntriesSectionProperty)fPage.allEntryDataObjects.get(i);
+        			if (entriesSectionProperty.getId().equals(property)) {
+        				break;
+        			}
+        		}
+        		if (i < fPage.allEntryDataObjects.size()) {
+        			ExtendableObject object = entriesSectionProperty.getObjectContainingProperty(de.entry);
+        			return entriesSectionProperty.getPropertyAccessor().getValueTypedForCellEditor(object);
+        		} else if (property.equals("credit")) {
+        			Commodity c = fPage.getAccount().getCurrency();
+        			return de.entry.getAmount() >= 0 ? c.format(de.entry.getAmount()) : "";
+        		} else if (property.equals("debit")) {
+        			Commodity c = fPage.getAccount().getCurrency();
+        			return de.entry.getAmount() < 0 ? c.format(-de.entry.getAmount()) : "";
+        		} else {
+        			// Must be a column that is not editable,
+        			// such as the balance column.
+        			return null;
+        		}
+        	} else {
+        		// should not happen??
+        		return null;
+        	}
+        }
+        
+        public void modify(Object element, String property, Object value) {
+            
+            if (element instanceof Item) {
+                element = ((Item) element).getData();
+            }
+            
+            if (!(element instanceof DisplayableTransaction)) {
+            	// TODO: complete this case.
+            	return;
+            }
+            
+            Entry entry = ((DisplayableTransaction) element).getEntry();
+
+            // Get the currency that is used to format the amounts.
+            Currency c = fPage.getAccount().getCurrency();
+            
+            // Find the property given the name.
+    		EntriesSectionProperty entriesSectionProperty = null;
+    		int i = 0;
+    		for ( ; i < fPage.allEntryDataObjects.size(); i++ ) {
+    			entriesSectionProperty = (EntriesSectionProperty)fPage.allEntryDataObjects.get(i);
+    			if (entriesSectionProperty.getId().equals(property)) {
+    				break;
+    			}
+    		}
+    		if (i < fPage.allEntryDataObjects.size()) {
+    			ExtendableObject object = entriesSectionProperty.getObjectContainingProperty(entry);
+    			entriesSectionProperty.getPropertyAccessor().setValueTypedForCellEditor(object, value);
+                fViewer.update(element, new String[] { property});
+    		} else if (property.equals("credit")) {
+                entry.setAmount(c.parse((String) value));
+                fViewer.refresh();
+    		} else if (property.equals("debit")) {
+                entry.setAmount(-c.parse((String) value));
+                fViewer.refresh();
+    		} else {
+    			// should not happen??
+    		}
+        }
+    }
+}
