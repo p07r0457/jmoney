@@ -25,12 +25,16 @@ package net.sf.jmoney.categoriespanel;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 /**
  * The main plugin class to be used in the desktop.
  */
 public class CategoriesPanelPlugin extends AbstractUIPlugin {
+
+    public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney.categoriespanel/debug"));
+
 	//The shared instance.
 	private static CategoriesPanelPlugin plugin;
 	//Resource bundle.
