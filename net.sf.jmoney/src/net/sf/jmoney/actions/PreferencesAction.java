@@ -22,20 +22,9 @@
 
 package net.sf.jmoney.actions;
 
-import net.sf.jmoney.preferences.PreferencePage;
-
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.preference.IPreferenceNode;
-import org.eclipse.jface.preference.IPreferencePage;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.preference.PreferenceManager;
-import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
@@ -49,7 +38,9 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
  * @see IWorkbenchWindowActionDelegate
  */
 public class PreferencesAction implements IWorkbenchWindowActionDelegate {
-	private IWorkbenchWindow window;
+	
+	private IWorkbenchWindow workbenchWindow;
+
 	/**
 	 * The constructor.
 	 */
@@ -63,66 +54,8 @@ public class PreferencesAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		PreferencePage preferencePage = new PreferencePage();
-/*
-		IPreferenceNode node = new PreferenceNode(
-				"net.sf.jmoney.preferences.preferencePage",
-				"core JMoney preferences",
-				null,
-				"net.sf.jmoney.preferences.PreferencePage");
-*/
-		// Load the prefence page extensions.
-		// Note that there are two constructors to PreferenceNode.
-		// One takes an instatiated object as a parameter,
-		// the other takes the class name, title, and image.
-		// The latter constructor is preferable because it loads
-		// the page lazily.  i.e. the class is not loaded unless
-		// the user selects the page.
-		// However, this does not work because by the time the
-		// page is lazily loaded, the class path does not include
-		// the path to the plug-in.  We must therefore use the
-		// createExecutableExtension method to load the class.
-		// TODO: figure out how we load lazily.
-		
-		PreferenceManager manager = new PreferenceManager();
-
-		IExtensionRegistry registry = Platform.getExtensionRegistry();
-		IExtensionPoint extensionPoint = registry.getExtensionPoint("org.eclipse.ui.preferencePages");
-		IExtension[] extensions = extensionPoint.getExtensions();
-		
-		for (int i = 0; i < extensions.length; i++) {
-			IConfigurationElement[] elements =
-				extensions[i].getConfigurationElements();
-			for (int j = 0; j < elements.length; j++) {
-				if (elements[j].getName().equals("page")) {
-					try {
-						String id = elements[j].getAttribute("id");
-						String label = elements[j].getAttribute("name");
-						// String className = elements[j].getAttribute("class");
-						IPreferencePage listener = (IPreferencePage)elements[j].createExecutableExtension("class");
-						// IPreferenceNode node = new PreferenceNode(
-						//		id,
-						//		label,
-						//		null,
-						//		className);
-						IPreferenceNode node = new PreferenceNode(
-								id,
-								listener);
-						manager.addToRoot(node);
-					} catch (CoreException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-
-/*
-IPreferenceNode node = new PreferenceNode(
-				"net.sf.jmoney.preferences.preferencePage",
-				preferencePage);
-*/
-		
-		PreferenceDialog preferenceDialog = new PreferenceDialog(window.getShell(), manager);
+		PreferenceManager manager = workbenchWindow.getWorkbench().getPreferenceManager();
+		PreferenceDialog preferenceDialog = new PreferenceDialog(workbenchWindow.getShell(), manager);
 		preferenceDialog.open();
 	}
 
@@ -150,6 +83,6 @@ IPreferenceNode node = new PreferenceNode(
 	 * @see IWorkbenchWindowActionDelegate#init
 	 */
 	public void init(IWorkbenchWindow window) {
-		this.window = window;
+		this.workbenchWindow = window;
 	}
 }
