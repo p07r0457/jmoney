@@ -82,7 +82,14 @@ public abstract class Account extends ExtendableObject {
 			return null;
 		}
 	}
-	
+
+	/**
+	 * @return Commodity for this account
+	 */
+	public Commodity getCommodity() {
+	    throw new RuntimeException("Illegal invocation");
+	}
+
 	public Iterator getSubAccountIterator() {
 		return subAccounts.iterator();
 	}

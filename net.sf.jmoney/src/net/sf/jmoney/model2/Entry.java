@@ -218,6 +218,13 @@ public class Entry extends ExtendableObject {
 	public String getMemo() {
 		return memo;
 	}
+
+	/**
+	 * @return The commodity for this entry
+	 */
+	public Commodity getCommodity() {
+	    return getAccount().getCommodity();
+	}
 	
 	/**
 	 * Sets the creation.
