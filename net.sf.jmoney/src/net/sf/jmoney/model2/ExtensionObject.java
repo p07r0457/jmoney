@@ -99,6 +99,6 @@ public abstract class ExtensionObject {
     }
 
 	protected void processPropertyChange(PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-		((ExtendableObjectHelperImpl)baseObject).processPropertyChange(propertyAccessor, oldValue, newValue);
+		((ExtendableObject)baseObject).processPropertyChange(propertyAccessor, oldValue, newValue);
 	}
 }

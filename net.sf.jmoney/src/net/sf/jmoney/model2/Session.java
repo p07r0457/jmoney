@@ -55,11 +55,11 @@ public interface Session extends IExtendableObject {
 
     Transaction createTransaction();
 
-    boolean removeCommodity(Commodity commodity);
+    boolean deleteCommodity(Commodity commodity);
     
-    boolean removeAccount(Account account);
+    boolean deleteAccount(Account account);
     
-    boolean removeTransaction(Transaction transaction);
+    boolean deleteTransaction(Transaction transaction);
 
 //  Object[] getAvailableCurrencies();
     Currency getCurrencyForCode(String code);

@@ -146,16 +146,6 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 		this.entries = objectKey.createIndexValuesList(accountAccessor);
 	}
 
-	protected boolean isMutable() {
-		return false;
-	}
-
-	protected IExtendableObject getOriginalObject() {
-		// This method should be called only if isMutable returns true,
-		// which it never does.  However, we must provide an implementation.
-		throw new RuntimeException("should never be called");
-	}
-	
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.account";
 	}
@@ -376,21 +366,9 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 	 * @return
 	 */
 	public CapitalAccount createSubAccount() {
-		CapitalAccount newAccount = (CapitalAccount)subAccounts.createNewElement(
+		return (CapitalAccount)subAccounts.createNewElement(
 				this, 
 				JMoneyPlugin.getCapitalAccountPropertySet()); 
-		
-		// Fire the event.
-		/* how do we get the session?        	
-		 final AccountAddedEvent event = new AccountAddedEvent(session, newAccount);
-		 session.fireEvent(
-		 new ISessionChangeFirer() {
-		 public void fire(SessionChangeListener listener) {
-		 listener.accountAdded(event);
-		 }
-		 });
-		 */
-		return newAccount;
 	}
         
 	static public Object [] getDefaultProperties() {
@@ -414,8 +392,8 @@ public class CapitalAccountImpl extends AbstractAccountImpl implements CapitalAc
 		eIt = entries.iterator();
 		while (eIt.hasNext()) {
 			Entry e = (Entry) eIt.next();
-			if ((e.getTransaxion().getDate().compareTo(fromDate) >= 0)
-					&& e.getTransaxion().getDate().compareTo(toDate) <= 0){
+			if ((e.getTransaction().getDate().compareTo(fromDate) >= 0)
+					&& e.getTransaction().getDate().compareTo(toDate) <= 0){
 				bal += e.getAmount();
 				
 			}

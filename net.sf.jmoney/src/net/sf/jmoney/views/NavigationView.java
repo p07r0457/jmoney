@@ -653,7 +653,7 @@ private Map idToNodeMap = new HashMap();
 					break;
 				}
 				if (account != null) {
-					session.removeAccount(account);
+					session.deleteAccount(account);
 				}
 			}
 		};

@@ -93,8 +93,8 @@ public abstract class AbstractEntryExtension extends ExtensionObject implements 
 		getBaseObject().setAmount(anAmount);
 	}
 	
-	public Transaction getTransaxion() {
-		return getBaseObject().getTransaxion();
+	public Transaction getTransaction() {
+		return getBaseObject().getTransaction();
 	}
 	
 	/**

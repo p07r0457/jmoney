@@ -14,6 +14,6 @@ public class ExtensionProperties {
 	}
 	
 	public void setProperties(ExtensionObject extensionObject) {
-		propertySet.setProperties(extensionObject, values);
+		// TODO: complete this
 	}
 }

@@ -33,9 +33,7 @@ import java.util.Map;
 /**
  * The data model for an entry.
  */
-public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
-	
-    protected MutableEntryImpl originalEntry = null;
+public class EntryImpl extends ExtendableObject implements Entry {
 	
 	protected IObjectKey transactionKey = null;
 	
@@ -118,43 +116,14 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 		}
 	}
 	
-	public boolean isMutable() {
-		return false;
-	}
-
-	// TODO: see how we can remove this method from here,
-	// as it is only required for mutable objects.
-	protected IExtendableObject getOriginalObject() {
-		return null;
-	}
-
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.entry";
 	}
 	
 	/**
-	 * Sets the property values in an entry to the values taken
-	 * from a mutable entry.
-	 *
-	 * This method is used when a new entry or changes to an existing
-	 * entry are to be committed to the database.
-	 */
-	void copyProperties(MutableEntryImpl sourceEntry) {
-		creation = sourceEntry.getCreation();
-		check = sourceEntry.getCheck();
-		valuta = sourceEntry.getValuta();
-		description = sourceEntry.getDescription();
-		account = sourceEntry.getAccount();
-		amount = sourceEntry.getAmount();
-		memo = sourceEntry.getMemo();
-		
-		copyExtensions(sourceEntry.getExtensionsAsIs());
-	}
-	
-	/**
 	 * Returns the transaction.
 	 */
-	public Transaction getTransaxion() {
+	public Transaction getTransaction() {
 		return (Transaction)transactionKey.getObject();
 	}
 
@@ -194,14 +163,14 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 	}
 	
 	public String getFullAccountName() {
-		if (getTransaxion().hasTwoEntries()) {
-			Account category = getTransaxion().getOther(this).getAccount();
+		if (getTransaction().hasTwoEntries()) {
+			Account category = getTransaction().getOther(this).getAccount();
 			if (category == null) {
 				return null;
 			} else {
 				return category.getFullAccountName();
 			}
-		} else if (getTransaxion().hasMoreThanTwoEntries()) {
+		} else if (getTransaction().hasMoreThanTwoEntries()) {
 			// TODO: get rid of this message from here,
 			// and move text from jmoney to jmoney.accountentriespanel
 			return JMoneyPlugin.getResourceString("SplitCategory.name");
@@ -309,40 +278,6 @@ public class EntryImpl extends ExtendableObjectHelperImpl implements Entry {
 		processPropertyChange(EntryInfo.getMemoAccessor(), oldMemo, memo);
 	}
 	
-	// Methods for firing property changes
-	
-	/**
-	 * Fires changes to properties in the extendable object.
-	 * (This method is not called for changes to properties
-	 * in extension property sets).
-	 */
-/*	
-	protected void firePropertyChange(String propertyLocalName, Object oldValue, Object newValue) {
-		if (newValue != null && !newValue.equals(oldValue)
-				|| newValue == null && oldValue != null) {
-	    	PropertySet entryPropertySet = JMoneyPlugin.getEntryPropertySet();
-			// TODO tidy this up.
-			// Should not get by name but this
-			// should be set directly and stored in a static
-			// in the class.
-			try {
-				entryPropertySet.getProperty(propertyLocalName).firePropertyChange(
-					this, oldValue, newValue);
-			} catch (PropertyNotFoundException e) {
-				throw new RuntimeException("internal error");
-			}
-		}
-	}
-	
-	protected void firePropertyChange(String propertyLocalName, int oldValue, int newValue) {
-		firePropertyChange(propertyLocalName, new Integer(oldValue), new Integer(newValue));
-	}
-	
-	protected void firePropertyChange(String propertyLocalName, char oldValue, char newValue) {
-		firePropertyChange(propertyLocalName, new Character(oldValue), new Character(newValue));
-	}
-*/
-
 	static public Object [] getDefaultProperties() {
 		return new Object [] { 
 				null,

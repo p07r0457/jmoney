@@ -56,7 +56,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * 
  * @author  Nigel
  */
-public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
+public abstract class ExtendableObject implements IExtendableObject {
 	
 	/**
 	 * The key from which this object can be fetched from
@@ -75,34 +75,15 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 	
 	protected boolean alwaysReturnNonNullExtensions = false;
 	
-	protected abstract boolean isMutable();
-	
-	/**
-	 * If this object is mutable, get the original object, if any.
-	 * If this is a newly created object that has not yet been committed
-	 * to the datastore then null will be returned.
-	 * <P>
-	 * This is an abstract method that allows the implementation of
-	 * this class to get the original object from the derived class.
-	 * The original object is kept in the derived class and not in
-	 * this class so that the field can be of the appropriate type
-	 * and the derived class does not have to cast the reference.
-	 */
-	protected abstract IExtendableObject getOriginalObject();
-	
 	protected abstract String getExtendablePropertySetId();
-/*
-	// TODO: We probably want to remove this constructor.
-	protected ExtendableObjectHelperImpl() {
-	}
-*/	
+
 	/**
 	 * @param extensions A map from PropertySet objects representing
 	 * 			extension property sets to the parameter lists from
 	 * 			which the extension property set objects can be
 	 * 			constructed.
 	 */
-	protected ExtendableObjectHelperImpl(IObjectKey objectKey, Map extensionParameters) {
+	protected ExtendableObject(IObjectKey objectKey, Map extensionParameters) {
 		this.objectKey = objectKey;
 		
 		if (extensionParameters != null) {
@@ -153,17 +134,9 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 		// the keys from which they were created are the same.
 		// Therefore we compare the key objects to see if they
 		// both contain the same data.
-		if (object instanceof ExtendableObjectHelperImpl) {
-			ExtendableObjectHelperImpl extendableObject = (ExtendableObjectHelperImpl)object;
-			if (isMutable() || extendableObject.isMutable()) {
-				// Mutable objects are not considered the same as the
-				// original, nor are two mutable objects considered the
-				// same just because they are based on the same original
-				// object.
-				return this == extendableObject;
-			} else {
-				return getObjectKey().equals(extendableObject.getObjectKey());
-			}
+		if (object instanceof ExtendableObject) {
+			ExtendableObject extendableObject = (ExtendableObject)object;
+			return getObjectKey().equals(extendableObject.getObjectKey());
 		} else {
 			return false;
 		}
@@ -192,11 +165,6 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 	}
 	
 	public ExtensionObject getExtension(PropertySet propertySet) {
-		// Perform any processing that must take place after an object
-		// has been loaded from the datastore but before the extensions
-		// can be accessed.
-//		postLoad();
-		
 		Object extensionObject = extensions.get(propertySet);
 		
 		ExtensionObject extension;
@@ -204,8 +172,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 		if (extensionObject == null) {
 			// Extension does not exist.
 			
-			if (alwaysReturnNonNullExtensions || isMutable()) {
-				// This is a mutable object.
+			if (alwaysReturnNonNullExtensions) {
 				// Create a new extension and look to the original
 				// for default values.
 				
@@ -229,17 +196,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 				extension.setBaseObject(this);
 				extension.setPropertySet(propertySet);
 				extensions.put(propertySet, extension);
-				
-				if (getOriginalObject() != null) {
-					
-					ExtensionObject originalExtension = getOriginalObject().getExtension(propertySet);
-					
-					if (originalExtension != null) {
-						propertySet.copyProperties(originalExtension, extension);
-					}
-				}
 			} else {
-				// This is a non-mutable object.
 				// Return null to indicate that no extension exists
 				// and default values should be used.
 				extension = null;
@@ -288,72 +245,6 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 		}
 		
 		return extension;
-	}
-	
-	/** 
-	 * Perform any processing that must take place after an object
-	 * has been loaded from the datastore but before the extensions
-	 * can be accessed.
-	 */
-/*	
-	protected void postLoad() 
-	{
-	}
-	*/;
-	
-	/**
-	 * Takes a map of extensions that have been modified and copies
-	 * the changes into the extensible object.
-	 * <P>
-	 * The modified extensions will always be in a de-serialized state.
-	 * There will be no extensions represented by a String object in
-	 * the modifiedExtensions map.
-	 * <P>
-	 * NYI: If all the properties in an extension are set to their
-	 * default values then the extension is removed from the map.
-	 * <P>
-	 * NYI: This method checks to see which properties have changed.
-	 * Appropriate events are fired for those properties whose values
-	 * have changed.
-	 */ 
-	public void copyExtensions(Map modifiedExtensions) {
-		// The mutable object will contain only those extensions
-		// that were requested.  Even if there are a large number of
-		// extensions in the object, it is expected that only a small
-		// number will have been requested by the user from
-		// the mutable object.  For those extensions that were not
-		// requested, we can safely and efficiently leave the original
-		// extension in the original object.
-		
-		for (Iterator iter = modifiedExtensions.entrySet().iterator(); iter.hasNext(); ) {
-			Map.Entry mapEntry = (Map.Entry)iter.next();
-			
-			PropertySet propertySet = (PropertySet)mapEntry.getKey();
-			IExtendableObject extension = (IExtendableObject)mapEntry.getValue();
-			
-			if (extensions.get(propertySet) != null) {
-				// Extension is also in the original.
-				
-				// TODO: Loop around the properties and see which are
-				// different.  Fire events for those that are.
-				// Also, see if any properties are different from
-				// the default properties.  Just set the extension
-				// to null if none are different.
-				
-				// Replace the extension.
-				extensions.put(propertySet, extension);
-			} else {
-				// The extension does not exist in the original.
-				
-				// TODO: Loop around seeing which extensions are
-				// different from the default values.  Fire events
-				// for those that are.  Leave null if none are
-				// different.
-				
-				// Add the extension.
-				extensions.put(propertySet, extension);
-			}
-		}
 	}
 	
 	public int getIntegerPropertyValue(PropertyAccessor propertyAccessor) {
@@ -416,7 +307,7 @@ public abstract class ExtendableObjectHelperImpl implements IExtendableObject {
 			throw new MalformedPluginException("Method '" + propertyAccessor.getTheSetMethod().getName() + "' in '" + propertyAccessor.getPropertySet().getInterfaceClass().getName() + "' threw an exception that was not caught by the plug-in.");
 		} catch (IllegalArgumentException e) {
 			System.out.println(e.getMessage());
-			throw new RuntimeException("An unexpected error occurred in ExtendableObjectHelperImpl.setPropertyValue");
+			throw new RuntimeException("An unexpected error occurred in ExtendableObject.setPropertyValue");
 		}
 	}
 

@@ -23,17 +23,14 @@
 package net.sf.jmoney.model2;
 
 /**
- * Exception raised if an attempt is made to set the value of a property
- * in a non-mutable object.
+ * Exception raised if an attempt is made to alter the datastore while
+ * the datastore is in read-only mode.
  *
  * In order to support transactions and high level change events in the
  * datastore, properties may not be set into the datastore objects unless
- * a specific request has first been made to update the datastore and a
- * reference to a mutable copy of the object has been obtained.  The
- * mutable and the non-mutable versions have the same interface, so
- * getter methods exist for the non-mutable versions.  However, any attempt
- * to call a getter method on a non-mutable object will result in this
- * exception.
+ * a specific request has first been made to update the datastore.
+ * Any attempt to call a getter method when the datastore is in
+ * read-only mode will result in this exception.
  *
  * @author  Nigel
  */

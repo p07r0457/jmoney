@@ -51,7 +51,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 /**
  * Holds the fields that will be saved in a file.
  */
-public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
+public class SessionImpl extends ExtendableObject implements Session {
 
     private Currency defaultCurrency;
     
@@ -105,18 +105,6 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
         }
     }
 
-    // TODO: decide how we implement saving of session properties.
-    // This gives problems in JDO.
-	protected boolean isMutable() {
-		return false;
-	}
-
-	protected IExtendableObject getOriginalObject() {
-		// This method should be called only if isMutable returns true,
-		// which it never does.  However, we must provide an implementation.
-		throw new RuntimeException("should never be called");
-	}
-	
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.session";
 	}
@@ -267,7 +255,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
     }
 */
     
-    public boolean removeCommodity(Commodity commodity) {
+    public boolean deleteCommodity(Commodity commodity) {
         return commodities.remove(commodity);
         
         // Fire the event.
@@ -296,7 +284,7 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
      * @return true if the account was present, false if the account
      * 				was not present in the collection.
      */
-    public boolean removeAccount(final Account account) {
+    public boolean deleteAccount(final Account account) {
         Account parent = account.getParent();
         if (parent == null) {
             boolean accountFound = accounts.remove(account);
@@ -313,31 +301,16 @@ public class SessionImpl extends ExtendableObjectHelperImpl implements Session {
             return accountFound;
         } else {
         	// Pass the request on to the parent account.
-            return ((AbstractAccountImpl)parent).removeSubAccount(account);
+            return ((AbstractAccountImpl)parent).deleteSubAccount(account);
         }
     }
 
-    // Used by MutableTransactionImpl.
-    // Also this is the implementation of the addXxx pattern
-    // required for list properties.
-/*    
-    public void addTransaction(Transaction transaction) {
-        transactions.add(transaction);
-       
-        // For efficiency, we keep a list of entries in each
-        // account/category.  We must update this list now.
-        for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
-            Entry entry = (Entry)iter.next();
-            // TODO: at some time, keep these lists for categories too
-            Account category = entry.getAccount();
-            if (category instanceof CapitalAccount) {
-                ((CapitalAccountImpl)category).addEntry(entry);
-            }
-        }
-    }
-*/    	
-   	public boolean removeTransaction(Transaction transaction) {
-        boolean found = transactions.remove(transaction);
+   	public boolean deleteTransaction(Transaction transaction) {
+   		// TODO: This method does not remove the entries from
+   		// any underlying database.  We must decide how this
+   		// is best done.
+   		
+   		boolean found = transactions.remove(transaction);
 
         // For efficiency, we keep a list of entries in each
         // account/category.  We must update this list now.

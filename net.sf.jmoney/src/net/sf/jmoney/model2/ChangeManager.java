@@ -94,7 +94,7 @@ public class ChangeManager {
 	}
 	
 	public void setProperty(
-		ExtendableObjectHelperImpl object,
+		ExtendableObject object,
 		PropertyAccessor propertyAccessor,
 		Object oldValue,
 		Object newValue) {
@@ -209,7 +209,7 @@ public class ChangeManager {
 	
 	public void createObject(
 			PropertySet propertySet,
-			ExtendableObjectHelperImpl object,
+			ExtendableObject object,
 			Object newValue) {
 
 		// Add object and its values to the map.
@@ -218,7 +218,7 @@ public class ChangeManager {
 		
 	public void deleteObject(
 			PropertySet propertySet,
-			ExtendableObjectHelperImpl object) {
+			ExtendableObject object) {
 
 		// Lookup object in our object map.
 		
@@ -242,7 +242,7 @@ public class ChangeManager {
 		/* actually nothing to do here.
 		for (Iterator objectIter = objects.entrySet().iterator(); objectIter.hasNext(); ) {
 			Map.Entry entry = (Map.Entry)objectIter.next();
-			ExtendableObjectHelperImpl extendableObject = (ExtendableObjectHelperImpl)entry.getKey();
+			ExtendableObject extendableObject = (ExtendableObject)entry.getKey();
 			ChangeEntry changeEntry = (ChangeEntry)entry.getValue();
 			
 			// TODO: build extensionValues from changeEntry.newValues.extensionValues

@@ -34,7 +34,7 @@ import net.sf.jmoney.model2.*;
 /**
  * An implementation of the Account interface
  */
-public abstract class AbstractAccountImpl extends ExtendableObjectHelperImpl implements Account {
+public abstract class AbstractAccountImpl extends ExtendableObject implements Account {
 	
 	protected IObjectKey parentKey;
 	
@@ -84,14 +84,14 @@ public abstract class AbstractAccountImpl extends ExtendableObjectHelperImpl imp
 		}
 	}
 	
-	boolean removeSubAccount(Account subAccount) {
-		return subAccounts.remove(subAccount);
-	}
-	
 	public Iterator getSubAccountIterator() {
 		return subAccounts == null
 		? new EmptyIterator()
 				: subAccounts.iterator();
+	}
+	
+	boolean deleteSubAccount(Account subAccount) {
+		return subAccounts.remove(subAccount);
 	}
 	
 	public String toString() {

@@ -45,16 +45,6 @@ public class IncomeExpenseAccountImpl extends AbstractAccountImpl implements Inc
 		this.name = name;
 	}
 
-	protected boolean isMutable() {
-		return false;
-	}
-
-	protected IExtendableObject getOriginalObject() {
-		// This method should be called only if isMutable returns true,
-		// which it never does.  However, we must provide an implementation.
-		throw new RuntimeException("should never be called");
-	}
-	
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.category";
 	}

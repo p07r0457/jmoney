@@ -24,17 +24,14 @@ package net.sf.jmoney.model2;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.Collection;
 import java.util.Map;
-
-import net.sf.jmoney.model2.*;
 
 /**
  * This class was created because the currency support wich comes with the Java
  * SDK is to complicated. Therefore we provide a simpler model which is
  * not based upon locales but upon the ISO 4217 currencies.
  */
-public class CurrencyImpl extends ExtendableObjectHelperImpl implements Currency {
+public class CurrencyImpl extends ExtendableObject implements Currency {
 	
 	private String name;
 	
@@ -74,17 +71,7 @@ public class CurrencyImpl extends ExtendableObjectHelperImpl implements Currency
 		this.code = code;
 		this.decimals = decimals;
 	}
-	
-    protected boolean isMutable() {
-		return false;
-	}
-	
-	protected IExtendableObject getOriginalObject() {
-		// This method should be called only if isMutable returns true,
-		// which it never does.  However, we must provide an implementation.
-		throw new RuntimeException("should never be called");
-	}
-	
+
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.currency";
 	}

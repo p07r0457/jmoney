@@ -82,7 +82,7 @@ public class PropertySet {
 	private static Map allPropertySetsMap = new HashMap();   // type: String (property set id) to PropertySet
 
 	/**
-	 * Map classes (the non-mutable classes) to property sets.
+	 * Map extendable classes to property sets.
 	 */
 	private static Map classToPropertySetMap = new HashMap();   // type: String (property set id) to PropertySet
 	
@@ -122,8 +122,6 @@ public class PropertySet {
 	 * This field is undefined for derivable property sets.
 	 */
 	Vector constructorProperties;
-	
-	private Method setPropertiesMethod;
 	
 	private Method theDefaultPropertiesMethod;
 
@@ -277,7 +275,7 @@ public class PropertySet {
 			}
 		}
 		
-		// Add to the map that maps the non-mutable classes
+		// Add to the map that maps the extendable classes
 		// to the extendable property sets.
 		// Only final property sets (ones which do not define an enumerated type
 		// to control derived classes) are put in the map.  This is important because
@@ -778,48 +776,6 @@ public class PropertySet {
 		throw new PropertyNotFoundException(propertySetId, name);
 	}
 	
-	// TODO: Make this package protection when stuff moved out of JDO plugin.
-	// TODO: This can be made faster by caching arrays of getter and setter methods.
-	/**
-	 * Copy all the properties in the source extension to the destination
-	 * extension.  A property will be copied if it has both a setter and
-	 * a getter method.
-	 */ 
-	public void copyProperties(Object sourceExtension, Object destinationExtension) {
-		// Copy the properties across, one by one.
-		BeanInfo beanInfo;
-		try {
-			beanInfo = Introspector.getBeanInfo(sourceExtension.getClass());
-		} catch (IntrospectionException e) {
-			throw new MalformedPluginException("Entry extension caused introspection error");
-		}
-		
-		PropertyDescriptor pd[] = beanInfo.getPropertyDescriptors();
-		for (int j = 0; j < pd.length; j++) {
-			String name = pd[j].getName();
-			// Must have read and write method to be serialized.
-			Method readMethod = pd[j].getReadMethod();
-			Method writeMethod = pd[j].getWriteMethod();
-			if (readMethod != null
-					&& writeMethod != null
-					&& readMethod.getDeclaringClass() != AbstractEntryExtension.class
-					&& writeMethod.getDeclaringClass() != AbstractEntryExtension.class) {
-				Object value;
-				try {
-					value = readMethod.invoke(sourceExtension, null);
-					writeMethod.invoke(destinationExtension, new Object[] { value });
-				} catch (IllegalAccessException e) {
-					// TODO: check access level when plug-in loaded.
-					throw new MalformedPluginException("Entry extension caused introspection error");
-					// throw new MalformedPluginException("Method 'getEntryExtensionClass' in '" + pluginBean.getClass().getName() + "' must be public.");
-				} catch (InvocationTargetException e) {
-					// Plugin error
-					throw new RuntimeException("bad error");
-				}
-			}
-		}
-	}
-	
 	/**
 	 * Gets a list of all property sets.  This method is used
 	 * by the Propagator class and also by the datastore plug-ins.
@@ -1124,57 +1080,4 @@ public class PropertySet {
 	}
 
 
-	/**
-	 * This method sets property values into an extendable object.
-	 * 
-	 * @param extensionObject The object into which the properties will be
-	 * 			set.
-	 * @param values An array containing the property values to be set.
-	 * 			This array must contain one element for each scalar property
-	 * 			in the property set and the properties must be in the same order
-	 * 			in the array as the properties were registered.
-	 * 			This array must also contain an extra element at the end
-	 * 			which is itself an array of ExtensionProperties objects.
-	 * 			If the array does not contain the correct number of elements
-	 * 			or if any element is not of the appropriate type for the property
-	 * 			then a runtime exception will be raised.
-	 */
-	public void setProperties(IExtendableObject extendableObject, Object[] values) {
-		try {
-			setPropertiesMethod.invoke(extendableObject, values);
-		} catch (IllegalAccessException e) {
-			// TODO: check access level when plug-in loaded.
-			throw new MalformedPluginException("Entry extension caused introspection error");
-			// throw new MalformedPluginException("Method 'getEntryExtensionClass' in '" + pluginBean.getClass().getName() + "' must be public.");
-		} catch (InvocationTargetException e) {
-			// Plugin error
-			throw new RuntimeException("bad error");
-		}
-	}
-	
-	/**
-	 * This method sets property values into an extension object.
-	 * 
-	 * @param extensionObject The object into which the properties will be
-	 * 			set.
-	 * @param values An array containing the property values to be set.
-	 * 			This array must contain one element for each scalar property
-	 * 			in the property set and the properties must be in the same order
-	 * 			in the array as the properties were registered.
-	 * 			If the array does not contain the correct number of elements
-	 * 			or if any element is not of the appropriate type for the property
-	 * 			then a runtime exception will be raised.
-	 */
-	public void setProperties(ExtensionObject extensionObject, Object[] values) {
-		try {
-			setPropertiesMethod.invoke(extensionObject, values);
-		} catch (IllegalAccessException e) {
-			// TODO: check access level when plug-in loaded.
-			throw new MalformedPluginException("Entry extension caused introspection error");
-			// throw new MalformedPluginException("Method 'getEntryExtensionClass' in '" + pluginBean.getClass().getName() + "' must be public.");
-		} catch (InvocationTargetException e) {
-			// Plugin error
-			throw new RuntimeException("bad error");
-		}
-	}
 }

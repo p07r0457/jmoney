@@ -425,7 +425,7 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 	}
 
 	// You may wonder why this code is here when it is also
-	// in the ExtendableObjectHelperImpl class.
+	// in the ExtendableObject class.
 	// The reason is that callers can provide a very basic
 	// implementation, often an inline implementation, of
 	// the property set getter interface.  There would thus

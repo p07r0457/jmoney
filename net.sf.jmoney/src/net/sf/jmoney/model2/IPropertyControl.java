@@ -46,7 +46,7 @@ public interface IPropertyControl {
 	 * Load the value into the control object.
 	 * 
 	 * @param object The object that contains the value of
-	 * the property.  This object must be a mutable object.
+	 * the property.
 	 */
 	void load(Object object);
 	
@@ -57,7 +57,7 @@ public interface IPropertyControl {
 	 * property should be shown in the control object.
 	 * 
 	 * @param object The object that contains the value of
-	 * the property.  This object is a non-mutable object.
+	 * the property.
 	 */
 	void loadDisabled(Object object);
 	

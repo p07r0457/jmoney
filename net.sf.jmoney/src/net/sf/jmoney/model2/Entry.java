@@ -34,7 +34,7 @@ public interface Entry extends IExtendableObject {
 	/**
 	 * Returns the transaction.
 	 */
-	Transaction getTransaxion();
+	Transaction getTransaction();
 	
 	/**
 	 * Returns the creation.
