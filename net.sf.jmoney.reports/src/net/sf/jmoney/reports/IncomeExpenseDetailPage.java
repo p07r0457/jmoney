@@ -370,7 +370,6 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 								java.util.Locale.US)
 								.format(messageArgs);
 				
-				System.err.println(errorText);
 				JMoneyPlugin.log(new Status(IStatus.ERROR, ReportsPlugin.PLUGIN_ID, IStatus.ERROR, errorText, null));
 	            MessageDialog errorDialog = new MessageDialog(
 	                    shell,

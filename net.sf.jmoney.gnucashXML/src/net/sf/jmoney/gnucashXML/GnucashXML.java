@@ -24,6 +24,7 @@ import java.util.Locale;
 
 import javax.swing.filechooser.FileFilter;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.BankAccountInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
@@ -83,11 +84,9 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 	    try {
 	        progressDialog.run(true,false,this);
 		} catch (InvocationTargetException e) {
-		    Throwable e2 = e.getCause();
-		    System.err.println(e.toString());
-		    e2.printStackTrace(System.err);
+			JMoneyPlugin.log(e);
 		} catch (InterruptedException e) {
-		    System.err.println(e.toString());
+			JMoneyPlugin.log(e);
 		}
 	    EventLoopProgressMonitor monitor = new EventLoopProgressMonitor(new NullProgressMonitor());
 	    // run(monitor);
@@ -152,22 +151,17 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 			// Commit the changes to the datastore
 			session.registerUndoableChange(GnucashXMLPlugin.getResourceString("importDescription"));
 		} catch (MalformedURLException e) {
-			System.err.println(e.toString());
+			JMoneyPlugin.log(e);
 		} catch (IOException e) {
-			System.err.println(e.toString());
+			JMoneyPlugin.log(e);
 		} catch (SAXException e) {
-			System.err.println(e.toString());
-
+			JMoneyPlugin.log(e);
 		} catch (LessThanTwoSplitsException e) {
-			System.err.println(e.toString());
+			JMoneyPlugin.log(e);
 		} catch (MoreThanTwoSplitsException e) {
-			System.err.println(e.toString());
+			JMoneyPlugin.log(e);
 		} catch (ParseException e) {
-			System.err.println(e.toString());
-
-		} catch (Error e) {
-		    System.err.println(e.getStackTrace());
-		    throw e;
+			JMoneyPlugin.log(e);
 		} finally {
 		    monitor.done();
 		}
@@ -268,8 +262,7 @@ public class GnucashXML implements FileFormat, IRunnableWithProgress {
 
 
 				} else {
-					System.err.println(
-						"Error while importing: Account without any name found !");
+					JMoneyPlugin.log(new RuntimeException("Error while importing: Account without any name found!"));
 				}
 			}
 

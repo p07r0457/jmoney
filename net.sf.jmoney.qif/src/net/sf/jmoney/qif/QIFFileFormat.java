@@ -38,6 +38,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.BankAccountInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.fields.TransactionInfo;
@@ -175,7 +176,7 @@ public class QIFFileFormat implements FileFormat {
 
 			// import transactions of a investment account
 			else {
-				System.err.println("Cannot import " + line.substring(0));
+				JMoneyPlugin.log(new RuntimeException("Cannot import " + line.substring(0)));
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

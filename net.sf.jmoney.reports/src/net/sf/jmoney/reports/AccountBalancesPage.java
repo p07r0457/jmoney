@@ -301,7 +301,6 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 			URL url =
 				ReportsPlugin.class.getResource("resources/AccountBalances.jasper");
 			if (url == null) {
-				System.err.println("resources/AccountBalances.jasper not found.  A manual build of the net.sf.jmoney.reports project may be necessary.");
 				JMoneyPlugin.log(new Status(IStatus.ERROR, ReportsPlugin.PLUGIN_ID, IStatus.ERROR, "resources/AccountBalances.jasper not found.  A manual build of the net.sf.jmoney.reports project may be necessary.", null));
 	            MessageDialog errorDialog = new MessageDialog(
 	                    shell,

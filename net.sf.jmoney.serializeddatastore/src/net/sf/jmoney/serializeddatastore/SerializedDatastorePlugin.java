@@ -222,8 +222,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			// enabled in the progress dialog, but if the cancel button is enabled
 			// then we do nothing here, leaving the previous session, if any, open.
 		} catch (Throwable ex) {
-			System.err.println(ex.toString());
-			ex.printStackTrace(System.err);
+			JMoneyPlugin.log(ex);
 			fileReadError(sessionFile, window);
 		}
 	}
@@ -1302,8 +1301,7 @@ System.out.println("start " + localName);
 			// then a message should perhaps be displayed here indicating that the
 			// file is unusable.
 		} catch (Throwable ex) {
-			System.err.println(ex.toString());
-			ex.printStackTrace(System.err);
+			JMoneyPlugin.log(ex);
 			fileWriteError(sessionFile, window);
 		}
 	}
