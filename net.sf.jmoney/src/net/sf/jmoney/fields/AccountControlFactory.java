@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.fields;
 
-import java.util.Date;
-
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.ExtendableObject;
