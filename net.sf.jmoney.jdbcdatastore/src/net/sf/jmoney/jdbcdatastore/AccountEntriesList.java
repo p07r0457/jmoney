@@ -32,27 +32,23 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
- * This class is used to provide faster searches for references
- * from a given property in a class of objects to a given
- * instance of an object.  For example, in the base JMoney code
- * each entry contains a reference to an account.  Entries are
- * primarily listed under the transaction in which they belong.
- * However, we want a quick way to find all the entries in a
- * given account.
+ * This class is used to get the list of entries in a given account. Entries are
+ * primarily listed under the transaction in which they belong. However, we want
+ * a quick way to find all the entries in a given account.
  * <P>
- * This class provides the list by submitting a query to the
- * database.  A suitable index should be created in the database.
+ * This class provides the list by submitting a query to the database. A
+ * suitable index should be created in the database.
  * 
  * @author Nigel Westbury
  */
-public class IndexValuesList implements Collection {
+public class AccountEntriesList implements Collection {
 	private SessionManager sessionManager;
 	private IDatabaseRowKey keyOfRequiredPropertyValue;
 	private PropertySet propertySet;
 	private String tableName;
 	private String columnName;
 	
-	public IndexValuesList(SessionManager sessionManager, IDatabaseRowKey keyOfRequiredPropertyValue, PropertyAccessor propertyAccessor) {
+	public AccountEntriesList(SessionManager sessionManager, IDatabaseRowKey keyOfRequiredPropertyValue, PropertyAccessor propertyAccessor) {
 		this.sessionManager = sessionManager;
 		this.keyOfRequiredPropertyValue = keyOfRequiredPropertyValue;
 		
