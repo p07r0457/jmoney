@@ -24,11 +24,9 @@ package net.sf.jmoney.jdbcdatastore;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
 
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ISessionManager;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.IDataManager;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;
@@ -137,10 +135,6 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 		}
 	}
 
-	public Collection createIndexValuesList(PropertyAccessor propertyAccessor) {
-		return new IndexValuesList(sessionManager, this, propertyAccessor);
-	}
-
 	public int getRowId() {
 		return rowId;
 	}
@@ -168,7 +162,7 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 		return sessionManager.getSession();
 	}
 
-	public ISessionManager getSessionManager() {
+	public IDataManager getSessionManager() {
 		throw new RuntimeException("should only be called for session keys");
 	}
 

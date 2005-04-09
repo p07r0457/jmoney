@@ -24,7 +24,15 @@
 package net.sf.jmoney.serializeddatastore;
 
 import java.io.File;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.Session;
 
@@ -55,6 +63,8 @@ public class SessionManager implements ISessionManager {
 
     private boolean modified = false;
 
+    private Map accountEntriesListsMap = new HashMap();
+	
 	/**
 	 * Construct the session manager.
 	 * <P>
@@ -278,7 +288,7 @@ public class SessionManager implements ISessionManager {
 			}
 		}
 	};
-	
+
 	/* (non-Javadoc)
 	 * @see org.eclipse.core.runtime.IAdaptable#getAdapter(java.lang.Class)
 	 */
@@ -289,4 +299,57 @@ public class SessionManager implements ISessionManager {
 		return null;
 	}
 
+	/**
+	 * @param account
+	 * @param entry
+	 */
+	public void addEntryToList(Account account, Entry entry) {
+		Collection accountEntriesList = (Collection)accountEntriesListsMap.get(account);
+		accountEntriesList.add(entry);
+	}
+
+	/**
+	 * @param account
+	 * @param entry
+	 */
+	public void removeEntryFromList(Account account, Entry entry) {
+		Collection accountEntriesList = (Collection)accountEntriesListsMap.get(account);
+		accountEntriesList.remove(entry);
+	}
+
+	/**
+	 * @param account
+	 */
+	public void addAccountList(Account account) {
+		JMoneyPlugin.myAssert(!accountEntriesListsMap.containsKey(account));
+		accountEntriesListsMap.put(account, new Vector());
+	}
+
+	/**
+	 * @param account
+	 */
+	public void removeAccountList(Account account) {
+		JMoneyPlugin.myAssert(accountEntriesListsMap.containsKey(account));
+		accountEntriesListsMap.remove(account);
+	}
+
+	public boolean hasEntries(Account account) {
+		Collection entriesList = (Collection)accountEntriesListsMap.get(account);
+		JMoneyPlugin.myAssert(entriesList != null);
+		return !entriesList.isEmpty();
+	}
+
+	public Collection getEntries(Account account) {
+		Collection entriesList = (Collection)accountEntriesListsMap.get(account);
+		JMoneyPlugin.myAssert(entriesList != null);
+		return Collections.unmodifiableCollection(entriesList);
+	}
+
+	public void startTransaction() {
+		// Nothing to do
+	}
+
+	public void commitTransaction() {
+		// Nothing to do
+	}
 }

@@ -43,10 +43,10 @@ public class Transaction extends ExtendableObject {
 	public Transaction(
 			IObjectKey objectKey,
     		Map extensions,
-			IObjectKey parent,
+			IObjectKey parentKey,
     		IListManager entries,
     		Date date) {
-		super(objectKey, extensions);
+		super(objectKey, extensions, parentKey);
 
 		this.entries = entries;
 		this.date = date;
@@ -55,9 +55,9 @@ public class Transaction extends ExtendableObject {
 	public Transaction(
 			IObjectKey objectKey,
     		Map extensions,
-			IObjectKey parent,
+			IObjectKey parentKey,
     		IListManager entries) {
-		super(objectKey, extensions);
+		super(objectKey, extensions, parentKey);
 
 		this.entries = entries;
 		// TODO: Check that this sets the date to the current date.
@@ -120,17 +120,7 @@ public class Transaction extends ExtendableObject {
 		           		});
 		}
 
-		// TODO: This is not correct.  Move it into the
-        // above 'remove' method or something.
-        if (found) {
-        	// TODO: at some time, keep these lists for categories too
-        	Account category = entry.getAccount();
-        	if (category instanceof CapitalAccount) {
-        		((CapitalAccount)category).removeEntry(entry);
-        	}
-        }
-        
-    	return found;
+		return found;
     }
     
     // Some helper methods:

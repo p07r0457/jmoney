@@ -28,6 +28,7 @@ import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
+import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
@@ -38,6 +39,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.views.NodeEditor;
 
 import org.eclipse.jface.action.Action;
@@ -70,7 +72,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
      * me. 
      * @author Faucheux
      */
-    public static final boolean IS_ENTRY_SECTION_TO_DISPLAY = false;
+    public static final boolean IS_ENTRY_SECTION_TO_DISPLAY = true;
     
 
 	protected NodeEditor fEditor;
@@ -88,6 +90,26 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 
 	final EntriesFilter filter = new EntriesFilter(this);
 
+	/**
+	 * The transaction manager used for all changes made by
+	 * this page.  It is created by the page is created and
+	 * remains usable for the rest of the time that this page
+	 * exists.
+	 */
+	TransactionManager transactionManager = null;
+
+	/**
+	 * The account being shown in this page.  This account
+	 * object exists in the context of transactionManager.
+	 */
+	private CurrencyAccount account;
+	
+	/**
+	 * the transaction currently being edited, or null
+	 * if no transaction is being edited
+	 */
+	protected Transaction currentTransaction = null;
+
     /**
      * Create a new page to edit entries.
      * 
@@ -102,6 +124,19 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
      * @see org.eclipse.ui.forms.editor.FormPage#createFormContent(org.eclipse.ui.forms.IManagedForm)
      */
     protected void createFormContent(IManagedForm managedForm) {
+        CurrencyAccount originalAccount = (CurrencyAccount) fEditor.getSelectedObject();
+
+        // Create our own transaction manager.
+        // This ensures that uncommitted changes
+    	// made by this page are isolated from datastore usage outside
+    	// of this page.
+        transactionManager = new TransactionManager(originalAccount.getSession());
+    	
+    	// Set the account that this page is viewing and editing.
+    	// We set an account object that is managed by our own
+    	// transaction manager.
+        account = (CurrencyAccount)transactionManager.getCopyInTransaction(originalAccount);
+        
     	// Build an array of all possible properties that may be
     	// displayed in the table.
         
@@ -209,7 +244,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
     }
     
     public CurrencyAccount getAccount () {
-        return (CurrencyAccount) fEditor.getSelectedObject();
+    	return account;
     }
 
 	public void saveState(IMemento memento) {
@@ -469,4 +504,13 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 			return false;
 		}
     }
+	
+	/**
+	 * Commit the transaction
+	 */
+	public void commitTransaction() {
+		// TODO make a sound
+		
+		transactionManager.commit();
+	}
 }

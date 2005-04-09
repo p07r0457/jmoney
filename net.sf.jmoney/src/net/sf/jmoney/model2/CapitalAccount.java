@@ -131,7 +131,7 @@ public abstract class CapitalAccount extends Account {
     		
     		List sortedEntries = new LinkedList();
     		
-    		Iterator it = entries.iterator();
+    		Iterator it = getEntries().iterator();
     		while (it.hasNext()) {
     			sortedEntries.add(it.next());
     		}
@@ -225,18 +225,6 @@ public abstract class CapitalAccount extends Account {
         processPropertyChange(CapitalAccountInfo.getCommentAccessor(), oldComment, aComment);
 	}
 
-	/**
-	 * Sort the entries.
-	 */
-        // TODO: Sorting the entries affects the view of the data.
-        // This sort should be done in the view, not the model, otherwise
-        // one view might mess up another view of the data.
-        // This must be reviewed if we support SQL databases in any case.
-/*	
-	public void sortEntries(Comparator c) {
-		Collections.sort(entries, c);
-	}
-*/
 	public String toString() {
 		return name;
 	}
@@ -326,7 +314,7 @@ public abstract class CapitalAccount extends Account {
     		// We must therefore provide our own implementation.
     		
     		Vector entriesList = new Vector();
-    		entriesList.addAll(entries);
+    		entriesList.addAll(getEntries());
     		if (includeSubAccounts) {
     			addEntriesFromSubAccounts(this, entriesList);
     		}

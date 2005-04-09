@@ -45,7 +45,7 @@ import org.eclipse.ui.IWorkbenchWindow;
  */
 public class Session extends ExtendableObject implements IAdaptable {
 
-    private Currency defaultCurrency;
+    protected IObjectKey defaultCurrencyKey;
     
     private IListManager commodities;
     
@@ -70,16 +70,17 @@ public class Session extends ExtendableObject implements IAdaptable {
     public Session(
     		IObjectKey objectKey,
     		Map extensions,
-			IObjectKey parent,
+			IObjectKey parentKey,
     		IListManager commodities,
 			IListManager accounts,
 			IListManager transactions,
-			IObjectKey defaultCurrency) {
-    	super(objectKey, extensions);
+			IObjectKey defaultCurrencyKey) {
+    	super(objectKey, extensions, parentKey);
 
     	this.commodities = commodities;
     	this.accounts = accounts;
     	this.transactions = transactions;
+    	this.defaultCurrencyKey = defaultCurrencyKey;
     	
         // Set up a hash table that maps currency codes to
         // the currency object.
@@ -94,12 +95,6 @@ public class Session extends ExtendableObject implements IAdaptable {
     			}
     		}
     	}
-    	
-        if (defaultCurrency != null) {
-        	this.defaultCurrency = (Currency)defaultCurrency.getObject();
-        } else {
-       		this.defaultCurrency = null;
-        }
     }
 
     /**
@@ -109,11 +104,11 @@ public class Session extends ExtendableObject implements IAdaptable {
     public Session(
     		IObjectKey objectKey,
     		Map extensions,
-			IObjectKey parent,
+			IObjectKey parentKey,
     		IListManager commodities,
 			IListManager accounts,
 			IListManager transactions) {
-    	super(objectKey, extensions);
+    	super(objectKey, extensions, parentKey);
 
     	this.commodities = commodities;
     	this.accounts = accounts;
@@ -133,7 +128,7 @@ public class Session extends ExtendableObject implements IAdaptable {
     		}
     	}
     	
-   		this.defaultCurrency = null;
+   		this.defaultCurrencyKey = null;
     }
 
 	protected String getExtendablePropertySetId() {
@@ -141,29 +136,19 @@ public class Session extends ExtendableObject implements IAdaptable {
 	}
 	
     public Currency getDefaultCurrency() {
-        return defaultCurrency;
+        return defaultCurrencyKey == null
+		? null
+				: (Currency)defaultCurrencyKey.getObject();
     }
     
     public void setDefaultCurrency(Currency defaultCurrency) {
-        Currency oldDefaultCurrency = this.defaultCurrency;
-        this.defaultCurrency = defaultCurrency;
+        Currency oldDefaultCurrency = getDefaultCurrency();
+        this.defaultCurrencyKey = defaultCurrency.getObjectKey();
 
 		// Notify the change manager.
 		processPropertyChange(SessionInfo.getDefaultCurrencyAccessor(), oldDefaultCurrency, defaultCurrency);
     }
     
-	/**
-	 * @return the available currencies.
-	 */
-/*    
-	public Object[] getAvailableCurrencies() {
-		if (sortedCurrencies == null) {
-			sortedCurrencies = currencies.values().toArray();
-			Arrays.sort(sortedCurrencies);
-		}
-		return sortedCurrencies;
-	}
-*/
 	/**
 	 * @param code the currency code.
 	 * @return the corresponding currency.
@@ -173,12 +158,6 @@ public class Session extends ExtendableObject implements IAdaptable {
 	}
 
     public Iterator getCommodityIterator() {
-/*    	
-		if (sortedCurrencies == null) {
-			sortedCurrencies = currencies.values().toArray();
-			Arrays.sort(sortedCurrencies);
-		}
-*/		
 		return currencies.values().iterator();
     } 
 /*   
@@ -373,7 +352,7 @@ public class Session extends ExtendableObject implements IAdaptable {
     	sessionFiring = true;
     	
     	// Notify listeners who are listening to us using the
-    	// SessionChangeListener interface.
+    	// SessionChangeFirerListener interface.
         if (!sessionChangeFirerListeners.isEmpty()) {
         	// Take a copy of the listener list.  By doing this we
         	// allow listeners to safely add or remove listeners.
@@ -614,14 +593,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 
         if (found) {
         	for (Iterator iter = entriesInTransaction.iterator(); iter.hasNext(); ) {
-                // For efficiency, we keep a list of entries in each
-                // account/category.  We must update this list now.
         		final Entry entry = (Entry)iter.next();
-        		// TODO: at some time, keep these lists for categories too
-        		Account category = entry.getAccount();
-        		if (category instanceof CapitalAccount) {
-        			((CapitalAccount)category).removeEntry(entry);
-        		}
 
         		// When deleting a transaction, we do not send notifications
         		// of deletion of the entries inside the transaction.

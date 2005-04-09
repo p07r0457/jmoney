@@ -39,7 +39,7 @@ public abstract class Commodity extends ExtendableObject {
 			Map extensions, 
 			IObjectKey parentKey,
 			String name) {
-		super(objectKey, extensions);
+		super(objectKey, extensions, parentKey);
 		this.name = name;
 	}
 	

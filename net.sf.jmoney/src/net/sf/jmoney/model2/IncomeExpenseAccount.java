@@ -43,7 +43,7 @@ public class IncomeExpenseAccount extends Account {
 	 * The currency in which all entries in this account are denominated.
 	 * This property is not applicable if multiCurrency is true.
 	 */
-	private Currency currency = null;
+	protected IObjectKey currencyKey = null;
 	
 	private String fullAccountName = null;
 
@@ -57,11 +57,7 @@ public class IncomeExpenseAccount extends Account {
 			IObjectKey currencyKey) {
 		super(objectKey, extensions, parent, name, subAccounts);
 		this.multiCurrency = multiCurrency;
-		if (currencyKey == null) {
-			this.currency = null;
-		} else {
-			this.currency = (Currency)currencyKey.getObject();
-		}
+		this.currencyKey = currencyKey;
 	}
 
 	public IncomeExpenseAccount(
@@ -101,7 +97,9 @@ public class IncomeExpenseAccount extends Account {
 	}
 	
 	public Currency getCurrency() {
-		return currency;
+		return currencyKey == null
+		? null
+				: (Currency)currencyKey.getObject();
 	}
 	
 	public void setMultiCurrency(boolean multiCurrency) {
@@ -110,11 +108,11 @@ public class IncomeExpenseAccount extends Account {
 
 		// When turning off multi-currency, we must set an appropriate 
 		// currency.
-		if (!multiCurrency && currency == null) {
+		if (!multiCurrency && currencyKey == null) {
 			// TODO: Look at the entries in the account and set the
 			// account as appropriate.
 			// For time being, set to default currency.
-			currency = getSession().getDefaultCurrency();
+			currencyKey = getSession().getDefaultCurrency().getObjectKey();
 		}
 		
 		// Notify the change manager.
@@ -124,8 +122,8 @@ public class IncomeExpenseAccount extends Account {
 	}
 	
 	public void setCurrency(Currency currency) {
-        Currency oldCurrency = this.currency;
-		this.currency = currency;
+        Currency oldCurrency = getCurrency();
+		this.currencyKey = currency.getObjectKey();
 
 		// Notify the change manager.
 		processPropertyChange(IncomeExpenseAccountInfo.getCurrencyAccessor(), oldCurrency, currency);
@@ -138,7 +136,7 @@ public class IncomeExpenseAccount extends Account {
 		// Income and expense accounts may be either single currency or
 		// multiple currency.
 		if (!multiCurrency) {
-			return currency;
+			return getCurrency();
 		} else {
 			// This is a multi-currency account, so we look to the entry.
 			return entry.getIncomeExpenseCurrency();

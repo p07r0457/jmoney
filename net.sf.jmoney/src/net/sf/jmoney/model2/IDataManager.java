@@ -22,14 +22,34 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Collection;
+
+import org.eclipse.core.runtime.IAdaptable;
+
 /**
- *
- * @author  Nigel
+ * An interface to an object that manages a view on the data.
+ * This is a base interface that is extended by ISessionManager to
+ * manage a view of data committed to a datastore and is also
+ * extended by ITransactionManager to manage a view of uncommitted data.
  */
-public class ObjectLockedForEditException extends Exception {
-    
-    /** Creates a new instance of ObjectLockedForEditException */
-    public ObjectLockedForEditException() {
-    }
-    
+public interface IDataManager extends IAdaptable {
+
+	/** Returns the session object.  The session object must be
+	 * non-null.
+	 * 
+	 * @return the session object
+	 */
+	Session getSession();
+	
+	/**
+	 * @param account
+	 * @return
+	 */
+	boolean hasEntries(Account account);
+
+	/**
+	 * @param account
+	 * @return
+	 */
+	Collection getEntries(Account account);
 }

@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.model2;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Comparator;
@@ -73,6 +74,9 @@ public class PropertyAccessorImpl implements PropertyAccessor {
     
     // Applies only if list property
     private Method theDeleteMethod;
+    
+    // Applies only if scalar property of type ExtendableObject
+    private Field theObjectKeyField;
     
 	/**
 	 * true if property is a list property, i.e. can contain
@@ -141,8 +145,38 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         if (theSetMethod.getReturnType() != void.class) {
             throw new MalformedPluginException("Method '" + theSetMethod.getName() + "' in '" + implementationClass.getName() + "' must return void type .");
         }
-    }
+        
+        // If the property value is an extendable object, use introspection on
+		// the implementation class to find the field containing
+		// the object key for the object referenced by this property.
+        if (ExtendableObject.class.isAssignableFrom(propertyClass)) { 		
+        	String fieldName = localName + "Key";
+        	
+        	Class classToTry = propertySet.getImplementationClass();
+        	do {
+        		try {
+        			theObjectKeyField = classToTry.getDeclaredField(fieldName);
+        			break;
+        		} catch (NoSuchFieldException e) {
+        			classToTry = classToTry.getSuperclass();
+        		}
+        	} while (classToTry != null);
+        	
+        	if (theObjectKeyField == null) {
+        		throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a field called " + fieldName + ".");
+        	}
+        	
+        	if (!IObjectKey.class.isAssignableFrom(theObjectKeyField.getType())) {
+        		throw new MalformedPluginException("Field '" + fieldName + "' in '" + implementationClass.getName() + "' must reference an object type that implements IObjectKey.");
+        	}
 
+			// (1 is public,  2 is private, 4 is protected, 1,2 & 4 bits off is default).
+			if ((theObjectKeyField.getModifiers() & 5) == 0) {
+				throw new MalformedPluginException("Field '" + fieldName + "' in '" + implementationClass.getName() + "' must be protected (or public if you insist).");
+			}
+        }
+    }
+    
     /**
      * Create a property accessor for a list property.
      * 
@@ -311,6 +345,10 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 			e.printStackTrace();
 			throw new RuntimeException("internal error");
 		}
+    }
+
+    public IObjectKey invokeObjectKeyField(ExtendableObject object) {
+    	return (IObjectKey)object.getProtectedFieldValue(theObjectKeyField);
     }
 
     /**
@@ -608,5 +646,4 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 	public IPropertyDependency getDependency() {
 		return dependency;
 	}
-
 }

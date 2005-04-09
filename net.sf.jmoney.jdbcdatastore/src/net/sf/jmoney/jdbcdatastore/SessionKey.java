@@ -22,11 +22,8 @@
 
 package net.sf.jmoney.jdbcdatastore;
 
-import java.util.Collection;
-
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ISessionManager;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.IDataManager;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 
@@ -61,13 +58,6 @@ public class SessionKey implements IDatabaseRowKey {
 		this.sessionManager = sessionManager;
 	}
 
-	public Collection createIndexValuesList(PropertyAccessor propertyAccessor) {
-		// TODO: complete this.  All objects of the type in 
-		// the session are fetched.
-		throw new RuntimeException("code not completed");
-//		return new IndexValuesList(sessionManager, rowId);
-	}
-
 	public int getRowId() {
 		// All session objects have a row id of zero.
 		// Only one session can exist.
@@ -83,7 +73,7 @@ public class SessionKey implements IDatabaseRowKey {
 		return sessionManager.getSession();
 	}
 
-	public ISessionManager getSessionManager() {
+	public IDataManager getSessionManager() {
 		return sessionManager;
 	}
 }

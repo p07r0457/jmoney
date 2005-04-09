@@ -56,20 +56,6 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.internal.dialogs.EventLoopProgressMonitor;
-import org.eclipse.ui.internal.progress.ProgressMonitorJobsDialog;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.AttributesImpl;
-import org.xml.sax.helpers.DefaultHandler;
-
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.BankAccountInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
@@ -93,6 +79,20 @@ import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
 import net.sf.jmoney.serializeddatastore.SessionManager;
 import net.sf.jmoney.serializeddatastore.SimpleListManager;
 import net.sf.jmoney.serializeddatastore.SimpleObjectKey;
+
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.internal.dialogs.EventLoopProgressMonitor;
+import org.eclipse.ui.internal.progress.ProgressMonitorJobsDialog;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * Implementation of the IFileDatastore extension listener
@@ -795,7 +795,15 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			
 			objectKey.setObject(extendableObject);
 			
-			extendableObject.registerWithIndexes();
+			// TODO: Move this out of format specific code
+			if (extendableObject instanceof Account) {
+				Account account = (Account)extendableObject;
+				sessionManager.addAccountList(account);
+			}
+			if (extendableObject instanceof Entry) {
+				Entry entry = (Entry)extendableObject;
+				sessionManager.addEntryToList(entry.getAccount(), entry);
+			}
 			
 			// Pass the value back up to the outer element processor.
 			if (parent != null) {

@@ -35,8 +35,6 @@ import net.sf.jmoney.fields.EntryInfo;
  */
 public class Entry extends ExtendableObject {
 	
-	protected IObjectKey transactionKey = null;
-	
 	protected long creation = Calendar.getInstance().getTime().getTime();
 	
 	protected String check = null;
@@ -45,7 +43,10 @@ public class Entry extends ExtendableObject {
 	
 	protected String description = null;
 	
-	protected Account account = null;
+	/**
+	 * Element: Account
+	 */
+	protected IObjectKey accountKey = null;
 	
 	protected long amount = 0;
 	
@@ -54,8 +55,10 @@ public class Entry extends ExtendableObject {
 	/**
 	 * Applicable only if the account is an IncomeExpenseAccount
 	 * and the multi-currency property in the account is set.
+	 * <P>
+	 * Element: Currency
 	 */
-	protected Currency incomeExpenseCurrency = null; 
+	protected IObjectKey incomeExpenseCurrencyKey = null; 
 	
     /**
      * Constructor used by datastore plug-ins to create
@@ -77,7 +80,7 @@ public class Entry extends ExtendableObject {
 	public Entry(
 			IObjectKey objectKey,
     		Map        extensions,
-			IObjectKey parent,
+			IObjectKey parentKey,
     		String     check,
     		String     description,
     		IObjectKey accountKey,
@@ -86,7 +89,7 @@ public class Entry extends ExtendableObject {
     		long       amount,
     		long       creation,
     		IObjectKey incomeExpenseCurrencyKey) {
-		super(objectKey, extensions);
+		super(objectKey, extensions, parentKey);
 		
 		if (creation == 0) {
 			this.creation = Calendar.getInstance().getTime().getTime();
@@ -96,20 +99,10 @@ public class Entry extends ExtendableObject {
 		this.check = check;
 		this.valuta = valuta;
 		this.description = description;
-		if (accountKey == null) {
-			this.account = null;
-		} else {
-			this.account = (Account)accountKey.getObject();
-		}
+		this.accountKey = accountKey;
 		this.amount = amount;
 		this.memo = memo;
-		if (incomeExpenseCurrencyKey == null) {
-			this.incomeExpenseCurrency = null;
-		} else {
-			this.incomeExpenseCurrency = (Currency)incomeExpenseCurrencyKey.getObject();
-		}
-		
-        this.transactionKey = parent;
+		this.incomeExpenseCurrencyKey = incomeExpenseCurrencyKey;
 	}
 	
     /**
@@ -132,28 +125,19 @@ public class Entry extends ExtendableObject {
 	public Entry(
 			IObjectKey objectKey,
     		Map        extensions,
-			IObjectKey parent) {
-		super(objectKey, extensions);
+			IObjectKey parentKey) {
+		super(objectKey, extensions, parentKey);
 		
 		this.creation = Calendar.getInstance().getTime().getTime();
 		this.check = null;
 		this.valuta = null;
 		this.description = null;
-		this.account = null;
+		this.accountKey = null;
 		this.amount = 0;
 		this.memo = null;
-		
-        this.transactionKey = parent;
+		this.incomeExpenseCurrencyKey = null;
 	}
-	
-	// Called only by datastore after object originally constructed.
-	public void registerWithIndexes() {
-		// Account should not be null, but just in case...
-		if (account != null) {
-			account.addEntry(this);
-		}
-	}
-	
+
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.entry";
 	}
@@ -162,7 +146,7 @@ public class Entry extends ExtendableObject {
 	 * Returns the transaction.
 	 */
 	public Transaction getTransaction() {
-		return (Transaction)transactionKey.getObject();
+		return (Transaction)parentKey.getObject();
 	}
 
 	/**
@@ -197,7 +181,11 @@ public class Entry extends ExtendableObject {
 	 * Returns the account.
 	 */
 	public Account getAccount() {
-		return account;
+		if (accountKey == null) {
+			return null;
+		} else {
+			return (Account)accountKey.getObject();
+		}
 	}
 	
 	/**
@@ -207,7 +195,11 @@ public class Entry extends ExtendableObject {
 	 * is set.
 	 */
 	public Currency getIncomeExpenseCurrency() {
-		return incomeExpenseCurrency;
+		if (incomeExpenseCurrencyKey == null) {
+			return null;
+		} else {
+			return (Currency)incomeExpenseCurrencyKey.getObject();
+		}
 	}
 	
 	public String getFullAccountName() {
@@ -301,16 +293,23 @@ public class Entry extends ExtendableObject {
 	 * Sets the account.
 	 */
 	public void setAccount(Account newAccount) {
-		Account oldAccount = this.account;
-		this.account = newAccount;
+		Account oldAccount =
+			this.accountKey == null
+			? null
+					: (Account)this.accountKey.getObject();
 		
-		// Update the list of entries in each account.
-		if (oldAccount != null) {
-			oldAccount.removeEntry(this);
-		}
-		if (newAccount != null) {
-			newAccount.addEntry(this);
-		}
+		// TODO: This is not efficient.  Better would be to pass
+		// an object key as the old value to the property change
+		// method.  Then the object is materialized only if
+		// necessary.
+		// NOTE: Even though a null account is not valid, we support
+		// the setting of it because code may potentially need to do this
+		// in order to, say, delete the account before the new account
+		// of the entry is known.
+		this.accountKey = 
+			newAccount == null
+			? null
+					: newAccount.getObjectKey();
 		
 		// Notify the change manager.
 		processPropertyChange(EntryInfo.getAccountAccessor(), oldAccount, newAccount);
@@ -345,11 +344,28 @@ public class Entry extends ExtendableObject {
 	 * is set.
 	 */
 	public void setIncomeExpenseCurrency(Currency incomeExpenseCurrency) {
-		Currency oldIncomeExpenseCurrency = this.incomeExpenseCurrency;
-		this.incomeExpenseCurrency = incomeExpenseCurrency;
+		Currency oldIncomeExpenseCurrency = (Currency)this.incomeExpenseCurrencyKey.getObject();
+		// TODO: This is not efficient.  Better would be to pass
+		// an object key as the old value to the property change
+		// method.  Then the object is materialized only if
+		// necessary.
+		this.incomeExpenseCurrencyKey = incomeExpenseCurrency.getObjectKey();
 		
 		// Notify the change manager.
 		processPropertyChange(EntryInfo.getIncomeExpenseCurrencyAccessor(), oldIncomeExpenseCurrency, incomeExpenseCurrency);
+	}
+	
+	protected Object [] getProperties() {
+		return new Object [] { 
+				null,
+				null,
+				null,
+				null,
+				null,
+				new Long(0),
+				new Long(0),  // creation, should be now.
+				null,
+				};
 	}
 	
 	static public Object [] getDefaultProperties() {

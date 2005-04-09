@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -87,6 +89,22 @@ public class SimpleListManager extends Vector implements IListManager {
 
 		add(extendableObject);
 		
+		// If an account is added then we
+		// must add a list that will contain the entries in the account.
+		if (extendableObject instanceof Account) {
+			Account account = (Account)extendableObject;
+			sessionManager.addAccountList(account);
+		}
+		
+		// If an entry is added then we
+		// must update the lists of entries in each account.
+		if (extendableObject instanceof Entry) {
+			Entry entry = (Entry)extendableObject;
+			if (entry.getAccount() != null) {
+				sessionManager.addEntryToList(entry.getAccount(), entry);
+			}
+		}
+		
         // This plug-in needs to know if a session has been
 		// modified so it knows whether the session needs to
 		// be saved.  Mark the session as modified now.
@@ -96,6 +114,27 @@ public class SimpleListManager extends Vector implements IListManager {
 	}
 	
 	public boolean remove(Object object) {
+		// If an account is removed then we
+		// clear out the list.
+		if (object instanceof Account) {
+			Account account = (Account)object;
+			sessionManager.removeAccountList(account);
+		}
+		
+		// If an entry is removed then we
+		// must update the lists of entries in each account.
+		if (object instanceof Entry) {
+			Entry entry = (Entry)object;
+			if (entry.getAccount() != null) {
+				sessionManager.removeEntryFromList(entry.getAccount(), entry);
+			}
+		}
+		
+        // This plug-in needs to know if a session has been
+		// modified so it knows whether the session needs to
+		// be saved.  Mark the session as modified now.
+		sessionManager.setModified();
+		
 		return super.remove(object);
 	}
 }

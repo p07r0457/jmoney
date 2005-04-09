@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.util.Collection;
 
 /**
  * Interface into a key object that holds the data required to
@@ -91,25 +90,6 @@ public interface IObjectKey {
 	ExtendableObject getObject();
 
 	/**
-	 * This method creates a collection that contains the entries
-	 * for an account.
-	 * <P>
-	 * The list of entries in a given account is often required.
-	 * Entries are not owned by the account but entries are owned by the transaction
-	 * and the transactions are owned by the session.  The entries in an
-	 * account can be obtained by searching all the entries in all the transactions
-	 * and looking for entries with the given account.  To speed this process up,
-	 * an object is created in each account than can return the entries quickly.
-	 * The actual implementation these objects depends on the datastore.
-	 * This method creates such an object.
-	 * 
-	 * @see index documentation
-	 * @param accountAccessor
-	 * @return
-	 */
-	Collection createIndexValuesList(PropertyAccessor propertyAccessor);
-
-	/**
 	 * Set the given property values in the datastore.
 	 * <P>
 	 * This method does not update the values in the object
@@ -154,5 +134,5 @@ public interface IObjectKey {
 	/**
 	 * @return
 	 */
-	ISessionManager getSessionManager();
+	IDataManager getSessionManager();
 }

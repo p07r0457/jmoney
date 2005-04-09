@@ -22,11 +22,8 @@
 
 package net.sf.jmoney.jdbcdatastore;
 
-import java.util.Collection;
-
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ISessionManager;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.IDataManager;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 
@@ -73,14 +70,6 @@ public class ObjectKeyCached implements IDatabaseRowKey {
 		return extendableObject;
 	}
 
-	public Collection createIndexValuesList(PropertyAccessor propertyAccessor) {
-		// For time being, the Vector class supports all we need.
-		// It may be that this will have to be changed to a class
-		// that extends Vector and provides more methods.
-		// TO DO: update above comment when design complete.
-		return new IndexValuesList(sessionManager, this, propertyAccessor);
-	}
-
 	public int getRowId() {
 		return rowId;
 	}
@@ -93,7 +82,7 @@ public class ObjectKeyCached implements IDatabaseRowKey {
 		return sessionManager.getSession();
 	}
 
-	public ISessionManager getSessionManager() {
+	public IDataManager getSessionManager() {
 		throw new RuntimeException("should only be called for session keys");
 	}
 

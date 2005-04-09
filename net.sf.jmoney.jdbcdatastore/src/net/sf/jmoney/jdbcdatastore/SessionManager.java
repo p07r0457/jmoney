@@ -32,6 +32,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -226,6 +228,22 @@ public class SessionManager implements ISessionManager, IEntryQueries {
 		return (ExtendableObject)mapOfObjects.get(new Integer(id));
 	}
 
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.model2.ISessionManager#hasEntries(net.sf.jmoney.model2.Account)
+	 */
+	public boolean hasEntries(Account account) {
+		// TODO: improve efficiency of this??????
+		// or should hasEntries be removed altogether and make caller
+		// call getEntries().isEmpty() ??????
+		// As long as collections are not being copied unneccessarily,
+		// this is probably better.
+		return !(new AccountEntriesList(this, (IDatabaseRowKey)account.getObjectKey(), EntryInfo.getAccountAccessor()).isEmpty());
+	}
+
+	public Collection getEntries(Account account) {
+		return new AccountEntriesList(this, (IDatabaseRowKey)account.getObjectKey(), EntryInfo.getAccountAccessor());
+	}
+
 	/**
 	 * @see net.sf.jmoney.model2.IEntryQueries#sumOfAmounts(net.sf.jmoney.model2.CurrencyAccount, java.util.Date, java.util.Date)
 	 */
@@ -313,4 +331,22 @@ public class SessionManager implements ISessionManager, IEntryQueries {
 		}
 	}
 
+	public void startTransaction() {
+		try {
+			connection.setAutoCommit(false);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void commitTransaction() {
+		try {
+			connection.commit();
+			connection.setAutoCommit(false);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

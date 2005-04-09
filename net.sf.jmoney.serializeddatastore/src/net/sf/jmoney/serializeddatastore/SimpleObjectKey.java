@@ -22,12 +22,14 @@
 
 package net.sf.jmoney.serializeddatastore;
 
-import java.util.Collection;
-import java.util.Vector;
+import java.util.Iterator;
 
+import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IDataManager;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -58,20 +60,33 @@ public class SimpleObjectKey implements IObjectKey {
 		this.extendableObject = extendableObject;
 	}
 
-	public Collection createIndexValuesList(PropertyAccessor propertyAccessor) {
-		// For time being, the Vector class supports all we need.
-		// It may be that this will have to be changed to a class
-		// that extends Vector and provides more methods.
-		// TO DO: update above comment when design complete.
-		return new IndexValuesList();
-	}
-	
-	private class IndexValuesList extends Vector {
-	}
-
 	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
+		// If the account property of an entry is changed then we
+		// must update the lists of entries in each account.
+		if (extendableObject instanceof Entry) {
+			int i = 0;
+			for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
+				PropertyAccessor propertyAccessor2 = (PropertyAccessor)iter.next();
+				if (propertyAccessor2.isScalar()) {
+					if (propertyAccessor2 == EntryInfo.getAccountAccessor()) {
+						// Note that if there is no change to the property then
+						// both old and new values will be null.
+						if (oldValues[i] != null) {
+							sessionManager.removeEntryFromList((Account)oldValues[i], (Entry)extendableObject);
+						}
+						if (newValues[i] != null) {
+							sessionManager.addEntryToList((Account)newValues[i], (Entry)extendableObject);
+						}
+						break;
+					}
+					i++;
+				}
+			}
+			
+		}
+		
 		// There is no backend datastore that needs updating, so we
-		// have nothing to do except to mark the session as modified.
+		// have nothing more to do except to mark the session as modified.
 		
 		sessionManager.setModified();
 	}
@@ -80,7 +95,7 @@ public class SimpleObjectKey implements IObjectKey {
 		return sessionManager.getSession();
 	}
 
-	public ISessionManager getSessionManager() {
+	public IDataManager getSessionManager() {
 		return sessionManager;
 	}
 }

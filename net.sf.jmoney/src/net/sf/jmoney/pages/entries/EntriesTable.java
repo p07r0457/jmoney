@@ -189,7 +189,7 @@ public class EntriesTable implements IEntriesControl {
 
 			public void widgetSelected(SelectionEvent e) {
                 Object selectedObject = e.item.getData();
-                
+
                 // TODO: This code is duplicated below.
                 // The selected object might be null.  This occurs when the table is refreshed.
                 // I don't understand this so I am simply bypassing the update
@@ -197,12 +197,23 @@ public class EntriesTable implements IEntriesControl {
                 if (EntriesPage.IS_ENTRY_SECTION_TO_DISPLAY && selectedObject != null) {
                 	IDisplayableItem data = (IDisplayableItem)selectedObject;
                 	DisplayableTransaction transactionData = null;
+                	Entry selectedEntry = null;
                 	if (selectedObject instanceof DisplayableTransaction) {
                 		transactionData = (DisplayableTransaction) data;
-                		fPage.fEntrySection.update(transactionData.getEntryForAccountFields(), transactionData.getEntryForAccountFields());
+                		selectedEntry = transactionData.getEntryForAccountFields();
                 	} else if (selectedObject instanceof DisplayableEntry) {
                 		transactionData = ((DisplayableEntry)data).getDisplayableTransaction();
-                		fPage.fEntrySection.update(transactionData.getEntryForAccountFields(), ((DisplayableEntry)data).entry);
+                		selectedEntry = ((DisplayableEntry)data).entry;
+                	}
+                	
+                	if (fPage.currentTransaction != null
+                			&& !fPage.currentTransaction.equals(transactionData.getTransactionForTransactionFields())) {
+                		fPage.commitTransaction();
+                	}
+            		fPage.currentTransaction = transactionData.getTransactionForTransactionFields();
+            		
+                	if (selectedEntry != null) {
+                		fPage.fEntrySection.update(transactionData.getEntryForAccountFields(), selectedEntry);
                 	}
                 }
 			}

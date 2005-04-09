@@ -118,6 +118,10 @@ public class EntriesSection extends SectionPart {
         addButton.addSelectionListener(new SelectionAdapter() {
            public void widgetSelected(SelectionEvent event) {
            		Session session = fPage.getAccount().getSession();
+           		
+           		// Commit any previous transaction
+           		fPage.transactionManager.commit();
+           		
            		Transaction transaction = session.createTransaction();
            		Entry entry1 = transaction.createEntry();
            		Entry entry2 = transaction.createEntry();

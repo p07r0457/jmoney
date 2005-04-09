@@ -23,8 +23,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
@@ -38,33 +36,12 @@ import net.sf.jmoney.fields.CurrencyAccountInfo;
 public class CurrencyAccount extends CapitalAccount {
 
 	/**
-	 * The entries are ordered by their creation.
+	 * Guaranteed non-null because the session default currency is
+	 * set by default.
 	 */
-	public static final int CREATION_ORDER = 0;
-
-	/**
-	 * The entries are ordered by their date field.
-	 */
-	public static final int DATE_ORDER = 1;
-
-	/**
-	 * The entries are ordered by their check field.
-	 */
-	public static final int CHECK_ORDER = 2;
-
-	/**
-	 * The entries are ordered by their valuta field.
-	 */
-	public static final int VALUTA_ORDER = 3;
-
-	protected static String[] entryOrderNames;
-
-	protected Currency currency;
+	protected IObjectKey currencyKey;
 
 	protected long startBalance = 0;
-
-	protected PropertyChangeSupport changeSupport =
-		new PropertyChangeSupport(this);
 
 	/**
 	 * The full constructor for a CurrencyAccount object.  This constructor is called
@@ -87,15 +64,7 @@ public class CurrencyAccount extends CapitalAccount {
 			long startBalance) {
 		super(objectKey, extensions, parent, name, subAccounts, abbreviation, comment);
 		
-		// This account is being loaded from the datastore and therefore a currency
-		// must be set.  We store internally the Currency object itself, not the 
-		// key used to fetch the Currency object.
-		if (currencyKey == null) {
-			this.currency = objectKey.getSession().getDefaultCurrency();
-		} else {
-			this.currency = (Currency)currencyKey.getObject();
-		}
-		
+		this.currencyKey = currencyKey;
         this.startBalance = startBalance;
 	}
 
@@ -117,7 +86,7 @@ public class CurrencyAccount extends CapitalAccount {
 		this.name = JMoneyPlugin.getResourceString("Account.newAccount");
 		
 		// Set the currency to the session default currency.
-		this.currency = objectKey.getSession().getDefaultCurrency();
+		this.currencyKey = objectKey.getSession().getDefaultCurrency().getObjectKey();
 		
         this.startBalance = 0;
 	}
@@ -130,11 +99,11 @@ public class CurrencyAccount extends CapitalAccount {
 	 * @return the locale of this account.
 	 */
 	public String getCurrencyCode() {
-		return currency.getCode();
+		return getCurrency().getCode();
 	}
 
 	public Currency getCurrency() {
-            return currency;
+            return (Currency)currencyKey.getObject();
 	}
 
 	public Commodity getCommodity(Entry entry) {
@@ -153,17 +122,11 @@ public class CurrencyAccount extends CapitalAccount {
 
 	public void setCurrency(Currency aCurrency) {
 	    if (aCurrency == null) throw new IllegalArgumentException();
-        Currency oldCurrency = currency;
-		currency = aCurrency;
+        Currency oldCurrency = getCurrency();
+		currencyKey = aCurrency.getObjectKey();
 
 		// Notify the change manager.
 		processPropertyChange(CurrencyAccountInfo.getCurrencyAccessor(), oldCurrency, aCurrency);
-
-		if (this.currency == aCurrency ||
-				(this.currency != null && this.currency.equals(aCurrency)))
-				return;
-		
-		changeSupport.firePropertyChange("currency", oldCurrency, currency);
 	}
 
 	/**
@@ -178,34 +141,6 @@ public class CurrencyAccount extends CapitalAccount {
 		processPropertyChange(CurrencyAccountInfo.getStartBalanceAccessor(), new Long(oldStartBalance), new Long(s));
 	}
 
-	/**
-	 * Adds a PropertyChangeListener.
-	 * @param pcl a property change listener
-	 */
-	public void addPropertyChangeListener(PropertyChangeListener pcl) {
-		changeSupport.addPropertyChangeListener(pcl);
-	}
-
-	/**
-	 * Removes a PropertyChangeListener.
-	 * @param pcl a property change listener
-	 */
-	public void removePropertyChangeListener(PropertyChangeListener pcl) {
-		changeSupport.removePropertyChangeListener(pcl);
-	}
-
-	/**
-	 * Sort the entries.
-	 */
-        // TODO: Sorting the entries affects the view of the data.
-        // This sort should be done in the view, not the model, otherwise
-        // one view might mess up another view of the data.
-        // This must be reviewed if we support SQL databases in any case.
-/*	
-	public void sortEntries(Comparator c) {
-		Collections.sort(entries, c);
-	}
-*/
 	public String toString() {
 		return name;
 	}
@@ -251,10 +186,8 @@ public class CurrencyAccount extends CapitalAccount {
     		// IEntryQueries has not been implemented in the datastore.
     		// We must therefore provide our own implementation.
     		
-    		Iterator eIt = null;
-    		
     		// Sum each entry the entry between the two dates 
-    		eIt = entries.iterator();
+    		Iterator eIt = getEntries().iterator();
     		while (eIt.hasNext()) {
     			Entry e = (Entry) eIt.next();
     			if ((e.getTransaction().getDate().compareTo(fromDate) >= 0)

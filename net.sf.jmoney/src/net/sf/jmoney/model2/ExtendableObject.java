@@ -28,6 +28,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Hashtable;
@@ -79,6 +80,12 @@ public abstract class ExtendableObject {
 	 */
 	protected Map extensions = new Hashtable();
 	
+	/**
+	 * The key from which this object's parent can be fetched from
+	 * the datastore and a reference to the parent obtained.
+	 */
+	protected IObjectKey parentKey;
+	
 	protected boolean alwaysReturnNonNullExtensions = false;
 	
 	protected abstract String getExtendablePropertySetId();
@@ -89,8 +96,9 @@ public abstract class ExtendableObject {
 	 * 			which the extension property set objects can be
 	 * 			constructed.
 	 */
-	protected ExtendableObject(IObjectKey objectKey, Map extensionParameters) {
+	protected ExtendableObject(IObjectKey objectKey, Map extensionParameters, IObjectKey parentKey) {
 		this.objectKey = objectKey;
+		this.parentKey = parentKey;
 		
 		if (extensionParameters != null) {
 			for (Iterator iter = extensionParameters.entrySet().iterator(); iter.hasNext(); ) {
@@ -112,6 +120,13 @@ public abstract class ExtendableObject {
 	 */
 	public IObjectKey getObjectKey() {
 		return objectKey;
+	}
+
+	/**
+	 * @return
+	 */
+	public IObjectKey getParentKey() {
+		return parentKey;
 	}
 	
 	/**
@@ -189,6 +204,9 @@ public abstract class ExtendableObject {
 		// into a single update.  Until then, we need this code here.
 		
 		// TODO: improve performance here.
+		// TODO: Do we really need this, or, now that transactional
+		// processing is supported, is it unnecessary to support the
+		// passing of multiple values???
 		int count = 0;
 		for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
 			PropertyAccessor propertyAccessor2 = (PropertyAccessor)iter.next();
@@ -257,21 +275,6 @@ public abstract class ExtendableObject {
             			listener.objectDeleted(oldObject);
             		}
            		});
-	}
-	
-	/**
-	 * This method may be called by the datastore plug-in immediately
-	 * after it has constructed this object.
-	 * 
-	 * If the object type is indexed then this method must be overridden
-	 * to add itself to the appropriate indexes.
-	 *
-	 * Some datastores may not bother to call this method.  For example,
-	 * a SQL database updates its indexes itself automatically.  This method
-	 * is not technically necessary because the datastore plug-in could keep it's
-	 * own index information.  However, it makes things simple and efficient.
-	 */
-	public void registerWithIndexes() {
 	}
 	
 	/**
@@ -522,7 +525,7 @@ public abstract class ExtendableObject {
 	 * @param actualPropertySet if the list property is typed to contain
 	 * 			properties that are derivable then <code>actualPropertySet</code>
 	 * 			must contain the non-derivable property set for the object to
-	 * 			be created.  f the list property is typed to contain
+	 * 			be created.  If the list property is typed to contain
 	 * 			properties that are not derivable then <code>actualPropertySet</code>
 	 * 			is ignored and objects are always created as appropriate for
 	 * 			the owning list.
@@ -538,6 +541,7 @@ public abstract class ExtendableObject {
 		}
 	}
 	
+
 	/**
 	 * @param owningListProperty
 	 * @param object
@@ -806,4 +810,23 @@ public abstract class ExtendableObject {
 		}
 	}
 
+	/**
+	 * This method is used to enable other classes in the package to
+	 * access protected fields in the extendable objects.
+	 * 
+	 * @param theObjectKeyField
+	 * @return
+	 */
+	Object getProtectedFieldValue(Field theObjectKeyField) {
+    	try {
+    		return theObjectKeyField.get(this);
+    	} catch (IllegalArgumentException e) {
+    		e.printStackTrace();
+    		throw new RuntimeException("internal error");
+    	} catch (IllegalAccessException e) {
+    		e.printStackTrace();
+    		// TODO: check the protection earlier and raise MalformedPlugin
+    		throw new RuntimeException("internal error - field protection problem");
+    	}
+	}
 }

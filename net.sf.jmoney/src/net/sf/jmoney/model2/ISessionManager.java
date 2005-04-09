@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.model2;
 
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.ui.IWorkbenchWindow;
 
 /**
@@ -33,16 +32,8 @@ import org.eclipse.ui.IWorkbenchWindow;
  * There will always be one SessionManager object for each Session
  * object.
  */
-public interface ISessionManager extends IAdaptable {
+public interface ISessionManager extends IDataManager {
 
-	/** Returns the session object.  The session object must be
-	 * non-null.  (If no session is set then no ISessionManager
-	 * implementation should be set).
-	 * 
-	 * @return the session object
-	 */
-	Session getSession();
-	
     /** Returns a brief description of the data in the session.
      * This description should be, for example, the file name or the name
      * of the database where the data either is stored or will be stored
@@ -84,4 +75,34 @@ public interface ISessionManager extends IAdaptable {
      * opportunity to cancel the operation.
      */
     void close();
+
+	/**
+	 * This method is called when a transaction is about to start.
+	 * <P>
+	 * If the datastore is kept in a transactional database then the code
+	 * needed to start a transaction should be put in the implementation
+	 * of this method.
+	 * <P>
+	 * The framework will always call this method, then make changes to
+	 * the datastore, then call <code>commitTransaction</code> within
+	 * a single function call.  The framework also ensures that no events
+	 * are fired between the call to <code>startTransaction</code> and
+	 * the call to <code>commitTransaction</code>.  The implementation of
+	 * this method thus has no need to support or guard against nested
+	 * transactions.
+	 * 
+	 * @see commitTransaction
+	 */
+	void startTransaction();
+
+	/**
+	 * This method is called when a transaction is to be committed.
+	 * <P>
+	 * If the datastore is kept in a transactional database then the code
+	 * needed to commit the transaction should be put in the implementation
+	 * of this method.
+	 * 
+	 * @see startTransaction
+	 */
+	void commitTransaction();
 }

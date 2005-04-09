@@ -324,4 +324,10 @@ public interface PropertyAccessor {
 	 * @return
 	 */
 	IPropertyDependency getDependency();
+
+	/**
+	 * @param object
+	 * @return
+	 */
+	IObjectKey invokeObjectKeyField(ExtendableObject object);
 }

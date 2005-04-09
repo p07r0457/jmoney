@@ -1345,6 +1345,10 @@ public class PropertySet {
 	 * This method should be used only by plug-ins that implement
 	 * a datastore.
 	 * 
+	 * @param constructorParameters an array of values to be passed to
+	 * 		the constructor.  If an extendable object is being constructed
+	 * 		then the first three elements of this array must be the
+	 * 		object key, the extension map, and the parent object key.
 	 * @return A newly constructed object, constructed from the given
 	 * 		parameters.  This object may be an ExtendableObject or
 	 * 		may be an ExtensionObject.
