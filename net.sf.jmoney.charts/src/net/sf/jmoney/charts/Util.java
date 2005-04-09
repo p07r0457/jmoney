@@ -10,6 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Entry;
@@ -272,8 +273,8 @@ public class Util {
     		
             Collections.sort(entriesList, new Comparator() {
                 public int compare(Object a, Object b) {
-                    assert (a instanceof Entry);
-                    assert (b instanceof Entry);
+                	JMoneyPlugin.myAssert(a instanceof Entry);
+                	JMoneyPlugin.myAssert(b instanceof Entry);
                     return ((Entry) a).getTransaction().getDate().compareTo(
                             ((Entry) b).getTransaction().getDate());
                 }
