@@ -30,14 +30,14 @@
       point="org.eclipse.core.runtime.products"
       id="product">
       <product
-         name="Branded JMoney"
+         name="JMoney RCP"
          application="net.sf.jmoney.JMoneyApplication">
          <property
              name="windowImages" 
-             value="icons/Accounts.gif"/>
+             value="icons/accounts.gif"/>
          <property
              name="appName" 
-             value="JMoney"/>
+             value="JMoney RCP"/>
       </product>          
    </extension>
     
