@@ -65,11 +65,6 @@ public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
 			configurer.setShowStatusLine(false);
 		}
 
-		public void postWindowOpen(IWorkbenchWindowConfigurer configurer) {
-			super.postWindowOpen(configurer);
-			configurer.setTitle("JMoney 1.0.0");
-		}
-
 		public void postWindowCreate(IWorkbenchWindowConfigurer windowConfigurer) {
 			super.postWindowCreate(windowConfigurer);
 /* does not compile
