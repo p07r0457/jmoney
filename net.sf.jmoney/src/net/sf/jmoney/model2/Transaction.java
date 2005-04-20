@@ -109,17 +109,43 @@ public class Transaction extends ExtendableObject {
         return entries.size() > 2;
     }
     
+    /**
+     * Given an entry in the transaction, return the other entry.
+     * <P>
+     * If there are more than two entries in the transaction then null is returned.
+     * If there is only one entry in the transaction then an
+     * exception is throw.  If the given entry is not in the transaction then
+     * an exception will be thrown.
+     * 
+     * @param thisEntry an entry in the transaction
+     * @return the other entry in the transaction or null if more than one other entry
+     * 				is in the transaction
+     */
     public Entry getOther(Entry thisEntry) {
-        if (entries.size() != 2) {
-            throw new RuntimeException("Double entry error");
-        }
+    	boolean thisEntryFound = false;
+    	Entry anotherEntry = null;
         for (Iterator iter = entries.iterator(); iter.hasNext(); ) {
         	Entry entry = (Entry)iter.next();
         	if (!entry.equals(thisEntry)) {
-        		return entry;
+                if (anotherEntry != null) {
+                	// There is more than one entry other than the given entry
+                	return null;
+                }
+                anotherEntry = entry;
+        	} else {
+        		thisEntryFound = true;
         	}
         }
-        throw new RuntimeException("Double entry error");
+        
+        if (!thisEntryFound) {
+        	throw new RuntimeException("Double entry error");
+        }
+        
+        if (anotherEntry == null) {
+        	throw new RuntimeException("Double entry error");
+        }
+        
+        return anotherEntry;
     }
     
 	static public Object [] getDefaultProperties() {
