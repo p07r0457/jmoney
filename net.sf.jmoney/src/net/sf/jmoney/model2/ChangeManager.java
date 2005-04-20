@@ -40,6 +40,8 @@ import net.sf.jmoney.JMoneyPlugin;
  * 		and then properties are set, and a SQL database is used for storage,
  * 		what would be an insert and multiple updates can be merged into
  * 		a single insert.</LI>
+ * <LI>Changes made within a transaction should not be visible to others
+ * 		until the transaction is committed.</LI>
  * <UL>
  * 
  * This class solves the first of the two above problems only.
@@ -59,7 +61,7 @@ import net.sf.jmoney.JMoneyPlugin;
  * the object are replaced with references to the delete entry.
  * This allows the data to be re-created correctly by the undo method.
  * <P>
- * The changes are made to the database by this class as changes are
+ * The changes are made to the database by this class when the changes are
  * passed to this class.  Although it may be more efficient to execute
  * the changes in the database when they are committed, this would result
  * in changes not being reflected in query statements that are submitted
@@ -234,11 +236,6 @@ public class ChangeManager {
 			}
 		}
 	}
-	/*	
-	 public ChangeManager(ISessionManager sessionManager) {
-	 this.sessionManager = sessionManager;
-	 }
-	 */
 	
 	
 	/**
