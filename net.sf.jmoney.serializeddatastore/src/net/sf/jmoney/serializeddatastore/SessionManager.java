@@ -181,15 +181,7 @@ public class SessionManager implements ISessionManager {
     	File sessionFile = obtainFileName(window);
     	if (sessionFile != null) {
     		String fileName = sessionFile.getName();
-            String fileExtension = null;
-            for (int i=fileName.length()-1; i>=0; i--) {
-            	if (fileName.charAt(i) == '.') {
-            		fileExtension = fileName.substring(i+1);
-            		break;
-            	}
-            }
-            
-            IConfigurationElement elements[] = SerializedDatastorePlugin.getElements(fileExtension);
+            IConfigurationElement elements[] = SerializedDatastorePlugin.getElements(fileName);
             
             // TODO: It is possible that multiple plug-ins may
             // use the same file extension.  The only solution to

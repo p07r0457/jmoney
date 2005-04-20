@@ -78,13 +78,13 @@
          point="net.sf.jmoney.serializeddatastore.filestores">
         <file-format
            id="xmlFormat" 
-           file-extension="xml" 
+           file-pattern="*.xml" 
            format-description="JMoney in uncompressed xml" 
            class="net.sf.jmoney.serializeddatastore.formats.JMoneyXmlFormat">
         </file-format> 
         <file-format
            id="jmxFormat" 
-           file-extension="jmx" 
+           file-pattern="*.jmx" 
            format-description="JMoney files" 
            class="net.sf.jmoney.serializeddatastore.formats.JMoneyXmlFormat">
         </file-format> 

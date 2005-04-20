@@ -18,7 +18,6 @@
       <import plugin="net.sf.jmoney"/>
    </requires>
 
-
    <extension
          point="net.sf.jmoney.fields">
       <extension-property-set

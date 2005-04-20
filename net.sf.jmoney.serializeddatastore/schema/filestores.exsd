@@ -65,10 +65,10 @@ file open dialog can open any of the supported file types.
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="file-extension" type="string">
+         <attribute name="file-pattern" type="string">
             <annotation>
                <documentation>
-                  The file extension used for this file format.
+                  The file pattern used for this file format.
                </documentation>
             </annotation>
          </attribute>

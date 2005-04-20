@@ -60,6 +60,7 @@ public class SimpleListManager extends Vector implements IListManager {
 		SimpleObjectKey objectKey = new SimpleObjectKey(sessionManager);
 		
 		int index = 0;
+		// TODO: We can assert that the property set is not an extension
 		if (!propertySet.isExtension()) {
 			constructorParameters[0] = objectKey;
 			constructorParameters[1] = null;

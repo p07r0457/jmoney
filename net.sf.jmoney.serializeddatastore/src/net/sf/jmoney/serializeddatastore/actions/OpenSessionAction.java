@@ -70,15 +70,7 @@ public class OpenSessionAction implements IWorkbenchWindowActionDelegate {
             if (fileName != null) {
                 File sessionFile = new File(fileName);
                 
-                String fileExtension = null;
-                for (int i=fileName.length()-1; i>=0; i--) {
-                	if (fileName.charAt(i) == '.') {
-                		fileExtension = fileName.substring(i+1);
-                		break;
-                	}
-                }
-                
-                IConfigurationElement elements[] = SerializedDatastorePlugin.getElements(fileExtension);
+                IConfigurationElement elements[] = SerializedDatastorePlugin.getElements(fileName);
                 
                 // TODO: It is possible that multiple plug-ins may
                 // use the same file extension.  There are two possible

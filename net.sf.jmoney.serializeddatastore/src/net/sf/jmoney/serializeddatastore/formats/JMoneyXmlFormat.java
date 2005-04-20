@@ -970,25 +970,14 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				String s = new String(ch, start, length);
 				value = new Boolean(s);
 			} else if (propertyClass.equals(Date.class)) {
-//				String s = new String(ch, start, length);
-//				String numbers[] = s.split("\.");
-				
-				// above function does not work, easier to do it ourselves than
-				// to find the doc. for the above function.
-				int i = start;
-				while (ch[i] != '.') i++;
-				int year = new Integer(new String(ch, start, i-start)).intValue();
-				int newStart = i + 1;
-				i = newStart;
-				while (ch[i] != '.') i++;
-				int month = new Integer(new String(ch, newStart, i-newStart)).intValue();
-				int day = new Integer(new String(ch, i+1, (start+length)-(i+1))).intValue();
-				
-//				int year = new Integer(numbers[0]).intValue();
-//				int month = new Integer(numbers[1]).intValue();
-//				int day = new Integer(numbers[2]).intValue();
+				String s = new String(ch, start, length);
+				String numbers[] = s.split("\\.");
 
-				value = new Date(year - 1900, month, day);
+				int year =  Integer.parseInt(numbers[0]);
+				int month = Integer.parseInt(numbers[1]);
+				int day =   Integer.parseInt(numbers[2]);
+
+				value = new Date(year-1900, month-1, day);
 			} else {
 				throw new RuntimeException("unsupported type");
 			}

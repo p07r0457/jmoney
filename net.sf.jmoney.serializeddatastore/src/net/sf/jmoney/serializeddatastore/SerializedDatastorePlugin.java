@@ -59,7 +59,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	//Resource bundle.
 	private ResourceBundle resourceBundle;
 	
-	private static String[] filterExtensions;
+	private static String[] filterPatterns;
 
 	private static String[] filterNames;
 	
@@ -134,7 +134,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			}
 		}
 		
-		filterExtensions = new String[count];
+		filterPatterns = new String[count];
 		filterNames = new String[count];
 		
 		int k = 0;
@@ -144,12 +144,11 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			for (int j = 0; j < elements.length; j++) {
 				if (elements[j].getName().equals("file-format")) {
 					String id = elements[j].getAttribute("id");
-					String fileExtension = elements[j].getAttribute("file-extension");
+					String filePattern = elements[j].getAttribute("file-pattern");
 					String formatDescription = elements[j].getAttribute("format-description");
 					
-					elements[k] = elements[j]; 
-					filterExtensions[k] = "*." + fileExtension;
-					filterNames[k] = formatDescription + " (*." + fileExtension + ")";
+					filterPatterns[k] = filePattern;
+					filterNames[k] = formatDescription + " (" + filePattern + ")";
 					k++;
 				}
 			}
@@ -162,7 +161,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * 			This is the format expected by the FileDialog methods.
 	 */
 	public static String[] getFilterExtensions() {
-		return filterExtensions;
+		return filterPatterns;
 	}
 
 	/**
@@ -186,7 +185,17 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * 
 	 * @return a collection of IConfigurationElement objects
 	 */
-	public static IConfigurationElement[] getElements(String fileExtension) {
+	public static IConfigurationElement[] getElements(String fileName) {
+/*
+		String fileExtension = null;
+        for (int i=fileName.length()-1; i>=0; i--) {
+        	if (fileName.charAt(i) == '.') {
+        		fileExtension = fileName.substring(i+1);
+        		break;
+        	}
+        }
+*/        
+		
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
 		IExtensionPoint extensionPoint = registry.getExtensionPoint("net.sf.jmoney.serializeddatastore.filestores");
 		IExtension[] extensions = extensionPoint.getExtensions();
@@ -195,9 +204,13 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		for (int i = 0; i < extensions.length; i++) {
 			IConfigurationElement[] elements = extensions[i].getConfigurationElements();
 			for (int j = 0; j < elements.length; j++) {
-				if (elements[j].getName().equals("file-format")
-				 && elements[j].getAttribute("file-extension").equals(fileExtension)) {
-					matchingElements.add(elements[j]);
+				if (elements[j].getName().equals("file-format")) {
+					// The file pattern should start with an asterisk
+					String filePattern = elements[j].getAttribute("file-pattern");
+					if (filePattern.charAt(0) == '*'
+						&& fileName.endsWith(filePattern.substring(1))) {
+						matchingElements.add(elements[j]);
+					}
 				}
 			}
 		}
