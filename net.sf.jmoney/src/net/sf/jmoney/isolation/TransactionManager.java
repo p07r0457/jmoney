@@ -40,6 +40,7 @@ import net.sf.jmoney.model2.IDataManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ISessionChangeFirer;
 import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -65,11 +66,9 @@ public class TransactionManager implements IDataManager {
 	private Session committedSession;
 	private Session uncommittedSession;
 	
-	// TODO: Should this map be mapping keys, not the objects themselves, to the
-	// property change maps?  This may avoid the need to instantiate objects
-	// unnecessarily.
 	/**
-	 * Maps ExtendableObject to Map, where each Map maps PropertyAccessor to the
+	 * Maps IObjectKey to Map, where IObjectKey is the key in the comitted datastore
+	 * and each Map maps PropertyAccessor to the
 	 * value of that property. Every object that has been modified by this
 	 * transaction manager (a scalar property in the object has been changed)
 	 * will have an entry in this map. The map keys are objects from the
@@ -79,10 +78,7 @@ public class TransactionManager implements IDataManager {
 	 * <P>
 	 * If a value of a property is a reference to another object then an
 	 * UncommittedObjectKey is stored as the value. By doing this, the
-	 * referenced object does not need to be materialized until necessary. The
-	 * referenced object will need to be materialized when the property values
-	 * are set into the committed datastore at commit time, but at least we do
-	 * not have cascading materialization.
+	 * referenced object does not need to be materialized unless necessary.
 	 * <P>
 	 * Deleted objects will also have an entry in this map (the value will be a
 	 * Boolean object with a value of false). If an object contains list
@@ -123,11 +119,11 @@ public class TransactionManager implements IDataManager {
 	 * @author Nigel Westbury
 	 */
 	class ParentListPair {
-		ExtendableObject parent;
+		IObjectKey parentKey;
 		PropertyAccessor listAccessor;
 		
-		ParentListPair(ExtendableObject parent,	PropertyAccessor listAccessor) {
-			this.parent = parent;
+		ParentListPair(IObjectKey parentKey, PropertyAccessor listAccessor) {
+			this.parentKey = parentKey;
 			this.listAccessor = listAccessor;
 		}
 		
@@ -135,12 +131,12 @@ public class TransactionManager implements IDataManager {
 			if (!(obj instanceof ParentListPair))
 				return false;
 			ParentListPair parentListPair = (ParentListPair)obj;
-			return parent.equals(parentListPair.parent)
+			return parentKey.equals(parentListPair.parentKey)
 				&& listAccessor.equals(parentListPair.listAccessor);
 		}
 		
 		public int hashCode() {
-			return parent.hashCode() ^ listAccessor.hashCode();
+			return parentKey.hashCode() ^ listAccessor.hashCode();
 		}
 	}
 	
@@ -255,7 +251,7 @@ public class TransactionManager implements IDataManager {
 			}
 			extensionMap.put(extensionPropertySet, extensionValues);
 		}
-		
+
 		Object modifiedValues = modifiedObjects.get(object);
 		if (modifiedValues != null) {
 			if (modifiedValues instanceof Boolean) {
@@ -408,17 +404,19 @@ public class TransactionManager implements IDataManager {
 			ParentListPair parentListPair = (ParentListPair)mapEntry.getKey();
 			ModifiedList modifiedList = (ModifiedList)mapEntry.getValue();
 
+			ExtendableObject parent = parentListPair.parentKey.getObject();
+			
 			for (Iterator iter2 = modifiedList.getAddedObjectIterator(); iter2.hasNext(); ) {
 				ExtendableObject newObject = (ExtendableObject)iter2.next();
 				
-				commitNewObject(newObject, parentListPair.parent, parentListPair.listAccessor);
+				commitNewObject(newObject, parent, parentListPair.listAccessor);
 			}
 		}
 
 		// Update all the updated objects
 		for (Iterator iter = modifiedObjects.entrySet().iterator(); iter.hasNext(); ) {
 			Map.Entry mapEntry = (Map.Entry)iter.next();
-			ExtendableObject object = (ExtendableObject)mapEntry.getKey();
+			IObjectKey committedKey = (IObjectKey)mapEntry.getKey();
 			Object newValues = mapEntry.getValue();
 			
 			if (newValues instanceof Map) {
@@ -428,13 +426,23 @@ public class TransactionManager implements IDataManager {
 					Map.Entry mapEntry2 = (Map.Entry)iter2.next();
 					PropertyAccessor accessor = (PropertyAccessor)mapEntry2.getKey();
 					Object newValue = mapEntry2.getValue();
+			
+					// TODO: If we create a method in IObjectKey for updating properties
+					// then we don't have to instantiate the committed object here.
+					// The advantages are small, however, because the key is likely to
+					// need to read the old properties from the database before setting
+					// the new property values.
+					ExtendableObject committedObject = committedKey.getObject();
 					
-					if (newValue instanceof ExtendableObject) {
-						ExtendableObject referencedObject = (ExtendableObject)newValue;
-						UncommittedObjectKey key = (UncommittedObjectKey)referencedObject.getObjectKey();
-						object.setPropertyValue(accessor, key.getCommittedObject());
+					if (newValue instanceof UncommittedObjectKey) {
+						UncommittedObjectKey referencedKey = (UncommittedObjectKey)newValue;
+						// TODO: We should not have to instantiate an instance of the
+						// referenced object in the committed datastore.  However, there
+						// is no method to set the key as the value.
+						// We should add such a mechanism.
+						committedObject.setPropertyValue(accessor, referencedKey.getCommittedObjectKey().getObject());
 					} else {
-						object.setPropertyValue(accessor, newValue);
+						committedObject.setPropertyValue(accessor, newValue);
 					}
 				}
 			}
@@ -446,24 +454,26 @@ public class TransactionManager implements IDataManager {
 		// to be deleted.
 		for (Iterator iter = modifiedObjects.entrySet().iterator(); iter.hasNext(); ) {
 			Map.Entry mapEntry = (Map.Entry)iter.next();
-			ExtendableObject object = (ExtendableObject)mapEntry.getKey();
+			IObjectKey committedKey = (IObjectKey)mapEntry.getKey();
 			Object newValues = mapEntry.getValue();
 			
 			if (newValues instanceof Boolean) {
-				PropertySet propertySet = PropertySet.getPropertySet(object.getClass());
+				ExtendableObject deletedObject = committedKey.getObject();
+				
+				PropertySet propertySet = PropertySet.getPropertySet(deletedObject.getClass());
 				for (Iterator iter2 = propertySet.getPropertyIterator3(); iter2.hasNext(); ) {
 					PropertyAccessor accessor = (PropertyAccessor)iter.next();
 					if (accessor.isScalar()) {
-						Object value = object.getPropertyValue(accessor);
+						Object value = deletedObject.getPropertyValue(accessor);
 						if (value instanceof ExtendableObject) {
 							ExtendableObject referencedObject = (ExtendableObject)value;
-							UncommittedObjectKey key = (UncommittedObjectKey)referencedObject.getObjectKey();
-							ExtendableObject committedReferencedObject = key.getCommittedObject();
-							Object referencedNewValues = modifiedObjects.get(committedReferencedObject);
+							UncommittedObjectKey referencedKey = (UncommittedObjectKey)referencedObject.getObjectKey();
+							IObjectKey committedReferencedKey = referencedKey.getCommittedObjectKey();
+							Object referencedNewValues = modifiedObjects.get(committedReferencedKey);
 							if (referencedNewValues instanceof Boolean) {
 								// This is a reference to an object that is marked for deletion.
 								// Set the reference to null
-								object.setPropertyValue(accessor, null);
+								deletedObject.setPropertyValue(accessor, null);
 							}
 						}
 					}
@@ -476,10 +486,13 @@ public class TransactionManager implements IDataManager {
 			Map.Entry mapEntry = (Map.Entry)iter.next();
 			ParentListPair parentListPair = (ParentListPair)mapEntry.getKey();
 			ModifiedList modifiedList = (ModifiedList)mapEntry.getValue();
+
+			ExtendableObject parent = parentListPair.parentKey.getObject();
+			
 			for (Iterator iter2 = modifiedList.getDeletedObjectIterator(); iter2.hasNext(); ) {
 				ExtendableObject objectToDelete = (ExtendableObject)iter2.next();
 				
-				parentListPair.parent.deleteObject(parentListPair.listAccessor, objectToDelete);
+				parent.deleteObject(parentListPair.listAccessor, objectToDelete);
 			}
 		}
 		
@@ -515,18 +528,22 @@ public class TransactionManager implements IDataManager {
 		 */
 		Map propertyChangeMap = new HashMap();
 		
-		// It should be possible to construct the object in one go, passing the values to the constructor.
-		// However, this takes rather more work, and the benefits are unclear, so for now we create the
-		// object with default property values and then set the actual property values.
-		ExtendableObject newCommittedObject = parent.createObject(listAccessor, actualPropertySet);
-
-		// Update the uncommitted object key to indicate that there is now a committed
-		// version of the object in the datastore
-		((UncommittedObjectKey)newObject.getObjectKey()).setCommittedObject(newCommittedObject);
+		int count = 0;
 		
 		for (Iterator iter3 = actualPropertySet.getPropertyIterator3(); iter3.hasNext(); ) {
 			PropertyAccessor accessor = (PropertyAccessor)iter3.next();
 			if (accessor.isScalar()) {
+				count++;
+			}
+		}
+		
+		Object [] values = new Object[count];
+		
+		int index = 0;
+		for (Iterator iter3 = actualPropertySet.getPropertyIterator3(); iter3.hasNext(); ) {
+			PropertyAccessor accessor = (PropertyAccessor)iter3.next();
+			if (accessor.isScalar()) {
+/*				
 				Object value = newObject.getPropertyValue(accessor);
 				if (value instanceof ExtendableObject) {
 					ExtendableObject referencedObject = (ExtendableObject)value;
@@ -551,17 +568,59 @@ public class TransactionManager implements IDataManager {
 				} else {
 					newCommittedObject.setPropertyValue(accessor, value);
 				}
-			} else {
-				// We must add all the objects in the list properties.
-				for (Iterator iter = newObject.getPropertyIterator(accessor); iter.hasNext(); ) {
+*/
+				Object value = newObject.getPropertyValue(accessor);
+				if (value instanceof ExtendableObject) {
+					ExtendableObject referencedObject = (ExtendableObject)value;
+					UncommittedObjectKey key = (UncommittedObjectKey)referencedObject.getObjectKey();
+					
+					// TODO: We do not really have to instantiate the object here.
+					// We can set an object reference just from the key.  However,
+					// we don't have the methods available to do that at this time.
+					
+					IObjectKey committedKey = key.getCommittedObjectKey();
+					if (committedKey != null) {
+						values[index] = committedKey;
+					} else {
+						// The property value is a reference to an object that has not have yet been committed to
+						// the datastore.  Such values cannot be set in the datastore.  We therefore avoid such
+						// properties here and set them later when all the new objects have been committed.
+						
+						// Add this property change to a map of property changes that we
+						// must do later.
+						values[index] = null;
+						propertyChangeMap.put(accessor, key);
+					}
+				} else {
+					values[index] = value;
+				}
+				index++;
+			}
+		}
+		
+		// Create the object with the appropriate property values
+		ObjectCollection propertyValues = parent.getListPropertyValue(listAccessor); 
+		ExtendableObject newCommittedObject = propertyValues.createNewElement(actualPropertySet, values);
+
+		// Update the uncommitted object key to indicate that there is now a committed
+		// version of the object in the datastore
+		((UncommittedObjectKey)newObject.getObjectKey()).setCommittedObject(newCommittedObject);
+
+		// Commit all the child objects in the list properties.
+		for (Iterator iter3 = actualPropertySet.getPropertyIterator3(); iter3.hasNext(); ) {
+			PropertyAccessor accessor = (PropertyAccessor)iter3.next();
+			if (accessor.isList()) {
+				for (Iterator iter = newObject.getListPropertyValue(accessor).iterator(); iter.hasNext(); ) {
 					ExtendableObject childObject = (ExtendableObject)iter.next(); 
 					commitNewObject(childObject, newCommittedObject, accessor);
 				}
 			}
 		}
 		
+		// If there are property changes that must be applied later, add the property
+		// change map to the list
 		if (!propertyChangeMap.isEmpty()) {
-			modifiedObjects.put(newCommittedObject, propertyChangeMap);
+			modifiedObjects.put(newCommittedObject.getObjectKey(), propertyChangeMap);
 		}
 	}
 
@@ -586,13 +645,13 @@ public class TransactionManager implements IDataManager {
 	 * The modified list objects are not created unless a change
 	 * is made to the list (objects added or objects removed).
 	 * 
-	 * @param parent the object (in the committed datastore) containing 
-	 * 			the list property
+	 * @param parentKey the object key (in the committed datastore) for the
+	 * 			object containing the list property
 	 * @param listProperty
 	 * @return
 	 */
-	public ModifiedList createModifiedList(ExtendableObject parent, PropertyAccessor listProperty) {
-		ParentListPair key = new ParentListPair(parent, listProperty);
+	public ModifiedList createModifiedList(IObjectKey parentKey, PropertyAccessor listProperty) {
+		ParentListPair key = new ParentListPair(parentKey, listProperty);
 		if (modifiedLists.get(key) != null) {
 			throw new RuntimeException("list already exists");
 		}
@@ -655,8 +714,10 @@ public class TransactionManager implements IDataManager {
 			// processed).
 			for (Iterator iter = modifiedObjects.entrySet().iterator(); iter.hasNext(); ) {
 				Map.Entry mapEntry = (Map.Entry)iter.next();
-				ExtendableObject committedObject = (ExtendableObject)mapEntry.getKey();
+				IObjectKey committedKey = (IObjectKey)mapEntry.getKey();
 				Object newValues = mapEntry.getValue();
+				
+				ExtendableObject committedObject = committedKey.getObject();
 				
 				if (committedObject instanceof Entry) {
 					Entry entry = (Entry)committedObject;
@@ -689,13 +750,14 @@ public class TransactionManager implements IDataManager {
 				}
 			}
 			
-			ExtendableObject committedObject = ((UncommittedObjectKey)account.getObjectKey()).getCommittedObject();
-			if (committedObject == null) {
+			IObjectKey committedAccountKey = ((UncommittedObjectKey)account.getObjectKey()).getCommittedObjectKey();
+			if (committedAccountKey == null) {
 				// This is a new account created in this transaction
 				JMoneyPlugin.myAssert(removedEntries.isEmpty());
 				return addedEntries.iterator();
 			} else {
-				Collection committedCollection = ((Account)committedObject).getEntries();
+				Account committedAccount = (Account)committedAccountKey.getObject();
+				Collection committedCollection = committedAccount.getEntries();
 				return new DeltaListIterator(TransactionManager.this, committedCollection.iterator(), addedEntries, removedEntries);
 			}
 		}

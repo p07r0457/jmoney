@@ -48,9 +48,6 @@ public class SimpleListManager extends Vector implements IListManager {
 	 	this.sessionManager = sessionManager;
 	 }
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.IListManager#createNewElement(net.sf.jmoney.model2.ExtendableObject, net.sf.jmoney.model2.PropertySet, java.lang.Object[], net.sf.jmoney.model2.ExtensionProperties[])
-	 */
 	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet/*, Object[] values, ExtensionProperties[] extensionProperties */) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
@@ -76,6 +73,73 @@ public class SimpleListManager extends Vector implements IListManager {
 		// the scalar properties.  We must, however, pass objects that manage
 		// any lists within the object.
 		
+		// Add a list manager for each list property in the object.
+		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+			constructorParameters[index++] = new SimpleListManager(sessionManager);
+		}
+		
+		// We can now create the object.
+		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructDefaultImplementationObject(constructorParameters);
+		
+		objectKey.setObject(extendableObject);
+
+		add(extendableObject);
+		
+		// If an account is added then we
+		// must add a list that will contain the entries in the account.
+		if (extendableObject instanceof Account) {
+			Account account = (Account)extendableObject;
+			sessionManager.addAccountList(account);
+		}
+		
+		// If an entry is added then we
+		// must update the lists of entries in each account.
+		if (extendableObject instanceof Entry) {
+			Entry entry = (Entry)extendableObject;
+			if (entry.getAccount() != null) {
+				sessionManager.addEntryToList(entry.getAccount(), entry);
+			}
+		}
+		
+        // This plug-in needs to know if a session has been
+		// modified so it knows whether the session needs to
+		// be saved.  Mark the session as modified now.
+		sessionManager.setModified();
+		
+		return extendableObject;
+	}
+
+	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
+		Collection constructorProperties = propertySet.getConstructorProperties();
+		
+		int numberOfParameters = constructorProperties.size();
+		if (!propertySet.isExtension()) {
+			numberOfParameters += 3;
+		}
+		Object[] constructorParameters = new Object[numberOfParameters];
+		
+		SimpleObjectKey objectKey = new SimpleObjectKey(sessionManager);
+		
+		int index = 0;
+		if (!propertySet.isExtension()) {
+			constructorParameters[0] = objectKey;
+			constructorParameters[1] = null;
+			constructorParameters[2] = parent.getObjectKey();
+			index = 3;
+		}
+		
+		int indexIntoValues = 0;
+		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next(); 
+			if (propertyAccessor.isScalar()) {
+				if (!propertyAccessor.getPropertySet().isExtension()) {
+					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = values[indexIntoValues];
+				}
+				indexIntoValues++;
+			}
+		}
+			
 		// Add a list manager for each list property in the object.
 		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();

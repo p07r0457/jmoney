@@ -82,6 +82,43 @@ public class ListManagerCached extends Vector implements IListManager {
 
 		return extendableObject;
 	}
+
+	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
+		// We must create the object before we persist it to the database.
+		// The reason why we must do this, and not simply write the
+		// default values, is that the constructor only uses the
+		// default values array as a guide.  For example, the constructor
+		// may replace a null timestamp with the current time, or
+		// a null currency with a default currency.
+		
+ 		// First we build the in-memory object.
+		// This is done here because in this case the object is always cached
+		// in memory.
+		
+		ObjectKeyCached objectKey = new ObjectKeyCached(-1, sessionManager);
+		
+		ExtendableObject extendableObject = JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, true);
+
+		objectKey.setObject(extendableObject);
+		
+		add(extendableObject);
+		
+		// Now we insert the new row into the tables.
+
+		int rowId = JDBCDatastorePlugin.insertIntoDatabase(propertySet, extendableObject, listProperty, parent, sessionManager);
+		objectKey.setRowId(rowId);
+
+		// If the list of objects are cached, then the objects themselves are cached
+		// objects, and vica versa, I think.
+		// Add to the cache map now.
+		// TODO: This does not work if we have uncached derivable property sets
+		// (Which, at time of writing, we don't), because the parameter passed to
+		// getMapOfCachedObjects must be a base-most property set (I think).
+		Map map = sessionManager.getMapOfCachedObjects(propertySet);
+		map.put(new Integer(rowId), extendableObject);
+
+		return extendableObject;
+	}
 	
 	public boolean remove(Object o) {
 		boolean found = super.remove(o);

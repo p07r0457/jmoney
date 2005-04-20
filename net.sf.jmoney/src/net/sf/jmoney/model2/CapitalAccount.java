@@ -38,6 +38,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CapitalAccountInfo;
 import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 
 /**
@@ -107,6 +108,10 @@ public abstract class CapitalAccount extends Account {
 	public String getComment() {
 		return comment;
 	};
+
+	public ObjectCollection getSubAccountSet() {
+		return new ObjectCollection(subAccounts, this, CapitalAccountInfo.getSubAccountAccessor());
+	}
 
 	/**
 	 * Get the entries in this account sorted according to the given

@@ -279,6 +279,19 @@ public class Session extends ExtendableObject implements IAdaptable {
     public Iterator getTransactionIterator() {
         return transactions.iterator();
     }
+    
+    public ObjectCollection getCommoditySet() {
+    	return new ObjectCollection(commodities, this, SessionInfo.getCommoditiesAccessor());
+    }
+    
+    public ObjectCollection getAccountSet() {
+    	return new ObjectCollection(accounts, this, SessionInfo.getAccountsAccessor());
+    }
+    
+    public ObjectCollection getTransactionSet() {
+    	return new ObjectCollection(transactions, this, SessionInfo.getTransactionsAccessor());
+    }
+    
 /* moved to MT940 code    
     public CapitalAccount getAccountByNumber(String accountNumber) {
         for (int i = 0; i < accounts.size(); i++) {

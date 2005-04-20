@@ -29,6 +29,7 @@ import java.util.Vector;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
+import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -78,7 +79,7 @@ public class DeltaListManager implements IListManager {
 	 * 'added' list are appended to the items returned by the underlying
 	 * committed list.
 	 */
-	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet/*, Object[] values, ExtensionProperties[] extensionProperties */) {
+	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());
@@ -111,8 +112,66 @@ public class DeltaListManager implements IListManager {
 		objectKey.setObject(extendableObject);
 
 		if (modifiedList == null) {
-			ExtendableObject committedParent = ((UncommittedObjectKey)parent.getObjectKey()).getCommittedObject();
-			modifiedList = transactionManager.createModifiedList(committedParent, listProperty);
+			IObjectKey committedParentKey = ((UncommittedObjectKey)parent.getObjectKey()).getCommittedObjectKey();
+			modifiedList = transactionManager.createModifiedList(committedParentKey, listProperty);
+		}
+		modifiedList.add(extendableObject);
+		
+		return extendableObject;
+	}
+
+	// This method is never used, because new objects are only created
+	// with non-default values when objects are being committed.
+	// It is here for completeness.
+	// If we support nested transactions then this method will be required.
+	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
+		Collection constructorProperties = propertySet.getConstructorProperties();
+		
+		JMoneyPlugin.myAssert (!propertySet.isExtension());
+
+		int numberOfParameters = 3 + constructorProperties.size();
+		Object[] constructorParameters = new Object[numberOfParameters];
+		
+		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
+		
+		constructorParameters[0] = objectKey;
+		constructorParameters[1] = null;
+		constructorParameters[2] = parent.getObjectKey();
+		
+		// Construct the extendable object using the 'full' constructor.
+		// This constructor takes a parameter for every property in the object.
+		
+		// TODO: This code could be simplified by making better use
+		// of getIndexIntoScalarProperties().  We only need one loop.
+		
+		int valuesIndex = 0;
+		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+			if (propertyAccessor.isScalar()) {
+				if (valuesIndex != propertyAccessor.getIndexIntoScalarProperties()) {
+					throw new RuntimeException("index mismatch");
+				}
+				constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()]
+									  = values[valuesIndex];
+				valuesIndex++;
+			}
+		}
+		
+		// Add a list manager for each list property in the object.
+		int index = 3;
+		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+			constructorParameters[index++] = new UncommittedListManager(transactionManager);
+		}
+		
+		// We can now create the object.
+		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructDefaultImplementationObject(constructorParameters);
+		
+		objectKey.setObject(extendableObject);
+
+		if (modifiedList == null) {
+			IObjectKey committedParentKey = ((UncommittedObjectKey)parent.getObjectKey()).getCommittedObjectKey();
+			modifiedList = transactionManager.createModifiedList(committedParentKey, listProperty);
 		}
 		modifiedList.add(extendableObject);
 		
@@ -123,19 +182,12 @@ public class DeltaListManager implements IListManager {
 		// This method is called, for example when getting the number of entries
 		// in a transaction.
 		
-		// TODO: When the data model is changed to expose Collections, not Iterators,
-		// this loop can be removed.
-		int count = 0;
-		Iterator committedListIterator = parent.getPropertyIterator(listProperty);
-		while (committedListIterator.hasNext()) {
-			committedListIterator.next();
-			count++;
-		}
+		int committedCount = parent.getListPropertyValue(listProperty).size();
 		
 		if (modifiedList == null) {
-			return count; 
+			return committedCount; 
 		} else {
-			return count + modifiedList.addedObjects.size() - modifiedList.deletedObjects.size();
+			return committedCount + modifiedList.addedObjects.size() - modifiedList.deletedObjects.size();
 		}
 	}
 
@@ -148,7 +200,7 @@ public class DeltaListManager implements IListManager {
 	}
 
 	public Iterator iterator() {
-		Iterator committedListIterator = parent.getPropertyIterator(listProperty);
+		Iterator committedListIterator = parent.getListPropertyValue(listProperty).iterator();
 		if (modifiedList == null) {
 			// We cannot simply return committedListIterator because
 			// that returns materializations of the objects that are outside
@@ -174,7 +226,7 @@ public class DeltaListManager implements IListManager {
 
 	public boolean remove(Object object) {
 		if (modifiedList == null) {
-			modifiedList = transactionManager.createModifiedList(parent, listProperty);
+			modifiedList = transactionManager.createModifiedList(parent.getObjectKey(), listProperty);
 		}
 		return modifiedList.delete((ExtendableObject)object);
 	}

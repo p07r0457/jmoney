@@ -194,11 +194,11 @@ public class PropertyAccessorImpl implements PropertyAccessor {
         
         isList = true;
 
-		// Use introspection on the interface to find the getXxxIterator method.
-		theGetMethod = findMethod("get", localName + "Iterator", null);
+		// Use introspection on the interface to find the getXxxSet method.
+		theGetMethod = findMethod("get", localName + "Set", null);
 		
-		if (theGetMethod.getReturnType() != Iterator.class) {
-			throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + propertySet.getImplementationClass().getName() + "' must return an Iterator type.");
+        if (!ObjectCollection.class.isAssignableFrom(theGetMethod.getReturnType())) { 		
+			throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + propertySet.getImplementationClass().getName() + "' must return an ObjectSet type.");
 		}
 	}
 
@@ -312,6 +312,10 @@ public class PropertyAccessorImpl implements PropertyAccessor {
 		}
     }
     
+	/**
+	 * If the property is a list property then the getter returns
+	 * an <code>ObjectSet</code>.
+	 */
     public Object invokeGetMethod(Object invocationTarget) {
 		try {
 			return theGetMethod.invoke(invocationTarget, null);

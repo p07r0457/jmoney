@@ -436,21 +436,46 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 					
 					String amountString = textControl.getText();
 					long amount = commodityForFormatting.parse(amountString);
+					
+					long previousEntryAmount = entry.getAmount();
+					long newEntryAmount;
+					
 					if (isDebit) {
 						if (amount != 0) {
-							entry.setAmount(-amount);
+							newEntryAmount = -amount;
 						} else {
-							if (entry.getAmount() < 0) { 
-								entry.setAmount(0);
+							if (previousEntryAmount < 0) { 
+								newEntryAmount  = 0;
+							} else {
+								newEntryAmount = previousEntryAmount;
 							}
 						}
 					} else {
 						if (amount != 0) {
-							entry.setAmount(amount);
+							newEntryAmount = amount;
 						} else {
-							if (entry.getAmount() > 0) { 
-								entry.setAmount(0);
+							if (previousEntryAmount > 0) { 
+								newEntryAmount  = 0;
+							} else {
+								newEntryAmount = previousEntryAmount;
 							}
+						}
+					}
+
+					entry.setAmount(newEntryAmount);
+
+					// If there are two entries in the transaction and
+					// if both entries have accounts in the same currency or
+					// one or other account is not known or one or other account
+					// is a multi-currency account then we set the amount in
+					// the other entry to be the same but opposite signed amount.
+					
+					if (entry.getTransaction().hasTwoEntries()) {
+						Entry otherEntry = entry.getTransaction().getOther(entry);
+						Commodity commodity1 = entry.getCommodity();
+						Commodity commodity2 = otherEntry.getCommodity();
+						if (commodity1 == null || commodity2 == null || commodity1.equals(commodity2)) {
+							otherEntry.setAmount(-newEntryAmount);
 						}
 					}
 				}

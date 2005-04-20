@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
@@ -195,7 +196,6 @@ public abstract class ExtendableObject {
 					return;
 
 		// Update the database.
-		IObjectKey key = getObjectKey();
 		PropertySet actualPropertySet = PropertySet.getPropertySet(this.getClass());
 		
 		// Build two arrays of old and new values.
@@ -226,16 +226,16 @@ public abstract class ExtendableObject {
 					oldValues[i] = oldValue;
 					newValues[i] = newValue;
 				} else {
-					// kludge: both null means no change.
-					oldValues[i] = null;
-					newValues[i] = null;
+					Object value = getPropertyValue(propertyAccessor2);
+					oldValues[i] = value;
+					newValues[i] = value;
 				}
 				i++;
 			}
 		}
-		key.updateProperties(actualPropertySet, oldValues, newValues);
+		objectKey.updateProperties(actualPropertySet, oldValues, newValues);
 
-		// Nofify the change manager.
+		// Notify the change manager.
 		getSession().getChangeManager().processPropertyUpdate(this, propertyAccessor, oldValue, newValue);
 
 		// Fire an event for this change.
@@ -436,22 +436,25 @@ public abstract class ExtendableObject {
 	}
 	
 	/**
-	 * Obtain an iterator that iterates over the values of a
-	 * list property.
+	 * Obtain a the collection of values of a list property.
 	 * 
 	 * @param propertyAccessor The property accessor for the property
-	 * 			whose values are to be iterated.  The property
+	 * 			whose values are to be obtained.  The property
 	 * 			must be a list property (and not a scalar property).
 	 */
-	public Iterator getPropertyIterator(PropertyAccessor propertyAccessor) {
-		Object objectWithProperties = getPropertySetInterface(propertyAccessor.getPropertySet());
+	public ObjectCollection getListPropertyValue(PropertyAccessor owningListProperty) {
+		Object objectWithProperties = getMutablePropertySetInterface(owningListProperty.getPropertySet());
 		
-		// If no extension exists then return the empty iterator.
+		// If no extension exists then return the empty collection.
+		// This is not technically correct.  The user should be able
+		// to create items in this collection, in which case the
+		// extension containing the list should be created.
 		if (objectWithProperties == null) {
-			return new EmptyIterator();
+			// TODO: implement this.
+			throw new RuntimeException("list properties in extension not yet fully implemented");
 		}
 		
-		return (Iterator)propertyAccessor.invokeGetMethod(objectWithProperties);
+		return (ObjectCollection)owningListProperty.invokeGetMethod(objectWithProperties);
 	}
 	
 	public void setPropertyValue(PropertyAccessor propertyAccessor, Object value) {
@@ -530,6 +533,7 @@ public abstract class ExtendableObject {
 	 * 			is ignored and objects are always created as appropriate for
 	 * 			the owning list.
 	 */
+// TODO: remove this method.	
 	public ExtendableObject createObject(PropertyAccessor owningListProperty, PropertySet actualPropertySet) {
 		// TODO: ensure the following always returns non-null.
 		Object objectWithProperties = getMutablePropertySetInterface(owningListProperty.getPropertySet());
@@ -541,7 +545,6 @@ public abstract class ExtendableObject {
 		}
 	}
 	
-
 	/**
 	 * @param owningListProperty
 	 * @param object

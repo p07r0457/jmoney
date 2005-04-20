@@ -57,7 +57,52 @@ public class UncommittedListManager extends Vector implements IListManager {
 	 * 'added' list are appended to the items returned by the underlying
 	 * committed list.
 	 */
-	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet/*, Object[] values, ExtensionProperties[] extensionProperties */) {
+	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet) {
+		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
+		
+		JMoneyPlugin.myAssert (!propertySet.isExtension());
+
+		int numberOfParameters = 3 + constructorProperties.size();
+		Object[] constructorParameters = new Object[numberOfParameters];
+		
+		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
+		
+		constructorParameters[0] = objectKey;
+		constructorParameters[1] = null;
+		constructorParameters[2] = parent.getObjectKey();
+		
+		// Construct the extendable object using the 'default' constructor.
+		// This constructor takes the minimum number of parameters necessary
+		// to properly construct the object, setting default values for all
+		// the scalar properties.  We must, however, pass objects that manage
+		// any lists within the object.
+		
+		// Add a list manager for each list property in the object.
+		int index = 3;
+		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+			constructorParameters[index++] = new UncommittedListManager(transactionManager);
+		}
+		
+		// We can now create the object.
+		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructDefaultImplementationObject(constructorParameters);
+		
+		objectKey.setObject(extendableObject);
+
+		add(extendableObject);
+		
+		return extendableObject;
+	}
+
+	// TODO: Complete the implementation of this method.
+	// The implementation may be copied from DeltaListManager.
+	// (Even better, put the code into a common method to avoid
+	// duplicating it).
+	
+	// This method is never used, because new objects are only created
+	// with non-default values when objects are being committed.
+	// If we support nested transactions then this method will be required.
+	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values/*, ExtensionProperties[] extensionProperties */) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());

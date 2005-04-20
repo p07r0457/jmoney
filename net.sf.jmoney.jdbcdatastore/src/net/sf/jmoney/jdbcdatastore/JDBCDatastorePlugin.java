@@ -41,6 +41,7 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CapitalAccountInfo;
 import net.sf.jmoney.fields.CommodityInfo;
@@ -1126,9 +1127,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					Object newValue = newValues[propertyIndex];
 					propertyIndex++;
 					
-					if ((oldValue == null && newValue != null)
-					 || (oldValue != null &&!oldValue.equals(newValue))) {
-						
+					if (!JMoneyPlugin.areEqual(oldValue, newValue)) {
 						String columnName;
 						if (propertyAccessor.getPropertySet().isExtension()) {
 							columnName = propertyAccessor.getName().replace('.', '_');
@@ -1249,6 +1248,8 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	}
 
 	/**
+	 * Construct an object with default property values.
+	 * 
 	 * @param propertySet
 	 * @param sessionManager
 	 * @param objectKeyProxy The key to this object.  This is required by this
@@ -1316,4 +1317,66 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		return extendableObject;
 	}
 
+	/**
+	 * Construct an object with the given property values.
+	 * 
+	 * @param propertySet
+	 * @param sessionManager
+	 * @param objectKeyProxy The key to this object.  This is required by this
+	 * 			method because it must be passed to the constructor.
+	 * 			This method does not call the setObject or setRowId
+	 * 			methods on this key.  It is the caller's responsibility
+	 * 			to call these methods.
+	 * @param parent
+	 * @param constructWithCachedLists
+	 * @param values the values of the scalar properties to be set into this object,
+	 * 			with ExtendableObject properties having the object key in this array 
+	 * @return
+	 */
+	public static ExtendableObject constructExtendableObject(PropertySet propertySet, SessionManager sessionManager, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists, Object[] values) {
+		Collection constructorProperties = propertySet.getConstructorProperties();
+		int numberOfParameters = constructorProperties.size();
+		if (!propertySet.isExtension()) {
+			numberOfParameters += 3;
+		}
+		Object[] constructorParameters = new Object[numberOfParameters];
+		
+		constructorParameters[0] = objectKey;
+		constructorParameters[1] = null;
+		constructorParameters[2] = parent.getObjectKey();
+	
+		int indexIntoValues = 0;
+		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next(); 
+			if (propertyAccessor.isScalar()) {
+				if (!propertyAccessor.getPropertySet().isExtension()) {
+					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = values[indexIntoValues];
+				}
+				indexIntoValues++;
+			}
+		}
+			
+		// For all lists, set the Collection object to be a Vector.
+		// For all primative properties, get the value from the passed object.
+		// For all extendable objects, we get the property value from
+		// the passed object and then get the object key from that.
+		// This works because all objects must be in a list and that
+		// list owns the object, not us.
+		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
+			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+			int index = propertyAccessor.getIndexIntoConstructorParameters();
+			if (propertyAccessor.isList()) {
+				if (constructWithCachedLists) {
+					constructorParameters[index] = new ListManagerCached(sessionManager, propertyAccessor);
+				} else {
+					constructorParameters[index] = new ListManagerUncached(objectKey, sessionManager, propertyAccessor);
+				}
+			}
+		}
+		
+		// We can now create the object.
+		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
+		
+		return extendableObject;
+	}
 }

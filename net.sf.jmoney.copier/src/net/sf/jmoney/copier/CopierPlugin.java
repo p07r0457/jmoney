@@ -157,7 +157,7 @@ public class CopierPlugin extends AbstractUIPlugin {
 					newValue);
     	} else {
     		// Property is a list property.
-    		for (Iterator listIter = oldObject.getPropertyIterator(propertyAccessor); listIter.hasNext(); ) {
+    		for (Iterator listIter = oldObject.getListPropertyValue(propertyAccessor).iterator(); listIter.hasNext(); ) {
     			ExtendableObject oldSubObject = (ExtendableObject)listIter.next();
     			PropertySet listElementPropertySet = PropertySet.getPropertySet(oldSubObject.getClass());
     			ExtendableObject newSubObject = newObject.createObject(propertyAccessor, listElementPropertySet);

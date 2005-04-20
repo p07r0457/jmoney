@@ -37,7 +37,21 @@ public interface IListManager extends Collection {
 	 * in the datastore.  The new object will be initialized
 	 * with default values.
 	 * 
+	 * @param propertySet the property set of the object to create
+	 * 			(this parameter is required because some lists
+	 * 			contain objects of a derivable type, in which case
+	 * 			the exact type of the object to create must be given).
 	 * @return the newly created object.
 	 */
 	ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet);
+
+	/**
+	 * This method creates a new object in this collection
+	 * in the datastore.  The new object will be initialized
+	 * with property values in the given array.
+	 * 
+	 * @param values values to be set in the properties of the new object 
+	 * @return the newly created object.
+	 */
+	ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object values[]);
 }

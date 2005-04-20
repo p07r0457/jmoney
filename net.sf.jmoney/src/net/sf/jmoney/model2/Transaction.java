@@ -88,39 +88,15 @@ public class Transaction extends ExtendableObject {
     }
     
     public Entry createEntry() {
-		final Entry newEntry = (Entry)entries.createNewElement(this, EntryInfo.getPropertySet());
-
-		processObjectAddition(TransactionInfo.getEntriesAccessor(), newEntry);
-		
-		getSession().fireEvent(
-				new ISessionChangeFirer() {
-					public void fire(SessionChangeListener listener) {
-						listener.entryAdded(newEntry);
-					}
-				});
-		
-	    return newEntry;
+    	return new EntrySet(entries, this, TransactionInfo.getEntriesAccessor()).createEntry();
 	}
 
-    public boolean deleteEntry(final Entry entry) {
-        boolean found = entries.remove(entry);
-
-		if (found) {
-			processObjectDeletion(TransactionInfo.getEntriesAccessor(), entry);
-
-			// In addition to the generic object deletion event, we also fire an event
-			// specifically for entry deletion.  The entryDeleted event is superfluous 
-			// and it may be simpler if we removed it, so that listeners receive the generic
-			// objectDeleted event only.
-			getSession().fireEvent(
-		            	new ISessionChangeFirer() {
-		            		public void fire(SessionChangeListener listener) {
-		            			listener.entryDeleted(entry);
-		            		}
-		           		});
-		}
-
-		return found;
+    public EntrySet getEntrySet() {
+    	return new EntrySet(entries, this, TransactionInfo.getEntriesAccessor());
+    }
+    
+    public boolean deleteEntry(Entry entry) {
+    	return new EntrySet(entries, this, TransactionInfo.getEntriesAccessor()).deleteEntry(entry);
     }
     
     // Some helper methods:
@@ -149,5 +125,69 @@ public class Transaction extends ExtendableObject {
 	static public Object [] getDefaultProperties() {
 		// TODO: Check if this is set to the current day.
 		return new Object [] { new Date() };
+	}
+	
+	class EntrySet extends ObjectCollection {
+		EntrySet(IListManager listManager, ExtendableObject parent, PropertyAccessor listPropertyAccessor) {
+			super(listManager, parent, listPropertyAccessor);
+		}
+		
+	    /**
+		 * @param entry
+		 * @return
+		 */
+		public boolean deleteEntry(final Entry entry) {
+	    	
+	        boolean found = entries.remove(entry);
+
+			if (found) {
+				processObjectDeletion(TransactionInfo.getEntriesAccessor(), entry);
+
+				// In addition to the generic object deletion event, we also fire an event
+				// specifically for entry deletion.  The entryDeleted event is superfluous 
+				// and it may be simpler if we removed it, so that listeners receive the generic
+				// objectDeleted event only.
+				getSession().fireEvent(
+			            	new ISessionChangeFirer() {
+			            		public void fire(SessionChangeListener listener) {
+			            			listener.entryDeleted(entry);
+			            		}
+			           		});
+			}
+
+			return found;
+		}
+
+		public Entry createEntry() {
+			final Entry newEntry = (Entry)entries.createNewElement(Transaction.this, EntryInfo.getPropertySet());
+
+			processObjectAddition(TransactionInfo.getEntriesAccessor(), newEntry);
+			
+			getSession().fireEvent(
+					new ISessionChangeFirer() {
+						public void fire(SessionChangeListener listener) {
+							listener.entryAdded(newEntry);
+						}
+					});
+			
+		    return newEntry;
+		}
+
+	    public ExtendableObject createNewElement(PropertySet actualPropertySet, Object values[]) {
+			final Entry newEntry = (Entry)entries.createNewElement(Transaction.this, EntryInfo.getPropertySet(), values);
+
+			processObjectAddition(TransactionInfo.getEntriesAccessor(), newEntry);
+			
+			getSession().fireEvent(
+					new ISessionChangeFirer() {
+						public void fire(SessionChangeListener listener) {
+							listener.entryAdded(newEntry);
+						}
+					});
+			
+		    return newEntry;
+		}
+
+		
 	}
 }

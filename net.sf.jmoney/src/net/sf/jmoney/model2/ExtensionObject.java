@@ -41,10 +41,6 @@ public abstract class ExtensionObject {
 		this.propertySet = propertySet;
 	}
 
-	public Iterator getPropertyIterator(PropertyAccessor propertyAccessor) {
-    	return baseObject.getPropertyIterator(propertyAccessor);
-	}
-	
 	public IObjectKey getObjectKey() {
     	return baseObject.getObjectKey();
 	}
@@ -74,6 +70,10 @@ public abstract class ExtensionObject {
         return baseObject.getPropertyValue(propertyAccessor);
     }
     
+	public ObjectCollection getListPropertyValue(PropertyAccessor propertyAccessor) {
+    	return baseObject.getListPropertyValue(propertyAccessor);
+	}
+	
     public int getIntegerPropertyValue(PropertyAccessor propertyAccessor) {
         return baseObject.getIntegerPropertyValue(propertyAccessor);
     }

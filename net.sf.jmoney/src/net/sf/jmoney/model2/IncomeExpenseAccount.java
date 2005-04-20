@@ -143,6 +143,10 @@ public class IncomeExpenseAccount extends Account {
 		}
 	}
 
+	public ObjectCollection getSubAccountSet() {
+		return new ObjectCollection(subAccounts, this, IncomeExpenseAccountInfo.getSubAccountAccessor());
+	}
+
 	/**
 	 * This method is required by the JMoney framework.
 	 * 

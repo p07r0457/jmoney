@@ -70,7 +70,6 @@ public class ListManagerUncached implements IListManager {
 	}
 	
 	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet) {
-
  		// First build the in-memory object.  Even though the object is not
 		// cached in the object key, the object must be constructed to get
 		// the default values to be written to the database and the
@@ -93,6 +92,29 @@ public class ListManagerUncached implements IListManager {
 		return extendableObject;
 	}
 	
+	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
+ 		// First build the in-memory object.  Even though the object is not
+		// cached in the object key, the object must be constructed to get
+		// the default values to be written to the database and the
+		// object must be constructed so it can be returned to the caller.
+		
+		ObjectKeyUncached objectKey = new ObjectKeyUncached(-1, typedPropertySet, sessionManager);
+		
+		// If an object is not cached, then neither are
+		// any lists in the object.  i.e. do not materialized
+		// the objects in a list just because the owning object
+		// is materialized.
+
+		ExtendableObject extendableObject = JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, false, values);
+		
+		// Insert the new object into the tables.
+		
+		int rowId = JDBCDatastorePlugin.insertIntoDatabase(propertySet, extendableObject, listProperty, parent, sessionManager);
+		objectKey.setRowId(rowId);
+		
+		return extendableObject;
+	}
+
 	public int size() {
 		try {
 			String tableName = typedPropertySet.getId().replace('.', '_');

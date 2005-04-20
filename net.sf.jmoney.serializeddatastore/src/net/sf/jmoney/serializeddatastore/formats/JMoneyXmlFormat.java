@@ -1302,7 +1302,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 						|| object.getExtension(propertySet2) != null) {
 					String name = propertyAccessor.getLocalName();
 					
-					for (Iterator elementIter = object.getPropertyIterator(propertyAccessor); elementIter.hasNext(); ) {
+					for (Iterator elementIter = object.getListPropertyValue(propertyAccessor).iterator(); elementIter.hasNext(); ) {
 						ExtendableObject listElement = (ExtendableObject)elementIter.next();
 						writeObject(hd, listElement, propertyAccessor.getLocalName(), propertyAccessor.getValueClass());
 					}

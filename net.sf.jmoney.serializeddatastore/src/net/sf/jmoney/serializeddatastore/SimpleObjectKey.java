@@ -24,6 +24,7 @@ package net.sf.jmoney.serializeddatastore;
 
 import java.util.Iterator;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
@@ -69,13 +70,13 @@ public class SimpleObjectKey implements IObjectKey {
 				PropertyAccessor propertyAccessor2 = (PropertyAccessor)iter.next();
 				if (propertyAccessor2.isScalar()) {
 					if (propertyAccessor2 == EntryInfo.getAccountAccessor()) {
-						// Note that if there is no change to the property then
-						// both old and new values will be null.
-						if (oldValues[i] != null) {
-							sessionManager.removeEntryFromList((Account)oldValues[i], (Entry)extendableObject);
-						}
-						if (newValues[i] != null) {
-							sessionManager.addEntryToList((Account)newValues[i], (Entry)extendableObject);
+						if (!JMoneyPlugin.areEqual(oldValues[i], newValues[i])) {
+							if (oldValues[i] != null) {
+								sessionManager.removeEntryFromList((Account)oldValues[i], (Entry)extendableObject);
+							}
+							if (newValues[i] != null) {
+								sessionManager.addEntryToList((Account)newValues[i], (Entry)extendableObject);
+							}
 						}
 						break;
 					}

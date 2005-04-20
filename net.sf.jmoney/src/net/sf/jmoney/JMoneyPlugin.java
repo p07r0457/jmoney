@@ -492,4 +492,19 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 		
     	return null;
 	}
+
+	/**
+	 * Helper method to compare two objects.  Either or both
+	 * the objects may be null.  If both objects are null,
+	 * they are considered equal.
+	 * 
+	 * @param object
+	 * @param object2
+	 * @return
+	 */
+	public static boolean areEqual(Object object1, Object object2) {
+		return (object1 == null)
+			? (object2 == null)
+					: object1.equals(object2);
+	}
 }

@@ -323,7 +323,7 @@ public class Entry extends ExtendableObject {
 		amount = anAmount;
 		
 		// Notify the change manager.
-		processPropertyChange(EntryInfo.getAmountAccessor(), new Double(oldAmount), new Double(amount));
+		processPropertyChange(EntryInfo.getAmountAccessor(), new Long(oldAmount), new Long(amount));
 	}
 	
 	/**

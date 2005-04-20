@@ -210,6 +210,8 @@ public class EntriesTable implements IEntriesControl {
                 			&& !fPage.currentTransaction.equals(transactionData.getTransactionForTransactionFields())) {
                 		fPage.commitTransaction();
                 	}
+                	// TODO: Support the blank transaction.
+                	// The following fails on the blank transaction. 
             		fPage.currentTransaction = transactionData.getTransactionForTransactionFields();
             		
                 	if (selectedEntry != null) {

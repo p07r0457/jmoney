@@ -180,19 +180,26 @@ public class UncommittedObjectKey implements IObjectKey {
 		// committed at commit time.
 		
 		if (committedObjectKey != null) {
-			Map propertyChangeMap = (Map)transactionManager.modifiedObjects.get(committedObjectKey.getObject());
+			Map propertyChangeMap = (Map)transactionManager.modifiedObjects.get(committedObjectKey);
 			if (propertyChangeMap == null) {
 				propertyChangeMap = new HashMap();
-				transactionManager.modifiedObjects.put(committedObjectKey.getObject(), propertyChangeMap);
+				transactionManager.modifiedObjects.put(committedObjectKey, propertyChangeMap);
 			}
 			
 			int i = 0;
 			for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
 				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 				if (propertyAccessor.isScalar()) {
-					// kludge: both null means no change.
-					if (oldValues[i] != null || newValues[i] != null) {
-						propertyChangeMap.put(propertyAccessor, newValues[i]);
+					// If values are different, put in the map
+					if (!JMoneyPlugin.areEqual(oldValues[i], newValues[i])) {
+						if (newValues[i] instanceof ExtendableObject) {
+							// propertyChangeMap must contain the UncommittedObjectKey,
+							// not the uncommitted object itself which is passed to this
+							// method.
+							propertyChangeMap.put(propertyAccessor, ((ExtendableObject)newValues[i]).getObjectKey());
+						} else {
+							propertyChangeMap.put(propertyAccessor, newValues[i]);
+						}
 					}
 					i++;
 				}
@@ -232,23 +239,19 @@ public class UncommittedObjectKey implements IObjectKey {
 	}
 
 	/**
-	 * Return the committed version of the object.
+	 * Return the key to the committed version of the object.
 	 * 
-	 * @return the version of the object from the committed datastore,
+	 * @return the key to the version of the object from the committed datastore,
 	 * 			or null if this object has never been committed to the\
 	 * 			datastore
 	 */
-	public ExtendableObject getCommittedObject() {
+	public IObjectKey getCommittedObjectKey() {
 		if (extendableObject != null) {
-			// This is a new account created in this transaction
+			// This is a new object created in this transaction
 			return null;
 		} else {
-			ExtendableObject committedObject;
-			if (committedObjectKey != null) {
-				return committedObjectKey.getObject();
-			} else {
-				throw new RuntimeException("bad case");
-			}
+			JMoneyPlugin.myAssert(committedObjectKey != null);
+			return committedObjectKey;
 		}
 	}
 
