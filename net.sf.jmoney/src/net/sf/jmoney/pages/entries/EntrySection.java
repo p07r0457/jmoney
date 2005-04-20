@@ -24,6 +24,7 @@ package net.sf.jmoney.pages.entries;
 import java.util.Iterator;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
@@ -52,6 +53,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.SectionPart;
+import org.eclipse.ui.forms.events.ExpansionAdapter;
+import org.eclipse.ui.forms.events.ExpansionEvent;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
 
@@ -518,8 +521,16 @@ public class EntrySection extends SectionPart {
 	private Composite filler = null;
     
     public EntrySection(EntriesPage page, Composite parent) {
-        super(parent, page.getManagedForm().getToolkit(), Section.DESCRIPTION | Section.TITLE_BAR | Section.TWISTIE | Section.EXPANDED);
+        super(parent, page.getManagedForm().getToolkit(), 
+        		Section.DESCRIPTION | Section.TITLE_BAR | Section.TWISTIE 
+				| (JMoneyPlugin.getDefault().getPreferenceStore().getBoolean("expandEditEntrySection")
+						? Section.EXPANDED : 0));
         fPage = page;
+        getSection().addExpansionListener(new ExpansionAdapter() {
+    		public void expansionStateChanged(ExpansionEvent e) {
+    			JMoneyPlugin.getDefault().getPreferenceStore().setValue("expandEditEntrySection", e.getState());
+    		}
+    	});
         getSection().setText("Selected Entry");
         createClient(page.getManagedForm().getToolkit());
     }
