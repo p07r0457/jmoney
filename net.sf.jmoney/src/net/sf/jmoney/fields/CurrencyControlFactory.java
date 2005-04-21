@@ -53,55 +53,6 @@ public class CurrencyControlFactory implements IPropertyControlFactory {
         return new CurrencyEditor(parent, propertyAccessor);
     }
 
-	public CellEditor createCellEditor(Table table) {
-        Session session = JMoneyPlugin.getDefault().getSession();
-
-        // Load all the currencies the user uses
-        usedCurrencies = new Vector();
-        for (Iterator iter = session.getCommodityCollection().iterator(); iter.hasNext();) {
-            Commodity commodity = (Commodity) iter.next();
-            if (commodity instanceof Currency) {
-                usedCurrencies.add(commodity);
-            }
-        }
-        
-        // Extract their names
-        String currencyNames[] = new String[usedCurrencies.size()];
-        for (int i = 0; i<usedCurrencies.size(); i++)
-            currencyNames[i] = ((Currency) usedCurrencies.get(i)).getName();
-
-		return new ComboBoxCellEditor(table, currencyNames);
-	}
-
-	/*
-	 * @author Faucheux
-	 */
-	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        
-	    Currency currency = (Currency) extendableObject.getPropertyValue(propertyAccessor);
-        if (currency == null) return new Integer(0); 
-        
-        // Search the index of the choosen entry
-        int index = 0;
-        while (index<usedCurrencies.size() && usedCurrencies.get(index) != currency  ) 
-            index++;
-        
-		return new Integer(index);
-	}
-
-	/*
-	 * @author Faucheux
-	 */
-	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
-		int index = ((Integer)value).intValue();
-		if (index > usedCurrencies.size()) 
-			if (JMoneyPlugin.DEBUG) System.out.println("Can't find the " + index + " currency of " + usedCurrencies.size());
-		else { 
-		    Currency currency = (Currency) usedCurrencies.get(index);
-        	extendableObject.setPropertyValue(propertyAccessor, currency);
-		}
-	}
-
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
         Currency value = (Currency) extendableObject.getPropertyValue(propertyAccessor);
         return value == null ? "none" : "'" + value.getName() + "'";

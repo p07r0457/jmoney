@@ -60,20 +60,6 @@ public class DateControlFactory implements IPropertyControlFactory {
   		return new DateEditor(parent, propertyAccessor, fDateFormat);
     }
 
-	public CellEditor createCellEditor(Table table) {
-		return new TextCellEditor(table);
-	}
-
-	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        Date value = (Date) extendableObject.getPropertyValue(propertyAccessor);
-        return fDateFormat.format(value);
-	}
-
-	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
-		String dateText = (String) value;
-        extendableObject.setPropertyValue(propertyAccessor, fDateFormat.parse(dateText));
-	}
-
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
         Date value = (Date) extendableObject.getPropertyValue(propertyAccessor);
         if (value == null) {

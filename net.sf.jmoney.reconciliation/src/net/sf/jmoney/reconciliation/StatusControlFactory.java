@@ -62,23 +62,6 @@ public class StatusControlFactory implements IPropertyControlFactory {
         return new StatusEditor(parent, propertyAccessor);
     }
 
-	public CellEditor createCellEditor(Table table) {
-		return new ComboBoxCellEditor(table, statusText);
-	}
-	
-	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-		// The status is stored as an integer that exactly matches the
-		// index into the combo box selections, so return it as is.
-        int status = extendableObject.getIntegerPropertyValue(propertyAccessor);
-        return new Integer(status);
-	}
-
-	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
-		// The status is stored as an integer that exactly matches the
-		// index into the combo box selections, so set it as is.
-        extendableObject.setPropertyValue(propertyAccessor, value);
-	}
-
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
         int status = extendableObject.getIntegerPropertyValue(propertyAccessor);
         return statusText[status];

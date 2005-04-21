@@ -594,61 +594,6 @@ public class PropertyAccessor {
 		return propertyControlFactory.createPropertyControl(parent, this);
 	}
 
-//TODO: Remove this method.  Cell editors are no longer used
-	// because the mechanism was not flexible enough and it was
-	// easy enough to position editors correctly ourselves.
-	/**
-	 * Create a CellEditor object that enables the property to
-	 * be edited in-place in a <code>Table</code>.
-	 * 
-	 * @param table
-	 * @return a cell editor, or null if the property cannot
-	 * 			be edited in-place in a <code>Table</code>
-	 */
-	public CellEditor createCellEditor(Table table) {
-		// When a PropertyAccessor object is created, it is
-		// provided with an interface to a factory that constructs
-		// control objects that edit the property.
-		// We call into that factory to create a cell editor.
-		return propertyControlFactory.createCellEditor(table);
-	}
-
-	// TODO: Remove
-	/**
-	 * Get the value of a property and return it typed for
-	 * use in the cell editor.
-	 * <P>
-	 * For example, the ComboBoxCellEditor cell editors require the
-	 * value as an integer index into the selection list.  Therefore,
-	 * if <code>createCellEditor</code> returns a ComboBoxCellEditor
-	 * then this method must return the value as an index into the list
-	 * of possible values.
-	 * 
-	 * @param extendableObject
-	 * @return
-	 */
-	public Object getValueTypedForCellEditor(ExtendableObject extendableObject) {
-	    if (extendableObject == null) return new Integer (0); // I don't know why -- Faucheux
-		return propertyControlFactory.getValueTypedForCellEditor(extendableObject, this);
-	}
-
-	// TODO: Remove
-	/**
-	 * Set the value of a property given a value returned by the cell editor.
-	 * <P>
-	 * For example, the ComboBoxCellEditor cell editors give the
-	 * value as an integer index into the selection list.  Therefore,
-	 * if <code>createCellEditor</code> returns a ComboBoxCellEditor
-	 * then this method must set the appropriate value as determined from
-	 * the given index.
-	 * 
-	 * @param extendableObject
-	 * @param value
-	 */
-	public void setValueTypedForCellEditor(ExtendableObject extendableObject, Object value) {
-		propertyControlFactory.setValueTypedForCellEditor(extendableObject, this, value);
-	}
-
 	/**
 	 * Format the value of a property so it can be embedded into a
 	 * message.

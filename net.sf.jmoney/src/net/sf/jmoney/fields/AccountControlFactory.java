@@ -49,39 +49,6 @@ public class AccountControlFactory implements IPropertyControlFactory {
         return new AccountEditor(parent, propertyAccessor);
     }
 
-    /*
-     * @author Faucheux
-     */
-	public CellEditor createCellEditor(Table table) {
-	    // Collect the accounts and extract the list of their names
-	    Session session = JMoneyPlugin.getDefault().getSession();
-	    allAccounts = session.getAccountList();
-	    
-	    String[] proposedItems = new String [allAccounts.length];
-	    for (int i = 0; i<allAccounts.length; i++) proposedItems[i] = allAccounts[i].getFullAccountName();
-		return new ComboBoxCellEditor(table, proposedItems);
-	}
-	
-	/*
-	 * @author Faucheux
-	 */
-	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-		// The entry has a reference to the account. We have to find in the list of the accounts
-	    // "proposedItems" the name if this account and returns the index of this name.
-	    Account account = (Account) extendableObject.getPropertyValue(propertyAccessor);
-	    int i = 0;
-	    while (i<allAccounts.length && ! (account == allAccounts[i])) i++;
-        return new Integer(i);
-	}
-
-	/*
-	 * @author Faucheux
-	 */
-	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
-	    int index = ((Integer) value).intValue();
-	    extendableObject.setPropertyValue(propertyAccessor, allAccounts[index]);
-	}
-
 	public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
         Account value = (Account) extendableObject.getPropertyValue(propertyAccessor);
         return value == null ? "<none>" : value.getFullAccountName();

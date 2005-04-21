@@ -54,26 +54,6 @@ public class MultiTextControlFactory implements IPropertyControlFactory {
         return multiText;
     }
 
-	public CellEditor createCellEditor(Table table) {
-		// TODO Complete this
-		return new DialogCellEditor(table) {
-			protected Object openDialogBox(Control cellEditorWindow) {
-				// TODO Implement this if we are to allow editing of
-				// multi-line text properties in-place in tables.
-				return null;
-			}
-			
-		};
-	}
-
-	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        return extendableObject.getStringPropertyValue(propertyAccessor);
-	}
-
-	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
-        extendableObject.setPropertyValue(propertyAccessor, value);
-	}
-
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
         String value = extendableObject.getStringPropertyValue(propertyAccessor);
         if (value == null || value.length() == 0) {

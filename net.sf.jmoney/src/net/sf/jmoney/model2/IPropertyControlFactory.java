@@ -44,51 +44,6 @@ public interface IPropertyControlFactory {
 	IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor);
 
 	/**
-	 * Create a CellEditor object that enables the property to
-	 * be edited in-place in a <code>Table</code>.
-	 * 
-	 * @param table
-	 * @return a cell editor, or null if the property cannot
-	 * 			be edited in-place in a <code>Table</code>
-	 */
-	CellEditor createCellEditor(Table table);
-
-
-	/**
-	 * Get the value of a property and return it typed for
-	 * use in the cell editor.
-	 * <P>
-	 * For example, the ComboBoxCellEditor cell editors require the
-	 * value as an integer index into the selection list.  Therefore,
-	 * if <code>createCellEditor</code> returns a ComboBoxCellEditor
-	 * then this method must return the value as an index into the list
-	 * of possible values.
-	 * <P>
-	 * Note that a returned value of null indicates that the property
-	 * is not editable.  Therefore, if the cell is editable, null values
-	 * must be converted to empty strings or some other appropriate
-	 * non-null value.
-	 * 
-	 * @param extendableObject
-	 * @return
-	 */
-	Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor);
-
-	/**
-	 * Set the value of a property given a value returned by the cell editor.
-	 * <P>
-	 * For example, the ComboBoxCellEditor cell editors give the
-	 * value as an integer index into the selection list.  Therefore,
-	 * if <code>createCellEditor</code> returns a ComboBoxCellEditor
-	 * then this method must set the appropriate value as determined from
-	 * the given index.
-	 * 
-	 * @param extendableObject
-	 * @param value
-	 */
-	void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value);
-
-	/**
 	 * Format the value of a property so it can be embedded into a
 	 * message.
 	 *

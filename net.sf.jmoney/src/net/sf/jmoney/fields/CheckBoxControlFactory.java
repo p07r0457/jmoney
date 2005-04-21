@@ -46,22 +46,6 @@ public class CheckBoxControlFactory implements IPropertyControlFactory {
   		return new CheckMarkEditor(parent, propertyAccessor);
     }
 
-	public CellEditor createCellEditor(Table table) {
-		return new CheckboxCellEditor(table);
-	}
-
-	public Object getValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-		// CheckboxCellEditor requires the value as a Boolean, so we can
-		// get the value and return it as is.
-        return extendableObject.getPropertyValue(propertyAccessor);
-	}
-
-	public void setValueTypedForCellEditor(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object value) {
-		// CheckboxCellEditor provides the value as a Boolean, so we can
-		// set the value as is.
-        extendableObject.setPropertyValue(propertyAccessor, extendableObject);
-	}
-
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
         Boolean value = (Boolean) extendableObject.getPropertyValue(propertyAccessor);
         if (value == null) {
