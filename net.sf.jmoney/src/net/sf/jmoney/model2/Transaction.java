@@ -82,21 +82,17 @@ public class Transaction extends ExtendableObject {
 		// Notify the change manager.
 		processPropertyChange(TransactionInfo.getDateAccessor(), oldDate, date);
     }
-    
-    public Iterator getEntryIterator() {
-        return entries.iterator();
-    }
-    
+
     public Entry createEntry() {
-    	return new EntrySet(entries, this, TransactionInfo.getEntriesAccessor()).createEntry();
+    	return new EntryCollection(entries, this, TransactionInfo.getEntriesAccessor()).createEntry();
 	}
 
-    public EntrySet getEntrySet() {
-    	return new EntrySet(entries, this, TransactionInfo.getEntriesAccessor());
+    public EntryCollection getEntryCollection() {
+    	return new EntryCollection(entries, this, TransactionInfo.getEntriesAccessor());
     }
     
     public boolean deleteEntry(Entry entry) {
-    	return new EntrySet(entries, this, TransactionInfo.getEntriesAccessor()).deleteEntry(entry);
+    	return new EntryCollection(entries, this, TransactionInfo.getEntriesAccessor()).deleteEntry(entry);
     }
     
     // Some helper methods:
@@ -153,8 +149,8 @@ public class Transaction extends ExtendableObject {
 		return new Object [] { new Date() };
 	}
 	
-	class EntrySet extends ObjectCollection {
-		EntrySet(IListManager listManager, ExtendableObject parent, PropertyAccessor listPropertyAccessor) {
+	public class EntryCollection extends ObjectCollection {
+		EntryCollection(IListManager listManager, ExtendableObject parent, PropertyAccessor listPropertyAccessor) {
 			super(listManager, parent, listPropertyAccessor);
 		}
 		

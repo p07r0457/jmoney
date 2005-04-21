@@ -555,36 +555,34 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			// TODO: The nodes are not currently ordered, but they
 			// should be.  
 			
-			Iterator iter;
 			if (parent instanceof Session) {
+				Iterator iter;
+
 				iter = ((Session)parent).getIncomeExpenseAccountIterator();
-			} else {
-				iter = ((Account)parent).getSubAccountIterator();
-			}
-			
-			int count = 0;
-			for ( ; iter.hasNext(); ) {
-				iter.next();
-				count++;
-			}
-			Object children[] = new Object[count];
-			if (parent instanceof Session) {
+				int count = 0;
+				for ( ; iter.hasNext(); ) {
+					iter.next();
+					count++;
+				}
+				Object children[] = new Object[count];
 				iter = ((Session)parent).getIncomeExpenseAccountIterator();
+				int i = 0;
+				for ( ; iter.hasNext(); ) {
+					children[i++] = iter.next();
+				}
+				return children;
+			} else if (parent instanceof IncomeExpenseAccount) {
+				return ((IncomeExpenseAccount)parent).getSubAccountCollection().toArray();
 			} else {
-				iter = ((Account)parent).getSubAccountIterator();
+				throw new RuntimeException("internal error");
 			}
-			int i = 0;
-			for ( ; iter.hasNext(); ) {
-				children[i++] = iter.next();
-			}
-			return children;
 		}
 		
 		public boolean hasChildren(Object parent) {
 			if (parent instanceof Session) {
 				return ((Session)parent).getIncomeExpenseAccountIterator().hasNext();
 			} else if (parent instanceof Account) {
-				return ((Account)parent).getSubAccountIterator().hasNext();
+				return !((Account)parent).getSubAccountCollection().isEmpty();
 			}
 			return false;
 		}

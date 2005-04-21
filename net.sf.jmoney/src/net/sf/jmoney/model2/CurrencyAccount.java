@@ -212,7 +212,7 @@ public class CurrencyAccount extends CapitalAccount {
 		if (JMoneyPlugin.DEBUG) System.out.println("Calculing the Balance for >" + name + "< (with sub-accounts) between " + fromDate + " and " + toDate);
 		long bal = getBalance(session, fromDate, toDate);
 		
-		Iterator aIt = getSubAccountIterator();
+		Iterator aIt = getSubAccountCollection().iterator();
 		
 		while (aIt.hasNext()) {
 			bal += ((CurrencyAccount) aIt.next()).getBalanceWithSubAccounts(session, fromDate, toDate);

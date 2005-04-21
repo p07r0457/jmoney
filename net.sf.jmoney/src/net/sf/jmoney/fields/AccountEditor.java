@@ -96,7 +96,7 @@ public class AccountEditor implements IPropertyControl {
         while (iter.hasNext()) {
         	Account account = (Account) iter.next();
         	allAccounts.add(account);
-            addAccounts(account.getSubAccountIterator(), allAccounts);
+            addAccounts(account.getSubAccountCollection().iterator(), allAccounts);
         }
     }
     
@@ -128,7 +128,7 @@ public class AccountEditor implements IPropertyControl {
     			// the order in the combo box.  This allows easy lookup of the 
     			// account given the selected index in the combo.
     			
-    			addAccounts(session.getAccountIterator(), allAccounts);
+    			addAccounts(session.getAccountCollection().iterator(), allAccounts);
     			
     			// Sort the accounts by name.
     			Collections.sort(allAccounts, new Comparator() {

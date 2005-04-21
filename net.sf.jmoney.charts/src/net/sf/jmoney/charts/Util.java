@@ -34,7 +34,7 @@ public class Util {
 	 */
     public static  Vector getAccountsUntilLevel(Session session, int level) {
     	Vector v = new Vector();
-    	Iterator it = session.getAccountIterator();
+    	Iterator it = session.getAccountCollection().iterator();
     	while (it.hasNext()) {
     		Account a = (Account) it.next();
     		v.add(a);
@@ -46,7 +46,7 @@ public class Util {
     
     private static void addSubAccountsUntilLevelToVector(Account a, int level, Vector v) {
         if (level == 0) return;
-        Iterator it = a.getSubAccountIterator();
+        Iterator it = a.getSubAccountCollection().iterator();
         while (it.hasNext()) {
             Account sa = (Account) it.next();
             v.add(sa);
@@ -88,7 +88,7 @@ public class Util {
 	    } else {
 	        begin=name;
 	    }
-	    Iterator it = session.getAccountIterator();
+	    Iterator it = session.getAccountCollection().iterator();
 	    while (it.hasNext()) {
 	        a = (Account) it.next();
 	        if (ChartsPlugin.DEBUG) System.out.println("Compare " + begin + " to " + a.getName());
@@ -116,7 +116,7 @@ public class Util {
 		    } else {
 		        begin=name;
 		    }
-		    Iterator it = a.getSubAccountIterator();
+		    Iterator it = a.getSubAccountCollection().iterator();
 		    while (it.hasNext()) {
 		        sa = (Account) it.next();
 		        if (ChartsPlugin.DEBUG) System.out.println("Compare " + begin + " to " + sa.getName());
@@ -187,7 +187,7 @@ public class Util {
 	public static List getEntriesFromAccountAndSubaccounts (Session session, CapitalAccount a) {
 		if (ChartsPlugin.DEBUG) System.out.println("getEntriesFromAccountAndSubaccounts for " + a.getName());
 	    List entries = getEntriesFromAccount(session, a);
-	    Iterator it = a.getSubAccountIterator();
+	    Iterator it = a.getSubAccountCollection().iterator();
 	    while (it.hasNext()) {
 	        CapitalAccount subaccount = (CapitalAccount) it.next();
 	        entries.addAll(getEntriesFromAccountAndSubaccounts(session, subaccount));
@@ -216,7 +216,7 @@ public class Util {
 		if (ChartsPlugin.DEBUG) System.out.println("getSubAccountsUntilLevel for " + a.getName() + ", Level " + level);
         List subaccounts = new LinkedList();
         if (a.getLevel() < level) {
-            Iterator it = a.getSubAccountIterator();
+            Iterator it = a.getSubAccountCollection().iterator();
             while (it.hasNext()) {
                 CapitalAccount sa = (CapitalAccount) it.next(); 
                 subaccounts.add(sa);

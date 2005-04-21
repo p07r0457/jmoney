@@ -21,7 +21,6 @@
  */
 package net.sf.jmoney.model2;
 
-import java.util.Iterator;
 
 /**
  * @author Nigel

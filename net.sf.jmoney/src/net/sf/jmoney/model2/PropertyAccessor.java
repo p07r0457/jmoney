@@ -213,8 +213,8 @@ public class PropertyAccessor {
        
        isList = true;
 
-		// Use introspection on the interface to find the getXxxSet method.
-		theGetMethod = findMethod("get", localName + "Set", null);
+		// Use introspection on the interface to find the getXxxCollection method.
+		theGetMethod = findMethod("get", localName + "Collection", null);
 		
        if (!ObjectCollection.class.isAssignableFrom(theGetMethod.getReturnType())) { 		
 			throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + propertySet.getImplementationClass().getName() + "' must return an ObjectSet type.");

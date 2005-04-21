@@ -203,7 +203,7 @@ public class EntriesSection extends SectionPart {
 				// the other entries in the transaction is in this account
 				// then the table view will need updating because the split
 				// entry rows will need updating.
-				for (Iterator iter = newEntry.getTransaction().getEntryIterator(); iter.hasNext(); ) {
+				for (Iterator iter = newEntry.getTransaction().getEntryCollection().iterator(); iter.hasNext(); ) {
 					Entry entry = (Entry)iter.next();
 					if (!entry.equals(newEntry) 
 							&& fPage.getAccount().equals(entry.getAccount())) {
@@ -222,7 +222,7 @@ public class EntriesSection extends SectionPart {
 				// the other entries in the transaction is in this account
 				// then the table view will need updating because the split
 				// entry rows will need updating.
-				for (Iterator iter = oldEntry.getTransaction().getEntryIterator(); iter.hasNext(); ) {
+				for (Iterator iter = oldEntry.getTransaction().getEntryCollection().iterator(); iter.hasNext(); ) {
 					Entry entry = (Entry)iter.next();
 					if (!entry.equals(oldEntry) 
 							&& fPage.getAccount().equals(entry.getAccount())) {
@@ -262,7 +262,7 @@ public class EntriesSection extends SectionPart {
 					}
 					
 					Transaction transaction = entry.getTransaction();
-					for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
+					for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
 						Entry entry2 = (Entry)iter.next();
 						if (fPage.getAccount().equals(entry2.getAccount())) {
 					    	fEntriesControl.updateEntry(entry2, entry);
@@ -275,7 +275,7 @@ public class EntriesSection extends SectionPart {
 				// of the entry is the account for the entries list.
 				if (extendableObject instanceof Transaction) {
 					Transaction transaction = (Transaction)extendableObject;
-					for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
+					for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
 						Entry entry = (Entry)iter.next();
 						if (fPage.getAccount().equals(entry.getAccount())) {
 					    	fEntriesControl.updateTransaction(entry);

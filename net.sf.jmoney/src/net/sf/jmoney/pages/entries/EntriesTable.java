@@ -474,7 +474,7 @@ public class EntriesTable implements IEntriesControl {
     	}
     	
         if (trans.hasMoreThanTwoEntries()) {
-    		Iterator itSubEntries = trans.getEntryIterator();
+    		Iterator itSubEntries = trans.getEntryCollection().iterator();
     		while (itSubEntries.hasNext()) {
     			Entry entry2 = (Entry) itSubEntries.next();
     			if (!entry2.equals(transData.getEntryForAccountFields())) {
@@ -722,7 +722,7 @@ public class EntriesTable implements IEntriesControl {
             
             // Cache the set of all other entries in this transaction because a query
             // to the datastore to get it may have non-trivial cost.
-            Iterator itSubEntries = entry.getTransaction().getEntryIterator(); 
+            Iterator itSubEntries = entry.getTransaction().getEntryCollection().iterator(); 
             while (itSubEntries.hasNext()) {
             	Entry entry2 = (Entry) itSubEntries.next();
             	if (!entry2.equals(entry)) {
@@ -1017,7 +1017,7 @@ public class EntriesTable implements IEntriesControl {
             // and the entries of the transaction on the following ones.
         	// However, the transaction line also holds the properties for the entry
         	// in this account, so display just the other entries underneath.
-            Iterator itSubEntries = entry.getTransaction().getEntryIterator();
+            Iterator itSubEntries = entry.getTransaction().getEntryCollection().iterator();
             while (itSubEntries.hasNext()) {
                 Entry entry2 = (Entry) itSubEntries.next();
                 if (!entry2.equals(entry)) {
@@ -1216,7 +1216,7 @@ public class EntriesTable implements IEntriesControl {
 			// newEntry, entryInAccount, and one other.
 			// We need to find the other.
 			Entry otherEntry = null;
-			for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
+			for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
 				Entry entry = (Entry)iter.next();
 				if (!entry.equals(entryInAccount) && !entry.equals(newEntry)) {
 					if (otherEntry != null) {

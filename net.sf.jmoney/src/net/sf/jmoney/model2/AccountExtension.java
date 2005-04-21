@@ -23,7 +23,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.util.Iterator;
 
 /**
  *
@@ -65,11 +64,11 @@ public abstract class AccountExtension extends ExtensionObject {
 	public Account getParent() {
 		return getBaseObject().getParent();
 	}
-	
-	public Iterator getSubAccountIterator() {
-		return getBaseObject().getSubAccountIterator();
+
+	public ObjectCollection getSubAccountCollection() {
+		return getBaseObject().getSubAccountCollection();
 	}
-	
+
 	public Account getBaseObject() {
 		return (Account)baseObject;
 	}

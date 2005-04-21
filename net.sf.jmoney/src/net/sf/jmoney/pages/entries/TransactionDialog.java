@@ -526,7 +526,7 @@ public class TransactionDialog {
            		Commodity commodity = null;
            		boolean mismatchedCommodities = false;
            		long totalAmount = 0;
-                for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
+                for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
                 	Entry entry = (Entry)iter.next();
                 	if (commodity == null) {
                 		// No commodity yet determined, so set to the commodity for
@@ -597,7 +597,7 @@ public class TransactionDialog {
 		
         // Create and set the controls for the other entries in
         // the transaction.
-        for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
+        for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
         	Entry entry = (Entry)iter.next();
         	if (!entry.equals(accountEntry)) {
 

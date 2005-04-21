@@ -261,7 +261,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     	// If the list of commodities is empty then load
     	// the full list of ISO currencies.
         if (newSessionManager != null) {
-        	if (!getSession().getCommodityIterator().hasNext()) {
+        	if (getSession().getCommodityCollection().isEmpty()) {
         		initSystemCurrency(getSession());
         		getSession().registerUndoableChange("add ISO currencies");
         	}

@@ -69,7 +69,7 @@ public class CurrencyEditor implements IPropertyControl {
 
         Session session = JMoneyPlugin.getDefault().getSession();
 
-        for (Iterator iter = session.getCommodityIterator(); iter.hasNext();) {
+        for (Iterator iter = session.getCommodityCollection().iterator(); iter.hasNext();) {
             Commodity commodity = (Commodity) iter.next();
             if (commodity instanceof Currency) {
                 propertyControl.add(commodity.getName());
@@ -143,7 +143,7 @@ public class CurrencyEditor implements IPropertyControl {
      */
     public void save() {
         String currencyName = propertyControl.getText();
-        for (Iterator iter = JMoneyPlugin.getDefault().getSession().getCommodityIterator(); iter.hasNext();) {
+        for (Iterator iter = JMoneyPlugin.getDefault().getSession().getCommodityCollection().iterator(); iter.hasNext();) {
             Commodity commodity = (Commodity) iter.next();
             if (commodity instanceof Currency && commodity.getName().equals(currencyName)) {
                 extendableObject.setPropertyValue(currencyPropertyAccessor, (Currency) commodity);

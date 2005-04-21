@@ -95,7 +95,7 @@ public class QIFExportAction implements IWorkbenchWindowActionDelegate {
 /*			
 			int result =
 				accountChooser.showDialog(
-						session.getAccountIterator(),
+						session.getAccountCollection().iterator(),
 						"hello",
 						false);
 			if (result == Constants.OK) {

@@ -632,7 +632,7 @@ public class EntriesTree implements IEntriesControl {
             	// However, the transaction line also holds the properties for the entry
             	// in this account, so display just the other entries underneath.
         		DisplayableTransaction dTrans = (DisplayableTransaction)parent; 
-        		Iterator itSubEntries = dTrans.getTransaction().getEntryIterator();
+        		Iterator itSubEntries = dTrans.getTransaction().getEntryCollection().iterator();
         		while (itSubEntries.hasNext()) {
                     Entry entry2 = (Entry) itSubEntries.next();
                     if (!entry2.equals(dTrans.getEntryForAccountFields())) {

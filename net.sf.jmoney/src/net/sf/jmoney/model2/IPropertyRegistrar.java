@@ -95,8 +95,8 @@ public interface IPropertyRegistrar {
 	 * This method should be called if the property contains
 	 * a list of properties.  If an object contains a list
 	 * of properties then the object implementation must contain
-	 * a method of the form getFooIterator() that returns an
-	 * Iterator, where 'foo' is the name of the list property.   
+	 * a method of the form getFooCollection() that returns a
+	 * ObjectCollection, where 'foo' is the name of the list property.   
 	 *
 	 * @param name
 	 * @param shortDescription

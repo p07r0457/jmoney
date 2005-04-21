@@ -21,7 +21,6 @@
  */
 package net.sf.jmoney.model2;
 
-import java.util.Iterator;
 
 /**
  * @author Nigel
@@ -48,6 +47,8 @@ public interface IExtendableObject {
 	ExtensionObject getExtension(PropertySet propertySet);
 	
 	Object getPropertyValue(PropertyAccessor propertyAccessor);
+	
+	ObjectCollection getListPropertyValue(PropertyAccessor propertyAccessor);
 	
 	int getIntegerPropertyValue(PropertyAccessor propertyAccessor);
 	
@@ -77,10 +78,10 @@ public interface IExtendableObject {
 	 * 			whose values are to be iterated.  The property
 	 * 			must be a list property (and not a scalar property).
 	 */
-	Iterator getPropertyIterator(PropertyAccessor propertyAccessor);
+//	Iterator getPropertyIterator(PropertyAccessor propertyAccessor);
 	
 	// TODO: check whether we need this method.
-	String getPropertyValueAsString(PropertyAccessor propertyAccessor);
+//	String getPropertyValueAsString(PropertyAccessor propertyAccessor);
 
 	/**
 	 * @return The key that fetches this object.

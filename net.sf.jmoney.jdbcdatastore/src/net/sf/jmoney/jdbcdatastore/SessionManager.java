@@ -323,7 +323,7 @@ public class SessionManager implements ISessionManager, IEntryQueries {
 	}
 	
 	private void addEntriesFromSubAccounts(CapitalAccount a, String accounts) {
-		for (Iterator it = a.getSubAccountIterator(); it.hasNext(); ) {
+		for (Iterator it = a.getSubAccountCollection().iterator(); it.hasNext(); ) {
 			CapitalAccount subAccount = (CapitalAccount)it.next();
 			IDatabaseRowKey proxy = (IDatabaseRowKey)subAccount.getObjectKey();
 			accounts += "," + proxy.getRowId();

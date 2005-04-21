@@ -38,7 +38,6 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CapitalAccountInfo;
 import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 
 /**
@@ -109,7 +108,7 @@ public abstract class CapitalAccount extends Account {
 		return comment;
 	};
 
-	public ObjectCollection getSubAccountSet() {
+	public ObjectCollection getSubAccountCollection() {
 		return new ObjectCollection(subAccounts, this, CapitalAccountInfo.getSubAccountAccessor());
 	}
 
@@ -376,7 +375,7 @@ public abstract class CapitalAccount extends Account {
 	}
 
 	public void addEntriesFromSubAccounts(CapitalAccount a, Collection entriesList) {
-		for (Iterator it = a.getSubAccountIterator(); it.hasNext(); ) {
+		for (Iterator it = a.getSubAccountCollection().iterator(); it.hasNext(); ) {
 			CapitalAccount subAccount = (CapitalAccount)it.next();
 			entriesList.addAll(subAccount.getEntries());
 			addEntriesFromSubAccounts(subAccount, entriesList);

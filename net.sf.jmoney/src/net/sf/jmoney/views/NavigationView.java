@@ -139,29 +139,20 @@ public class NavigationView extends ViewPart {
 				return ((TreeNode)parent).getChildren();
 			} else if (parent instanceof CapitalAccount) {
 				CapitalAccount account = (CapitalAccount)parent;
-				int count = 0;
-				for (Iterator iter = account.getSubAccountIterator(); iter.hasNext(); iter.next() ) {
-					count++;
-				}
-				Object children[] = new Object[count];
-				int i = 0;
-				for (Iterator iter = account.getSubAccountIterator(); iter.hasNext(); ) {
-					children[i++] = iter.next();
-				}
-				return children;
+				return account.getSubAccountCollection().toArray();
 			};
 			return new Object[0];
 		}
+		
 		public boolean hasChildren(Object parent) {
 			if (parent instanceof TreeNode) {
 				return ((TreeNode)parent).hasChildren();
 			} else if (parent instanceof CapitalAccount) {
 				CapitalAccount account = (CapitalAccount)parent;
-				return account.getSubAccountIterator().hasNext();
+				return !account.getSubAccountCollection().isEmpty();
 			}
 			return false;
 		}
-
 	}
 
 	class ViewLabelProvider extends LabelProvider {

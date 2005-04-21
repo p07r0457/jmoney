@@ -29,6 +29,7 @@ import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.ResourceBundle;
@@ -299,7 +300,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			container.setLayout(layout);
 					
 			// Calculate the list of used currencies.
-			findUsedCurrencies(session.getAccountIterator(), usedCurrencies);
+			findUsedCurrencies(session.getAccountCollection(), usedCurrencies);
 
 			// Build the list of available ISO 4217 currencies.
     	    ResourceBundle NAME =
@@ -366,8 +367,8 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 		 * @param accountIterator
 		 * @param usedCurrencies
 		 */
-		private void findUsedCurrencies(Iterator accountIterator, Set usedCurrencies) {
-			for (; accountIterator.hasNext(); ) {
+		private void findUsedCurrencies(Collection accounts, Set usedCurrencies) {
+			for (Iterator accountIterator = accounts.iterator(); accountIterator.hasNext(); ) {
 				Account account = (Account)accountIterator.next();
 				if (account instanceof IncomeExpenseAccount) {
 					IncomeExpenseAccount a = (IncomeExpenseAccount)account;
@@ -401,7 +402,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 				}
 				
 				// Search the sub-accounts
-				findUsedCurrencies(account.getSubAccountIterator(), usedCurrencies);
+				findUsedCurrencies(account.getSubAccountCollection(), usedCurrencies);
 			}
 		}
 

@@ -169,7 +169,7 @@ public class LineChartPage implements IBookkeepingPageFactory {
 	    	selectedTreeItems.add(treeItem);
 	    }
 	    
-	    addAccountsInTree(treeItem, a2.getSubAccountIterator(), selectedAccounts, selectedTreeItems);
+	    addAccountsInTree(treeItem, a2.getSubAccountCollection().iterator(), selectedAccounts, selectedTreeItems);
 	}
 }
 	

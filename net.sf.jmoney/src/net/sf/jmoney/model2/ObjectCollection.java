@@ -9,8 +9,6 @@ package net.sf.jmoney.model2;
 import java.util.Collection;
 import java.util.Iterator;
 
-import net.sf.jmoney.fields.SessionInfo;
-
 /**
  * @author Nigel
  *

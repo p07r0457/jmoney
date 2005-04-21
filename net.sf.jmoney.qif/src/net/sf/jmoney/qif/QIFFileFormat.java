@@ -218,7 +218,7 @@ public class QIFFileFormat implements FileFormat {
 	private void buildAccountMap(Session session) {
 		if (accountMap == null)
 			accountMap = new HashMap();
-		Iterator iterator = session.getAccountIterator();
+		Iterator iterator = session.getAccountCollection().iterator();
 		while (iterator.hasNext()) {
 			Account obj = (Account) iterator.next();
 			if (obj instanceof CapitalAccount) {
@@ -235,7 +235,7 @@ public class QIFFileFormat implements FileFormat {
 	private void buildCategoryMap(Session session) {
 		if (categoryMap == null)
 			categoryMap = new HashMap();
-		Iterator iterator = session.getAccountIterator();
+		Iterator iterator = session.getAccountCollection().iterator();
 		while (iterator.hasNext()) {
 			Account obj = (Account) iterator.next();
 			if (obj instanceof IncomeExpenseAccount) {
@@ -456,7 +456,7 @@ public class QIFFileFormat implements FileFormat {
 			// (if one is a split transaction, we should keep that one, otherwise
 			// it does not matter which we keep so keep the old one).
 			
-			for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
+			for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
 				Entry entry = (Entry)iter.next();
 				if (!entry.equals(firstEntry)) {
 					
@@ -775,7 +775,7 @@ public class QIFFileFormat implements FileFormat {
 			IncomeExpenseAccount category) {
 		IncomeExpenseAccount subcategory = null;
 
-		for (Iterator iter = category.getSubAccountIterator(); iter.hasNext();) {
+		for (Iterator iter = category.getSubAccountCollection().iterator(); iter.hasNext();) {
 			subcategory = (IncomeExpenseAccount) iter.next();
 			if (subcategory.getName().equals(name))
 				return subcategory;

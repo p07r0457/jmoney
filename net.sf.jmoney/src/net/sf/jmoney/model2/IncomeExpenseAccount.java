@@ -143,7 +143,7 @@ public class IncomeExpenseAccount extends Account {
 		}
 	}
 
-	public ObjectCollection getSubAccountSet() {
+	public ObjectCollection getSubAccountCollection() {
 		return new ObjectCollection(subAccounts, this, IncomeExpenseAccountInfo.getSubAccountAccessor());
 	}
 

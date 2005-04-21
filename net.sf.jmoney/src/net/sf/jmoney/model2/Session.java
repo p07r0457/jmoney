@@ -54,7 +54,6 @@ public class Session extends ExtendableObject implements IAdaptable {
     private IListManager transactions;
 
     Hashtable currencies = new Hashtable();
-    private Object[] sortedCurrencies = null;
         
     private Vector sessionChangeListeners = new Vector();
     private Vector sessionChangeFirerListeners = new Vector();
@@ -157,9 +156,6 @@ public class Session extends ExtendableObject implements IAdaptable {
 		return (Currency) currencies.get(code);
 	}
 
-    public Iterator getCommodityIterator() {
-		return currencies.values().iterator();
-    } 
 /*   
     public Iterator getAccountIterator() {
         return new Iterator() {
@@ -186,13 +182,10 @@ public class Session extends ExtendableObject implements IAdaptable {
         };
     }
   */ 
-    public Iterator getAccountIterator() {
-        return accounts.iterator();
-    }
-    
-    public Collection getAllAccounts() {
+
+	public Collection getAllAccounts() {
         Vector all = new Vector();
-        Iterator rootIt = getAccountIterator();
+        Iterator rootIt = getAccountCollection().iterator();
         while (rootIt.hasNext()) {
             Account a = (Account) rootIt.next();
             all.add(a);
@@ -275,35 +268,18 @@ public class Session extends ExtendableObject implements IAdaptable {
 			}
         };
     }
-   
-    public Iterator getTransactionIterator() {
-        return transactions.iterator();
-    }
-    
-    public ObjectCollection getCommoditySet() {
+
+    public ObjectCollection getCommodityCollection() {
     	return new ObjectCollection(commodities, this, SessionInfo.getCommoditiesAccessor());
     }
     
-    public ObjectCollection getAccountSet() {
+    public ObjectCollection getAccountCollection() {
     	return new ObjectCollection(accounts, this, SessionInfo.getAccountsAccessor());
     }
     
-    public ObjectCollection getTransactionSet() {
+    public ObjectCollection getTransactionCollection() {
     	return new ObjectCollection(transactions, this, SessionInfo.getTransactionsAccessor());
     }
-    
-/* moved to MT940 code    
-    public CapitalAccount getAccountByNumber(String accountNumber) {
-        for (int i = 0; i < accounts.size(); i++) {
-            CapitalAccount account = (CapitalAccount) accounts.get(i);
-            if (account.getAccountNumber() != null
-                && account.getAccountNumber().equals(accountNumber)) {
-                return account;
-            }
-        }
-        return null;
-    }
-*/
     
     public void addSessionChangeListener(SessionChangeListener l) {
         sessionChangeListeners.add(l);
@@ -596,12 +572,13 @@ public class Session extends ExtendableObject implements IAdaptable {
    		// and we cannot iterate the entries.  The only methods
    		// that may be called after an object is removed from the 
    		// datastore are the equals and hashCode methods.
-   		final Vector entriesInTransaction = new Vector();
-    	for (Iterator iter = transaction.getEntryIterator(); iter.hasNext(); ) {
+   		final Vector entriesInTransaction = new Vector(transaction.getEntryCollection());
+/*   		
+    	for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
     		Entry entry = (Entry)iter.next();
     		entriesInTransaction.add(entry);
     	}
-    	
+*/    	
    		boolean found = transactions.remove(transaction);
 
         if (found) {
@@ -689,7 +666,7 @@ public class Session extends ExtendableObject implements IAdaptable {
      */
 	public Account getAccountByFullName(String name) {
 	    Account a = null;
-	    Iterator it = getAccountIterator();
+	    Iterator it = getAccountCollection().iterator();
 	    while (it.hasNext()) {
 	        a = (Account) it.next();
 	        if (JMoneyPlugin.DEBUG) System.out.println("Compare " + name + " to " + a.getFullAccountName());

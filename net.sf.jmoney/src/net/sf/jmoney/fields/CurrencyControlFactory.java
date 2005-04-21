@@ -58,7 +58,7 @@ public class CurrencyControlFactory implements IPropertyControlFactory {
 
         // Load all the currencies the user uses
         usedCurrencies = new Vector();
-        for (Iterator iter = session.getCommodityIterator(); iter.hasNext();) {
+        for (Iterator iter = session.getCommodityCollection().iterator(); iter.hasNext();) {
             Commodity commodity = (Commodity) iter.next();
             if (commodity instanceof Currency) {
                 usedCurrencies.add(commodity);

@@ -97,13 +97,11 @@ public abstract class Account extends ExtendableObject {
 	 */
 	public abstract Commodity getCommodity(Entry entry);
 
-	public Iterator getSubAccountIterator() {
-		return subAccounts.iterator();
-	}
+	public abstract ObjectCollection getSubAccountCollection();
 
 	public Collection getAllSubAccounts() {
 	    Collection all = new Vector();
-	    Iterator it = getSubAccountIterator();
+	    Iterator it = getSubAccountCollection().iterator();
 	    while (it.hasNext()) {
 	        Account a = (Account) it.next();
 	        all.add(a);
