@@ -331,13 +331,13 @@ public class PropertySet {
 						
 						// TODO change all shortDescription to displayName
 						public PropertyAccessor addProperty(String name, String displayName, int weight, int minimumWidth, IPropertyControlFactory propertyControlFactory, IPropertyDependency propertyDependency) {
-							PropertyAccessor accessor = new PropertyAccessorImpl(PropertySet.this, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency);
+							PropertyAccessor accessor = new PropertyAccessor(PropertySet.this, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency);
 							properties.add(accessor);
 							return accessor;
 						}
 
 						public PropertyAccessor addPropertyList(String name, String displayName, Class listItemClass, IPropertyDependency propertyDependency) {
-							PropertyAccessor accessor = new PropertyAccessorImpl(PropertySet.this, name, displayName, listItemClass, propertyDependency);
+							PropertyAccessor accessor = new PropertyAccessor(PropertySet.this, name, displayName, listItemClass, propertyDependency);
 							properties.add(accessor);
 							return accessor;
 						}
