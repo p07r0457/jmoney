@@ -28,9 +28,7 @@ import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.Iterator;
 
-import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Table;
 
 /**
 * This class contains information about a property.  The property may be in the base

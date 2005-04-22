@@ -265,7 +265,7 @@ public class EntriesSection extends SectionPart {
 					for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
 						Entry entry2 = (Entry)iter.next();
 						if (fPage.getAccount().equals(entry2.getAccount())) {
-					    	fEntriesControl.updateEntry(entry2, entry);
+					    	fEntriesControl.updateEntry(entry2, entry, propertyAccessor, oldValue, newValue);
 						}
 					}
 				}

@@ -33,6 +33,7 @@ import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Transaction;
 
 import org.eclipse.jface.viewers.ColumnWeightData;
@@ -714,7 +715,7 @@ public class EntriesTree implements IEntriesControl {
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.pages.entries.IEntriesControl#updateEntry(net.sf.jmoney.model2.Entry)
 	 */
-	public void updateEntry(Entry entryInAccount, Entry entryChanged) {
+	public void updateEntry(Entry entryInAccount, Entry entryChanged, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 		// TODO Auto-generated method stub
 		
 	}

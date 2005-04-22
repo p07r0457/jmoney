@@ -22,22 +22,15 @@
 
 package net.sf.jmoney.fields;
 
-import java.util.Iterator;
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.Session;
 
-import org.eclipse.jface.viewers.CellEditor;
-import org.eclipse.jface.viewers.ComboBoxCellEditor;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Table;
 
 /**
  * A control factory to select a currency.

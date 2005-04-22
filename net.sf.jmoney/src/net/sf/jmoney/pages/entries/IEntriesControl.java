@@ -23,6 +23,7 @@
 package net.sf.jmoney.pages.entries;
 
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.PropertyAccessor;
 
 /**
  * All classes that implement a view of a list of account entries
@@ -87,7 +88,7 @@ public interface IEntriesControl {
 	 * @param entryInAccount The entry in the account being listed
 	 * @param entryChanged The entry whose property is changed 
 	 */
-	void updateEntry(Entry entryInAccount, Entry entryChanged);
+	void updateEntry(Entry entryInAccount, Entry entryChanged, PropertyAccessor propertyAccessor, Object oldValue, Object newValue);
 
 	/**
 	 * This method is called whenever a new transaction is added

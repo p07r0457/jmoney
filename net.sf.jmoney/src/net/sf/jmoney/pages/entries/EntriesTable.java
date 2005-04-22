@@ -30,10 +30,12 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Transaction;
 
 import org.eclipse.jface.viewers.ColumnWeightData;
@@ -1035,13 +1037,27 @@ public class EntriesTable implements IEntriesControl {
 		updateColors(i, isAlternated);
 	}
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.pages.entries.IEntriesControl#updateEntry(net.sf.jmoney.model2.Entry)
-	 */
-	public void updateEntry(Entry entryInAccount, Entry entryChanged) {
+	public void updateEntry(Entry entryInAccount, Entry entryChanged, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 		int index = lookupItem(entryInAccount, entryChanged);
-		if (index >= 0) {
-			updateItem(fTable.getItem(index));
+		JMoneyPlugin.myAssert(index >= 0);
+		
+		TableItem item = fTable.getItem(index);
+		
+		updateItem(item);
+		
+		// Recalculate balances from this point onwards.
+		if (propertyAccessor == EntryInfo.getAmountAccessor()
+				&& entryInAccount.equals(entryChanged)) {
+			
+			// If the entry in the account is the same as the changed
+			// entry, then this must be the top row for the transaction.
+			DisplayableTransaction dTrans = (DisplayableTransaction)item.getData();
+			
+			// Determine the balance prior to this entry.  This is most easily done
+			// by deducting the old amount of this entry from the old balance.
+			long balance = dTrans.getBalance() - ((Long)oldValue).longValue();
+			
+			updateBalances(index, balance);
 		}
 	}
 
@@ -1141,7 +1157,6 @@ public class EntriesTable implements IEntriesControl {
 				balance += dTrans.getEntryForAccountFields().getAmount();
         		dTrans.setBalance(balance);
 
-//				int balanceColumnNumber = visibleEntryDataObjects.size() - 1;
 				item.setText(balanceColumnIndex, fPage.balanceColumnManager.getValueFormattedForTable(dTrans));
 			}
 		}

@@ -22,9 +22,7 @@
 
 package net.sf.jmoney.model2;
 
-import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Table;
 
 /**
  * @author Nigel

@@ -252,7 +252,7 @@ public class TransactionManager implements IDataManager {
 			extensionMap.put(extensionPropertySet, extensionValues);
 		}
 
-		Object modifiedValues = modifiedObjects.get(object);
+		Object modifiedValues = modifiedObjects.get(object.getObjectKey());
 		if (modifiedValues != null) {
 			if (modifiedValues instanceof Boolean) {
 				throw new RuntimeException("Attempt to get copy of object, but that object has been deleted in the transaction");
