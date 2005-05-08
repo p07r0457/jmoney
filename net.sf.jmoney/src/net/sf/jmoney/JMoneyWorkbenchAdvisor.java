@@ -22,9 +22,21 @@
 
 package net.sf.jmoney;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
+
+import org.eclipse.core.internal.jobs.JobStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.actions.ActionFactory;
@@ -32,6 +44,7 @@ import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
+
 
 /**
  * @author Nigel
@@ -138,5 +151,61 @@ public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
 			//    the navigation view saves the session details.
 
 			return JMoneyPlugin.getDefault().saveOldSession(configurer.getWindow());
+		}
+		
+		/**
+		 * Display a window with an error message when an exception take place
+		 * inside the code of JMoney.
+		 * @author Faucheux
+		 */
+		public void eventLoopException(Throwable exception) {
+		    super.eventLoopException(exception);
+	        Shell shell = new Shell(SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE);
+	        String errorString = ExceptionToString(exception);
+	        JobStatus jobStatus = new JobStatus(Status.ERROR, Status.OK, (Job) null,  "", exception);
+	        // ErrorDialog dialog = new ErrorDialog (shell, "An error occured", "Following error has taken place: " + exception.getLocalizedMessage(), jobStatus, Status.ERROR);
+
+	        // Preparation of the dialog box
+	        Composite transactionArea = new Composite(shell, 0);
+	        GridLayout sectionLayout = new GridLayout();
+	        sectionLayout.numColumns = 1;
+	        sectionLayout.marginHeight = 0;
+	        sectionLayout.marginWidth = 0;
+	        shell.setLayout(sectionLayout);
+
+	        GridLayout transactionAreaLayout = new GridLayout(1, false);
+	        transactionArea.setLayout(transactionAreaLayout);
+	        transactionArea.setLayoutData(new GridData(GridData.FILL_BOTH));
+	        
+	        Label label = (new Label(transactionArea, SWT.LEFT));
+	        label.setText(errorString);
+	        label.setEnabled(true);
+	        shell.pack();
+	        shell.open();
+		}
+		
+		/**
+		 * Create a String wich documents the exception.
+		 * Sorry, I haven't found another way...
+		 * @author Faucheux
+		 */
+		private String ExceptionToString (Throwable e) {
+		    final int STRING_MAX_SIZE = 5000;
+		    final byte[] s = new byte[STRING_MAX_SIZE];
+		    PrintStream p = new PrintStream (new OutputStream() {
+		        int pointer = 0;
+		        public void write (int character) {
+		            if (pointer < STRING_MAX_SIZE) {
+		                s[pointer++] = (byte) character;
+		            }
+		        }
+		        public void close () {
+		            s[pointer++] = '\0';
+		        }
+		    });
+		    e.printStackTrace(p);
+		    p.close();
+		    
+		    return new String(s);
 		}
 }
