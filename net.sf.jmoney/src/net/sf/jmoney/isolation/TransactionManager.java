@@ -31,6 +31,7 @@ import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
@@ -45,6 +46,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeListener;
+import net.sf.jmoney.model2.Transaction;
 
 /**
  * A transaction manager must be set before the datastore can be modified.
@@ -265,7 +267,30 @@ public class TransactionManager implements IDataManager {
 				Map.Entry mapEntry2 = (Map.Entry)iter2.next();
 				PropertyAccessor accessor = (PropertyAccessor)mapEntry2.getKey();
 				Object newValue = mapEntry2.getValue();
-				constructorParameters[accessor.getIndexIntoConstructorParameters()] = newValue;
+				if (!accessor.getPropertySet().isExtension()) {
+					constructorParameters[accessor.getIndexIntoConstructorParameters()] = newValue;
+				} else {
+					PropertySet extensionPropertySet = accessor.getPropertySet();
+//					ExtensionObject extension = (ExtensionObject)mapEntry.getValue();
+					Object[] extensionValues = (Object[])extensionMap.get(extensionPropertySet);
+					if (extensionValues == null) {
+						int count = 0;
+						for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); ) {
+							PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIter.next();
+							count++;
+						}
+						extensionValues = new Object[count];
+						int i = 0;
+						for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); ) {
+							PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIter.next();
+							extensionValues[i++] = object.getPropertyValue(propertyAccessor);
+						}
+						extensionMap.put(extensionPropertySet, extensionValues);
+					}
+					
+					// Now we can set the extension property value into the array
+					extensionValues[accessor.getIndexIntoConstructorParameters()] = newValue;
+				}
 			}
 		}
         	
@@ -490,9 +515,9 @@ public class TransactionManager implements IDataManager {
 			ExtendableObject parent = parentListPair.parentKey.getObject();
 			
 			for (Iterator iter2 = modifiedList.getDeletedObjectIterator(); iter2.hasNext(); ) {
-				ExtendableObject objectToDelete = (ExtendableObject)iter2.next();
+				IObjectKey objectToDelete = (IObjectKey)iter2.next();
 				
-				parent.deleteObject(parentListPair.listAccessor, objectToDelete);
+				parent.deleteObject(parentListPair.listAccessor, objectToDelete.getObject());
 			}
 		}
 		
@@ -696,11 +721,25 @@ public class TransactionManager implements IDataManager {
 				ParentListPair parentListPair = (ParentListPair)mapEntry.getKey();
 				ModifiedList modifiedList = (ModifiedList)mapEntry.getValue();
 				
+				// Find all entries added to existing transactions
 				if (parentListPair.listAccessor == TransactionInfo.getEntriesAccessor()) {
-					for (Iterator iter2 = modifiedList.addedObjects.iterator(); iter2.hasNext(); ) {
+					for (Iterator iter2 = modifiedList.getAddedObjectIterator(); iter2.hasNext(); ) {
 						Entry newEntry = (Entry)iter2.next();
 						if (newEntry.getAccount().equals(account)) {
 							addedEntries.add(newEntry);
+						}
+					}
+				}
+
+				// Find all entries in new transactions.
+				if (parentListPair.listAccessor == SessionInfo.getTransactionsAccessor()) {
+					for (Iterator iter2 = modifiedList.getAddedObjectIterator(); iter2.hasNext(); ) {
+						Transaction newTransaction = (Transaction)iter2.next();
+						for (Iterator iter3 = newTransaction.getEntryCollection().iterator(); iter3.hasNext(); ) {
+							Entry newEntry = (Entry)iter3.next();
+							if (account.equals(newEntry.getAccount())) {
+								addedEntries.add(newEntry);
+							}
 						}
 					}
 				}

@@ -18,24 +18,22 @@
  */
 package net.sf.jmoney.pages.entries;
 
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.VerySimpleDateFormat;
-import net.sf.jmoney.fields.AccountInfo;
-import net.sf.jmoney.fields.CommodityInfo;
 import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.fields.TransactionInfo;
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
@@ -50,14 +48,15 @@ import org.eclipse.ui.forms.widgets.Section;
  * 
  * @author Johann Gyger
  */
-public class EntriesSection extends SectionPart {
+public class EntriesSection extends SectionPart implements IEntriesContent {
 
-    protected VerySimpleDateFormat fDateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
-    protected EntriesPage fPage;
-    protected IEntriesControl fEntriesControl;
+    private EntriesPage fPage;
+    private IEntriesControl fEntriesControl;
     
-    Composite containerOfEntriesControl;
-    FormToolkit toolkit;
+    private Composite containerOfEntriesControl;
+    private FormToolkit toolkit;
+    
+    private SelectionListener tableSelectionListener = null;
     
     public EntriesSection(EntriesPage page, Composite parent) {
         super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
@@ -89,21 +88,51 @@ public class EntriesSection extends SectionPart {
         // in the grid container.
         containerOfEntriesControl = toolkit.createComposite(container);
         GridLayout layout2 = new GridLayout();
-        layout.numColumns = 1;
         containerOfEntriesControl.setLayout(layout2);
         
         GridData gridData = new GridData(GridData.FILL_BOTH);
         gridData.heightHint = 200;
-        layout2.marginHeight = 0;
-        layout2.marginWidth = 0;
+        //layout2.marginHeight = 0;
+        //layout2.marginWidth = 0;
 		gridData.grabExcessHorizontalSpace = true;
 		gridData.grabExcessVerticalSpace = true;
         containerOfEntriesControl.setLayoutData(gridData);
 
+        tableSelectionListener = new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+                Object selectedObject = e.item.getData();
+
+                // TODO: This code is duplicated below.
+                // The selected object might be null.  This occurs when the table is refreshed.
+                // I don't understand this so I am simply bypassing the update
+                // in this case.  Nigel
+                if (selectedObject != null) {
+                	IDisplayableItem data = (IDisplayableItem)selectedObject;
+
+                	Entry entryInAccount = data.getEntryInAccount();
+                	Entry selectedEntry = data.getSelectedEntry();
+                	
+                	if (fPage.currentTransaction != null
+                			&& !fPage.currentTransaction.equals(entryInAccount.getTransaction())) {
+                		fPage.commitTransaction();
+                	}
+                	// TODO: Support the blank transaction.
+                	// The following fails on the blank transaction. 
+            		fPage.currentTransaction = entryInAccount.getTransaction();
+            		
+                	if (selectedEntry != null) {
+                		fPage.fEntrySection.update(entryInAccount, selectedEntry);
+                	}
+                }
+			}
+        };
+
         // Initially set to the table control.
         // TODO: save this information in the memento so
         // the user always gets the last selected view.
-        fEntriesControl = new EntriesTable(containerOfEntriesControl, fPage); 
+        fEntriesControl = new EntriesTable(containerOfEntriesControl, this, fPage.getAccount().getSession()); 
+		fPage.getEditor().getToolkit().adapt(fEntriesControl.getControl(), true, false);
+		fEntriesControl.addSelectionListener(tableSelectionListener);
 
         // Create the button area
 		Composite buttonArea = toolkit.createComposite(container);
@@ -191,111 +220,6 @@ public class EntriesSection extends SectionPart {
         	}
         });
         
-        fPage.getAccount().getSession().addSessionChangeListener(new SessionChangeAdapter() {
-			public void entryAdded(Entry newEntry) {
-				// if the entry is in this account, tell the entries list control
-				// that the transaction for this entry should be added to the list.
-				if (fPage.getAccount().equals(newEntry.getAccount())) {
-					fEntriesControl.addEntryInAccount(newEntry);
-				}
-				
-				// Even if this entry is not in this account, if one of
-				// the other entries in the transaction is in this account
-				// then the table view will need updating because the split
-				// entry rows will need updating.
-				for (Iterator iter = newEntry.getTransaction().getEntryCollection().iterator(); iter.hasNext(); ) {
-					Entry entry = (Entry)iter.next();
-					if (!entry.equals(newEntry) 
-							&& fPage.getAccount().equals(entry.getAccount())) {
-						fEntriesControl.addEntry(entry, newEntry);
-					}
-				}
-			}
-
-			public void entryDeleted(Entry oldEntry) {
-				// if the entry was in this account, refresh the table.
-				if (fPage.getAccount().equals(oldEntry.getAccount())) {
-					fEntriesControl.removeEntryInAccount(oldEntry);
-				}
-				
-				// Even if this entry is not in this account, if one of
-				// the other entries in the transaction is in this account
-				// then the table view will need updating because the split
-				// entry rows will need updating.
-				for (Iterator iter = oldEntry.getTransaction().getEntryCollection().iterator(); iter.hasNext(); ) {
-					Entry entry = (Entry)iter.next();
-					if (!entry.equals(oldEntry) 
-							&& fPage.getAccount().equals(entry.getAccount())) {
-						fEntriesControl.removeEntry(entry, oldEntry);
-					}
-				}
-			}
-
-			public void transactionDeleted(Transaction oldTransaction, Vector entriesInTransaction) {
-				for (Iterator iter = entriesInTransaction.iterator(); iter.hasNext(); ) {
-					Entry entry = (Entry)iter.next();
-					if (fPage.getAccount().equals(entry.getAccount())) {
-						fEntriesControl.removeEntryInAccount(entry);
-					}
-				}
-			}
-			
-			public void objectAdded(ExtendableObject extendableObject) {
-			}
-
-			public void objectDeleted(ExtendableObject extendableObject) {
-				// Nothing to do here.  When a transaction is deleted, an event is
-				// fired for each entry in the transaction and we process those so there
-				// is no additional processing for the case where the transaction is deleted.
-			}
-
-			public void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-				if (extendableObject instanceof Entry) {
-					Entry entry = (Entry)extendableObject;
-					
-					if (propertyAccessor == EntryInfo.getAccountAccessor()) {
-						if (fPage.getAccount().equals(oldValue)) {
-							fEntriesControl.removeEntryInAccount(entry);
-						} else if (fPage.getAccount().equals(newValue)) {
-							fEntriesControl.addEntryInAccount(entry);
-						}
-					}
-					
-					Transaction transaction = entry.getTransaction();
-					for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
-						Entry entry2 = (Entry)iter.next();
-						if (fPage.getAccount().equals(entry2.getAccount())) {
-					    	fEntriesControl.updateEntry(entry2, entry, propertyAccessor, oldValue, newValue);
-						}
-					}
-				}
-				
-				// When a transaction property changes, we notify the entries list
-				// control once for each entry in the transaction where the account
-				// of the entry is the account for the entries list.
-				if (extendableObject instanceof Transaction) {
-					Transaction transaction = (Transaction)extendableObject;
-					for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
-						Entry entry = (Entry)iter.next();
-						if (fPage.getAccount().equals(entry.getAccount())) {
-					    	fEntriesControl.updateTransaction(entry);
-						}
-					}
-				}
-				
-				// Account names and currency names affect the data displayed in the
-				// entries list.  These changes are both infrequent, may involve the
-				// change to a lot of entries, and would involve finding all transactions
-				// that contain both an entry with the changed account or currency
-				// and an entry with in the account for this page.  It is therefore
-				// better just to refresh the entire entries list.
-				if (propertyAccessor == AccountInfo.getNameAccessor()
-						|| propertyAccessor == CommodityInfo.getNameAccessor()) {
-					fEntriesControl.refresh();
-				}
-			}
-        }, container);
-        
         getSection().setClient(container);
         toolkit.paintBordersFor(container);
         refresh();
@@ -321,7 +245,9 @@ public class EntriesSection extends SectionPart {
     	}
     	
     	fEntriesControl.dispose();
-    	fEntriesControl = new EntriesTable(containerOfEntriesControl, fPage);
+    	fEntriesControl = new EntriesTable(containerOfEntriesControl, this, fPage.getAccount().getSession());
+		fPage.getEditor().getToolkit().adapt(fEntriesControl.getControl(), true, false);
+		fEntriesControl.addSelectionListener(tableSelectionListener);
         containerOfEntriesControl.layout(false);
 	}
 
@@ -337,6 +263,89 @@ public class EntriesSection extends SectionPart {
     	
     	fEntriesControl.dispose();
     	fEntriesControl = new EntriesTree(containerOfEntriesControl, fPage);
+		fPage.getEditor().getToolkit().adapt(fEntriesControl.getControl(), true, false);
+		fEntriesControl.addSelectionListener(tableSelectionListener);
         containerOfEntriesControl.layout(false);
     }
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesContent#getAllEntryDataObjects()
+	 */
+	public Vector getAllEntryDataObjects() {
+		return fPage.allEntryDataObjects;
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesContent#getDebitColumnManager()
+	 */
+	public IEntriesTableProperty getDebitColumnManager() {
+		return fPage.debitColumnManager;
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesContent#getCreditColumnManager()
+	 */
+	public IEntriesTableProperty getCreditColumnManager() {
+		return fPage.creditColumnManager;
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesContent#getBalanceColumnManager()
+	 */
+	public IEntriesTableProperty getBalanceColumnManager() {
+		return fPage.balanceColumnManager;
+	}
+
+	public Collection getEntries() {
+        CurrencyAccount account = fPage.getAccount();
+        Collection accountEntries = 
+        	account
+				.getSortedEntries(TransactionInfo.getDateAccessor(), false);
+        return accountEntries;
+	}
+
+	public boolean isEntryInTable(Entry entry) {
+		return fPage.getAccount().equals(entry.getAccount());
+	}
+
+	public boolean isEntryInTable(Entry entry, PropertyAccessor propertyAccessor, Object value) {
+		Account account;
+		if (propertyAccessor == EntryInfo.getAccountAccessor()) {
+			account = (Account)value;
+		} else {
+			account = entry.getAccount();
+		}
+		return fPage.getAccount().equals(account);
+	}
+
+	// TODO: Do we need this????
+	public int isEntryInTable(Entry entry, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+		if (propertyAccessor == EntryInfo.getAccountAccessor()) {
+			boolean wasInTable   = fPage.getAccount().equals(oldValue); 
+			boolean isNowInTable = fPage.getAccount().equals(newValue); 
+			if (wasInTable && !isNowInTable) {
+				return -1; 
+			} else if (!wasInTable && isNowInTable) {
+				return 1;
+			} else {
+				return 0;
+			}
+ 		} else {
+			return 0;
+		}
+	}
+	
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesContent#filterEntry(net.sf.jmoney.pages.entries.EntriesTable.DisplayableTransaction)
+	 */
+	public boolean filterEntry(IDisplayableItem data) {
+		return fPage.filter.filterEntry(data);
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesContent#getStartBalance()
+	 */
+	public long getStartBalance() {
+        return fPage.getAccount().getStartBalance();
+	}
 }

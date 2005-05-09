@@ -220,6 +220,7 @@
             id="accountProperties">
       </pages>
    </extension>
+   
    <extension
          point="net.sf.jmoney.fields">
       <extendable-property-set

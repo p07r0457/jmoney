@@ -41,8 +41,17 @@ import net.sf.jmoney.model2.ExtendableObject;
 class DeltaListIterator implements Iterator {
 	TransactionManager transactionManager;
 	boolean processingCommittedObjects = true;
+
+	/**
+	 * Element: ExtendableObject (uncommitted version)
+	 */
 	Collection addedObjects;
+	
+	/**
+	 * Element: IObjectKey (committed version)
+	 */
 	Collection deletedObjects;
+	
 	Iterator subIterator;
 	
 	/**
@@ -67,7 +76,8 @@ class DeltaListIterator implements Iterator {
 	 * @param deletedObjects list of objects in the committed datastore
 	 * 			that have been deleted in the transaction.  All objects
 	 * 			in this list should be also in the set returned by
-	 * 			committedListIterator 
+	 * 			committedListIterator.  This list contains the committed
+	 * 			object keys.
 	 */
 	DeltaListIterator(TransactionManager transactionManager, Iterator committedListIterator, Collection addedObjects, Collection deletedObjects) {
 		this.transactionManager = transactionManager;
@@ -123,7 +133,7 @@ class DeltaListIterator implements Iterator {
 				return;
 			}
 			committedObject = (ExtendableObject)subIterator.next();
-		} while (deletedObjects.contains(committedObject));
+		} while (deletedObjects.contains(committedObject.getObjectKey()));
 		
 		nextObject = transactionManager.getCopyInTransaction(committedObject);
 	}

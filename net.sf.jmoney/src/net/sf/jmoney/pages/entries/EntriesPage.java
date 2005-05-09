@@ -214,7 +214,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         fEntriesSection.initialize(managedForm);
 
         if (IS_ENTRY_SECTION_TO_DISPLAY) {
-            fEntrySection = new EntrySection(this, form.getBody());
+            fEntrySection = new EntrySection(form.getBody(), managedForm.getToolkit(), account.getSession(), account.getCurrency());
             fEntrySection.getSection().setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
             managedForm.addPart(fEntriesSection);
             fEntrySection.initialize(managedForm);

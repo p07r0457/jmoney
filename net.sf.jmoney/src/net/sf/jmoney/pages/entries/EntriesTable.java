@@ -30,12 +30,15 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.AccountInfo;
+import net.sf.jmoney.fields.CommodityInfo;
 import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.TransactionInfo;
-import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 
 import org.eclipse.jface.viewers.ColumnWeightData;
@@ -60,7 +63,6 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 
 /**
  * An implementation of IEntriesControl that displays the entries
@@ -85,7 +87,7 @@ public class EntriesTable implements IEntriesControl {
     protected static final Color entryColor                = new Color(Display.getCurrent(), 240, 240, 255);
     protected static final Color alternateEntryColor       = new Color(Display.getCurrent(), 240, 255, 255);
 
-	protected EntriesPage fPage;
+	protected IEntriesContent entriesContent;
 	protected Table fTable;
     
     /**
@@ -124,11 +126,10 @@ public class EntriesTable implements IEntriesControl {
 	 * @param container
 	 * @param page
 	 */
-	public EntriesTable(final Composite container, EntriesPage page) {
-		this.fPage = page;
-		FormToolkit toolkit = page.getEditor().getToolkit();
-		
-        fTable = toolkit.createTable(container, SWT.FULL_SELECTION);
+	public EntriesTable(final Composite container, final IEntriesContent entriesContent, Session session) {
+		this.entriesContent = entriesContent;
+
+        fTable = new Table(container, SWT.FULL_SELECTION);
 
         GridData gridData = new GridData(GridData.FILL_BOTH);
         gridData.heightHint = 100;
@@ -140,7 +141,7 @@ public class EntriesTable implements IEntriesControl {
         TableLayout tlayout = new TableLayout();
         
         int index = 0;
-        for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext(); ) {
+        for (Iterator iter = entriesContent.getAllEntryDataObjects().iterator(); iter.hasNext(); ) {
         	IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)iter.next();
         	addColumn(entriesSectionProperty, index++);
         }
@@ -151,20 +152,20 @@ public class EntriesTable implements IEntriesControl {
         col = new TableColumn(fTable, SWT.RIGHT);
         col.setText("Debit");
         col.setData("layoutData", new ColumnWeightData(2, 70));
-        col.setData(fPage.debitColumnManager);
+        col.setData(entriesContent.getDebitColumnManager());
         
         col = new TableColumn(fTable, SWT.RIGHT);
         col.setText("Credit");
         col.setData("layoutData", new ColumnWeightData(2, 70));
-        col.setData(fPage.creditColumnManager);
+        col.setData(entriesContent.getCreditColumnManager());
 
         col = new TableColumn(fTable, SWT.RIGHT);
         col.setText("Balance");
         col.setData("layoutData", new ColumnWeightData(2, 70));
-        col.setData(fPage.balanceColumnManager);
+        col.setData(entriesContent.getBalanceColumnManager());
 
         // FIXME: This is wrong because the balance column may move.
-        balanceColumnIndex = fPage.allEntryDataObjects.size() + 2;
+        balanceColumnIndex = entriesContent.getAllEntryDataObjects().size() + 2;
         
         fTable.setLayout(tlayout);
         fTable.setHeaderVisible(true);
@@ -190,36 +191,43 @@ public class EntriesTable implements IEntriesControl {
         fTable.addSelectionListener(new SelectionListener() {
 
 			public void widgetSelected(SelectionEvent e) {
+/*				
                 Object selectedObject = e.item.getData();
 
                 // TODO: This code is duplicated below.
                 // The selected object might be null.  This occurs when the table is refreshed.
                 // I don't understand this so I am simply bypassing the update
                 // in this case.  Nigel
-                if (EntriesPage.IS_ENTRY_SECTION_TO_DISPLAY && selectedObject != null) {
+                if (selectedObject != null) {
                 	IDisplayableItem data = (IDisplayableItem)selectedObject;
-                	DisplayableTransaction transactionData = null;
+                	Transaction selectedTransaction = null;
+                	Entry entryInAccount = null;
                 	Entry selectedEntry = null;
                 	if (selectedObject instanceof DisplayableTransaction) {
-                		transactionData = (DisplayableTransaction) data;
+                		DisplayableTransaction transactionData = (DisplayableTransaction) data;
                 		selectedEntry = transactionData.getEntryForAccountFields();
+                		selectedTransaction = transactionData.getTransactionForTransactionFields();
+                		entryInAccount = transactionData.getEntryForAccountFields();
                 	} else if (selectedObject instanceof DisplayableEntry) {
-                		transactionData = ((DisplayableEntry)data).getDisplayableTransaction();
+                		DisplayableTransaction transactionData = ((DisplayableEntry)data).getDisplayableTransaction();
                 		selectedEntry = ((DisplayableEntry)data).entry;
-                	}
+                		selectedTransaction = transactionData.getTransactionForTransactionFields();
+                		entryInAccount = transactionData.getEntryForAccountFields();
+               	}
                 	
                 	if (fPage.currentTransaction != null
-                			&& !fPage.currentTransaction.equals(transactionData.getTransactionForTransactionFields())) {
+                			&& !fPage.currentTransaction.equals(selectedTransaction)) {
                 		fPage.commitTransaction();
                 	}
                 	// TODO: Support the blank transaction.
                 	// The following fails on the blank transaction. 
-            		fPage.currentTransaction = transactionData.getTransactionForTransactionFields();
+            		fPage.currentTransaction = selectedTransaction;
             		
                 	if (selectedEntry != null) {
-                		fPage.fEntrySection.update(transactionData.getEntryForAccountFields(), selectedEntry);
+                		fPage.fEntrySection.update(entryInAccount, selectedEntry);
                 	}
                 }
+*/                
 			}
 
 			public void widgetDefaultSelected(SelectionEvent e) {
@@ -344,7 +352,7 @@ public class EntriesTable implements IEntriesControl {
     				
     	            MenuItem separatorItem = new MenuItem(popupMenu, SWT.SEPARATOR);
 
-    	            for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext(); ) {
+    	            for (Iterator iter = entriesContent.getAllEntryDataObjects().iterator(); iter.hasNext(); ) {
     		        	final IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)iter.next();
     		        	boolean found = false;
     		        	for (int index = 0; index < fTable.getColumnCount(); index++) {
@@ -380,6 +388,114 @@ public class EntriesTable implements IEntriesControl {
     			}
     		}
     	});
+
+        session.addSessionChangeListener(new SessionChangeAdapter() {
+			public void entryAdded(Entry newEntry) {
+				// if the entry is in this table, add it
+				if (entriesContent.isEntryInTable(newEntry)) {
+					addEntryInAccount(newEntry);
+				}
+				
+				// Even if this entry is not in this table, if one of
+				// the other entries in the transaction is in this table
+				// then the table view will need updating because the split
+				// entry rows will need updating.
+				for (Iterator iter = newEntry.getTransaction().getEntryCollection().iterator(); iter.hasNext(); ) {
+					Entry entry = (Entry)iter.next();
+					if (!entry.equals(newEntry) 
+							&& entriesContent.isEntryInTable(entry)) {
+						addEntry(entry, newEntry);
+					}
+				}
+			}
+
+			public void entryDeleted(Entry oldEntry, Transaction transaction) {
+				// if the entry is in this table, remove it.
+				if (entriesContent.isEntryInTable(oldEntry)) {
+					removeEntryInAccount(oldEntry);
+				}
+				
+				// Even if this entry is not in this table, if one of
+				// the other entries in the transaction is in this table
+				// then the table view will need updating because the split
+				// entry rows will need updating.
+				for (Iterator iter = oldEntry.getTransaction().getEntryCollection().iterator(); iter.hasNext(); ) {
+					Entry entry = (Entry)iter.next();
+					if (!entry.equals(oldEntry) 
+							&& entriesContent.isEntryInTable(entry)) {
+						removeEntry(entry, oldEntry);
+					}
+				}
+			}
+
+			/* I do not believe this is necessary because EntryDeleted
+			 * should be called when a transaction is deleted.
+			public void transactionDeleted(Transaction oldTransaction, Vector entriesInTransaction) {
+				for (Iterator iter = entriesInTransaction.iterator(); iter.hasNext(); ) {
+					Entry entry = (Entry)iter.next();
+					if (fPage.getAccount().equals(entry.getAccount())) {
+						fEntriesControl.removeEntryInAccount(entry);
+					}
+				}
+			}
+			 */
+			
+			public void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+				if (extendableObject instanceof Entry) {
+					Entry entry = (Entry)extendableObject;
+
+					boolean wasInTable   = entriesContent.isEntryInTable(entry, propertyAccessor, oldValue);
+					boolean isNowInTable = entriesContent.isEntryInTable(entry, propertyAccessor, newValue);
+					if (wasInTable && !isNowInTable) {
+						removeEntryInAccount(entry);
+					} else if (!wasInTable && isNowInTable) {
+						addEntryInAccount(entry);
+					} 
+					
+					// Find all rows on which properties of this entry are displayed
+					// and update those rows.  This involves finding all entries in
+					// the same transaction that are listed in the table contents
+					// (including this entry itself if this entry is a top level entry
+					// in the table).
+					// TODO: we do not need to include this entry itself if it were
+					// just added or just removed above.  This code is not quite
+					// perfect but probably works.
+					Transaction transaction = entry.getTransaction();
+					for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
+						Entry entry2 = (Entry)iter.next();
+						if (entriesContent.isEntryInTable(entry2)) {
+					    	updateEntry(entry2, entry, propertyAccessor, oldValue, newValue);
+						}
+					}
+				}
+				
+				// When a transaction property changes, we notify the entries list
+				// control once for each entry in the transaction where the entry is
+				// listed as a top level entry in the table.
+				// (Only rows for top level entries display transaction properties).
+				if (extendableObject instanceof Transaction) {
+					Transaction transaction = (Transaction)extendableObject;
+					for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
+						Entry entry = (Entry)iter.next();
+						if (entriesContent.isEntryInTable(entry)) {
+					    	updateTransaction(entry);
+						}
+					}
+				}
+				
+				// Account names and currency names affect the data displayed in the
+				// entries list.  These changes are both infrequent, may involve a
+				// change to a lot of entries, and would involve finding all transactions
+				// that contain both an entry with the changed account or currency
+				// and an entry with in the account for this page.  It is therefore
+				// better just to refresh the entire entries list.
+				if (propertyAccessor == AccountInfo.getNameAccessor()
+						|| propertyAccessor == CommodityInfo.getNameAccessor()) {
+					refresh();
+				}
+			}
+        }, container);
+	
 	}
 
     /**
@@ -434,13 +550,11 @@ public class EntriesTable implements IEntriesControl {
     	// when the data is set into the table.  It is just as easy
     	// and efficient to do it then and that reduces the effort
     	// to keep the balances updated.
-        CurrencyAccount account = fPage.getAccount();
-        Collection accountEntries = 
-        	account
-				.getSortedEntries(TransactionInfo.getDateAccessor(), false);
+    	Collection accountEntries = entriesContent.getEntries();
+    	
         entries = new DisplayableTransaction[accountEntries.size()];
         int i = 0;
-        for (Iterator iter = accountEntries.iterator(); iter.hasNext(); ) {
+        for (Iterator iter = entriesContent.getEntries().iterator(); iter.hasNext(); ) {
             Entry accountEntry = (Entry) iter.next();
         	DisplayableTransaction data = new DisplayableTransaction(accountEntry, 0);
         	if (matchesFilter(data)) {
@@ -471,7 +585,7 @@ public class EntriesTable implements IEntriesControl {
     private boolean matchesFilter(DisplayableTransaction transData) {
     	Transaction trans = transData.getTransactionForTransactionFields();
     	
-    	if (fPage.filter.filterEntry(transData)) {
+    	if (entriesContent.filterEntry(transData)) {
     		return true;
     	}
     	
@@ -481,7 +595,7 @@ public class EntriesTable implements IEntriesControl {
     			Entry entry2 = (Entry) itSubEntries.next();
     			if (!entry2.equals(transData.getEntryForAccountFields())) {
     				DisplayableEntry entryData = new DisplayableEntry(entry2, transData);
-    				if (fPage.filter.filterEntry(entryData)) {
+    				if (entriesContent.filterEntry(entryData)) {
     					return true;
     				}
     			}
@@ -508,7 +622,7 @@ public class EntriesTable implements IEntriesControl {
          */
         boolean isAlternated = true;
 
-        long saldo = fPage.getAccount().getStartBalance();
+        long saldo = entriesContent.getStartBalance();
         for (int i = 0; i < entries.length; i++) {
         	DisplayableTransaction data = entries[i];
 
@@ -785,6 +899,14 @@ public class EntriesTable implements IEntriesControl {
 		public void setBalance(long balance) {
 			this.balance = balance;
 		}
+
+		public Entry getEntryInAccount() {
+    		return entry;
+		}
+
+		public Entry getSelectedEntry() {
+    		return entry;
+		}
     }
     
     class DisplayableEntry implements IDisplayableItem { 
@@ -836,6 +958,15 @@ public class EntriesTable implements IEntriesControl {
 
 		public long getBalance() {
 			throw new RuntimeException("");
+		}
+
+		public Entry getEntryInAccount() {
+    		DisplayableTransaction transactionData = getDisplayableTransaction();
+    		return transactionData.getEntryForAccountFields();
+		}
+
+		public Entry getSelectedEntry() {
+			return entry;
 		}
     }
     
@@ -906,6 +1037,22 @@ public class EntriesTable implements IEntriesControl {
 			// TODO Auto-generated method stub
 			return 0;
 		}
+
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.pages.entries.IDisplayableItem#getEntryInAccount()
+		 */
+		public Entry getEntryInAccount() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.pages.entries.IDisplayableItem#getSelectedEntry()
+		 */
+		public Entry getSelectedEntry() {
+			// TODO Auto-generated method stub
+			return null;
+		}
     }
 
     /**
@@ -918,14 +1065,6 @@ public class EntriesTable implements IEntriesControl {
 		buildEntryList();
 		
 		refreshAfterTransactionListChange();
-	}	
-
-	/**
-	 * Update the viewer.
-	 */
-	// TODO: remove this
-	public void update(Object element) {
-//		fViewer.update(element, null);
 	}	
 
 	public void dispose() {
@@ -961,7 +1100,7 @@ public class EntriesTable implements IEntriesControl {
 
 		for (i = realItemCount-1; ; i-- ) { 
 			if (i < 0) {
-				balance = fPage.getAccount().getStartBalance();
+				balance = entriesContent.getStartBalance();
 				isAlternated = true;
 				break;
 			}
@@ -1009,8 +1148,8 @@ public class EntriesTable implements IEntriesControl {
 		item.setData(de);
 
 		// Set the column values for this new row.
-		for (int index = 0; index < fPage.allEntryDataObjects.size(); index++ ) {
-			IEntriesTableProperty p = (IEntriesTableProperty)fPage.allEntryDataObjects.get(index);
+		for (int index = 0; index < entriesContent.getAllEntryDataObjects().size(); index++ ) {
+			IEntriesTableProperty p = (IEntriesTableProperty)entriesContent.getAllEntryDataObjects().get(index);
 			item.setText(index, p.getValueFormattedForTable(de));
 		}
 		
@@ -1031,10 +1170,10 @@ public class EntriesTable implements IEntriesControl {
         }
         
 		// Recalculate balances from this point onwards.
-		updateBalances(i, balance);
+		updateBalances(originalInsertIndex, balance);
 		
 		// Set colors from this point onwards (colors have switched).
-		updateColors(i, isAlternated);
+		updateColors(originalInsertIndex, isAlternated);
 	}
 
 	public void updateEntry(Entry entryInAccount, Entry entryChanged, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
@@ -1157,7 +1296,7 @@ public class EntriesTable implements IEntriesControl {
 				balance += dTrans.getEntryForAccountFields().getAmount();
         		dTrans.setBalance(balance);
 
-				item.setText(balanceColumnIndex, fPage.balanceColumnManager.getValueFormattedForTable(dTrans));
+				item.setText(balanceColumnIndex, entriesContent.getBalanceColumnManager().getValueFormattedForTable(dTrans));
 			}
 		}
 	}
@@ -1283,5 +1422,19 @@ public class EntriesTable implements IEntriesControl {
 			fTable.getItem(transIndex+1).dispose();
 			updateItem(transItem);
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesControl#addSelectionListener(org.eclipse.swt.events.SelectionListener)
+	 */
+	public void addSelectionListener(SelectionListener tableSelectionListener) {
+		fTable.addSelectionListener(tableSelectionListener);
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesControl#getControl()
+	 */
+	public Control getControl() {
+		return fTable;
 	}
 }

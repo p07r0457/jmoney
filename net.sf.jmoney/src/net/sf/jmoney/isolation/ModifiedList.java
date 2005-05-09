@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.PropertyAccessor;
 
 /**
  * An instance of this class contains the changes that have
@@ -45,38 +44,38 @@ import net.sf.jmoney.model2.PropertyAccessor;
  */
 public class ModifiedList {
 
-	private ExtendableObject parent;
-
-	private PropertyAccessor listProperty;
-	
 	/**
-	 * Element: ExtendableObject
+	 * Element: ExtendableObject (uncommitted version)
 	 */
 	Vector addedObjects = new Vector();
 	
 	/**
-	 * Element: ExtendableObject
+	 * Element: IObjectKey (committed version)
 	 */
 	Vector deletedObjects = new Vector();
 	
 	/**
-	 * 
+	 * @param newObject an uncommitted version of an object
+	 * 			being added to the list
 	 */
 	void add(ExtendableObject newObject) {
 		addedObjects.add(newObject);
 	}
 	
 	/**
-	 * 
+	 * @param objectToDelete an uncommitted version of an object
+	 * 			to be deleted from the list
 	 */
 	boolean delete(ExtendableObject objectToDelete) {
-		if (((UncommittedObjectKey)objectToDelete.getObjectKey()).isNewObject()) {
+		UncommittedObjectKey uncommittedKey = (UncommittedObjectKey)objectToDelete.getObjectKey();
+		if (uncommittedKey.isNewObject()) {
 			return addedObjects.remove(objectToDelete);
 		} else {
-			if (deletedObjects.contains(objectToDelete)) {
+			if (deletedObjects.contains(uncommittedKey.getCommittedObjectKey())) {
 				return false;
 			}
-			deletedObjects.add(objectToDelete);
+			deletedObjects.add(uncommittedKey.getCommittedObjectKey());
+			
 			// TODO: following return value may not be correct.
 			// However, it is expensive to see if the object
 			// exists in the original list, so assume it does.
@@ -85,14 +84,24 @@ public class ModifiedList {
 	}
 	
 	/**
-	 * @return
+	 * Return the collection of objects in the list that do not exist in the committed
+	 * datastore but which are being added by this transaction.
+	 * 
+	 * @return an iterator which iterates over elements of
+	 * 			type ExtendableObject, being the uncommitted versions
+	 * 			of the objects being added
 	 */
 	Iterator getAddedObjectIterator() {
 		return addedObjects.iterator();
 	}
 
 	/**
-	 * @return
+	 * Return the collection of objects in the list that exist in the committed
+	 * datastore but which are being deleted by this transaction.
+	 * 
+	 * @return an iterator which iterates over elements of
+	 * 			type IObjectKey, being the committed keys
+	 * 			of the objects being deleted
 	 */
 	Iterator getDeletedObjectIterator() {
 		return deletedObjects.iterator();

@@ -52,6 +52,7 @@ import org.eclipse.swt.custom.TableTreeEditor;
 import org.eclipse.swt.custom.TableTreeItem;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -460,6 +461,22 @@ public class EntriesTree implements IEntriesControl {
 		public Transaction getTransaction() {
 			return entry.getTransaction();
 		}
+
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.pages.entries.IDisplayableItem#getEntryInAccount()
+		 */
+		public Entry getEntryInAccount() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.pages.entries.IDisplayableItem#getSelectedEntry()
+		 */
+		public Entry getSelectedEntry() {
+			// TODO Auto-generated method stub
+			return null;
+		}
     }
     
     class DisplayableEntry implements IDisplayableItem { 
@@ -511,6 +528,22 @@ public class EntriesTree implements IEntriesControl {
 
 		public long getBalance() {
 			throw new RuntimeException("");
+		}
+
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.pages.entries.IDisplayableItem#getEntryInAccount()
+		 */
+		public Entry getEntryInAccount() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.pages.entries.IDisplayableItem#getSelectedEntry()
+		 */
+		public Entry getSelectedEntry() {
+			// TODO Auto-generated method stub
+			return null;
 		}
     }
     
@@ -579,6 +612,22 @@ public class EntriesTree implements IEntriesControl {
 		public long getBalance() {
 			// TODO Auto-generated method stub
 			return 0;
+		}
+
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.pages.entries.IDisplayableItem#getEntryInAccount()
+		 */
+		public Entry getEntryInAccount() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		/* (non-Javadoc)
+		 * @see net.sf.jmoney.pages.entries.IDisplayableItem#getSelectedEntry()
+		 */
+		public Entry getSelectedEntry() {
+			// TODO Auto-generated method stub
+			return null;
 		}
     }
 
@@ -693,10 +742,11 @@ public class EntriesTree implements IEntriesControl {
 	/**
 	 * Update the viewer.
 	 */
+/*	
 	public void update(Object element) {
 		fViewer.update(element, null);
 	}	
-
+*/
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.ui.internal.pages.account.capital.IEntriesControl#dispose()
 	 */
@@ -750,5 +800,19 @@ public class EntriesTree implements IEntriesControl {
 	public void removeEntry(Entry entryInAccount, Entry oldEntry) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesControl#addSelectionListener(org.eclipse.swt.events.SelectionListener)
+	 */
+	public void addSelectionListener(SelectionListener tableSelectionListener) {
+		fTableTree.addSelectionListener(tableSelectionListener);
+	}
+
+	/* (non-Javadoc)
+	 * @see net.sf.jmoney.pages.entries.IEntriesControl#getControl()
+	 */
+	public Control getControl() {
+		return fTableTree;
 	}
 }

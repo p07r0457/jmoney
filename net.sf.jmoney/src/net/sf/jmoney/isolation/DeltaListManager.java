@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.isolation;
 
+import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
@@ -44,7 +45,7 @@ import net.sf.jmoney.model2.PropertySet;
  * 
  * @author Nigel Westbury
  */
-public class DeltaListManager implements IListManager {
+public class DeltaListManager extends AbstractCollection implements IListManager {
 
 	TransactionManager transactionManager;
 	
@@ -191,14 +192,6 @@ public class DeltaListManager implements IListManager {
 		}
 	}
 
-	public boolean isEmpty() {
-		return size() == 0;
-	}
-
-	public boolean contains(Object object) {
-		throw new RuntimeException("not implemented");
-	}
-
 	public Iterator iterator() {
 		Iterator committedListIterator = parent.getListPropertyValue(listProperty).iterator();
 		if (modifiedList == null) {
@@ -212,42 +205,10 @@ public class DeltaListManager implements IListManager {
 		}
 	}
 
-	public Object[] toArray() {
-		throw new RuntimeException("not implemented");
-	}
-
-	public Object[] toArray(Object[] arg0) {
-		throw new RuntimeException("not implemented");
-	}
-
-	public boolean add(Object arg0) {
-		throw new RuntimeException("not implemented");
-	}
-
 	public boolean remove(Object object) {
 		if (modifiedList == null) {
 			modifiedList = transactionManager.createModifiedList(parent.getObjectKey(), listProperty);
 		}
 		return modifiedList.delete((ExtendableObject)object);
-	}
-
-	public boolean containsAll(Collection arg0) {
-		throw new RuntimeException("not implemented");
-	}
-
-	public boolean addAll(Collection arg0) {
-		throw new RuntimeException("not implemented");
-	}
-
-	public boolean removeAll(Collection arg0) {
-		throw new RuntimeException("not implemented");
-	}
-
-	public boolean retainAll(Collection arg0) {
-		throw new RuntimeException("not implemented");
-	}
-
-	public void clear() {
-		throw new RuntimeException("not implemented");
 	}
 }

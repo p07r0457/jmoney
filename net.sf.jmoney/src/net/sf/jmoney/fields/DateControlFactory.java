@@ -54,7 +54,7 @@ public class DateControlFactory implements IPropertyControlFactory {
     }
     
     public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
-  		return new DateEditor(parent, propertyAccessor, fDateFormat);
+  		return new DateEditor(parent, propertyAccessor);
     }
 
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
