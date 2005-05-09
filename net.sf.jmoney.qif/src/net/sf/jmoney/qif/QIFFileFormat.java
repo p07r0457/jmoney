@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
@@ -187,6 +188,17 @@ public class QIFFileFormat implements FileFormat {
 	/**
 	 * Scans a QIF file to determine whether the date format is US or
 	 * EU ie: mm/dd/yyyy or dd/mm/yyyy
+	 * <P>
+	 * If a number is found in the day or month field that is
+	 * greater than 12 then we know immediately the date format.
+	 * <P>
+	 * If we get to the end of the file with no such number greater
+	 * than 12 then we assume the dates are in order and return the
+	 * format that would put the dates in order.
+	 * <P>
+	 * If both formats put the dates in order then we give up
+	 * and assume US format.  This scenario would be extremely
+	 * unlikely.
 	 * 
 	 * @param qifFile
 	 *            the file to scan
@@ -195,20 +207,52 @@ public class QIFFileFormat implements FileFormat {
 	 */
 	private boolean isUSDateFormat(File file) throws IOException {
 		String line;
-		BufferedReader r = new BufferedReader(new FileReader(file));
-		while (true) {
+		Reader reader = new FileReader(file);
+		BufferedReader r = new BufferedReader(reader);
+		
+		int lastDateIfUS = 0;
+		int lastDateIfEU = 0;
+		boolean usDatesInOrder = true;
+		boolean euDatesInOrder = true;
+		
+		try {
 			line = r.readLine();
-			if (line == null)
-				return true;
-			if (line.charAt(0) == QIFCashTransaction.DATE) {
-				StringTokenizer st = new StringTokenizer(line, "D/\'");
-				int month = Integer.parseInt(st.nextToken().trim());
-				if (month > 12) {
-					if (QIFPlugin.DEBUG) System.out.println("Non-US dates:" + line);
-					return false;
+			while (line != null) {
+				if (line.charAt(0) == 'D') {
+					StringTokenizer st = new StringTokenizer(line, "D/\'");
+					int number1 = Integer.parseInt(st.nextToken().trim());
+					if (number1 > 12) {
+						return false;
+					}
+					int number2 = Integer.parseInt(st.nextToken().trim());
+					if (number2 > 12) {
+						return true;
+					}
+					
+					int year = Integer.parseInt(st.nextToken().trim());
+					
+					int dateIfUS = number1*100 + number2 + year*10000;
+					if (dateIfUS < lastDateIfUS) {
+						usDatesInOrder = false;
+					}
+					lastDateIfUS = dateIfUS;
+					
+					int dateIfEU = number1*100 + number2 + year*10000;
+					if (dateIfEU < lastDateIfEU) {
+						euDatesInOrder = false;
+					}
+					lastDateIfEU = dateIfEU;
 				}
 			}
+		} finally {
+			r.close();
+			reader.close();
 		}
+
+		// No month or day above 12, but if the dates are in
+		// order only when we assume EU format then indicate
+		// EU format, otherwise assume US format.
+		return (usDatesInOrder || !euDatesInOrder);
 	}
 
 	/**
