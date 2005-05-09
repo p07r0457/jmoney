@@ -74,7 +74,6 @@ import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.serializeddatastore.IFileDatastore;
-import net.sf.jmoney.serializeddatastore.OldFormatJMoneyFileException;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
 import net.sf.jmoney.serializeddatastore.SessionManager;
 import net.sf.jmoney.serializeddatastore.SimpleListManager;
@@ -802,7 +801,9 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			}
 			if (extendableObject instanceof Entry) {
 				Entry entry = (Entry)extendableObject;
-				sessionManager.addEntryToList(entry.getAccount(), entry);
+				if (entry.getAccount() != null) {
+					sessionManager.addEntryToList(entry.getAccount(), entry);
+				}
 			}
 			
 			// Pass the value back up to the outer element processor.

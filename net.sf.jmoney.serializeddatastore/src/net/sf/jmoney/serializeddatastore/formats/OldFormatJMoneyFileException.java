@@ -21,7 +21,7 @@
 *
 */
 
-package net.sf.jmoney.serializeddatastore;
+package net.sf.jmoney.serializeddatastore.formats;
 
 /**
  * Thrown when the input XML file is found to be
