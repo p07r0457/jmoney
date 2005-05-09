@@ -56,7 +56,7 @@ public class StatusControlFactory implements IPropertyControlFactory {
 	};
 	
     public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
-        return new StatusEditor(parent, propertyAccessor);
+        return new StatusEditor(parent, propertyAccessor, statusText);
     }
 
     public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {

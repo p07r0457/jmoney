@@ -25,8 +25,11 @@ package net.sf.jmoney.reconciliation;
 import net.sf.jmoney.model2.EntryExtension;
 
 /**
- *
- * @author  Nigel
+ * An extension object that extends Entry objects.
+ * This extension object maintains the values of the properties
+ * that have been added by this plug-in.
+ * 
+ * @author Nigel Westbury
  */
 public class ReconciliationEntry extends EntryExtension {
 	
@@ -46,6 +49,8 @@ public class ReconciliationEntry extends EntryExtension {
 	public static final int CLEARED = 2;
 	
 	protected int status = 0;
+	private BankStatement statement = null;
+	private String uniqueId = null;
 	
 	/**
 	 * A default constructor is mandatory for all extension objects.
@@ -61,8 +66,10 @@ public class ReconciliationEntry extends EntryExtension {
 	 * the extension objects when loading data.
 	 * 
 	 */
-	public ReconciliationEntry(int status) {
+	public ReconciliationEntry(int status, BankStatement statement, String uniqueId) {
 		this.status = status;
+		this.statement = statement;
+		this.uniqueId = uniqueId;
 	}
 	
 	/**
@@ -73,11 +80,32 @@ public class ReconciliationEntry extends EntryExtension {
 	}
 	
 	/**
+	 * Returns the bank statement on which this entry appears.
+	 * 
+	 * @return the bank statement on which the entry
+	 * 			appears, or null if the entry has not yet been
+	 * 			reconciled to a bank statement
+	 */
+	public BankStatement getStatement() {
+		return statement;
+	}
+	
+	/**
+	 * Returns a string that uniquely identifies this entry.
+	 * <P>
+	 * The bank may provide a unique id with each entry downloaded
+	 * from the bank.  If so then this id can be used to check if an
+	 * entry has already been imported.  If no unique id is provided
+	 * then this property should be null.  A unique id is not required
+	 * to be provided by the bank.  If none is provided then entries are
+	 * matched based on amount, date etc.
+	 */
+	public String getUniqueId() {
+		return uniqueId;
+	}
+	
+	/**
 	 * Sets the check. Either UNCLEARED, RECONCILING or CLEARED.
-	 *
-	 * Fire a property change event.  Note that listeners cannot listen for changes to a
-	 * single entry.  Listeners must be added to the appropriate PropertyAccessor
-	 * object and will recieve notification when the property in any entry has changed.
 	 */
 	public void setStatus(int status) {
 		int oldStatus = this.status;
@@ -85,7 +113,19 @@ public class ReconciliationEntry extends EntryExtension {
 		processPropertyChange(ReconciliationEntryInfo.getStatusAccessor(), new Integer(oldStatus), new Integer(status));
 	}
 	
+	public void setStatement(BankStatement statement) {
+		BankStatement oldStatement = this.statement;
+		this.statement = statement;
+		processPropertyChange(ReconciliationEntryInfo.getStatementAccessor(), oldStatement, statement);
+	}
+	
+	public void setUniqueId(String uniqueId) {
+		String oldUniqueId = this.uniqueId;
+		this.uniqueId = uniqueId;
+		processPropertyChange(ReconciliationEntryInfo.getUniqueIdAccessor(), oldUniqueId, uniqueId);
+	}
+	
 	static public Object [] getDefaultProperties() {
-		return new Object [] { new Integer(UNCLEARED) };
+		return new Object [] { new Integer(UNCLEARED), null, null };
 	}
 }

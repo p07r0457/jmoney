@@ -56,16 +56,10 @@ public class StatusEditor implements IPropertyControl {
      * 			by this control.  This property accessor will always be the
      * 			'status' property in the ReconciliationEntry propery set.
      */
-    public StatusEditor(Composite parent, PropertyAccessor propertyAccessor) {
+    public StatusEditor(Composite parent, PropertyAccessor propertyAccessor, String [] items) {
         propertyControl = new Combo(parent, 0);
 
-        propertyControl.setItems(
-    			new String[] { 
-    					ReconciliationPlugin.getResourceString("Entry.uncleared"),
-						ReconciliationPlugin.getResourceString("Entry.reconciling"),
-						ReconciliationPlugin.getResourceString("Entry.cleared"),
-    			}
-        );
+        propertyControl.setItems(items);
         		
         // Selection changes are reflected immediately in the
         // datastore.

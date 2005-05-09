@@ -28,15 +28,17 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
- * @author Nigel
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * Provides the metadata for the extra properties added to each
+ * entry by this plug-in.
+ * 
+ * @author Nigel Westbury
  */
 public class ReconciliationEntryInfo implements IPropertySetInfo {
 
 	private static PropertySet propertySet = null;
 	private static PropertyAccessor statusAccessor = null;
+	private static PropertyAccessor statementAccessor = null;
+	private static PropertyAccessor uniqueIdAccessor = null;
 	
 	public Class getImplementationClass() {
 		return ReconciliationEntry.class;
@@ -45,7 +47,10 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
 		ReconciliationEntryInfo.propertySet = propertySet;
 
-		statusAccessor = propertyRegistrar.addProperty("status", ReconciliationPlugin.getResourceString("Entry.statusShort"), 1, 20, new StatusControlFactory(), null);
+		// TODO: tidy this up
+		statusAccessor    = propertyRegistrar.addProperty("status", ReconciliationPlugin.getResourceString("Entry.statusShort"), 1, 20, new StatusControlFactory(), null);
+		statementAccessor = propertyRegistrar.addProperty("statement", ReconciliationPlugin.getResourceString("Entry.statusShort"), 1, 20, /*new IntegerControlFactory()*/null, null);
+		uniqueIdAccessor  = propertyRegistrar.addProperty("uniqueId", ReconciliationPlugin.getResourceString("Entry.statusShort"), 1, 20, /*new IntegerControlFactory()*/null, null);
 	}
 
 	/**
@@ -60,5 +65,19 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 	 */
 	public static PropertyAccessor getStatusAccessor() {
 		return statusAccessor;
+	}
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getStatementAccessor() {
+		return statementAccessor;
 	}	
+
+	/**
+	 * @return
+	 */
+	public static PropertyAccessor getUniqueIdAccessor() {
+		return uniqueIdAccessor;
+	}
 }

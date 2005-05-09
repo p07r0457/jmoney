@@ -28,7 +28,7 @@ import java.util.ResourceBundle;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 /**
- * The main plugin class to be used in the desktop.
+ * The main plug-in class for this plug-in.
  */
 public class ReconciliationPlugin extends AbstractUIPlugin {
 	//The shared instance.
