@@ -214,8 +214,9 @@ public class NavigationView extends ViewPart {
 			refreshViewer();
 		}
 		
-		public void accountAdded(Account newAccount) {
-			if (newAccount instanceof CapitalAccount) {
+		public void objectAdded(ExtendableObject newObject) {
+			if (newObject instanceof CapitalAccount) {
+				CapitalAccount newAccount = (CapitalAccount)newObject;
 				if (newAccount.getParent() == null) {
 					// An array of top level accounts is cached, so we add it now.
 					TreeNode.getAccountsRootNode().addChild(newAccount);
@@ -223,14 +224,16 @@ public class NavigationView extends ViewPart {
 					// Sub-accounts are not cached in any tree node, so there is
 					// nothing to do except to refresh the viewer.
 				}
-				refreshViewer ();
+				refreshViewer();
 			}
 		}
-		public void accountDeleted(Account oldAccount) {
-			if (oldAccount instanceof CapitalAccount) {
-				if (oldAccount.getParent() == null) {
+
+		public void objectDeleted(ExtendableObject deletedObject) {
+			if (deletedObject instanceof CapitalAccount) {
+				CapitalAccount deletedAccount = (CapitalAccount)deletedObject;
+				if (deletedAccount.getParent() == null) {
 					// An array of top level accounts is cached, so we add it now.
-					TreeNode.getAccountsRootNode().removeChild(oldAccount);
+					TreeNode.getAccountsRootNode().removeChild(deletedAccount);
 				} else {
 					// Sub-accounts are not cached in any tree node, so there is
 					// nothing to do except to refresh the viewer.
@@ -238,10 +241,12 @@ public class NavigationView extends ViewPart {
 				refreshViewer ();
 			}
 		}
-	    public void accountChanged(final Account account, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-			if (account instanceof CapitalAccount
+		
+		public void objectChanged(ExtendableObject changedObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+			if (changedObject instanceof CapitalAccount
 					&& propertyAccessor == AccountInfo.getNameAccessor()) {
-
+				final CapitalAccount account = (CapitalAccount)changedObject;
+				
 				// SWTException: Invalid thread access can occur
 				// without wrapping the call to update.
 		        Display.getDefault().syncExec( new Runnable() {

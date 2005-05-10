@@ -255,9 +255,9 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 				// and possibly re-built, so do nothing here.
 			}
 			
-			public void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-				if (extendableObject.equals(session)
-						&& propertyAccessor == SessionInfo.getDefaultCurrencyAccessor()) {
+			public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+				if (changedObject.equals(session)
+						&& changedProperty == SessionInfo.getDefaultCurrencyAccessor()) {
 					TableItem[] items = selectedListViewer.getTable().getItems();
 					for (int i = 0; i < items.length; i++) {
 						ISOCurrencyData currencyData = (ISOCurrencyData)items[i].getData();
@@ -269,11 +269,11 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 				}
 			}
 			
-			public void objectAdded(ExtendableObject extendableObject) {
+			public void objectAdded(ExtendableObject newObject) {
 				// TODO: currency added
 			}
 
-			public void objectDeleted(ExtendableObject extendableObject) {
+			public void objectDeleted(ExtendableObject deletedObject) {
 				// TODO: currency removed
 			}
 

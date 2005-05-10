@@ -148,53 +148,14 @@ public class IncomeExpenseAccount extends Account {
 	}
 
 	/**
-	 * This method is required by the JMoney framework.
+	 * Creates an sub-income/expense category to this income/expense category.
 	 * 
 	 * @return a new sub-account
 	 */
     public IncomeExpenseAccount createSubAccount() {
-    	final IncomeExpenseAccount newSubAccount = (IncomeExpenseAccount)subAccounts.createNewElement(
-				this, 
-				IncomeExpenseAccountInfo.getPropertySet());
-
-		processObjectAddition(IncomeExpenseAccountInfo.getSubAccountAccessor(), newSubAccount);
-		
-		// In addition to the generic object creation event, we also fire an event
-		// specifically for account creation.  The accountAdded event is superfluous 
-		// and it may be simpler if we removed it, so that listeners receive the generic
-		// objectAdded event only.
-		getSession().fireEvent(
-				new ISessionChangeFirer() {
-					public void fire(SessionChangeListener listener) {
-						listener.accountAdded(newSubAccount);
-					}
-				});
-		
-		return newSubAccount;
+    	return (IncomeExpenseAccount)getSubAccountCollection().createNewElement(IncomeExpenseAccountInfo.getPropertySet());
     }
     
-	/**
-	 * This version is required by the JMoney framework.
-	 */
-	boolean deleteSubAccount(final IncomeExpenseAccount subAccount) {
-		boolean found = subAccounts.remove(subAccount);
-		if (found) {
-			processObjectDeletion(IncomeExpenseAccountInfo.getSubAccountAccessor(), subAccount);
-
-			// In addition to the generic object deletion event, we also fire an event
-			// specifically for account deletion.  The accountDeleted event is superfluous 
-			// and it may be simpler if we removed it, so that listeners receive the generic
-			// objectDeleted event only.
-			getSession().fireEvent(
-					new ISessionChangeFirer() {
-						public void fire(SessionChangeListener listener) {
-							listener.accountDeleted(subAccount);
-						}
-					});
-		}
-		return found;
-	}
-	
     static public  Object [] getDefaultProperties() {
 		return new Object [] { "new category", new Boolean(true), null };
 	}

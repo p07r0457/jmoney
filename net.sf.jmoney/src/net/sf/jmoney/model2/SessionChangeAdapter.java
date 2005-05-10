@@ -30,7 +30,7 @@ import java.util.Vector;
  * instead extend this class to avoid implementing empty methods
  * for events on which no action is necessary.
  *
- * @author  Nigel Westbury
+ * @author Nigel Westbury
  */
 public class SessionChangeAdapter implements SessionChangeListener {
 	/**
@@ -40,66 +40,15 @@ public class SessionChangeAdapter implements SessionChangeListener {
     public void sessionReplaced(Session oldSession, Session newSession) {
     }
 	
-	/**
-	 * A scalar property in the session object has changed.
-	 */
-    public void sessionPropertyChange(String propertyName, Object oldValue, Object newValue) {
-    }
-	
-	/**
-	 * An account has been added.  The account may be a top-level
-	 * account or a sub-account.
-	 */
-    public void accountAdded(Account newAccount) {
-    }
-
-    /**
-	 * An account has been deleted.  The account may be a top-level
-	 * account or a sub-account.
-	 */
-    public void accountDeleted(Account oldAccount) {
-    }
-
-    /**
-	 * The properties of an account have been changed.  
-	 * The account may be a top-level account or a sub-account
-	 * and may be a capital account or a category
-	 * (income and expense) account.
-	 */
-	public void accountChanged(Account account, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+	public void objectAdded(ExtendableObject newObject) {
 	}
 
-    /**
-	 * An entry has been added.  Either the entry has been added to
-	 * an existing transaction, or a new transaction has been added.
-	 * If a new transaction is added then an entryAdded event is
-	 * fired for each entry in the transaction.
-	 */
-    public void entryAdded(Entry newEntry) {
-    }
-
-    /**
-	 * An entry has been deleted.  Either the entry has been deleted
-	 * from a transaction, or an entire transaction has been deleted.
-	 * If a transaction is deleted then an entryDeleted event is
-	 * fired for each entry in the transaction.
-	 */
-    public void entryDeleted(Entry oldEntry) {
-    }
-
-	/**
-	 * @param transaction
-	 * @param entriesInTransaction
-	 */
-	public void transactionDeleted(Transaction oldTransaction, Vector entriesInTransaction) {
-	}
-	
-	public void objectAdded(ExtendableObject extendableObject) {
+	public void objectDeleted(ExtendableObject deletedObject) {
 	}
 
-	public void objectDeleted(ExtendableObject extendableObject) {
+	public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
 	}
 
-	public void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+	public void performRefresh() {
 	}
 }

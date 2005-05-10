@@ -189,7 +189,7 @@ public abstract class ExtendableObject {
 	// Should allow default package access and protected access
 	// but not public access.  Unfortunately this cannot be done
 	// so for time being allow public access.
-	public void processPropertyChange(PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+	public void processPropertyChange(final PropertyAccessor propertyAccessor, final Object oldValue, final Object newValue) {
 		if (oldValue == newValue ||
 				(oldValue != null && oldValue.equals(newValue)))
 					return;
@@ -238,40 +238,10 @@ public abstract class ExtendableObject {
 		getSession().getChangeManager().processPropertyUpdate(this, propertyAccessor, oldValue, newValue);
 
 		// Fire an event for this change.
-		getSession().objectChanged(
-        		this,
-        		propertyAccessor,
-				oldValue,
-				newValue);
-	}
-	
-	// Should allow default package access and protected access
-	// but not public access.  Unfortunately this cannot be done
-	// so for time being allow public access.
-	public void processObjectAddition(PropertyAccessor owningListProperty, final ExtendableObject newObject) {
-		getSession().getChangeManager().processObjectCreation(this, owningListProperty, newObject);
-
-		// Fire the event.
 		getSession().fireEvent(
             	new ISessionChangeFirer() {
             		public void fire(SessionChangeListener listener) {
-            			listener.objectAdded(newObject);
-            		}
-           		});
-	}
-	
-	// Should allow default package access and protected access
-	// but not public access.  Unfortunately this cannot be done
-	// so for time being allow public access.
-	public void processObjectDeletion(PropertyAccessor owningListProperty, final ExtendableObject oldObject) {
-		// Notify the change manager.
-		getSession().getChangeManager().processObjectDeletion(this, owningListProperty, oldObject);
-		
-		// Fire the event.
-		getSession().fireEvent(
-            	new ISessionChangeFirer() {
-            		public void fire(SessionChangeListener listener) {
-            			listener.objectDeleted(oldObject);
+            			listener.objectChanged(ExtendableObject.this, propertyAccessor, oldValue, newValue);
             		}
            		});
 	}
@@ -521,46 +491,6 @@ public abstract class ExtendableObject {
 		setPropertyValue(propertyAccessor, new Character(value));
 	}
 
-	/**
-	 * @param owningListProperty property accessor for the list property into which
-	 * 			the newly created object is to be placed
-	 * @param actualPropertySet if the list property is typed to contain
-	 * 			properties that are derivable then <code>actualPropertySet</code>
-	 * 			must contain the non-derivable property set for the object to
-	 * 			be created.  If the list property is typed to contain
-	 * 			properties that are not derivable then <code>actualPropertySet</code>
-	 * 			is ignored and objects are always created as appropriate for
-	 * 			the owning list.
-	 */
-// TODO: remove this method.	
-	public ExtendableObject createObject(PropertyAccessor owningListProperty, PropertySet actualPropertySet) {
-		// TODO: ensure the following always returns non-null.
-		Object objectWithProperties = getMutablePropertySetInterface(owningListProperty.getPropertySet());
-		
-		if (owningListProperty.getValuePropertySet().isDerivable()) {
-			return owningListProperty.invokeCreateMethod(objectWithProperties, actualPropertySet);
-		} else {
-			return owningListProperty.invokeCreateMethod(objectWithProperties);
-		}
-	}
-	
-	/**
-	 * @param owningListProperty
-	 * @param object
-	 */
-	public boolean deleteObject(PropertyAccessor owningListProperty, ExtendableObject object) {
-		Object objectWithProperties = getMutablePropertySetInterface(owningListProperty.getPropertySet());
-		
-		// If objectWithProperties is null, the list is in an extension and no properties
-		// have been set in the extension.  That means the list is empty so return false
-		// to indicate the object to be deleted cannot be found.
-		if (objectWithProperties == null) {
-			return false;
-		}
-		
-		return owningListProperty.invokeDeleteMethod(objectWithProperties, object);
-	}
-	
 	/**
 	 * Return a list of extension that exist for this object.
 	 * This is the list of extensions that have actually been

@@ -517,7 +517,7 @@ public class TransactionManager implements IDataManager {
 			for (Iterator iter2 = modifiedList.getDeletedObjectIterator(); iter2.hasNext(); ) {
 				IObjectKey objectToDelete = (IObjectKey)iter2.next();
 				
-				parent.deleteObject(parentListPair.listAccessor, objectToDelete.getObject());
+				parent.getListPropertyValue(parentListPair.listAccessor).remove(objectToDelete.getObject());
 			}
 		}
 		
@@ -659,7 +659,7 @@ public class TransactionManager implements IDataManager {
 		}
 		
 		void deleteObject(ExtendableObject object) {
-			parent.deleteObject(owningListProperty, object);
+			parent.getListPropertyValue(owningListProperty).remove(object);
 		}
 	}
 

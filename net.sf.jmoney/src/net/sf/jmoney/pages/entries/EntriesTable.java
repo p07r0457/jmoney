@@ -390,55 +390,58 @@ public class EntriesTable implements IEntriesControl {
     	});
 
         session.addSessionChangeListener(new SessionChangeAdapter() {
-			public void entryAdded(Entry newEntry) {
-				// if the entry is in this table, add it
-				if (entriesContent.isEntryInTable(newEntry)) {
-					addEntryInAccount(newEntry);
-				}
-				
-				// Even if this entry is not in this table, if one of
-				// the other entries in the transaction is in this table
-				// then the table view will need updating because the split
-				// entry rows will need updating.
-				for (Iterator iter = newEntry.getTransaction().getEntryCollection().iterator(); iter.hasNext(); ) {
-					Entry entry = (Entry)iter.next();
-					if (!entry.equals(newEntry) 
-							&& entriesContent.isEntryInTable(entry)) {
-						addEntry(entry, newEntry);
-					}
-				}
+        	public void objectAdded(ExtendableObject newObject) {
+        		if (newObject instanceof Entry) {
+        			Entry newEntry = (Entry)newObject;
+        			// if the entry is in this table, add it
+        			if (entriesContent.isEntryInTable(newEntry)) {
+        				addEntryInAccount(newEntry);
+        			}
+        			
+        			// Even if this entry is not in this table, if one of
+        			// the other entries in the transaction is in this table
+        			// then the table view will need updating because the split
+        			// entry rows will need updating.
+        			for (Iterator iter = newEntry.getTransaction().getEntryCollection().iterator(); iter.hasNext(); ) {
+        				Entry entry = (Entry)iter.next();
+        				if (!entry.equals(newEntry) 
+        						&& entriesContent.isEntryInTable(entry)) {
+        					addEntry(entry, newEntry);
+        				}
+        			}
+        		}
 			}
 
-			public void entryDeleted(Entry oldEntry, Transaction transaction) {
-				// if the entry is in this table, remove it.
-				if (entriesContent.isEntryInTable(oldEntry)) {
-					removeEntryInAccount(oldEntry);
-				}
-				
-				// Even if this entry is not in this table, if one of
-				// the other entries in the transaction is in this table
-				// then the table view will need updating because the split
-				// entry rows will need updating.
-				for (Iterator iter = oldEntry.getTransaction().getEntryCollection().iterator(); iter.hasNext(); ) {
-					Entry entry = (Entry)iter.next();
-					if (!entry.equals(oldEntry) 
-							&& entriesContent.isEntryInTable(entry)) {
-						removeEntry(entry, oldEntry);
-					}
-				}
+        	public void objectDeleted(ExtendableObject deletedObject) {
+        		if (deletedObject instanceof Entry) {
+        			Entry deletedEntry = (Entry)deletedObject;
+        			// if the entry is in this table, remove it.
+        			if (entriesContent.isEntryInTable(deletedEntry)) {
+        				removeEntryInAccount(deletedEntry);
+        			}
+        			
+        			// Even if this entry is not in this table, if one of
+        			// the other entries in the transaction is in this table
+        			// then the table view will need updating because the split
+        			// entry rows will need updating.
+        			for (Iterator iter = deletedEntry.getTransaction().getEntryCollection().iterator(); iter.hasNext(); ) {
+        				Entry entry = (Entry)iter.next();
+        				if (!entry.equals(deletedEntry) 
+        						&& entriesContent.isEntryInTable(entry)) {
+        					removeEntry(entry, deletedEntry);
+        				}
+        			}
+        		} else if (deletedObject instanceof Transaction) {
+        			Transaction deletedTransaction = (Transaction)deletedObject;
+        			
+        			for (Iterator iter = deletedTransaction.getEntryCollection().iterator(); iter.hasNext(); ) {
+        				Entry entry = (Entry)iter.next();
+        				if (entriesContent.isEntryInTable(entry)) {
+        					removeEntryInAccount(entry);
+        				}
+        			}
+        		}
 			}
-
-			/* I do not believe this is necessary because EntryDeleted
-			 * should be called when a transaction is deleted.
-			public void transactionDeleted(Transaction oldTransaction, Vector entriesInTransaction) {
-				for (Iterator iter = entriesInTransaction.iterator(); iter.hasNext(); ) {
-					Entry entry = (Entry)iter.next();
-					if (fPage.getAccount().equals(entry.getAccount())) {
-						fEntriesControl.removeEntryInAccount(entry);
-					}
-				}
-			}
-			 */
 			
 			public void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 				if (extendableObject instanceof Entry) {

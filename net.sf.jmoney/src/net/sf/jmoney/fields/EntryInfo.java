@@ -97,7 +97,7 @@ public class EntryInfo implements IPropertySetInfo {
 		        			    return;
 		        			}
 		        			// Has the account property changed?
-		        			if (changedObject == entry && changedProperty == EntryInfo.getAccountAccessor()) {
+		        			if (changedObject.equals(entry) && changedProperty == EntryInfo.getAccountAccessor()) {
 		        				// FIXME I don't know how to get the commodity for an
 		        				// income and expense account.
 		        				//editor.updateCommodity(entry.getCommodity());	

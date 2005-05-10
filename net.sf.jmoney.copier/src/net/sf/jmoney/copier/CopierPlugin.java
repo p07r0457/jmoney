@@ -11,6 +11,7 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionObject;
 import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -157,10 +158,11 @@ public class CopierPlugin extends AbstractUIPlugin {
 					newValue);
     	} else {
     		// Property is a list property.
+    		ObjectCollection newList = newObject.getListPropertyValue(propertyAccessor);
     		for (Iterator listIter = oldObject.getListPropertyValue(propertyAccessor).iterator(); listIter.hasNext(); ) {
     			ExtendableObject oldSubObject = (ExtendableObject)listIter.next();
     			PropertySet listElementPropertySet = PropertySet.getPropertySet(oldSubObject.getClass());
-    			ExtendableObject newSubObject = newObject.createObject(propertyAccessor, listElementPropertySet);
+    			ExtendableObject newSubObject = newList.createNewElement(listElementPropertySet);
     			populateObject(listElementPropertySet, oldSubObject, newSubObject, objectMap);
     		}
     	}

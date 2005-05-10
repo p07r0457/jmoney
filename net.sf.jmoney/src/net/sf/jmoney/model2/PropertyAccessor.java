@@ -80,17 +80,11 @@ public class PropertyAccessor {
     */
    private Class propertyClass;
    
-   // If a list property, this is the iterator getter.
+   // If a list property, this getter returns a collection
    private Method theGetMethod;
    
    // Applies only if scalar property
    private Method theSetMethod;
-   
-   // Applies only if list property
-   private Method theCreateMethod;
-   
-   // Applies only if list property
-   private Method theDeleteMethod;
    
    // Applies only if scalar property of type ExtendableObject
    private Field theObjectKeyField;
@@ -250,20 +244,6 @@ public class PropertyAccessor {
 			} else {
 				parameters = new Class[0];
 			}	
-			
-			theCreateMethod = findMethod("create", localName, parameters);
-			
-			if (theCreateMethod.getReturnType() != this.getValueClass()) {
-				throw new MalformedPluginException("Method '" + theCreateMethod.getName() + "' in '" + propertySet.getImplementationClass().getName() + "' must return an object of type " + this.getValueClass() + "."); 
-			}
-
-	        Class deleteParameterTypes[] = {propertyClass};
-			theDeleteMethod = findMethod("delete", localName, deleteParameterTypes);
-	        
-	        if (theDeleteMethod.getReturnType() != boolean.class) {
-	            throw new MalformedPluginException("Method '" + theDeleteMethod.getName() + "' in '" + propertySet.getImplementationClass().getName() + "' must return boolean type .");
-	        }
-
 		}
 	}
 
@@ -386,70 +366,6 @@ public class PropertyAccessor {
 
    public IObjectKey invokeObjectKeyField(ExtendableObject object) {
    	return (IObjectKey)object.getProtectedFieldValue(theObjectKeyField);
-   }
-
-   /**
-    * This version of the method is valid only for list objects where
-    * the list is typed to a property set that is not derivable.
-    */
-   public ExtendableObject invokeCreateMethod(Object invocationTarget) {
-		try {
-			Object parameters[] = new Object[] { };
-			return (ExtendableObject)theCreateMethod.invoke(invocationTarget, parameters);
-		} catch (InvocationTargetException e) {
-			// TODO Process this properly
-			e.printStackTrace();
-			throw new RuntimeException("Plugin error");
-		} catch (Exception e) {
-			// IllegalAccessException and IllegalArgumentException exceptions should
-			// not be possible here because the method was checked
-			// for correct access rights and parameters during initialization.
-			// Therefore throw a runtime exception.
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		}
-   }
-   
-   /**
-    * This version of the method is valid only for list objects where
-    * the list is typed to a property set that is derivable.
-    * The property set of the object to be created must be passed.
-    */
-   public ExtendableObject invokeCreateMethod(Object invocationTarget, PropertySet actualPropertySet) {
-		try {
-			Object parameters[] = new Object[] { actualPropertySet };
-			return (ExtendableObject)theCreateMethod.invoke(invocationTarget, parameters);
-		} catch (InvocationTargetException e) {
-			// TODO Process this properly
-			e.printStackTrace();
-			throw new RuntimeException("Plugin error");
-		} catch (Exception e) {
-			// IllegalAccessException and IllegalArgumentException exceptions should
-			// not be possible here because the method was checked
-			// for correct access rights and parameters during initialization.
-			// Therefore throw a runtime exception.
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		}
-   }
-   
-   public boolean invokeDeleteMethod(Object invocationTarget, ExtendableObject object) {
-		try {
-			Object parameters[] = new Object[] { object };
-			Boolean result = (Boolean)theDeleteMethod.invoke(invocationTarget, parameters);
-			return result.booleanValue();
-		} catch (InvocationTargetException e) {
-			// TODO Process this properly
-			e.printStackTrace();
-			throw new RuntimeException("Plugin error");
-		} catch (Exception e) {
-			// IllegalAccessException and IllegalArgumentException exceptions should
-			// not be possible here because the method was checked
-			// for correct access rights and parameters during initialization.
-			// Therefore throw a runtime exception.
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		}
    }
 
    /**

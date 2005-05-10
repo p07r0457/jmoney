@@ -188,7 +188,7 @@ public class ChangeManager {
 			ExtendableObject object = objectKeyProxy.key.getObject();  // efficient???
 			
 			// Delete the object from the datastore.
-			parent.deleteObject(owningListProperty, object);
+			parent.getListPropertyValue(owningListProperty).remove(object);
 		}
 	}
 	
@@ -200,7 +200,7 @@ public class ChangeManager {
 		
 		void undo() {
 			// Create the object in the datastore.
-			ExtendableObject object = parent.createObject(owningListProperty, actualPropertySet);
+			ExtendableObject object = parent.getListPropertyValue(owningListProperty).createNewElement(actualPropertySet);
 			
 			// Set the properties to the values that were set before
 			// the object was deleted.
@@ -352,6 +352,10 @@ public class ChangeManager {
 			ExtendableObject parent,
 			PropertyAccessor owningListProperty,
 			ExtendableObject oldObject) {
+		
+		// TODO: We must also process objects owned by this object in a recursive
+		// manner.  Otherwise, undoing the deletion of an object will not restore
+		// any objects owned by that object.
 		
 		ChangeEntry_Delete newChangeEntry = new ChangeEntry_Delete();
 		

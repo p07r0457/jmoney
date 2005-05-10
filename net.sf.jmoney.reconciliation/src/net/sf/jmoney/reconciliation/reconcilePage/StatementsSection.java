@@ -33,6 +33,7 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.IReconciliationQueries;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
@@ -249,25 +250,40 @@ public class StatementsSection extends SectionPart {
 
 			// Listen for changes so we can keep the tree map upto date.
 			account.getSession().addSessionChangeListener(new SessionChangeAdapter() {
-				public void entryAdded(Entry newEntry) {
-					if (account.equals(newEntry.getAccount())) {
-						BankStatement statement = (BankStatement)newEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
-						adjustStatement(statement, newEntry.getAmount());
+				public void objectAdded(ExtendableObject newObject) {
+					if (newObject instanceof Entry) {
+						Entry newEntry = (Entry)newObject;
+						if (account.equals(newEntry.getAccount())) {
+							BankStatement statement = (BankStatement)newEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
+							adjustStatement(statement, newEntry.getAmount());
+						}
 					}
 				}
 				
-				public void entryDeleted(Entry oldEntry) {
-					if (account.equals(oldEntry.getAccount())) {
-						BankStatement statement = (BankStatement)oldEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
-						adjustStatement(statement, -oldEntry.getAmount());
+				public void objectDeleted(ExtendableObject deletedObject) {
+					if (deletedObject instanceof Entry) {
+						Entry deletedEntry = (Entry)deletedObject;
+						if (account.equals(deletedEntry.getAccount())) {
+							BankStatement statement = (BankStatement)deletedEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
+							adjustStatement(statement, -deletedEntry.getAmount());
+						}
+					} else if (deletedObject instanceof Transaction) {
+						Transaction deletedTransaction = (Transaction)deletedObject;
+						for (Iterator iter = deletedTransaction.getEntryCollection().iterator(); iter.hasNext(); ) {
+							Entry deletedEntry = (Entry)iter.next();
+							if (account.equals(deletedEntry.getAccount())) {
+								BankStatement statement = (BankStatement)deletedEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
+								adjustStatement(statement, -deletedEntry.getAmount());
+							}
+						}
 					}
 				}
 				
-				public void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-					if (extendableObject instanceof Entry) {
-						Entry entry = (Entry)extendableObject;
+				public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+					if (changedObject instanceof Entry) {
+						Entry entry = (Entry)changedObject;
 						
-						if (propertyAccessor == EntryInfo.getAccountAccessor()) {
+						if (changedProperty == EntryInfo.getAccountAccessor()) {
 							if (account.equals(oldValue)) {
 								BankStatement statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 								adjustStatement(statement, -entry.getAmount());
@@ -278,12 +294,12 @@ public class StatementsSection extends SectionPart {
 							}
 						} else {
 							if (account.equals(entry.getAccount())) {
-								if (propertyAccessor == EntryInfo.getAmountAccessor()) {
+								if (changedProperty == EntryInfo.getAmountAccessor()) {
 									BankStatement statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 									long oldAmount = ((Long)oldValue).longValue();
 									long newAmount = ((Long)newValue).longValue();
 									adjustStatement(statement, newAmount - oldAmount);
-								} else if (propertyAccessor == ReconciliationEntryInfo.getStatementAccessor()) {
+								} else if (changedProperty == ReconciliationEntryInfo.getStatementAccessor()) {
 									adjustStatement((BankStatement)oldValue, -entry.getAmount());
 									adjustStatement((BankStatement)newValue, entry.getAmount());
 								}
@@ -336,7 +352,7 @@ public class StatementsSection extends SectionPart {
 				// update.  Note that tailMap returns a collection that
 				// includes the starting key, so we must be sure not to
 				// process that.
-				SortedMap laterStatements = statementDetailsMap.tailMap(thisStatementDetails);
+				SortedMap laterStatements = statementDetailsMap.tailMap(statement);
 				for (Iterator iter = laterStatements.values().iterator(); iter.hasNext(); ) {
 					StatementDetails statementDetails = (StatementDetails)iter.next();
 					if (!statementDetails.statement.equals(statement)) {

@@ -45,47 +45,6 @@ public interface SessionChangeListener extends EventListener {
     void sessionReplaced(Session oldSession, Session newSession);
 	
 	/**
-	 * A scalar property in the session object has changed.
-	 */
-    void sessionPropertyChange(String propertyName, Object oldValue, Object newValue);
-	
-	/**
-	 * An account has been added.  The account may be a top-level
-	 * account or a sub-account.
-	 */
-    void accountAdded(Account newAccount);
-
-    /**
-	 * An account has been deleted.  The account may be a top-level
-	 * account or a sub-account.
-	 */
-    void accountDeleted(Account oldAccount);
-
-    /**
-	 * The properties of an account have been changed.  
-	 * The account may be a top-level account or a sub-account
-	 * and may be a capital account or a category
-	 * (income and expense) account.
-	 */
-    void accountChanged(Account account, PropertyAccessor propertyAccessor, Object oldValue, Object newValue);
-
-    /**
-	 * An entry has been added.  Either the entry has been added to
-	 * an existing transaction, or a new transaction has been added.
-	 * If a new transaction is added then an entryAdded event is
-	 * fired for each entry in the transaction.
-	 */
-    void entryAdded(Entry newEntry);
-
-    /**
-	 * An entry has been deleted.  Either the entry has been deleted
-	 * from a transaction, or an entire transaction has been deleted.
-	 * If a transaction is deleted then an entryDeleted event is
-	 * fired for each entry in the transaction.
-	 */
-    void entryDeleted(Entry oldEntry);
-
-	/**
 	 * An extendable object has been added.
 	 * <P>
 	 * This method is called for all extendable objects added
@@ -94,23 +53,23 @@ public interface SessionChangeListener extends EventListener {
 	 *
 	 * @param extendableObject
 	 */
-	void objectAdded(ExtendableObject extendableObject);
+	void objectAdded(ExtendableObject newObject);
 
 	/**
 	 * An extendable object has been deleted.
 	 */
-    void objectDeleted(ExtendableObject extendableObject);
+    void objectDeleted(ExtendableObject deletedObject);
 
     /**
 	 * A scalar property in an extendable object
 	 * has been changed.
 	 */
-    void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue);
+    void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue);
 
 	/**
 	 * @param transaction
 	 * @param entriesInTransaction
 	 */
-	void transactionDeleted(Transaction oldTransaction, Vector entriesInTransaction);
+	void performRefresh();
 
 }

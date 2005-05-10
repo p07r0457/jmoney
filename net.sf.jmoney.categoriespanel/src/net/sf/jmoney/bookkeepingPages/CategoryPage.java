@@ -34,6 +34,7 @@ import net.sf.jmoney.categoriespanel.CategoriesPanelPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyDependency;
@@ -190,8 +191,9 @@ public class CategoryPage implements IBookkeepingPageFactory {
 				// and possibly re-built, so do nothing here.
 			}
 			
-			public void accountAdded(Account newAccount) {
-				if (newAccount instanceof IncomeExpenseAccount) {
+			public void objectAdded(ExtendableObject newObject) {
+				if (newObject instanceof IncomeExpenseAccount) {
+					IncomeExpenseAccount newAccount = (IncomeExpenseAccount)newObject;
 					Account parent = newAccount.getParent();
 					if (parent == null) {
 						viewer.refresh(session, false);
@@ -201,9 +203,10 @@ public class CategoryPage implements IBookkeepingPageFactory {
 				}
 			}
 			
-			public void accountDeleted(Account oldAccount) {
-				if (oldAccount instanceof IncomeExpenseAccount) {
-					Account parent = oldAccount.getParent();
+			public void objectDeleted(ExtendableObject deletedObject) {
+				if (deletedObject instanceof IncomeExpenseAccount) {
+					IncomeExpenseAccount deletedAccount = (IncomeExpenseAccount)deletedObject;
+					Account parent = deletedAccount.getParent();
 					if (parent == null) {
 						viewer.refresh(session, false);
 					} else {
@@ -212,24 +215,26 @@ public class CategoryPage implements IBookkeepingPageFactory {
 				}
 			}
 			
-			public void accountChanged(Account account, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-				if (account instanceof IncomeExpenseAccount
-						&& propertyAccessor == AccountInfo.getNameAccessor()) {
-					Account parent = account.getParent();
-					// We refresh the parent node because the name change
-					// in this node may affect the order of the child nodes.
-					if (parent == null) {
-						viewer.refresh(session, true);
-					} else {
-						viewer.refresh(parent, true);
+			public void objectChanged(ExtendableObject changedObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+				if (changedObject instanceof IncomeExpenseAccount) {
+					IncomeExpenseAccount account = (IncomeExpenseAccount)changedObject;
+					if (propertyAccessor == AccountInfo.getNameAccessor()) {
+						Account parent = account.getParent();
+						// We refresh the parent node because the name change
+						// in this node may affect the order of the child nodes.
+						if (parent == null) {
+							viewer.refresh(session, true);
+						} else {
+							viewer.refresh(parent, true);
+						}
 					}
-				}
-				
-				if (account.equals(selectedAccount)) {
-					// Update the visibility of controls.
-					for (Iterator iter = propertyList.iterator(); iter.hasNext(); ) {
-						PropertyControls propertyControls = (PropertyControls)iter.next();
-						propertyControls.setVisibility();
+					
+					if (account.equals(selectedAccount)) {
+						// Update the visibility of controls.
+						for (Iterator iter = propertyList.iterator(); iter.hasNext(); ) {
+							PropertyControls propertyControls = (PropertyControls)iter.next();
+							propertyControls.setVisibility();
+						}
 					}
 				}
 			}

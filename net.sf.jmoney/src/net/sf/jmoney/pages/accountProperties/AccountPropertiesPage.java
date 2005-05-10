@@ -31,6 +31,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -82,11 +83,11 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 		
 		private SessionChangeListener listener =
 			new SessionChangeAdapter() {
-		    public void accountChanged(final Account account, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-				if (account == AccountPropertiesControl.this.account) {
-					if (JMoneyPlugin.DEBUG) System.out.println("Property changed, reloading control: " + propertyAccessor.getLocalName());
+        	public void objectChanged(ExtendableObject extendableObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+				if (extendableObject.equals(AccountPropertiesControl.this.account)) {
+					if (JMoneyPlugin.DEBUG) System.out.println("Property changed, reloading control: " + changedProperty.getLocalName());
 					// Find the control for this property.
-					IPropertyControl propertyControl = (IPropertyControl)propertyControlList.get(propertyAccessor.getIndexIntoScalarProperties());
+					IPropertyControl propertyControl = (IPropertyControl)propertyControlList.get(changedProperty.getIndexIntoScalarProperties());
 					propertyControl.load(account);
 				}
 			}

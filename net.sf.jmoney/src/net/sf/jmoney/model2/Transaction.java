@@ -149,67 +149,27 @@ public class Transaction extends ExtendableObject {
 		return new Object [] { new Date() };
 	}
 	
+    /**
+     * This class adds a little tighter typing to ObjectCollection,
+     * but it is barely worth while having this class.
+	 */
 	public class EntryCollection extends ObjectCollection {
 		EntryCollection(IListManager listManager, ExtendableObject parent, PropertyAccessor listPropertyAccessor) {
 			super(listManager, parent, listPropertyAccessor);
 		}
 		
 	    /**
-		 * @param entry
-		 * @return
+	     * Identical to <code>remove</remove> but tighter typing
 		 */
-		public boolean deleteEntry(final Entry entry) {
-	    	
-	        boolean found = entries.remove(entry);
-
-			if (found) {
-				processObjectDeletion(TransactionInfo.getEntriesAccessor(), entry);
-
-				// In addition to the generic object deletion event, we also fire an event
-				// specifically for entry deletion.  The entryDeleted event is superfluous 
-				// and it may be simpler if we removed it, so that listeners receive the generic
-				// objectDeleted event only.
-				getSession().fireEvent(
-			            	new ISessionChangeFirer() {
-			            		public void fire(SessionChangeListener listener) {
-			            			listener.entryDeleted(entry);
-			            		}
-			           		});
-			}
-
-			return found;
+		public boolean deleteEntry(Entry entry) {
+	    	return remove(entry);
 		}
 
+	    /**
+	     * Identical to <code>createNewElement</remove> but tighter typing
+		 */
 		public Entry createEntry() {
-			final Entry newEntry = (Entry)entries.createNewElement(Transaction.this, EntryInfo.getPropertySet());
-
-			processObjectAddition(TransactionInfo.getEntriesAccessor(), newEntry);
-			
-			getSession().fireEvent(
-					new ISessionChangeFirer() {
-						public void fire(SessionChangeListener listener) {
-							listener.entryAdded(newEntry);
-						}
-					});
-			
-		    return newEntry;
+			return (Entry)createNewElement(EntryInfo.getPropertySet());
 		}
-
-	    public ExtendableObject createNewElement(PropertySet actualPropertySet, Object values[]) {
-			final Entry newEntry = (Entry)entries.createNewElement(Transaction.this, EntryInfo.getPropertySet(), values);
-
-			processObjectAddition(TransactionInfo.getEntriesAccessor(), newEntry);
-			
-			getSession().fireEvent(
-					new ISessionChangeFirer() {
-						public void fire(SessionChangeListener listener) {
-							listener.entryAdded(newEntry);
-						}
-					});
-			
-		    return newEntry;
-		}
-
-		
 	}
 }

@@ -247,56 +247,27 @@ public abstract class CapitalAccount extends Account {
 	}
 
 	/**
-	 * This version is required by the JMoney framework.
+	 * Create a sub-account of this account.  This method is
+	 * identical to calling 
+	 * <code>getSubAccountCollection().createNewElement(propertySet)</code>.
 	 * 
 	 * @param propertySet a property set derived (directly or
 	 * 			indirectly) from the CapitalAccount property set.
 	 * 			This property set must not be derivable and is
 	 * 			the property set for the type of capital account
 	 * 			to be created.
-	 * @return
 	 */
 	public CapitalAccount createSubAccount(PropertySet propertySet) {
-		final CapitalAccount newSubAccount = (CapitalAccount)subAccounts.createNewElement(
-				this, 
-				propertySet); 
-
-		processObjectAddition(CapitalAccountInfo.getSubAccountAccessor(), newSubAccount);
-		
-		// In addition to the generic object creation event, we also fire an event
-		// specifically for account creation.  The accountAdded event is superfluous 
-		// and it may be simpler if we removed it, so that listeners receive the generic
-		// objectAdded event only.
-		getSession().fireEvent(
-				new ISessionChangeFirer() {
-					public void fire(SessionChangeListener listener) {
-						listener.accountAdded(newSubAccount);
-					}
-				});
-		
-		return newSubAccount;
+		return (CapitalAccount)getSubAccountCollection().createNewElement(propertySet);
 	}
         
 	/**
-	 * This version is required by the JMoney framework.
+	 * Delete a sub-account of this account.  This method is
+	 * identical to calling 
+	 * <code>getSubAccountCollection().remove(subAccount)</code>.
 	 */
-	boolean deleteSubAccount(final CapitalAccount subAccount) {
-		boolean found = subAccounts.remove(subAccount);
-		if (found) {
-			processObjectDeletion(CapitalAccountInfo.getSubAccountAccessor(), subAccount);
-			
-			// In addition to the generic object deletion event, we also fire an event
-			// specifically for account deletion.  The accountDeleted event is superfluous 
-			// and it may be simpler if we removed it, so that listeners receive the generic
-			// objectDeleted event only.
-			getSession().fireEvent(
-					new ISessionChangeFirer() {
-						public void fire(SessionChangeListener listener) {
-							listener.accountDeleted(subAccount);
-						}
-					});
-		}
-		return found;
+	boolean deleteSubAccount(CapitalAccount subAccount) {
+		return getSubAccountCollection().remove(subAccount);
 	}
 	
 	static public Object [] getDefaultProperties() {

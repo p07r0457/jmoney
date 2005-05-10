@@ -278,9 +278,9 @@ public class TransactionDialog {
     		// This changes the set of properties to be shown
     		// for this entry.
             session.addSessionChangeListener(new SessionChangeAdapter() {
-    			public void objectChanged(ExtendableObject extendableObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-    				if (propertyAccessor == EntryInfo.getAccountAccessor()
-    						&& extendableObject.equals(entry)) {
+    			public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+    				if (changedProperty == EntryInfo.getAccountAccessor()
+    						&& changedObject.equals(entry)) {
     					updateSetOfEntryControls();
     				}
     			}

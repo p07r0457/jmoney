@@ -408,28 +408,6 @@ public class Session extends ExtendableObject implements IAdaptable {
     	return sessionFiring;
     }
 
-    /* (non-Javadoc)
-	 * @see net.sf.jmoney.model2.Session#objectChanged(net.sf.jmoney.model2.ExtendableObject, net.sf.jmoney.model2.PropertyAccessor)
-	 */
-	public void objectChanged(final ExtendableObject extendableObject, final PropertyAccessor propertyAccessor, final Object oldValue, final Object newValue) {
-		if (extendableObject instanceof Account) {
-	        fireEvent(
-	            	new ISessionChangeFirer() {
-	            		public void fire(SessionChangeListener listener) {
-	            			listener.accountChanged((Account)extendableObject, propertyAccessor, oldValue, newValue);
-	            		}
-	           		});
-		}
-
-		// We always fire on the generic method.
-        fireEvent(
-            	new ISessionChangeFirer() {
-            		public void fire(SessionChangeListener listener) {
-            			listener.objectChanged(extendableObject, propertyAccessor, oldValue, newValue);
-            		}
-           		});
-	}
-
 	/**
 	 * Create a new account.  Accounts are abstract, so
 	 * a property set derived from the account property
@@ -455,22 +433,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 	 * @return
 	 */
 	public Account createAccount(PropertySet propertySet) {
-		final Account newAccount = (Account)accounts.createNewElement(this, propertySet);
-
-		processObjectAddition(SessionInfo.getAccountsAccessor(), newAccount);
-		
-		// In addition to the generic object creation event, we also fire an event
-		// specifically for account creation.  The accountAdded event is superfluous 
-		// and it may be simpler if we removed it, so that listeners receive the generic
-		// objectAdded event only.
-		fireEvent(
-				new ISessionChangeFirer() {
-					public void fire(SessionChangeListener listener) {
-						listener.accountAdded(newAccount);
-					}
-				});
-		
-		return newAccount;
+		return (Account)getAccountCollection().createNewElement(propertySet);
 	}
 
 	/**
@@ -498,33 +461,15 @@ public class Session extends ExtendableObject implements IAdaptable {
 	 * @return
 	 */
 	public Commodity createCommodity(PropertySet propertySet) {
-		Commodity newCommodity = (Commodity)commodities.createNewElement(this, propertySet);
-
-		processObjectAddition(SessionInfo.getCommoditiesAccessor(), newCommodity);
-		
-		return newCommodity;
+		return (Commodity)getCommodityCollection().createNewElement(propertySet);
 	}
 
 	public Transaction createTransaction() {
-		Transaction newTransaction = (Transaction)transactions.createNewElement(
-					this, 
-					TransactionInfo.getPropertySet()); 
-
-		processObjectAddition(SessionInfo.getTransactionsAccessor(), newTransaction);
-		
-		return newTransaction;
+		return (Transaction)getTransactionCollection().createNewElement(TransactionInfo.getPropertySet());
 	}
 	
     public boolean deleteCommodity(Commodity commodity) {
-        boolean found = commodities.remove(commodity);
-		if (found) {
-			if (commodity instanceof Currency) {
-				getSession().currencies.remove(((Currency)commodity).getCode());
-			}
-
-			processObjectDeletion(SessionInfo.getCommoditiesAccessor(), commodity);
-		}
-		return found;
+   		return getCommodityCollection().remove(commodity);
     }
 
     /**
@@ -541,102 +486,18 @@ public class Session extends ExtendableObject implements IAdaptable {
      * @return true if the account was present, false if the account
      * 				was not present in the collection.
      */
-    public boolean deleteAccount(final Account account) {
+    public boolean deleteAccount(Account account) {
         Account parent = account.getParent();
         if (parent == null) {
-            boolean accountFound = accounts.remove(account);
-            if (accountFound) {
-            	processObjectDeletion(SessionInfo.getAccountsAccessor(), account);
-
-            	// In addition to the generic object deletion event, we also fire an event
-    			// specifically for account deletion.  The accountDeleted event is superfluous 
-    			// and it may be simpler if we removed it, so that listeners receive the generic
-    			// objectDeleted event only.
-    			fireEvent(
-    					new ISessionChangeFirer() {
-    						public void fire(SessionChangeListener listener) {
-    							listener.accountDeleted(account);
-    						}
-    					});
-            }
-            return accountFound;
+        	return getAccountCollection().remove(account);
         } else {
         	// Pass the request on to the parent account.
             return ((Account)parent).deleteSubAccount(account);
         }
     }
 
-   	public boolean deleteTransaction(final Transaction transaction) {
-   		// Save the list of entries, because once the transaction
-   		// is removed from the collection, neither the transactions
-   		// nor the entries in it are in the database
-   		// and we cannot iterate the entries.  The only methods
-   		// that may be called after an object is removed from the 
-   		// datastore are the equals and hashCode methods.
-   		final Vector entriesInTransaction = new Vector(transaction.getEntryCollection());
-/*   		
-    	for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
-    		Entry entry = (Entry)iter.next();
-    		entriesInTransaction.add(entry);
-    	}
-*/    	
-   		boolean found = transactions.remove(transaction);
-
-        if (found) {
-        	for (Iterator iter = entriesInTransaction.iterator(); iter.hasNext(); ) {
-        		final Entry entry = (Entry)iter.next();
-
-        		// When deleting a transaction, we do not send notifications
-        		// of deletion of the entries inside the transaction.
-        		// To understand the reason for this, consider the account
-        		// entries list.  It is notified that an entry has been deleted.
-        		// It looks at the transaction to see what other entries are
-        		// in the transaction so it can update the entries list correctly.
-        		// However, the entire transaction has been deleted together
-        		// with the entries in it.  For the logic in the account entries list
-        		// to work, it would have to see the transaction with the remaining
-        		// entries each time an entry is deleted.  Also, it is not valid
-        		// to have a transaction with less than two entries, so we cannot
-        		// notify each object's removal and have each removal leave the
-        		// remaining objects in a valid state.
-        		
-        		// When it comes to the undo/redo change manager, however,
-        		// we must notify the change manager of each individual object
-        		// that is added or removed.
-        		// Notify the change manager.
-        		getSession().getChangeManager().processObjectDeletion(this, TransactionInfo.getEntriesAccessor(), entry);
-        		//processObjectDeletion(TransactionInfo.getEntriesAccessor(), entry);
-
-    			// In addition to the generic object deletion event, we also fire an event
-    			// specifically for entry deletion.  The entryDeleted event is superfluous 
-    			// and it may be simpler if we removed it, so that listeners receive the generic
-    			// objectDeleted event only.
-        		// This version is called when transactions are deleted, so
-        		// may be useful, but there is no current use.
-    			getSession().fireEvent(
-    		            	new ISessionChangeFirer() {
-    		            		public void fire(SessionChangeListener listener) {
-    		            			listener.entryDeleted(entry);
-    		            		}
-    		           		});
-        		
-        	}
-        	
-			processObjectDeletion(SessionInfo.getTransactionsAccessor(), transaction);
-			
-			// Fire the special transaction deletion event.
-			// This event is useful because the list of entries
-			// that were in the transaction is provided.
-			getSession().fireEvent(
-	            	new ISessionChangeFirer() {
-	            		public void fire(SessionChangeListener listener) {
-	            			listener.transactionDeleted(transaction, entriesInTransaction);
-	            		}
-	           		});
-			
-        }
-        
-        return found;
+   	public boolean deleteTransaction(Transaction transaction) {
+   		return getTransactionCollection().remove(transaction);
     }
     
 	public ChangeManager getChangeManager() {
