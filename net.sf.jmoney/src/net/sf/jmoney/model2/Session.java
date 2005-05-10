@@ -23,6 +23,7 @@
 
 package net.sf.jmoney.model2;
 
+import java.security.InvalidParameterException;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -49,7 +50,7 @@ public class Session extends ExtendableObject implements IAdaptable {
     
     private IListManager commodities;
     
-    private IListManager accounts;
+    private IListManager accounts;  // Only the Accounts of Level 0
 
     private IListManager transactions;
 
@@ -235,7 +236,7 @@ public class Session extends ExtendableObject implements IAdaptable {
      */
     
     public Iterator getCapitalAccountIteratorByLevel(int level) {
-    	Iterator itAccounts = accounts.iterator();
+    	Iterator itAccounts = getAllAccounts().iterator();
     	Vector   vecResult = new Vector();
     	while (itAccounts.hasNext()) {
     	    Account a = (Account) itAccounts.next();
@@ -650,7 +651,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 	 * @author Faucheux
 	 */
     public Vector getAccountsUntilLevel(int level) {
-    	Iterator i = accounts.iterator();
+    	Iterator i = getAllAccounts().iterator();
     	Vector v = new Vector();
     	while (i.hasNext()) {
     		Account a = (Account) i.next();
@@ -666,7 +667,7 @@ public class Session extends ExtendableObject implements IAdaptable {
      */
 	public Account getAccountByFullName(String name) {
 	    Account a = null;
-	    Iterator it = getAccountCollection().iterator();
+	    Iterator it = getAllAccounts().iterator();
 	    while (it.hasNext()) {
 	        a = (Account) it.next();
 	        if (JMoneyPlugin.DEBUG) System.out.println("Compare " + name + " to " + a.getFullAccountName());
@@ -676,6 +677,30 @@ public class Session extends ExtendableObject implements IAdaptable {
 	    return null;
 	}
 
+    /**
+     * @throws InvalidParameterException
+     * @author Faucheux
+     * TODO: Faucheux - not the better algorythm!
+     */
+	public Account getAccountByShortName(String name) throws SeveralAccountsFoundException, NoAccountFoundException{
+	    Account foundAccount = null;
+	    Iterator it = getAllAccounts().iterator();
+	    while (it.hasNext()) {
+	        Account a = (Account) it.next();
+	        if (JMoneyPlugin.DEBUG) System.out.println("Compare " + name + " to " + a.getName());
+	        if (a.getName().equals(name)) {
+	            if (foundAccount != null) {
+	                throw new SeveralAccountsFoundException ();
+	            } else {
+	                foundAccount = a;
+	            }
+	        } 
+	    }
+	    if (foundAccount == null) throw new NoAccountFoundException();
+	    return foundAccount;
+	}
+
+	
 	/**
 	 * Indicates the completion of a set of changes to the datastore 
 	 * that make a single undo/redo change.  This undo/redo change
@@ -766,4 +791,8 @@ public class Session extends ExtendableObject implements IAdaptable {
 		// are optimized for the datastore.
 		return objectKey.getSessionManager().getAdapter(adapter);
 	}
+	
+    public class NoAccountFoundException extends Exception {};
+    public class SeveralAccountsFoundException extends Exception {};
+
 }

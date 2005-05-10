@@ -201,7 +201,20 @@ public class Entry extends ExtendableObject {
 			return (Currency)incomeExpenseCurrencyKey.getObject();
 		}
 	}
-	
+
+	/**
+	 * returns the other account of the transaction associated with this
+	 * entry. If the transaction is a splitted one, there are several "other 
+	 * accounts", and the returned value is "null".
+	 */
+	public Account getOtherAccount () {
+		if (getTransaction().hasTwoEntries()) {
+			return getTransaction().getOther(this).getAccount();
+		} else {
+			return null;
+		}                    
+	}
+
 	public String getFullAccountName() {
 		if (getTransaction().hasTwoEntries()) {
 			Account category = getTransaction().getOther(this).getAccount();
@@ -380,4 +393,5 @@ public class Entry extends ExtendableObject {
 				null,
 				};
 	}
+
 }
