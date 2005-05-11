@@ -75,7 +75,7 @@ public class GnucashXMLExport {
       while (itList.hasNext()) 
           accountList.add ((Account) itList.next());
       LinkedList transactionList = new LinkedList ();
-      Iterator itTransaction = session.getTransactionIterator();
+      Iterator itTransaction = session.getTransactionCollection().iterator();
       while (itTransaction.hasNext()) 
           transactionList.add ((Transaction) itTransaction.next());
       
@@ -242,7 +242,7 @@ public class GnucashXMLExport {
       e.appendChild(e2);
 
       e2 = doc.createElement("trn:splits");
-      Iterator entryIt = transaction.getEntryIterator();
+      Iterator entryIt = transaction.getEntryCollection().iterator();
       while (entryIt.hasNext()) {
           Entry entry = (Entry) entryIt.next();
           exportEntry (e2, entry);
@@ -316,7 +316,7 @@ public class GnucashXMLExport {
    */
   private String getDescription (Transaction t) {
       String s = null;
-      Iterator it = t.getEntryIterator();
+      Iterator it = t.getEntryCollection().iterator();
       while (it.hasNext()) {
           Entry e = (Entry) it.next();
           if (s == null)
