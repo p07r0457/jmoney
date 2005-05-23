@@ -115,7 +115,7 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
      */
     public String getToolTipText() {
         // TODO Auto-generated method stub
-        return null;
+        return "tool tip text to distinquish pages with same name";
     }
 
     /* (non-Javadoc)

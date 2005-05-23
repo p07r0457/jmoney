@@ -162,7 +162,7 @@ public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
 		    super.eventLoopException(exception);
 	        Shell shell = new Shell(SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE);
 	        String errorString = ExceptionToString(exception);
-	        JobStatus jobStatus = new JobStatus(Status.ERROR, Status.OK, (Job) null,  "", exception);
+	        JobStatus jobStatus = new JobStatus(Status.ERROR, (Job) null,  "Following error has taken place: " + exception.getLocalizedMessage());
 	        // ErrorDialog dialog = new ErrorDialog (shell, "An error occured", "Following error has taken place: " + exception.getLocalizedMessage(), jobStatus, Status.ERROR);
 
 	        // Preparation of the dialog box

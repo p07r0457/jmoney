@@ -82,4 +82,16 @@ public interface IEntriesContent {
 	 * @return
 	 */
 	long getStartBalance();
+
+	/**
+	 * When a new entry is created in a list of entries, certain
+	 * properties must be set in the entry to ensure that the new
+	 * entry is included in the list.  For example, if the list
+	 * contains all entries that appear on a given statement of
+	 * a given account, then when the user creates a new entry in
+	 * that list, the account and statement must be set in the entry.
+	 *
+	 * @param newEntry
+	 */
+	void setNewEntryProperties(Entry newEntry);
 }

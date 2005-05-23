@@ -32,15 +32,10 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.Transaction;
-import net.sf.jmoney.pages.entries.EntriesTable;
 import net.sf.jmoney.pages.entries.EntriesTree;
 import net.sf.jmoney.pages.entries.IDisplayableItem;
 import net.sf.jmoney.pages.entries.IEntriesContent;
-import net.sf.jmoney.pages.entries.IEntriesControl;
 import net.sf.jmoney.pages.entries.IEntriesTableProperty;
-import net.sf.jmoney.pages.entries.TransactionDialog;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
@@ -60,10 +55,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
@@ -83,9 +75,7 @@ public class StatementSection extends SectionPart {
 
     private ReconcilePage fPage;
 
-    private IEntriesControl fReconciledEntriesControl;
-    
-    private Composite containerOfEntriesControl1;
+    private EntriesTree fReconciledEntriesControl;
     
 	/**
 	 * Contains two controls:
@@ -237,9 +227,12 @@ public class StatementSection extends SectionPart {
 			public long getStartBalance() {
 				return fPage.getAccount().getStartBalance();
 			}
-        	
-        };
 
+			public void setNewEntryProperties(Entry newEntry) {
+				newEntry.setAccount(fPage.getAccount());
+				newEntry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), fPage.getStatement());
+			}
+        };
         
         // Create the control that contains the table control and the buttons
         // underneath it.  These controls are grouped into a composite because
@@ -250,27 +243,6 @@ public class StatementSection extends SectionPart {
         layout23.marginHeight = 0;
         layout23.marginWidth = 0;
         containerOfTableAndButtons.setLayout(layout23);
-        
-        // Create the control that contains the Table or TableTree control.
-        // Although this control only contains a single child control,
-        // we need to create it so we can destroy and re-create the
-        // child control without altering the sequence of controls
-        // in the grid container.
-        
-        containerOfEntriesControl1 = toolkit.createComposite(containerOfTableAndButtons);
-        containerOfEntriesControl1.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED));
-        GridLayout layout21 = new GridLayout();
-        layout21.marginHeight = 0;
-        layout21.marginWidth = 0;
-        containerOfEntriesControl1.setLayout(layout21);
-
-        GridData gridData = new GridData(GridData.FILL_BOTH);
-        gridData.heightHint = 50;
-        gridData.widthHint = 200;
-		gridData.grabExcessHorizontalSpace = true;
-		gridData.grabExcessVerticalSpace = true;
-        containerOfEntriesControl1.setLayoutData(gridData);
-
         
 		// We manage the layout of 'container' ourselves because we want either
 		// the 'containerOfTableAndButtons' to be visible or the 'no statement'
@@ -283,10 +255,8 @@ public class StatementSection extends SectionPart {
 		noStatementMessage.setText(ReconciliationPlugin.getResourceString("EntriesSection.noStatementMessage"));
 		noStatementMessage.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED));
 
-        // Initially set to the table control.
-        // TODO: save this information in the memento so
-        // the user always gets the last selected view.
-        fReconciledEntriesControl = new EntriesTable(containerOfEntriesControl1, reconciledTableContents, fPage.getAccount().getSession()); 
+        // Create the table control.
+        fReconciledEntriesControl = new EntriesTree(containerOfTableAndButtons, toolkit, reconciledTableContents, fPage.getAccount().getSession()); 
 		fPage.getEditor().getToolkit().adapt(fReconciledEntriesControl.getControl(), true, false);
 		fReconciledEntriesControl.addSelectionListener(tableSelectionListener);
         
@@ -318,7 +288,6 @@ public class StatementSection extends SectionPart {
 					containerOfTableAndButtons.layout(true);  // ??????
 				}
 			}
-			
 		});
 		
 		// Listen for double clicks.
@@ -405,136 +374,9 @@ public class StatementSection extends SectionPart {
 			}
         });
         
-        // Create the button area
-		Composite buttonArea = toolkit.createComposite(containerOfTableAndButtons);
-		
-		RowLayout layoutOfButtons = new RowLayout();
-		layoutOfButtons.fill = false;
-		layoutOfButtons.justify = true;
-		buttonArea.setLayout(layoutOfButtons);
-		
-        // Create the 'add transaction' button.
-        Button addButton = toolkit.createButton(buttonArea, "New Transaction", SWT.PUSH);
-        addButton.addSelectionListener(new SelectionAdapter() {
-           public void widgetSelected(SelectionEvent event) {
-           		Session session = fPage.getAccount().getSession();
-           		
-           		// Commit any previous transaction
-           		fPage.transactionManager.commit();
-           		
-           		Transaction transaction = session.createTransaction();
-           		Entry entry1 = transaction.createEntry();
-           		Entry entry2 = transaction.createEntry();
-           		entry1.setAccount(fPage.getAccount());
-           		
-           		// Select entry1 in the lower entries list.
-                fReconciledEntriesControl.setSelection(entry1, entry1);
-           }
-        });
-
-        // Create the 'delete transaction' button.
-        Button deleteButton = toolkit.createButton(buttonArea, "Delete Transaction", SWT.PUSH);
-        deleteButton.addSelectionListener(new SelectionAdapter() {
-        	public void widgetSelected(SelectionEvent event) {
-        		// TODO: Should we allow deletion from top table?
-        		// TODO: Should we allow a selection in one table only?
-        		Entry selectedEntry = fReconciledEntriesControl.getSelectedEntry();
-        		if (selectedEntry != null) {
-        			Transaction transaction = selectedEntry.getTransaction();
-        			transaction.getSession().deleteTransaction(transaction);
-        			transaction.getSession().registerUndoableChange("Delete Transaction");
-        		}
-        	}
-        });
-        
-        // Create the 'add split' button.
-        Button addEntryButton = toolkit.createButton(buttonArea, "New Split", SWT.PUSH);
-        addEntryButton.addSelectionListener(new SelectionAdapter() {
-           public void widgetSelected(SelectionEvent event) {
-           		Session session = fPage.getAccount().getSession();
-
-           		// TODO: We must allow the user to add a split in the
-           		// top table too.
-        		Entry selectedEntry = fReconciledEntriesControl.getSelectedEntryInAccount();
-        		if (selectedEntry != null) {
-        			Transaction transaction = selectedEntry.getTransaction();
-        			Entry newEntry = transaction.createEntry();
-        			transaction.getSession().registerUndoableChange("New Split");
-        			
-               		// Select the new entry in the entries list.
-                    fReconciledEntriesControl.setSelection(selectedEntry, newEntry);
-        		}
-           }
-        });
-
-        // Create the 'delete split' button.
-        Button deleteSplitButton = toolkit.createButton(buttonArea, "Delete Split", SWT.PUSH);
-        deleteSplitButton.addSelectionListener(new SelectionAdapter() {
-        	public void widgetSelected(SelectionEvent event) {
-           		// TODO: We must allow the user to add a split in the
-           		// top table too.
-        		Entry selectedEntryInAccount = fReconciledEntriesControl.getSelectedEntryInAccount();
-        		Entry selectedEntry = fReconciledEntriesControl.getSelectedEntry();
-        		if (selectedEntry != null && selectedEntry != selectedEntryInAccount) {
-        			Transaction transaction = selectedEntry.getTransaction();
-        			transaction.deleteEntry(selectedEntry);
-        			transaction.getSession().registerUndoableChange("Delete Split");
-        		}
-        	}
-        });
-        
-        // Create the 'details' button.
-        Button detailsButton = toolkit.createButton(buttonArea, "Details", SWT.PUSH);
-        detailsButton.addSelectionListener(new SelectionAdapter() {
-        	public void widgetSelected(SelectionEvent event) {
-        		// TODO: We must support this in lower table too
-        		Entry selectedEntryInAccount = fReconciledEntriesControl.getSelectedEntryInAccount();
-				TransactionDialog dialog = new TransactionDialog(
-						container.getShell(),
-						selectedEntryInAccount,
-						fPage.getAccount().getSession(), 
-						fPage.getAccount().getCurrency());
-				dialog.open();
-        	}
-        });
-
         getSection().setClient(container);
         toolkit.paintBordersFor(container);
         refresh();
-    }
-
-	/**
-	 * Set the entries list to be a flat table.  If any other
-	 * entries control is set, destroy it first.
-	 */
-	public void setTableView() {
-    	if (fReconciledEntriesControl instanceof EntriesTable) {
-    		// Already set to table view, so nothing to do.
-    		return;
-    	}
-    	
-    	fReconciledEntriesControl.dispose();
-    	fReconciledEntriesControl = new EntriesTable(containerOfEntriesControl1, reconciledTableContents, fPage.getAccount().getSession());
-		fPage.getEditor().getToolkit().adapt(fReconciledEntriesControl.getControl(), true, false);
-		fReconciledEntriesControl.addSelectionListener(tableSelectionListener);
-        containerOfEntriesControl1.layout(false);
-	}
-
-	/**
-	 * Set the entries list to be a table tree.  If any other
-	 * entries control is set, destroy it first.
-	 */
-    public void setTreeView() {
-    	if (fReconciledEntriesControl instanceof EntriesTree) {
-    		// Already set to tree view, so nothing to do.
-    		return;
-    	}
-    	
-    	fReconciledEntriesControl.dispose();
-//TODO:    	fReconciledEntriesControl = new EntriesTree(containerOfEntriesControl, reconciledTableContents);
-		fPage.getEditor().getToolkit().adapt(fReconciledEntriesControl.getControl(), true, false);
-		fReconciledEntriesControl.addSelectionListener(tableSelectionListener);
-        containerOfEntriesControl1.layout(false);
     }
 
 	/**
@@ -542,7 +384,7 @@ public class StatementSection extends SectionPart {
 	 */
 	public void setStatement(BankStatement statement) {
 		// Statement will already have been set in fPage.
-    	fReconciledEntriesControl.refresh();
+    	fReconciledEntriesControl.refreshEntryList();
 
 
 		if (statement == null) {

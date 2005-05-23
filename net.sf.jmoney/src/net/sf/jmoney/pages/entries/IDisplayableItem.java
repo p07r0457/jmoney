@@ -92,6 +92,4 @@ public interface IDisplayableItem {
 	 * @return
 	 */
 	Entry getSelectedEntry();
-	
-	
 }

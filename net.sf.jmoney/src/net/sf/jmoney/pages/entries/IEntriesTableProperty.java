@@ -23,15 +23,17 @@
 package net.sf.jmoney.pages.entries;
 
 import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
 
 import org.eclipse.swt.widgets.Composite;
 
 /**
- * Represents a property that can be displayed in the entries table,
- * edited by the user, or used in the filter.
+ * Represents a column of data that can be displayed in the entries table,
+ * edited by the user, sorted, or used in a filter.
  * <P>
- * The credit, debit, and balance columns are hard coded at the end
- * of the table and are not represented by objects of this class.
+ * All columns are managed by an object of this class.  Special
+ * implementations exist for the credit, debit, and balance columns.
+ * More generic implementations exist for the other properties.
  * 
  * @author Nigel Westbury
  */
@@ -61,6 +63,8 @@ public interface IEntriesTableProperty {
 	 * @return
 	 */
 	boolean isTransactionProperty();
+
+	int compare(DisplayableTransaction trans1, DisplayableTransaction trans2);
 }
 
 

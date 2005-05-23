@@ -168,8 +168,10 @@ public class AccountEditor implements IPropertyControl {
      */
     public void save() {
         int index = propertyControl.getSelectionIndex();
-        Account account = (Account)allAccounts.get(index);
-        extendableObject.setPropertyValue(accountPropertyAccessor, account);
+        if (index != -1) {
+        	Account account = (Account)allAccounts.get(index);
+        	extendableObject.setPropertyValue(accountPropertyAccessor, account);
+        }
     }
 
     /* (non-Javadoc)

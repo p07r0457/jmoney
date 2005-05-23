@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.fields;
 
-import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.ExtendableObject;

@@ -19,9 +19,12 @@ import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeColumn;
 /**
  * A layout for a table.
  * <P>
@@ -96,8 +99,16 @@ public class TableLayout extends Layout {
 			return;
 		}
 		
-		Table table = (Table) c;
-		int width = table.getClientArea().width;
+		int width = c.getClientArea().width;
+		
+		Item [] tableColumns;
+		if (c instanceof Table) {
+			Table table = (Table) c;
+			tableColumns = table.getColumns();
+		} else {
+			Tree table = (Tree) c;
+			tableColumns = table.getColumns();
+		}
 		
 		// XXX: Layout is being called with an invalid value the first time
 		// it is being called on Linux. This method resets the
@@ -106,7 +117,6 @@ public class TableLayout extends Layout {
 		if (width <= 1)
 			return;
 		
-		TableColumn[] tableColumns = table.getColumns();
 		int size = tableColumns.length;
 		
 		// If widths is not null then it will contain the column widths
@@ -117,7 +127,14 @@ public class TableLayout extends Layout {
 		// user's changes.
 		if (widths != null && widths.length == size) {
 			for (int i = 0; i < size; i++) {
-				if (tableColumns[i].getWidth() != widths[i]) {
+				int currentWidth;
+				if (tableColumns[i] instanceof TableColumn) {
+					currentWidth = ((TableColumn)tableColumns[i]).getWidth();
+				} else {
+					currentWidth = ((TreeColumn)tableColumns[i]).getWidth();
+				}
+				
+				if (currentWidth != widths[i]) {
 //nrw					userOverride = true;
 //nrw					return;
 				}
@@ -137,7 +154,7 @@ public class TableLayout extends Layout {
 		
 		// First calculate the minimum space
 		for (int i = 0; i < size; i++) {
-			ColumnLayoutData col = (ColumnLayoutData) table.getColumn(i).getData("layoutData");
+			ColumnLayoutData col = (ColumnLayoutData) tableColumns[i].getData("layoutData");
 			if (col instanceof ColumnWeightData) {
 				ColumnWeightData cw = (ColumnWeightData) col;
 				widths[i] = cw.minimumWidth;
@@ -154,7 +171,7 @@ public class TableLayout extends Layout {
 			int rest = width - fixedWidth;
 			int totalDistributed = 0;
 			for (int i = 0; i < size; i++) {
-				ColumnLayoutData col = (ColumnLayoutData) table.getColumn(i).getData("layoutData");
+				ColumnLayoutData col = (ColumnLayoutData) tableColumns[i].getData("layoutData");
 				if (col instanceof ColumnWeightData) {
 					ColumnWeightData cw = (ColumnWeightData) col;
 					int pixels = cw.weight * rest / totalWeight;
@@ -170,7 +187,7 @@ public class TableLayout extends Layout {
 			// number of columns with non-zero weights.
 			int diff = rest - totalDistributed;
 			for (int i = 0; i < size && diff > 0; i++) {
-				ColumnLayoutData col = (ColumnLayoutData) table.getColumn(i).getData("layoutData");
+				ColumnLayoutData col = (ColumnLayoutData) tableColumns[i].getData("layoutData");
 				if (col instanceof ColumnWeightData) {
 					++widths[i];
 					--diff;
@@ -179,7 +196,11 @@ public class TableLayout extends Layout {
 		}
 		
 		for (int i = 0; i < size; i++) {
-			tableColumns[i].setWidth(widths[i]);
+			if (tableColumns[i] instanceof TableColumn) {
+				((TableColumn)tableColumns[i]).setWidth(widths[i]);
+			} else {
+				((TreeColumn)tableColumns[i]).setWidth(widths[i]);
+			}
 		}
 	}
 }

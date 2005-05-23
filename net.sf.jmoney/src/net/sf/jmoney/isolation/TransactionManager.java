@@ -185,7 +185,7 @@ public class TransactionManager implements IDataManager {
      * 			of the object in this transaction, or null if the
      * 			given object has been deleted in this transaction 
      */
-    public ExtendableObject getCopyInTransaction(ExtendableObject object) {
+    public ExtendableObject getCopyInTransaction(ExtendableObject committedObject) {
     	// First look in our map to see if this object has already been
     	// modified within the context of this transaction manager.
     	// If it has, return the modified version.
@@ -198,12 +198,12 @@ public class TransactionManager implements IDataManager {
     	// manager and all other objects are obtained by traversing
     	// from that object.  However, it is good to check.
 
-		PropertySet propertySet = PropertySet.getPropertySet(object.getClass());
+		PropertySet propertySet = PropertySet.getPropertySet(committedObject.getClass());
     	
 		Collection constructorProperties = propertySet.getConstructorProperties();
 		
-		IObjectKey committedParentKey = object.getParentKey();
-		UncommittedObjectKey key = new UncommittedObjectKey(this, object.getObjectKey());
+		IObjectKey committedParentKey = committedObject.getParentKey();
+		UncommittedObjectKey key = new UncommittedObjectKey(this, committedObject.getObjectKey());
 		UncommittedObjectKey parentKey = (committedParentKey==null)?null:new UncommittedObjectKey(this, committedParentKey);
 		Map extensionMap = new HashMap();
 		
@@ -220,14 +220,14 @@ public class TransactionManager implements IDataManager {
 			Class valueClass = propertyAccessor.getValueClass(); 
 			Object value;
 			if (propertyAccessor.isList()) {
-				value = new DeltaListManager(this, object, propertyAccessor);
+				value = new DeltaListManager(this, committedObject, propertyAccessor);
 			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
-				IObjectKey committedObjectKey = propertyAccessor.invokeObjectKeyField(object);
+				IObjectKey committedObjectKey = propertyAccessor.invokeObjectKeyField(committedObject);
 				value = committedObjectKey == null
 				? null
 						: new UncommittedObjectKey(this, committedObjectKey);
 			} else {
-				value = object.getPropertyValue(propertyAccessor);
+				value = committedObject.getPropertyValue(propertyAccessor);
 			}
 			
 			constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
@@ -236,7 +236,7 @@ public class TransactionManager implements IDataManager {
 		// Now copy the extensions.  This is done by looping through the extensions
 		// in the old object and, for every extension that exists in the old object,
 		// copy the properties to the new object.
-		for (Iterator extensionIter = object.getExtensionIterator(); extensionIter.hasNext(); ) {
+		for (Iterator extensionIter = committedObject.getExtensionIterator(); extensionIter.hasNext(); ) {
 			Map.Entry mapEntry = (Map.Entry)extensionIter.next();
 			PropertySet extensionPropertySet = (PropertySet)mapEntry.getKey();
 			ExtensionObject extension = (ExtensionObject)mapEntry.getValue();
@@ -249,12 +249,12 @@ public class TransactionManager implements IDataManager {
 			int i = 0;
 			for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); ) {
 				PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIter.next();
-				extensionValues[i++] = object.getPropertyValue(propertyAccessor);
+				extensionValues[i++] = committedObject.getPropertyValue(propertyAccessor);
 			}
 			extensionMap.put(extensionPropertySet, extensionValues);
 		}
 
-		Object modifiedValues = modifiedObjects.get(object.getObjectKey());
+		Object modifiedValues = modifiedObjects.get(committedObject.getObjectKey());
 		if (modifiedValues != null) {
 			if (modifiedValues instanceof Boolean) {
 				throw new RuntimeException("Attempt to get copy of object, but that object has been deleted in the transaction");
@@ -283,7 +283,7 @@ public class TransactionManager implements IDataManager {
 						int i = 0;
 						for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); ) {
 							PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIter.next();
-							extensionValues[i++] = object.getPropertyValue(propertyAccessor);
+							extensionValues[i++] = committedObject.getPropertyValue(propertyAccessor);
 						}
 						extensionMap.put(extensionPropertySet, extensionValues);
 					}
@@ -666,6 +666,30 @@ public class TransactionManager implements IDataManager {
 	/**
 	 * Given a list property in an object, create an object that
 	 * maintains the changes that have been made to that list within
+	 * a transaction, or return the object if one already exists.
+	 *
+	 * Note that the modified list objects are not created unless a change
+	 * is made to the list (objects added or objects removed).
+	 * 
+	 * @param parentKey the object key (in the committed datastore) for the
+	 * 			object containing the list property
+	 * @param listProperty
+	 * @return an object containing the changes to the given list.
+	 * 			This object may be empty but is never null
+	 */
+	public ModifiedList createModifiedList(IObjectKey parentKey, PropertyAccessor listProperty) {
+		ParentListPair key = new ParentListPair(parentKey, listProperty);
+		ModifiedList modifiedList = (ModifiedList)modifiedLists.get(key);
+		if (modifiedList == null) {
+			modifiedList = new ModifiedList();
+			modifiedLists.put(key, modifiedList);
+		}
+		return modifiedList;
+	}
+
+	/**
+	 * Given a list property in an object, get the object that
+	 * maintains the changes that have been made to that list within
 	 * a transaction.
 	 * The modified list objects are not created unless a change
 	 * is made to the list (objects added or objects removed).
@@ -673,17 +697,12 @@ public class TransactionManager implements IDataManager {
 	 * @param parentKey the object key (in the committed datastore) for the
 	 * 			object containing the list property
 	 * @param listProperty
-	 * @return
+	 * @return an object containing the changes to the given list,
+	 * 				or null if no changes have been made to the given list
 	 */
-	public ModifiedList createModifiedList(IObjectKey parentKey, PropertyAccessor listProperty) {
+	public ModifiedList getModifiedList(IObjectKey parentKey, PropertyAccessor listProperty) {
 		ParentListPair key = new ParentListPair(parentKey, listProperty);
-		if (modifiedLists.get(key) != null) {
-			throw new RuntimeException("list already exists");
-		}
-		
-		ModifiedList modifiedList = new ModifiedList();
-		modifiedLists.put(key, modifiedList);
-		return modifiedList;
+		return (ModifiedList)modifiedLists.get(key);
 	}
 
 	public Object getAdapter(Class adapter) {
@@ -725,7 +744,7 @@ public class TransactionManager implements IDataManager {
 				if (parentListPair.listAccessor == TransactionInfo.getEntriesAccessor()) {
 					for (Iterator iter2 = modifiedList.getAddedObjectIterator(); iter2.hasNext(); ) {
 						Entry newEntry = (Entry)iter2.next();
-						if (newEntry.getAccount().equals(account)) {
+						if (account.equals(newEntry.getAccount())) {
 							addedEntries.add(newEntry);
 						}
 					}

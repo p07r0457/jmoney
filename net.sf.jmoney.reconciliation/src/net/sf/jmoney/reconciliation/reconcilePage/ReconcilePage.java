@@ -22,11 +22,11 @@
 package net.sf.jmoney.reconciliation.reconcilePage;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.IBookkeepingPage;
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
@@ -45,6 +45,7 @@ import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.pages.entries.EntrySection;
 import net.sf.jmoney.pages.entries.IDisplayableItem;
 import net.sf.jmoney.pages.entries.IEntriesTableProperty;
+import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.IBankStatementSource;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
@@ -57,8 +58,6 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -466,7 +465,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         fEntrySection.initialize(managedForm);
 
         form.setText("Reconcile Entries against Bank Statement/Bank's Records");
-
+/* probably no longer needed
         IToolBarManager toolBarManager = form.getToolBarManager();
         toolBarManager.add(
         		new Action("tree", JMoneyPlugin.createImageDescriptor("icons/TreeView.gif")) {
@@ -485,6 +484,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         );
 
         toolBarManager.update(false);
+*/        
     }
     
     public CurrencyAccount getAccount() {
@@ -507,6 +507,12 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		// displayed in the table).
 	}
 
+	// TODO: These IEntriesTableProperty implementations are duplicated.
+	// Remove the duplication.  We also should probably persist column
+	// selection in a memento, and also save so that when a new account
+	// is opened, the previously made selection is used.
+	
+	
 	/**
 	 * Represents a property that can be displayed in the entries table,
 	 * edited by the user, or used in the filter.
@@ -585,6 +591,51 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		 */
 		public boolean isTransactionProperty() {
 			return accessor.getExtendablePropertySet() == TransactionInfo.getPropertySet();
+		}
+
+		public int compare(DisplayableTransaction trans1, DisplayableTransaction trans2) {
+			ExtendableObject extendableObject1 = getObjectContainingProperty(trans1);
+			ExtendableObject extendableObject2 = getObjectContainingProperty(trans2);
+
+			int result;
+			
+			// First deal with null cases.  If no object contains this
+			// property on this row then the cell is blank.
+
+			// Null values are sorted first.  It is necessary to put
+			// null values first because empty strings are sorted first,
+			// and users may not be aware of the difference.
+			if (extendableObject1 == null && extendableObject2 == null) {
+				return 0;
+			} else if (extendableObject1 == null) {
+				return -1;
+			} else if (extendableObject2 == null) {
+				return 1;
+			}
+				
+			Object value1 = extendableObject1.getPropertyValue(accessor);
+			Object value2 = extendableObject2.getPropertyValue(accessor);
+			
+			if (accessor.getCustomComparator() != null) { 
+				result = accessor.getCustomComparator().compare(value1, value2);
+			} else {
+				if (accessor.getValueClass() == Date.class) {
+					result = ((Date)value1).compareTo((Date)value2);
+				} else if (accessor.getValueClass() == Integer.class) {
+					result = ((Integer)value1).compareTo((Integer)value2);
+				} else if (accessor.getValueClass() == Long.class) {
+					result = ((Long)value1).compareTo((Long)value2);
+				} else {
+					// No custom comparator and not a known type, so sort according to the
+					// text value that is displayed when the property is shown
+					// in a table (ignoring case).
+					String text1 = accessor.formatValueForTable(extendableObject1);
+					String text2 = accessor.formatValueForTable(extendableObject2);
+					result = text1.compareToIgnoreCase(text2);
+				}
+			}
+			
+			return result;
 		}
 	}
 
@@ -742,7 +793,31 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		public boolean isTransactionProperty() {
 			return false;
 		}
+
+		public int compare(DisplayableTransaction trans1, DisplayableTransaction trans2) {
+			long amount1 = trans1.getEntryForAccountFields().getAmount();
+			long amount2 = trans2.getEntryForAccountFields().getAmount();
+			
+			int result;
+			if (amount1 < amount2) {
+				result = -1;
+			} else if (amount1 > amount2) {
+				result = 1;
+			} else {
+				result = 0;
+			}
+
+			// If debit column then reverse.  Ascending sort should
+			// result in the user seeing ascending numbers in the
+			// sorted column.
+			if (isDebit) {
+				result = -result;
+			}
+			
+			return result;
+		}
     }
+	
 	/**
 	 * Represents a table column that is the account balance.
 	 */
@@ -782,6 +857,12 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 			// This is displayed on transaction lines only,
 			// 
 			return false;
+		}
+
+		public int compare(DisplayableTransaction trans1, DisplayableTransaction trans2) {
+			// Entries lists cannot be sorted based on the balance.
+			// The caller should not do this.
+			throw new RuntimeException("internal error - attempt to sort on balance");
 		}
     }
 	

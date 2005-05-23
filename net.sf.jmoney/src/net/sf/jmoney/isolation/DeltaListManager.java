@@ -31,43 +31,76 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
- * This is a special implementation of the IListManager interface.
- * It is used only in objects that are copies in a transaction manager
- * of objects that have been committed to the datastore.
+ * This is a special implementation of the IListManager interface. It is used
+ * only in objects that are copies in a transaction manager of objects that have
+ * been committed to the datastore.
  * <P>
- * This class keeps the differences (objects added and objects deleted)
- * between the committed list and the list in this transaction.
+ * This class implements the Collection methods by looking at the differences
+ * (objects added and objects deleted) between the committed list and the list
+ * in this transaction. These differences are applied to the collection of
+ * committed objects returned by the underlying datastore.
+ * <P>
+ * The differences (objects added and objects deleted) between the committed
+ * list and the list in this transaction are kept not by this object but by the
+ * transaction manager. The reason for this is that the user could potentially
+ * get to the same list by two different routes. If objects are read from a
+ * database upon demand then there could be two or more DeltaListManager objects
+ * that in fact refer to the same list. Modifications to one list should be seen
+ * in all the other lists. The only reasonable way to do this, without keeping a
+ * map of every DeltaListManager in existence, is to have the DeltaListManager
+ * objects ask the TransactionManager for the delta information each time this
+ * is needed.
  * 
  * @author Nigel Westbury
  */
 public class DeltaListManager extends AbstractCollection implements IListManager {
 
-	TransactionManager transactionManager;
+	private TransactionManager transactionManager;
 	
-	private ISessionManager sessionManager = null;
-	private IListManager committedList = null;
-
 	// These two enable us to get the ModifiedList object,
 	// they also enable us to get the collection of
 	// objects in the committed list.
-	ExtendableObject parent;
-	PropertyAccessor listProperty;
-	
+	private IObjectKey committedParentKey;
+	private PropertyAccessor listProperty;
+
+	/**
+	 * The committed list, set by the constructor
+	 */
+	private ObjectCollection committedList = null;
+
+	/**
+	 * If this is non-null then this is the object, managed by the transaction
+	 * manager, that contains the list of new objects and the list of deleted
+	 * objects.
+	 * <P>
+	 * If this is null then either the transaction manager has not yet created
+	 * such an object (and the transaction manager does not create such an
+	 * object until there are changes to store in it), or the transaction
+	 * manager has created such an object with changes but this object has not
+	 * interogated the transaction manager for the object since the object was
+	 * created.
+	 * 
+	 * If this field is null then methods in this class must interogate the
+	 * transaction manager for a ModifiedList object before assuming that there
+	 * is none.
+	 */
 	private ModifiedList modifiedList;
 	
 	/**
-	 * @param object the object containing the list property 
+	 * @param committedParent the object containing the list property.  This
+	 * 			object must be an uncommitted object 
 	 * @param propertyAccessor the list property
 	 */
-	public DeltaListManager(TransactionManager transactionManager, ExtendableObject parent, PropertyAccessor listProperty) {
+	public DeltaListManager(TransactionManager transactionManager, ExtendableObject committedParent, PropertyAccessor listProperty) {
 		this.transactionManager = transactionManager;
-		this.parent = parent;
+		this.committedParentKey = committedParent.getObjectKey();
 		this.listProperty = listProperty;
+		this.committedList = committedParent.getListPropertyValue(listProperty);
 	}
 
 	/**
@@ -113,7 +146,6 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 		objectKey.setObject(extendableObject);
 
 		if (modifiedList == null) {
-			IObjectKey committedParentKey = ((UncommittedObjectKey)parent.getObjectKey()).getCommittedObjectKey();
 			modifiedList = transactionManager.createModifiedList(committedParentKey, listProperty);
 		}
 		modifiedList.add(extendableObject);
@@ -171,7 +203,6 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 		objectKey.setObject(extendableObject);
 
 		if (modifiedList == null) {
-			IObjectKey committedParentKey = ((UncommittedObjectKey)parent.getObjectKey()).getCommittedObjectKey();
 			modifiedList = transactionManager.createModifiedList(committedParentKey, listProperty);
 		}
 		modifiedList.add(extendableObject);
@@ -183,8 +214,15 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 		// This method is called, for example when getting the number of entries
 		// in a transaction.
 		
-		int committedCount = parent.getListPropertyValue(listProperty).size();
+		int committedCount = committedList.size();
 		
+		// If no modifiedList is set then try getting from the transaction
+		// manager.  There is a very small possibility that another DeltaListManager
+		// has made changes to the same list within the same transaction.
+		if (modifiedList == null) {
+			modifiedList = transactionManager.getModifiedList(committedParentKey, listProperty);
+		}
+
 		if (modifiedList == null) {
 			return committedCount; 
 		} else {
@@ -193,7 +231,15 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 	}
 
 	public Iterator iterator() {
-		Iterator committedListIterator = parent.getListPropertyValue(listProperty).iterator();
+		Iterator committedListIterator = committedList.iterator();
+
+		// If no modifiedList is set then try getting from the transaction
+		// manager.  There is a very small possibility that another DeltaListManager
+		// has made changes to the same list within the same transaction.
+		if (modifiedList == null) {
+			modifiedList = transactionManager.getModifiedList(committedParentKey, listProperty);
+		}
+
 		if (modifiedList == null) {
 			// We cannot simply return committedListIterator because
 			// that returns materializations of the objects that are outside
@@ -205,9 +251,32 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 		}
 	}
 
+	public boolean contains(Object object) {
+		// If no modifiedList is set then try getting from the transaction
+		// manager.  There is a very small possibility that another DeltaListManager
+		// has made changes to the same list within the same transaction.
+		if (modifiedList == null) {
+			modifiedList = transactionManager.getModifiedList(committedParentKey, listProperty);
+		}
+
+		IObjectKey committedObjectKey = ((UncommittedObjectKey)((ExtendableObject)object).getObjectKey()).getCommittedObjectKey();
+
+		if (modifiedList != null) {
+			if (modifiedList.addedObjects.contains(object)) {
+				return true; 
+			} else if (modifiedList.deletedObjects.contains(committedObjectKey)) {
+				return false;
+			}
+		}
+		
+		// The object has neither been added or removed by us, so
+		// pass the request on the the underlying datastore.
+		return committedList.contains(committedObjectKey.getObject());
+	}
+
 	public boolean remove(Object object) {
 		if (modifiedList == null) {
-			modifiedList = transactionManager.createModifiedList(parent.getObjectKey(), listProperty);
+			modifiedList = transactionManager.createModifiedList(committedParentKey, listProperty);
 		}
 		return modifiedList.delete((ExtendableObject)object);
 	}

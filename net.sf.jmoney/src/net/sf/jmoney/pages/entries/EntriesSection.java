@@ -22,22 +22,14 @@ import java.util.Collection;
 import java.util.Vector;
 
 import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.Transaction;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -51,9 +43,9 @@ import org.eclipse.ui.forms.widgets.Section;
 public class EntriesSection extends SectionPart implements IEntriesContent {
 
     private EntriesPage fPage;
-    private IEntriesControl fEntriesControl;
+    private EntriesTree fEntriesControl;
     
-    private Composite containerOfEntriesControl;
+//    private Composite containerOfEntriesControl;
     private FormToolkit toolkit;
     
     private SelectionListener tableSelectionListener = null;
@@ -66,38 +58,12 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     }
 
     public void refreshEntryList() {
-    	fEntriesControl.refresh();
-//        super.refresh();
+    	fEntriesControl.refreshEntryList();
     }
 
     protected void createClient(FormToolkit toolkit) {
     	this.toolkit = toolkit;
     	
-        final Composite container = toolkit.createComposite(getSection());
-
-        GridLayout layout = new GridLayout();
-        layout.numColumns = 1;
-        layout.marginHeight = 0;
-        layout.marginWidth = 0;
-        container.setLayout(layout);
-
-        // Create the control that contains the Table or TableTree control.
-        // Although this control only contains a single child control,
-        // we need to create it so we can destroy and re-create the
-        // child control without altering the sequence of controls
-        // in the grid container.
-        containerOfEntriesControl = toolkit.createComposite(container);
-        GridLayout layout2 = new GridLayout();
-        containerOfEntriesControl.setLayout(layout2);
-        
-        GridData gridData = new GridData(GridData.FILL_BOTH);
-        gridData.heightHint = 200;
-        //layout2.marginHeight = 0;
-        //layout2.marginWidth = 0;
-		gridData.grabExcessHorizontalSpace = true;
-		gridData.grabExcessVerticalSpace = true;
-        containerOfEntriesControl.setLayoutData(gridData);
-
         tableSelectionListener = new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
                 Object selectedObject = e.item.getData();
@@ -127,145 +93,22 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 			}
         };
 
-        // Initially set to the table control.
-        // TODO: save this information in the memento so
-        // the user always gets the last selected view.
-        fEntriesControl = new EntriesTable(containerOfEntriesControl, this, fPage.getAccount().getSession()); 
+        final Composite container = toolkit.createComposite(getSection());
+
+        GridLayout layout = new GridLayout();
+        layout.numColumns = 1;
+        layout.marginHeight = 0;
+        layout.marginWidth = 0;
+        container.setLayout(layout);
+
+        // Create the table control.
+        fEntriesControl = new EntriesTree(container, toolkit, this, fPage.getAccount().getSession()); 
 		fPage.getEditor().getToolkit().adapt(fEntriesControl.getControl(), true, false);
 		fEntriesControl.addSelectionListener(tableSelectionListener);
 
-        // Create the button area
-		Composite buttonArea = toolkit.createComposite(container);
-		
-		RowLayout layoutOfButtons = new RowLayout();
-		layoutOfButtons.fill = false;
-		layoutOfButtons.justify = true;
-		buttonArea.setLayout(layoutOfButtons);
-		
-        // Create the 'add transaction' button.
-        Button addButton = toolkit.createButton(buttonArea, "New Transaction", SWT.PUSH);
-        addButton.addSelectionListener(new SelectionAdapter() {
-           public void widgetSelected(SelectionEvent event) {
-           		Session session = fPage.getAccount().getSession();
-           		
-           		// Commit any previous transaction
-           		fPage.transactionManager.commit();
-           		
-           		Transaction transaction = session.createTransaction();
-           		Entry entry1 = transaction.createEntry();
-           		Entry entry2 = transaction.createEntry();
-           		entry1.setAccount(fPage.getAccount());
-           		
-           		// Select entry1 in the entries list.
-                fEntriesControl.setSelection(entry1, entry1);
-           }
-        });
-
-        // Create the 'delete transaction' button.
-        Button deleteButton = toolkit.createButton(buttonArea, "Delete Transaction", SWT.PUSH);
-        deleteButton.addSelectionListener(new SelectionAdapter() {
-        	public void widgetSelected(SelectionEvent event) {
-        		Entry selectedEntry = fEntriesControl.getSelectedEntry();
-        		if (selectedEntry != null) {
-        			Transaction transaction = selectedEntry.getTransaction();
-        			transaction.getSession().deleteTransaction(transaction);
-        			transaction.getSession().registerUndoableChange("Delete Transaction");
-        		}
-        	}
-        });
-        
-        // Create the 'add split' button.
-        Button addEntryButton = toolkit.createButton(buttonArea, "New Split", SWT.PUSH);
-        addEntryButton.addSelectionListener(new SelectionAdapter() {
-           public void widgetSelected(SelectionEvent event) {
-           		Session session = fPage.getAccount().getSession();
-
-        		Entry selectedEntry = fEntriesControl.getSelectedEntryInAccount();
-        		if (selectedEntry != null) {
-        			Transaction transaction = selectedEntry.getTransaction();
-        			Entry newEntry = transaction.createEntry();
-        			transaction.getSession().registerUndoableChange("New Split");
-        			
-               		// Select the new entry in the entries list.
-                    fEntriesControl.setSelection(selectedEntry, newEntry);
-        		}
-           }
-        });
-
-        // Create the 'delete split' button.
-        Button deleteSplitButton = toolkit.createButton(buttonArea, "Delete Split", SWT.PUSH);
-        deleteSplitButton.addSelectionListener(new SelectionAdapter() {
-        	public void widgetSelected(SelectionEvent event) {
-        		Entry selectedEntryInAccount = fEntriesControl.getSelectedEntryInAccount();
-        		Entry selectedEntry = fEntriesControl.getSelectedEntry();
-        		if (selectedEntry != null && selectedEntry != selectedEntryInAccount) {
-        			Transaction transaction = selectedEntry.getTransaction();
-        			transaction.deleteEntry(selectedEntry);
-        			transaction.getSession().registerUndoableChange("Delete Split");
-        		}
-        	}
-        });
-        
-        // Create the 'details' button.
-        Button detailsButton = toolkit.createButton(buttonArea, "Details", SWT.PUSH);
-        detailsButton.addSelectionListener(new SelectionAdapter() {
-        	public void widgetSelected(SelectionEvent event) {
-        		Entry selectedEntryInAccount = fEntriesControl.getSelectedEntryInAccount();
-				TransactionDialog dialog = new TransactionDialog(
-						container.getShell(),
-						selectedEntryInAccount,
-						fPage.getAccount().getSession(), 
-						fPage.getAccount().getCurrency());
-				dialog.open();
-        	}
-        });
-        
         getSection().setClient(container);
         toolkit.paintBordersFor(container);
         refresh();
-    }
-
-	/**
-	 * This method is called whenever the filter has changed
-	 * and must be re-applied. 
-	 */
-	void refreshFilter() {
-		// Refresh the entries table control
-		fEntriesControl.refresh();
-	}
-	
-	/**
-	 * Set the entries list to be a flat table.  If any other
-	 * entries control is set, destroy it first.
-	 */
-	public void setTableView() {
-    	if (fEntriesControl instanceof EntriesTable) {
-    		// Already set to table view, so nothing to do.
-    		return;
-    	}
-    	
-    	fEntriesControl.dispose();
-    	fEntriesControl = new EntriesTable(containerOfEntriesControl, this, fPage.getAccount().getSession());
-		fPage.getEditor().getToolkit().adapt(fEntriesControl.getControl(), true, false);
-		fEntriesControl.addSelectionListener(tableSelectionListener);
-        containerOfEntriesControl.layout(false);
-	}
-
-	/**
-	 * Set the entries list to be a table tree.  If any other
-	 * entries control is set, destroy it first.
-	 */
-    public void setTreeView() {
-    	if (fEntriesControl instanceof EntriesTree) {
-    		// Already set to tree view, so nothing to do.
-    		return;
-    	}
-    	
-    	fEntriesControl.dispose();
-    	fEntriesControl = new EntriesTree(containerOfEntriesControl, fPage);
-		fPage.getEditor().getToolkit().adapt(fEntriesControl.getControl(), true, false);
-		fEntriesControl.addSelectionListener(tableSelectionListener);
-        containerOfEntriesControl.layout(false);
     }
 
 	/* (non-Javadoc)
@@ -297,11 +140,19 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 	}
 
 	public Collection getEntries() {
+/* The caller always sorts, so there is no point in us returning
+ * sorted results.  It may be at some point we decide it is more
+ * efficient to get the database to sort for us, but that would
+ * only help the first time the results are fetched, it would not
+ * help on a re-sort.  It also only helps if the database indexes
+ * on the date.		
         CurrencyAccount account = fPage.getAccount();
         Collection accountEntries = 
         	account
 				.getSortedEntries(TransactionInfo.getDateAccessor(), false);
         return accountEntries;
+*/
+		return fPage.getAccount().getEntries();
 	}
 
 	public boolean isEntryInTable(Entry entry) {
@@ -347,5 +198,9 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 	 */
 	public long getStartBalance() {
         return fPage.getAccount().getStartBalance();
+	}
+
+	public void setNewEntryProperties(Entry newEntry) {
+   		newEntry.setAccount(fPage.getAccount());
 	}
 }

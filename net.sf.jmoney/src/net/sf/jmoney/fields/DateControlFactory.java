@@ -31,6 +31,8 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
 
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Composite;
 
 /**
@@ -40,9 +42,21 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class DateControlFactory implements IPropertyControlFactory {
 
-    // TODO Listen to date format changes.
     protected VerySimpleDateFormat fDateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
 
+    // Listen to date format changes so we keep up to date
+    static {
+    	JMoneyPlugin
+    	.getDefault()
+    	.getPreferenceStore()
+    	.addPropertyChangeListener(new IPropertyChangeListener() {
+			public void propertyChange(PropertyChangeEvent event) {
+				if (event.getProperty().equals("dateFormat")) {
+					VerySimpleDateFormat fDateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
+				}
+			}});
+    }
+    
     protected boolean readOnly;
     
     public DateControlFactory() {
