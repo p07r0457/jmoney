@@ -29,14 +29,12 @@ import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Transaction;
@@ -159,6 +157,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
             PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
             if (propertyAccessor != EntryInfo.getAccountAccessor() 
            		&& propertyAccessor != EntryInfo.getDescriptionAccessor()
+           		&& propertyAccessor != EntryInfo.getIncomeExpenseCurrencyAccessor()
         		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
             	if (propertyAccessor.isScalar() && propertyAccessor.isEditable()) {
             		allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "this") {
@@ -170,23 +169,22 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
             }
         }
 
-        // Add properties from the other entry.
-        // For time being, this is just the account and description.
+        // Add properties from the other entry where the property also is
+        // applicable for capital accounts.
+        // For time being, this is just the account.
         PropertySet extendablePropertySet = EntryInfo.getPropertySet();
         for (Iterator iter = extendablePropertySet.getPropertyIterator3(); iter.hasNext();) {
             PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
-            if (propertyAccessor == EntryInfo.getAccountAccessor() || propertyAccessor == EntryInfo.getDescriptionAccessor()) {
+            if (propertyAccessor == EntryInfo.getAccountAccessor()) {
+            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "common2") {
+					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
+						return data.getEntryForCommon2Fields();
+					}
+            	});
+            } else if (propertyAccessor == EntryInfo.getDescriptionAccessor()
+            		|| propertyAccessor == EntryInfo.getIncomeExpenseCurrencyAccessor()) {
             	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "other") {
 					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
-						Entry entry = data.getEntryForAccountFields();
-						if (entry == null) {
-							// May be the new entry.
-							return null;
-						}
-						Account account = entry.getAccount();
-						if (account instanceof IncomeExpenseAccount) {
-							return data.getEntryForAccountFields();
-						}
 						return data.getEntryForOtherFields();
 					}
             	});
@@ -413,7 +411,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		}
 
 		public String getValueFormattedForTable(IDisplayableItem data) {
-			Entry entry = data.getEntryForAccountFields();
+			Entry entry = data.getEntryForThisRow();
 			if (entry == null) {
 				return "";
 			}
@@ -431,7 +429,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		public IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data) {
 			// This is the entry whose amount is being edited by
 			// this control.
-			final Entry entry = data.getEntryForAccountFields();
+			final Entry entry = data.getEntryForThisRow();
 			if (entry == null) {
 				return null;
 			}
@@ -534,8 +532,8 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		}
 
 		public int compare(DisplayableTransaction trans1, DisplayableTransaction trans2) {
-			long amount1 = trans1.getEntryForAccountFields().getAmount();
-			long amount2 = trans2.getEntryForAccountFields().getAmount();
+			long amount1 = trans1.getEntryForThisRow().getAmount();
+			long amount2 = trans2.getEntryForThisRow().getAmount();
 			
 			int result;
 			if (amount1 < amount2) {

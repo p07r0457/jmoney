@@ -1006,7 +1006,7 @@ public class PropertySet {
 		// The reason is that the default values may contain a
 		// timestamp or may depend on user options.
 		try {
-			Object [] values = (Object[])theDefaultPropertiesMethod.invoke(null, null);
+			Object [] values = (Object[])theDefaultPropertiesMethod.invoke(null, (Object [])null);
 			return values;
 		} catch (IllegalAccessException e) {
 			throw new MalformedPluginException("Method '" + theDefaultPropertiesMethod.getName() + "' in '" + getImplementationClass().getName() + "' must be public.");

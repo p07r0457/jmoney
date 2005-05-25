@@ -48,7 +48,9 @@ public interface IDisplayableItem {
 	
 	Entry getEntryForOtherFields();
 	
-	//Entry getEntryForDualPurposeFields();
+	Entry getEntryForCommon1Fields();
+
+	Entry getEntryForCommon2Fields();
 	
 	long getAmount();
 	
@@ -91,5 +93,5 @@ public interface IDisplayableItem {
 	/**
 	 * @return
 	 */
-	Entry getSelectedEntry();
+	Entry getEntryForThisRow();
 }

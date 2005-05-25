@@ -23,7 +23,6 @@
 package net.sf.jmoney.model2;
 
 import java.util.EventListener;
-import java.util.Vector;
 
 /**
  * Listener interface for addition and deletion of <code>Entry</code>

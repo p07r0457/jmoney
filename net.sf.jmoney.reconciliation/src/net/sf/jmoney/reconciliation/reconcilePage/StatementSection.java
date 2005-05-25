@@ -126,7 +126,7 @@ public class StatementSection extends SectionPart {
                 	IDisplayableItem data = (IDisplayableItem)selectedObject;
 
                 	Entry entryInAccount = data.getEntryInAccount();
-                	Entry selectedEntry = data.getSelectedEntry();
+                	Entry selectedEntry = data.getEntryForThisRow();
                 	
                 	if (fPage.currentTransaction != null
                 			&& !fPage.currentTransaction.equals(entryInAccount.getTransaction())) {
@@ -193,6 +193,14 @@ public class StatementSection extends SectionPart {
 			}
 
 			public boolean isEntryInTable(Entry entry) {
+		        // If no statement is set, nothing is in the table.
+		        // The table will not be visible in this situation, but
+		        // this method will be called and so we must allow for
+		        // this situation.
+		        if (fPage.getStatement() == null) {
+		        	return false;
+		        }
+		        
 				// This entry is to be shown if both the account and
 				// the statement match.
 	        	BankStatement statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
@@ -201,6 +209,14 @@ public class StatementSection extends SectionPart {
 			}
 
 			public boolean isEntryInTable(Entry entry, PropertyAccessor propertyAccessor, Object value) {
+		        // If no statement is set, nothing is in the table.
+		        // The table will not be visible in this situation, but
+		        // this method will be called and so we must allow for
+		        // this situation.
+		        if (fPage.getStatement() == null) {
+		        	return false;
+		        }
+		        
 				Account account;
 				if (propertyAccessor == EntryInfo.getAccountAccessor()) {
 					account = (Account)value;

@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.util.Vector;
 
 /**
  * Empty implementation of the SessionChangeListener interface.

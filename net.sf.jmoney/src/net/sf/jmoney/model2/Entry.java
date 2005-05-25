@@ -307,9 +307,9 @@ public class Entry extends ExtendableObject {
 	 */
 	public void setAccount(Account newAccount) {
 		Account oldAccount =
-			this.accountKey == null
+			accountKey == null
 			? null
-					: (Account)this.accountKey.getObject();
+					: (Account)accountKey.getObject();
 		
 		// TODO: This is not efficient.  Better would be to pass
 		// an object key as the old value to the property change
@@ -319,7 +319,7 @@ public class Entry extends ExtendableObject {
 		// the setting of it because code may potentially need to do this
 		// in order to, say, delete the account before the new account
 		// of the entry is known.
-		this.accountKey = 
+		accountKey = 
 			newAccount == null
 			? null
 					: newAccount.getObjectKey();
@@ -357,12 +357,20 @@ public class Entry extends ExtendableObject {
 	 * is set.
 	 */
 	public void setIncomeExpenseCurrency(Currency incomeExpenseCurrency) {
-		Currency oldIncomeExpenseCurrency = (Currency)this.incomeExpenseCurrencyKey.getObject();
+		Currency oldIncomeExpenseCurrency =
+			incomeExpenseCurrencyKey == null
+			? null
+					: (Currency)incomeExpenseCurrencyKey.getObject();
+		
 		// TODO: This is not efficient.  Better would be to pass
 		// an object key as the old value to the property change
 		// method.  Then the object is materialized only if
 		// necessary.
-		this.incomeExpenseCurrencyKey = incomeExpenseCurrency.getObjectKey();
+		incomeExpenseCurrencyKey =
+			incomeExpenseCurrency == null
+			? null
+					: incomeExpenseCurrency.getObjectKey();
+		
 		
 		// Notify the change manager.
 		processPropertyChange(EntryInfo.getIncomeExpenseCurrencyAccessor(), oldIncomeExpenseCurrency, incomeExpenseCurrency);

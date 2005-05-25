@@ -331,7 +331,7 @@ public class PropertyAccessor {
 	 */
    public Object invokeGetMethod(Object invocationTarget) {
 		try {
-			return theGetMethod.invoke(invocationTarget, null);
+			return theGetMethod.invoke(invocationTarget, (Object [])null);
 		} catch (InvocationTargetException e) {
 			// TODO Process this properly
 			e.printStackTrace();

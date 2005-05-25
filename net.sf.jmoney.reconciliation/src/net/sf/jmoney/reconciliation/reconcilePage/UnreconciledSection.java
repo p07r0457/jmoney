@@ -230,7 +230,7 @@ public class UnreconciledSection extends SectionPart {
                 	IDisplayableItem data = (IDisplayableItem)selectedObject;
 
                 	Entry entryInAccount = data.getEntryInAccount();
-                	Entry selectedEntry = data.getSelectedEntry();
+                	Entry selectedEntry = data.getEntryForThisRow();
                 	
                 	if (fPage.currentTransaction != null
                 			&& !fPage.currentTransaction.equals(entryInAccount.getTransaction())) {

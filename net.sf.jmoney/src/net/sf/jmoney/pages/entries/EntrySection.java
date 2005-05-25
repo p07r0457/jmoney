@@ -370,6 +370,18 @@ public class EntrySection extends SectionPart {
 							&& changedObject.equals(entry)) {
 						updateSetOfEntryControls();
 					}
+					
+					// If any other properties are changed, re-load the control.
+					if (changedObject.equals(entry)) {
+						for (int i = 0; i < entryPropertyControls.size(); i++) {
+							LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
+							if (controlPair.propertyAccessor == changedProperty) {
+								if (controlPair.pairComposite != null) {
+									controlPair.load(entry);
+								}
+							}
+						}
+					}
 				}
 			});
 		}

@@ -45,7 +45,6 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     private EntriesPage fPage;
     private EntriesTree fEntriesControl;
     
-//    private Composite containerOfEntriesControl;
     private FormToolkit toolkit;
     
     private SelectionListener tableSelectionListener = null;
@@ -72,18 +71,18 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
                 // The selected object might be null.  This occurs when the table is refreshed.
                 // I don't understand this so I am simply bypassing the update
                 // in this case.  Nigel
+                
                 if (selectedObject != null) {
+                	// Note that we never get here with the item data set to the
+                	// new entry data object.  The reason being that the EntryTree
+                	// object intercepts mouse down events first and replaces the
+                	// data with a new entry.
+                	
                 	IDisplayableItem data = (IDisplayableItem)selectedObject;
 
                 	Entry entryInAccount = data.getEntryInAccount();
-                	Entry selectedEntry = data.getSelectedEntry();
+                	Entry selectedEntry = data.getEntryForThisRow();
                 	
-                	if (fPage.currentTransaction != null
-                			&& !fPage.currentTransaction.equals(entryInAccount.getTransaction())) {
-                		fPage.commitTransaction();
-                	}
-                	// TODO: Support the blank transaction.
-                	// The following fails on the blank transaction. 
             		fPage.currentTransaction = entryInAccount.getTransaction();
             		
                 	if (selectedEntry != null) {

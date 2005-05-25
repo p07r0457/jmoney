@@ -577,7 +577,7 @@ public abstract class ExtendableObject {
 					&& writeMethod.getDeclaringClass() != EntryExtension.class) {
 				Object value;
 				try {
-					value = readMethod.invoke(extension, null);
+					value = readMethod.invoke(extension, (Object [])null);
 				} catch (IllegalAccessException e) {
 					throw new MalformedPluginException("Property set extension caused introspection error");
 					//                      throw new MalformedPluginException("Method 'getEntryExtensionClass' in '" + pluginBean.getClass().getName() + "' must be public.");

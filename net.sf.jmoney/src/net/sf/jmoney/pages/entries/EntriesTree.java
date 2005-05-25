@@ -32,15 +32,20 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CommodityInfo;
 import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TreeEditor;
@@ -74,6 +79,83 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
  * in a table tree.  The tree contains one top level row for each
  * entry in the account.  The child rows show the other entries in
  * the transaction.
+ * <P>
+ * It is important to understand how object properties are mapped
+ * to cells in the table.  There is one top-level row in the tree
+ * control for each entry in the list.  In general, the other entries
+ * in the transaction are child rows.  Note that it is possible that
+ * one transaction may contain two or more entries in the same account.
+ * For example, a user may write a check for a deposit and a check for
+ * the balance of a purchase.  The user may enter this as a single 
+ * 'split' transaction containing the two checks and a single entry
+ * containing the total purchase amount in an expense category.
+ * In this situation, the single transaction will have two top-level
+ * rows (one for each check).  Expanding one of the rows with show
+ * two child entries: the other check and the purchase entry.  
+ * <P>
+ * A simple transaction is a transaction
+ * that contains two entries where one entry is in a capital account
+ * and the other entry is in an income and expense account.  This
+ * is a common form of transaction and therefore we make a special
+ * effort to display such transactions on a single row.
+ * <P>
+ * Some of the entry properties apply only to entries in capital
+ * accounts, some apply only to entries in income and expense
+ * accounts, and some apply to entries in both types of accounts.
+ * In a simple transaction, all the properties from both entries
+ * have a column.  Properties from the transaction are displayed
+ * in the top level and also have a column.  So, we have a column
+ * for all the following:
+ * <UL>
+ * <LI>Every property in the transaction</LI>
+ * <LI>Every property in an entry that may be applicable given
+ * 	   the account being listed, with the exception
+ *     that if all the entries are in the same account (true in
+ *     most uses of this class) then no column exists for the account 
+ *     property (as such a column would contain the same account in
+ *     every row and therefore not be of much use)</LI>
+ * <LI>Every property in an entry that may be applicable when the
+ *     entry is in an income and expense account</LI>
+ * </UL>
+ * 
+ * Some properties may be applicable for both entries in the
+ * capital account and for entries in income and expense accounts.
+ * There will be two columns for such properties.  When an entry
+ * is being show on its own child row, we have the choice of which
+ * of the two columns we use for the property.  We chose to show
+ * it in the column that would, for a simple transaction, be used
+ * to show the property of the entry in the income and expense account.
+ * This makes the child rows look more similar and also ensures that
+ * a transfer account is shown.
+ * <P>
+ * Each column is managed by an IEntriesTableProperty object.
+ * Each row is managed by an IDisplayableItem object.
+ * (Both classes of object are set as the data on the TreeColumn
+ * and TreeItem items respectively).  These two classes must
+ * work together to determine the contents of a cell.
+ * <P>
+ * The credit, debit, and balance columns are special cases
+ * and special implementations of IEntriesTableProperty handle those
+ * three columns.  The other columns fall into one of the above
+ * three categories.  The rest of this explanation applies only
+ * to the latter class of columns.
+ * <P>   
+ * A request for cell contents (whether for displaying text
+ * or for creating a cell editor) goes first to the IEntriesTableProperty
+ * object.  That object then calls one of the following three
+ * methods on the IDisplayableItem row, depending on which class
+ * of column it is:
+ * <UL>
+ * <LI>getTransactionForTransactionFields</LI>
+ * <LI>getEntryForAccountFields</LI>
+ * <LI>getEntryForOtherFields</LI>
+ * </UL>
+ * The above three methods all return the object that
+ * contains the value associated with the cell (or null
+ * if no property value is associated with that cell).
+ * As the IEntriesTableProperty object has the property
+ * accessor, the property value associated with the cell
+ * can be got and set.
  */
 public class EntriesTree {
 
@@ -119,13 +201,6 @@ public class EntriesTree {
 	 */
 	protected boolean sortAscending;
 
-	/**
-	 * Comparator for the current ordering of entries.
-	 * This must always match the sortColumn and sortAscending
-	 * fields.
-	 */
-//	private Comparator propertyComparator;
-	
 	protected IPropertyControl currentCellPropertyControl = null;
 
 	private Entry newEntryRowEntry;
@@ -133,7 +208,6 @@ public class EntriesTree {
 	public EntriesTree(final Composite container, FormToolkit toolkit,
 			final IEntriesContent entriesContent, final Session session) {
 		this.entriesContent = entriesContent;
-//		this.session = session;
 
 		fTable = new Tree(container, SWT.FULL_SELECTION | SWT.BORDER
 				| SWT.H_SCROLL | SWT.HIDE_SELECTION);
@@ -148,9 +222,14 @@ public class EntriesTree {
         // Create the button area
 		Composite buttonArea = toolkit.createComposite(container);
 		
+		// Note that the buttons touch each other and also touch
+		// the table above.  This makes it clearer that the buttons
+		// are tightly associated with the table.
 		RowLayout layoutOfButtons = new RowLayout();
 		layoutOfButtons.fill = false;
 		layoutOfButtons.justify = true;
+		layoutOfButtons.marginTop = 0;
+		layoutOfButtons.spacing = 0;
 		buttonArea.setLayout(layoutOfButtons);
 		
         // Create the 'add transaction' button.
@@ -165,6 +244,26 @@ public class EntriesTree {
            		Entry entry2 = transaction.createEntry();
            		entriesContent.setNewEntryProperties(entry1);
            		
+    			// We set the currency by default to be the currency
+    			// of the top-level entry.
+    			
+    			// The currency of an entry is not
+    			// applicable if the entry is an entry in a currency account
+    			// (because all entries in a currency account must have the
+    			// currency of the account).  However, we set it anyway so
+    			// the value is there if the entry is set to an income and
+    			// expense account (which would cause the currency property
+    			// to become applicable).
+
+				// It may be that the currency of the top-level entry is not known.
+				// This is not possible if entries in a currency account
+				// are being listed, but may be possible if this entries list
+				// control is used for more general purposes.  In this case,
+    			// the currency is not set and so the user must enter it.
+    			if (entry1.getCommodity() instanceof Currency) {
+        			entry2.setIncomeExpenseCurrency((Currency)entry1.getCommodity());
+    			}
+    			
            		// Select entry1 in the entries list.
                 setSelection(entry1, entry1);
            }
@@ -189,6 +288,8 @@ public class EntriesTree {
            public void widgetSelected(SelectionEvent event) {
         		Entry selectedEntry = getSelectedEntryInAccount();
         		if (selectedEntry != null) {
+        			closeCellEditor();
+        			
         			Transaction transaction = selectedEntry.getTransaction();
         			Entry newEntry = transaction.createEntry();
         			
@@ -216,10 +317,39 @@ public class EntriesTree {
         			
         			newEntry.setAmount(-total);
         			
+        			// We set the currency by default to be the currency
+        			// of the top-level entry.
+        			
+        			// The currency of an entry is not
+        			// applicable if the entry is an entry in a currency account
+        			// (because all entries in a currency account must have the
+        			// currency of the account).  However, we set it anyway so
+        			// the value is there if the entry is set to an income and
+        			// expense account (which would cause the currency property
+        			// to become applicable).
+
+    				// It may be that the currency of the top-level entry is not known.
+    				// This is not possible if entries in a currency account
+    				// are being listed, but may be possible if this entries list
+    				// control is used for more general purposes.  In this case,
+        			// the currency is not set and so the user must enter it.
+        			if (selectedEntry.getCommodity() instanceof Currency) {
+            			newEntry.setIncomeExpenseCurrency((Currency)selectedEntry.getCommodity());
+        			}
+        			
         			transaction.getSession().registerUndoableChange("New Split");
         			
                		// Select the new entry in the entries list.
                     setSelection(selectedEntry, newEntry);
+        		} else {
+        			MessageDialog waitDialog = new MessageDialog(
+        					container.getShell(),
+        					"Disabled Action Selected",
+        					null, // accept the default window icon
+        					"You cannot add a new split to an entry until you have selected an entry from the above list.",
+        					MessageDialog.INFORMATION,
+        					new String[] { IDialogConstants.OK_LABEL }, 0);
+        			waitDialog.open();
         		}
            }
         });
@@ -243,14 +373,11 @@ public class EntriesTree {
         detailsButton.addSelectionListener(new SelectionAdapter() {
         	public void widgetSelected(SelectionEvent event) {
         		Entry selectedEntryInAccount = getSelectedEntryInAccount();
-/* TODO: get currency        		
 				TransactionDialog dialog = new TransactionDialog(
 						container.getShell(),
 						selectedEntryInAccount,
-						session, 
-						fPage.getAccount().getCurrency());
+						session);
 				dialog.open();
-*/				
         	}
         });
         
@@ -324,11 +451,20 @@ public class EntriesTree {
 			public void mouseDown(MouseEvent event) {
 				System.out.println("mouse: " + event.x + ", " + event.y);
 				
+				Point pt = new Point(event.x, event.y);
+				final TreeItem item = fTable.getItem(pt);
+				
+				// User may have clicked on space after the last row (i.e. after the new entry row).
+				// The selection is not changed by SWT when the user does this, so ignore
+				// this mouse down event, leaving the current selection and any
+				// open cell editor.
+				if (item == null) {
+					return;
+				}
+				
 				// Clean up any previous editor control
 				closeCellEditor();
 
-				Point pt = new Point(event.x, event.y);
-				final TreeItem item = fTable.getItem(pt);
 				final int column = getColumn(pt, item);
 
 				// User may have clicked on the expand button, or perhaps somewhere else.
@@ -557,23 +693,59 @@ public class EntriesTree {
 						return;
 					}
 					
-					boolean wasInTable = entriesContent.isEntryInTable(entry,
-							propertyAccessor, oldValue);
-					boolean isNowInTable = entriesContent.isEntryInTable(entry,
-							propertyAccessor, newValue);
-					if (wasInTable && !isNowInTable) {
-						removeEntryInAccount(entry);
-					} else if (!wasInTable && isNowInTable) {
-						addEntryInAccount(entry);
+					// A property change may result in a top-level entry no longer
+					// meeting the requirements to be listed in the table.
+					// If the entry is not the selected entry (or, if a split entry
+					// is selected, the top-level entry of that split entry) then
+					// the changed entry is immediately removed from the list.
+					
+					// However, if the changed entry is the selected top-level entry
+					// (including being the top-level entry for a selected child entry)
+					// then we do not remove the entry from the list.  It would confuse
+					// the user if an entry disappeared while the user was editing the
+					// entry.  The entry is instead removed when the entry is no longer
+					// the selected entry.  This may still be a little confusing, because
+					// the entry would disappear when the user selects another entry,
+					// but the user is forced to commit the changes and should not be
+					// so surprised to see that the entry is no longer in the table once
+					// the changes are committed.
+					
+					// Note that the entry being changed may be the other entry
+					// in the transaction, whose
+					// properties are also diplayed on the parent row. As long
+					// as properties
+					// from the 'other' entry never affect whether an entry is
+					// listed
+					// then this
+					// code is correct. If, however, properties from the other
+					// entry
+					// or properties from the transaction affect whether an
+					// entry is
+					// listed then this code will need re-visiting.
+					if (!entry.equals(getSelectedEntryInAccount())) {
+						boolean wasInTable = entriesContent.isEntryInTable(
+								entry, propertyAccessor, oldValue);
+						boolean isNowInTable = entriesContent.isEntryInTable(
+								entry, propertyAccessor, newValue);
+						if (wasInTable && !isNowInTable) {
+							removeEntryInAccount(entry);
+						} else if (!wasInTable && isNowInTable) {
+							addEntryInAccount(entry);
+						}
 					}
 
-					// Find all rows on which properties of this entry are displayed
-					// and update those rows.  This involves finding all entries in
-					// the same transaction that are listed in the table contents
-					// (including this entry itself if this entry is a top level entry
+					// Find all rows on which properties of this entry are
+					// displayed
+					// and update those rows. This involves finding all entries
+					// in
+					// the same transaction that are listed in the table
+					// contents
+					// (including this entry itself if this entry is a top level
+					// entry
 					// in the table).
-					// TODO: we do not need to include this entry itself if it were
-					// just added or just removed above.  This code is not quite
+					// TODO: we do not need to include this entry itself if it
+					// were
+					// just added or just removed above. This code is not quite
 					// perfect but probably works.
 					Transaction transaction = entry.getTransaction();
 					for (Iterator iter = transaction.getEntryCollection()
@@ -952,6 +1124,7 @@ public class EntriesTree {
 
 		Object selectedObject = fTable.getSelection()[0].getData();
 
+		JMoneyPlugin.myAssert(selectedObject != null);
 		if (selectedObject != null) {
 			IDisplayableItem data = (IDisplayableItem) selectedObject;
 			if (selectedObject instanceof DisplayableTransaction) {
@@ -983,7 +1156,7 @@ public class EntriesTree {
 			}
 			if (selectedObject instanceof DisplayableEntry) {
 				DisplayableEntry entryData = (DisplayableEntry) data;
-				return entryData.getEntry();
+				return entryData.getEntryForThisRow();
 			}
 		}
 
@@ -1000,18 +1173,20 @@ public class EntriesTree {
 	 */	public class DisplayableTransaction implements IDisplayableItem {
 		private Entry entry;
 
-		private Vector otherEntries = new Vector();
-
 		private long balance;
+
+		/**
+		 * A cache of the entries in this transaction excluding
+		 * the entry itself.
+		 */
+		private Vector otherEntries = new Vector();
 
 		public DisplayableTransaction(Entry entry, long saldo) {
 			this.entry = entry;
 			this.balance = saldo;
-
-			// Cache the set of all other entries in this transaction because a query
-			// to the datastore to get it may have non-trivial cost.
+			
 			Iterator itSubEntries = entry.getTransaction().getEntryCollection()
-					.iterator();
+			.iterator();
 			while (itSubEntries.hasNext()) {
 				Entry entry2 = (Entry) itSubEntries.next();
 				if (!entry2.equals(entry)) {
@@ -1024,7 +1199,8 @@ public class EntriesTree {
 		 * @return
 		 */
 		public boolean hasSplitEntries() {
-			return otherEntries.size() > 1;
+			return otherEntries.size() > 1
+			|| ((Entry)otherEntries.firstElement()).getAccount() instanceof CapitalAccount;
 		}
 
 		/**
@@ -1044,12 +1220,24 @@ public class EntriesTree {
 
 		public Entry getEntryForOtherFields() {
 			if (otherEntries.size() == 1) {
-				return (Entry) otherEntries.get(0);
+				return (Entry)otherEntries.firstElement();
 			} else {
 				return null;
 			}
 		}
 
+		public Entry getEntryForCommon1Fields() {
+			return entry;
+		}
+		
+		public Entry getEntryForCommon2Fields() {
+			if (otherEntries.size() == 1) {
+				return (Entry)otherEntries.firstElement();
+			} else {
+				return null;
+			}
+		}
+		
 		public long getAmount() {
 			return entry.getAmount();
 		}
@@ -1077,7 +1265,7 @@ public class EntriesTree {
 			return entry;
 		}
 
-		public Entry getSelectedEntry() {
+		public Entry getEntryForThisRow() {
 			return entry;
 		}
 	}
@@ -1098,22 +1286,49 @@ public class EntriesTree {
 			return this.transactionData;
 		}
 
-		Entry getEntry() {
-			return entry;
-		}
-
 		public Transaction getTransactionForTransactionFields() {
 			return null;
 		}
 
 		public Entry getEntryForAccountFields() {
-			return entry;
+			// If this entry has been set to an income and expense account entry
+			// then the capital account fields must be blank and we return null
+			// to indicate this, otherwise the capital account properties are
+			// associated with this entry.
+			if (entry.getAccount() == null
+					|| entry.getAccount() instanceof CapitalAccount) {
+				return entry;
+			} else {
+				return null;
+			}
 		}
 
 		public Entry getEntryForOtherFields() {
+			// If this entry has been set to a capital account entry
+			// then the income and expense account fields must be blank and we return null
+			// to indicate this, otherwise the capital account properties are
+			// associated with this entry.
+			if (entry.getAccount() == null
+					|| entry.getAccount() instanceof IncomeExpenseAccount) {
+				return entry;
+			} else {
+				return null;
+			}
+		}
+		
+		public Entry getEntryForCommon1Fields() {
+			// If the column contains an entry property that applies to both capital and income and expense
+			// accounts, and (in the simple transaction case) displays the property from the capital account,
+			// then the column is always blank in the child rows (we use common2 in preference).
 			return null;
 		}
-
+		
+		public Entry getEntryForCommon2Fields() {
+			// If the column contains an entry property that applies to both capital and income and expense
+			// accounts, then in child rows it will always contain the property from the entry.
+			return entry;
+		}
+		
 		/* (non-Javadoc)
 		 * @see net.sf.jmoney.ui.internal.pages.account.capital.IDisplayableItem#getAmount()
 		 */
@@ -1142,7 +1357,7 @@ public class EntriesTree {
 			return transactionData.getEntryForAccountFields();
 		}
 
-		public Entry getSelectedEntry() {
+		public Entry getEntryForThisRow() {
 			return entry;
 		}
 	}
@@ -1182,6 +1397,16 @@ public class EntriesTree {
 			return null;
 		}
 
+		public Entry getEntryForCommon1Fields() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+		public Entry getEntryForCommon2Fields() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
 		/* (non-Javadoc)
 		 * @see net.sf.jmoney.ui.internal.pages.account.capital.IDisplayableItem#getAmount()
 		 */
@@ -1225,7 +1450,7 @@ public class EntriesTree {
 		/* (non-Javadoc)
 		 * @see net.sf.jmoney.pages.entries.IDisplayableItem#getSelectedEntry()
 		 */
-		public Entry getSelectedEntry() {
+		public Entry getEntryForThisRow() {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -1467,7 +1692,7 @@ public class EntriesTree {
 		for (int i = 0; i < parentItem.getItemCount(); i++) {
 			TreeItem item = parentItem.getItem(i);
 			DisplayableEntry dEntry = (DisplayableEntry)item.getData();
-			if (dEntry.getEntry().equals(entry)) {
+			if (dEntry.getEntryForThisRow().equals(entry)) {
 				return item;
 			}
 		}
@@ -1553,8 +1778,11 @@ public class EntriesTree {
 		fTable.setSelection(new TreeItem [] {item});
 	}
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.pages.entries.IEntriesControl#addEntry(net.sf.jmoney.model2.Entry, net.sf.jmoney.model2.Entry)
+	/**
+	 * Update the view to show the insertion of a new child
+	 * entry to a given top-level entry.
+	 * This includes updating the cached list of entries
+	 * in the DisplayableTransaction object.
 	 */
 	public void addEntry(Entry entryInAccount, Entry newEntry) {
 		int parentIndex = lookupEntryInAccount(entryInAccount);
@@ -1563,6 +1791,10 @@ public class EntriesTree {
 
 		Transaction transaction = entryInAccount.getTransaction();
 		DisplayableTransaction dTrans = (DisplayableTransaction)parentItem.getData();
+		
+		// Update the list of child entries in the
+		// DisplayableTransaction object.
+		dTrans.otherEntries.add(newEntry);
 		
 		Color colorOfNewEntry = parentItem.getBackground().equals(
 				transactionColor) ? entryColor : alternateEntryColor;
@@ -1606,20 +1838,27 @@ public class EntriesTree {
 		newItem.setBackground(colorOfNewEntry);
 	}
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.pages.entries.IEntriesControl#removeEntry(net.sf.jmoney.model2.Entry, net.sf.jmoney.model2.Entry)
+	/**
+	 * Update the view to show the deletion of a child
+	 * entry to a given top-level entry.
+	 * This includes updating the cached list of entries
+	 * in the DisplayableTransaction object.
 	 */
-	public void removeEntry(Entry entryInAccount, Entry oldEntry) {
+	public void removeEntry(Entry entryInAccount, Entry deletedEntry) {
 		// get the index of the row for the transaction
 		int transIndex = lookupEntryInAccount(entryInAccount);
 
 		TreeItem parentItem = fTable.getItem(transIndex);
 		DisplayableTransaction dTrans = (DisplayableTransaction) parentItem
 				.getData();
-		Transaction transaction = oldEntry.getTransaction();
+		Transaction transaction = deletedEntry.getTransaction();
 
+		// Update the list of child entries in the
+		// DisplayableTransaction object.
+		dTrans.otherEntries.remove(deletedEntry);
+		
 		// get the child row item for the entry
-		TreeItem childItem = lookupSplitEntry(parentItem, oldEntry);
+		TreeItem childItem = lookupSplitEntry(parentItem, deletedEntry);
 
 		// Dispose it
 		childItem.dispose();
@@ -1627,7 +1866,7 @@ public class EntriesTree {
 		// If the transaction is now a simple transaction,
 		// dispose the remaining item, and update the transaction
 		// row.
-		if (dTrans.getEntryForOtherFields() != null) {
+		if (!dTrans.hasSplitEntries()) {
 			JMoneyPlugin.myAssert(parentItem.getItemCount() == 1);
 			parentItem.getItem(0).dispose();
 			updateItem(parentItem);

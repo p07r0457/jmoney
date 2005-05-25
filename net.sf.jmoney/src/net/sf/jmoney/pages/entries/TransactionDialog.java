@@ -77,16 +77,9 @@ public class TransactionDialog {
     protected static final Color green  = new Color(Display.getCurrent(), 200, 255, 200);
 
     private Shell shell;
+
     private Display display;
 
-    public void open() {
-        shell.pack();
-        shell.open();
-        while (!shell.isDisposed()) {
-            if (!display.readAndDispatch()) display.sleep();
-        }
-    }
-    
     private Session session;
 
     private Currency defaultCurrency;
@@ -455,9 +448,12 @@ public class TransactionDialog {
     /** element: IPropertyControl */
     Vector transactionControls = new Vector();
     
-    public TransactionDialog(Shell parent, Entry accountEntry, Session session, Currency defaultCurrency) {
+    public TransactionDialog(Shell parent, Entry accountEntry, Session session) {
     	this.session = session;
-    	this.defaultCurrency = defaultCurrency;
+    	
+    	this.defaultCurrency = accountEntry.getCommodity() instanceof Currency
+    	? (Currency)accountEntry.getCommodity()
+    			: session.getDefaultCurrency();
     	
         this.display = parent.getDisplay();
         
@@ -612,7 +608,14 @@ public class TransactionDialog {
         shell.pack();
 	}
 	
-	
+    public void open() {
+        shell.pack();
+        shell.open();
+        while (!shell.isDisposed()) {
+            if (!display.readAndDispatch()) display.sleep();
+        }
+    }
+    
 	abstract private class PropertyControlFocusListener extends FocusAdapter {
 
     	private PropertyAccessor propertyAccessor;
