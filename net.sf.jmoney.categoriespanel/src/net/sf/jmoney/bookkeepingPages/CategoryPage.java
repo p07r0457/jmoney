@@ -34,7 +34,6 @@ import net.sf.jmoney.categoriespanel.CategoriesPanelPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyDependency;
