@@ -21,6 +21,7 @@ package net.sf.jmoney.pages.entries;
 import java.util.Collection;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
@@ -47,7 +48,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     
     private FormToolkit toolkit;
     
-    private SelectionListener tableSelectionListener = null;
+    private EntriesTree.EntryRowSelectionListener tableSelectionListener = null;
     
     public EntriesSection(EntriesPage page, Composite parent) {
         super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
@@ -63,32 +64,29 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     protected void createClient(FormToolkit toolkit) {
     	this.toolkit = toolkit;
     	
-        tableSelectionListener = new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent e) {
-                Object selectedObject = e.item.getData();
-
-                // TODO: This code is duplicated below.
-                // The selected object might be null.  This occurs when the table is refreshed.
-                // I don't understand this so I am simply bypassing the update
-                // in this case.  Nigel
-                
-                if (selectedObject != null) {
-                	// Note that we never get here with the item data set to the
-                	// new entry data object.  The reason being that the EntryTree
-                	// object intercepts mouse down events first and replaces the
-                	// data with a new entry.
-                	
-                	IDisplayableItem data = (IDisplayableItem)selectedObject;
-
-                	Entry entryInAccount = data.getEntryInAccount();
-                	Entry selectedEntry = data.getEntryForThisRow();
-                	
-            		fPage.currentTransaction = entryInAccount.getTransaction();
-            		
-                	if (selectedEntry != null) {
-                		fPage.fEntrySection.update(entryInAccount, selectedEntry);
-                	}
-                }
+    	tableSelectionListener = new EntriesTree.EntryRowSelectionListener() {
+    		public void widgetSelected(IDisplayableItem selectedObject) {
+    			JMoneyPlugin.myAssert(selectedObject != null);
+    			
+    			// We should never get here with the item data set to the
+    			// DisplayableNewEmptyEntry object as a result of the user
+    			// selecting the row.  The reason being that the EntryTree
+    			// object intercepts mouse down events first and replaces the
+    			// data with a new entry.  However, SWT seems to set the selection
+    			// to the last row in certain circumstances such as when
+    			// applying a filter.  In such a situation, both the top-level
+    			// entry and the selected entry will be given as null.
+    			// Two null values passed to the entry section will cause
+    			// the section to be blanked.
+    			
+    			IDisplayableItem data = (IDisplayableItem)selectedObject;
+    			
+    			Entry entryInAccount = data.getEntryInAccount();
+    			Entry selectedEntry = data.getEntryForThisRow();
+    			
+    			if (selectedEntry != null) {
+    				fPage.fEntrySection.update(entryInAccount, selectedEntry);
+    			}
 			}
         };
 
@@ -101,7 +99,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
         container.setLayout(layout);
 
         // Create the table control.
-        fEntriesControl = new EntriesTree(container, toolkit, this, fPage.getAccount().getSession()); 
+        fEntriesControl = new EntriesTree(container, toolkit, fPage.transactionManager, this, fPage.getAccount().getSession()); 
 		fPage.getEditor().getToolkit().adapt(fEntriesControl.getControl(), true, false);
 		fEntriesControl.addSelectionListener(tableSelectionListener);
 

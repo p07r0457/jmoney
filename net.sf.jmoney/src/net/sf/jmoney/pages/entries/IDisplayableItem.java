@@ -55,19 +55,14 @@ public interface IDisplayableItem {
 	long getAmount();
 	
 	/**
-	 *  
-	 * 
-	 * 
-	 * @return true if the transaction fields (the date and any
-	 * 		extension properties added to the transaction) are to 
-	 * 		be blank on this row
+	 * @return the transaction represented by this row.  This is
+	 * 			always non-null for top-level and child entry rows.
+	 * 			It is null only for the blank new entry row at the
+	 * 			bottom of the list.
 	 */
-	boolean blankTransactionFields();
+	Transaction getTransaction();
 	
 	/**
-	 * 
-	 * 
-	 * 
 	 * @return true if this row causes the balance
 	 * 		(as shown in the balance column) to be a different
 	 * 		value from the previous balance

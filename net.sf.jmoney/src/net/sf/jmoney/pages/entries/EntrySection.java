@@ -501,8 +501,6 @@ public class EntrySection extends SectionPart {
 	 */
 	private Commodity defaultCurrencyForPage;
 	
-	private Entry currentEntry = null;
-	
 	private Composite transactionArea;
 	
 	private Composite entriesArea;
@@ -615,45 +613,56 @@ public class EntrySection extends SectionPart {
 	 *
 	 * @param entry Entry whose editable properties are presented to the user
 	 */
-	public void update(Entry accountEntry, Entry selectedEntry) {
-		currentEntry = accountEntry;
-		
+	public void update(Entry topLevelEntry, Entry selectedEntry) {
 		if (filler != null) {
 			filler.dispose();
 			filler = null;
 		}
-		
-		GridData entriesAreaLayoutData = new GridData(SWT.FILL, SWT.FILL, true, false);
-		entriesAreaLayoutData.widthHint = 200;
-		entriesArea.setLayoutData(entriesAreaLayoutData);
-		
-		selectedEntryControls.setEntry(selectedEntry);
-		
-		// Update transaction property controls.
-		if (selectedEntry.equals(accountEntry)) {
-			getSection().setDescription("Edit the currently selected entry.");
+
+		if (topLevelEntry == null && selectedEntry == null) {
+			entriesArea.setLayoutData(new GridData(0, 0));
+			getSection().setDescription("No entry is currently selected.  Select an entry to edit, or create a new transaction.");
+		} else {
 			
-			transactionArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+			GridData entriesAreaLayoutData = new GridData(SWT.FILL, SWT.FILL, true, false);
+			entriesAreaLayoutData.widthHint = 200;
+			entriesArea.setLayoutData(entriesAreaLayoutData);
 			
-			for (Iterator iter = transactionControls.iterator(); iter.hasNext();) {
-				IPropertyControl control = (IPropertyControl)iter.next();
-				control.load(accountEntry.getTransaction());
+			selectedEntryControls.setEntry(selectedEntry);
+			
+			if (selectedEntry.equals(topLevelEntry)) {
+				getSection().setDescription("Edit the currently selected entry.");
+				
+				// Update transaction property controls.
+				transactionArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+				for (Iterator iter = transactionControls.iterator(); iter.hasNext();) {
+					IPropertyControl control = (IPropertyControl)iter.next();
+					control.load(topLevelEntry.getTransaction());
+				}
+			} else {
+				getSection().setDescription("Edit the currently selected split.");
+				
+				// Hide the transaction property controls.
+				transactionArea.setLayoutData(new GridData(0, 0));
 			}
-		} else {
-			getSection().setDescription("Edit the currently selected split.");
-			transactionArea.setLayoutData(new GridData(0, 0));
-		}
-		
-		// Create the groups for the remaining entries in the transaction.
-		Transaction transaction = currentEntry.getTransaction();
-		
-		if (selectedEntry.equals(accountEntry)
-				&& transaction.hasTwoEntries()) {
-			Entry otherEntry = transaction.getOther(currentEntry);
-			otherEntryControls.setEntry(otherEntry);
-			otherEntryControls.setVisible(true);
-		} else {
-			otherEntryControls.setVisible(false);
+			
+			// If the transaction is a simple transaction (not a split or
+			// transfer transaction), then we must also display the properties
+			// for the income and expense account entry.
+			Transaction transaction = topLevelEntry.getTransaction();
+			
+			if (selectedEntry.equals(topLevelEntry)
+					&& transaction.hasTwoEntries()) {
+				Entry otherEntry = transaction.getOther(topLevelEntry);
+				if ((otherEntry.getAccount() instanceof CapitalAccount)) {
+					otherEntryControls.setEntry(otherEntry);
+					otherEntryControls.setVisible(true);
+				} else {
+					otherEntryControls.setVisible(false);
+				}
+			} else {
+				otherEntryControls.setVisible(false);
+			}
 		}
 		
 		layoutSection();

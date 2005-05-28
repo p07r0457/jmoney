@@ -108,40 +108,6 @@ public class TransactionManager implements IDataManager {
 	 */
 	Map modifiedLists = new HashMap();
 
-	/**
-	 * This class is the class of the keys in the modifiedLists
-	 * map.  An instance of this class contains the parent object
-	 * (the object containing the list property) and the accessor
-	 * for the list property.  This pair defines exactly a list.
-	 * <P>
-	 * The parent is an object in the
-	 * datastore and will contain lists that contain the data
-	 * that has been committed to the datastore.
-	 *  
-	 * @author Nigel Westbury
-	 */
-	class ParentListPair {
-		IObjectKey parentKey;
-		PropertyAccessor listAccessor;
-		
-		ParentListPair(IObjectKey parentKey, PropertyAccessor listAccessor) {
-			this.parentKey = parentKey;
-			this.listAccessor = listAccessor;
-		}
-		
-		public boolean equals(Object obj) {
-			if (!(obj instanceof ParentListPair))
-				return false;
-			ParentListPair parentListPair = (ParentListPair)obj;
-			return parentKey.equals(parentListPair.parentKey)
-				&& listAccessor.equals(parentListPair.listAccessor);
-		}
-		
-		public int hashCode() {
-			return parentKey.hashCode() ^ listAccessor.hashCode();
-		}
-	}
-	
     private Vector sessionChangeListeners = new Vector();
 
     /**
@@ -170,7 +136,23 @@ public class TransactionManager implements IDataManager {
 		return uncommittedSession;
 	}
 
-    /**
+	/**
+	 * Indicate whether there are any uncommitted changes being held
+	 * by this transaction manager.  This method is useful when the user
+	 * does something like selecting another transaction or closing a
+	 * dialog box and it is not clear whether the user wants to commit
+	 * or to cancel changes.
+	 *
+	 * @return true if property values have been changed or objects
+	 * 			have been created or deleted within the context of this
+	 * 			transaction manager since the last commit
+	 */
+	public boolean hasChanges() {
+		return !modifiedObjects.isEmpty() 
+		|| !modifiedLists.isEmpty();
+	}
+
+	/**
      * Given an instance of an object in the datastore
      * (i.e. committed), obtain a copy of the object that 
      * is in the version of the datastore managed by this
@@ -426,7 +408,7 @@ public class TransactionManager implements IDataManager {
 		// reference can be set to the other object.
 		for (Iterator iter = modifiedLists.entrySet().iterator(); iter.hasNext(); ) {
 			Map.Entry mapEntry = (Map.Entry)iter.next();
-			ParentListPair parentListPair = (ParentListPair)mapEntry.getKey();
+			ModifiedListKey parentListPair = (ModifiedListKey)mapEntry.getKey();
 			ModifiedList modifiedList = (ModifiedList)mapEntry.getValue();
 
 			ExtendableObject parent = parentListPair.parentKey.getObject();
@@ -509,7 +491,7 @@ public class TransactionManager implements IDataManager {
 		// Delete the deleted objects
 		for (Iterator iter = modifiedLists.entrySet().iterator(); iter.hasNext(); ) {
 			Map.Entry mapEntry = (Map.Entry)iter.next();
-			ParentListPair parentListPair = (ParentListPair)mapEntry.getKey();
+			ModifiedListKey parentListPair = (ModifiedListKey)mapEntry.getKey();
 			ModifiedList modifiedList = (ModifiedList)mapEntry.getValue();
 
 			ExtendableObject parent = parentListPair.parentKey.getObject();
@@ -664,21 +646,26 @@ public class TransactionManager implements IDataManager {
 	}
 
 	/**
-	 * Given a list property in an object, create an object that
-	 * maintains the changes that have been made to that list within
-	 * a transaction, or return the object if one already exists.
-	 *
-	 * Note that the modified list objects are not created unless a change
-	 * is made to the list (objects added or objects removed).
+	 * Given a list property in an object, create an object that maintains the
+	 * changes that have been made to that list within a transaction, or return
+	 * the object if one already exists. The modified list objects are not
+	 * created unless a change is made to the list (objects added or objects
+	 * removed).
+	 * <P>
+	 * It is important that callers do not keep a copy of the modified list
+	 * across method calls. This is because it may have changed from null to
+	 * non-null if someone else added to or deleted from the list, and it may
+	 * have changed from non-null to null if someone else committed the
+	 * transaction.
 	 * 
-	 * @param parentKey the object key (in the committed datastore) for the
-	 * 			object containing the list property
+	 * @param parentKey
+	 *            the object key (in the committed datastore) for the object
+	 *            containing the list property
 	 * @param listProperty
-	 * @return an object containing the changes to the given list.
-	 * 			This object may be empty but is never null
+	 * @return an object containing the changes to the given list. This object
+	 *         may be empty but is never null
 	 */
-	public ModifiedList createModifiedList(IObjectKey parentKey, PropertyAccessor listProperty) {
-		ParentListPair key = new ParentListPair(parentKey, listProperty);
+	public ModifiedList createModifiedList(ModifiedListKey key) {
 		ModifiedList modifiedList = (ModifiedList)modifiedLists.get(key);
 		if (modifiedList == null) {
 			modifiedList = new ModifiedList();
@@ -688,20 +675,25 @@ public class TransactionManager implements IDataManager {
 	}
 
 	/**
-	 * Given a list property in an object, get the object that
-	 * maintains the changes that have been made to that list within
-	 * a transaction.
-	 * The modified list objects are not created unless a change
-	 * is made to the list (objects added or objects removed).
+	 * Given a list property in an object, get the object that maintains the
+	 * changes that have been made to that list within a transaction. The
+	 * modified list objects are not created unless a change is made to the list
+	 * (objects added or objects removed).
+	 * <P>
+	 * It is important that callers do not keep a copy of the modified list
+	 * across method calls. This is because it may have changed from null to
+	 * non-null if someone else added to or deleted from the list, and it may
+	 * have changed from non-null to null if someone else committed the
+	 * transaction.
 	 * 
-	 * @param parentKey the object key (in the committed datastore) for the
-	 * 			object containing the list property
+	 * @param parentKey
+	 *            the object key (in the committed datastore) for the object
+	 *            containing the list property
 	 * @param listProperty
-	 * @return an object containing the changes to the given list,
-	 * 				or null if no changes have been made to the given list
+	 * @return an object containing the changes to the given list, or null if no
+	 *         changes have been made to the given list
 	 */
-	public ModifiedList getModifiedList(IObjectKey parentKey, PropertyAccessor listProperty) {
-		ParentListPair key = new ParentListPair(parentKey, listProperty);
+	public ModifiedList getModifiedList(ModifiedListKey key) {
 		return (ModifiedList)modifiedLists.get(key);
 	}
 
@@ -737,7 +729,7 @@ public class TransactionManager implements IDataManager {
 			// Process all the new objects added within this transaction
 			for (Iterator iter = modifiedLists.entrySet().iterator(); iter.hasNext(); ) {
 				Map.Entry mapEntry = (Map.Entry)iter.next();
-				ParentListPair parentListPair = (ParentListPair)mapEntry.getKey();
+				ModifiedListKey parentListPair = (ModifiedListKey)mapEntry.getKey();
 				ModifiedList modifiedList = (ModifiedList)mapEntry.getValue();
 				
 				// Find all entries added to existing transactions
