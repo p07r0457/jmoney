@@ -90,8 +90,10 @@ public class OpenSessionAction implements IWorkbenchWindowActionDelegate {
 				}
 
 				SessionManager sessionManager = new SessionManager(fileFormatId, fileDatastore, sessionFile);
-				fileDatastore.readSession(sessionFile, sessionManager, window);
-	            JMoneyPlugin.getDefault().setSessionManager(sessionManager);
+				boolean isGoodFileRead = fileDatastore.readSession(sessionFile, sessionManager, window);
+				if (isGoodFileRead) {
+					JMoneyPlugin.getDefault().setSessionManager(sessionManager);
+				}
             }
         }
 		

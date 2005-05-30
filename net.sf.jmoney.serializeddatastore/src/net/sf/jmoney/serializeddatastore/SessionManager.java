@@ -178,9 +178,9 @@ public class SessionManager implements ISessionManager {
 	 * @param window the workbench window to be used for UI
 	 */
     public void saveSessionAs(IWorkbenchWindow window) {
-    	File sessionFile = obtainFileName(window);
-    	if (sessionFile != null) {
-    		String fileName = sessionFile.getName();
+    	File newSessionFile = obtainFileName(window);
+    	if (newSessionFile != null) {
+    		String fileName = newSessionFile.getName();
             IConfigurationElement elements[] = SerializedDatastorePlugin.getElements(fileName);
             
             // TODO: It is possible that multiple plug-ins may
@@ -196,7 +196,13 @@ public class SessionManager implements ISessionManager {
 				throw new RuntimeException("internal error");
 			}
     		
-			fileDatastore.writeSession(this, getFile(), window);
+			// Write the file and then set the session file to the new file.
+			// Note that we do not set the new session file until the file is
+			// successfully written.  If the file cannot be written to the new
+			// file then we must leave the old file as the current file.
+			fileDatastore.writeSession(this, newSessionFile, window);
+			this.sessionFile = newSessionFile;
+			
 	        modified = false;
     	}
     }

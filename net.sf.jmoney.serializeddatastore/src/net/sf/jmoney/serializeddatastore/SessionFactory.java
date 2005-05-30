@@ -40,7 +40,6 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
  * @see IWorkbenchWindowActionDelegate
  */
 public class SessionFactory implements ISessionFactory {
-//	private IWorkbenchWindow window;
 	/**
 	 * The constructor.
 	 */
@@ -58,8 +57,15 @@ public class SessionFactory implements ISessionFactory {
             File sessionFile = new File(fileName);
             IWorkbenchWindow window = JMoneyPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow();
             SessionManager sessionManager = new SessionManager(fileFormatId, fileDatastore, sessionFile);
-			fileDatastore.readSession(sessionFile, sessionManager, window);
-            JMoneyPlugin.getDefault().setSessionManager(sessionManager);
+            
+            // Read the session from file.  If the read fails, we do nothing,
+            // which will have the effect of starting JMoney with no open
+            // session.  If the read fails then the readSession method is 
+            // responsible for displaying an appropriate message to the user.
+			boolean isGoodFileRead = fileDatastore.readSession(sessionFile, sessionManager, window);
+			if (isGoodFileRead) {
+				JMoneyPlugin.getDefault().setSessionManager(sessionManager);
+			}
         } else {
         	// No file name is set. This can happen if the workbench was last
 			// closed with a session that had never been saved. Although the

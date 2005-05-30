@@ -23,7 +23,9 @@
 package net.sf.jmoney.serializeddatastore;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.Account;
@@ -34,11 +36,11 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
- * @author Nigel
- *
  * Every datastore implementation must provide an implementation
  * of the IListManager interface.  This implementation simply
  * uses the Vector class to keep a list of objects.
+ *
+ * @author Nigel Westbury
  */
 public class SimpleListManager extends Vector implements IListManager {
 
@@ -48,7 +50,7 @@ public class SimpleListManager extends Vector implements IListManager {
 	 	this.sessionManager = sessionManager;
 	 }
 
-	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet/*, Object[] values, ExtensionProperties[] extensionProperties */) {
+	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		int numberOfParameters = constructorProperties.size();
@@ -122,33 +124,47 @@ public class SimpleListManager extends Vector implements IListManager {
 		
 		SimpleObjectKey objectKey = new SimpleObjectKey(sessionManager);
 		
+		Map extensionMap = new HashMap();
+		
 		int index = 0;
 		if (!propertySet.isExtension()) {
 			constructorParameters[0] = objectKey;
-			constructorParameters[1] = null;
+			constructorParameters[1] = extensionMap;
 			constructorParameters[2] = parent.getObjectKey();
 			index = 3;
 		}
 		
 		int indexIntoValues = 0;
 		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next(); 
+			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+			
+			// For this property, determine the parameter value to be passed to the
+			// constructor.
+			Object value;
 			if (propertyAccessor.isScalar()) {
-				if (!propertyAccessor.getPropertySet().isExtension()) {
-					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = values[indexIntoValues];
+				value = values[indexIntoValues++];
+			} else {
+				value = new SimpleListManager(sessionManager);
+			}
+
+			// Determine how this value is passed to the constructor.
+			// If the property comes from an extension then we must set
+			// the property into an extension, otherwise we simply set
+			// the property into the constructor parameters.
+			if (!propertyAccessor.getPropertySet().isExtension()) {
+				constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
+			} else {
+				Object [] extensionConstructorParameters = (Object[])extensionMap.get(propertyAccessor.getPropertySet());
+				if (extensionConstructorParameters == null) {
+					extensionConstructorParameters = new Object [propertyAccessor.getPropertySet().getConstructorProperties().size()];
+					extensionMap.put(propertyAccessor.getPropertySet(), extensionConstructorParameters);
 				}
-				indexIntoValues++;
+				extensionConstructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
 			}
 		}
 			
-		// Add a list manager for each list property in the object.
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			constructorParameters[index++] = new SimpleListManager(sessionManager);
-		}
-		
 		// We can now create the object.
-		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructDefaultImplementationObject(constructorParameters);
+		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 

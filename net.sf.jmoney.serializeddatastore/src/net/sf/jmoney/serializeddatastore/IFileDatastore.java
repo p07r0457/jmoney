@@ -34,9 +34,22 @@ import org.eclipse.ui.IWorkbenchWindow;
 public interface IFileDatastore {
 
 	/**
-	 * Read data from the file
+	 * Read the session data from file. The session is set as the open session
+	 * in the given session manager.
+	 * <P>
+	 * The opened session is set as the current open JMoney session. If no
+	 * session can be opened then an appropriate message is displayed to the
+	 * user and the previous session, if any, is left open.
+	 * <P>
+	 * If this method returns false then any previous session will be left open.
+	 * The caller will not display any error message. This method must display
+	 * an appropriate error message if the file cannot be read.
+	 * 
+	 * @return true if the file was successfully read and the session was set in
+	 *         the given session manager, false if the user cancelled the
+	 *         operation or if a failure occurred
 	 */
-	void readSession(File sessionFile, SessionManager sessionManager, IWorkbenchWindow window);
+	boolean readSession(File sessionFile, SessionManager sessionManager, IWorkbenchWindow window);
     
     /**
      * Write data to a file

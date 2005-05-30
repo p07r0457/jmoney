@@ -111,14 +111,24 @@ public class JMoneyXmlFormat implements IFileDatastore {
 	}
 	
 	/**
-	 * Read session from file.
+	 * Read session from file.  The session is set as the open session
+	 * in the given session manager.
 	 * <P>
 	 * The opened session is set as the current open JMoney session. 
 	 * If no session can be opened then an appropriate message is
 	 * displayed to the user and the previous session, if any, is
 	 * left open.
+	 * <P>
+	 * If this method returns false then any previous session will be
+	 * left open.  The caller will not display any error message.
+	 * This method must display an appropriate error message if the
+	 * file cannot be read.
+	 * 
+	 * @return true if the file was successfully read and the session
+	 * 			was set in the given session manager, false if the user
+	 * 			cancelled the operation or if a failure occurred
 	 */
-	public void readSession(final File sessionFile, final SessionManager sessionManager, final IWorkbenchWindow window) {
+	public boolean readSession(final File sessionFile, final SessionManager sessionManager, final IWorkbenchWindow window) {
 		try {
 			if (sessionFile.length() < 500000) {
 				// If the file is smaller than 500K then it is
@@ -164,10 +174,14 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			// Currently this cannot happen because the cancel button is not
 			// enabled in the progress dialog, but if the cancel button is enabled
 			// then we do nothing here, leaving the previous session, if any, open.
+			return false;
 		} catch (Throwable ex) {
 			JMoneyPlugin.log(ex);
 			fileReadError(sessionFile, window);
+			return false;
 		}
+		
+		return true;
 	}
 	
 	/**
@@ -826,8 +840,13 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 * add it to the appropriate list.
 		 */
 		public void elementCompleted(Object value) {
-			// Now we have the value of this property.
-			// If it is null, something is wrong.
+			/*
+			 * Now we have the value of this property. If it is null, something
+			 * is wrong, because null values are not written out. An empty
+			 * element may exist, but only if the element content is of a type
+			 * that can construct a valid non-null value from an empty string,
+			 * so no null values should be here.
+			 */
 			if (value == null) {
 				throw new RuntimeException("null value");
 			}
@@ -1256,34 +1275,24 @@ public class JMoneyXmlFormat implements IFileDatastore {
 
 		hd.startElement("", "", elementName, atts);
 		
-		// Write all properties that have both getters and setters.
-		
-		// If the property is an object then we find the PropertyAccessor
-		// object for it and see if this object 'owns' the object.
-		// If it does then we output that object as a nested XML element. 
-		
-		// If we find the pattern for a list (add... method,
-		// remove... method, and a get...Iterator method)
-		// then we again look for the PropertyAccessor object
-		// and see if this object 'owns' the list.
-		// If it does then we output the list of objects
-		// as nested XML elements.
-		
-		// For derived property sets, information must be in
-		// the XML that allows the derived property set to be
-		// determined.  This is done by outputting the
-		// actual final property set id.  The property set id
-		// is specified as an attribute.
-		
-		// When an object is not owned, an id is specified.
-		// These are specified as 'id' and 'idref' attributes
-		// in the normal way.
-		
-		// Write the list properties.
-		// This is done before the properties because then, as it happens, we get
-		// no problems due to the single pass.
-		// TODO: we cannot rely on this mechanism to ensure all idref's are written
-		// before they are used.
+		/*
+		 * Write all properties for this object, including properties from base
+		 * objects and properties from extensions.
+		 * 
+		 * For derived property sets, information must be in the XML that allows
+		 * the derived property set to be determined. This is done by outputting
+		 * the actual final property set id. The property set id is specified as
+		 * an attribute.
+		 * 
+		 * When an object is not owned, an id is specified. These are specified
+		 * as 'id' and 'idref' attributes in the normal way.
+		 * 
+		 * Write the list properties. This is done before the properties because
+		 * then, as it happens, we get no problems due to the single pass.
+		 * 
+		 * TODO: we cannot rely on this mechanism to ensure all idref's are
+		 * written before they are used.
+		 */
 		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 			if (propertyAccessor.isList()) {
@@ -1308,9 +1317,24 @@ public class JMoneyXmlFormat implements IFileDatastore {
 						|| object.getExtension(propertySet2) != null) {
 					String name = propertyAccessor.getLocalName();
 					Object value = object.getPropertyValue(propertyAccessor);
-					// No element means null value.
+
+					/*
+					 * If no element for a property exists in the file then the
+					 * property value is treated as null. Therefore, if the
+					 * property value is null, we do not write out an element.
+					 * 
+					 * Strings are a special case because JMoney treats null
+					 * strings and empty strings the same. If a string is empty,
+					 * we treat the string as null and do not write out the
+					 * value.
+					 */ 
+					 
+					if (value instanceof String 
+							&& ((String)value).length() == 0) {
+						value = null;
+					}
+					 
 					if (value != null) {
-						
 						atts.clear();
 						
 						String idref = null;
