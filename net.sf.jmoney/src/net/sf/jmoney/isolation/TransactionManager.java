@@ -550,32 +550,7 @@ public class TransactionManager implements IDataManager {
 		for (Iterator iter3 = actualPropertySet.getPropertyIterator3(); iter3.hasNext(); ) {
 			PropertyAccessor accessor = (PropertyAccessor)iter3.next();
 			if (accessor.isScalar()) {
-/*				
-				Object value = newObject.getPropertyValue(accessor);
-				if (value instanceof ExtendableObject) {
-					ExtendableObject referencedObject = (ExtendableObject)value;
-					UncommittedObjectKey key = (UncommittedObjectKey)referencedObject.getObjectKey();
-					
-					// TODO: We do not really have to instantiate the object here.
-					// We can set an object reference just from the key.  However,
-					// we don't have the methods available to do that at this time.
-					
-					ExtendableObject committedReferencedObject = key.getCommittedObject();
-					if (committedReferencedObject != null) {
-						newCommittedObject.setPropertyValue(accessor, committedReferencedObject);
-					} else {
-						// The property value is a reference to an object that has not have yet been committed to
-						// the datastore.  Such values cannot be set in the datastore.  We therefore avoid such
-						// properties here and set them later when all the new objects have been committed.
-						
-						// Add this property change to a map of property changes that we
-						// must do later.
-						propertyChangeMap.put(accessor, key);
-					}
-				} else {
-					newCommittedObject.setPropertyValue(accessor, value);
-				}
-*/
+
 				Object value = newObject.getPropertyValue(accessor);
 				if (value instanceof ExtendableObject) {
 					ExtendableObject referencedObject = (ExtendableObject)value;

@@ -236,9 +236,6 @@ public class OfxImport implements IBankStatementSource {
 		String line = buffer.readLine();
 		Matcher childMatch = elementPattern.matcher(line);
 		while (childMatch.matches()) {
-			System.out.println("X" + childMatch.group(0) + "X");
-			System.out.println("X" + childMatch.group(1) + "X");
-			System.out.println("X" + childMatch.group(2) + "X");
 			String data = childMatch.group(2); 
 		
 			if (childMatch.group(1).equals("DTPOSTED")) {

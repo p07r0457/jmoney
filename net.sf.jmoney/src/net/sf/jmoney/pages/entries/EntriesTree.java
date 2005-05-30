@@ -196,12 +196,6 @@ public class EntriesTree {
 	private Entry newEntryRowEntry;
 
 	/**
-	 * The transaction currently being edited, or null if no transaction
-	 * is currently being edited.
-	 */
-	//private Transaction currentTransaction;
-
-	/**
 	 * The item that was selected before an mouse down or selection
 	 * change event occurs.  We need to know the previously selected
 	 * item for two purposes:
@@ -234,8 +228,8 @@ public class EntriesTree {
 		this.entriesContent = entriesContent;
 
 		fTable = new Tree(container, SWT.FULL_SELECTION | SWT.BORDER
-				| SWT.H_SCROLL | SWT.HIDE_SELECTION);
-
+				| SWT.H_SCROLL | SWT.SINGLE);
+		
 		GridData gridData = new GridData(GridData.FILL_BOTH);
 		gridData.heightHint = 100;
 		gridData.widthHint = 100;
@@ -306,9 +300,13 @@ public class EntriesTree {
 
         		Entry selectedEntry = getSelectedEntry();
         		if (selectedEntry != null) {
+        			// Clear the selection.  This should not be necessary but.....
+        			fTable.setSelection(new TreeItem [] {});
+        			
         			Transaction transaction = selectedEntry.getTransaction();
         			transaction.getSession().deleteTransaction(transaction);
         			transaction.getSession().registerUndoableChange("Delete Transaction");
+        			transactionManager.commit();
         		}
         	}
         });
@@ -376,14 +374,7 @@ public class EntriesTree {
                		// Select the new entry in the entries list.
                     setSelection(selectedEntry, newEntry);
         		} else {
-        			MessageDialog dialog = new MessageDialog(
-        					container.getShell(),
-        					"Disabled Action Selected",
-        					null, // accept the default window icon
-        					"You cannot add a new split to an entry until you have selected an entry from the above list.",
-        					MessageDialog.INFORMATION,
-        					new String[] { IDialogConstants.OK_LABEL }, 0);
-        			dialog.open();
+        			showMessage("You cannot add a new split to an entry until you have selected an entry from the above list.");
         		}
            }
         });
@@ -395,9 +386,35 @@ public class EntriesTree {
 				// Clean up any cell editor
 				closeCellEditor();
 
+				if (fTable.getSelectionCount() != 1) {
+					showMessage("No split entry is selected in the entries list");
+					return;
+				}
+
+				IDisplayableItem data = (IDisplayableItem)fTable.getSelection()[0].getData();
+				
+				if (!(data instanceof DisplayableEntry)) {
+					showMessage("No split entry is selected in the entries list");
+					return;
+				}
+
+				DisplayableTransaction dTrans = ((DisplayableEntry)data).transactionData;
+				
+				if (dTrans.otherEntries.size() == 1) {
+					showMessage("You cannot delete the transfer account entry in a double entry transaction.  If you do not intend this transaction to be a transfer then change the category as appropriate.");
+					return;
+				}
+
         		Entry selectedEntryInAccount = getSelectedEntryInAccount();
         		Entry selectedEntry = getSelectedEntry();
-        		if (selectedEntry != null && selectedEntry != selectedEntryInAccount) {
+        		if (selectedEntry != null 
+        				&& selectedEntry != selectedEntryInAccount) {
+
+        			// Set the previouslySelectedItem to be the item of the top-level entry,
+    				// as this item will no longer be valid after we dispose it.
+    				previouslySelectedItem = previouslySelectedItem.getParentItem();
+    				fTable.setSelection(new TreeItem [] { previouslySelectedItem });
+    				
         			Transaction transaction = selectedEntry.getTransaction();
         			transaction.deleteEntry(selectedEntry);
         			transaction.getSession().registerUndoableChange("Delete Split");
@@ -479,14 +496,11 @@ public class EntriesTree {
 				// the table control and therefore it would be non-trivial to determine
 				// the column to which the pop-up menu applies.  We therefore process the
 				// pop-up menu in the MouseDown event.
-				System.out.println("menu detect: " + event.x + ", " + event.y);
 			}
 		});
 
 		fTable.addMouseListener(new MouseAdapter() {
 			public void mouseDown(MouseEvent event) {
-				System.out.println("mouse: " + event.x + ", " + event.y);
-				
 				Point pt = new Point(event.x, event.y);
 				final TreeItem item = fTable.getItem(pt);
 				
@@ -538,7 +552,20 @@ public class EntriesTree {
 			           		entriesContent.setNewEntryProperties(entry1);
 			           		JMoneyPlugin.myAssert(newEntryRowEntry == null);
 			           		
-			           		item.setData(new DisplayableTransaction(entry1, 0));
+			           		// Get the balance from the previous item.
+			           		long balance;
+			           		if (fTable.getItemCount() == 1) {
+			           			balance = entriesContent.getStartBalance();
+			           		} else {
+			           			balance = 
+			           				((DisplayableTransaction) 
+			           						fTable
+			           						.getItem(fTable.getItemCount() - 2)
+			           						.getData()
+									).balance;
+			           		}
+			           		
+			           		item.setData(new DisplayableTransaction(entry1, balance));
 			           		
 			           		// Although most properties will be blank, some, such
 			           		// as the date, default to non-blank values and these
@@ -547,10 +574,9 @@ public class EntriesTree {
 			           		
 			           		// Add another blank new entry row to replace the one we
 			           		// have just converted to a new transaction.
-			    			TreeItem item3 = new TreeItem(fTable, SWT.NULL);
-			    			item3.setData(new DisplayableNewEmptyEntry());
-			    			//updateItem(item3);
-			    			item3.setBackground(fTable.getItemCount() % 2 == 0 ? alternateTransactionColor
+			    			TreeItem blankItem = new TreeItem(fTable, SWT.NULL);
+			    			blankItem.setData(new DisplayableNewEmptyEntry());
+			    			blankItem.setBackground(fTable.getItemCount() % 2 == 0 ? alternateTransactionColor
 								: transactionColor);
 						} else {
 							return;
@@ -669,7 +695,7 @@ public class EntriesTree {
 			}
 		});
 
-		fTable.addSelectionListener(new SelectionAdapter() {
+		fTable.addSelectionListener(new SelectionListener() {
 			public void widgetSelected(SelectionEvent event) {
     			if (ignoreSelectionEvent) {
         			ignoreSelectionEvent = false;
@@ -681,6 +707,31 @@ public class EntriesTree {
                		
     				fireSelectionChanges(data);
     			}
+			}
+
+			public void widgetDefaultSelected(SelectionEvent event) {
+				// If we get here, we know that:
+				// - This is not a selection that must be ignored.  The reason we
+				// know this is that if there was an error on another transaction,
+				// a dialog would have come up in response to the first click, and
+				// that stops this double click event.
+				// - there is no error on another transaction.  In fact, this row
+				// must already be the currently selected row.
+   				JMoneyPlugin.myAssert(!ignoreSelectionEvent);
+				JMoneyPlugin.myAssert(previouslySelectedItem == event.item);
+				
+				// Because double clicks may create actions that would remove the
+				// item from the list, we free up the item.
+				closeCellEditor();
+				fTable.setSelection(new TreeItem [] {});
+				previouslySelectedItem = null;
+				
+				IDisplayableItem data = (IDisplayableItem)event.item.getData();
+				if (!checkAndCommitTransaction(data.getTransaction())) {
+					return;
+				}
+				
+				fireRowDefaultSelection(data);
 			}
 		});
 		
@@ -731,6 +782,21 @@ public class EntriesTree {
 				} else if (deletedObject instanceof Transaction) {
 					Transaction deletedTransaction = (Transaction) deletedObject;
 
+					/*
+					 * If <code>previouslySelectedItem</code> is a row in this
+					 * transaction then we must set it to null because the row
+					 * item will no longer be valid. Normally we must be not
+					 * change <code>previouslySelectedItem</code> without
+					 * first validating and committing the transaction in which
+					 * the row item occurs. However, in this situation the
+					 * transaction is being deleted so no validation of the
+					 * transaction is necessary.
+					 */
+					if (previouslySelectedItem != null
+							&& deletedTransaction.equals(((IDisplayableItem) previouslySelectedItem.getData()).getTransaction())) {
+						previouslySelectedItem = null;
+					}
+					
 					for (Iterator iter = deletedTransaction
 							.getEntryCollection().iterator(); iter.hasNext();) {
 						Entry entry = (Entry) iter.next();
@@ -820,6 +886,7 @@ public class EntriesTree {
 				// (Only rows for top level entries display transaction properties).
 				if (extendableObject instanceof Transaction) {
 					Transaction transaction = (Transaction) extendableObject;
+					
 					for (Iterator iter = transaction.getEntryCollection()
 							.iterator(); iter.hasNext();) {
 						Entry entry = (Entry) iter.next();
@@ -872,6 +939,10 @@ public class EntriesTree {
 	 *         transaction that must be corrected by the user.
 	 */
 	protected boolean checkAndCommitTransaction(Transaction newTransaction) {
+		if (previouslySelectedItem == null) {
+			return true;
+		}
+		
 		Transaction previousTransaction =
 			(previouslySelectedItem == null)
 			? null
@@ -1056,6 +1127,12 @@ public class EntriesTree {
 			TreeItem item;
 			if (itemIndex < fTable.getItemCount()) {
 				item = fTable.getItem(itemIndex++);
+				
+				// Dispose of any child items.
+				TreeItem childItems [] = item.getItems();
+				for (int j = 0; j < childItems.length; j++) {
+					childItems[j].dispose();
+				}
 			} else {
 				itemIndex++;
 				item = new TreeItem(fTable, SWT.NULL);
@@ -1084,29 +1161,28 @@ public class EntriesTree {
 					Entry entry2 = (Entry) itSubEntries.next();
 					DisplayableEntry entryData = new DisplayableEntry(entry2,
 							data);
-					TreeItem item2 = new TreeItem(item, 0);
-					item2.setData(entryData);
-					updateItem(item2);
+					TreeItem childItem = new TreeItem(item, 0);
+					childItem.setData(entryData);
+					updateItem(childItem);
 
-					item2.setBackground(isAlternated ? alternateEntryColor
+					childItem.setBackground(isAlternated ? alternateEntryColor
 							: entryColor);
 				}
 			}
 		}
 
 		// an empty line to have the possibility to enter a new entry
-		TreeItem item3;
+		TreeItem blankItem;
 		if (itemIndex < fTable.getItemCount()) {
-			item3 = fTable.getItem(itemIndex++);
+			blankItem = fTable.getItem(itemIndex++);
 		} else {
 			itemIndex++;
-			item3 = new TreeItem(fTable, SWT.NULL);
+			blankItem = new TreeItem(fTable, SWT.NULL);
 		}
-		item3.setData(new DisplayableNewEmptyEntry());
-		updateItem(item3);
+		blankItem.setData(new DisplayableNewEmptyEntry());
 
 		isAlternated = !isAlternated;
-		item3.setBackground(isAlternated ? alternateTransactionColor
+		blankItem.setBackground(isAlternated ? alternateTransactionColor
 				: transactionColor);
 
 		// If there were more items in the table than needed,
@@ -1136,6 +1212,34 @@ public class EntriesTree {
 
 		col.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent event) {
+				// Clean up any cell editor
+				closeCellEditor();
+
+				/*
+				 * Before we can sort, validate and commit any changes to the
+				 * currently selected transaction.
+				 * 
+				 * TODO: It would not be too difficult to allow sorting without
+				 * forcing the user the complete the current transaction. To do
+				 * this, we must first make a note of the current row (stored in
+				 * the previouslySelectedItem field), then set
+				 * previouslySelectedItem to null, then do the sort (which may
+				 * destroy the item referenced by previouslySelectedItem), then
+				 * find the item that now contains the uncommitted transaction
+				 * and set previouslySelectedItem to that, also selecting the
+				 * item. We must, however, consider whether this would be a
+				 * benefit. It is possible that the user wants to sort so that
+				 * the user can find similar transactions and decide how to
+				 * complete the new transaction. However, it is also possible
+				 * that the user will get confused because the user is told
+				 * about an incomplete entry too long after the user entered the
+				 * entry.
+				 */
+				if (!checkAndCommitTransaction(null)) {
+					return;
+				}
+				previouslySelectedItem = null;
+           		
 				if (col == sortColumn) {
 					sortAscending = !sortAscending;
 					col.setImage(JMoneyPlugin.createImageDescriptor(
@@ -1679,8 +1783,6 @@ public class EntriesTree {
 	 * the user pressed the 'new transaction' button then the action
 	 * code for that button will set the transaction as the selection
 	 * after this method has created the table rows for the transaction.
-	 * 
-	 * @see net.sf.jmoney.pages.entries.IEntriesControl#addTransaction(net.sf.jmoney.model2.Entry)
 	 */
 	public void addEntryInAccount(Entry entry) {
 		DisplayableTransaction dTrans = new DisplayableTransaction(entry, 0);
@@ -1726,21 +1828,18 @@ public class EntriesTree {
 			parentItem.setText(parentIndex, p.getValueFormattedForTable(dTrans));
 		}
 
-		if (entry.getTransaction().hasMoreThanTwoEntries()) {
+		if (dTrans.hasSplitEntries()) {
 			// Case of an splitted entry. We display the transaction on the first line
 			// and the entries of the transaction on the following ones.
 			// However, the transaction line also holds the properties for the entry
 			// in this account, so display just the other entries underneath.
-			Iterator itSubEntries = entry.getTransaction().getEntryCollection()
-					.iterator();
+			Iterator itSubEntries = dTrans.getSplitEntryIterator();
 			while (itSubEntries.hasNext()) {
 				Entry entry2 = (Entry) itSubEntries.next();
-				if (!entry2.equals(entry)) {
-					DisplayableEntry entryData = new DisplayableEntry(entry2,
-							dTrans);
-					TreeItem item2 = new TreeItem(parentItem, SWT.NULL);
-					item2.setData(entryData);
-				}
+				DisplayableEntry entryData = new DisplayableEntry(entry2, dTrans);
+				TreeItem childItem = new TreeItem(parentItem, SWT.NULL);
+				childItem.setData(entryData);
+				updateItem(childItem);
 			}
 		}
 
@@ -1779,6 +1878,7 @@ public class EntriesTree {
 		boolean isAlternated = (alternateTransactionColor.equals(parentItem
 				.getBackground()));
 
+		
 		// Dispose it
 		parentItem.dispose();
 
@@ -1795,8 +1895,45 @@ public class EntriesTree {
 			PropertyAccessor changedProperty, Object oldValue, Object newValue) {
 		int parentIndex = lookupEntryInAccount(entryInAccount);
 		JMoneyPlugin.myAssert(parentIndex >= 0);
-		TreeItem item = lookupSplitEntry(fTable.getItem(parentIndex), changedEntry);
+		TreeItem parentItem = fTable.getItem(parentIndex);
+		
+		// If there are two entries in the transaction
+		// and the changed entry in not the listed entry
+		// and the changed property was the account property
+		// and the account changed from being a capital account to an income and expense account
+		// or vica versa
+		// then we must add or remove a child item.
+		DisplayableTransaction dTrans = (DisplayableTransaction)parentItem.getData(); 
+		if (dTrans.otherEntries.size() == 1
+				&& !changedEntry.equals(entryInAccount)
+				&& changedProperty == EntryInfo.getAccountAccessor()) {
+			
+			if ((oldValue instanceof CapitalAccount)
+					&& !(newValue instanceof CapitalAccount)) {
+				// Remove the single child item.
+				parentItem.getItem(0).dispose();
+			}
+			if (!(oldValue instanceof CapitalAccount)
+					&& (newValue instanceof CapitalAccount)) {
+				// Add a child item.Remove the single child item.
+				TreeItem childItem = new TreeItem(parentItem, SWT.NULL);
+				childItem.setData(new DisplayableEntry(changedEntry, dTrans));
 
+				Color colorOfNewEntry = parentItem.getBackground().equals(
+						transactionColor) ? entryColor : alternateEntryColor;
+				childItem.setBackground(colorOfNewEntry);
+			}
+		}
+		
+		// If this is a double entry transaction then changing the other entry
+		// may affect the top-level row (the account, for example, is displayed
+		// in the top-level row).
+		updateItem(parentItem);
+
+		// Update the row containing the changed entry.  This may be
+		// the parent row, in which case the parent row is updated
+		// twice, but that is okay.
+		TreeItem item = lookupSplitEntry(parentItem, changedEntry);
 		updateItem(item);
 
 		// If the changed property is the sort property, the entry may
@@ -1811,11 +1948,6 @@ public class EntriesTree {
 		// Recalculate balances from this point onwards.
 		if (changedProperty == EntryInfo.getAmountAccessor()
 				&& entryInAccount.equals(changedEntry)) {
-
-			// If the entry in the account is the same as the changed
-			// entry, then this must be the top row for the transaction.
-			DisplayableTransaction dTrans = (DisplayableTransaction) item
-					.getData();
 
 			// Determine the balance prior to this entry.  This is most easily done
 			// by deducting the old amount of this entry from the old balance.
@@ -2103,15 +2235,29 @@ public class EntriesTree {
 		}
 	}
 
+	private void fireRowDefaultSelection(IDisplayableItem data) {
+		for (Iterator iter = selectionListeners.iterator(); iter.hasNext(); ) {
+			EntryRowSelectionListener listener = (EntryRowSelectionListener)iter.next();
+			listener.widgetDefaultSelected(data);
+		}
+	}
+
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.pages.entries.IEntriesControl#getControl()
 	 */
 	public Control getControl() {
 		return fTable;
 	}
-	
-	public interface EntryRowSelectionListener {
-		void widgetSelected(IDisplayableItem data);
+
+	private void showMessage (String message) {
+		MessageDialog dialog = new MessageDialog(
+				fTable.getShell(),
+				"Disabled Action Selected",
+				null, // accept the default window icon
+				message,
+				MessageDialog.WARNING,
+				new String[] { IDialogConstants.OK_LABEL }, 0);
+		dialog.open();
 	}
 	
 	private class RowComparator implements Comparator {

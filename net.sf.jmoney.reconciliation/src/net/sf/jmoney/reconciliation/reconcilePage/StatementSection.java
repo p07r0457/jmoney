@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
@@ -33,6 +34,8 @@ import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.pages.entries.EntriesTree;
+import net.sf.jmoney.pages.entries.EntryRowSelectionAdapter;
+import net.sf.jmoney.pages.entries.EntryRowSelectionListener;
 import net.sf.jmoney.pages.entries.IDisplayableItem;
 import net.sf.jmoney.pages.entries.IEntriesContent;
 import net.sf.jmoney.pages.entries.IEntriesTableProperty;
@@ -51,9 +54,6 @@ import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -101,9 +101,11 @@ public class StatementSection extends SectionPart {
 	
     private FormToolkit toolkit;
     
-    private SelectionListener tableSelectionListener = null;
+    private EntryRowSelectionListener tableSelectionListener = null;
     
     private IEntriesContent reconciledTableContents = null;
+
+	private long openingBalance = 0;
     
     public StatementSection(ReconcilePage page, Composite parent) {
         super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
@@ -113,37 +115,29 @@ public class StatementSection extends SectionPart {
     	
         container = toolkit.createComposite(getSection());
 
-        tableSelectionListener = new SelectionListener() {
-
-			public void widgetSelected(SelectionEvent e) {
-                Object selectedObject = e.item.getData();
-
-                // TODO: This code is duplicated below.
-                // The selected object might be null.  This occurs when the table is refreshed.
-                // I don't understand this so I am simply bypassing the update
-                // in this case.  Nigel
-                if (selectedObject != null) {
-                	IDisplayableItem data = (IDisplayableItem)selectedObject;
-
-                	Entry entryInAccount = data.getEntryInAccount();
-                	Entry selectedEntry = data.getEntryForThisRow();
-                	
-                	if (fPage.currentTransaction != null
-                			&& !fPage.currentTransaction.equals(entryInAccount.getTransaction())) {
-                		fPage.commitTransaction();
-                	}
-                	// TODO: Support the blank transaction.
-                	// The following fails on the blank transaction. 
-            		fPage.currentTransaction = entryInAccount.getTransaction();
-            		
-                	if (selectedEntry != null) {
-                		fPage.fEntrySection.update(entryInAccount, selectedEntry);
-                	}
-                }
-			}
-
-			public void widgetDefaultSelected(SelectionEvent e) {
-				// TODO Auto-generated method stub
+        tableSelectionListener = new EntryRowSelectionAdapter() {
+			public void widgetSelected(IDisplayableItem selectedObject) {
+    			JMoneyPlugin.myAssert(selectedObject != null);
+    			
+    			// We should never get here with the item data set to the
+    			// DisplayableNewEmptyEntry object as a result of the user
+    			// selecting the row.  The reason being that the EntryTree
+    			// object intercepts mouse down events first and replaces the
+    			// data with a new entry.  However, SWT seems to set the selection
+    			// to the last row in certain circumstances such as when
+    			// applying a filter.  In such a situation, both the top-level
+    			// entry and the selected entry will be given as null.
+    			// Two null values passed to the entry section will cause
+    			// the section to be blanked.
+    			
+    			IDisplayableItem data = (IDisplayableItem)selectedObject;
+    			
+    			Entry entryInAccount = data.getEntryInAccount();
+    			Entry selectedEntry = data.getEntryForThisRow();
+    			
+    			if (selectedEntry != null) {
+    				fPage.fEntrySection.update(entryInAccount, selectedEntry);
+    			}
 			}
         };
 
@@ -241,7 +235,7 @@ public class StatementSection extends SectionPart {
 			}
 
 			public long getStartBalance() {
-				return fPage.getAccount().getStartBalance();
+				return openingBalance;
 			}
 
 			public void setNewEntryProperties(Entry newEntry) {
@@ -272,7 +266,7 @@ public class StatementSection extends SectionPart {
 		noStatementMessage.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED));
 
         // Create the table control.
-        fReconciledEntriesControl = new EntriesTree(containerOfTableAndButtons, toolkit, reconciledTableContents, fPage.getAccount().getSession()); 
+        fReconciledEntriesControl = new EntriesTree(containerOfTableAndButtons, toolkit, fPage.transactionManager, reconciledTableContents, fPage.getAccount().getSession()); 
 		fPage.getEditor().getToolkit().adapt(fReconciledEntriesControl.getControl(), true, false);
 		fReconciledEntriesControl.addSelectionListener(tableSelectionListener);
         
@@ -309,17 +303,14 @@ public class StatementSection extends SectionPart {
 		// Listen for double clicks.
 		// Double clicking on an entry in the statement table remove that entry from
 		// the statement (the entry will then appear in the table of unreconciled entries).
-		fReconciledEntriesControl.addSelectionListener(new SelectionAdapter() {
-			public void widgetDefaultSelected(SelectionEvent e) {
-                Object selectedObject = e.item.getData();
-                // The selected object might be null.  This occurs when the table is refreshed.
-                // I don't understand this so I am simply bypassing the update
-                // in this case.  Nigel
-                if (selectedObject != null) {
-                	IDisplayableItem data = (IDisplayableItem)selectedObject;
-                	Entry entry = data.getEntryInAccount();
-                	entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), null);
-                }
+		fReconciledEntriesControl.addSelectionListener(new EntryRowSelectionAdapter() {
+			public void widgetDefaultSelected(IDisplayableItem selectedObject) {
+				Entry entry = selectedObject.getEntryInAccount();
+				// If the blank new entry row, entry will be null.
+				// We must guard against that.
+				if (entry != null) {
+					entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), null);
+				}
 			}
         });
         
@@ -397,9 +388,13 @@ public class StatementSection extends SectionPart {
 
 	/**
 	 * @param statement
+	 * @param openingBalance
 	 */
-	public void setStatement(BankStatement statement) {
-		// Statement will already have been set in fPage.
+	public void setStatement(BankStatement statement, long openingBalance) {
+		// Statement will already have been set in fPage,
+		// but we must save the opening balance for ourselves.
+		this.openingBalance = openingBalance;
+		
     	fReconciledEntriesControl.refreshEntryList();
 
 

@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
@@ -34,6 +35,8 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.pages.entries.EntriesTree;
+import net.sf.jmoney.pages.entries.EntryRowSelectionAdapter;
+import net.sf.jmoney.pages.entries.EntryRowSelectionListener;
 import net.sf.jmoney.pages.entries.IDisplayableItem;
 import net.sf.jmoney.pages.entries.IEntriesContent;
 import net.sf.jmoney.pages.entries.IEntriesTableProperty;
@@ -48,8 +51,6 @@ import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.SectionPart;
@@ -70,7 +71,7 @@ public class UnreconciledSection extends SectionPart {
     
     private FormToolkit toolkit;
     
-    private SelectionListener tableSelectionListener = null;
+    private EntryRowSelectionListener tableSelectionListener = null;
     
     private IEntriesContent unreconciledTableContents = null;
     
@@ -156,7 +157,10 @@ public class UnreconciledSection extends SectionPart {
 			}
 
 			public long getStartBalance() {
-				return fPage.getAccount().getStartBalance();
+				// TODO: figure out how we keep this up to date.
+				// The EntriesTree class has no mechanism for refreshing
+				// the opening balance.  It should have.
+				return 0;
 			}
 
 			public void setNewEntryProperties(Entry newEntry) {
@@ -165,7 +169,7 @@ public class UnreconciledSection extends SectionPart {
         };
 
         // Create the table control.
-        fUnreconciledEntriesControl = new EntriesTree(container, toolkit, unreconciledTableContents, fPage.getAccount().getSession()); 
+        fUnreconciledEntriesControl = new EntriesTree(container, toolkit, fPage.transactionManager, unreconciledTableContents, fPage.getAccount().getSession()); 
 		fPage.getEditor().getToolkit().adapt(fUnreconciledEntriesControl.getControl(), true, false);
 		
         // Allow entries in the account to be moved from the unreconciled list
@@ -217,46 +221,40 @@ public class UnreconciledSection extends SectionPart {
 			}
         });
         
-        tableSelectionListener = new SelectionListener() {
-
-			public void widgetSelected(SelectionEvent e) {
-                Object selectedObject = e.item.getData();
-
-                // TODO: This code is duplicated below.
-                // The selected object might be null.  This occurs when the table is refreshed.
-                // I don't understand this so I am simply bypassing the update
-                // in this case.  Nigel
-                if (selectedObject != null) {
-                	IDisplayableItem data = (IDisplayableItem)selectedObject;
-
-                	Entry entryInAccount = data.getEntryInAccount();
-                	Entry selectedEntry = data.getEntryForThisRow();
-                	
-                	if (fPage.currentTransaction != null
-                			&& !fPage.currentTransaction.equals(entryInAccount.getTransaction())) {
-                		fPage.commitTransaction();
-                	}
-                	// TODO: Support the blank transaction.
-                	// The following fails on the blank transaction. 
-            		fPage.currentTransaction = entryInAccount.getTransaction();
-            		
-                	if (selectedEntry != null) {
-                		fPage.fEntrySection.update(entryInAccount, selectedEntry);
-                	}
-                }
+        tableSelectionListener = new EntryRowSelectionAdapter() {
+			public void widgetSelected(IDisplayableItem selectedObject) {
+    			JMoneyPlugin.myAssert(selectedObject != null);
+    			
+    			// We should never get here with the item data set to the
+    			// DisplayableNewEmptyEntry object as a result of the user
+    			// selecting the row.  The reason being that the EntryTree
+    			// object intercepts mouse down events first and replaces the
+    			// data with a new entry.  However, SWT seems to set the selection
+    			// to the last row in certain circumstances such as when
+    			// applying a filter.  In such a situation, both the top-level
+    			// entry and the selected entry will be given as null.
+    			// Two null values passed to the entry section will cause
+    			// the section to be blanked.
+    			
+    			IDisplayableItem data = (IDisplayableItem)selectedObject;
+    			
+    			Entry entryInAccount = data.getEntryInAccount();
+    			Entry selectedEntry = data.getEntryForThisRow();
+    			
+    			if (selectedEntry != null) {
+    				fPage.fEntrySection.update(entryInAccount, selectedEntry);
+    			}
 			}
 
 			// Default selection sets the statement, causing the entry to move from
 			// the unreconciled table to the statement table.
-			public void widgetDefaultSelected(SelectionEvent e) {
+			public void widgetDefaultSelected(IDisplayableItem data) {
 				if (fPage.getStatement() != null) {
-					Object selectedObject = e.item.getData();
-					// The selected object might be null.  This occurs when the table is refreshed.
-					// I don't understand this so I am simply bypassing the update
-					// in this case.  Nigel
-					if (selectedObject != null) {
-						IDisplayableItem data = (IDisplayableItem)selectedObject;
-						Entry entry = data.getEntryInAccount();
+					Entry entry = data.getEntryInAccount();
+					
+					// If the user double clicked on the blank new entry row, then
+					// entry will be null.  We must guard against that.
+					if (entry != null) {
 						entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), fPage.getStatement());
 					}
 				}

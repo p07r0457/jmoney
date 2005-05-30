@@ -33,28 +33,6 @@ import net.sf.jmoney.fields.BankAccountInfo;
  */
 public class BankAccount extends CurrencyAccount {
 
-	/**
-	 * The entries are ordered by their creation.
-	 */
-	public static final int CREATION_ORDER = 0;
-
-	/**
-	 * The entries are ordered by their date field.
-	 */
-	public static final int DATE_ORDER = 1;
-
-	/**
-	 * The entries are ordered by their check field.
-	 */
-	public static final int CHECK_ORDER = 2;
-
-	/**
-	 * The entries are ordered by their valuta field.
-	 */
-	public static final int VALUTA_ORDER = 3;
-
-	protected static String[] entryOrderNames;
-
 	protected String bank = null;
 
 	protected String accountNumber = null;

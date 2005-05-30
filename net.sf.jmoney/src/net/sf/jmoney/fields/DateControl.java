@@ -30,8 +30,8 @@ import net.sf.jmoney.VerySimpleDateFormat;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -96,7 +96,7 @@ public class DateControl extends Composite {
 
 		textControl = new Text(this, SWT.LEFT);
 		
-		textControl.addKeyListener(new KeyListener() {
+		textControl.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
 				// CTRL + and CTRL - increment and decrement the date respectively.
 				// It would be even easier for the user the CTRL did not have to be
@@ -125,12 +125,6 @@ public class DateControl extends Composite {
 					);
 
 					e.doit = false;
-				}
-			}
-			public void keyReleased(KeyEvent e) {
-				System.out.println("release " + e.keyCode );
-				if (e.character == '+' || e.character == '-') {
-					
 				}
 			}
 		});

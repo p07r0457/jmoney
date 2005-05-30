@@ -27,9 +27,6 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.PropertyAccessor;
 
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.SectionPart;
@@ -48,7 +45,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     
     private FormToolkit toolkit;
     
-    private EntriesTree.EntryRowSelectionListener tableSelectionListener = null;
+    private EntryRowSelectionListener tableSelectionListener = null;
     
     public EntriesSection(EntriesPage page, Composite parent) {
         super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
@@ -64,7 +61,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     protected void createClient(FormToolkit toolkit) {
     	this.toolkit = toolkit;
     	
-    	tableSelectionListener = new EntriesTree.EntryRowSelectionListener() {
+    	tableSelectionListener = new EntryRowSelectionAdapter() {
     		public void widgetSelected(IDisplayableItem selectedObject) {
     			JMoneyPlugin.myAssert(selectedObject != null);
     			

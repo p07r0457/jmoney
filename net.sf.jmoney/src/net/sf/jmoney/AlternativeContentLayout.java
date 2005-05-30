@@ -63,8 +63,6 @@ public class AlternativeContentLayout extends Layout {
 	}
 
 	public Point computeSize(Composite editor, int wHint, int hHint, boolean force) {
-		if (JMoneyPlugin.DEBUG) System.out.println("wHint =" + wHint + ", " + hHint);
-		
 		Control [] children = editor.getChildren();
 		int maxWidth = 0;
 		int maxHeight = 0;

@@ -261,7 +261,10 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         fStatementsSection.addSelectionListener(new SelectionAdapter() {
 			public void widgetDefaultSelected(SelectionEvent e) {
 				StatementDetails statementDetails = (StatementDetails)e.item.getData();
-				setStatement(statementDetails.statement);
+		    	statement = statementDetails.statement;
+		    	
+		    	// Refresh the statement section
+		    	fStatementSection.setStatement(statementDetails.statement, statementDetails.openingBalance);
 			}
 		});
 		
@@ -310,7 +313,11 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 				NewStatementDialog messageBox = 
 					new NewStatementDialog(getSite().getShell(), lastStatement==null ? null : lastStatement.statement);
 				if (messageBox.open() == Dialog.OK) {
-					setStatement(messageBox.getValue());
+					long openingBalanceOfNewStatement = 
+						lastStatement == null 
+						? account.getStartBalance()
+						: lastStatement.getClosingBalance();
+					fStatementSection.setStatement(messageBox.getValue(), openingBalanceOfNewStatement);
 				}				
 			}
 		});
@@ -493,13 +500,6 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 
     public BankStatement getStatement() {
     	return statement;
-    }
-
-    public void setStatement(BankStatement statement) {
-    	this.statement = statement;
-    	
-    	// Refresh the statement section
-    	fStatementSection.setStatement(statement);
     }
 
 	public void saveState(IMemento memento) {

@@ -29,8 +29,6 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeListener;
 
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
@@ -124,12 +122,7 @@ public class AmountEditor implements IPropertyControl {
 
     	// Note that we cannot get the session from fObject because fObject
 		// may be null.
-		JMoneyPlugin.getDefault().getSession().addSessionChangeListener(commodityChangeListener);
-    	
-		propertyControl.addDisposeListener(new DisposeListener() {
-			public void widgetDisposed(DisposeEvent e) {
-				JMoneyPlugin.getDefault().getSession().removeSessionChangeListener(commodityChangeListener);
-			}});
+		JMoneyPlugin.getDefault().getSession().addSessionChangeListener(commodityChangeListener, propertyControl);
     }
     
     public void updateCommodity(Commodity newCommodity) {

@@ -453,11 +453,9 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 			// data in the session memento.  Therefore, if a session is open,
 			// just return that.  We know it is the right session.
 			if (getDefault().getSession() != null) {
-				if (DEBUG) System.out.println("creating session - subsequent time");
 				return getDefault().getSession();
 			}
 			
-			if (DEBUG) System.out.println("creating session - first time");
 			String factoryId = memento.getString("currentSessionFactoryId"); 
 			if (factoryId != null && factoryId.length() != 0) {
 				// Search for the factory.
