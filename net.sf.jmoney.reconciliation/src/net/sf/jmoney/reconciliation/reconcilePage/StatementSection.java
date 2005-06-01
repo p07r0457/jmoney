@@ -308,8 +308,14 @@ public class StatementSection extends SectionPart {
 				Entry entry = selectedObject.getEntryInAccount();
 				// If the blank new entry row, entry will be null.
 				// We must guard against that.
+
+				// The EntriesTree control will always validate and commit
+				// any outstanding changes before firing a default selection
+				// event.  We set the property to take the entry out of the
+				// statement and immediately commit the change.
 				if (entry != null) {
 					entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), null);
+					fPage.transactionManager.commit();
 				}
 			}
         });

@@ -42,6 +42,7 @@ import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
+import net.sf.jmoney.fields.DateControl;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
@@ -105,9 +106,9 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 	private Label periodLabel;
 	private Combo periodBox;
 	private Label fromLabel;
-	private Text fromField;
+	private DateControl fromField;
 	private Label toLabel;
-	private Text toField;
+	private DateControl toField;
 	private Button subtotalsCheckBox;
 	private Button generateButton;
 
@@ -160,9 +161,9 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 		periodLabel = new Label(editAreaControl, 0);
 		periodBox = new Combo(editAreaControl, 0);
 		fromLabel = new Label(editAreaControl, 0);
-		fromField = new Text(editAreaControl, 0);
+		fromField = new DateControl(editAreaControl);
 		toLabel = new Label(editAreaControl, 0);
-		toField = new Text(editAreaControl, 0);
+		toField = new DateControl(editAreaControl);
 		generateButton = new Button(editAreaControl, 0);
 		subtotalsCheckBox = new Button(editAreaControl, SWT.CHECK);
 			
@@ -253,8 +254,8 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 				if (period != -1) {
 					memento.putInteger("period", period);
 					if (period == CUSTOM) {
-						memento.putString("fromDate", fromField.getText());
-						memento.putString("toDate", toField.getText());
+						memento.putString("fromDate", dateFormat.format(fromField.getDate()));
+						memento.putString("toDate", dateFormat.format(toField.getDate()));
 					}
 				}
 				memento.putString(
@@ -322,20 +323,20 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 			default :
 				}
 
-		fromField.setText(dateFormat.format(fromDate));
+		fromField.setDate(fromDate);
 		fromField.setEnabled(index == CUSTOM);
-		toField.setText(dateFormat.format(toDate));
+		toField.setDate(toDate);
 		toField.setEnabled(index == CUSTOM);
 	}
 
 	private void updateFrom() {
-		fromDate = dateFormat.parse(fromField.getText());
-		fromField.setText(dateFormat.format(fromDate));
+		fromDate = fromField.getDate();
+		fromField.setDate(fromDate);
 	}
 
 	private void updateTo() {
-		toDate = dateFormat.parse(toField.getText());
-		toField.setText(dateFormat.format(toDate));
+		toDate = toField.getDate();
+		toField.setDate(toDate);
 	}
 
 	private void generateReport() {

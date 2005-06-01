@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -991,13 +992,23 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				value = new Boolean(s);
 			} else if (propertyClass.equals(Date.class)) {
 				String s = new String(ch, start, length);
+				try {
+					value = dateFormat.parse(s);
+				} catch (ParseException e) {
+					// If the date does not parse then the file is not
+					// valid, so throw an exception to cause a file read
+					// failure.
+					throw new RuntimeException("file contains invalid date");
+				}
+
 				String numbers[] = s.split("\\.");
 
 				int year =  Integer.parseInt(numbers[0]);
 				int month = Integer.parseInt(numbers[1]);
 				int day =   Integer.parseInt(numbers[2]);
 
-				value = new Date(year-1900, month-1, day);
+				Date value2 = new Date(year-1900, month-1, day);
+				JMoneyPlugin.myAssert(value.equals(value2));
 			} else {
 				throw new RuntimeException("unsupported type");
 			}
@@ -1361,11 +1372,6 @@ public class JMoneyXmlFormat implements IFileDatastore {
 							if (value instanceof Date) {
 								Date date = (Date)value;
 								text = dateFormat.format(date);
-								
-								String text2 = new Integer(date.getYear() + 1900).toString() + "."
-								+ new Integer(date.getMonth()).toString() + "."
-								+ new Integer(date.getDay()).toString();
-								
 							} else {
 								text = value.toString();
 							}

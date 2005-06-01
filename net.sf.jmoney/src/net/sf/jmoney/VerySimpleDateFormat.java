@@ -61,8 +61,14 @@ public class VerySimpleDateFormat {
         }
 	}
 
-	public String format(Date d) {
-		return (d == null) ? "" : formatter.format(d);
+	/**
+	 * @param date the date to be formatted, which may
+	 * 			be null
+	 * @return the formatted date, or an empty string if the date
+	 * 			parameter is null
+	 */
+	public String format(Date date) {
+		return (date == null) ? "" : formatter.format(date);
 	}
 
 	public Date parse(String dateString) {

@@ -313,11 +313,12 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 				NewStatementDialog messageBox = 
 					new NewStatementDialog(getSite().getShell(), lastStatement==null ? null : lastStatement.statement);
 				if (messageBox.open() == Dialog.OK) {
+					statement = messageBox.getValue();
 					long openingBalanceOfNewStatement = 
 						lastStatement == null 
 						? account.getStartBalance()
 						: lastStatement.getClosingBalance();
-					fStatementSection.setStatement(messageBox.getValue(), openingBalanceOfNewStatement);
+					fStatementSection.setStatement(statement, openingBalanceOfNewStatement);
 				}				
 			}
 		});

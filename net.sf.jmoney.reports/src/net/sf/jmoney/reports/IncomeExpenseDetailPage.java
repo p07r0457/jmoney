@@ -42,6 +42,7 @@ import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
+import net.sf.jmoney.fields.DateControl;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
@@ -57,6 +58,8 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
@@ -113,9 +116,9 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 	private Label periodLabel;
 	private Combo periodBox;
 	private Label fromLabel;
-	private Text fromField;
+	private DateControl fromField;
 	private Label toLabel;
-	private Text toField;
+	private DateControl toField;
 	private Button subtotalsCheckBox;
 	private Button generateButton;
 
@@ -166,14 +169,12 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 		editAreaLayout.numColumns = 7;
 		editAreaControl.setLayout(editAreaLayout);
 		
-		// Add the controls to the edit area
-		
 		periodLabel = new Label(editAreaControl, 0);
 		periodBox = new Combo(editAreaControl, 0);
 		fromLabel = new Label(editAreaControl, 0);
-		fromField = new Text(editAreaControl, 0);
+		fromField = new DateControl(editAreaControl);
 		toLabel = new Label(editAreaControl, 0);
-		toField = new Text(editAreaControl, 0);
+		toField = new DateControl(editAreaControl);
 		generateButton = new Button(editAreaControl, 0);
 		subtotalsCheckBox = new Button(editAreaControl, SWT.CHECK);
 			
@@ -192,17 +193,7 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 		});
 		fromLabel.setText(
 				ReportsPlugin.getResourceString("Panel.Report.IncomeExpense.From"));
-		fromField.addFocusListener(new FocusAdapter() {
-			public void focusLost(FocusEvent e) {
-				updateFrom();
-			}
-		});
 		toLabel.setText(ReportsPlugin.getResourceString("Panel.Report.IncomeExpense.To"));
-		toField.addFocusListener(new FocusAdapter() {
-			public void focusLost(FocusEvent e) {
-				updateTo();
-			}
-		});
 		generateButton.setText(ReportsPlugin.getResourceString("Panel.Report.Generate"));
 		generateButton.addSelectionListener(new SelectionListener() {
 			public void widgetSelected(SelectionEvent e) {
@@ -268,8 +259,8 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 				if (period != -1) {
 					memento.putInteger("period", period);
 					if (period == CUSTOM) {
-						memento.putString("fromDate", fromField.getText());
-						memento.putString("toDate", toField.getText());
+						memento.putString("fromDate", dateFormat.format(fromField.getDate()));
+						memento.putString("toDate", dateFormat.format(toField.getDate()));
 					}
 				}
 				memento.putString(
@@ -337,23 +328,16 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 			default :
 				}
 
-		fromField.setText(dateFormat.format(fromDate));
+		fromField.setDate(fromDate);
 		fromField.setEnabled(index == CUSTOM);
-		toField.setText(dateFormat.format(toDate));
+		toField.setDate(toDate);
 		toField.setEnabled(index == CUSTOM);
 	}
 
-	private void updateFrom() {
-		fromDate = dateFormat.parse(fromField.getText());
-		fromField.setText(dateFormat.format(fromDate));
-	}
-
-	private void updateTo() {
-		toDate = dateFormat.parse(toField.getText());
-		toField.setText(dateFormat.format(toDate));
-	}
-
 	private void generateReport() {
+		fromDate = fromField.getDate();
+		toDate = toField.getDate();
+		
 		try {
 			String reportFile =
 				subtotalsCheckBox.getSelection()
@@ -452,8 +436,6 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 
 	private boolean acceptFrom(Date d) {
 		if (fromDate == null)
-			return false;
-		if (d == null)
 			return true;
 		return (d.after(fromDate) || d.equals(fromDate));
 	}
@@ -461,8 +443,6 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 	private boolean acceptTo(Date d) {
 		if (toDate == null)
 			return true;
-		if (d == null)
-			return false;
 		return (d.before(toDate) || d.equals(toDate));
 	}
 

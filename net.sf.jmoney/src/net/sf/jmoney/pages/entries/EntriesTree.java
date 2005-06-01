@@ -540,6 +540,9 @@ public class EntriesTree {
 			           		Entry entry1 = transaction.createEntry();
 			           		Entry entry2 = transaction.createEntry();
 			           		
+			           		// TODO: There is so much duplicated stuff here that it
+			           		// would be better if we could get the listener to do this.
+			     
 			           		// When we set the account, the entry will be added
 			           		// to the list through the listener.  However, we want this
 			           		// new entry to be replaced into the new entry item.
@@ -565,12 +568,16 @@ public class EntriesTree {
 									).balance;
 			           		}
 			           		
-			           		item.setData(new DisplayableTransaction(entry1, balance));
+			           		DisplayableTransaction dTrans = new DisplayableTransaction(entry1, balance);
+			           		item.setData(dTrans);
 			           		
 			           		// Although most properties will be blank, some, such
 			           		// as the date, default to non-blank values and these
 			           		// should be shown now.
 			           		updateItem(item);
+			           		
+			           		// Add to our cached list of all transactions in the table
+			           		entries.add(dTrans);
 			           		
 			           		// Add another blank new entry row to replace the one we
 			           		// have just converted to a new transaction.

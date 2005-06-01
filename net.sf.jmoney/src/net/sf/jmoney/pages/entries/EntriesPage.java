@@ -35,6 +35,7 @@ import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Transaction;
@@ -181,8 +182,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 						return data.getEntryForCommon2Fields();
 					}
             	});
-            } else if (propertyAccessor == EntryInfo.getDescriptionAccessor()
-            		|| propertyAccessor == EntryInfo.getIncomeExpenseCurrencyAccessor()) {
+            } else if (propertyAccessor == EntryInfo.getDescriptionAccessor()) {
             	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "other") {
 					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
 						return data.getEntryForOtherFields();
@@ -190,6 +190,32 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
             	});
             }
         }
+
+        /*
+		 * Add the currency column. This is placed just before the amount, which
+		 * is the logical place as it is the currency for the amount. The
+		 * currency has special processing because the currency is not always
+		 * applicable. The currency applies only if the account is an income and
+		 * expense account with the multi-currency flag set or if the account is
+		 * a capital account but not a currency account. In either case, the
+		 * list of currencies that may exist in the account are fetched from the
+		 * account object.
+		 */
+        allEntryDataObjects.add(new EntriesSectionProperty(EntryInfo.getIncomeExpenseCurrencyAccessor(), "common2") {
+        	public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
+        		Entry entry = data.getEntryForOtherFields();
+        		if (entry != null
+        				&& entry.getAccount() instanceof IncomeExpenseAccount) {
+        			IncomeExpenseAccount account = (IncomeExpenseAccount)entry.getAccount();
+        			if (account.isMultiCurrency()) {
+        				return entry;
+        			}
+        		}
+        		
+        		// Not a multi-currency account, so property not applicable.
+        		return null;
+        	}
+        });
 
 		debitColumnManager = new DebitAndCreditColumns("Debit", "debit", true);     //$NON-NLS-2$
 		creditColumnManager = new DebitAndCreditColumns("Credit", "credit", false); //$NON-NLS-2$
@@ -417,7 +443,16 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 			}
 			
 			long amount = entry.getAmount();
-			Commodity commodity = EntriesPage.this.getAccount().getCurrency();
+			
+			Commodity commodity = entry.getCommodity();
+			if (commodity == null) {
+				// The commodity should never be null after all the data for the
+				// entry has been entered.  However, the user may enter an amount
+				// before entering the currency, and the best we can do in such a
+				// situation is to format the amount assuming the currency for
+				// the account.
+				commodity = EntriesPage.this.getAccount().getCurrency();
+			}
 
 			if (isDebit) {
 				return amount < 0 ? commodity.format(-amount) : "";

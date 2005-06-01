@@ -41,6 +41,7 @@ import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
+import net.sf.jmoney.fields.DateControl;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
@@ -131,7 +132,7 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 	private Label filterLabel;
 	private Combo filterBox;
 	private Label dateLabel;
-	private Text dateField;
+	private DateControl dateField;
 	private Button generateButton;
 
 	/**
@@ -182,7 +183,7 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 		filterLabel = new Label(editAreaControl, 0);
 		filterBox = new Combo(editAreaControl, 0);
 		dateLabel = new Label(editAreaControl, 0);
-		dateField = new Text(editAreaControl, 0);
+		dateField = new DateControl(editAreaControl);
 		generateButton = new Button(editAreaControl, 0);
 
 		filterLabel.setText(ReportsPlugin.getResourceString("EntryFilterPanel.filter"));
@@ -253,7 +254,13 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 								dateField.setEnabled(true);
 								String dateString = memento.getString("date");
 								if (dateString != null) {
-									dateField.setText(dateString);
+									try {
+										Date date = dateFormat.parse(dateString);
+										dateField.setDate(date);
+									} catch (IllegalArgumentException e) {
+										// Ignore and leave date blank if the date from the
+										// memento does not parse
+									}
 								}
 							}
 						}
@@ -268,7 +275,7 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 				if (selectionIndex != -1) {
 					memento.putInteger("filter", filterIndexes[selectionIndex]);
 					if (filterIndexes[selectionIndex] == DATE) {
-						memento.putString("date", dateField.getText());
+						memento.putString("date", dateFormat.format(dateField.getDate()));
 					}
 				}
 			}
@@ -292,8 +299,8 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 	}
 
 	private void updateDate() {
-		date = dateFormat.parse(dateField.getText());
-		dateField.setText(dateFormat.format(date));
+		date = dateField.getDate();
+		dateField.setDate(date);
 	}
 
 	private void generateReport() {
