@@ -100,10 +100,6 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 			GridLayout layout = new GridLayout();
 			layout.numColumns = 2;
 			setLayout(layout);
-			GridData data = new GridData();
-			data.verticalAlignment = GridData.FILL;
-			data.horizontalAlignment = GridData.FILL;
-			setLayoutData(data);
 			
 			// TODO: what is this?
 			pack();
@@ -190,12 +186,9 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 				"Properties", 
 				"Account Properties") {
 			
-			AccountPropertiesControl propertiesControl;
-			
 			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
 				CapitalAccount account = (CapitalAccount)nodeObject;
-				propertiesControl = new AccountPropertiesControl(parent, account, toolkit);
-				return propertiesControl;
+				return new AccountPropertiesControl(parent, account, toolkit);
 			}
 
 			public void saveState(IMemento memento) {
