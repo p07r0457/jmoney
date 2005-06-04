@@ -683,7 +683,6 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			// "http://jmoney.sf.net".  If the element is a property in an
 			// extension property set then the id of the extension property
 			// set will be appended.
-			
 			String namespace = null;
 			if (uri.length() == 20) {
 				namespace = null;
@@ -754,10 +753,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				
 				currentSAXEventProcessor = new IgnoreElementProcessor(sessionManager, this, value);
 			} else {
-				if (!propertyClass.isPrimitive() 
-						&& propertyClass != String.class
-						&& propertyClass != Long.class
-						&& propertyClass != Date.class) {
+				if (ExtendableObject.class.isAssignableFrom(propertyClass)) {
 					String propertySetId = atts.getValue("propertySet");
 					if (propertySetId == null) {
 						// TODO: following call is overkill, because
@@ -896,13 +892,10 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				int index = propertyAccessor.getIndexIntoConstructorParameters(); 
 				if (index != -1) {
 					if (propertyAccessor.isScalar()) {
-						if (propertyAccessor.getValueClass().isPrimitive()
-								|| propertyAccessor.getValueClass() == String.class
-								|| propertyAccessor.getValueClass() == Long.class
-								|| propertyAccessor.getValueClass() == Date.class) {
-							extensionConstructorParameters[index] = value;
-						} else {
+						if (ExtendableObject.class.isAssignableFrom(propertyAccessor.getValueClass())) {
 							extensionConstructorParameters[index] = ((ExtendableObject)value).getObjectKey();
+						} else {
+							extensionConstructorParameters[index] = value;
 						}
 					} else {
 						// Must be an element in an array.
@@ -921,10 +914,9 @@ public class JMoneyXmlFormat implements IFileDatastore {
 	}
 
 	/**
-	 * An event processor that takes over processing
-	 * while we are inside a scalar property.  
-	 * The processor looks for character content of the element
-	 * giving the value of the property.
+	 * An event processor that takes over processing while we are inside a
+	 * scalar property. The processor looks for the character content of the
+	 * element (which gives the value of the property).
 	 */
 	private class PropertyProcessor extends SAXEventProcessor {
 		/**
@@ -938,6 +930,8 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 * processor.
 		 */
 		Object value = null;
+		
+		String s = "";
 		
 		/**
 		 *
@@ -976,22 +970,24 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 */
 		public void characters(char ch[], int start, int length)
 		throws SAXException {
+			s += new String(ch, start, length);
+		}
+
+		public SAXEventProcessor endElement()
+		throws SAXException {
+			
 			// TODO: change this.  Find a constructor from string.
 			if (propertyClass.equals(int.class)) {
-				String s = new String(ch, start, length);
 				value = new Integer(s);
 			} else if (propertyClass.equals(long.class) || propertyClass.equals(Long.class)) {
-				String s = new String(ch, start, length);
 				value = new Long(s);
 			} else if (propertyClass.equals(String.class)) {
-				value = new String(ch, start, length);
+				value = s;
 			} else if (propertyClass.equals(char.class)) {
-				value = new Character(ch[start]);
+				value = new Character(s.charAt(0));
 			} else if (propertyClass.equals(boolean.class)) {
-				String s = new String(ch, start, length);
 				value = new Boolean(s);
 			} else if (propertyClass.equals(Date.class)) {
-				String s = new String(ch, start, length);
 				try {
 					value = dateFormat.parse(s);
 				} catch (ParseException e) {
@@ -1000,22 +996,26 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					// failure.
 					throw new RuntimeException("file contains invalid date");
 				}
-
-				String numbers[] = s.split("\\.");
-
-				int year =  Integer.parseInt(numbers[0]);
-				int month = Integer.parseInt(numbers[1]);
-				int day =   Integer.parseInt(numbers[2]);
-
-				Date value2 = new Date(year-1900, month-1, day);
-				JMoneyPlugin.myAssert(value.equals(value2));
 			} else {
-				throw new RuntimeException("unsupported type");
+				// The property value is an class that is in none of the above
+				// categories.  We therefore use the string constructor to construct
+				// the object.
+				try {
+					value = propertyClass
+					.getConstructor( new Class [] { String.class } )
+					.newInstance(new Object [] { s });
+				} catch (Exception e) {
+					// The classes used in the data model are checked when the
+					// PropertySet and PropertyAccessor static fields are
+					// initialized.  Therefore other plug-ins should not be
+					// able to cause an error here.
+					// TODO: put the above mentioned check into the
+					// initialization code.
+					e.printStackTrace();
+					throw new RuntimeException("internal error");
+				}
 			}
-		}
-
-		public SAXEventProcessor endElement()
-		throws SAXException {
+			
 			// Pass the value back up to the outer element processor.
 			parent.elementCompleted(value);
 			
