@@ -435,8 +435,6 @@ public class NavigationView extends ViewPart {
 			}
 			
 		});
-		
-		JMoneyPlugin.getDefault().addSessionChangeListener(listener);
 	}
 
 	
