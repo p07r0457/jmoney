@@ -22,11 +22,9 @@
 
 package net.sf.jmoney.gnucashXML.actions;
 
-import java.io.File;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.gnucashXML.GnucashXML;
-import net.sf.jmoney.gnucashXML.GnucashXMLExport;
 import net.sf.jmoney.gnucashXML.GnucashXMLPlugin;
 import net.sf.jmoney.model2.Session;
 
@@ -35,6 +33,7 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
@@ -78,6 +77,14 @@ public class GnucashXMLExportAction implements IWorkbenchWindowActionDelegate {
 	        waitDialog.open();
 			return;
 		}
+        
+        
+        // Display a warning
+        // TODO Remove this warning when the problem is resolved 
+        MessageBox diag = new MessageBox(window.getShell());
+        diag.setText("Warning");
+        diag.setMessage("Warning:\nFor this time, the export as a GnuCash file produce a file which can't be imported under GnuCash. The file can only be imported in the current JMoney application.");
+        diag.open();
 		
 	    FileDialog xmlFileChooser = new FileDialog(window.getShell());
 		xmlFileChooser.setText(
@@ -89,8 +96,8 @@ public class GnucashXMLExportAction implements IWorkbenchWindowActionDelegate {
 		String fileName = xmlFileChooser.open();
 
 	    if (fileName != null) {
-	        GnucashXMLExport export = new GnucashXMLExport(session);
-	        export.export(fileName);
+	        GnucashXML export = GnucashXML.getSingleton(window);
+	        export.export(session, fileName);
 		}
 	    
 	}

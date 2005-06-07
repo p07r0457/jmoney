@@ -32,6 +32,9 @@ import net.sf.jmoney.model2.Session;
  * 
  * @author Jan-Pascal van Best
  * @author Johann Gyger
+ * 
+ * TODO: This interface defines what an Export/Import tool has to do.
+ * It should be directly defined in the jmoney-Plugin, not in the gnucashXML 
  */
 public interface FileFormat {
 

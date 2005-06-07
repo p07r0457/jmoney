@@ -26,7 +26,6 @@ import java.io.File;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.gnucashXML.GnucashXML;
-import net.sf.jmoney.gnucashXML.GnucashXMLExport;
 import net.sf.jmoney.gnucashXML.GnucashXMLPlugin;
 import net.sf.jmoney.model2.Session;
 
@@ -90,7 +89,7 @@ public class GnucashXMLImportAction implements IWorkbenchWindowActionDelegate {
 
 	    if (fileName != null) {
 	        File qifFile = new File(fileName);
-	        GnucashXML gnucashXML = new GnucashXML(window);
+	        GnucashXML gnucashXML = GnucashXML.getSingleton(window);
 			gnucashXML.importFile(session, qifFile);
 		}
 	    
