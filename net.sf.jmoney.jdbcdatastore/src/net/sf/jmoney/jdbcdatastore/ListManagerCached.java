@@ -38,6 +38,9 @@ import net.sf.jmoney.model2.PropertySet;
  * @author Nigel Westbury
  */
 public class ListManagerCached extends Vector implements IListManager {
+
+	private static final long serialVersionUID = 867883048050895954L;
+
 	private SessionManager sessionManager;
 	private PropertyAccessor listProperty;
 	
