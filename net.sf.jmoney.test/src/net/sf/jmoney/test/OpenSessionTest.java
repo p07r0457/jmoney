@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.net.URL;
 
 import junit.framework.TestCase;
-import net.sf.jmoney.serializeddatastore.IFileDatastore;
-import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
 import net.sf.jmoney.serializeddatastore.SessionManager;
 import net.sf.jmoney.serializeddatastore.formats.JMoneyXmlFormat;
 

@@ -33,4 +33,6 @@ package net.sf.jmoney.serializeddatastore.formats;
  */
 public class OldFormatJMoneyFileException extends RuntimeException {
 
+	private static final long serialVersionUID = 8396811374780457790L;
+
 }
