@@ -40,6 +40,8 @@ import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
  */
 public class Account implements Category, Serializable, Constants {
 
+	private static final long serialVersionUID = -204768756583878194L;
+
 	/**
 	 * The entries are ordered by their creation.
 	 */

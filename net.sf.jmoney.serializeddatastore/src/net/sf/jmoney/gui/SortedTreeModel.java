@@ -28,6 +28,8 @@ import javax.swing.tree.TreeNode;
 
 public class SortedTreeModel extends DefaultTreeModel {
 
+	private static final long serialVersionUID = -7070395954201502578L;
+
 	public SortedTreeModel(TreeNode root) {
 		super(root, false);
 	}

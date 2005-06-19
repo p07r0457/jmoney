@@ -27,7 +27,9 @@ import java.util.Vector;
 
 public class SplittedEntry extends Entry {
 
-    protected Vector entries = new Vector();
+	private static final long serialVersionUID = 2919524277629853452L;
+
+	protected Vector entries = new Vector();
 
     public SplittedEntry() { }
 

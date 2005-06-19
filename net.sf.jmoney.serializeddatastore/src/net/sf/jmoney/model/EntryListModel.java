@@ -30,6 +30,8 @@ import javax.swing.event.EventListenerList;
 
 public class EntryListModel extends DefaultListModel {
 
+	private static final long serialVersionUID = -5136106602683124813L;
+
 	/**
 	 * Used by XMLDecoder
 	 */

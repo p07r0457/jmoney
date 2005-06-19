@@ -25,7 +25,9 @@ package net.sf.jmoney.model;
 
 public class TransferCategory extends AbstractCategory {
 
-    public String getCategoryName() {
+	private static final long serialVersionUID = -3087388118525899946L;
+
+	public String getCategoryName() {
 	return "transfer not used"; //Constants.LANGUAGE.getString("TransferCategory.name");
     }
 

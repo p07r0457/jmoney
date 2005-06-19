@@ -27,6 +27,8 @@ package net.sf.jmoney.model;
  */
 public class SimpleCategory extends AbstractCategory {
 
+	private static final long serialVersionUID = 3057882967522350415L;
+
 	private String categoryName;
 
 	private String fullCategoryName = null;

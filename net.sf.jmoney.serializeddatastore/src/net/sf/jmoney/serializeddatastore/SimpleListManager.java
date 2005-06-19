@@ -44,6 +44,8 @@ import net.sf.jmoney.model2.PropertySet;
  */
 public class SimpleListManager extends Vector implements IListManager {
 
+	private static final long serialVersionUID = 2090027937924066725L;
+
 	private SessionManager sessionManager;
 
 	public SimpleListManager(SessionManager sessionManager) {

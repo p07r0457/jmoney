@@ -26,7 +26,9 @@ import net.sf.jmoney.gui.SortedTreeNode;
 
 public class CategoryNode extends SortedTreeNode {
 
-    /**
+	private static final long serialVersionUID = -1672550964245685408L;
+
+	/**
      * Used by XMLDecoder.
      */
     public CategoryNode() { }

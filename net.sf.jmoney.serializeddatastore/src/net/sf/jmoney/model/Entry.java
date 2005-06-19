@@ -35,6 +35,8 @@ import java.util.Date;
  */
 public class Entry implements Serializable {
 
+	private static final long serialVersionUID = 1860094708090075118L;
+
 	/**
 	 * Entry is uncleared.
 	 */

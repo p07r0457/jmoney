@@ -35,6 +35,8 @@ import net.sf.jmoney.gui.SortedTreeModel;
  */
 public class CategoryTreeModel extends SortedTreeModel {
 
+	private static final long serialVersionUID = 6457332494138567318L;
+
 	protected CategoryNode rootNode = (new RootCategory()).getCategoryNode();
 
 	protected CategoryNode transferNode =

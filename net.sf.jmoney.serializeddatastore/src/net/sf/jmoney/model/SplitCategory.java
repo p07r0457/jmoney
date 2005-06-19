@@ -25,7 +25,9 @@ package net.sf.jmoney.model;
 
 public class SplitCategory extends AbstractCategory {
 
-    public String getCategoryName() {
+	private static final long serialVersionUID = -3667630366605958650L;
+
+	public String getCategoryName() {
 	return "split not used"; //Constants.LANGUAGE.getString("SplitCategory.name");
     }
 

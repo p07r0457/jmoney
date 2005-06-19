@@ -36,7 +36,6 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.IPluginDescriptor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -66,11 +65,10 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	/**
 	 * The constructor.
 	 */
-	public SerializedDatastorePlugin(IPluginDescriptor descriptor) {
-		super(descriptor);
+	public SerializedDatastorePlugin() {
 		plugin = this;
 		try {
-			resourceBundle   = ResourceBundle.getBundle("net.sf.jmoney.serializeddatastore.Language");
+			resourceBundle = ResourceBundle.getBundle("net.sf.jmoney.serializeddatastore.Language");
 		} catch (MissingResourceException x) {
 			resourceBundle = null;
 		}

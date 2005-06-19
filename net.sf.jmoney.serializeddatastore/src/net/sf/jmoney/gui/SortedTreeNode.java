@@ -31,6 +31,8 @@ public class SortedTreeNode
 	extends DefaultMutableTreeNode
 	implements Comparable {
 
+	private static final long serialVersionUID = -32238679169645975L;
+
 	public SortedTreeNode() {
 	}
 

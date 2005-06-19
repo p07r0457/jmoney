@@ -29,7 +29,9 @@ import java.util.Date;
  */
 public class DoubleEntry extends Entry {
 
-    /**
+	private static final long serialVersionUID = 6953490509166229209L;
+
+	/**
      * The entry in the other account.
      */
     protected DoubleEntry other;

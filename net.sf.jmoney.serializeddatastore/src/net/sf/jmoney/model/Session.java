@@ -34,7 +34,9 @@ import java.util.Vector;
  */
 public class Session implements Serializable {
 
-    protected Vector accounts = new Vector();
+	private static final long serialVersionUID = 3821656883337202055L;
+
+	protected Vector accounts = new Vector();
 
     protected CategoryTreeModel categories = new CategoryTreeModel();
 
