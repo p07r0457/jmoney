@@ -36,7 +36,9 @@ package net.sf.jmoney.model2;
  */
 public class PropertySetInNonMutableObjectException extends RuntimeException {
     
-    /** Creates a new instance of PropertySetInNonMutableObjectException */
+	private static final long serialVersionUID = -1094792377244984225L;
+
+	/** Creates a new instance of PropertySetInNonMutableObjectException */
     public PropertySetInNonMutableObjectException(String propertyName, Class propertyOwningClass) {
     }
     

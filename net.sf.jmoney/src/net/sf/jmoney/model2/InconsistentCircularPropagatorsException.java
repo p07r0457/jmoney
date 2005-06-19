@@ -29,7 +29,9 @@ package net.sf.jmoney.model2;
  */
 public class InconsistentCircularPropagatorsException extends RuntimeException {
 
-    private PropertyAccessor[] propertyAccessorList;
+	private static final long serialVersionUID = -385956833951648836L;
+
+	private PropertyAccessor[] propertyAccessorList;
     private Object[] valueList;
 
     /** 

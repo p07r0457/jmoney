@@ -30,7 +30,9 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class MalformedPluginException extends RuntimeException {
     
-    /** Creates a new instance of MalformedPluginExtension */
+	private static final long serialVersionUID = -6363680459650517598L;
+
+	/** Creates a new instance of MalformedPluginExtension */
     public MalformedPluginException(String text) {
         super(text);
     }

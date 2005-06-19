@@ -28,7 +28,9 @@ package net.sf.jmoney.model2;
  */
 public class PropertySetNotFoundException extends Exception {
     
-    private String missingPropertySetId;
+	private static final long serialVersionUID = 8497895163661872417L;
+
+	private String missingPropertySetId;
     
     /** Creates a new instance of PropertyNotFoundException */
     public PropertySetNotFoundException(String missingPropertySetId) {

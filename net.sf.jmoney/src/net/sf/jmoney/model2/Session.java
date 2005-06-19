@@ -653,7 +653,12 @@ public class Session extends ExtendableObject implements IAdaptable {
 		return objectKey.getSessionManager().getAdapter(adapter);
 	}
 	
-    public class NoAccountFoundException extends Exception {};
-    public class SeveralAccountsFoundException extends Exception {};
+    public class NoAccountFoundException extends Exception {
+		private static final long serialVersionUID = -6022196945540827504L;
+	};
+
+	public class SeveralAccountsFoundException extends Exception {
+		private static final long serialVersionUID = -6427097946645258873L;
+	};
 
 }
