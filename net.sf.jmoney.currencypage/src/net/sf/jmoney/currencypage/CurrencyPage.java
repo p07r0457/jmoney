@@ -535,7 +535,6 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			Dialog.applyDialogFont(button);
 			Object gd = button.getLayoutData();
 			if (gd instanceof GridData) {
-				((GridData) gd).heightHint = getButtonHeigthHint(button);
 				((GridData) gd).widthHint = getButtonWidthHint(button);
 			}
 		}
@@ -549,16 +548,6 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			PixelConverter converter= new PixelConverter(button);
 			int widthHint= converter.convertHorizontalDLUsToPixels(IDialogConstants.BUTTON_WIDTH);
 			return Math.max(widthHint, button.computeSize(SWT.DEFAULT, SWT.DEFAULT, true).x);
-		}
-
-		/**
-		 * Returns a height hint for a button control.
-		 */
-		public int getButtonHeigthHint(Button button) {
-			if (button.getFont().equals(JFaceResources.getDefaultFont()))
-				button.setFont(JFaceResources.getDialogFont());
-			PixelConverter converter= new PixelConverter(button);
-			return converter.convertVerticalDLUsToPixels(IDialogConstants.BUTTON_HEIGHT);
 		}
 
 		public class PixelConverter {
