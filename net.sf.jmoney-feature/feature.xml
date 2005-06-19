@@ -4,9 +4,7 @@
       label="JMoney Finance Manager"
       version="1.0.0"
       provider-name="The JMoney Team"
-      plugin="net.sf.jmoney"
-      primary="true">
-
+      plugin="net.sf.jmoney">
    <install-handler/>
 
    <description>
@@ -14,8 +12,8 @@
    </description>
 
    <copyright>
-      Copyright (c) 2002-2004 Johann Gyger, Nigel Westbury, Olivier
-Faucheux and others
+      Copyright (c) 2000 - 2005 Johann Gyger, Nigel Westbury, Olivier
+Faucheux, and others
 &lt;P&gt;
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License as
@@ -34,7 +32,7 @@ Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
    </copyright>
 
    <license url="license.html">
-      
+		GNU GENERAL PUBLIC LICENSE
    </license>
 
    <url>
@@ -50,12 +48,6 @@ Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
    <plugin
          id="net.sf.jmoney"
-         download-size="0"
-         install-size="0"
-         version="1.0.0"/>
-
-   <plugin
-         id="net.sf.jmoney.isocurrencies"
          download-size="0"
          install-size="0"
          version="1.0.0"/>
