@@ -25,26 +25,16 @@ package net.sf.jmoney;
 import java.io.OutputStream;
 import java.io.PrintStream;
 
-import org.eclipse.core.internal.jobs.JobStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.action.GroupMarker;
-import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IWorkbenchActionConstants;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.actions.ActionFactory;
-import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
-
+import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 
 /**
  * @author Nigel
@@ -53,86 +43,31 @@ import org.eclipse.ui.application.WorkbenchAdvisor;
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
 public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
-		public String getInitialWindowPerspectiveId() {
-	    	// This method will not be called if 
-	    	// org.eclipse.ui/defaultPerspectiveId is set in
-	    	// plugin_customization.ini in org.eclipse.platform
-	    	// plugin.  (This seems to be a design flaw - if
-	    	// the application wants this perspective then it
-	    	// would stupid to use some other).
-	    	// TODO sort this out
-	        return "net.sf.jmoney.JMoneyPerspective";
-	    }
 
+	public String getInitialWindowPerspectiveId() {
+		// This method will not be called if
+		// org.eclipse.ui/defaultPerspectiveId is set in
+		// plugin_customization.ini in org.eclipse.platform
+		// plugin. (This seems to be a design flaw - if
+		// the application wants this perspective then it
+		// would stupid to use some other).
+		// TODO sort this out
+		return "net.sf.jmoney.JMoneyPerspective";
+	}
+
+    /* (non-Javadoc)
+     * @see org.eclipse.ui.application.WorkbenchAdvisor#createWorkbenchWindowAdvisor(org.eclipse.ui.application.IWorkbenchWindowConfigurer)
+     */
+    public WorkbenchWindowAdvisor createWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer) {
+        return  new JMoneyWorkbenchWindowAdvisor(configurer);
+    }
+    
 		public void initialize(IWorkbenchConfigurer configurer) {
 			super.initialize(configurer);
 
 			// Turn on support for the saving and restoring of
 			// view states through IMemento interfaces.
 			configurer.setSaveAndRestore(true);
-		}
-
-	    public void preWindowOpen(IWorkbenchWindowConfigurer configurer) {
-			super.preWindowOpen(configurer);
-			configurer.setShowCoolBar(false);
-			configurer.setShowStatusLine(false);
-		}
-
-		public void postWindowCreate(IWorkbenchWindowConfigurer windowConfigurer) {
-			super.postWindowCreate(windowConfigurer);
-/* does not compile
-			// determines if the workbench has any intro to show
-			boolean hasIntro = getWorkbenchConfigurer().getWorkbench().getIntroManager().hasIntro();
-			    
-			if (hasIntro) {
-				// shows the intro
-				getWorkbenchConfigurer()
-					.getWorkbench()
-					.getIntroManager()
-					.showIntro(
-						windowConfigurer.getWindow(), 
-						false);
-			}
-*/
-		}  	
-
-		public void fillActionBars(
-			    IWorkbenchWindow window,
-			    IActionBarConfigurer configurer,
-			    int flags) {
-			    super.fillActionBars(window, configurer, flags);
-		      if ((flags & FILL_MENU_BAR) != 0) {
-			        fillMenuBar(window, configurer);
-			    }
-			}
-
-		private void fillMenuBar(
-			    IWorkbenchWindow window,
-			    IActionBarConfigurer configurer) {
-			    IMenuManager menuBar = configurer.getMenuManager();
-			    menuBar.add(createFileMenu(window));
-			    menuBar.add(createHelpMenu(window));
-			}
-
-		private MenuManager createFileMenu(IWorkbenchWindow window) {
-			// TODO: currently language uses MainFrame.file.mnemonic, not an ampersand.
-		    MenuManager menu = new MenuManager("&File"/*Constants.LANGUAGE.getString("MainFrame.file")*/,
-		        IWorkbenchActionConstants.M_FILE);
-		    menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_START));
-		    menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		    menu.add(ActionFactory.QUIT.create(window));
-		    menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_END));
-		    return menu;
-		}
-
-		private MenuManager createHelpMenu(IWorkbenchWindow window) {
-		    MenuManager menu = new MenuManager("Help"/*Messages.getString("File")*/, //$NON-NLS-1$
-		        IWorkbenchActionConstants.M_HELP);
-		    menu.add(new GroupMarker(IWorkbenchActionConstants.HELP_START));
-		    menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		    menu.add(ActionFactory.QUIT.create(window));
-		    menu.add(new GroupMarker(IWorkbenchActionConstants.HELP_END));
-		    return menu;
 		}
 
 		public boolean preWindowShellClose(IWorkbenchWindowConfigurer configurer) {
@@ -162,7 +97,7 @@ public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
 		    super.eventLoopException(exception);
 	        Shell shell = new Shell(SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE);
 	        String errorString = ExceptionToString(exception);
-	        JobStatus jobStatus = new JobStatus(Status.ERROR, (Job) null,  "Following error has taken place: " + exception.getLocalizedMessage());
+	        // JobStatus jobStatus = new JobStatus(Status.ERROR, (Job) null,  "Following error has taken place: " + exception.getLocalizedMessage());
 	        // ErrorDialog dialog = new ErrorDialog (shell, "An error occured", "Following error has taken place: " + exception.getLocalizedMessage(), jobStatus, Status.ERROR);
 
 	        // Preparation of the dialog box
