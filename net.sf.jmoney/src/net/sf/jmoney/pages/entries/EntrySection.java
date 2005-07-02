@@ -560,7 +560,6 @@ public class EntrySection extends SectionPart {
 		for (Iterator iter = TransactionInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
 			final PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
 			if (propertyAccessor.isScalar()) {
-				Label propertyLabel = toolkit.createLabel(transactionArea, propertyAccessor.getShortDescription() + ':');
 				IPropertyControl propertyControl = propertyAccessor.createPropertyControl(transactionArea);
 				propertyControl.load(null);
 				toolkit.adapt(propertyControl.getControl(), true, true);

@@ -3,7 +3,6 @@ package net.sf.jmoney.charts;
 import java.awt.BorderLayout;
 
 import javax.swing.JFrame;
-import javax.swing.JPanel;
 
 import net.sf.jmoney.model2.Session;
 
@@ -71,7 +70,6 @@ public abstract class StackedChart extends JFrame {
         renderer.setItemLabelsVisible(true);
 
         // add the chart to a panel...
-        JPanel windowPanel = new JPanel();
         ChartPanel chartPanel = new ChartPanel(chart);
         this.getContentPane().add(chartPanel);
         
@@ -98,6 +96,9 @@ public abstract class StackedChart extends JFrame {
      * (copied from BarChartDemo7)
      */
     static class LabelGenerator extends StandardCategoryLabelGenerator {
+
+        private static final long serialVersionUID = 8648204229664085094L;
+
         /**
          * Generates an item label.
          * 

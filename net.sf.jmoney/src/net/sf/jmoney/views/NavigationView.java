@@ -44,7 +44,6 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ILabelProvider;
@@ -270,9 +269,6 @@ public class NavigationView extends ViewPart {
         });
 	}
 
-	private IMemento memento;
-		
-
 	/**
 	 * The constructor.
 	 */
@@ -299,7 +295,7 @@ public class NavigationView extends ViewPart {
         // and the objects that need the memento are not
         // created until createPartControl is called so we save
         // the memento now for later use.
-        this.memento = memento; 
+        // this.memento = memento; 
     }
     
     public void saveState(IMemento memento) {
@@ -642,13 +638,6 @@ public class NavigationView extends ViewPart {
 			getImageDescriptor(ISharedImages.IMG_TOOL_DELETE));
 	}
 	
-	private void showMessage(String message) {
-		MessageDialog.openInformation(
-			viewer.getControl().getShell(),
-			"Navigation",
-			message);
-	}
-
 	/**
 	 * Passing the focus request to the viewer's control.
 	 */

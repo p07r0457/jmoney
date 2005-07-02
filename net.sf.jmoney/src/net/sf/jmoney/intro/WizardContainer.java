@@ -11,15 +11,10 @@
  *******************************************************************************/
 package net.sf.jmoney.intro;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 import net.sf.jmoney.JMoneyPlugin;
 
-import org.eclipse.jface.dialogs.ControlEnableState;
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.IMessageProvider;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.util.Assert;
@@ -30,7 +25,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -74,15 +68,6 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 	private ArrayList nestedWizards = new ArrayList();
 	// The currently displayed page.
 	private IWizardPage currentPage = null;
-	// The number of long running operation executed from the dialog.	
-	private long activeRunningOperations = 0;
-	// The current page message and description
-	private String pageMessage;
-	private int pageMessageType = IMessageProvider.NONE;
-	private String pageDescription;
-	private Cursor waitCursor;
-	private Cursor arrowCursor;
-	private MessageDialog windowClosingDialog;
 	
 	/**
 	 * The dialog area; <code>null</code> until dialog is layed out.
@@ -107,8 +92,6 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 			225);
 	private int pageWidth = SWT.DEFAULT;
 	private int pageHeight = SWT.DEFAULT;
-	private static final String FOCUS_CONTROL = "focusControl"; //$NON-NLS-1$
-	private boolean lockedUI = false;
 
 	/**
 	 * Indicates whether the container is in standby or full
@@ -561,7 +544,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 	/**
 	 * Creates and return a new wizard closing dialog without openiong it.
 	 * @return MessageDalog
-	 */
+	 *
 	private MessageDialog createWizardClosingDialog() {
 		MessageDialog result = new MessageDialog(getShell(), JFaceResources
 				.getString("WizardClosingDialog.title"), //$NON-NLS-1$
@@ -569,6 +552,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 				MessageDialog.QUESTION, new String[]{IDialogConstants.OK_LABEL}, 0);
 		return result;
 	}
+	*/
 
 	/**
 	 * The Close button has been pressed.
@@ -681,7 +665,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 	 *   <code>Boolean</code>)
 	 * @param key the key
 	 * @see #saveEnableStateAndSet
-	 */
+	 *
 	private void restoreEnableState(Control w, Map h, String key) {
 		if (w != null) {
 			Boolean b = (Boolean) h.get(key);
@@ -689,6 +673,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 				w.setEnabled(b.booleanValue());
 		}
 	}
+    */
 
 	/**
 	 * Restores the enabled/disabled state of the wizard dialog's
@@ -697,7 +682,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 	 * @param state a map containing the saved state as returned by 
 	 *   <code>saveUIState</code>
 	 * @see #saveUIState
-	 */
+	 *
 	private void restoreUIState(Map state) {
 		restoreEnableState(backButton, state, "back"); //$NON-NLS-1$
 		restoreEnableState(nextButton, state, "next"); //$NON-NLS-1$
@@ -708,6 +693,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 		if(pageValue != null)//page may never have been created
 			((ControlEnableState) pageValue).restore();
 	}
+    */
 
 	/* (non-Javadoc)
 	 * Method declared on IRunnableContext.
@@ -727,13 +713,14 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 	 * @param enabled <code>true</code> to enable the control, 
 	 *   and <code>false</code> to disable it
 	 * @see #restoreEnableState(Control, Map, String)
-	 */
+	 *
 	private void saveEnableStateAndSet(Control w, Map h, String key, boolean enabled) {
 		if (w != null) {
 			h.put(key, new Boolean(w.getEnabled()));
 			w.setEnabled(enabled);
 		}
 	}
+    */
 
 	/**
 	 * Captures and returns the enabled/disabled state of the wizard dialog's
@@ -746,7 +733,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 	 * @return a map containing the saved state suitable for restoring later
 	 *   with <code>restoreUIState</code>
 	 * @see #restoreUIState
-	 */
+	 *
 	private Map saveUIState(boolean keepCancelEnabled) {
 		Map savedState = new HashMap(10);
 		saveEnableStateAndSet(backButton, savedState, "back", false); //$NON-NLS-1$
@@ -758,17 +745,19 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 			savedState.put("page", ControlEnableState.disable(currentPage.getControl())); //$NON-NLS-1$
 		return savedState;
 	}
+    */
 	/**
 	 * Sets the given cursor for all shells currently active
 	 * for this window's display.
 	 *
 	 * @param c the cursor
-	 */
+	 *
 	private void setDisplayCursor(Cursor c) {
 		Shell[] shells = getShell().getDisplay().getShells();
 		for (int i = 0; i < shells.length; i++)
 			shells[i].setCursor(c);
 	}
+    */
 
 	/**
 	 * Sets the minimum page size used for the pages.
@@ -999,7 +988,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 	 * its shell if nessessary.
 	 *
 	 * @param sizingWizard the wizard
-	 */
+	 *
 	private void updateSizeForWizard(IWizard sizingWizard) {
 		Point delta = new Point(0, 0);
 		IWizardPage[] pages = sizingWizard.getPages();
@@ -1016,6 +1005,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 			this.setSize(shellSize.x + delta.x, shellSize.y + delta.y);
 		}
 	}
+    */
 
 	/* (non-Javadoc)
 	 * Method declared on IWizardContainer.

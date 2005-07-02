@@ -82,13 +82,11 @@ import net.sf.jmoney.serializeddatastore.SimpleObjectKey;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.internal.dialogs.EventLoopProgressMonitor;
-import org.eclipse.ui.internal.progress.ProgressMonitorJobsDialog;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
@@ -160,15 +158,13 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					
 				};
 				
-				ProgressMonitorJobsDialog progressDialog = new ProgressMonitorJobsDialog(window.getShell());
+				ProgressMonitorDialog progressDialog = new ProgressMonitorDialog(window.getShell());
 				
 				try {
 					progressDialog.run(true, false, readSessionRunnable);
 				} catch (InvocationTargetException e) {
 					throw e.getCause();
 				}
-				
-				EventLoopProgressMonitor monitor = new EventLoopProgressMonitor(new NullProgressMonitor());
 			}
 		} catch (InterruptedException e) {
 			// If the user inturrupted the read then no error message is displayed.
@@ -1159,15 +1155,13 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					
 				};
 				
-				ProgressMonitorJobsDialog progressDialog = new ProgressMonitorJobsDialog(window.getShell());
+				ProgressMonitorDialog progressDialog = new ProgressMonitorDialog(window.getShell());
 				
 				try {
 					progressDialog.run(true, false, writeSessionRunnable);
 				} catch (InvocationTargetException e) {
 					throw e.getCause();
 				}
-				
-				EventLoopProgressMonitor monitor = new EventLoopProgressMonitor(new NullProgressMonitor());
 			}
 		} catch (InterruptedException e) {
 			// If the user inturrupted the write then we do nothing.
@@ -1310,8 +1304,6 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				PropertySet propertySet2 = propertyAccessor.getPropertySet(); 
 				if (!propertySet2.isExtension()
 						|| object.getExtension(propertySet2) != null) {
-					String name = propertyAccessor.getLocalName();
-					
 					for (Iterator elementIter = object.getListPropertyValue(propertyAccessor).iterator(); elementIter.hasNext(); ) {
 						ExtendableObject listElement = (ExtendableObject)elementIter.next();
 						writeObject(hd, listElement, propertyAccessor.getLocalName(), propertyAccessor.getValueClass());

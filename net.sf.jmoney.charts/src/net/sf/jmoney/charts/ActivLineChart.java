@@ -23,6 +23,11 @@ import org.jfree.data.time.TimeSeriesDataItem;
 public class ActivLineChart extends LineChart {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = -5937219526820401153L;
+
+    /**
      * @param title
      * @param session
      */

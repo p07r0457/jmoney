@@ -425,8 +425,6 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// the session object.  The names of the columns are the fully qualified
 		// names of the properties that list these objects.
 		
-		String tableName = propertySet.getId().replace('.', '_');
-		
 		Vector list = (Vector)tablesMap.get(propertySet);
 		
 		// Find all properties in any property set that are
@@ -561,22 +559,6 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	
 	private static String[] tableOnlyType = new String[] { "TABLE" };
 
-	private void traceResultSetLabels(ResultSet rs) {
-		try {
-			String x = "";		
-			ResultSetMetaData rsmd = rs.getMetaData();
-			int cols = rsmd.getColumnCount();
-			for (int i = 1; i <= cols; i++) {
-				x += rsmd.getColumnLabel(i) + ", ";
-			}
-			if (DEBUG) System.out.println(x);
-			
-		} catch (Exception SQLException) {
-			throw new RuntimeException("database error");
-		}
-		if (DEBUG) System.out.println("");
-	}
-
 	private void traceResultSet(ResultSet rs) {
 		try {
 			String x = "";		
@@ -630,8 +612,8 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 						
 						ResultSet columnResultSet = dmd.getColumns(null, null, tableName.toUpperCase(), columnInfo.columnName);
 						if (columnResultSet.next()) {
-							int dataType = columnResultSet.getInt("DATA_TYPE");
-							String typeName = columnResultSet.getString("TYPE_NAME");
+							// int dataType = columnResultSet.getInt("DATA_TYPE");
+							// String typeName = columnResultSet.getString("TYPE_NAME");
 							// TODO: Check that the column information is
 							// correct.  Display a fatal error if it is not.
 						} else {

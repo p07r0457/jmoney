@@ -25,7 +25,6 @@ package net.sf.jmoney.views;
 import java.util.Vector;
 
 import net.sf.jmoney.IBookkeepingPage;
-import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.ISessionManager;
@@ -205,7 +204,6 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
 			for (int i = 0; i < pageFactories.size(); i++) {
 				PageEntry entry = (PageEntry)pageFactories.get(i);
 				String pageId = (String)entry.getPageId();
-				IBookkeepingPageFactory pageListener = (IBookkeepingPageFactory)entry.getPageFactory();
 				pages[i].saveState(memento.createChild(pageId));
 			}
 		}

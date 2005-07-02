@@ -9,7 +9,6 @@ import java.util.ResourceBundle;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ExtensionObject;
 import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -127,7 +126,6 @@ public class CopierPlugin extends AbstractUIPlugin {
     	for (Iterator extensionIter = oldObject.getExtensionIterator(); extensionIter.hasNext(); ) {
     		Map.Entry mapEntry = (Map.Entry)extensionIter.next();
     		PropertySet extensionPropertySet = (PropertySet)mapEntry.getKey();
-    		ExtensionObject extension = (ExtensionObject)mapEntry.getValue();
     		for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); ) {
     			PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIter.next();
     			copyProperty(propertyAccessor, oldObject, newObject, objectMap);

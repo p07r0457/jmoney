@@ -24,6 +24,7 @@ package net.sf.jmoney.reconciliation;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -50,18 +51,20 @@ public class BankStatement implements Comparable {
 	private Date statementDate = null;
 	
 	public BankStatement(String s) {
-		if (s.length() != 0) {
-			String numbers [] = s.split("\\.");
-			if (numbers.length == 1) {
-				statementNumber = Integer.parseInt(numbers[0]);
-			} else if (numbers.length == 3) {
-				int year  = Integer.parseInt(numbers[0]);
-				int month = Integer.parseInt(numbers[1]);
-				int day   = Integer.parseInt(numbers[2]);
-				statementDate = new Date(year-1900, month-1, day);
-			}
-		}
-	}
+        if (s.length() != 0) {
+            String numbers[] = s.split("\\.");
+            if (numbers.length == 1) {
+                statementNumber = Integer.parseInt(numbers[0]);
+            } else if (numbers.length == 3) {
+                int year = Integer.parseInt(numbers[0]);
+                int month = Integer.parseInt(numbers[1]);
+                int day = Integer.parseInt(numbers[2]);
+                Calendar cal = Calendar.getInstance();
+                cal.set(year, month, day);
+                statementDate = cal.getTime();
+            }
+        }
+    }
 	
 	/**
 	 * @param statementDate

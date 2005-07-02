@@ -141,7 +141,6 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 				extensions[i].getConfigurationElements();
 			for (int j = 0; j < elements.length; j++) {
 				if (elements[j].getName().equals("file-format")) {
-					String id = elements[j].getAttribute("id");
 					String filePattern = elements[j].getAttribute("file-pattern");
 					String formatDescription = elements[j].getAttribute("format-description");
 					

@@ -64,7 +64,6 @@ public class TransactionInfo implements IPropertySetInfo {
 	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
 		TransactionInfo.propertySet = propertySet;
 
-		IPropertyControlFactory textControlFactory = new TextControlFactory();
         IPropertyControlFactory dateControlFactory = new DateControlFactory();
 		
 		entriesAccessor = propertyRegistrar.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), Entry.class, null);
@@ -93,4 +92,5 @@ public class TransactionInfo implements IPropertySetInfo {
 	public static PropertyAccessor getDateAccessor() {
 		return dateAccessor;
 	}	
+
 }

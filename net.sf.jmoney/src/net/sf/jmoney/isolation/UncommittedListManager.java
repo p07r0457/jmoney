@@ -29,7 +29,6 @@ import java.util.Vector;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
-import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
@@ -81,8 +80,7 @@ public class UncommittedListManager extends Vector implements IListManager {
 		
 		// Add a list manager for each list property in the object.
 		int index = 3;
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); iter.next()) {
 			constructorParameters[index++] = new UncommittedListManager(transactionManager);
 		}
 		
@@ -126,8 +124,7 @@ public class UncommittedListManager extends Vector implements IListManager {
 		
 		// Add a list manager for each list property in the object.
 		int index = 3;
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); iter.next()) {
 			constructorParameters[index++] = new UncommittedListManager(transactionManager);
 		}
 		

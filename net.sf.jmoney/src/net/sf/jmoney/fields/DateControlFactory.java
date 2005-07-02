@@ -31,8 +31,6 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
 
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Composite;
 
 /**
@@ -42,36 +40,42 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class DateControlFactory implements IPropertyControlFactory {
 
-    protected VerySimpleDateFormat fDateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
+    protected VerySimpleDateFormat fDateFormat = new VerySimpleDateFormat(
+            JMoneyPlugin.getDefault().getDateFormat());
 
     // Listen to date format changes so we keep up to date
+    // Johann, 2005-07-02: Shouldn't this be done in the control?
+    /*
     static {
-    	JMoneyPlugin
-    	.getDefault()
-    	.getPreferenceStore()
-    	.addPropertyChangeListener(new IPropertyChangeListener() {
-			public void propertyChange(PropertyChangeEvent event) {
-				if (event.getProperty().equals("dateFormat")) {
-					VerySimpleDateFormat fDateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
-				}
-			}});
+        JMoneyPlugin.getDefault().getPreferenceStore()
+                .addPropertyChangeListener(new IPropertyChangeListener() {
+                    public void propertyChange(PropertyChangeEvent event) {
+                        if (event.getProperty().equals("dateFormat")) {
+                            fDateFormat = new VerySimpleDateFormat(JMoneyPlugin
+                                    .getDefault().getDateFormat());
+                        }
+                    }
+                });
     }
-    
+    */
+
     protected boolean readOnly;
-    
+
     public DateControlFactory() {
-    	this.readOnly = false;
-    }
-    
-    public DateControlFactory(boolean readOnly) {
-    	this.readOnly = readOnly;
-    }
-    
-    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
-  		return new DateEditor(parent, propertyAccessor);
+        this.readOnly = false;
     }
 
-    public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+    public DateControlFactory(boolean readOnly) {
+        this.readOnly = readOnly;
+    }
+
+    public IPropertyControl createPropertyControl(Composite parent,
+            PropertyAccessor propertyAccessor) {
+        return new DateEditor(parent, propertyAccessor);
+    }
+
+    public String formatValueForMessage(ExtendableObject extendableObject,
+            PropertyAccessor propertyAccessor) {
         Date value = (Date) extendableObject.getPropertyValue(propertyAccessor);
         if (value == null) {
             return "none";
@@ -80,12 +84,14 @@ public class DateControlFactory implements IPropertyControlFactory {
         }
     }
 
-    public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+    public String formatValueForTable(ExtendableObject extendableObject,
+            PropertyAccessor propertyAccessor) {
         Date value = (Date) extendableObject.getPropertyValue(propertyAccessor);
         return fDateFormat.format(value);
     }
 
-	public boolean isEditable() {
-		return !readOnly;
-	}
+    public boolean isEditable() {
+        return !readOnly;
+    }
+
 }

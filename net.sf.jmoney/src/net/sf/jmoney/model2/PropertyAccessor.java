@@ -227,24 +227,6 @@ public class PropertyAccessor {
 	 * required by this method.
 	 */
 	public void initMethods() {
-       
-		if (isList) {
-			// For every list, there must be an create<propertyName>
-			// method.  Find this method.
-			
-			Class parameters[];
-			
-			if (getValuePropertySet().isDerivable()) {
-				// Class is derivable, which means we don't know the property
-				// set at compile time, so the method takes the property set
-				// as a parameter.
-				parameters = new Class [] {
-						PropertySet.class, 
-				};
-			} else {
-				parameters = new Class[0];
-			}	
-		}
 	}
 
 	public Method findMethod(String prefix, String propertyName, Class [] parameters) {

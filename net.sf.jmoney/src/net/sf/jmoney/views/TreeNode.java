@@ -98,7 +98,6 @@ public class TreeNode implements IAdaptable {
 					if (id != null && id.length() != 0) {
 						String fullNodeId = extensions[i].getNamespace() + '.' + id;
 						ImageDescriptor descriptor = null;
-						Image image = null;
 						if (icon != null) {
 							// Try getting the image from this plug-in.
 							descriptor = JMoneyPlugin.imageDescriptorFromPlugin(extensions[i].getNamespace(), icon); 

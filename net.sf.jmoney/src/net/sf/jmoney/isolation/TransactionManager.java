@@ -36,7 +36,6 @@ import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ExtensionObject;
 import net.sf.jmoney.model2.IDataManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ISessionChangeFirer;
@@ -221,10 +220,8 @@ public class TransactionManager implements IDataManager {
 		for (Iterator extensionIter = committedObject.getExtensionIterator(); extensionIter.hasNext(); ) {
 			Map.Entry mapEntry = (Map.Entry)extensionIter.next();
 			PropertySet extensionPropertySet = (PropertySet)mapEntry.getKey();
-			ExtensionObject extension = (ExtensionObject)mapEntry.getValue();
 			int count = 0;
-			for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); ) {
-				PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIter.next();
+			for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); propertyIter.next()) {
 				count++;
 			}
 			Object[] extensionValues = new Object[count];
@@ -257,8 +254,7 @@ public class TransactionManager implements IDataManager {
 					Object[] extensionValues = (Object[])extensionMap.get(extensionPropertySet);
 					if (extensionValues == null) {
 						int count = 0;
-						for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); ) {
-							PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIter.next();
+						for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); propertyIter.next()) {
 							count++;
 						}
 						extensionValues = new Object[count];

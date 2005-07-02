@@ -319,11 +319,6 @@ public class QIFFileFormat implements FileFormat {
 	 */
 	private void importAccount(Session session, CurrencyAccount account,
 			BufferedReader buffer) throws IOException {
-
-		// The property set with the additional properties added
-		// by this plug-in to the Entry objects.
-		PropertySet qifPropertySet = QIFEntryInfo.getPropertySet();
-
 		String line;
 		Currency currency = session.getDefaultCurrency();
 
@@ -348,8 +343,6 @@ public class QIFFileFormat implements FileFormat {
 			// Set the entry into which split entry data is put.
 			// Initially, this is the second entry.
 			Entry splitEntry = secondEntry;
-
-			boolean isTransfer = false;
 
 			boolean categoryInSplitAlreadySpecified = false;
 			boolean memoInSplitAlreadySpecified = false;
@@ -390,7 +383,7 @@ public class QIFFileFormat implements FileFormat {
 					Account category = parseCategory(session, line);
 					secondEntry.setAccount(category);
 					if (category instanceof CapitalAccount) {
-						isTransfer = true;
+						// isTransfer = true;
 					} else {
 						IncomeExpenseAccount incomeExpenseCategory = (IncomeExpenseAccount)category;
 						if (incomeExpenseCategory.isMultiCurrency()) {

@@ -132,13 +132,6 @@ public class TransactionDialog {
         	}
         }
         
-        /**
-         * The account for which the appropriate set of entry
-         * properties exist.  If null then the account list 
-         * property only exists.
-         */
-        private Account account;
-        
         /** 
          * The entry object being displayed in the set of controls.
     	 */
@@ -350,8 +343,6 @@ public class TransactionDialog {
     	 * 			account list control.
     	 */
     	void addFurtherControls(Account account) {
-    		this.account = account;
-    		
     		// The other controls depend on the type of account.
     		// This needs to be generalized in the metadata, but until
     		// that work is done, the description applies to entries in

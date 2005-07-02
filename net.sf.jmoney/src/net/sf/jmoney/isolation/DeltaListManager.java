@@ -118,8 +118,7 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 		
 		// Add a list manager for each list property in the object.
 		int index = 3;
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); iter.next()) {
 			constructorParameters[index++] = new UncommittedListManager(transactionManager);
 		}
 		
@@ -173,8 +172,7 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 		
 		// Add a list manager for each list property in the object.
 		int index = 3;
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); iter.next()) {
 			constructorParameters[index++] = new UncommittedListManager(transactionManager);
 		}
 		

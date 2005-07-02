@@ -13,7 +13,6 @@ import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -49,11 +48,9 @@ import oracle.xml.parser.v2.XMLElement;
 
 import org.apache.xalan.templates.OutputProperties;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.internal.dialogs.EventLoopProgressMonitor;
-import org.eclipse.ui.internal.progress.ProgressMonitorJobsDialog;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -68,16 +65,7 @@ import org.xml.sax.SAXException;
 public final class GnucashXML implements FileFormat, IRunnableWithProgress {
     private NumberFormat number = NumberFormat.getInstance(Locale.US);
 
-    private Calendar calendar = Calendar.getInstance();
-
-    private DateFormat swiftDateFormat = new SimpleDateFormat("yyMMdd");
-
-    private NumberFormat swiftNumberFormat = NumberFormat
-            .getInstance(Locale.GERMANY);
-
     private IWorkbenchWindow window;
-
-    private AccountChooser accountChooser;
 
     private DateFormat gnucashDateFormat = new SimpleDateFormat(
             "yyyy-MM-dd HH:mm:ss Z");
@@ -116,7 +104,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
     }
 
     public void importFile(Session session, File file) {
-        ProgressMonitorJobsDialog progressDialog = new ProgressMonitorJobsDialog(
+        ProgressMonitorDialog progressDialog = new ProgressMonitorDialog(
                 window.getShell());
         this.session = session;
         this.file = file;
@@ -127,8 +115,6 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
         } catch (InterruptedException e) {
             JMoneyPlugin.log(e);
         }
-        EventLoopProgressMonitor monitor = new EventLoopProgressMonitor(
-                new NullProgressMonitor());
         // run(monitor);
     }
 
@@ -233,7 +219,6 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
                 String accountName = null;
                 String accountGUID = null;
                 String parentGUID = null;
-                String parentName = null;
 
                 NodeList childNodes = node.getChildNodes();
                 for (int j = 0; j < childNodes.getLength(); j++) {
@@ -318,7 +303,6 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
         while (e.hasNext()) {
             String childGUID = (String) e.next();
             String parentGUID = (String) childParent.get(childGUID);
-            String childName;
             // if (GnucashXMLPlugin.DEBUG) System.out.println("childGUID:" +
             // childGUID);
             // if (GnucashXMLPlugin.DEBUG) System.out.println("parentGUID:" +
@@ -368,10 +352,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
             throws MoreThanTwoSplitsException, LessThanTwoSplitsException,
             ParseException {
 
-        Entry e;
         Node transactionElement; /* Currently treated Transaction node */
-        /* Currently treated property for the transaction */
-        Element propertyElement;
 
         // For each Transaction of the XML file
 
@@ -396,7 +377,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
     private long getLong(String s) {
         int posDivision = s.indexOf("/");
         long l1 = Long.parseLong(s.substring(0, posDivision));
-        long l2 = Long.parseLong(s.substring(posDivision + 1));
+        // long l2 = Long.parseLong(s.substring(posDivision + 1));
 
         // TODO: Faucheux - understand why return (l1/l2) is not the good one;
         return l1;
@@ -410,7 +391,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
      * @param transactionElement
      * @throws ParseException
      * @author Olivier Faucheux
-     */
+     *
     private void treatSimpleTransaction(Element propertyElement, Transaction t)
             throws ParseException {
 
@@ -426,7 +407,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
         try {
             description = transactionNode.getElementsByTagName("description")
                     .item(0).getFirstChild().getNodeValue();
-        } catch (NullPointerException e) { /* No description */
+        } catch (NullPointerException e) { // No description
         }
 
         Element firstAccoutElement = (Element) propertyElement
@@ -458,6 +439,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
 
         // TODO: Faucheux to check
     }
+    */
 
     private void treatTransaction(Node transactionElement)
             throws ParseException {
@@ -468,12 +450,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
         for (Element propertyElement = (Element) transactionElement
                 .getFirstChild(); propertyElement != null; propertyElement = (Element) propertyElement
                 .getNextSibling()) {
-            String transactionDescription = null;
-
             String propertyElementName = propertyElement.getNodeName();
-            String propertyElementValue = propertyElement.getFirstChild() == null ? null
-                    : propertyElement.getFirstChild().getNodeValue();
-
             // if (GnucashXMLPlugin.DEBUG) System.out.println("New property : >"
             // + propertyElementName + "<" + " Value >" + propertyElementValue +
             // "<");
@@ -481,10 +458,6 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
             if (propertyElementName.equalsIgnoreCase("trn:date-posted")) {
                 t.setDate(gnucashDateFormat.parse(propertyElement
                         .getFirstChild().getFirstChild().getNodeValue()));
-
-            } else if (propertyElementName.equalsIgnoreCase("trn:description")) {
-                transactionDescription = propertyElementValue;
-
             } else if (propertyElementName.equalsIgnoreCase("trn:splits")) {
 
                 if (propertyElement.getElementsByTagName("split").getLength() < 2) {
@@ -523,8 +496,6 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
      */
     private void treatSplittedTransaction(Element propertyElement, Transaction t)
             throws ParseException {
-
-        String accountName = null;
         String accountGUID = null;
         String transactionDescription = null;
         XMLElement transactionNode;
@@ -737,7 +708,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
         e.setAttribute("version", "2.0.0");
 
         // give the information of the account
-        Element e1, e2, e3;
+        Element e2;
 
         String guid = Integer.toHexString(transaction.hashCode());
         e2 = doc.createElement("trn:id");

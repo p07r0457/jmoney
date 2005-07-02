@@ -10,8 +10,6 @@ import java.awt.GridBagLayout;
 import java.awt.Panel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -151,7 +149,6 @@ public class PieChartPage implements IBookkeepingPageFactory {
 	    
 	    private void redraw() {
 	        // chart.setAccount("Dépenses exceptionelles");
-	        DateFormat df = new SimpleDateFormat("dd.MM.yyyy");
 	        chart.setDates((Date) fromDate.getValue(), (Date) toDate.getValue());
 	        chart.setMaxLevel(maxLevel.getText());
 	        chart.createValues();

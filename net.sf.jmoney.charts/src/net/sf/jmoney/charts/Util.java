@@ -4,7 +4,6 @@ package net.sf.jmoney.charts;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,25 +53,6 @@ public class Util {
         }
     }
 
-    
-    
-    /**
-     *  returns a new date, which is the last minute of the month of the given date
-     * @author Faucheux
-     * TODO: Do not use depreceated functions.
-     */
-    public static Date endOfMonth(Date givenDate) {
-        GregorianCalendar gc = new GregorianCalendar(givenDate.getYear(), givenDate.getMonth(), givenDate.getDay());
-        Date endOfMonth = new Date();
-        endOfMonth.setYear(givenDate.getYear());
-        endOfMonth.setMonth(givenDate.getMonth());
-        endOfMonth.setDate(gc.getMaximum(GregorianCalendar.MONTH));
-        endOfMonth.setHours(23);
-        endOfMonth.setMinutes(59);
-        
-        return endOfMonth;
-    }
- 
     /**
      * @author Faucheux
      */

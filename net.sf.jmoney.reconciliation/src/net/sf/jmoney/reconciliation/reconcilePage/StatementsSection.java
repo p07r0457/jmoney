@@ -63,8 +63,6 @@ import org.eclipse.ui.forms.widgets.Section;
  */
 public class StatementsSection extends SectionPart {
 	
-	private CurrencyAccount account;
-	
 	private Table statementTable;
 	
 	private StatementContentProvider contentProvider;
@@ -73,9 +71,7 @@ public class StatementsSection extends SectionPart {
 	
 	public StatementsSection(Composite parent, FormToolkit toolkit, CurrencyAccount account) {
 		super(parent, toolkit, 
-				Section.DESCRIPTION | Section.TITLE_BAR);
-		this.account = account;
-		
+				Section.DESCRIPTION | Section.TITLE_BAR);		
 		getSection().setText("Statements");
 		getSection().setDescription("Double click a statement to show that statement.");
 

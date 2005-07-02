@@ -63,7 +63,6 @@ public class CurrencyAccountInfo implements IPropertySetInfo {
     public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
 		CurrencyAccountInfo.propertySet = propertySet;
 		
-		IPropertyControlFactory textControlFactory = new TextControlFactory();
 		IPropertyControlFactory amountControlFactory = new AmountInCurrencyAccountControlFactory();
 		IPropertyControlFactory currencyControlFactory = new CurrencyControlFactory();
 		

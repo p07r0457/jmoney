@@ -681,8 +681,7 @@ public class PropertySet {
 					parameters[i++] = IObjectKey.class;
 				}
 				
-				for (Iterator iter = defaultConstructorProperties.iterator(); iter.hasNext(); ) {
-					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+				for (Iterator iter = defaultConstructorProperties.iterator(); iter.hasNext(); iter.next()) {
 					parameters[i++] = IListManager.class; 
 				}
 				
@@ -752,17 +751,6 @@ public class PropertySet {
 			propertyAccessor.initMethods();
 		}
 	}
-
-
-	/**
-	 * @return The number of properties in this property set.
-	 *		This number is the same as the number of elements
-	 * 		enumerated by the iterator returned by getPropertyIterator1.
-	 */
-	private int getPropertyCount() {
-		return properties.size();
-	}
-
 
 	/**
 	 * Returns the list of properties whose values are passed as

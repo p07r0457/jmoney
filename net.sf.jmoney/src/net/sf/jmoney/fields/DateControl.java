@@ -67,11 +67,6 @@ public class DateControl extends Composite {
     private VerySimpleDateFormat fDateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
 
 	/**
-	 * Image registry key for three dot image (value <code>"cell_editor_dots_button_image"</code>).
-	 */
-	private static final String CELL_EDITOR_IMG_DOTS_BUTTON = "cell_editor_dots_button_image";//$NON-NLS-1$
-
-	/**
 	 * The text box containing the date
 	 */
 	private Text textControl;

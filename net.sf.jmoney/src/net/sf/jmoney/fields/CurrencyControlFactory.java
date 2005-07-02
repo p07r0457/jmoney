@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.fields;
 
-import java.util.Vector;
-
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
@@ -40,8 +38,6 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class CurrencyControlFactory implements IPropertyControlFactory {
 
-    private Vector usedCurrencies;
-    
     public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
         return new CurrencyEditor(parent, propertyAccessor);
     }

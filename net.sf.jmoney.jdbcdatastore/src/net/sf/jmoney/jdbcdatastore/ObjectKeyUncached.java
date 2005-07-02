@@ -94,7 +94,7 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 				String id = rs.getString("_PROPERTY_SET_ID");
 				
 				try {
-					PropertySet finalPropertySet = PropertySet.getPropertySet(id);
+					PropertySet.getPropertySet(id);
 				} catch (PropertySetNotFoundException e1) {
 					// TODO: The most probable cause is that an object
 					// is stored in the database, but the plug-in that supports

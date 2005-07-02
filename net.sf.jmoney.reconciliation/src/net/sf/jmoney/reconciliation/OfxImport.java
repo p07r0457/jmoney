@@ -27,8 +27,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,7 +51,7 @@ public class OfxImport implements IBankStatementSource {
 	private static Pattern elementPattern = Pattern.compile("^\\s*<([A-Z][\\w.]*)>(.*)$");
 	private static Pattern elementEndPattern = Pattern.compile("^\\s*</([A-Z][\\w.]*)>$");
 
-	private static Pattern datePattern = Pattern.compile("^(\\d\\d\\d\\d)(\\d\\d)(\\d\\d)\\d{6}");
+	//private static Pattern datePattern = Pattern.compile("^(\\d\\d\\d\\d)(\\d\\d)(\\d\\d)\\d{6}");
 	
 	// These are member variables only so we don't have to pass
 	// them down the stack.  The values are not held across non-private method
@@ -257,7 +257,9 @@ public class OfxImport implements IBankStatementSource {
 				int month = Integer.parseInt(data.substring(4, 6));
 				int day = Integer.parseInt(data.substring(6, 8));
 				
-				entryData.setClearedDate(new Date(year-1900, month-1, day));
+                 Calendar cal = Calendar.getInstance();
+                 cal.set(year, month, day);
+				entryData.setClearedDate(cal.getTime());
 			} else if (childMatch.group(1).equals("TRNAMT")) {
 				long amount = (long)(Double.parseDouble(data) * 100);
 				entryData.setAmount(amount);

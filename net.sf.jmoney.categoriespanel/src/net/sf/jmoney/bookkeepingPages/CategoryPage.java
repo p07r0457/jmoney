@@ -507,7 +507,6 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			if (!IncomeExpenseAccountInfo.getPropertySet().getPageFactories().isEmpty()) {
 				editorAction = new Action() {
 					public void run() {
-						IncomeExpenseAccount account = null;
 						IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 						for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
 							Object selectedObject = iterator.next();

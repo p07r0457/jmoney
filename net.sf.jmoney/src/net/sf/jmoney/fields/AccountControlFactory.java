@@ -38,8 +38,6 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class AccountControlFactory implements IPropertyControlFactory {
     
-    private Account[] allAccounts;
-    
     public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
         return new AccountEditor(parent, propertyAccessor);
     }

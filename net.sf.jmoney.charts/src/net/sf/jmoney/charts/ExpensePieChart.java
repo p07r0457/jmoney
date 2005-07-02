@@ -34,6 +34,8 @@ import org.jfree.data.DefaultPieDataset;
 
 public class ExpensePieChart extends PieChart {
  
+    private static final long serialVersionUID = -4298533800978851837L;
+
     protected Date fromDate; 
 	protected Date toDate;
 	protected int  maxLevel;

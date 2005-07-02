@@ -23,7 +23,6 @@
 package net.sf.jmoney.pages.entries;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Vector;
@@ -538,7 +537,6 @@ public class EntriesTree {
 			           		
 			           		Transaction transaction = session.createTransaction();
 			           		Entry entry1 = transaction.createEntry();
-			           		Entry entry2 = transaction.createEntry();
 			           		
 			           		// TODO: There is so much duplicated stuff here that it
 			           		// would be better if we could get the listener to do this.
@@ -657,9 +655,6 @@ public class EntriesTree {
 									}
 								}
 							});
-
-					MenuItem separatorItem = new MenuItem(popupMenu,
-							SWT.SEPARATOR);
 
 					for (Iterator iter = entriesContent
 							.getAllEntryDataObjects().iterator(); iter
@@ -1329,31 +1324,28 @@ public class EntriesTree {
 	}
 
 	/**
-	 * Build the list of entries to be shown in the entries
-	 * list.  This method sets the list into <code>entries</code>.
-	 * This list contains only the top level entries.
-	 * <P>
-	 * The entries are unsorted.
-	 */
-	private void buildEntryList() {
-		// Note that the balances are not set at this time.  This is done
-		// when the data is set into the table.  It is just as easy
-		// and efficient to do it then and that reduces the effort
-		// to keep the balances updated.
-		Collection accountEntries = entriesContent.getEntries();
-
-		entries = new Vector();
-		int i = 0;
-		for (Iterator iter = entriesContent.getEntries().iterator(); iter
-				.hasNext();) {
-			Entry accountEntry = (Entry) iter.next();
-			DisplayableTransaction data = new DisplayableTransaction(
-					accountEntry, 0);
-			if (matchesFilter(data)) {
-				entries.add(data);
-			}
-		}
-	}
+     * Build the list of entries to be shown in the entries list. This method
+     * sets the list into <code>entries</code>. This list contains only the
+     * top level entries.
+     * <P>
+     * The entries are unsorted.
+     */
+    private void buildEntryList() {
+        // Note that the balances are not set at this time. This is done
+        // when the data is set into the table. It is just as easy
+        // and efficient to do it then and that reduces the effort
+        // to keep the balances updated.
+        entries = new Vector();
+        for (Iterator iter = entriesContent.getEntries().iterator(); iter
+                .hasNext();) {
+            Entry accountEntry = (Entry) iter.next();
+            DisplayableTransaction data = new DisplayableTransaction(
+                    accountEntry, 0);
+            if (matchesFilter(data)) {
+                entries.add(data);
+            }
+        }
+    }
 
 	/**
 	 * Filters work at the transaction level, not the entry level.
@@ -1366,8 +1358,6 @@ public class EntriesTree {
 	 * @return
 	 */
 	private boolean matchesFilter(DisplayableTransaction transData) {
-		Transaction trans = transData.getTransactionForTransactionFields();
-
 		if (entriesContent.filterEntry(transData)) {
 			return true;
 		}
@@ -1875,7 +1865,6 @@ public class EntriesTree {
 
 		TreeItem parentItem = fTable.getItem(parentIndex);
 		DisplayableTransaction dTrans = (DisplayableTransaction)parentItem.getData();
-		Transaction transaction = entry.getTransaction();
 
 		// Remove from our cached set of entries
 		entries.remove(dTrans);
@@ -2182,7 +2171,6 @@ public class EntriesTree {
 		TreeItem parentItem = fTable.getItem(transIndex);
 		DisplayableTransaction dTrans = (DisplayableTransaction) parentItem
 				.getData();
-		Transaction transaction = deletedEntry.getTransaction();
 
 		// Update the list of child entries in the
 		// DisplayableTransaction object.
@@ -2280,7 +2268,7 @@ public class EntriesTree {
 			DisplayableTransaction dTrans1 = (DisplayableTransaction) obj1;
 			DisplayableTransaction dTrans2 = (DisplayableTransaction) obj2;
 			int result = sortProperty.compare(dTrans1, dTrans2);
-			return sortAscending ? result : -result;
+			return ascending ? result : -result;
 		}
 	}
 }

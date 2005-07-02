@@ -25,7 +25,6 @@ package net.sf.jmoney.reconciliation.reconcilePage;
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.views.NodeEditor;
 
 import org.eclipse.ui.IMemento;
@@ -47,7 +46,6 @@ public class ReconcileBookkeepingPage implements IBookkeepingPageFactory {
     	// Create the page only if the properties for this account
     	// indicate that this account has statements that can be
     	// reconciled.
-    	CurrencyAccount account = (CurrencyAccount) editor.getSelectedObject();
     	ReconcilePage formPage = new ReconcilePage(editor);
     	
     	try {

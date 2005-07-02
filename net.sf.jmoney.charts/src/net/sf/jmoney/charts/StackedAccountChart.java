@@ -17,14 +17,13 @@ import org.jfree.data.time.RegularTimePeriod;
 
 public class StackedAccountChart extends StackedChart {
 
+    private static final long serialVersionUID = 83591871943261555L;
+
     public StackedAccountChart(String title, Session session, StackedChartParameters params) {
         super(title, session, params);
     }
 
     protected CategoryDataset createValues(Session session) {
-        long saldo = 0;
-        Date[] dates;
-        int numberOfAccounts = 0;
         int numberOfPeriods;
         List listAccounts;
         long totalValue = 0;
@@ -63,8 +62,6 @@ public class StackedAccountChart extends StackedChart {
                     Util.getSubAccountsUntilLevel(acc, params.maxLevel)
                     );
         }
-        
-        numberOfAccounts = listAccounts.size();
         
         // Now, enter the values in our table
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();

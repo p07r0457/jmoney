@@ -43,8 +43,6 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     private EntriesPage fPage;
     private EntriesTree fEntriesControl;
     
-    private FormToolkit toolkit;
-    
     private EntryRowSelectionListener tableSelectionListener = null;
     
     public EntriesSection(EntriesPage page, Composite parent) {
@@ -59,7 +57,6 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     }
 
     protected void createClient(FormToolkit toolkit) {
-    	this.toolkit = toolkit;
     	
     	tableSelectionListener = new EntryRowSelectionAdapter() {
     		public void widgetSelected(IDisplayableItem selectedObject) {

@@ -434,10 +434,9 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			container.setLayout(layout);
 			container.setLayoutData(new GridData());
 
-			Label label = toolkit.createLabel(
-					container, 
-					CurrencyPagePlugin.getResourceString("CurrencyPage.isoCurrencyList"), //$NON-NLS-1$ 
-					SWT.NONE);
+			toolkit.createLabel(container, CurrencyPagePlugin
+                    .getResourceString("CurrencyPage.isoCurrencyList"), //$NON-NLS-1$ 
+                    SWT.NONE);
 
 			Table table = toolkit.createTable(container, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL);
 			GridData gd = new GridData(GridData.FILL_BOTH);
@@ -599,7 +598,8 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			container.setLayout(layout);
 			container.setLayoutData(new GridData(GridData.FILL_BOTH));
 			
-			Label label = toolkit.createLabel(container, CurrencyPagePlugin.getResourceString("CurrencyPage.selectedList"), SWT.NONE); //$NON-NLS-1$ 
+			toolkit.createLabel(container, CurrencyPagePlugin
+                    .getResourceString("CurrencyPage.selectedList"), SWT.NONE); //$NON-NLS-1$ 
 
 			Table table = toolkit.createTable(container, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL);
 			GridData gd = new GridData(GridData.FILL_BOTH);
@@ -607,13 +607,12 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			gd.heightHint = 200;
 			table.setLayoutData(gd);
 
-	        TableColumn col;
 	        TableLayout tlayout = new TableLayout();
 	        
-	        col = new TableColumn(table, SWT.LEFT);
+	        new TableColumn(table, SWT.LEFT);
 	        tlayout.addColumnData(new ColumnWeightData(1, 100));
 
-	        col = new TableColumn(table, SWT.LEFT);
+	        new TableColumn(table, SWT.LEFT);
 	        tlayout.addColumnData(new ColumnWeightData(0, 70));
 
 	        table.setLayout(tlayout);

@@ -79,8 +79,7 @@ public class SimpleListManager extends Vector implements IListManager {
 		// any lists within the object.
 		
 		// Add a list manager for each list property in the object.
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); iter.next()) {
 			constructorParameters[index++] = new SimpleListManager(sessionManager);
 		}
 		
@@ -128,12 +127,10 @@ public class SimpleListManager extends Vector implements IListManager {
 		
 		Map extensionMap = new HashMap();
 		
-		int index = 0;
 		if (!propertySet.isExtension()) {
 			constructorParameters[0] = objectKey;
 			constructorParameters[1] = extensionMap;
 			constructorParameters[2] = parent.getObjectKey();
-			index = 3;
 		}
 		
 		int indexIntoValues = 0;

@@ -339,12 +339,10 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		IExtensionPoint extensionPoint = registry.getExtensionPoint("net.sf.jmoney.reconciliation.bankstatements");
 		IExtension[] extensions = extensionPoint.getExtensions();
 		
-		int count = 0;
 		for (int i = 0; i < extensions.length; i++) {
 			IConfigurationElement[] elements = extensions[i].getConfigurationElements();
 			for (int j = 0; j < elements.length; j++) {
 				if (elements[j].getName().equals("statement-source")) {
-					String id = elements[j].getAttribute("id");
 					String description = elements[j].getAttribute("description");
 					
 					MenuItem menuItem = new MenuItem(menu, SWT.PUSH);
