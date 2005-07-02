@@ -1,0 +1,26 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Jmoney Plug-in
+Bundle-SymbolicName: net.sf.jmoney; singleton:=true
+Bundle-Version: 1.0.0
+Bundle-ClassPath: jmoney.jar,
+ swtcalendar-0.4.0.jar
+Bundle-Activator: net.sf.jmoney.JMoneyPlugin
+Bundle-Localization: plugin
+Export-Package: net.sf.jmoney,
+ net.sf.jmoney.actions,
+ net.sf.jmoney.fields,
+ net.sf.jmoney.intro,
+ net.sf.jmoney.isolation,
+ net.sf.jmoney.model2,
+ net.sf.jmoney.pages.accountProperties,
+ net.sf.jmoney.pages.entries,
+ net.sf.jmoney.popup.actions,
+ net.sf.jmoney.preferences,
+ net.sf.jmoney.resources,
+ net.sf.jmoney.views,
+ org.vafada.swtcalendar
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.ui.forms
+Eclipse-AutoStart: true

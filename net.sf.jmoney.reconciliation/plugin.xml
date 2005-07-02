@@ -1,25 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
-<plugin
-   id="net.sf.jmoney.reconciliation"
-   name="Reconciliation Plug-in"
-   version="1.0.0"
-   provider-name=""
-   class="net.sf.jmoney.reconciliation.ReconciliationPlugin">
+<plugin>
 
-   <runtime>
-      <library name="reconciliation.jar">
-         <export name="*"/>
-      </library>
-   </runtime>
-   <requires>
-      <import plugin="net.sf.jmoney"/>
-      <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="org.eclipse.ui"/>
-      <import plugin="org.eclipse.ui.forms"/>
-   </requires>
-
-   <extension-point id="bankstatements" name="Bank Statements" schema="schema/bankStatements.exsd"/>
+     <extension-point id="bankstatements" name="Bank Statements" schema="schema/bankStatements.exsd"/>
 
    <extension
          point="net.sf.jmoney.pages">

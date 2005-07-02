@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Categories Panel Plug-in
+Bundle-SymbolicName: net.sf.jmoney.categoriespanel; singleton:=true
+Bundle-Version: 1.0.0
+Bundle-ClassPath: categoriespanel.jar
+Bundle-Activator: net.sf.jmoney.categoriespanel.CategoriesPanelPlugin
+Bundle-Vendor: JMoney
+Bundle-Localization: plugin
+Export-Package: net.sf.jmoney.bookkeepingPages,
+ net.sf.jmoney.categoriespanel
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ net.sf.jmoney,
+ org.eclipse.ui.forms
+Eclipse-AutoStart: true

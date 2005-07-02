@@ -1,41 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
-<plugin
-   id="net.sf.jmoney.reports"
-   name="Reports Plug-in"
-   version="1.0.0"
-   provider-name="JMoney"
-   class="net.sf.jmoney.reports.ReportsPlugin">
+<plugin>
 
-   <runtime>
-      <library name="reports.jar">
-         <export name="*"/>
-      </library>
-      <library name="lib/jasperreports-0.6.1.jar">
-         <export name="*"/>
-      </library>
-      <library name="lib/commons-logging.jar">
-         <export name="*"/>
-      </library>
-      <library name="lib/commons-beanutils.jar">
-         <export name="*"/>
-      </library>
-      <library name="lib/commons-collections-3.0.jar">
-         <export name="*"/>
-      </library>
-      <library name="lib/swtjasperviewer-1.0.0.jar">
-         <export name="*"/>
-      </library>
-   </runtime>
-   <requires>
-      <import plugin="org.eclipse.ui"/>
-      <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="net.sf.jmoney"/>
-      <import plugin="org.eclipse.ui.forms"/>
-   </requires>
-
-
-   <extension
+     <extension
          point="net.sf.jmoney.pages">
       <node
             id="reportsNode"

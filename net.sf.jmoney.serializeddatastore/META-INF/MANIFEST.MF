@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Serialized Datastore Plug-in
+Bundle-SymbolicName: net.sf.jmoney.serializeddatastore; singleton:=true
+Bundle-Version: 1.0.0
+Bundle-ClassPath: serializeddatastore.jar
+Bundle-Activator: org.eclipse.core.internal.compatibility.PluginActivator
+Bundle-Vendor: Nigel Westbury
+Bundle-Localization: plugin
+Export-Package: net.sf.jmoney.gui,
+ net.sf.jmoney.model,
+ net.sf.jmoney.serializeddatastore,
+ net.sf.jmoney.serializeddatastore.actions,
+ net.sf.jmoney.serializeddatastore.formats
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime.compatibility,
+ net.sf.jmoney
+Eclipse-AutoStart: true
+Plugin-Class: net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin
