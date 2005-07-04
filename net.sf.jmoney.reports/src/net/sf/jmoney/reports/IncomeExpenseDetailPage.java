@@ -243,7 +243,7 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 						updateFromAndTo();
 					}
 					
-					boolean subtotals = new Boolean(memento.getString("subtotals")).booleanValue();
+					// boolean subtotals = new Boolean(memento.getString("subtotals")).booleanValue();
 				}
 				
 				return control;
@@ -405,25 +405,19 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 	}
 
 	private Collection getItems() {
-		Vector allItems = new Vector();
-		
-		/**
-		 * Map Commodity to HashMap,
-		 * where each HashMap maps IncomeExpenseAccount to Item 
-		 */
-		HashMap byCurrency = new HashMap();
+        Vector allItems = new Vector();
 
-			for (Iterator eIt = account.getEntries().iterator(); eIt.hasNext(); ) {
-				Entry e = (Entry) eIt.next();
-				if (accept(e)) {
-						Item i = new Item(account, e);
-						allItems.add(i);
-				}
-			}
+        for (Iterator eIt = account.getEntries().iterator(); eIt.hasNext();) {
+            Entry e = (Entry) eIt.next();
+            if (accept(e)) {
+                Item i = new Item(account, e);
+                allItems.add(i);
+            }
+        }
 
-		Collections.sort(allItems);
-		return allItems;
-	}
+        Collections.sort(allItems);
+        return allItems;
+    }
 
 	private boolean accept(Entry e) {
 		return acceptFrom(e.getTransaction().getDate()) && acceptTo(e.getTransaction().getDate());

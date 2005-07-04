@@ -242,7 +242,7 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 						updateFromAndTo();
 					}
 					
-					boolean subtotals = new Boolean(memento.getString("subtotals")).booleanValue();
+					// boolean subtotals = new Boolean(memento.getString("subtotals")).booleanValue();
 				}
 				
 				return control;
