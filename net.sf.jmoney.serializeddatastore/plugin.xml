@@ -2,7 +2,7 @@
 <?eclipse version="3.0"?>
 <plugin>
 
-     <extension-point id="filestores" name="File Storage Formats" schema="schema/filestores.exsd"/>
+   <extension-point id="filestores" name="File Storage Formats" schema="schema/filestores.exsd"/>
 
    <extension
          point="org.eclipse.ui.actionSets">
@@ -61,15 +61,15 @@
    <extension
          point="net.sf.jmoney.serializeddatastore.filestores">
         <file-format
-           id="xmlFormat" 
-           file-pattern="*.xml" 
-           format-description="JMoney in uncompressed xml" 
-           class="net.sf.jmoney.serializeddatastore.formats.JMoneyXmlFormat">
-        </file-format> 
-        <file-format
            id="jmxFormat" 
            file-pattern="*.jmx" 
            format-description="JMoney files" 
+           class="net.sf.jmoney.serializeddatastore.formats.JMoneyXmlFormat">
+        </file-format> 
+        <file-format
+           id="xmlFormat" 
+           file-pattern="*.xml" 
+           format-description="JMoney in uncompressed xml" 
            class="net.sf.jmoney.serializeddatastore.formats.JMoneyXmlFormat">
         </file-format> 
    </extension>
