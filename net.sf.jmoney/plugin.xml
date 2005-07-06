@@ -11,14 +11,14 @@
       point="org.eclipse.core.runtime.products"
       id="product">
       <product
-         name="JMoney RCP"
-         application="net.sf.jmoney.JMoneyApplication">
+            application="net.sf.jmoney.JMoneyApplication"
+            name="JMoney RCP">
          <property
-             name="windowImages" 
-             value="icons/accounts.gif"/>
+               name="windowImages"
+               value="icons/accounts.gif"/>
          <property
-             name="appName" 
-             value="JMoney RCP"/>
+               name="appName"
+               value="JMoney RCP"/>
       </product>          
    </extension>
     
