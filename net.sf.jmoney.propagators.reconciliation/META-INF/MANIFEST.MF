@@ -3,9 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Reconciliation Property Propagator Plug-in
 Bundle-SymbolicName: net.sf.jmoney.propagators.reconciliation; singleton:=true
 Bundle-Version: 1.0.0
-Bundle-ClassPath: reconciliationPropagator.jar
 Bundle-Activator: net.sf.jmoney.propagators.reconciliation.ReconciliationPropagatorPlugin
-Bundle-Vendor: JMoney
 Bundle-Localization: plugin
 Export-Package: net.sf.jmoney.propagators.reconciliation
 Require-Bundle: org.eclipse.core.runtime,

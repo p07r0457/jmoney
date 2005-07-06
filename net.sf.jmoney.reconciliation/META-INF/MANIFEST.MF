@@ -3,7 +3,6 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Reconciliation Plug-in
 Bundle-SymbolicName: net.sf.jmoney.reconciliation; singleton:=true
 Bundle-Version: 1.0.0
-Bundle-ClassPath: reconciliation.jar
 Bundle-Activator: net.sf.jmoney.reconciliation.ReconciliationPlugin
 Bundle-Localization: plugin
 Export-Package: net.sf.jmoney.reconciliation,

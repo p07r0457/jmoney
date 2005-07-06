@@ -3,7 +3,6 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Datastore Copier Plug-in
 Bundle-SymbolicName: net.sf.jmoney.copier; singleton:=true
 Bundle-Version: 1.0.0
-Bundle-ClassPath: copier.jar
 Bundle-Activator: net.sf.jmoney.copier.CopierPlugin
 Bundle-Localization: plugin
 Export-Package: net.sf.jmoney.copier,
