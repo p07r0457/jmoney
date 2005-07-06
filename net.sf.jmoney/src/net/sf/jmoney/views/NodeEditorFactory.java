@@ -30,7 +30,6 @@ import net.sf.jmoney.model2.Session;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.ui.IElementFactory;
 import org.eclipse.ui.IMemento;
-import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 /**
  * Our sample action implements workbench action delegate.

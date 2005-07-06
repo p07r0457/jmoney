@@ -24,7 +24,6 @@
 package net.sf.jmoney.model2;
 
 import org.eclipse.ui.IMemento;
-import org.eclipse.ui.IPersistableElement;
 
 /**
  * A factory for re-creating sessions from a previously saved memento.
@@ -41,7 +40,6 @@ import org.eclipse.ui.IPersistableElement;
  * </pre>
  * </p>
  *
- * @see IPersistableElement
  * @see IMemento
  * @see org.eclipse.ui.IWorkbench#getElementFactory
  * @author Nigel Westbury

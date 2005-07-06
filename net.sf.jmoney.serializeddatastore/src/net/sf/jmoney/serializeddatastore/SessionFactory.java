@@ -29,7 +29,6 @@ import net.sf.jmoney.model2.ISessionFactory;
 
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 /**
  * Our sample action implements workbench action delegate.
@@ -37,7 +36,6 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
  * shown in the UI. When the user tries to use the action,
  * this delegate will be created and execution will be 
  * delegated to it.
- * @see IWorkbenchWindowActionDelegate
  */
 public class SessionFactory implements ISessionFactory {
 	/**

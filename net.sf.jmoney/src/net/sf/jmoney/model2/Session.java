@@ -23,7 +23,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.security.InvalidParameterException;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
