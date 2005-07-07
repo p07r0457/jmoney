@@ -25,6 +25,7 @@ package net.sf.jmoney;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.actions.ActionFactory;
@@ -37,54 +38,49 @@ import org.eclipse.ui.application.IActionBarConfigurer;
  */
 public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
 
-	private IWorkbenchAction quitAction;
+    private IWorkbenchAction quitAction;
 
-	public JMoneyActionBarAdvisor(IActionBarConfigurer configurer) {
-		super(configurer);
-	}
+    private IWorkbenchAction aboutAction;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.application.ActionBarAdvisor#makeActions(org.eclipse.ui.IWorkbenchWindow)
-	 */
-	protected void makeActions(final IWorkbenchWindow window) {
-		quitAction = ActionFactory.QUIT.create(window);
-		register(quitAction);
-	}
+    public JMoneyActionBarAdvisor(IActionBarConfigurer configurer) {
+        super(configurer);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.ui.application.ActionBarAdvisor#fillMenuBar(org.eclipse.jface.action.IMenuManager)
-	 */
-	protected void fillMenuBar(IMenuManager menuBar) {
-		menuBar.add(createFileMenu());
-		menuBar.add(createHelpMenu());
-	}
+    /* (non-Javadoc)
+     * @see org.eclipse.ui.application.ActionBarAdvisor#makeActions(org.eclipse.ui.IWorkbenchWindow)
+     */
+    protected void makeActions(final IWorkbenchWindow window) {
+        quitAction = ActionFactory.QUIT.create(window);
+        register(quitAction);
 
-	private MenuManager createFileMenu() {
-		// TODO: currently language uses MainFrame.file.mnemonic, not an
-		// ampersand.
-		MenuManager menu = new MenuManager(
-				"&File"/* Constants.LANGUAGE.getString("MainFrame.file") */,
-				IWorkbenchActionConstants.M_FILE);
-		menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_START));
-		menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		menu.add(quitAction);
-		menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_END));
-		return menu;
-	}
+        aboutAction = ActionFactory.ABOUT.create(window);
+        register(aboutAction);
+    }
 
-	private MenuManager createHelpMenu() {
-		MenuManager menu = new MenuManager(
-				"Help"/* Messages.getString("File") */, //$NON-NLS-1$
-				IWorkbenchActionConstants.M_HELP);
-		menu.add(new GroupMarker(IWorkbenchActionConstants.HELP_START));
-		menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-		menu.add(quitAction);
-		menu.add(new GroupMarker(IWorkbenchActionConstants.HELP_END));
-		return menu;
-	}
+    /* (non-Javadoc)
+     * @see org.eclipse.ui.application.ActionBarAdvisor#fillMenuBar(org.eclipse.jface.action.IMenuManager)
+     */
+    protected void fillMenuBar(IMenuManager menuBar) {
+        MenuManager fileMenu = new MenuManager("&File", IWorkbenchActionConstants.M_FILE);
+        MenuManager helpMenu = new MenuManager("&Help", IWorkbenchActionConstants.M_HELP);
+
+        menuBar.add(fileMenu);
+        menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        menuBar.add(helpMenu);
+
+        // File
+        fileMenu.add(new GroupMarker(IWorkbenchActionConstants.FILE_START));
+        fileMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        fileMenu.add(new Separator());
+        fileMenu.add(quitAction);
+        fileMenu.add(new GroupMarker(IWorkbenchActionConstants.FILE_END));
+
+        // Help
+        helpMenu.add(new GroupMarker(IWorkbenchActionConstants.HELP_START));
+        helpMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        helpMenu.add(new Separator());
+        helpMenu.add(aboutAction);
+        helpMenu.add(new GroupMarker(IWorkbenchActionConstants.HELP_END));    
+    }
 
 }
