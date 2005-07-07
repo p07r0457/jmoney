@@ -15,7 +15,7 @@
             name="JMoney RCP">
          <property
                name="windowImages"
-               value="icons/accounts.gif"/>
+               value="icons/JMoney16.gif,icons/JMoney32.gif"/>
          <property
                name="appName"
                value="JMoney RCP"/>
