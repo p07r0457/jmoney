@@ -19,6 +19,12 @@
          <property
                name="appName"
                value="JMoney RCP"/>
+         <property
+               name="aboutText"
+               value="JMoney RCP&#x0A;&#x0A;Version: 1.0&#x0A;Build Id: 2005-07-06&#x0A;&#x0A;(c) Copyright JMoney contributors and others 2000, 2005.  All rights reserved.&#x0A;Visit http://jmoney.sourceforge.net&#x0A;&#x0A;This product includes software developed by the&#x0A;Eclipse Foundation http://www.eclipse.org/"/>
+         <property
+               name="aboutImage"
+               value="icons/JMoney128.gif"/>
       </product>          
    </extension>
     
