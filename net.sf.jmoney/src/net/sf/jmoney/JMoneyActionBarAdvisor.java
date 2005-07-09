@@ -61,26 +61,47 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
      * @see org.eclipse.ui.application.ActionBarAdvisor#fillMenuBar(org.eclipse.jface.action.IMenuManager)
      */
     protected void fillMenuBar(IMenuManager menuBar) {
-        MenuManager fileMenu = new MenuManager("&File", IWorkbenchActionConstants.M_FILE);
-        MenuManager helpMenu = new MenuManager("&Help", IWorkbenchActionConstants.M_HELP);
-
-        menuBar.add(fileMenu);
+        menuBar.add(createFileMenu());
         menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-        menuBar.add(helpMenu);
+        menuBar.add(createHelpMenu());
+    }
+
+    /**
+     * Creates and returns the File menu.
+     */
+    private MenuManager createFileMenu() {
+        MenuManager menu = new MenuManager("&File", IWorkbenchActionConstants.M_FILE);
 
         // File
-        fileMenu.add(new GroupMarker(IWorkbenchActionConstants.FILE_START));
-        fileMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-        fileMenu.add(new Separator());
-        fileMenu.add(quitAction);
-        fileMenu.add(new GroupMarker(IWorkbenchActionConstants.FILE_END));
+        menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_START));
+        menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+
+        // TODO 2005-07-09/jgyger: Change to an import (export) wizard.
+        menu.add(new Separator());
+        menu.add(new MenuManager("Import", "import"));
+        menu.add(new MenuManager("Export", "export"));
+
+        menu.add(new Separator());
+        menu.add(quitAction);
+        menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_END));
+
+        return menu;
+    }   
+
+    /**
+     * Creates and returns the Help menu.
+     */
+    private MenuManager createHelpMenu() {
+        MenuManager menu = new MenuManager("&Help", IWorkbenchActionConstants.M_HELP);
 
         // Help
-        helpMenu.add(new GroupMarker(IWorkbenchActionConstants.HELP_START));
-        helpMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-        helpMenu.add(new Separator());
-        helpMenu.add(aboutAction);
-        helpMenu.add(new GroupMarker(IWorkbenchActionConstants.HELP_END));    
+        menu.add(new GroupMarker(IWorkbenchActionConstants.HELP_START));
+        menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        menu.add(new Separator());
+        menu.add(aboutAction);
+        menu.add(new GroupMarker(IWorkbenchActionConstants.HELP_END));    
+
+        return menu;
     }
 
 }

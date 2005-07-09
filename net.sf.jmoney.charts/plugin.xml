@@ -3,10 +3,6 @@
 <plugin>
 
    <extension
-         point="org.eclipse.ui.actionSets">
-   </extension>
-
-   <extension
          point="net.sf.jmoney.pages">
       <node
             id="chartsNode"

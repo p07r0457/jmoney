@@ -23,27 +23,18 @@
             label="QIF Action Set"
             visible="true"
             id="net.sf.jmoney.qif.actionSet">
-         <menu
-               label="%MainFrame.import"
-               id="importMenu">
-            <separator
-                  name="importExportGroup">
-            </separator>
-         </menu>
          <action
-               label="%MainFrame.import"
-               icon="icons/Import16.gif"
+               label="QIF File..."
                class="net.sf.jmoney.qif.actions.QIFImportAction"
                tooltip="Import Data from QIF File"
-               menubarPath="file/importExportGroup"
+               menubarPath="file/import/"
                id="net.sf.jmoney.qif.actions.QIFImport">
          </action>
          <action
-               label="%MainFrame.export"
-               icon="icons/Export16.gif"
+               label="QIF File..."
                class="net.sf.jmoney.qif.actions.QIFExportAction"
                tooltip="Export Data to a QIF File"
-               menubarPath="file/importExportGroup"
+               menubarPath="file/export/"
                id="net.sf.jmoney.qif.actions.QIFExport">
          </action>
       </actionSet>

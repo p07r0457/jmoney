@@ -7,25 +7,18 @@
       <actionSet
             label="net.sf.jmoney.gnucashXML"
             visible="true"
-            id="net.sf.jmoney.gnucashXML">
-         <menu
-               label="%MainFrame.import"
-               id="importMenu">
-            <separator name="importExportGroup"/>
-         </menu>
+            id="net.sf.jmoney.gnucashXML.actionSet">
          <action
-               label="%MainFrame.import"
+               label="%import.label"
                class="net.sf.jmoney.gnucashXML.actions.GnucashXMLImportAction"
-               tooltip="Import Data from a GnuCash XML file"
-               icon="icons/Import16.gif"
-               menubarPath="file/importExportGroup"
+               tooltip="%import.tooltip"
+               menubarPath="file/import/"
                id="net.sf.jmoney.gnucashXML.actions.gnucashXMLImport"/>
          <action
-               label="%MainFrame.export"
+               label="%export.label"
                class="net.sf.jmoney.gnucashXML.actions.GnucashXMLExportAction"
-               tooltip="Export Data into a GnuCash XML file"
-               icon="icons/Export16.gif"
-               menubarPath="file/importExportGroup"
+               tooltip="%export.tooltip"
+               menubarPath="file/export/"
                id="net.sf.jmoney.gnucashXML.actions.gnucashXMLExport"/>
       </actionSet>
    </extension>
