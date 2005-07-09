@@ -624,16 +624,20 @@ public class PropertyAccessor {
 	 * @return
 	 */
 	public IPropertyDependency getFalseValueDependency() {
-		if (propertyClass != boolean.class) {
-			throw new MalformedPluginException("getTrueValueDependency called on property that is not a boolean.");
-		}
-		
-		return new IPropertyDependency() {
-			public boolean isSelected(ExtendableObject object) {
-				return !object.getBooleanPropertyValue(PropertyAccessor.this);
-			}
-		};
-	}
+        if (propertyClass != boolean.class) {
+            throw new MalformedPluginException(
+                    "getTrueValueDependency called on property that is not a boolean.");
+        }
+
+        return new IPropertyDependency() {
+            public boolean isSelected(ExtendableObject object) {
+                if (object == null) {
+                    return false;
+                }
+                return !object.getBooleanPropertyValue(PropertyAccessor.this);
+            }
+        };
+    }
 
 	/**
 	 * Returns an object that indicates whether this property is applicable,

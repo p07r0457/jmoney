@@ -593,22 +593,25 @@ public class CategoryPage implements IBookkeepingPageFactory {
 	}
 	
 	class ViewLabelProvider extends LabelProvider {
-		
-		public String getText(Object obj) {
-			if (obj instanceof Account) {
-				return ((Account)obj).getName();
-			} else {
-				return "unknown object";
-			}
-		}
-		public Image getImage(Object obj) {
-			if (obj instanceof Account) {
-				return Constants.CATEGORY_ICON;
-			} else {
-				throw new RuntimeException("");
-			}
-		}
-	}
+
+        public String getText(Object obj) {
+            if (obj instanceof Account) {
+                String name = ((Account) obj).getName();
+                return name == null? "(unknown account name)": name;
+            } else {
+                return "(unknown object)";
+            }
+        }
+
+        public Image getImage(Object obj) {
+            if (obj instanceof Account) {
+                return Constants.CATEGORY_ICON;
+            } else {
+                throw new RuntimeException("");
+            }
+        }
+
+    }
 	
 	class NameSorter extends ViewerSorter {
 	}
