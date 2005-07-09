@@ -22,15 +22,6 @@
 
 package net.sf.jmoney;
 
-import java.io.OutputStream;
-import java.io.PrintStream;
-
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
@@ -62,85 +53,30 @@ public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
         return  new JMoneyWorkbenchWindowAdvisor(configurer);
     }
     
-		public void initialize(IWorkbenchConfigurer configurer) {
-			super.initialize(configurer);
+    public void initialize(IWorkbenchConfigurer configurer) {
+        super.initialize(configurer);
 
-			// Turn on support for the saving and restoring of
-			// view states through IMemento interfaces.
-			configurer.setSaveAndRestore(true);
-		}
+        // Turn on support for the saving and restoring of
+        // view states through IMemento interfaces.
+        configurer.setSaveAndRestore(true);
+    }
 
-		public boolean preWindowShellClose(IWorkbenchWindowConfigurer configurer) {
-			// If a session is open, ensure we have all the information we
-			// need to close it.  Some datastores need additional information
-			// to save the session.  For example the serialized XML datastore
-			// requires a file name which will not have been requested from the
-			// user if the datastore has not yet been saved.
-			
-			// This call must be done here for two reasons.
-			// 1. It ensures that the session data can be saved.
-			// 2. The navigation view saves, as part of its state,
-			//    the datastore which was open when the workbench was
-			//    last shut down, allowing it to open the same session
-			//    when the workbench is next opened.  In order to do this,
-			//    the navigation view saves the session details.
+    public boolean preWindowShellClose(IWorkbenchWindowConfigurer configurer) {
+        // If a session is open, ensure we have all the information we
+        // need to close it. Some datastores need additional information
+        // to save the session. For example the serialized XML datastore
+        // requires a file name which will not have been requested from the
+        // user if the datastore has not yet been saved.
 
-			return JMoneyPlugin.getDefault().saveOldSession(configurer.getWindow());
-		}
-		
-		/**
-		 * Display a window with an error message when an exception take place
-		 * inside the code of JMoney.
-		 * @author Faucheux
-		 */
-		public void eventLoopException(Throwable exception) {
-		    super.eventLoopException(exception);
-	        Shell shell = new Shell(SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.RESIZE);
-	        String errorString = ExceptionToString(exception);
-	        // JobStatus jobStatus = new JobStatus(Status.ERROR, (Job) null,  "Following error has taken place: " + exception.getLocalizedMessage());
-	        // ErrorDialog dialog = new ErrorDialog (shell, "An error occured", "Following error has taken place: " + exception.getLocalizedMessage(), jobStatus, Status.ERROR);
+        // This call must be done here for two reasons.
+        // 1. It ensures that the session data can be saved.
+        // 2. The navigation view saves, as part of its state,
+        // the datastore which was open when the workbench was
+        // last shut down, allowing it to open the same session
+        // when the workbench is next opened. In order to do this,
+        // the navigation view saves the session details.
 
-	        // Preparation of the dialog box
-	        Composite transactionArea = new Composite(shell, 0);
-	        GridLayout sectionLayout = new GridLayout();
-	        sectionLayout.numColumns = 1;
-	        sectionLayout.marginHeight = 0;
-	        sectionLayout.marginWidth = 0;
-	        shell.setLayout(sectionLayout);
+        return JMoneyPlugin.getDefault().saveOldSession(configurer.getWindow());
+    }
 
-	        GridLayout transactionAreaLayout = new GridLayout(1, false);
-	        transactionArea.setLayout(transactionAreaLayout);
-	        transactionArea.setLayoutData(new GridData(GridData.FILL_BOTH));
-	        
-	        Label label = (new Label(transactionArea, SWT.LEFT));
-	        label.setText(errorString);
-	        label.setEnabled(true);
-	        shell.pack();
-	        shell.open();
-		}
-		
-		/**
-		 * Create a String wich documents the exception.
-		 * Sorry, I haven't found another way...
-		 * @author Faucheux
-		 */
-		private String ExceptionToString (Throwable e) {
-		    final int STRING_MAX_SIZE = 5000;
-		    final byte[] s = new byte[STRING_MAX_SIZE];
-		    PrintStream p = new PrintStream (new OutputStream() {
-		        int pointer = 0;
-		        public void write (int character) {
-		            if (pointer < STRING_MAX_SIZE) {
-		                s[pointer++] = (byte) character;
-		            }
-		        }
-		        public void close () {
-		            s[pointer++] = '\0';
-		        }
-		    });
-		    e.printStackTrace(p);
-		    p.close();
-		    
-		    return new String(s);
-		}
 }
