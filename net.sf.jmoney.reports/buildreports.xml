@@ -4,8 +4,6 @@
 Compiles the Jasper report designs (XML) into .jasper files
 
 NOTE: "eclipse.home" must be set prior to calling this build script.
-If this build script is run as an Eclipse build task then this will
-be set by Eclipse.
 	</description>
 
 	<path id="classpath">
