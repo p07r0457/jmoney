@@ -111,7 +111,7 @@ public abstract class Account extends ExtendableObject {
 	}
 
 	boolean deleteSubAccount(Account subAccount) {
-		return subAccounts.remove(subAccount);
+		return getSubAccountCollection().remove(subAccount);
 	}
 	
 	/**
