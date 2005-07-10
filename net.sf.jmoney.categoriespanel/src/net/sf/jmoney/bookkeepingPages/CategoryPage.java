@@ -78,6 +78,7 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
 
 /**
  * @author Nigel Westbury
+ * @author Johann Gyger
  */
 public class CategoryPage implements IBookkeepingPageFactory {
 	
@@ -203,16 +204,12 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			}
 			
 			public void objectDeleted(ExtendableObject deletedObject) {
-				if (deletedObject instanceof IncomeExpenseAccount) {
-					IncomeExpenseAccount deletedAccount = (IncomeExpenseAccount)deletedObject;
-					Account parent = deletedAccount.getParent();
-					if (parent == null) {
-						viewer.refresh(session, false);
-					} else {
-						viewer.refresh(parent, false);
-					}
-				}
-			}
+                if (deletedObject instanceof IncomeExpenseAccount) {
+                    IncomeExpenseAccount deletedAccount = (IncomeExpenseAccount) deletedObject;
+                    viewer.setSelection(null);
+                    viewer.remove(deletedAccount);
+                }
+            }
 			
 			public void objectChanged(ExtendableObject changedObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 				if (changedObject instanceof IncomeExpenseAccount) {
@@ -262,7 +259,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			layout.numColumns = 2;
 			topLevelControl.setLayout(layout);
 			
-			viewer = new TreeViewer(topLevelControl, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+			viewer = new TreeViewer(topLevelControl, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL);
 			
 			GridData gridData = new GridData();
 			gridData.horizontalAlignment = GridData.FILL;
@@ -279,7 +276,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			viewer.setSorter(new NameSorter());
 			
 			viewer.setInput(session);
-			
+
 			// Listen for changes to the category list.
 			JMoneyPlugin.getDefault().addSessionChangeListener(listener);
 			//		viewer.expandAll();
@@ -294,26 +291,13 @@ public class CategoryPage implements IBookkeepingPageFactory {
 					}
 					
 					// Set the new selection
-					if(event.getSelection().isEmpty()) {
-						selectedAccount = null;
-					} else if(event.getSelection() instanceof IStructuredSelection) {
-						IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-						for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-							Object selectedObject = iterator.next();
-							if (selectedObject instanceof IncomeExpenseAccount) {
-								selectedAccount = (IncomeExpenseAccount)selectedObject;
-							} else {
-								selectedAccount = null;
-							}
-							break;
-						}
-					}
+                    IStructuredSelection selection = (IStructuredSelection) event.getSelection();
+                    selectedAccount = (IncomeExpenseAccount) selection.getFirstElement();
 					
 					// Set the values from the account object into the control fields,
 					// or disable the controls if the account is null.
 					for (Iterator iter = propertyList.iterator(); iter.hasNext(); ) {
 						PropertyControls propertyControls = (PropertyControls)iter.next();
-						
 						propertyControls.load(selectedAccount);
 					}
 				}
@@ -421,88 +405,61 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			site.registerContextMenu(menuMgr, viewer);
 		}
 		
-		private void fillContextMenu(IMenuManager manager) {
-			manager.add(newAccountAction);
-			manager.add(newSubAccountAction);
-			manager.add(deleteAccountAction);
-			
-			manager.add(new Separator());
-			
-			// Add a menu item for IncomeExpenseAccount editor
-			if (editorAction != null) {
-				manager.add(editorAction);
-			}
-			
-			manager.add(new Separator());
-			
-			// Other plug-ins can contribute their actions here
-			manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
-		}
+        private void fillContextMenu(IMenuManager manager) {
+            manager.add(newAccountAction);
+            if (selectedAccount != null) {
+                manager.add(newSubAccountAction);
+                manager.add(deleteAccountAction);
+            }
+
+            manager.add(new Separator());
+
+            // Add a menu item for IncomeExpenseAccount editor
+            if (selectedAccount != null && editorAction != null) {
+                manager.add(editorAction);
+            }
+
+            manager.add(new Separator());
+
+            // Other plug-ins can contribute their actions here
+            manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
+        }
 		
-		private void makeActions() {
+        private void makeActions() {
 			newAccountAction = new Action() {
-				public void run() {
-					//Session session = JMoneyPlugin.getDefault().getSession();
-					
-					IncomeExpenseAccount account = (IncomeExpenseAccount)session.createAccount(IncomeExpenseAccountInfo.getPropertySet());
-					account.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-					session.registerUndoableChange("add new category");
-					
-					// Having added the new account, set it as the selected
-					// account in the tree viewer.
-					viewer.setSelection(new StructuredSelection(account), true);
-				}
-			};
-			newAccountAction.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-			newAccountAction.setToolTipText("New category tooltip");
-			//	newAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-			//			getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
-			
-			newSubAccountAction = new Action() {
-				public void run() {
-					//Session session = JMoneyPlugin.getDefault().getSession();
-					IncomeExpenseAccount account = null;
-					IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-					for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-						Object selectedObject = iterator.next();
-						account = (IncomeExpenseAccount)selectedObject;
-						break;
-					}
-					if (account != null) {
-						IncomeExpenseAccount subAccount = (IncomeExpenseAccount)((IncomeExpenseAccount)account).createSubAccount();
-						subAccount.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-						session.registerUndoableChange("add new category");
-						
-						// Having added the new account, set it as the selected
-						// account in the tree viewer.
-						viewer.setSelection(new StructuredSelection(subAccount), true);
-					}
-				}
-			};
+                public void run() {
+                    IncomeExpenseAccount account = (IncomeExpenseAccount) session.createAccount(IncomeExpenseAccountInfo
+                            .getPropertySet());
+                    account.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
+                    session.registerUndoableChange("add new category");
+                    viewer.setSelection(new StructuredSelection(account), true);
+                }
+            };
+            newAccountAction.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
+            newAccountAction.setToolTipText("New category tooltip");
+
+            newSubAccountAction = new Action() {
+                public void run() {
+                    if (selectedAccount != null) {
+                        IncomeExpenseAccount subAccount = selectedAccount.createSubAccount();
+                        subAccount.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
+                        session.registerUndoableChange("add new category");
+                        viewer.setSelection(new StructuredSelection(subAccount), true);
+                    }
+                }
+            };
 			newSubAccountAction.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.newSubcategory"));
 			newSubAccountAction.setToolTipText("New category tooltip");
-			//	newSubAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-			//			getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
 			
 			deleteAccountAction = new Action() {
 				public void run() {
-					//Session session = JMoneyPlugin.getDefault().getSession();
-					IncomeExpenseAccount account = null;
-					IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-					for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-						Object selectedObject = iterator.next();
-						account = (IncomeExpenseAccount)selectedObject;
-						break;
-					}
-					if (account != null) {
-						session.deleteAccount(account);
+					if (selectedAccount != null) {
+						session.deleteAccount(selectedAccount);
 					}
 				}
 			};
 			deleteAccountAction.setText(CategoriesPanelPlugin.getResourceString("CategoryPanel.deleteCategory"));
 			deleteAccountAction.setToolTipText("Delete category tooltip");
-			//	deleteAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-			//		getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
 
 			if (!IncomeExpenseAccountInfo.getPropertySet().getPageFactories().isEmpty()) {
 				editorAction = new Action() {
