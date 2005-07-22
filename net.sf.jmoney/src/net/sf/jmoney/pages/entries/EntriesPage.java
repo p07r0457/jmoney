@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.IBookkeepingPage;
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
@@ -213,6 +214,40 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         		}
         		
         		// Not a multi-currency account, so property not applicable.
+        		return null;
+        	}
+        });
+
+        /*
+		 * Add the column which shows the amount of the foreign currency.
+		 * This field is blank unless:
+		 * - The transaction is a simple transaction (i.e. is displayed on
+		 * a single line with no child rows).
+		 * - The currency of the income and expense amount is different
+		 * from the currency in this bank account.  This may be because
+		 * the income and expense account is limited to entries in a single
+		 * currency or it may be that the user chose a different currency
+		 * for the income and expense amount.
+		 * 
+		 * This amount is always show without a sign (the sign can be
+		 * determined from whether the other currency amount is in
+		 * the credit or debit column).
+		 */
+        allEntryDataObjects.add(new EntriesSectionProperty(EntryInfo.getAmountAccessor(), "other") {
+        	public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
+        		if (data instanceof DisplayableTransaction) {
+        			DisplayableTransaction dTrans = (DisplayableTransaction)data;
+        			if (!dTrans.hasSplitEntries()) {
+        				Entry entry = data.getEntryForOtherFields();
+        				if (entry != null
+        				&& entry.getAccount() instanceof IncomeExpenseAccount
+        				&& !JMoneyPlugin.areEqual(entry.getCommodity(), account.getCurrency())) {
+        					return entry;
+        				}
+        			}
+        		}
+        		
+        		// If we get here, the property is not applicable for this entry.
         		return null;
         	}
         });

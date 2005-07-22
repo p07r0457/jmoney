@@ -524,7 +524,7 @@ public class EntriesTree {
 				if (event.button == 1) {
 					IDisplayableItem data = (IDisplayableItem)item.getData();
 
-					if (!checkAndCommitTransaction(data.getTransaction())) {
+					if (!checkAndCommitTransaction(data)) {
 						return;
 					}
 					
@@ -703,7 +703,7 @@ public class EntriesTree {
         			ignoreSelectionEvent = false;
     			} else {
     				IDisplayableItem data = (IDisplayableItem)event.item.getData();
-    				if (!checkAndCommitTransaction(data.getTransaction())) {
+    				if (!checkAndCommitTransaction(data)) {
     					return;
     				}
                		
@@ -729,7 +729,7 @@ public class EntriesTree {
 				previouslySelectedItem = null;
 				
 				IDisplayableItem data = (IDisplayableItem)event.item.getData();
-				if (!checkAndCommitTransaction(data.getTransaction())) {
+				if (!checkAndCommitTransaction(data)) {
 					return;
 				}
 				
@@ -940,17 +940,33 @@ public class EntriesTree {
 	 *         in a different transaction and there are errors in the previous
 	 *         transaction that must be corrected by the user.
 	 */
-	protected boolean checkAndCommitTransaction(Transaction newTransaction) {
+	protected boolean checkAndCommitTransaction(IDisplayableItem newData) {
 		if (previouslySelectedItem == null) {
 			return true;
 		}
 		
-		Transaction previousTransaction =
-			(previouslySelectedItem == null)
-			? null
-					: ((IDisplayableItem)previouslySelectedItem.getData()).getTransaction();
+		DisplayableTransaction previousTransData;
+		Object previousData = previouslySelectedItem.getData();
+		if (previousData instanceof DisplayableTransaction) {
+			previousTransData = (DisplayableTransaction)previousData;
+		} else if (previousData instanceof DisplayableEntry) {
+			previousTransData = ((DisplayableEntry)previousData).transactionData;
+		} else {
+			throw new RuntimeException("can this be thrown???");
+		}
 		
-		if (!JMoneyPlugin.areEqual(newTransaction, previousTransaction)) {
+		Transaction previousTransaction = previousTransData.getTransaction();
+		
+		DisplayableTransaction newTransData;
+		if (newData instanceof DisplayableTransaction) {
+			newTransData = (DisplayableTransaction)newData;
+		} else if (newData instanceof DisplayableEntry) {
+			newTransData = ((DisplayableEntry)newData).transactionData;
+		} else {
+			throw new RuntimeException("can this be thrown???");
+		}
+		
+		if (newTransData != previousTransData) {
 			// We have moved to a different transaction.
 
 			// If changes have been made then check they are valid and ask
@@ -960,7 +976,11 @@ public class EntriesTree {
 
 				String message = null;
 				TreeItem itemWithError = null;
-
+				
+				long totalAmount = 0;
+				Commodity commodity = null;
+				boolean mixedCommodities = false;
+				
 				TreeItem parentItem = (previouslySelectedItem.getData() instanceof DisplayableTransaction)
 				? previouslySelectedItem
 						: previouslySelectedItem.getParentItem();
@@ -974,8 +994,42 @@ public class EntriesTree {
 						if (entry.getAccount() == null) {
 							message = "A category must be selected.";
 							itemWithError = lookupSplitEntry(parentItem, entry);
-						}									
+						}
+						
+						if (commodity == null) {
+							commodity = entry.getCommodity();
+						} else if (!commodity.equals(entry.getCommodity())) {
+							mixedCommodities = true;
+						}
+						
+						totalAmount += entry.getAmount();
 					}
+				}
+				
+				/*
+				 * If all the entries are in the same currency then the sum of
+				 * the entries in the transaction must add to zero. In a
+				 * transaction with child rows we display an error to the user
+				 * if the sum is not zero. However, in a simple transaction the
+				 * amount of the income and expense is not shown because it
+				 * always matches the amount of the credit or debit. The amounts
+				 * may not match if, for example, the currencies used to differ
+				 * but the user changed the category so that the currencies now
+				 * match. We present the data to the user as tho the other
+				 * amount does not exist, so we should silently correct the
+				 * amount.
+				 */
+				if (totalAmount != 0 && !mixedCommodities) {
+					if (newTransData.hasSplitEntries()) {
+						message = "The transaction does not balance.  " +
+							"Unless some entries in the transaction are in different currencies, " +
+							"the sum of all the entries in a transaction must add up to zero.";
+					} else {
+						Entry accountEntry = newTransData.getEntryForAccountFields();
+						Entry otherEntry = newTransData.getEntryForOtherFields();
+						otherEntry.setAmount(-accountEntry.getAmount());
+					}
+							
 				}
 				
 				if (message != null) {
