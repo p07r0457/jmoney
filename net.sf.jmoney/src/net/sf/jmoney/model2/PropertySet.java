@@ -218,22 +218,42 @@ public class PropertySet {
 				if (elements[j].getName().equals("extendable-property-set")) {
 					try {
 						Object listener = elements[j].createExecutableExtension("info-class");
-						if (listener instanceof IPropertySetInfo) {
-							IPropertySetInfo pageListener = (IPropertySetInfo)listener;
-							
-							String fullPropertySetId = extensions[i].getNamespace();
-							String id = elements[j].getAttribute("id");
-							if (id != null && id.length() != 0) {
-								fullPropertySetId = fullPropertySetId + '.' + id;
-							}
-							
-							String basePropertySetId = elements[j].getAttribute("base-property-set");
-							if (basePropertySetId != null && basePropertySetId.length() == 0) {
-								basePropertySetId = null;
-							}
-							registerExtendablePropertySet(fullPropertySetId, basePropertySetId, pageListener);
+						if (!(listener instanceof IPropertySetInfo)) {
+							throw new MalformedPluginException(
+									"Plug-in " + extensions[i].getNamespace()
+									+ " extends the net.sf.jmoney.fields extension point. "
+									+ "However, the class specified by the info-class attribute "
+									+ "(" + listener.getClass().getName() + ") "
+									+ "does not implement the IPropertySetInfo interface. "
+									+ "This interface must be implemented by all classes referenced "
+									+ "by the info-class attribute.");
 						}
+
+						IPropertySetInfo pageListener = (IPropertySetInfo)listener;
+						
+						String fullPropertySetId = extensions[i].getNamespace();
+						String id = elements[j].getAttribute("id");
+						if (id != null && id.length() != 0) {
+							fullPropertySetId = fullPropertySetId + '.' + id;
+						}
+						
+						String basePropertySetId = elements[j].getAttribute("base-property-set");
+						if (basePropertySetId != null && basePropertySetId.length() == 0) {
+							basePropertySetId = null;
+						}
+						registerExtendablePropertySet(fullPropertySetId, basePropertySetId, pageListener);
 					} catch (CoreException e) {
+						if (e.getStatus().getException() instanceof ClassNotFoundException) {
+							ClassNotFoundException e2 = (ClassNotFoundException)e.getStatus().getException();
+							throw new MalformedPluginException(
+									"Plug-in " + extensions[i].getNamespace()
+									+ " extends the net.sf.jmoney.fields extension point. "
+									+ "However, the class specified by the info-class attribute "
+									+ "(" + e2.getMessage() + ") "
+									+ "could not be found. "
+									+ "The info-class attribute must specify a class that implements the "
+									+ "IPropertySetInfo interface.");
+						}
 						e.printStackTrace();
 					}
 				}
