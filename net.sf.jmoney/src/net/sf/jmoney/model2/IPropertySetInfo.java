@@ -22,10 +22,17 @@
 package net.sf.jmoney.model2;
 
 /**
- * @author Nigel
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * This interface must be implemented by all classes that implement
+ * an extension to the net.sf.jmoney.fields extension point.
+ * (All classes referenced by the info-class attribute in the
+ * extensions must implement this interface).
+ * <P>
+ * Implementations of this interface provide detailed information
+ * about the property set, including details of the properties
+ * and the implementation class that is to be used to contain
+ * the property values.
+ * 
+ * @author Nigel Westbury
  */
 public interface IPropertySetInfo {
 
