@@ -23,26 +23,12 @@
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="id" type="string">
-            <annotation>
-               <documentation>
-                  
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="name" type="string">
-            <annotation>
-               <documentation>
-                  
-               </documentation>
-            </annotation>
-         </attribute>
       </complexType>
    </element>
 
    <element name="extendable-property-set">
       <complexType>
-         <attribute name="id" type="string">
+         <attribute name="id" type="string" use="required">
             <annotation>
                <documentation>
                   The id of this property set.
@@ -52,7 +38,8 @@
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="info-class" type="string">
+         
+         <attribute name="info-class" type="string" use="required">
             <annotation>
                <documentation>
                   The class that provides detailed information
@@ -78,7 +65,7 @@
 
    <element name="extension-property-set">
       <complexType>
-         <attribute name="id" type="string">
+         <attribute name="id" type="string" use="required">
             <annotation>
                <documentation>
                   The id of this property set.
@@ -88,7 +75,7 @@
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="extendable-property-set" type="string">
+         <attribute name="extendable-property-set" type="string" use="required">
             <annotation>
                <documentation>
                   The fully qualified id of the property set
@@ -97,7 +84,7 @@
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="info-class" type="string">
+         <attribute name="info-class" type="string" use="required">
             <annotation>
                <documentation>
                   The class that provides detailed information
