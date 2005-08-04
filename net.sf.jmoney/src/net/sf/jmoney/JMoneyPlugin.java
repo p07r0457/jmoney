@@ -422,18 +422,18 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 
     // Preferences
     
-	/** 
-	 * Initializes a preference store with default preference values 
-	 * for this plug-in.
-	 */
-	protected void initializeDefaultPreferences(IPreferenceStore store) {
-		store.setDefault("dateFormat", "yyyy-MM-dd");
-	}
-	
+    /**
+     * Get the format to be used for dates.  This format is
+     * compatible with the VerySimpleDateFormat class.
+     * The format is read from the preference store.
+     */
     public String getDateFormat() {
-    	// The following line cannot return a null value because if
-    	// no value is set then the default value set in
-    	// the above initializeDefaultPreferences method will be returned.
+    	/*
+		 * The following line cannot return a null value, even if the user did
+		 * not set a value, because a default value is set. The default value is
+		 * set by by JMoneyPreferenceInitializer (an extension to the
+		 * org.eclipse.core.runtime.preferences extension point).
+		 */
     	return getPreferenceStore().getString("dateFormat");
     }
 

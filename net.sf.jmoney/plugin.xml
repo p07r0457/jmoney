@@ -49,7 +49,12 @@
 			introId="net.sf.jmoney.intro.custom"/>
 	</extension>
 
-   <extension
+	<extension
+          point="org.eclipse.core.runtime.preferences">
+		<initializer class="net.sf.jmoney.JMoneyPreferenceInitializer"/>
+	</extension>
+
+	<extension
          point="org.eclipse.ui.perspectives">
       <perspective
             name="JMoney Accounting"
