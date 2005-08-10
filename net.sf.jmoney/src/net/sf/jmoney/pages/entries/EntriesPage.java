@@ -237,7 +237,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         	public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
         		if (data instanceof DisplayableTransaction) {
         			DisplayableTransaction dTrans = (DisplayableTransaction)data;
-        			if (!dTrans.hasSplitEntries()) {
+        			if (dTrans.isSimpleEntry()) {
         				Entry entry = data.getEntryForOtherFields();
         				if (entry != null
         				&& entry.getAccount() instanceof IncomeExpenseAccount

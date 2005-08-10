@@ -537,6 +537,7 @@ public class EntriesTree {
 			           		
 			           		Transaction transaction = session.createTransaction();
 			           		Entry entry1 = transaction.createEntry();
+			           		Entry entry2 = transaction.createEntry();
 			           		
 			           		// TODO: There is so much duplicated stuff here that it
 			           		// would be better if we could get the listener to do this.
@@ -952,7 +953,9 @@ public class EntriesTree {
 		} else if (previousData instanceof DisplayableEntry) {
 			previousTransData = ((DisplayableEntry)previousData).transactionData;
 		} else {
-			throw new RuntimeException("can this be thrown???");
+			// We were not on a transaction (we were probably on the
+			// blank 'new transaction' line.
+			previousTransData = null;
 		}
 		
 		Transaction previousTransaction = previousTransData.getTransaction();
@@ -963,7 +966,9 @@ public class EntriesTree {
 		} else if (newData instanceof DisplayableEntry) {
 			newTransData = ((DisplayableEntry)newData).transactionData;
 		} else {
-			throw new RuntimeException("can this be thrown???");
+			// We are not on a transaction (we are probably on the
+			// blank 'new transaction' line.
+			newTransData = null;
 		}
 		
 		if (newTransData != previousTransData) {
@@ -1208,7 +1213,7 @@ public class EntriesTree {
 				childItems[j].dispose();
 			}
 
-			if (data.hasSplitEntries()) {
+			if (!data.isSimpleEntry()) {
 				// Case of an splitted entry. We display the transaction and
 				// account entry on the first line and the other entries of the
 				// transaction on the following ones.
@@ -1416,7 +1421,7 @@ public class EntriesTree {
 			return true;
 		}
 
-		if (transData.hasSplitEntries()) {
+		if (!transData.isSimpleEntry()) {
 			Iterator itSubEntries = transData.getSplitEntryIterator();
 			while (itSubEntries.hasNext()) {
 				Entry entry2 = (Entry) itSubEntries.next();
@@ -1510,13 +1515,52 @@ public class EntriesTree {
 		}
 
 		/**
-		 * @return
+		 * A transaction with split entries is a transaction that
+		 * has entries in three or more accounts or income and
+		 * expense categories.
 		 */
 		public boolean hasSplitEntries() {
 			return otherEntries.size() > 1
-			|| ((Entry)otherEntries.firstElement()).getAccount() instanceof CapitalAccount;
+			|| otherEntries.size() == 1 
+				&& ((Entry)otherEntries.firstElement()).getAccount() instanceof CapitalAccount;
 		}
 
+		/**
+		 * A double entry transaction is a transaction with two
+		 * entries (a credit entry and a debit entry) and where
+		 * both entries are capital accounts.
+		 * <P>
+		 * A double entry is not a special case as far as the model
+		 * is concerned.  However, it is a special case as far
+		 * as the entries list is concerned because such transactions
+		 * are displayed on two lines.  The reason why the transaction
+		 * must take two lines is that both entries will have
+		 * capital account properties such as the value date
+		 * (valuta) and a memo and thus needs two lines to display.
+		 */
+		public boolean isDoubleEntry() {
+			return otherEntries.size() == 1 
+				&& ((Entry)otherEntries.firstElement()).getAccount() instanceof CapitalAccount;
+		}
+
+		/**
+		 * A simple entry is a transaction that contains two
+		 * entries, one being a capital account and the other
+		 * being an income or expense account.  Most transactions
+		 * are simple entries.
+		 * <P>
+		 * Note that jmoney requires all transactions to have
+		 * at least two entries.  Therefore, with the rare exception
+		 * of a transaction that has two entries both of which
+		 * are income and expense accounts, all transactions will
+		 * be either a split transaction, a double entry, or a
+		 * simple entry.
+		 */
+		public boolean isSimpleEntry() {
+			return otherEntries.size() == 1 
+			&& ((Entry)otherEntries.firstElement()).getAccount() instanceof IncomeExpenseAccount;
+		}
+		
 		/**
 		 * @return
 		 */
@@ -1538,7 +1582,7 @@ public class EntriesTree {
 			 * on the top level row only if there are no child
 			 * rows.
 			 */
-			if (!hasSplitEntries()) {
+			if (isSimpleEntry()) {
 				return (Entry)otherEntries.firstElement();
 			} else {
 				return null;
@@ -1879,11 +1923,14 @@ public class EntriesTree {
 			parentItem.setText(parentIndex, p.getValueFormattedForTable(dTrans));
 		}
 
-		if (dTrans.hasSplitEntries()) {
-			// Case of an splitted entry. We display the transaction on the first line
-			// and the entries of the transaction on the following ones.
-			// However, the transaction line also holds the properties for the entry
-			// in this account, so display just the other entries underneath.
+		if (!dTrans.isSimpleEntry()) {
+			/*
+			 * Case of an splitted or double entry. We display the transaction
+			 * on the first line and the entries of the transaction on the
+			 * following ones. However, the transaction line also holds the
+			 * properties for the entry in this account, so display just the
+			 * other entries underneath.
+			 */
 			Iterator itSubEntries = dTrans.getSplitEntryIterator();
 			while (itSubEntries.hasNext()) {
 				Entry entry2 = (Entry) itSubEntries.next();
@@ -2239,7 +2286,7 @@ public class EntriesTree {
 		// If the transaction is now a simple transaction,
 		// dispose the remaining item, and update the transaction
 		// row.
-		if (!dTrans.hasSplitEntries()) {
+		if (dTrans.isSimpleEntry()) {
 			JMoneyPlugin.myAssert(parentItem.getItemCount() == 1);
 			parentItem.getItem(0).dispose();
 			updateItem(parentItem);
