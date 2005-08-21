@@ -8,7 +8,8 @@ Bundle-Localization: plugin
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.ui.forms,
- org.vafada.swtcalendar
+ org.vafada.swtcalendar,
+ org.eclipse.pde.runtime
 Export-Package: net.sf.jmoney,
  net.sf.jmoney.actions,
  net.sf.jmoney.fields,

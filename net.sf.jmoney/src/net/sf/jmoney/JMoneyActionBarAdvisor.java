@@ -22,14 +22,16 @@
 
 package net.sf.jmoney;
 
+import net.sf.jmoney.actions.ShowErrorLogAction;
+
 import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.actions.ActionFactory;
-import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 
@@ -38,9 +40,9 @@ import org.eclipse.ui.application.IActionBarConfigurer;
  */
 public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
 
-    private IWorkbenchAction quitAction;
-
-    private IWorkbenchAction aboutAction;
+    private IAction quitAction;
+    private IAction showErrorLogAction;
+    private IAction aboutAction;
 
     public JMoneyActionBarAdvisor(IActionBarConfigurer configurer) {
         super(configurer);
@@ -52,6 +54,9 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     protected void makeActions(final IWorkbenchWindow window) {
         quitAction = ActionFactory.QUIT.create(window);
         register(quitAction);
+
+        showErrorLogAction = new ShowErrorLogAction();
+        register(showErrorLogAction);
 
         aboutAction = ActionFactory.ABOUT.create(window);
         register(aboutAction);
@@ -97,6 +102,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
         // Help
         menu.add(new GroupMarker(IWorkbenchActionConstants.HELP_START));
         menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        menu.add(showErrorLogAction);
         menu.add(new Separator());
         menu.add(aboutAction);
         menu.add(new GroupMarker(IWorkbenchActionConstants.HELP_END));    
