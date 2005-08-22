@@ -519,12 +519,6 @@ public class NavigationView extends ViewPart {
 	}
 	
 	private void fillLocalToolBar(IToolBarManager manager) {
-		for (Iterator iter = newAccountActions.iterator(); iter.hasNext(); ) {
-			Action newAccountAction = (Action)iter.next();
-			manager.add(newAccountAction);
-		}
-		manager.add(deleteAccountAction);
-		manager.add(new Separator());
 		drillDownAdapter.addNavigationActions(manager);
 	}
 
