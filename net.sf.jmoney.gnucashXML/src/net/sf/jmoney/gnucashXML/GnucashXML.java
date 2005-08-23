@@ -46,7 +46,6 @@ import oracle.xml.parser.v2.DOMParser;
 import oracle.xml.parser.v2.XMLDocument;
 import oracle.xml.parser.v2.XMLElement;
 
-import org.apache.xalan.templates.OutputProperties;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -620,8 +619,9 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
         //
         transformer.setOutputProperty(OutputKeys.METHOD, "xml");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        transformer
-                .setOutputProperty(OutputProperties.S_KEY_INDENT_AMOUNT, "2");
+        // TODO org.apache.xalan.templates.OutputProperties not available in Java 1.5
+        // transformer
+        //        .setOutputProperty(OutputProperties.S_KEY_INDENT_AMOUNT, "2");
 
         Source input = new DOMSource(doc);
         Result output = new StreamResult(new File(toFile));
