@@ -7,7 +7,7 @@
       <node
           id="categoriesNode"
 	      label="%NavigationTreeModel.categories"
-    	  icon="icons/Category.gif"
+    	  icon="icons/category.gif"
     	  position="200">
       </node>
       <pages
