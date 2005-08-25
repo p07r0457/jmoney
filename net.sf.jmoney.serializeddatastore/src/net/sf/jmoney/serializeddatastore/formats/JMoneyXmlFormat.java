@@ -344,12 +344,12 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			// The classpath set in this thread is the system class path, and if that
 			// is used then XMLDecoder will not be able to find the classes specified
 			// in the XML.  We must therefore temporarily replace the classpath.
-			ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
-			Thread.currentThread().setContextClassLoader(SerializedDatastorePlugin.getDefault().getDescriptor().getPluginClassLoader());
+			// ClassLoader originalClassLoader = Thread.currentThread().getContextClassLoader();
+			// Thread.currentThread().setContextClassLoader(SerializedDatastorePlugin.getDefault().getDescriptor().getPluginClassLoader());
 			XMLDecoder dec = new XMLDecoder(bin);
 			Object newSession = dec.readObject();
 			dec.close();
-			Thread.currentThread().setContextClassLoader(originalClassLoader);            
+			// Thread.currentThread().setContextClassLoader(originalClassLoader);            
 
 			if  (!(newSession instanceof net.sf.jmoney.model.Session)) {
 				throw new CoreException(
