@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?pde version="3.1"?>
+
+<product name="JMoney RCP" id="net.sf.jmoney.product" application="net.sf.jmoney.JMoneyApplication" useFeatures="false">
+
+   <aboutInfo>
+      <image path="/net.sf.jmoney/icons/JMoney128.gif"/>
+      <text>
+         JMoney RCP
+
+Version: 1.0pre1
+
+(c) Copyright JMoney contributors and others 2000, 2005.  All rights reserved.
+Visit http://jmoney.sourceforge.net
+
+This product includes software developed by the
+Eclipse Foundation http://www.eclipse.org/
+      </text>
+   </aboutInfo>
+
+   <configIni use="default"/>
+
+   <launcherArgs>
+      <programArgs>-nl en_US</programArgs>
+   </launcherArgs>
+
+   <windowImages small="/net.sf.jmoney/icons/JMoney16.gif" large="/net.sf.jmoney/icons/JMoney32.gif"/>
+
+   <splash location="net.sf.jmoney"/>
+
+   <launcher name="jmoney">
+      <macosx icon="/net.sf.jmoney-product/icons/JMoney.icns"/>
+      <solaris/>
+      <win useIco="true">
+         <ico path="/net.sf.jmoney/icons/JMoney.ico"/>
+         <bmp/>
+      </win>
+   </launcher>
+
+   <plugins>
+      <plugin id="net.sf.jmoney"/>
+      <plugin id="net.sf.jmoney.categoriespanel"/>
+      <plugin id="net.sf.jmoney.copier"/>
+      <plugin id="net.sf.jmoney.currencypage"/>
+      <plugin id="net.sf.jmoney.gnucashXML"/>
+      <plugin id="net.sf.jmoney.propagators.reconciliation"/>
+      <plugin id="net.sf.jmoney.qif"/>
+      <plugin id="net.sf.jmoney.reconciliation"/>
+      <plugin id="net.sf.jmoney.reports"/>
+      <plugin id="net.sf.jmoney.serializeddatastore"/>
+      <plugin id="org.eclipse.core.commands"/>
+      <plugin id="org.eclipse.core.expressions"/>
+      <plugin id="org.eclipse.core.runtime"/>
+      <plugin id="org.eclipse.help"/>
+      <plugin id="org.eclipse.jface"/>
+      <plugin id="org.eclipse.osgi"/>
+      <plugin id="org.eclipse.pde.runtime"/>
+      <plugin id="org.eclipse.swt"/>
+      <plugin id="org.eclipse.swt.carbon.macosx.ppc"/>
+      <plugin id="org.eclipse.swt.gtk.linux.ppc"/>
+      <plugin id="org.eclipse.swt.gtk.linux.x86"/>
+      <plugin id="org.eclipse.swt.gtk.linux.x86_64"/>
+      <plugin id="org.eclipse.swt.gtk.solaris.sparc"/>
+      <plugin id="org.eclipse.swt.motif.aix.ppc"/>
+      <plugin id="org.eclipse.swt.motif.hpux.PA_RISC"/>
+      <plugin id="org.eclipse.swt.motif.linux.x86"/>
+      <plugin id="org.eclipse.swt.motif.solaris.sparc"/>
+      <plugin id="org.eclipse.swt.win32.win32.x86"/>
+      <plugin id="org.eclipse.ui"/>
+      <plugin id="org.eclipse.ui.carbon"/>
+      <plugin id="org.eclipse.ui.forms"/>
+      <plugin id="org.eclipse.ui.views"/>
+      <plugin id="org.eclipse.ui.workbench"/>
+      <plugin id="org.vafada.swtcalendar"/>
+   </plugins>
+
+</product>
