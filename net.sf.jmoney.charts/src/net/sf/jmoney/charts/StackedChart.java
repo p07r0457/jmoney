@@ -47,7 +47,9 @@ public abstract class StackedChart extends JFrame {
         CategoryDataset data = createValues (session);
 
         // create the chart...
-        JFreeChart chart = ChartFactory.createStackedBarChart(title,  // title
+		JFreeChart chart;
+		if (params.isStacked) {
+			chart = ChartFactory.createStackedBarChart(title,  // title
                 										"Date", // Name of the X-Axis
                 										"Amount", // Name of the Y-Axis
                                                        data,                // data
@@ -57,7 +59,20 @@ public abstract class StackedChart extends JFrame {
                                                        true   // URL
 
                                                        );
+		} else {
+			chart = ChartFactory.createBarChart(title,  // title
+					"Date", // Name of the X-Axis
+					"Amount", // Name of the Y-Axis
+                   data,                // data
+                   PlotOrientation.VERTICAL, // Orientation
+                   true,                 // include legend
+                   true,	// tooltips
+                   true   // URL
 
+                   );
+		}
+
+			
         // set the background color for the chart...
         // chart.setBackgroundPaint(Color.yellow);
 
@@ -74,6 +89,7 @@ public abstract class StackedChart extends JFrame {
         this.getContentPane().add(chartPanel);
         
         chartPanel.addChartMouseListener(new clickListener());
+		
         return chartPanel;
      }
     

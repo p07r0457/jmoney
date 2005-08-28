@@ -22,6 +22,7 @@ public class StackedChartParameters {
     public /*String*/Vector accountList;
     public Date	fromDate, toDate;
     public int maxLevel = 1;
+	public boolean isStacked = false;
     
     // Frequences of the dataes
     public static final int DAY = 0;
@@ -133,4 +134,8 @@ public class StackedChartParameters {
     public void setMaxLevel(int maxLevel) {
         this.maxLevel = maxLevel;
     }
+	
+	public void setIsStacked (boolean isStacked) {
+		this.isStacked = isStacked;
+	}
 }

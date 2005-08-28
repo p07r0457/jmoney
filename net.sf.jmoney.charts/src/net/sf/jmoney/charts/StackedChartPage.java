@@ -46,6 +46,7 @@ public class StackedChartPage implements IBookkeepingPageFactory {
     private Text fromDate, toDate, maxLevel;
     private final DateFormat df;
     private Button radPeriodDay, radPeriodMonth, radPeriodYear;
+    private Button chkIsStacked; 
     
     /**
      * Constructor
@@ -83,7 +84,11 @@ public class StackedChartPage implements IBookkeepingPageFactory {
 	    Group groupPeriod = new Group(parameterContainer, SWT.NULL);
 	    groupPeriod.setText("Period");
 	    groupPeriod.setLayout(new CellLayout(2));
-	    
+
+	    Group groupOptions = new Group(parameterContainer, SWT.NULL);
+		groupOptions.setText("Options");
+		groupOptions.setLayout(new CellLayout(2));
+
 	    Group actionGroup = new Group(parameterContainer, SWT.NULL);
 	    actionGroup.setText("Actions");
 	    actionGroup.setLayout(new CellLayout(2));
@@ -108,7 +113,12 @@ public class StackedChartPage implements IBookkeepingPageFactory {
 
 		radPeriodYear = new Button(groupPeriod, SWT.RADIO);
 		radPeriodYear.setText("Years");
-	
+		
+		// Add Options
+		chkIsStacked = new Button(groupOptions, SWT.CHECK);
+		chkIsStacked.setText("Stack the accounts on eachother");
+		chkIsStacked.setSelection(true);
+		
 		// Add the "Draw" Button
 		
 		Button drawButton = new Button(actionGroup, SWT.NULL);
@@ -118,8 +128,6 @@ public class StackedChartPage implements IBookkeepingPageFactory {
 		    public void widgetSelected (SelectionEvent e) { createChart(); }
 		});
 
-
-		
 	    return swingComposite;
 }
 
@@ -242,7 +250,8 @@ private void createChart() {
     if (radPeriodMonth.getSelection()) params.setFrequence(StackedChartParameters.MONTH);
     if (radPeriodYear.getSelection())  params.setFrequence(StackedChartParameters.YEAR);
     
-    chart = new StackedAccountChart("Chart", session, params);
+	params.setIsStacked(chkIsStacked.getSelection());
+	chart = new StackedAccountChart("Chart", session, params);
     final ChartPanel chartPanel = chart.getChartPanel();
     chartPanel.setPreferredSize(new Dimension(500,270));
     // chart.createOrUpdateValues(params);
