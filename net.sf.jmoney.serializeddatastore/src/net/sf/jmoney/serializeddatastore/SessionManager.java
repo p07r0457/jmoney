@@ -40,6 +40,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPersistableElement;
@@ -214,7 +215,7 @@ public class SessionManager implements ISessionManager {
 	 *      false if no file name was obtained.
 	 */
 	public File obtainFileName(IWorkbenchWindow window) {
-		FileDialog dialog = new FileDialog(window.getShell());
+		FileDialog dialog = new FileDialog(window.getShell(), SWT.SAVE);
 		dialog.setFilterExtensions(SerializedDatastorePlugin.getFilterExtensions());
 		dialog.setFilterNames(SerializedDatastorePlugin.getFilterNames());
 		String fileName = dialog.open();
