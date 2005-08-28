@@ -92,7 +92,7 @@ public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
 		
 		String text =  getText(t);
 		IStatus status = 
-			new Status(Status.ERROR, "Unknown Plugin" /*TODO*/, Status.ERROR,  t.getMessage(), t);
+			new Status(Status.ERROR, "Unknown Plugin" /*TODO*/, Status.OK,  new String("Uncatched error"), t);
 
 		ErrorDialog dialog = new ErrorDialog(
 				Workbench.getInstance().getWorkbenchWindows()[0].getShell(),
@@ -101,7 +101,8 @@ public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
 				status, 
 				status.getSeverity());
 		// dialog.setBlockOnOpen(true);
-		dialog.getShell().computeSize(SWT.DEFAULT,SWT.DEFAULT);
+		dialog.create();
+		dialog.getShell().setSize(dialog.getShell().computeSize(800, SWT.DEFAULT));
 		dialog.open();
 	}
 	
