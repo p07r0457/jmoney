@@ -43,6 +43,7 @@ import net.sf.jmoney.views.SectionlessPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -119,6 +120,8 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 					Label propertyLabel = new Label(this, 0);
 					propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
 					final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(this);
+					propertyControl.getControl().setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
+
 					propertyControl.getControl().addFocusListener(
 							new FocusAdapter() {
 

@@ -37,6 +37,9 @@ import org.eclipse.ui.IPerspectiveFactory;
  */
 public class JMoneyPerspective implements IPerspectiveFactory {
 
+    public static final String ID_PERSPECTIVE =
+    	"net.sf.jmoney.JMoneyPerspective"; //$NON-NLS-1$
+
     public void createInitialLayout(IPageLayout layout) {
         IFolderLayout navigator = layout.createFolder("navigator", IPageLayout.LEFT, 0.2f, layout.getEditorArea());
         navigator.addView(NavigationView.ID_VIEW);
@@ -44,7 +47,7 @@ public class JMoneyPerspective implements IPerspectiveFactory {
         IFolderLayout bottom = layout.createFolder("bottom", IPageLayout.BOTTOM, 0.8f, layout.getEditorArea());
         bottom.addView(ShowErrorLogAction.ERROR_LOG_VIEW_ID);
 
-        layout.addPerspectiveShortcut("net.sf.jmoney.JMoneyPerspective");
+        layout.addPerspectiveShortcut(JMoneyPerspective.ID_PERSPECTIVE);
         layout.addShowViewShortcut(NavigationView.ID_VIEW);
     }
 

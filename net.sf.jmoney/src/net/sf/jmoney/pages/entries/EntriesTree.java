@@ -534,9 +534,11 @@ public class EntriesTree {
 						previouslySelectedItem = item;
 						if (data instanceof DisplayableNewEmptyEntry) {
 							// Replace with a real transaction.
-			           		
+							// Note that all transactions must have at least
+							// two entries.
 			           		Transaction transaction = session.createTransaction();
 			           		Entry entry1 = transaction.createEntry();
+			           		transaction.createEntry();
 			           		
 			           		// TODO: There is so much duplicated stuff here that it
 			           		// would be better if we could get the listener to do this.

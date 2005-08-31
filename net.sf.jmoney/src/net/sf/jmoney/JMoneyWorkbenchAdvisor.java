@@ -33,22 +33,14 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.internal.Workbench;
 
 /**
- * @author Nigel
- *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * The workbench advisor for the JMoney application.
+ * 
+ * @author Nigel Westbury
  */
 public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
 
 	public String getInitialWindowPerspectiveId() {
-		// This method will not be called if
-		// org.eclipse.ui/defaultPerspectiveId is set in
-		// plugin_customization.ini in org.eclipse.platform
-		// plugin. (This seems to be a design flaw - if
-		// the application wants this perspective then it
-		// would stupid to use some other).
-		// TODO sort this out
-		return "net.sf.jmoney.JMoneyPerspective";
+		return JMoneyPerspective.ID_PERSPECTIVE;
 	}
 
     /* (non-Javadoc)
@@ -116,5 +108,4 @@ public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
 		}
 		return text;
 	}
-
 }
