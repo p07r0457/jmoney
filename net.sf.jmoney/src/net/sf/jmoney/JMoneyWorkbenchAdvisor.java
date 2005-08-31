@@ -22,15 +22,10 @@
 
 package net.sf.jmoney;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.dialogs.ErrorDialog;
-import org.eclipse.swt.SWT;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
-import org.eclipse.ui.internal.Workbench;
 
 /**
  * The workbench advisor for the JMoney application.
@@ -75,37 +70,5 @@ public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
 
         return JMoneyPlugin.getDefault().saveOldSession(configurer.getWindow());
     }
-	
-	/** 
-	 * Display a window to document the error if an Exception occurs
-	 */
-	public void eventLoopException (Throwable t) {
-		
-		
-		String text =  getText(t);
-		IStatus status = 
-			new Status(Status.ERROR, "Unknown Plugin" /*TODO*/, Status.OK,  new String("Uncatched error"), t);
 
-		ErrorDialog dialog = new ErrorDialog(
-				Workbench.getInstance().getWorkbenchWindows()[0].getShell(),
-				"An error occured",
-				text, 
-				status, 
-				status.getSeverity());
-		// dialog.setBlockOnOpen(true);
-		dialog.create();
-		dialog.getShell().setSize(dialog.getShell().computeSize(800, SWT.DEFAULT));
-		dialog.open();
-	}
-	
-	String getText (Throwable t) {
-		String text = new String();
-		text += "Following error has occured:\n\n";
-		text += t.getLocalizedMessage() + "\n\n";
-		StackTraceElement st[] = t.getStackTrace();
-		for (int i = 0; i<st.length && i<6; i++) {
-			text += st[i].toString() + "\n";
-		}
-		return text;
-	}
 }
