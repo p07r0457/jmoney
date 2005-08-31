@@ -122,9 +122,6 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 	 */
 	Shell shell;
 	
-	private VerySimpleDateFormat dateFormat =	
-		new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());	
-
 	private Date fromDate;
 	private Date toDate;
 
@@ -223,6 +220,8 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
 				Composite control = createContent((IncomeExpenseAccount)nodeObject, parent);
 
+				VerySimpleDateFormat dateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
+
 				// If a memento is passed, restore the field contents
 				if (memento != null) {
 					Integer periodType = memento.getInteger("period");
@@ -250,6 +249,7 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 			}
 
 			public void saveState(IMemento memento) {
+				VerySimpleDateFormat dateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
 				int period = periodBox.getSelectionIndex();
 				if (period != -1) {
 					memento.putInteger("period", period);
@@ -330,6 +330,8 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 	}
 
 	private void generateReport() {
+		VerySimpleDateFormat dateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
+		
 		fromDate = fromField.getDate();
 		toDate = toField.getDate();
 		

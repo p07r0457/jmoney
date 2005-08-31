@@ -139,9 +139,6 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 	 */
 	Shell shell;
 	
-	private VerySimpleDateFormat dateFormat =	
-		new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());	
-
 	private Date date;
 
 	/* (non-Javadoc)
@@ -254,6 +251,7 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 								String dateString = memento.getString("date");
 								if (dateString != null) {
 									try {
+										VerySimpleDateFormat dateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
 										Date date = dateFormat.parse(dateString);
 										dateField.setDate(date);
 									} catch (IllegalArgumentException e) {
@@ -274,6 +272,7 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 				if (selectionIndex != -1) {
 					memento.putInteger("filter", filterIndexes[selectionIndex]);
 					if (filterIndexes[selectionIndex] == DATE) {
+						VerySimpleDateFormat dateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
 						memento.putString("date", dateFormat.format(dateField.getDate()));
 					}
 				}
@@ -319,6 +318,8 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 				return;
 			}
 			InputStream is = url.openStream();
+
+			VerySimpleDateFormat dateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
 
 			Map params = new HashMap();
 			params.put(
@@ -367,6 +368,7 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 					return ReportsPlugin.getResourceString(
 					"Report.AccountBalances.ClearedEntries");
 				case DATE :
+					VerySimpleDateFormat dateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
 					return dateFormat.format(date);
 			}
 		}
