@@ -23,6 +23,7 @@
 package net.sf.jmoney.model2;
 
 import net.sf.jmoney.IBookkeepingPageFactory;
+import net.sf.jmoney.JMoneyPlugin;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -42,10 +43,12 @@ public class PageEntry {
 	String pageId;
 	IConfigurationElement pageElement;
 	IBookkeepingPageFactory pageFactory = null;
+	int position;
 
-	public PageEntry(String pageId, IConfigurationElement pageElement) {
+	public PageEntry(String pageId, IConfigurationElement pageElement, int position) {
 	    this.pageId = pageId;
         this.pageElement = pageElement;
+        this.position = position;
 	}
 
 	public String getPageId() {
@@ -57,12 +60,15 @@ public class PageEntry {
 			try {
 				pageFactory = (IBookkeepingPageFactory)pageElement.createExecutableExtension("class");
 			} catch (CoreException e) {
-				// TODO: handle properly
-				e.printStackTrace();
-				throw new RuntimeException("CoreException failure");
+                JMoneyPlugin.log(e);
 			}
 		}
 	    return pageFactory;
 	}
+
+	public int getPosition() {
+		return position;
+	}
+
 }
 
