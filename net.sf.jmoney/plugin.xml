@@ -25,6 +25,7 @@
          <property
                name="aboutImage"
                value="icons/JMoney128.gif"/>
+         <property name="preferenceCustomization" value="plugin_customization.ini"/> 
       </product>          
    </extension>
     
