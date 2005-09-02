@@ -152,7 +152,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
      * @param editor Parent editor
      */
     public ReconcilePage(NodeEditor editor) {
-        super(editor, PAGE_ID, "Reconcile Bank Statement");
+        super(editor, PAGE_ID, "Reconciliation");
         fEditor = editor;
     }
 
