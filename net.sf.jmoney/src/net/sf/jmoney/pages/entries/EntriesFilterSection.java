@@ -55,7 +55,7 @@ public class EntriesFilterSection extends SectionPart {
     protected Text fFilterText;
 
 	public EntriesFilterSection(EntriesPage page, Composite parent) {
-        super(parent, page.getManagedForm().getToolkit(), Section.DESCRIPTION | Section.TITLE_BAR | Section.TWISTIE | Section.EXPANDED);
+        super(parent, page.getManagedForm().getToolkit(), Section.DESCRIPTION | Section.TITLE_BAR | Section.TWISTIE);
         fPage = page;
         getSection().addExpansionListener(new ExpansionAdapter() {
     		public void expansionStateChanged(ExpansionEvent e) {
