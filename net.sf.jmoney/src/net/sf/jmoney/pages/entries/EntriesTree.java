@@ -1026,7 +1026,11 @@ public class EntriesTree {
 				 * amount.
 				 */
 				if (totalAmount != 0 && !mixedCommodities) {
-					if (newTransData.hasSplitEntries()) {
+					// TODO: For double entries where both accounts are in the same currency,
+					// should the amount for one account automatically change when the user changes
+					// the amount for the other account?  Currently the user must update both
+					// to keep the transaction balanced and to avoid the following error message.
+					if (newTransData.hasSplitEntries() || newTransData.isDoubleEntry()) {
 						message = "The transaction does not balance.  " +
 							"Unless some entries in the transaction are in different currencies, " +
 							"the sum of all the entries in a transaction must add up to zero.";
@@ -1517,13 +1521,12 @@ public class EntriesTree {
 
 		/**
 		 * A transaction with split entries is a transaction that
-		 * has entries in three or more accounts or income and
-		 * expense categories.
+		 * has entries in three or more accounts (where each account
+		 * may be either a capital account or an income and
+		 * expense category).
 		 */
 		public boolean hasSplitEntries() {
-			return otherEntries.size() > 1
-			|| otherEntries.size() == 1 
-				&& ((Entry)otherEntries.firstElement()).getAccount() instanceof CapitalAccount;
+			return otherEntries.size() > 1;
 		}
 
 		/**
@@ -1556,10 +1559,17 @@ public class EntriesTree {
 		 * are income and expense accounts, all transactions will
 		 * be either a split transaction, a double entry, or a
 		 * simple entry.
+		 * <P>
+		 * The user may not have yet selected the category for a
+		 * simple transaction.  Such a transaction is displayed on
+		 * a single line and therefore considered a simple transaction.
+		 * Therefore the test to be used here is that the category is NOT a
+		 * capital account (rather than testing FOR an income and
+		 * expense account. 
 		 */
 		public boolean isSimpleEntry() {
 			return otherEntries.size() == 1 
-			&& ((Entry)otherEntries.firstElement()).getAccount() instanceof IncomeExpenseAccount;
+			&& !(((Entry)otherEntries.firstElement()).getAccount() instanceof CapitalAccount);
 		}
 		
 		/**
