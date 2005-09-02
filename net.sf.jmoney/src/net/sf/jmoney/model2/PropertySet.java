@@ -1444,8 +1444,16 @@ public class PropertySet {
 	/**
 	 * @param pageEntry
 	 */
-	public void addPage(PageEntry pageEntry) {
-		pageExtensions.add(pageEntry);
+	public void addPage(PageEntry newPage) {
+		int addIndex = pageExtensions.size();
+		for (int i = 0; i < pageExtensions.size(); i++) {
+			PageEntry page = (PageEntry) pageExtensions.get(i);
+			if (newPage.getPosition() < page.getPosition()) {
+				addIndex = i;
+				break;
+			}
+		}
+		pageExtensions.add(addIndex, newPage);
 	}
 
 
