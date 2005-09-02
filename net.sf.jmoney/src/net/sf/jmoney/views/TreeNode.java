@@ -150,10 +150,17 @@ public class TreeNode implements IAdaptable {
 					String id = elements[j].getAttribute("id");
 					String pageId = extensions[i].getNamespace() + '.' + id;
 					String nodeId = elements[j].getAttribute("node");
+
+					String position = elements[j].getAttribute("position");
+					int pos = 5;
+					if (position != null) {
+						pos = Integer.parseInt(position);
+					}
+
 					if (nodeId != null && nodeId.length() != 0) {
 						TreeNode node = (TreeNode)idToNodeMap.get(nodeId);
 						if (node != null) {
-							node.addPage(pageId, elements[j]);
+							node.addPage(pageId, elements[j], pos);
 						} else {
 							// No node found with given id, so the
 							// page listener is dropped.
@@ -169,7 +176,7 @@ public class TreeNode implements IAdaptable {
 						if (propertySetId != null) {
 							try {
 								PropertySet pagePropertySet = PropertySet.getPropertySet(propertySetId);
-								PageEntry pageEntry = new PageEntry(pageId, elements[j]);  
+								PageEntry pageEntry = new PageEntry(pageId, elements[j], pos);  
 								
 								for (Iterator iter = pagePropertySet.getDerivedPropertySetIterator(); iter.hasNext(); ) {
 									PropertySet derivedPropertySet = (PropertySet)iter.next();
@@ -295,8 +302,8 @@ public class TreeNode implements IAdaptable {
 	/**
 	 * @param pageListener
 	 */
-	public void addPage(String pageId, IConfigurationElement pageElement) {
-		PageEntry pageEntry = new PageEntry(pageId, pageElement);  
+	public void addPage(String pageId, IConfigurationElement pageElement, int pos) {
+		PageEntry pageEntry = new PageEntry(pageId, pageElement, pos);  
 		pageFactories.add(pageEntry);
 	}
 
