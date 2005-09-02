@@ -63,17 +63,6 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 
     public static final String PAGE_ID = "entries";
     
-    /**
-     * Display (true) or hide (false) the details of selected transaction
-     * at the botom of the window. I don't like this display and want a 
-     * possibility to hide it. 
-     * This parameter will surely be "true" for common usage and "false" for
-     * me. 
-     * @author Faucheux
-     */
-    public static final boolean IS_ENTRY_SECTION_TO_DISPLAY = true;
-    
-
 	protected NodeEditor fEditor;
 
 	/** Element: IEntriesTableProperty */
@@ -271,12 +260,10 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         managedForm.addPart(fEntriesSection);
         fEntriesSection.initialize(managedForm);
 
-        if (IS_ENTRY_SECTION_TO_DISPLAY) {
-            fEntrySection = new EntrySection(form.getBody(), managedForm.getToolkit(), account.getSession(), account.getCurrency());
-            fEntrySection.getSection().setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-            managedForm.addPart(fEntriesSection);
-            fEntrySection.initialize(managedForm);
-        }
+        fEntrySection = new EntrySection(form.getBody(), managedForm.getToolkit(), account.getSession(), account.getCurrency());
+        fEntrySection.getSection().setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        managedForm.addPart(fEntriesSection);
+        fEntrySection.initialize(managedForm);
 
         form.setText("Accounting Entries");
         
