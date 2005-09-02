@@ -204,12 +204,14 @@
       <pages
             class="net.sf.jmoney.pages.entries.EntriesBookkeepingPage"
             extendable-property-set="net.sf.jmoney.currencyAccount"
-            id="entries">
+            id="entries"
+            position="1">
       </pages>
       <pages
             class="net.sf.jmoney.pages.accountProperties.AccountPropertiesPage"
             extendable-property-set="net.sf.jmoney.capitalAccount"
-            id="accountProperties">
+            id="accountProperties"
+            position="2">
       </pages>
    </extension>
    
