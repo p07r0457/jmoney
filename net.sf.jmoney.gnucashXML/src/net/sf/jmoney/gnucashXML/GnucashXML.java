@@ -461,9 +461,6 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
 
                 if (propertyElement.getElementsByTagName("split").getLength() < 2) {
                     // TODO Faucheux
-                } else if (propertyElement.getElementsByTagName("split")
-                        .getLength() == 2) {
-                    treatSplittedTransaction(propertyElement, t);
                 } else {
                     treatSplittedTransaction(propertyElement, t);
                 }
@@ -526,7 +523,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
                 Entry e = t.createEntry();
                 e.setAmount(getLong(value));
                 e.setAccount(account);
-                e.setDescription(transactionDescription);
+                e.setMemo(transactionDescription);
 
                 // if (GnucashXMLPlugin.DEBUG) System.out.println("Added amount:
                 // " + getLong(value) + " for " + account.toString() + " for >"
@@ -574,12 +571,17 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
 
         // Create the header
         Element e1 = doc.createElement("gnc:count-data");
+		e1.setAttribute("cd:type", "book");
+		e1.appendChild(doc.createTextNode("1"));
         documentRoot.appendChild(e1);
 
         bookElement = doc.createElement("gnc:book");
+		bookElement.setAttribute("version", "2.0.0");
         documentRoot.appendChild(bookElement);
 
         e1 = doc.createElement("book:id");
+		e1.setAttribute("type", "guid");
+		e1.appendChild(doc.createTextNode(e1.getNodeValue()));
         bookElement.appendChild(e1);
 
         e1 = doc.createElement("book:slots");
@@ -620,8 +622,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
         transformer.setOutputProperty(OutputKeys.METHOD, "xml");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         // TODO org.apache.xalan.templates.OutputProperties not available in Java 1.5
-        // transformer
-        //        .setOutputProperty(OutputProperties.S_KEY_INDENT_AMOUNT, "2");
+        // transformer.setOutputProperty(OutputPropertiesFactory.S_KEY_INDENT_AMOUNT, "2");
 
         Source input = new DOMSource(doc);
         Result output = new StreamResult(new File(toFile));
@@ -672,9 +673,9 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
                                                         // Change this
         e.appendChild(e2);
 
-        e2 = doc.createElement("act:currency");
+        e2 = doc.createElement("act:commodity");
         e3 = doc.createElement("cmdty:space");
-        e3.appendChild(doc.createTextNode("cmdty:ISO4217"));
+        e3.appendChild(doc.createTextNode("ISO4217"));
         e2.appendChild(e3);
         e3 = doc.createElement("cmdty:id");
         e3.appendChild(doc.createTextNode("EUR")); // TODO Faucheux - Change
