@@ -180,7 +180,12 @@ public class StackedAccountChart extends StackedChart {
          * @param other
          */
         public void add (accountCategory other) {
-            this.name = this.name + " + " + other.name;
+			
+			// Concatenate the names. Don't contatenate the name of an empty account.
+			if (this.totalValue != 0  && other.totalValue != 0)
+				this.name = this.name + " + " + other.name;
+			else if (this.totalValue == 0)
+				this.name = other.name;
             
             this.totalValue += other.totalValue;
             for (int i =0; i < this.values.size(); i++) {
