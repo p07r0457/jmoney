@@ -40,6 +40,7 @@ Eclipse Foundation http://www.eclipse.org/
    <plugins>
       <plugin id="net.sf.jmoney"/>
       <plugin id="net.sf.jmoney.categoriespanel"/>
+      <plugin id="net.sf.jmoney.charts"/>
       <plugin id="net.sf.jmoney.copier"/>
       <plugin id="net.sf.jmoney.currencypage"/>
       <plugin id="net.sf.jmoney.gnucashXML"/>
