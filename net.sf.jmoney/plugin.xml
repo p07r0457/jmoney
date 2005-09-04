@@ -44,12 +44,12 @@
    
 	<extension point="org.eclipse.ui.intro">
 		<intro
-      		icon="icons\Accounts.gif"
+      		icon="icons/JMoney16.gif"
       		class="net.sf.jmoney.intro.JMoneyIntroPart"
-      		id="net.sf.jmoney.intro.custom"/>
+      		id="net.sf.jmoney.intro"/>
 		<introProductBinding 
 			productId="net.sf.jmoney.product"
-			introId="net.sf.jmoney.intro.custom"/>
+			introId="net.sf.jmoney.intro"/>
 	</extension>
 
 	<extension
@@ -61,7 +61,7 @@
          point="org.eclipse.ui.perspectives">
       <perspective
             name="JMoney Accounting"
-      		icon="icons\Accounts.gif"
+      		icon="icons/JMoney16.gif"
             class="net.sf.jmoney.JMoneyPerspective"
             id="net.sf.jmoney.JMoneyPerspective">
       </perspective>
