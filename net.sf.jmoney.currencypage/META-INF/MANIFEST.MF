@@ -11,3 +11,4 @@ Require-Bundle: org.eclipse.ui,
  net.sf.jmoney,
  org.eclipse.ui.forms
 Eclipse-AutoStart: true
+Bundle-Vendor: JMoney.sf.net

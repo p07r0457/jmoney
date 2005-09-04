@@ -23,3 +23,4 @@ Export-Package: net.sf.jmoney,
  net.sf.jmoney.resources,
  net.sf.jmoney.views
 Eclipse-AutoStart: true
+Bundle-Vendor: JMoney.sf.net

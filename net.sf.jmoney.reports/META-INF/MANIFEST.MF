@@ -12,7 +12,7 @@ Bundle-ClassPath: reports.jar,
  lib/commons-digester-1.3.jar,
  lib/commons-collections-3.0.jar,
  lib/commons-beanutils.jar
-Bundle-Vendor: JMoney
+Bundle-Vendor: JMoney.sf.net
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  net.sf.jmoney,

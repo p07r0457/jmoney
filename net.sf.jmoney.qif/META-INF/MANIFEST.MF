@@ -13,3 +13,4 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  net.sf.jmoney
 Eclipse-AutoStart: true
+Bundle-Vendor: JMoney.sf.net

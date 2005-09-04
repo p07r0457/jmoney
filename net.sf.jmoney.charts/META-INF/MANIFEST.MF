@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: Jfreechart Plug-in
+Bundle-Name: Charts Plug-in
 Bundle-SymbolicName: net.sf.jmoney.charts; singleton:=true
 Bundle-Version: 1.0.0
 Bundle-ClassPath: charts.jar,
@@ -57,3 +57,4 @@ Require-Bundle: org.eclipse.ui,
  net.sf.jmoney,
  org.eclipse.ui.forms
 Eclipse-AutoStart: true
+Bundle-Vendor: JMoney.sf.net

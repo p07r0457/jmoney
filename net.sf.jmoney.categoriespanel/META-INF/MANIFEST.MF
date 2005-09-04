@@ -12,3 +12,4 @@ Require-Bundle: org.eclipse.ui,
 Export-Package: net.sf.jmoney.bookkeepingPages,
  net.sf.jmoney.categoriespanel
 Eclipse-AutoStart: true
+Bundle-Vendor: JMoney.sf.net
