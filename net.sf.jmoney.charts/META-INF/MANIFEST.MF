@@ -58,3 +58,4 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.forms
 Eclipse-AutoStart: true
 Bundle-Vendor: JMoney.sf.net
+Eclipse-PlatformFilter: (| (osgi.os=win32) (osgi.os=linux))
