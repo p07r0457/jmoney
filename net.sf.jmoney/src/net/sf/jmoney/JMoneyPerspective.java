@@ -22,7 +22,6 @@
 
 package net.sf.jmoney;
 
-import net.sf.jmoney.actions.ShowErrorLogAction;
 import net.sf.jmoney.views.NavigationView;
 
 import org.eclipse.ui.IFolderLayout;
@@ -37,18 +36,20 @@ import org.eclipse.ui.IPerspectiveFactory;
  */
 public class JMoneyPerspective implements IPerspectiveFactory {
 
-    public static final String ID_PERSPECTIVE =
-    	"net.sf.jmoney.JMoneyPerspective"; //$NON-NLS-1$
+    public static final String ID_PERSPECTIVE = "net.sf.jmoney.JMoneyPerspective"; //$NON-NLS-1$
+
+    public static final String ERROR_LOG_VIEW_ID = "org.eclipse.pde.runtime.LogView"; //$NON-NLS-1$
 
     public void createInitialLayout(IPageLayout layout) {
         IFolderLayout navigator = layout.createFolder("navigator", IPageLayout.LEFT, 0.2f, layout.getEditorArea());
         navigator.addView(NavigationView.ID_VIEW);
 
         IFolderLayout bottom = layout.createFolder("bottom", IPageLayout.BOTTOM, 0.8f, layout.getEditorArea());
-        bottom.addView(ShowErrorLogAction.ERROR_LOG_VIEW_ID);
+        bottom.addView(ERROR_LOG_VIEW_ID);
 
         layout.addPerspectiveShortcut(JMoneyPerspective.ID_PERSPECTIVE);
         layout.addShowViewShortcut(NavigationView.ID_VIEW);
+        layout.addShowViewShortcut(ERROR_LOG_VIEW_ID);
     }
 
 }
