@@ -22,16 +22,16 @@
 
 package net.sf.jmoney;
 
-import net.sf.jmoney.actions.ShowErrorLogAction;
-
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.actions.ActionFactory;
+import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 
@@ -40,12 +40,15 @@ import org.eclipse.ui.application.IActionBarConfigurer;
  */
 public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
 
+    private final IWorkbenchWindow window;
     private IAction quitAction;
-    private IAction showErrorLogAction;
+    private IAction preferencesAction;
+    private IAction introAction;
     private IAction aboutAction;
 
     public JMoneyActionBarAdvisor(IActionBarConfigurer configurer) {
         super(configurer);
+        window = configurer.getWindowConfigurer().getWindow();
     }
 
     /* (non-Javadoc)
@@ -55,8 +58,13 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
         quitAction = ActionFactory.QUIT.create(window);
         register(quitAction);
 
-        showErrorLogAction = new ShowErrorLogAction();
-        register(showErrorLogAction);
+        preferencesAction = ActionFactory.PREFERENCES.create(window);
+        register(preferencesAction);
+
+        if (window.getWorkbench().getIntroManager().hasIntro()) {
+            introAction = ActionFactory.INTRO.create(window);
+            register(introAction);
+        }
 
         aboutAction = ActionFactory.ABOUT.create(window);
         register(aboutAction);
@@ -68,6 +76,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     protected void fillMenuBar(IMenuManager menuBar) {
         menuBar.add(createFileMenu());
         menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        menuBar.add(createWindowMenu());
         menuBar.add(createHelpMenu());
     }
 
@@ -96,13 +105,34 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     /**
      * Creates and returns the Help menu.
      */
+    private MenuManager createWindowMenu() {
+        MenuManager menu = new MenuManager("&Window", IWorkbenchActionConstants.M_WINDOW);
+        {
+            MenuManager showViewMenuMgr = new MenuManager("Show View", "showView");
+            IContributionItem showViewMenu = ContributionItemFactory.VIEWS_SHORTLIST.create(window);
+            showViewMenuMgr.add(showViewMenu);
+            menu.add(showViewMenuMgr);
+        }
+        menu.add(new Separator());
+        menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        menu.add(new Separator());
+        menu.add(preferencesAction);
+        return menu;
+    }
+
+    /**
+     * Creates and returns the Help menu.
+     */
     private MenuManager createHelpMenu() {
         MenuManager menu = new MenuManager("&Help", IWorkbenchActionConstants.M_HELP);
 
         // Help
+        if (introAction != null) {
+            menu.add(introAction);
+        }
+        menu.add(new Separator());
         menu.add(new GroupMarker(IWorkbenchActionConstants.HELP_START));
         menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
-        menu.add(showErrorLogAction);
         menu.add(new Separator());
         menu.add(aboutAction);
         menu.add(new GroupMarker(IWorkbenchActionConstants.HELP_END));    
