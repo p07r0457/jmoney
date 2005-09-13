@@ -81,23 +81,6 @@
                id="net.sf.jmoney.actions.CloseSessionAction">
          </action>
          <menu
-               label="&amp;Options"
-               id="options">
-            <separator
-                  name="sampleGroup">
-            </separator>
-         </menu>
-         <action
-               label="Preferences..."
-               icon="icons/jlfgr/preferences16.gif"
-               class="net.sf.jmoney.actions.PreferencesAction"
-               tooltip="user preferences"
-               menubarPath="options/sampleGroup"
-               toolbarPath="optionsGroup"
-               id="net.sf.jmoney.actions.PreferencesAction">
-         </action>
-
-         <menu
                label="&amp;Edit"
                id="edit">
             <separator
@@ -172,7 +155,7 @@
    <extension
          point="org.eclipse.ui.views">
       <category
-            name="Sample Category"
+            name="JMoney Basic"
             id="net.sf.jmoney.viewCategory">
       </category>
       <view
