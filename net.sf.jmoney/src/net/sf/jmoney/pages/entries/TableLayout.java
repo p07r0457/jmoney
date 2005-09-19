@@ -45,6 +45,16 @@ public class TableLayout extends Layout {
 	private int[] widths = null;
 	
 	private boolean userOverride = false;
+
+	/**
+	 * The amount of extra space to allow for the first column.
+	 * This column contains the expand/collapse icons and space
+	 * for those icons must be included in the width assigned
+	 * by this layout to the first column.
+	 * <P>
+	 * The correct value for Windows is 16.  
+	 */
+	private final int expandCollapseIconWidth = 16;
 	
 	/**
 	 * Creates a new table layout.
@@ -157,8 +167,12 @@ public class TableLayout extends Layout {
 			ColumnLayoutData col = (ColumnLayoutData) tableColumns[i].getData("layoutData");
 			if (col instanceof ColumnWeightData) {
 				ColumnWeightData cw = (ColumnWeightData) col;
-				widths[i] = cw.minimumWidth;
-				fixedWidth += cw.minimumWidth;
+				int minimumWidth = cw.minimumWidth;
+				if (i == 0) {
+					minimumWidth += expandCollapseIconWidth;
+				}
+				widths[i] = minimumWidth;
+				fixedWidth += minimumWidth;
 				totalWeight += cw.weight;
 			} else {
 				Assert.isTrue(false, "Unknown column layout data");//$NON-NLS-1$

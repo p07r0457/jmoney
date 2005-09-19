@@ -25,24 +25,16 @@ package net.sf.jmoney.pages.entries;
 import java.util.Iterator;
 import java.util.Vector;
 
-import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
-import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
@@ -54,7 +46,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 
 /**
  * This class manages the transaction dialog that appears when
@@ -73,365 +64,20 @@ import org.eclipse.swt.widgets.Text;
  */
 public class TransactionDialog {
 
-    protected static final Color yellow = new Color(Display.getCurrent(), 255, 255, 150);
-    protected static final Color green  = new Color(Display.getCurrent(), 200, 255, 200);
+	private static final Color yellow = new Color(Display.getCurrent(), 255, 255, 200);
+	private static final Color green  = new Color(Display.getCurrent(), 225, 255, 225);
 
     private Shell shell;
 
     private Display display;
 
-    private Session session;
+    Session session;
 
-    private Currency defaultCurrency;
+    Currency defaultCurrency;
     
     private Composite transactionArea;
     
-    private Composite entriesArea;
-    
-    /**
-     * Represents the set of controls for a single entry in the
-     * transaction.  These controls form one (or maybe more) rows
-     * of controls in a colored row across the grid.
-     * 
-     * @author Nigel Westbury
-     */
-    class EntryControls {
-    	private Color entryColor;
-    	
-    	/** The controls that fill each grid item in the entries grid. */
-    	private Composite composite1;
-    	private Composite composite2;
-    	private Composite composite3;
-    	private Composite composite4;
-    	private Composite composite5;
-    	
-    	private Label debitLabel;
-    	private Text debitText;
-    	private Label creditLabel;
-    	private Text creditText;
-
-        /** element: LabelAndEditControlPair */
-    	Vector entryPropertyControls = new Vector();
-
-        class LabelAndEditControlPair {
-        	private Label label;
-        	private IPropertyControl propertyControl;
-        	
-        	/**
-			 * @param propertyLabel
-			 * @param propertyControl
-			 */
-			public LabelAndEditControlPair(Label label, IPropertyControl propertyControl) {
-				this.label = label;
-				this.propertyControl = propertyControl;
-			}
-
-			void dispose() {
-        		label.dispose();
-        		propertyControl.getControl().dispose();
-        	}
-        }
-        
-        /** 
-         * The entry object being displayed in the set of controls.
-    	 */
-    	private Entry entry;
-    	
-        /**
-    	 * This object represents a row of controls that allow
-    	 * editing of the properties for an Entry in the transaction.
-    	 * Constructing this object also constructs the controls.
-    	 */
-    	EntryControls(final Entry entry, Color entryColor) {
-    		this.entryColor = entryColor;
-    		this.entry = entry;
-    		
-            composite1 = new Composite(entriesArea, 0);
-            composite2 = new Composite(entriesArea, 0);
-            composite3 = new Composite(entriesArea, 0);
-            composite4 = new Composite(entriesArea, 0);
-            composite5 = new Composite(entriesArea, 0);
-             
-            GridLayout layout1 = new GridLayout(8, false);
-            composite1.setLayout(layout1);
-
-            RowLayout layout2 = new RowLayout();
-            layout2.marginHeight = 2;
-            layout2.marginWidth = 2;
-            composite2.setLayout(layout2);
-            composite3.setLayout(layout2);
-            composite4.setLayout(layout2);
-            composite5.setLayout(layout2);
-
-            composite1.setLayoutData(new GridData(GridData.FILL_BOTH));
-            composite1.setBackground(entryColor);
-    		composite2.setLayoutData(new GridData(GridData.FILL_BOTH));
-            composite2.setBackground(entryColor);
-    		composite3.setLayoutData(new GridData(GridData.FILL_BOTH));
-            composite3.setBackground(entryColor);
-    		composite4.setLayoutData(new GridData(GridData.FILL_BOTH));
-            composite4.setBackground(entryColor);
-    		composite5.setLayoutData(new GridData(GridData.FILL_BOTH));
-            composite5.setBackground(entryColor);
-
-            // Create the debit and credit controls.  Note that the text for the
-            // labels are not set until later because the text depends on whether
-            // the account for the entry is a capital account or an income and
-            // expense account.
-            debitLabel = new Label(composite2, 0);
-            debitText = new Text(composite3, 0);
-            creditLabel = new Label(composite4, 0);
-            creditText = new Text(composite5, 0);
-
-            debitLabel.setBackground(entryColor);
-            creditLabel.setBackground(entryColor);
-            
-            debitText.addFocusListener(
-    				new FocusAdapter() {
-    					public void focusLost(FocusEvent e) {
-    						// We need a currency so that we can format the amount.
-    						// Get the currency from this entry if possible.
-    						// However, the user may not have yet entered enough information
-    						// to determine the currency for this entry, in which case
-    						// use the currency for the account being listed in this editor.
-    						// FIXME change this when we can get the currency for income/expense
-    						// accounts.
-    						Commodity commodityForFormatting = null;
-    						if (entry.getAccount() != null
-    								&& entry.getAccount() instanceof CapitalAccount) {
-    							commodityForFormatting = entry.getCommodity();
-    						}
-    						if (commodityForFormatting == null) {
-    							commodityForFormatting = defaultCurrency;
-    						}
-    						
-    						String amountString = debitText.getText();
-    						long amount = commodityForFormatting.parse(amountString);
-    						if (amount != 0) {
-    							entry.setAmount(-amount);
-    							debitText.setText(commodityForFormatting.format(amount));
-    							// When a debit is entered, clear out any credit.
-    							creditText.setText("");
-    						} else {
-    							if (creditText.getText().equals("")) { 
-    								entry.setAmount(0);
-    							}
-								debitText.setText("");
-    						}
-    					}
-    				});
-    		
-            creditText.addFocusListener(
-    				new FocusAdapter() {
-    					public void focusLost(FocusEvent e) {
-    						// We need a currency so that we can format the amount.
-    						// Get the currency from this entry if possible.
-    						// However, the user may not have yet entered enough information
-    						// to determine the currency for this entry, in which case
-    						// use the currency for the account being listed in this editor.
-    						// FIXME change this when we can get the currency for income/expense
-    						// accounts.
-    						Commodity commodityForFormatting = null;
-    						if (entry.getAccount() != null
-    								&& entry.getAccount() instanceof CapitalAccount) {
-    							commodityForFormatting = entry.getCommodity();
-    						}
-    						if (commodityForFormatting == null) {
-    							commodityForFormatting = defaultCurrency;
-    						}
-    						
-    						String amountString = creditText.getText();
-    						long amount = commodityForFormatting.parse(amountString);
-    						if (amount != 0) {
-    							entry.setAmount(amount);
-    							creditText.setText(commodityForFormatting.format(amount));
-    							// When a debit is entered, clear out any credit.
-    							debitText.setText("");
-    						} else {
-    							if (debitText.getText().equals("")) { 
-    								entry.setAmount(0);
-    							}
-								creditText.setText("");
-    						}
-    					}
-    				});
-    		
-    		// The account combo always exists and always comes first,
-            // so we add that ourselves.
-    		addLabelAndEditControl(EntryInfo.getAccountAccessor());
-    		
-    		// Listen for changes to the account selection.
-    		// This changes the set of properties to be shown
-    		// for this entry.
-            session.addSessionChangeListener(new SessionChangeAdapter() {
-    			public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
-    				if (changedProperty == EntryInfo.getAccountAccessor()
-    						&& changedObject.equals(entry)) {
-    					updateSetOfEntryControls();
-    				}
-    			}
-    		}, entriesArea);
-
-			addFurtherControls(entry.getAccount());
-				
-			// Set the amount in the credit and debit controls.
-			long amount = entry.getAmount();
-			
-			// Kludge: If a category account, use the currency
-			// for set in this editor.
-			
-			Commodity commodity = (entry.getAccount() instanceof CapitalAccount) 
-			? entry.getCommodity()
-					: defaultCurrency;
-			
-			if (commodity != null) {
-				if (amount > 0) {
-					creditText.setText(commodity.format(amount));
-				} else {
-					creditText.setText("");
-				}
-				if (amount < 0) {
-					debitText.setText(commodity.format(-amount));
-				} else {
-					debitText.setText("");
-				}
-			}
-		}
-
-    	/**
-    	 * Creates both a label and an edit control.
-    	 * 
-    	 * Adds both to the propertyControls array so that they can
-    	 * later be disposed (they will be disposed if the account or
-    	 * some other property is changed so that this property is
-    	 * no longer applicable).
-    	 * <P>
-    	 * The caller must call the <code>IPropertyControl.load()</code>
-    	 * method to either set the entry object or to disable the
-    	 * control.
-    	 * 
-    	 * @param propertyAccessor
-    	 */
-    	void addLabelAndEditControl(PropertyAccessor propertyAccessor) {
-    		Label propertyLabel = new Label(composite1, 0);
-    		propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
-    		propertyLabel.setBackground(entryColor);
-    		IPropertyControl propertyControl = propertyAccessor.createPropertyControl(composite1);
-    		propertyControl.getControl().addFocusListener(
-    				new PropertyControlFocusListener(propertyAccessor, propertyControl) {
-    					ExtendableObject getExtendableObject() {
-    						return entry;
-    					}
-    				});
-    		
-    		LabelAndEditControlPair controlPair = new LabelAndEditControlPair(propertyLabel, propertyControl);
-			propertyControl.load(entry);
-    		entryPropertyControls.add(controlPair);
-    	}
-
-
-    	/**
-    	 * Adds the controls that are dependent on the selected account.
-    	 * This method is called when the row of controls for an entry are
-    	 * first constructed, and also called when the user changes the
-    	 * account selected in the entry.
-    	 * 
-    	 * The set of applicable entry properties depends on the account
-    	 * set in the entry.
-    	 * 
-    	 * @param account If null then no controls are added beyond the
-    	 * 			account list control.
-    	 */
-    	void addFurtherControls(Account account) {
-    		// The other controls depend on the type of account.
-    		// This needs to be generalized in the metadata, but until
-    		// that work is done, the description applies to entries in
-    		// income/expense accounts and all other properties apply
-    		// to capital accounts.
-    		if (account != null) {
-    			if (account instanceof IncomeExpenseAccount) {
-    				addLabelAndEditControl(EntryInfo.getDescriptionAccessor());
-    			} else {
-    				for (Iterator iter = EntryInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
-    					PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
-    					if (propertyAccessor.isEditable()
-    							&& propertyAccessor.isScalar()
-    							&& propertyAccessor != EntryInfo.getAccountAccessor() 
-    							&& propertyAccessor != EntryInfo.getAmountAccessor()
-    							&& propertyAccessor != EntryInfo.getDescriptionAccessor()) {
-    						addLabelAndEditControl(propertyAccessor);
-    					}
-    				}
-    			}
-    		}
-    		
-    		// The choice of labels for the two amount controls also depend
-    		// on the type of account that is selected.
-    		String debitText = "";
-    		String creditText = "";
-    		if (account != null) {
-    			if (account instanceof IncomeExpenseAccount) {
-    				debitText = "Income:";
-    				creditText = "Expense:";
-    			} else {
-    				debitText = "Debit:";
-    				creditText = "Credit:";
-    			}
-    		}
-    		debitLabel.setText(debitText);
-    		creditLabel.setText(creditText);
-
-    		// We must pack these or the labels will not show, though I
-    		// do not entirely understand why.
-    		debitLabel.pack();
-    		creditLabel.pack();
-    	}
-
-    	void updateSetOfEntryControls() {
-			// Remove all the old controls after the account.
-			for (int i = 1; i < entryPropertyControls.size(); i++) {
-				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
-				controlPair.dispose();
-			}
-			entryPropertyControls.setSize(1);
-			
-			// Add the new controls
-			addFurtherControls(entry.getAccount());
-
-			shell.pack();
-    	}
-
-		/**
-		 * Set the backgroud color of the controls for this entry. 
-		 * Although the color is passed to the constructor, the color may need to
-		 * be flipped when an entry is deleted.
-		 * 
-		 * @param color
-		 */
-		public void setColor(Color entryColor) {
-			this.entryColor = entryColor;
-			
-            composite1.setBackground(entryColor);
-            composite2.setBackground(entryColor);
-            composite3.setBackground(entryColor);
-            composite4.setBackground(entryColor);
-            composite5.setBackground(entryColor);
-            debitLabel.setBackground(entryColor);
-            creditLabel.setBackground(entryColor);
-			for (int i = 0; i < entryPropertyControls.size(); i++) {
-				LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
-				controlPair.label.setBackground(entryColor);
-			}
-		}
-    	
-		void dispose() {
-        	composite1.dispose();
-        	composite2.dispose();
-        	composite3.dispose();
-        	composite4.dispose();
-        	composite5.dispose();
-		}
-    }
+    Composite entriesArea;
     
     /** Element: EntryControls */
     Vector entryControlsList = new Vector();
@@ -452,7 +98,7 @@ public class TransactionDialog {
    		
         shell = new Shell(parent, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.CLOSE);
         shell.setText("Transaction Details");
-    	
+    
         GridLayout sectionLayout = new GridLayout();
         sectionLayout.numColumns = 1;
         sectionLayout.marginHeight = 0;
@@ -469,7 +115,11 @@ public class TransactionDialog {
 
         // Create the entries area
 		entriesArea = new Composite(shell, 0);
-		entriesArea.setLayoutData(new GridData(GridData.FILL_BOTH));
+		GridData gd = new GridData(GridData.FILL_BOTH);
+		gd.minimumWidth = 800;
+		gd.widthHint = 800;
+		gd.grabExcessHorizontalSpace = true;
+		entriesArea.setLayoutData(gd);
 
 		GridLayout entriesAreaLayout = new GridLayout();
         entriesAreaLayout.numColumns = 5;
@@ -536,7 +186,7 @@ public class TransactionDialog {
         		? yellow
         		: green;
 
-        		EntryControls newEntryControls = new EntryControls(newEntry, entryColor);
+        		EntryControls newEntryControls = new EntryControls(TransactionDialog.this.session, entriesArea, newEntry, entryColor, defaultCurrency);
         		entryControlsList.add(newEntryControls);
 
                 shell.pack(true);
@@ -580,7 +230,7 @@ public class TransactionDialog {
         }
         
 		// Load the values from the given entry into the property controls.
-		entryControlsList.add(new EntryControls(accountEntry, yellow));
+		entryControlsList.add(new EntryControls(session, entriesArea, accountEntry, yellow, defaultCurrency));
 		
         // Create and set the controls for the other entries in
         // the transaction.
@@ -592,7 +242,7 @@ public class TransactionDialog {
         		? yellow 
         		: green;
 
-        		entryControlsList.add(new EntryControls(entry, entryColor));
+        		entryControlsList.add(new EntryControls(session, entriesArea, entry, entryColor, defaultCurrency));
         	}
         }
         
@@ -606,45 +256,4 @@ public class TransactionDialog {
             if (!display.readAndDispatch()) display.sleep();
         }
     }
-    
-	abstract private class PropertyControlFocusListener extends FocusAdapter {
-
-    	private PropertyAccessor propertyAccessor;
-    	private IPropertyControl propertyControl;
-    	
-		// When a control gets the focus, save the old value here.
-		// This value is used in the change message.
-		private String oldValueText;
-		
-		
-		PropertyControlFocusListener(PropertyAccessor propertyAccessor, IPropertyControl propertyControl) {
-			this.propertyAccessor = propertyAccessor;
-			this.propertyControl = propertyControl;
-		}
-		
-		public void focusLost(FocusEvent e) {
-			ExtendableObject object = getExtendableObject();
-			
-			if (object.getSession().isSessionFiring()) {
-				return;
-			}
-			
-			propertyControl.save();
-			String newValueText = propertyAccessor.formatValueForMessage(object);
-			
-			String description = 
-					"change " + propertyAccessor.getShortDescription() + " property"
-					+ " from " + oldValueText
-					+ " to " + newValueText;
-			
-			object.getSession().registerUndoableChange(description);
-		}
-		public void focusGained(FocusEvent e) {
-			// Save the old value of this property for use in our 'undo' message.
-			ExtendableObject object = getExtendableObject();
-			oldValueText = propertyAccessor.formatValueForMessage(object);
-		}
-		
-		abstract ExtendableObject getExtendableObject();
-	};    
 }

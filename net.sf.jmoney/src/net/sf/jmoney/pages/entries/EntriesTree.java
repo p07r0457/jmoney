@@ -32,6 +32,7 @@ import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CommodityInfo;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
@@ -162,6 +163,8 @@ public class EntriesTree {
 	protected static final Color alternateEntryColor = new Color(Display
 			.getCurrent(), 245, 255, 255);
 
+	private Composite container;
+
 	protected IEntriesContent entriesContent;
 
 	protected TransactionManager transactionManager;
@@ -223,6 +226,7 @@ public class EntriesTree {
 
 	public EntriesTree(final Composite container, FormToolkit toolkit,
 			final TransactionManager transactionManager, final IEntriesContent entriesContent, final Session session) {
+		this.container = container;
 		this.transactionManager = transactionManager;
 		this.entriesContent = entriesContent;
 
@@ -246,7 +250,7 @@ public class EntriesTree {
 		layoutOfButtons.fill = false;
 		layoutOfButtons.justify = true;
 		layoutOfButtons.marginTop = 0;
-		layoutOfButtons.spacing = 0;
+		layoutOfButtons.spacing = 5;
 		buttonArea.setLayout(layoutOfButtons);
 		
         // Create the 'add transaction' button.
@@ -429,11 +433,15 @@ public class EntriesTree {
 				closeCellEditor();
 
         		Entry selectedEntryInAccount = getSelectedEntryInAccount();
+        		if (selectedEntryInAccount != null) {
 				TransactionDialog dialog = new TransactionDialog(
 						container.getShell(),
 						selectedEntryInAccount,
 						session);
 				dialog.open();
+        		} else {
+        			// No entry selected.
+        		}
         	}
         });
         
@@ -444,7 +452,16 @@ public class EntriesTree {
 				.hasNext();) {
 			IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty) iter
 					.next();
-			addColumn(entriesSectionProperty, index++);
+			// By default, do not include the column for the currency
+			// of the entry in the category (which applies only when
+			// the category is a multi-currency income/expense category)
+			// and the column for the amount (which applies only when
+			// the currency is different from the entry in the capital 
+			// account)
+			if (!entriesSectionProperty.getId().equals("common2.net.sf.jmoney.entry.incomeExpenseCurrency")
+					&& !entriesSectionProperty.getId().equals("other.net.sf.jmoney.entry.amount")) {
+				addColumn(entriesSectionProperty, index++);
+			}
 		}
 
 		TreeColumn col;
@@ -522,7 +539,7 @@ public class EntriesTree {
 				}
 
 				if (event.button == 1) {
-					IDisplayableItem data = (IDisplayableItem)item.getData();
+					final IDisplayableItem data = (IDisplayableItem)item.getData();
 
 					if (!checkAndCommitTransaction(data)) {
 						return;
@@ -594,6 +611,34 @@ public class EntriesTree {
 					currentCellPropertyControl = entryData.createAndLoadPropertyControl(fTable, data);
 					if (currentCellPropertyControl != null) {
 						createCellEditor(item, column, currentCellPropertyControl);
+						
+						/*
+						 * If the category property, listen for changes and set
+						 * the currency to be the currency of the listed account
+						 * whenever the category is set to a multi-currency
+						 * category and no currency is set.
+						 */
+						if (entryData.getId().equals("common2.net.sf.jmoney.entry.account")) {
+							currentCellPropertyControl.getControl().addListener(SWT.Selection, new Listener() {
+								public void handleEvent(Event event) {
+									Entry changedEntry = data.getEntryForCommon2Fields();
+									Account account = changedEntry.getAccount();
+									if (account instanceof IncomeExpenseAccount) {
+										IncomeExpenseAccount incomeExpenseAccount = (IncomeExpenseAccount)account;
+										if (incomeExpenseAccount.isMultiCurrency()
+												&& changedEntry.getIncomeExpenseCurrency() == null) {
+											// Find the capital account in this transaction and set
+											// the currency of this income or expense to match the
+											// currency of the capital entry.
+											Commodity defaultCommodity = data.getEntryInAccount().getCommodity();
+											if (defaultCommodity instanceof Currency) {
+												changedEntry.setIncomeExpenseCurrency((Currency)defaultCommodity);
+											}
+										}
+									}
+								}
+							});
+						}
 					}
 				} else {
 					// Mouse button other than number 1 was pressed.
@@ -658,6 +703,8 @@ public class EntriesTree {
 								}
 							});
 
+					new MenuItem(popupMenu, SWT.SEPARATOR);
+					
 					for (Iterator iter = entriesContent
 							.getAllEntryDataObjects().iterator(); iter
 							.hasNext();) {
@@ -980,9 +1027,6 @@ public class EntriesTree {
 			if (transactionManager.hasChanges()) {
 				// Validate the transacion.
 
-				String message = null;
-				TreeItem itemWithError = null;
-				
 				long totalAmount = 0;
 				Commodity commodity = null;
 				boolean mixedCommodities = false;
@@ -991,64 +1035,120 @@ public class EntriesTree {
 				? previouslySelectedItem
 						: previouslySelectedItem.getParentItem();
 
-				if (previousTransaction.getDate() == null) {
-					message = "The date cannot be blank.";
-					itemWithError = parentItem;
-				} else {
-					for (Iterator iter = previousTransaction.getEntryCollection().iterator(); iter.hasNext(); ) {
-						Entry entry = (Entry)iter.next();
-						if (entry.getAccount() == null) {
-							message = "A category must be selected.";
-							itemWithError = lookupSplitEntry(parentItem, entry);
-						}
-						
-						if (commodity == null) {
-							commodity = entry.getCommodity();
-						} else if (!commodity.equals(entry.getCommodity())) {
-							mixedCommodities = true;
-						}
-						
-						totalAmount += entry.getAmount();
+				class InvalidUserEntryException extends Exception {
+					private static final long serialVersionUID = -8693190447361905525L;
+
+					TreeItem itemWithError = null;
+					
+					public InvalidUserEntryException(String message, TreeItem itemWithError) {
+						super(message);
+						this.itemWithError = itemWithError;
 					}
-				}
+
+					public TreeItem getItemWithError() {
+						return itemWithError;
+					}
+				};
 				
-				/*
-				 * If all the entries are in the same currency then the sum of
-				 * the entries in the transaction must add to zero. In a
-				 * transaction with child rows we display an error to the user
-				 * if the sum is not zero. However, in a simple transaction the
-				 * amount of the income and expense is not shown because it
-				 * always matches the amount of the credit or debit. The amounts
-				 * may not match if, for example, the currencies used to differ
-				 * but the user changed the category so that the currencies now
-				 * match. We present the data to the user as tho the other
-				 * amount does not exist, so we should silently correct the
-				 * amount.
-				 */
-				if (totalAmount != 0 && !mixedCommodities) {
-					// TODO: For double entries where both accounts are in the same currency,
-					// should the amount for one account automatically change when the user changes
-					// the amount for the other account?  Currently the user must update both
-					// to keep the transaction balanced and to avoid the following error message.
-					if (newTransData.hasSplitEntries() || newTransData.isDoubleEntry()) {
-						message = "The transaction does not balance.  " +
-							"Unless some entries in the transaction are in different currencies, " +
-							"the sum of all the entries in a transaction must add up to zero.";
+				try {
+					if (previousTransaction.getDate() == null) {
+						throw new InvalidUserEntryException(
+								"The date cannot be blank.",
+								parentItem);
 					} else {
-						Entry accountEntry = newTransData.getEntryForAccountFields();
-						Entry otherEntry = newTransData.getEntryForOtherFields();
-						otherEntry.setAmount(-accountEntry.getAmount());
-					}
+						for (Iterator iter = previousTransaction.getEntryCollection().iterator(); iter.hasNext(); ) {
+							Entry entry = (Entry)iter.next();
+							if (entry.getAccount() == null) {
+								throw new InvalidUserEntryException(
+										"A category must be selected.",
+										lookupSplitEntry(parentItem, entry));
+							}
 							
-				}
-				
-				if (message != null) {
+							if (entry.getAccount() instanceof IncomeExpenseAccount) {
+								IncomeExpenseAccount incomeExpenseAccount = (IncomeExpenseAccount)entry.getAccount();
+								if (incomeExpenseAccount.isMultiCurrency()
+										&& entry.getIncomeExpenseCurrency() == null) {
+									throw new InvalidUserEntryException(
+											"A currency must be selected (" + incomeExpenseAccount.getName() + " is a multi-currency category).",
+											lookupSplitEntry(parentItem, entry));
+								}
+							}
+							
+							if (commodity == null) {
+								commodity = entry.getCommodity();
+							} else if (!commodity.equals(entry.getCommodity())) {
+								mixedCommodities = true;
+							}
+							
+							totalAmount += entry.getAmount();
+						}
+					}
+					
+					/*
+					 * If all the entries are in the same currency then the sum of
+					 * the entries in the transaction must add to zero. In a
+					 * transaction with child rows we display an error to the user
+					 * if the sum is not zero. However, in a simple transaction the
+					 * amount of the income and expense is not shown because it
+					 * always matches the amount of the credit or debit. The amounts
+					 * may not match if, for example, the currencies used to differ
+					 * but the user changed the category so that the currencies now
+					 * match. We present the data to the user as tho the other
+					 * amount does not exist, so we should silently correct the
+					 * amount.
+					 */
+					if (totalAmount != 0 && !mixedCommodities) {
+						// TODO: For double entries where both accounts are in the same currency,
+						// should the amount for one account automatically change when the user changes
+						// the amount for the other account?  Currently the user must update both
+						// to keep the transaction balanced and to avoid the following error message.
+						if (previousTransData.hasSplitEntries() || previousTransData.isDoubleEntry()) {
+							throw new InvalidUserEntryException(
+									"The transaction does not balance.  " +
+									"Unless some entries in the transaction are in different currencies, " +
+									"the sum of all the entries in a transaction must add up to zero.",
+									previouslySelectedItem);
+						} else {
+							Entry accountEntry = newTransData.getEntryForAccountFields();
+							Entry otherEntry = newTransData.getEntryForOtherFields();
+							otherEntry.setAmount(-accountEntry.getAmount());
+						}
+					}
+					
+					/*
+					 * Check for zero amounts. A zero amount is
+					 * normally a user error and will not be accepted. However, if
+					 * this is a simple transaction and the currencies are different
+					 * then we prompt the user for the amount of the other entry
+					 * (the income and expense entry). This is very desirable
+					 * because the foreign currency column (being used so little) is
+					 * not displayed by default.
+					 */
+					if (previousTransData.isSimpleEntry()
+							&& previousTransData.getEntryForAccountFields().getAmount() != 0
+							&& previousTransData.getEntryForOtherFields().getAmount() == 0
+							&& previousTransData.getEntryForOtherFields().getCommodity() != previousTransData.getEntryForAccountFields().getCommodity()) {
+						ForeignCurrencyDialog dialog = new ForeignCurrencyDialog(
+								container.getShell(),
+								previousTransData);
+						dialog.open();
+					} else {
+						for (Iterator iter = previousTransaction.getEntryCollection().iterator(); iter.hasNext(); ) {
+							Entry entry = (Entry)iter.next();
+							if (entry.getAmount() == 0) {
+								throw new InvalidUserEntryException(
+										"A non-zero credit or debit amount must be entered.",
+										lookupSplitEntry(parentItem, entry));
+							}
+						}
+					}
+				} catch (InvalidUserEntryException e) {
         			MessageDialog dialog = new MessageDialog(
         					fTable.getShell(),
         					"Incomplete or invalid data in entry",
         					null, // accept the default window icon
-        					message,
-        					MessageDialog.INFORMATION,
+        					e.getLocalizedMessage(),
+        					MessageDialog.ERROR,
         					new String[] { IDialogConstants.OK_LABEL }, 0);
 
         			// While waiting for the dialog box input, SWT will process
@@ -1062,7 +1162,7 @@ public class EntriesTree {
         			// Unfortunately there is no 'doit' field in mouse events.
         			// However, we can simply select the row with the error and that
         			// will cancel out the user's selection.
-    				fTable.setSelection( new TreeItem [] { itemWithError });
+    				fTable.setSelection( new TreeItem [] { e.getItemWithError() });
     				
     				/*
 					 * SWT does not seem to generate events for the above
@@ -1071,9 +1171,9 @@ public class EntriesTree {
 					 * been no change to the selected item so we don't need to
 					 * fire anything.
 					 */
-        			if (itemWithError != previouslySelectedItem) {
-        				fireSelectionChanges((IDisplayableItem)itemWithError.getData());
-        				previouslySelectedItem = itemWithError;
+        			if (e.getItemWithError() != previouslySelectedItem) {
+        				fireSelectionChanges((IDisplayableItem)(e.getItemWithError()).getData());
+        				previouslySelectedItem = e.getItemWithError();
         			}
         			
         			return false;

@@ -26,6 +26,8 @@ import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.pages.entries.EntriesTree.DisplayableEntry;
+import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
 
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -74,12 +76,20 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     			// the section to be blanked.
     			
     			IDisplayableItem data = (IDisplayableItem)selectedObject;
-    			
-    			Entry entryInAccount = data.getEntryInAccount();
-    			Entry selectedEntry = data.getEntryForThisRow();
-    			
-    			if (selectedEntry != null) {
-    				fPage.fEntrySection.update(entryInAccount, selectedEntry);
+
+    			if (selectedObject instanceof DisplayableTransaction) {
+    				DisplayableTransaction transData = (DisplayableTransaction)selectedObject;
+    				if (transData.isSimpleEntry()) {
+    					fPage.fEntrySection.update(data.getEntryInAccount(), data.getEntryForOtherFields(), true);
+    				} else {
+    					fPage.fEntrySection.update(data.getEntryInAccount(), null, true);
+    				}
+    			} else if (selectedObject instanceof DisplayableEntry) {
+					fPage.fEntrySection.update(data.getEntryForThisRow(), null, false);
+    			} else {
+    				// We were not on a transaction (we were probably on the
+    				// blank 'new transaction' line.
+					fPage.fEntrySection.update(null, null, false);
     			}
 			}
         };
