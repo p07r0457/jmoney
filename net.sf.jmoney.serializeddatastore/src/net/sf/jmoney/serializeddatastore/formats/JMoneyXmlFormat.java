@@ -1525,7 +1525,12 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		for (Iterator iter = oldAccounts.iterator(); iter.hasNext(); ) {
 			net.sf.jmoney.model.Account oldAccount = (net.sf.jmoney.model.Account)iter.next();
 			CapitalAccount newAccount = (CapitalAccount)accountMap.get(oldAccount);
-			
+
+			// As all accounts in the old format are bank accounts, we can get
+			// the currency of the account simply by casting to BankAccount.
+			Currency currencyForCategories =  
+				((BankAccount)newAccount).getCurrency();
+				
 			for (Iterator entryIter = oldAccount.getEntries().iterator(); entryIter.hasNext(); ) {
 				net.sf.jmoney.model.Entry oldEntry = (net.sf.jmoney.model.Entry)entryIter.next();
 				
@@ -1570,6 +1575,14 @@ public class JMoneyXmlFormat implements IFileDatastore {
 						subEntry.setAmount(oldSubEntry.getAmount());
 						subEntry.setAccount((Account)accountMap.get(oldSubEntry.getCategory()));
 						copyEntryProperties(oldSubEntry, subEntry, statusProperty);
+						
+						
+						// Under the old model, all categories are multi-currency categories
+						// and the currency of the category matches the currency of the account
+						// entry.  We must set the currency.
+						if (subEntry.getAccount() instanceof IncomeExpenseAccount) {
+							subEntry.setIncomeExpenseCurrency(currencyForCategories);
+						}
 					}
 				} else {
 					Transaction trans = newSession.createTransaction();
@@ -1590,6 +1603,11 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					
 					entry2.setCreation(oldEntry.getCreation());
 					entry2.setDescription(oldEntry.getDescription());
+					
+					// Under the old model, all categories are multi-currency categories
+					// and the currency of the category matches the currency of the account
+					// entry.  We must set the currency.
+					entry2.setIncomeExpenseCurrency(currencyForCategories);
 				}
 			}
 		}
