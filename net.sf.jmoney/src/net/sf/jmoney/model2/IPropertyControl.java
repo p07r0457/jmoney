@@ -65,6 +65,15 @@ public interface IPropertyControl {
      */
     void load(ExtendableObject object);
 
+    /**
+     * This method takes the data in the control and sets it
+     * into the datastore.  This method must be called before 
+     * a control is destroyed, otherwise data entered by the user
+     * may not be saved.
+     * <P>
+     * Some controls will save data in response to user edits.
+     * Combo boxes typically do this.  Other controls, such as
+     * text boxes, do not.
+     */
     void save();
-
 }
