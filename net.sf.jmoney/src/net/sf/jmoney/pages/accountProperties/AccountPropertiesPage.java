@@ -120,7 +120,24 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 					Label propertyLabel = new Label(this, 0);
 					propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
 					final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(this);
-					propertyControl.getControl().setLayoutData(new GridData(GridData.FILL, GridData.CENTER, true, false));
+		
+					/*
+					 * If the control factory set up grid data then leave it
+					 * alone. Otherwise set up the grid data based on the
+					 * properties minimum sizes and expansion weights. <P> The
+					 * control widths are set to the minimum width plus 10 times
+					 * the expansion weight. (As we are not short of space, we
+					 * make them a little bigger than their minimum sizes). A
+					 * minimum of 100 pixels is then applied because this makes
+					 * the right sides of the smaller controls line up, which
+					 * looks a little more tidy.
+					 */  
+					if (propertyControl.getControl().getLayoutData() == null) {
+						GridData gridData = new GridData();
+						gridData.minimumWidth = propertyAccessor.getMinimumWidth();
+						gridData.widthHint = Math.max(propertyAccessor.getMinimumWidth() + 10 * propertyAccessor.getWeight(), 100);
+						propertyControl.getControl().setLayoutData(gridData);
+					}
 
 					propertyControl.getControl().addFocusListener(
 							new FocusAdapter() {

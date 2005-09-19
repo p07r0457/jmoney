@@ -69,7 +69,7 @@ public class BankAccountInfo implements IPropertySetInfo {
 		
 		bankAccessor = propertyRegistrar.addProperty("bank", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), 5, 100, textControlFactory, null);
 		accountNumberAccessor = propertyRegistrar.addProperty("accountNumber", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), 2, 70, textControlFactory, null);
-		minBalanceAccessor = propertyRegistrar.addProperty("minBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.minBalance"), 1, 50, amountControlFactory, null);
+		minBalanceAccessor = propertyRegistrar.addProperty("minBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.minBalance"), 2, 40, amountControlFactory, null);
 		
 		propertyRegistrar.setObjectDescription("Bank Account");
 	}
