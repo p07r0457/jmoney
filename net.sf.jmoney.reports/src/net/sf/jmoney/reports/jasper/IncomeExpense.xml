@@ -2,7 +2,7 @@
 <!DOCTYPE jasperReport PUBLIC "-//JasperReports//DTD Report Design//EN" "http://jasperreports.sourceforge.net/dtds/jasperreport.dtd">
 
 <jasperReport
-	      name="CashFlow"
+	      name="IncomeExpense"
 	      pageWidth="595"
 	      pageHeight="842"
 	      columnWidth="515"
