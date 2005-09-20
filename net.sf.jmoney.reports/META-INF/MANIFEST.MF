@@ -7,11 +7,10 @@ Bundle-Activator: net.sf.jmoney.reports.ReportsPlugin
 Bundle-Localization: plugin
 Bundle-ClassPath: reports.jar,
  lib/swtjasperviewer-1.0.3.jar,
- lib/jasperreports-0.6.8.jar,
- lib/commons-logging.jar,
- lib/commons-digester-1.3.jar,
- lib/commons-collections-3.0.jar,
- lib/commons-beanutils.jar
+ lib/commons-beanutils-1.7.0.jar,
+ lib/commons-collections-3.1.jar,
+ lib/commons-digester-1.7.jar,
+ lib/commons-logging-1.0.4.jar
 Bundle-Vendor: JMoney.sf.net
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
