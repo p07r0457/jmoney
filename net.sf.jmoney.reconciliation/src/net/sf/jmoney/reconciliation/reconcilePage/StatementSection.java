@@ -39,6 +39,8 @@ import net.sf.jmoney.pages.entries.EntryRowSelectionListener;
 import net.sf.jmoney.pages.entries.IDisplayableItem;
 import net.sf.jmoney.pages.entries.IEntriesContent;
 import net.sf.jmoney.pages.entries.IEntriesTableProperty;
+import net.sf.jmoney.pages.entries.EntriesTree.DisplayableEntry;
+import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
@@ -116,29 +118,38 @@ public class StatementSection extends SectionPart {
         container = toolkit.createComposite(getSection());
 
         tableSelectionListener = new EntryRowSelectionAdapter() {
-			public void widgetSelected(IDisplayableItem selectedObject) {
-    			JMoneyPlugin.myAssert(selectedObject != null);
-    			
-    			// We should never get here with the item data set to the
-    			// DisplayableNewEmptyEntry object as a result of the user
-    			// selecting the row.  The reason being that the EntryTree
-    			// object intercepts mouse down events first and replaces the
-    			// data with a new entry.  However, SWT seems to set the selection
-    			// to the last row in certain circumstances such as when
-    			// applying a filter.  In such a situation, both the top-level
-    			// entry and the selected entry will be given as null.
-    			// Two null values passed to the entry section will cause
-    			// the section to be blanked.
-    			
-    			IDisplayableItem data = (IDisplayableItem)selectedObject;
-    			
-    			Entry entryInAccount = data.getEntryInAccount();
-    			Entry selectedEntry = data.getEntryForThisRow();
-    			
-    			if (selectedEntry != null) {
-    				fPage.fEntrySection.update(entryInAccount, selectedEntry);
-    			}
-			}
+            public void widgetSelected(IDisplayableItem selectedObject) {
+                JMoneyPlugin.myAssert(selectedObject != null);
+
+                // We should never get here with the item data set to the
+                // DisplayableNewEmptyEntry object as a result of the user
+                // selecting the row. The reason being that the EntryTree
+                // object intercepts mouse down events first and replaces the
+                // data with a new entry. However, SWT seems to set the
+                // selection
+                // to the last row in certain circumstances such as when
+                // applying a filter. In such a situation, both the top-level
+                // entry and the selected entry will be given as null.
+                // Two null values passed to the entry section will cause
+                // the section to be blanked.
+
+                IDisplayableItem data = (IDisplayableItem) selectedObject;
+
+                if (selectedObject instanceof DisplayableTransaction) {
+                    DisplayableTransaction transData = (DisplayableTransaction) selectedObject;
+                    if (transData.isSimpleEntry()) {
+                        fPage.fEntrySection.update(data.getEntryInAccount(), data.getEntryForOtherFields(), true);
+                    } else {
+                        fPage.fEntrySection.update(data.getEntryInAccount(), null, true);
+                    }
+                } else if (selectedObject instanceof DisplayableEntry) {
+                    fPage.fEntrySection.update(data.getEntryForThisRow(), null, false);
+                } else {
+                    // We were not on a transaction (we were probably on the
+                    // blank 'new transaction' line.
+                    fPage.fEntrySection.update(null, null, false);
+                }
+            }
         };
 
         reconciledTableContents = new IEntriesContent() {
