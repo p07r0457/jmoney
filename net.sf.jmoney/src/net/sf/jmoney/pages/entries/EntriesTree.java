@@ -1752,7 +1752,7 @@ public class EntriesTree {
 		}
 	}
 
-	class DisplayableEntry implements IDisplayableItem {
+	public class DisplayableEntry implements IDisplayableItem {
 
 		private Entry entry;
 
