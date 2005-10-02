@@ -6,6 +6,7 @@ Bundle-Version: 1.0.0
 Bundle-Activator: net.sf.jmoney.reports.ReportsPlugin
 Bundle-Localization: plugin
 Bundle-ClassPath: reports.jar,
+ lib/jasperreports-1.0.2.jar,
  lib/swtjasperviewer-1.0.3.jar,
  lib/commons-beanutils-1.7.0.jar,
  lib/commons-collections-3.1.jar,
