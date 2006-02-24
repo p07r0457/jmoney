@@ -50,66 +50,77 @@ Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
          id="net.sf.jmoney"
          download-size="0"
          install-size="0"
-         version="1.0.0"/>
+         version="1.0.0"
+         unpack="false"/>
 
    <plugin
          id="net.sf.jmoney.categoriespanel"
          download-size="0"
          install-size="0"
-         version="1.0.0"/>
+         version="1.0.0"
+         unpack="false"/>
 
    <plugin
          id="net.sf.jmoney.charts"
          download-size="0"
          install-size="0"
-         version="1.0.0"/>
+         version="1.0.0"
+         unpack="false"/>
 
    <plugin
          id="net.sf.jmoney.copier"
          download-size="0"
          install-size="0"
-         version="1.0.0"/>
+         version="1.0.0"
+         unpack="false"/>
 
    <plugin
          id="net.sf.jmoney.gnucashXML"
          download-size="0"
          install-size="0"
-         version="1.0.0"/>
+         version="1.0.0"
+         unpack="false"/>
 
    <plugin
          id="net.sf.jmoney.jdbcdatastore"
          download-size="0"
          install-size="0"
-         version="1.0.0"/>
+         version="1.0.0"
+         unpack="false"/>
 
    <plugin
          id="net.sf.jmoney.propagators.reconciliation"
          download-size="0"
          install-size="0"
-         version="1.0.0"/>
+         version="1.0.0"
+         unpack="false"/>
 
    <plugin
          id="net.sf.jmoney.qif"
          download-size="0"
          install-size="0"
-         version="1.0.0"/>
+         version="1.0.0"
+         unpack="false"/>
 
    <plugin
          id="net.sf.jmoney.reconciliation"
          download-size="0"
          install-size="0"
-         version="1.0.0"/>
+         version="1.0.0"
+         unpack="false"/>
 
    <plugin
          id="net.sf.jmoney.reports"
          download-size="0"
          install-size="0"
-         version="1.0.0"/>
+         version="1.0.0"
+         unpack="false"/>
 
    <plugin
          id="net.sf.jmoney.serializeddatastore"
          download-size="0"
          install-size="0"
-         version="1.0.0"/>
+         version="1.0.0"
+         unpack="false"/>
 
 </feature>
