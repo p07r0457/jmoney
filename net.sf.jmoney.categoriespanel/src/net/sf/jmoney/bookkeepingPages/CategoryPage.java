@@ -97,9 +97,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
 	public IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento) {
-		SectionlessPage formPage = new CategoryFormPage(
-				editor,
-				PAGE_ID);
+		SectionlessPage formPage = new CategoryFormPage(editor, PAGE_ID);
 		
 		try {
 			editor.addPage(formPage);
@@ -184,8 +182,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 		 */
 		Vector propertyList = new Vector();
 		
-		private SessionChangeListener listener =
-			new SessionChangeAdapter() {
+		private SessionChangeListener listener = new SessionChangeAdapter() {
 			public void sessionReplaced(Session oldSession, Session newSession) {
 				// When the session is replaced, this view will be disposed
 				// and possibly re-built, so do nothing here.
@@ -236,16 +233,13 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			}
 		};
 		
-		CategoryFormPage(
-				NodeEditor editor,
-				String pageId) {
-			super(editor,
-					pageId, 
-					CategoriesPanelPlugin.getResourceString("NavigationTreeModel.categories"), 
-			"Income and Expense Categories");
-			
-			this.session = JMoneyPlugin.getDefault().getSession();
-		}
+		CategoryFormPage(NodeEditor editor, String pageId) {
+            super(editor, pageId, CategoriesPanelPlugin
+                    .getResourceString("NavigationTreeModel.categories"),
+                    "Income and Expense Categories");
+
+            this.session = JMoneyPlugin.getDefault().getSession();
+        }
 		
 		public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
 			
@@ -278,8 +272,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			viewer.setInput(session);
 
 			// Listen for changes to the category list.
-			JMoneyPlugin.getDefault().addSessionChangeListener(listener);
-			//		viewer.expandAll();
+			JMoneyPlugin.getDefault().addSessionChangeListener(listener, viewer.getControl());
 			
 			// Listen for changes in the selection and update the 
 			// edit controls.
