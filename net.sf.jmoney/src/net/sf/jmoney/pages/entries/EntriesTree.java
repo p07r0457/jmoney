@@ -61,6 +61,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
@@ -147,7 +148,7 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
  * that cell). As the IEntriesTableProperty object has the property accessor,
  * the property value associated with the cell can be got and set.
  */
-public class EntriesTree {
+public class EntriesTree extends Composite {
 
 	// The darker purple and green lines for the listed entry in each transaction
 	protected static final Color transactionColor = new Color(Display
@@ -162,8 +163,6 @@ public class EntriesTree {
 
 	protected static final Color alternateEntryColor = new Color(Display
 			.getCurrent(), 245, 255, 255);
-
-	private Composite container;
 
 	protected IEntriesContent entriesContent;
 
@@ -224,24 +223,30 @@ public class EntriesTree {
 	 */
 	protected boolean ignoreSelectionEvent = false;
 
-	public EntriesTree(final Composite container, FormToolkit toolkit,
+	public EntriesTree(Composite parent, FormToolkit toolkit,
 			final TransactionManager transactionManager, final IEntriesContent entriesContent, final Session session) {
-		this.container = container;
+		super(parent, SWT.NONE);
+		
+		toolkit.adapt(this, true, false);
+
+		GridLayout layout = new GridLayout(1, false);
+		layout.marginWidth = 0;
+		layout.marginHeight = 0;
+		setLayout(layout);
+		
 		this.transactionManager = transactionManager;
 		this.entriesContent = entriesContent;
 
-		fTable = new Tree(container, SWT.FULL_SELECTION | SWT.BORDER
+		fTable = new Tree(this, SWT.FULL_SELECTION | SWT.BORDER
 				| SWT.H_SCROLL | SWT.SINGLE);
 		
-		GridData gridData = new GridData(GridData.FILL_BOTH);
+		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gridData.heightHint = 100;
 		gridData.widthHint = 100;
-		gridData.grabExcessHorizontalSpace = true;
-		gridData.grabExcessVerticalSpace = true;
 		fTable.setLayoutData(gridData);
 
         // Create the button area
-		Composite buttonArea = toolkit.createComposite(container);
+		Composite buttonArea = toolkit.createComposite(this);
 		
 		// Note that the buttons touch each other and also touch
 		// the table above.  This makes it clearer that the buttons
@@ -435,7 +440,7 @@ public class EntriesTree {
         		Entry selectedEntryInAccount = getSelectedEntryInAccount();
         		if (selectedEntryInAccount != null) {
 				TransactionDialog dialog = new TransactionDialog(
-						container.getShell(),
+						getShell(),
 						selectedEntryInAccount,
 						session);
 				dialog.open();
@@ -960,7 +965,7 @@ public class EntriesTree {
 					refreshLabels();
 				}
 			}
-		}, container);
+		}, this);
 	}
 
 	/**
@@ -1129,7 +1134,7 @@ public class EntriesTree {
 							&& previousTransData.getEntryForOtherFields().getAmount() == 0
 							&& previousTransData.getEntryForOtherFields().getCommodity() != previousTransData.getEntryForAccountFields().getCommodity()) {
 						ForeignCurrencyDialog dialog = new ForeignCurrencyDialog(
-								container.getShell(),
+								getShell(),
 								previousTransData);
 						dialog.open();
 					} else {

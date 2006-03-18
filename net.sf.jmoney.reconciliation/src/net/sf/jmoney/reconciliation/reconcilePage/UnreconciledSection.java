@@ -83,14 +83,6 @@ public class UnreconciledSection extends SectionPart {
         fPage = page;
     	this.toolkit = page.getManagedForm().getToolkit();
     	
-        final Composite container = toolkit.createComposite(getSection());
-
-        GridLayout layout = new GridLayout();
-        layout.numColumns = 1;
-        layout.marginHeight = 0;
-        layout.marginWidth = 0;
-        container.setLayout(layout);
-
         unreconciledTableContents = new IEntriesContent() {
 
 			public Vector getAllEntryDataObjects() {
@@ -171,8 +163,7 @@ public class UnreconciledSection extends SectionPart {
         };
 
         // Create the table control.
-        fUnreconciledEntriesControl = new EntriesTree(container, toolkit, fPage.transactionManager, unreconciledTableContents, fPage.getAccount().getSession()); 
-		fPage.getEditor().getToolkit().adapt(fUnreconciledEntriesControl.getControl(), true, false);
+        fUnreconciledEntriesControl = new EntriesTree(getSection(), toolkit, fPage.transactionManager, unreconciledTableContents, fPage.getAccount().getSession()); 
 		
         // Allow entries in the account to be moved from the unreconciled list
         final DragSource dragSource = new DragSource(fUnreconciledEntriesControl.getControl(), DND.DROP_MOVE);
@@ -217,7 +208,7 @@ public class UnreconciledSection extends SectionPart {
         	}
         });
         
-        fUnreconciledEntriesControl.getControl().addDisposeListener(new DisposeListener() {
+        fUnreconciledEntriesControl.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {
 				dragSource.dispose();
 			}
@@ -279,8 +270,8 @@ public class UnreconciledSection extends SectionPart {
 
 		fUnreconciledEntriesControl.addSelectionListener(tableSelectionListener);
 
-        getSection().setClient(container);
-        toolkit.paintBordersFor(container);
+        getSection().setClient(fUnreconciledEntriesControl);
+        toolkit.paintBordersFor(fUnreconciledEntriesControl);
         refresh();
     }
 }

@@ -93,14 +93,6 @@ public class StatementSection extends SectionPart {
      */
     private Label noStatementMessage;
     
-    /**
-	 * Contains two controls:
-	 * - the table container
-	 * - the button area container
-	 * Layout: GridLayout
-     */
-	private Composite containerOfTableAndButtons;
-	
     private FormToolkit toolkit;
     
     private EntryRowSelectionListener tableSelectionListener = null;
@@ -255,16 +247,6 @@ public class StatementSection extends SectionPart {
 			}
         };
         
-        // Create the control that contains the table control and the buttons
-        // underneath it.  These controls are grouped into a composite because
-        // they are displayed alternatively with the 'no statement' label.
-        containerOfTableAndButtons = toolkit.createComposite(container);
-        GridLayout layout23 = new GridLayout();
-        layout23.numColumns = 1; // not needed????
-        layout23.marginHeight = 0;
-        layout23.marginWidth = 0;
-        containerOfTableAndButtons.setLayout(layout23);
-        
 		// We manage the layout of 'container' ourselves because we want either
 		// the 'containerOfTableAndButtons' to be visible or the 'no statement'
 		// message to be visible.  There is no suitable layout for
@@ -277,20 +259,19 @@ public class StatementSection extends SectionPart {
 		noStatementMessage.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED));
 
         // Create the table control.
-        fReconciledEntriesControl = new EntriesTree(containerOfTableAndButtons, toolkit, fPage.transactionManager, reconciledTableContents, fPage.getAccount().getSession()); 
-		fPage.getEditor().getToolkit().adapt(fReconciledEntriesControl.getControl(), true, false);
+        fReconciledEntriesControl = new EntriesTree(container, toolkit, fPage.transactionManager, reconciledTableContents, fPage.getAccount().getSession()); 
 		fReconciledEntriesControl.addSelectionListener(tableSelectionListener);
         
 		// TODO: do not duplicate this.
 		if (fPage.getStatement() == null) {
 			noStatementMessage.setSize(container.getSize());
 			//fReconciledEntriesControl.getControl().setSize(0, 0);
-			containerOfTableAndButtons.setSize(0, 0);
+			fReconciledEntriesControl.setSize(0, 0);
 		} else {
 			noStatementMessage.setSize(0, 0);
 			//fReconciledEntriesControl.getControl().setSize(containerOfEntriesControl1.getSize());
-			containerOfTableAndButtons.setSize(container.getSize());
-			containerOfTableAndButtons.layout(true);  // ??????
+			fReconciledEntriesControl.setSize(container.getSize());
+			fReconciledEntriesControl.layout(true);  // ??????
 		}
         
         
@@ -302,11 +283,11 @@ public class StatementSection extends SectionPart {
 			public void controlResized(ControlEvent e) {
 				if (fPage.getStatement() == null) {
 					noStatementMessage.setSize(container.getSize());
-					containerOfTableAndButtons.setSize(0, 0);
+					fReconciledEntriesControl.setSize(0, 0);
 				} else {
 					noStatementMessage.setSize(0, 0);
-					containerOfTableAndButtons.setSize(container.getSize());
-					containerOfTableAndButtons.layout(true);  // ??????
+					fReconciledEntriesControl.setSize(container.getSize());
+					fReconciledEntriesControl.layout(true);  // ??????
 				}
 			}
 		});
@@ -414,20 +395,19 @@ public class StatementSection extends SectionPart {
 		
     	fReconciledEntriesControl.refreshEntryList();
 
-
 		if (statement == null) {
 	        getSection().setText("Entries Shown on Statement");
 	        refresh();  // Must refresh to see new section title
 
 	        noStatementMessage.setSize(container.getSize());
-			containerOfTableAndButtons.setSize(0, 0);
+	        fReconciledEntriesControl.setSize(0, 0);
 		} else {
 	        getSection().setText("Entries Shown on Statement " + statement.toLocalizedString());
 	        getSection().layout(false);  // Required to get the new section title to show
 
 	        noStatementMessage.setSize(0, 0);
-			containerOfTableAndButtons.setSize(container.getSize());
-			containerOfTableAndButtons.layout(true);  // ??????
+	        fReconciledEntriesControl.setSize(container.getSize());
+	        fReconciledEntriesControl.layout(true);  // ??????
 		}
 	}
 }

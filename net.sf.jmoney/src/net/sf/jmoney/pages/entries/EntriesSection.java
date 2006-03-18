@@ -29,6 +29,8 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.pages.entries.EntriesTree.DisplayableEntry;
 import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.SectionPart;
@@ -94,21 +96,12 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 			}
         };
 
-        final Composite container = toolkit.createComposite(getSection());
-
-        GridLayout layout = new GridLayout();
-        layout.numColumns = 1;
-        layout.marginHeight = 0;
-        layout.marginWidth = 0;
-        container.setLayout(layout);
-
         // Create the table control.
-        fEntriesControl = new EntriesTree(container, toolkit, fPage.transactionManager, this, fPage.getAccount().getSession()); 
-		fPage.getEditor().getToolkit().adapt(fEntriesControl.getControl(), true, false);
+        fEntriesControl = new EntriesTree(getSection(), toolkit, fPage.transactionManager, this, fPage.getAccount().getSession()); 
 		fEntriesControl.addSelectionListener(tableSelectionListener);
-
-        getSection().setClient(container);
-        toolkit.paintBordersFor(container);
+		
+        getSection().setClient(fEntriesControl);
+        toolkit.paintBordersFor(fEntriesControl);
         refresh();
     }
 
