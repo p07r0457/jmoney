@@ -47,6 +47,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -75,7 +76,14 @@ public class StatementsSection extends SectionPart {
 		getSection().setText("Statements");
 		getSection().setDescription("Double click a statement to show that statement.");
 
-		statementTable = new Table(getSection(), SWT.FULL_SELECTION | SWT.SINGLE);
+		Composite c = new Composite(getSection(), SWT.NONE);
+		c.setLayout(new GridLayout());
+		
+		statementTable = new Table(c, SWT.FULL_SELECTION | SWT.SINGLE | SWT.V_SCROLL);
+		GridData gdTable = new GridData(SWT.FILL, SWT.FILL, true, true);
+		gdTable.heightHint = 100;
+		statementTable.setLayoutData(gdTable);
+		
 		statementTable.setHeaderVisible(true);
 		statementTable.setLinesVisible(true);
 		
@@ -88,9 +96,6 @@ public class StatementsSection extends SectionPart {
 		column2 = new TableColumn(statementTable, SWT.RIGHT, 1);
 		column2.setText("Balance");
 		column2.setWidth(70);
-		
-		GridData gd = new GridData(GridData.FILL_BOTH);
-		statementTable.setLayoutData(gd);
 		
 		// Create and setup the TableViewer
 		TableViewer tableViewer = new TableViewer(statementTable);   
@@ -105,10 +110,16 @@ public class StatementsSection extends SectionPart {
 		// The input for the table viewer is the instance of ExampleTaskList
 		tableViewer.setInput(account);
 		
-		statementTable.pack(true);   // Does this do anything??????
+		/*
+		 * Scroll the statement list to the bottom so that the most recent
+		 * statements are shown. This is done by selecting the last item (and
+		 * then clearing the selection).
+		 */
+		statementTable.setSelection(statementTable.getItemCount() - 1);
+		statementTable.setSelection(-1);
 		
-		getSection().setClient(statementTable);
-		toolkit.paintBordersFor(statementTable);
+		getSection().setClient(c);
+		toolkit.paintBordersFor(c);
 		refresh();
 	}
 	
