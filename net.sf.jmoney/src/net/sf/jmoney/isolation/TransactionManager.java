@@ -39,7 +39,6 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IDataManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ISessionChangeFirer;
-import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -395,7 +394,7 @@ public class TransactionManager implements IDataManager {
 	 * 
 	 */
 	public void commit() {
-		ISessionManager sessionManager = (ISessionManager)committedSession.getObjectKey().getSessionManager();
+		IDataManager sessionManager = committedSession.getObjectKey().getSessionManager();
 		sessionManager.startTransaction();
 		
 		// Add all the new objects, but set references to other
@@ -782,5 +781,29 @@ public class TransactionManager implements IDataManager {
 				return new DeltaListIterator(TransactionManager.this, committedCollection.iterator(), addedEntries, removedEntries);
 			}
 		}
+	}
+
+	public void startTransaction() {
+		/*
+		 * This method is called only when transaction are nested.
+		 * The nested transaction will call this method before it
+		 * applies the changes to this transaction.
+		 * 
+		 * An implementation of this method must be provided because
+		 * this class implements the IDataManager interface.
+		 * However, this method does not need to do anything.
+		 */
+	}
+
+	public void commitTransaction() {
+		/*
+		 * This method is called only when transaction are nested.
+		 * The nested transaction will call this method before it
+		 * applies the changes to this transaction.
+		 * 
+		 * An implementation of this method must be provided because
+		 * this class implements the IDataManager interface.
+		 * However, this method does not need to do anything.
+		 */
 	}
 }

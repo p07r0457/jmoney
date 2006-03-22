@@ -24,7 +24,9 @@ package net.sf.jmoney.isolation;
 
 import java.util.AbstractCollection;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -92,7 +94,7 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 	 * This method does not create the object in the underlying committed list,
 	 * because if it did that then other views would see the object before it is
 	 * committed. Instead this method adds the object to a list maintained by
-	 * this object. When the consumer iterates over the list, the objects in the
+	 * the transaction manager. When the consumer iterates over the list, the objects in the
 	 * 'added' list are appended to the items returned by the underlying
 	 * committed list.
 	 */
@@ -133,10 +135,23 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 		return extendableObject;
 	}
 
-	// This method is never used, because new objects are only created
-	// with non-default values when objects are being committed.
-	// It is here for completeness.
-	// If we support nested transactions then this method will be required.
+	/**
+	 * Create a new extendable object in the list represented by this object.
+	 * This version of this method takes an array of values of the properties in
+	 * the object.
+	 * <P>
+	 * This method does not create the object in the underlying committed list,
+	 * because if it did that then other views would see the object before it is
+	 * committed. Instead this method adds the object to a list maintained by
+	 * the transaction manager. When the consumer iterates over the list, the
+	 * objects in the 'added' list are appended to the items returned by the
+	 * underlying committed list.
+	 * <P>
+	 * This method is used only if transactions are nested. The API between the
+	 * model and the application does not support a method for creating an
+	 * object and setting the property values in a single call. That can only be
+	 * done when using a transaction manager.
+	 */
 	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
 		Collection constructorProperties = propertySet.getConstructorProperties();
 		
@@ -147,8 +162,10 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 		
 		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
 		
+		Map extensionMap = new HashMap();
+		
 		constructorParameters[0] = objectKey;
-		constructorParameters[1] = null;
+		constructorParameters[1] = extensionMap;
 		constructorParameters[2] = parent.getObjectKey();
 		
 		// Construct the extendable object using the 'full' constructor.
@@ -160,24 +177,35 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 		int valuesIndex = 0;
 		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+			
+			Object value;
 			if (propertyAccessor.isScalar()) {
 				if (valuesIndex != propertyAccessor.getIndexIntoScalarProperties()) {
 					throw new RuntimeException("index mismatch");
 				}
-				constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()]
-									  = values[valuesIndex];
-				valuesIndex++;
+				value = values[valuesIndex++];
+			} else {
+				value = new UncommittedListManager(transactionManager);
+			}
+			
+			// Determine how this value is passed to the constructor.
+			// If the property comes from an extension then we must set
+			// the property into an extension, otherwise we simply set
+			// the property into the constructor parameters.
+			if (!propertyAccessor.getPropertySet().isExtension()) {
+				constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
+			} else {
+				Object [] extensionConstructorParameters = (Object[])extensionMap.get(propertyAccessor.getPropertySet());
+				if (extensionConstructorParameters == null) {
+					extensionConstructorParameters = new Object [propertyAccessor.getPropertySet().getConstructorProperties().size()];
+					extensionMap.put(propertyAccessor.getPropertySet(), extensionConstructorParameters);
+				}
+				extensionConstructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
 			}
 		}
 		
-		// Add a list manager for each list property in the object.
-		int index = 3;
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); iter.next()) {
-			constructorParameters[index++] = new UncommittedListManager(transactionManager);
-		}
-		
 		// We can now create the object.
-		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructDefaultImplementationObject(constructorParameters);
+		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 
