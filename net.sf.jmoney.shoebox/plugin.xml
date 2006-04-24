@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension-point id="templates" name="Shoebox Transaction Templates" schema="schema/shoeboxTemplates.exsd"/>
+
+     <extension
+         point="net.sf.jmoney.pages">
+      <node
+          id="shoeboxNode"
+	      label="%navigationTreeLabel"
+    	  icon="icons/shoebox.gif"
+    	  position="250">
+      </node>
+      <pages
+            node="net.sf.jmoney.shoebox.shoeboxNode"
+            class="net.sf.jmoney.shoebox.ShoeboxPage"
+            id="editor">
+      </pages>
+   </extension>
+
+   <extension
+         point="net.sf.jmoney.shoebox.templates">
+      <template
+            id="credit"
+            class="net.sf.jmoney.shoebox.templates.CreditTemplate"
+            position="1">
+      </template>
+      <template
+            id="debit"
+            class="net.sf.jmoney.shoebox.templates.DebitTemplate"
+            position="2">
+      </template>
+      <template
+            id="transfer"
+            class="net.sf.jmoney.shoebox.templates.TransferTemplate"
+            position="3">
+      </template>
+   </extension>
+   
+</plugin>
