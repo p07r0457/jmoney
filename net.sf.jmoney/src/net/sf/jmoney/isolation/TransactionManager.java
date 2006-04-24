@@ -411,7 +411,21 @@ public class TransactionManager implements IDataManager {
 			for (Iterator iter2 = modifiedList.getAddedObjectIterator(); iter2.hasNext(); ) {
 				ExtendableObject newObject = (ExtendableObject)iter2.next();
 				
-				commitNewObject(newObject, parent, parentListPair.listAccessor);
+				final ExtendableObject newCommittedObject = commitNewObject(newObject, parent, parentListPair.listAccessor);
+
+				// Fire the event.
+				// Note that this must be done after the committed object is set above.  This allows
+				// listeners to connect the event to an uncommitted object.
+				// TODO: decide if this should be here.  The fireEvent should be package protected,
+				// and we are calling it from outside the package.  Also, what are the event firing
+				// rules?
+				parent.getSession().fireEvent(
+						new ISessionChangeFirer() {
+							public void fire(SessionChangeListener listener) {
+								listener.objectAdded(newCommittedObject);
+							}
+						}
+				);
 			}
 		}
 
@@ -517,8 +531,9 @@ public class TransactionManager implements IDataManager {
 	 * @param newObject
 	 * @param parent
 	 * @param listAccessor
+	 * @return the committed version of the object
 	 */
-	private void commitNewObject(ExtendableObject newObject, ExtendableObject parent, PropertyAccessor listAccessor) {
+	private ExtendableObject commitNewObject(ExtendableObject newObject, ExtendableObject parent, PropertyAccessor listAccessor) {
 		PropertySet actualPropertySet = PropertySet.getPropertySet(newObject.getClass());
 		
 		/**
@@ -577,7 +592,7 @@ public class TransactionManager implements IDataManager {
 		
 		// Create the object with the appropriate property values
 		ObjectCollection propertyValues = parent.getListPropertyValue(listAccessor); 
-		ExtendableObject newCommittedObject = propertyValues.createNewElement(actualPropertySet, values);
+		final ExtendableObject newCommittedObject = propertyValues.createNewElement(actualPropertySet, values);
 
 		// Update the uncommitted object key to indicate that there is now a committed
 		// version of the object in the datastore
@@ -599,6 +614,8 @@ public class TransactionManager implements IDataManager {
 		if (!propertyChangeMap.isEmpty()) {
 			modifiedObjects.put(newCommittedObject.getObjectKey(), propertyChangeMap);
 		}
+		
+		return newCommittedObject;
 	}
 
 	class DeletedObject {

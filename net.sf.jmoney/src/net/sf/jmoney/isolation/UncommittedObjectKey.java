@@ -132,13 +132,7 @@ public class UncommittedObjectKey implements IObjectKey {
 				// One is new, one is not, so cannot be equal
 				return false;
 			} else {
-				if (this.committedObjectKey == null && otherKey.committedObjectKey == null) {
-					return true;
-				} else if (this.committedObjectKey == null || otherKey.committedObjectKey == null) {
-					return false;
-				} else {
-					return this.committedObjectKey.equals(otherKey.committedObjectKey);
-				}
+				return JMoneyPlugin.areEqual(this.committedObjectKey, otherKey.committedObjectKey);
 			}
 		} else {
 			return false;
@@ -241,9 +235,9 @@ public class UncommittedObjectKey implements IObjectKey {
 	/**
 	 * Return the key to the committed version of the object.
 	 * 
-	 * @return the key to the version of the object from the committed datastore,
-	 * 			or null if this object has never been committed to the\
-	 * 			datastore
+	 * @return the key to the version of the object from the committed
+	 *         datastore, or null if this object has never been committed to the
+	 *         datastore
 	 */
 	public IObjectKey getCommittedObjectKey() {
 		if (extendableObject != null) {
