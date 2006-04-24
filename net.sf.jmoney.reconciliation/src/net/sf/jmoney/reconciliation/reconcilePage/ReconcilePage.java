@@ -30,14 +30,12 @@ import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -215,29 +213,27 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
             }
         }
 
-        // Add properties from the other entry.
-        // For time being, this is just the account and description.
+        // Add properties from the other entry where the property also is
+        // applicable for capital accounts.
+        // For time being, this is just the account.
         PropertySet extendablePropertySet = EntryInfo.getPropertySet();
         for (Iterator iter = extendablePropertySet.getPropertyIterator3(); iter.hasNext();) {
             PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
-            if (propertyAccessor == EntryInfo.getAccountAccessor() || propertyAccessor == EntryInfo.getDescriptionAccessor()) {
+            if (propertyAccessor == EntryInfo.getAccountAccessor()) {
+            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "common2") {
+					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
+						return data.getEntryForCommon2Fields();
+					}
+            	});
+            } else if (propertyAccessor == EntryInfo.getDescriptionAccessor()) {
             	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "other") {
 					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
-						Entry entry = data.getEntryForAccountFields();
-						if (entry == null) {
-							// May be the new entry.
-							return null;
-						}
-						Account account = entry.getAccount();
-						if (account instanceof IncomeExpenseAccount) {
-							return data.getEntryForAccountFields();
-						}
 						return data.getEntryForOtherFields();
 					}
             	});
             }
         }
-
+        
 		debitColumnManager = new DebitAndCreditColumns("Debit", "debit", true);     //$NON-NLS-2$
 		creditColumnManager = new DebitAndCreditColumns("Credit", "credit", false); //$NON-NLS-2$
 		balanceColumnManager = new BalanceColumn();
@@ -566,7 +562,9 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		 * @return
 		 */
 		public IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data) {
-			IPropertyControl propertyControl = accessor.createPropertyControl(parent); 
+			Session session = data.getTransaction().getSession();
+			
+			IPropertyControl propertyControl = accessor.createPropertyControl(parent, session); 
 				
 			ExtendableObject extendableObject = getObjectContainingProperty(data);
 
