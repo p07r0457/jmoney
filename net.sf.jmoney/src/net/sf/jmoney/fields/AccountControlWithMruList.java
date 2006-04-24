@@ -25,9 +25,7 @@ package net.sf.jmoney.fields;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.ISessionManager;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.SWT;
@@ -38,7 +36,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.ui.IMemento;
-import org.eclipse.ui.IPersistableElement;
 
 public class AccountControlWithMruList extends AccountComposite {
 	protected Session session;

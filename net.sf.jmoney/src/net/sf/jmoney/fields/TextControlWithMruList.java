@@ -25,8 +25,6 @@ package net.sf.jmoney.fields;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import net.sf.jmoney.model2.Account;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;

@@ -22,14 +22,7 @@
 
 package net.sf.jmoney.fields;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Vector;
-
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -37,7 +30,6 @@ import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
