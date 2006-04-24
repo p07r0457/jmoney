@@ -303,7 +303,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 				if (propertyAccessor.isScalar()) {
 					final Label propertyLabel = new Label(topLevelControl, 0);
 					propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
-					final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(topLevelControl);
+					final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(topLevelControl, session);
 					propertyControl.getControl().addFocusListener(
 							new FocusAdapter() {
 								
