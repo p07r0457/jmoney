@@ -207,7 +207,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     // TODO: remove this method when Java 1.4 becomes a requirement
     public static void myAssert(boolean assertion) {
     	if (!assertion) {
-    		IStatus status = null;
+    		IStatus status = new Status(IStatus.ERROR, JMoneyPlugin.PLUGIN_ID, IStatus.ERROR, "assert failure", null);
     		JMoneyPlugin.log(status);
     	}
     }
