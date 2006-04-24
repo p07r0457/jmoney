@@ -61,7 +61,7 @@ import org.vafada.swtcalendar.SWTCalendarListener;
  * 
  * @author Nigel Westbury
  */
-public class DateControl extends Composite {
+public class DateControl extends DateComposite {
 
     // TODO Listen to date format changes.
     private VerySimpleDateFormat fDateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());

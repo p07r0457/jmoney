@@ -27,6 +27,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.widgets.Composite;
 
@@ -38,8 +39,8 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class AccountControlFactory implements IPropertyControlFactory {
     
-    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
-        return new AccountEditor(parent, propertyAccessor);
+    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor, Session session) {
+        return new AccountEditor(parent, propertyAccessor, session);
     }
 
 	public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {

@@ -32,6 +32,7 @@ import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 
 import org.eclipse.swt.widgets.Composite;
@@ -84,7 +85,7 @@ public class EntryInfo implements IPropertySetInfo {
 	    	    return ((Entry) object).getCommodity();
 			}
 
-			public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
+			public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor, Session session) {
 		    	final AmountEditor editor = new AmountEditor(parent, propertyAccessor, this);
 		        
 		    	// The format of the amount will change if either

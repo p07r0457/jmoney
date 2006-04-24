@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -58,57 +59,33 @@ public class AccountEditor implements IPropertyControl {
 
     private PropertyAccessor accountPropertyAccessor;
 
-    private Combo propertyControl;
+    private AccountControl propertyControl;
 
-    private Vector allAccounts = new Vector();
-
-    /**
-     * The session whose accounts are listed in the combo box
-     */
-    private Session session = null;
-    
     /** 
      * @param propertyAccessor the accessor for the property to be edited
      * 			by this control.  The property must be of type Currency.
+     * @param session the session whose accounts are listed in the combo box
      */
-    public AccountEditor(Composite parent, PropertyAccessor propertyAccessor) {
-        propertyControl = new Combo(parent, 0);
+    public AccountEditor(Composite parent, PropertyAccessor propertyAccessor, Session session) {
+        propertyControl = new AccountControl(parent, session, Account.class);
         this.accountPropertyAccessor = propertyAccessor;
 
-        // Selection changes are reflected immediately in the
-        // mutable account object.  This allows other properties
-        // such as money amounts to listen for changes to the
-        // currency and change their format to be correct for
-        // the newly selected currency.
+        /*
+		 * Selection changes are reflected immediately in the account object.
+		 * This allows other properties such as money amounts to listen for
+		 * changes to the currency and change their format to be correct for the
+		 * newly selected currency.
+		 */
 
         propertyControl.addSelectionListener(new SelectionListener() {
-            public void widgetSelected(SelectionEvent e) {
-                save();
-            }
-            public void widgetDefaultSelected(SelectionEvent e) {
-                // Should this be here?
-                save();
-            }
+        	public void widgetSelected(SelectionEvent e) {
+        		save(); 
+        	} 
+        	public void widgetDefaultSelected(SelectionEvent e) { 
+        		// Should this be here?
+        		save(); 
+        	}
         });
-    }
-
-    private void addAccounts(Iterator iter, Vector allAccounts) {
-        while (iter.hasNext()) {
-        	Account account = (Account) iter.next();
-        	allAccounts.add(account);
-            addAccounts(account.getSubAccountCollection().iterator(), allAccounts);
-        }
-    }
-    
-    private String getLabel(Account account) {
-    	String text = account.getName();
-        if (account instanceof CapitalAccount) {
-            text += " (TRANSFER)";
-        }
-        if (account.getParent() != null) {
-        	text += " - " + account.getParent().getFullAccountName();
-        }
-        return text;
     }
     
     /**
@@ -117,42 +94,8 @@ public class AccountEditor implements IPropertyControl {
     public void load(ExtendableObject object) {
     	extendableObject = object;
     	
-    	if (object == null) {
-            propertyControl.setText("");
-            propertyControl.removeAll();
-    	} else {
-    		if (session != object.getSession()) {
-    			session = object.getSession();
-    			
-    			// We keep an array of accounts, the order of the array matches
-    			// the order in the combo box.  This allows easy lookup of the 
-    			// account given the selected index in the combo.
-    			
-    			addAccounts(session.getAccountCollection().iterator(), allAccounts);
-    			
-    			// Sort the accounts by name.
-    			Collections.sort(allAccounts, new Comparator() {
-    				public int compare(Object arg0, Object arg1) {
-    					return ((Account)arg0).getName().compareTo(((Account)arg1).getName());
-    				}
-    			});
-    			
-                propertyControl.removeAll();
-    			for (Iterator iter = allAccounts.iterator(); iter.hasNext();) {
-    				Account account = (Account) iter.next();
-    				propertyControl.add(getLabel(account));
-    			}
-    		}
-    		
-    		Account account = (Account) object.getPropertyValue(accountPropertyAccessor);
-    		if (account != null) {
-    			propertyControl.setText(getLabel(account));
-    		} else {
-    			// This is needed because of control re-use in the entry section
-    			propertyControl.setText("");
-    		}
-    	}
-    	propertyControl.setEnabled(object != null);
+		Account account = (Account) object.getPropertyValue(accountPropertyAccessor);
+        propertyControl.setAccount(account);
     }
 
     /**
@@ -170,11 +113,8 @@ public class AccountEditor implements IPropertyControl {
      * so we can assume that <code>extendableObject</code> is not null.
      */
     public void save() {
-        int index = propertyControl.getSelectionIndex();
-        if (index != -1) {
-        	Account account = (Account)allAccounts.get(index);
-        	extendableObject.setPropertyValue(accountPropertyAccessor, account);
-        }
+        Account account = propertyControl.getAccount();
+       	extendableObject.setPropertyValue(accountPropertyAccessor, account);
     }
 
     /* (non-Javadoc)

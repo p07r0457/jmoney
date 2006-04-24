@@ -26,6 +26,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -39,7 +40,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class MultiTextControlFactory implements IPropertyControlFactory {
 
-    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
+    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor, Session session) {
         IPropertyControl multiText = new TextEditor(parent, SWT.MULTI | SWT.WRAP, propertyAccessor);
         GridData gridData = new GridData();
         gridData.verticalAlignment = GridData.FILL;

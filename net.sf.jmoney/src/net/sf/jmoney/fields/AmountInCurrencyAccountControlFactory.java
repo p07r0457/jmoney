@@ -27,6 +27,7 @@ import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 
 import org.eclipse.swt.widgets.Composite;
@@ -39,7 +40,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class AmountInCurrencyAccountControlFactory extends AmountControlFactory {
 
-    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor) {
+    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor, Session session) {
     	final AmountEditor editor = new AmountEditor(parent, propertyAccessor, this);
         
         editor.setListener(new SessionChangeAdapter() {
