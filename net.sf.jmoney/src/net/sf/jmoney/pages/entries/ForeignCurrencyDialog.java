@@ -43,10 +43,12 @@ import org.eclipse.swt.widgets.Shell;
  * when none has been entered.
  * <P>
  * It is called only in the following situation:
- * - The transaction is a simple transaction
- * - both the capital account and the income and expense account
- *   have different currencies (or commodities)
- * - the amount for the income and expense account was zero
+ * <UL>
+ * <LI>The transaction is a simple transaction</LI>
+ * <LI>both the capital account and the income and expense account
+ *   have different currencies (or commodities)</LI>
+ * <LI>the amount for the income and expense account was zero</LI>
+ * </UL>
  * 
  * You may wonder why this dialog box is used only in such a narrow
  * situation.  The reason is that in all other situations the user can
@@ -108,33 +110,33 @@ public class ForeignCurrencyDialog {
 		Object[] messageArgs2 = new Object[] { 
 				entry2.getCommodity().getName()
 		};
-        label2.setText(new java.text.MessageFormat(
-        		"What is the {0} amount?", 
-        		java.util.Locale.US)
+		label2.setText(new java.text.MessageFormat(
+				"What is the {0} amount?", 
+				java.util.Locale.US)
 				.format(messageArgs2));
-        
-        		final IPropertyControl propertyControl = EntryInfo.getAmountAccessor().createPropertyControl(transactionArea);
-        		propertyControl.load(item.getEntryForOtherFields());
-
-            	// Create the button area
-        		Composite buttonArea = new Composite(shell, 0);
-        		
-        		RowLayout layoutOfButtons = new RowLayout();
-        		layoutOfButtons.fill = false;
-        		layoutOfButtons.justify = true;
-        		buttonArea.setLayout(layoutOfButtons);
-        		
-                // Create the 'add entry' button.
-                Button addButton = new Button(buttonArea, SWT.PUSH);
-                addButton.setText("OK");
-                addButton.addSelectionListener(new SelectionAdapter() {
-                   public void widgetSelected(SelectionEvent event) {
-               		propertyControl.save();
-            		shell.close();
-               	}
-               });
-                   		
-        		// Create the 'close' button
+		
+		final IPropertyControl propertyControl = EntryInfo.getAmountAccessor().createPropertyControl(transactionArea, entry1.getSession());
+		propertyControl.load(item.getEntryForOtherFields());
+		
+		// Create the button area
+		Composite buttonArea = new Composite(shell, 0);
+		
+		RowLayout layoutOfButtons = new RowLayout();
+		layoutOfButtons.fill = false;
+		layoutOfButtons.justify = true;
+		buttonArea.setLayout(layoutOfButtons);
+		
+		// Create the 'add entry' button.
+		Button addButton = new Button(buttonArea, SWT.PUSH);
+		addButton.setText("OK");
+		addButton.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event) {
+				propertyControl.save();
+				shell.close();
+			}
+		});
+		
+		// Create the 'close' button
         Button closeButton = new Button(buttonArea, SWT.PUSH);
         closeButton.setText("Close");
         closeButton.addSelectionListener(new SelectionAdapter() {

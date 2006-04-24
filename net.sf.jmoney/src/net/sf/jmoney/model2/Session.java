@@ -23,6 +23,7 @@
 
 package net.sf.jmoney.model2;
 
+import java.security.InvalidParameterException;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -337,7 +338,7 @@ public class Session extends ExtendableObject implements IAdaptable {
      * workbench window then it should register with the JMoneyPlugin
      * object.
      */
-    void fireEvent(ISessionChangeFirer firer) {
+    public void fireEvent(ISessionChangeFirer firer) {
     	sessionFiring = true;
     	
     	// Notify listeners who are listening to us using the

@@ -134,7 +134,7 @@ public class TransactionDialog {
             if (propertyAccessor.isScalar()) {
         		Label propertyLabel = new Label(transactionArea, 0);
         		propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
-        		IPropertyControl propertyControl = propertyAccessor.createPropertyControl(transactionArea);
+        		IPropertyControl propertyControl = propertyAccessor.createPropertyControl(transactionArea, session);
         		propertyControl.load(null);
         		transactionControls.add(propertyControl);
             }

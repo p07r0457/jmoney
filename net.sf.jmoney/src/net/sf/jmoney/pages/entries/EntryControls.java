@@ -128,6 +128,7 @@ class EntryControls {
 		 */
 		public void refreshState(final Entry entry, boolean isEntryChanging) {
 			Account account = entry.getAccount();
+			Session session = entry.getSession();
 			boolean isApplicable = isApplicable(account);
 			
 			// Controls with the visability set to false still
@@ -149,7 +150,7 @@ class EntryControls {
 					label = new Label(pairComposite, 0);
 					label.setText(propertyAccessor.getShortDescription() + ':');
 					label.setBackground(entryColor);
-					propertyControl = propertyAccessor.createPropertyControl(pairComposite);
+					propertyControl = propertyAccessor.createPropertyControl(pairComposite, session);
 
 					RowData controlLayoutData = new RowData();
 					controlLayoutData.width = propertyAccessor.getMinimumWidth();

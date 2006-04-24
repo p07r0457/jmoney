@@ -119,7 +119,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 				if (propertyAccessor.isScalar()) {
 					Label propertyLabel = new Label(this, 0);
 					propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
-					final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(this);
+					final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(this, session);
 		
 					/*
 					 * If the control factory set up grid data then leave it

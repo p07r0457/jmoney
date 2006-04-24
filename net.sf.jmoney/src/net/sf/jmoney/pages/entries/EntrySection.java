@@ -112,7 +112,7 @@ public class EntrySection extends SectionPart {
 		for (Iterator iter = TransactionInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
 			final PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
 			if (propertyAccessor.isScalar()) {
-				IPropertyControl propertyControl = propertyAccessor.createPropertyControl(transactionArea);
+				IPropertyControl propertyControl = propertyAccessor.createPropertyControl(transactionArea, session);
 				propertyControl.load(null);
 				toolkit.adapt(propertyControl.getControl(), true, true);
 				transactionControls.add(propertyControl);

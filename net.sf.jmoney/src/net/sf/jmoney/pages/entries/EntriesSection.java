@@ -29,9 +29,6 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.pages.entries.EntriesTree.DisplayableEntry;
 import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;

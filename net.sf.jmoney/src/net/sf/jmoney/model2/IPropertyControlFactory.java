@@ -39,7 +39,7 @@ public interface IPropertyControlFactory {
 	 * @return An interface to the class that wraps the
 	 * 			control.
 	 */
-	IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor);
+	IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor, Session session);
 
 	/**
 	 * Format the value of a property so it can be embedded into a

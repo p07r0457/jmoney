@@ -299,6 +299,53 @@ public class EntriesTree extends Composite {
            }
         });
 
+        // Create the 'duplicate transaction' button.
+        Button duplicateButton = toolkit.createButton(buttonArea, "Duplicate Transaction", SWT.PUSH);
+        duplicateButton.addSelectionListener(new SelectionAdapter() {
+           public void widgetSelected(SelectionEvent event) {
+				// Clean up any cell editor
+				closeCellEditor();
+
+				if (!checkAndCommitTransaction(null)) {
+					return;
+				}
+           		
+        		Entry selectedEntry = getSelectedEntryInAccount();
+        		Entry newSelectedEntry = null;
+        		
+        		if (selectedEntry != null) {
+        			
+    				TransactionManager transactionManager = new TransactionManager(session);
+    				Session sessionInTrans = transactionManager.getSession();
+    				
+        			Transaction sourceTransaction = selectedEntry.getTransaction();
+        			Transaction newTransaction = sessionInTrans.createTransaction();
+        			
+        			for (Iterator iter = sourceTransaction.getEntryCollection().iterator(); iter.hasNext(); ) {
+        				Entry sourceEntry = (Entry)iter.next();
+        				
+        				Entry newEntry = newTransaction.createEntry();
+        				newEntry.setAccount((Account)transactionManager.getCopyInTransaction(sourceEntry.getAccount()));
+        				newEntry.setDescription(sourceEntry.getDescription());
+        				newEntry.setMemo(sourceEntry.getMemo());
+        				if (sourceEntry.getIncomeExpenseCurrency() != null) {
+        					newEntry.setIncomeExpenseCurrency((Currency)transactionManager.getCopyInTransaction(sourceEntry.getIncomeExpenseCurrency()));
+        				}
+        				newEntry.setAmount(sourceEntry.getAmount());
+        				
+        				if (sourceEntry.equals(selectedEntry)) {
+        					newSelectedEntry = newEntry;
+        				}
+        			}
+    			
+        			transactionManager.commit();
+        			
+        			// Select newSelectedEntry in the entries list.
+//        			setSelection(newSelectedEntry, newSelectedEntry);
+        		}
+           }
+        });
+
         // Create the 'delete transaction' button.
         Button deleteButton = toolkit.createButton(buttonArea, "Delete Transaction", SWT.PUSH);
         deleteButton.addSelectionListener(new SelectionAdapter() {
@@ -481,10 +528,12 @@ public class EntriesTree extends Composite {
 		col.setData("layoutData", new ColumnWeightData(2, 70));
 		col.setData(entriesContent.getCreditColumnManager());
 
-		col = new TreeColumn(fTable, SWT.RIGHT);
-		col.setText("Balance");
-		col.setData("layoutData", new ColumnWeightData(2, 70));
-		col.setData(entriesContent.getBalanceColumnManager());
+		if (entriesContent.getBalanceColumnManager() != null) {
+			col = new TreeColumn(fTable, SWT.RIGHT);
+			col.setText("Balance");
+			col.setData("layoutData", new ColumnWeightData(2, 70));
+			col.setData(entriesContent.getBalanceColumnManager());
+		}
 
 		fTable.setLayout(tlayout);
 		fTable.setHeaderVisible(true);
@@ -810,6 +859,16 @@ public class EntriesTree extends Composite {
 						if (!entry.equals(newEntry)
 								&& entriesContent.isEntryInTable(entry)) {
 							addEntry(entry, newEntry);
+						}
+					}
+				} else if (newObject instanceof Transaction) {
+					Transaction newTransaction = (Transaction) newObject;
+					// Add all entries in the transaction that are to be listed at
+					// the top level in this list.
+					for (Iterator iter = newTransaction.getEntryCollection().iterator(); iter.hasNext();) {
+						Entry entry = (Entry) iter.next();
+						if (entriesContent.isEntryInTable(entry)) {
+							addEntryInAccount(entry);
 						}
 					}
 				}
@@ -2031,12 +2090,14 @@ public class EntriesTree extends Composite {
 		TreeItem parentItem = new TreeItem(fTable, 0, parentIndex);
 		parentItem.setData(dTrans);
 		
-		// Set the column values for this new row (note that the last
-		// column is not set.  The last column is always the balance and is set
+		// Set the column values for this new row (note that the balance
+		// column is not set.  The balance column is always set
 		// later by the same code that updates all the following balances).
-		for (int columnIndex = 0; columnIndex < fTable.getColumnCount() - 1; columnIndex++) {
+		for (int columnIndex = 0; columnIndex < fTable.getColumnCount(); columnIndex++) {
 			IEntriesTableProperty p = (IEntriesTableProperty)fTable.getColumn(columnIndex).getData();
-			parentItem.setText(parentIndex, p.getValueFormattedForTable(dTrans));
+			if (!p.getId().equals("balance")) {
+				parentItem.setText(columnIndex, p.getValueFormattedForTable(dTrans));
+			}
 		}
 
 		if (!dTrans.isSimpleEntry()) {
@@ -2249,6 +2310,11 @@ public class EntriesTree extends Composite {
 	 * 				at or after the given index
 	 */
 	private void updateBalances(int i, long balance) {
+		if (entriesContent.getBalanceColumnManager() == null) {
+			// No balance column is being displayed
+			return;
+		}
+		
 		// The balance column is always the last column
 		int balanceColumnIndex = fTable.getColumnCount() - 1;
 		

@@ -67,14 +67,6 @@ public class ObjectCollection implements Collection {
 		
 		parent.getSession().getChangeManager().processObjectCreation(parent, listPropertyAccessor, newObject);
 		
-		// Fire the event.
-		parent.getSession().fireEvent(
-				new ISessionChangeFirer() {
-					public void fire(SessionChangeListener listener) {
-						listener.objectAdded(newObject);
-					}
-				});
-		
 		return newObject;
 	}
 	

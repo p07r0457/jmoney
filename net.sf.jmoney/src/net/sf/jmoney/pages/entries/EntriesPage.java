@@ -353,7 +353,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		 * @return
 		 */
 		public IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data) {
-			IPropertyControl propertyControl = accessor.createPropertyControl(parent); 
+			IPropertyControl propertyControl = accessor.createPropertyControl(parent, account.getSession()); 
 				
 			ExtendableObject extendableObject = getObjectContainingProperty(data);
 
@@ -611,6 +611,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 			return result;
 		}
     }
+	
 	/**
 	 * Represents a table column that is the account balance.
 	 */
