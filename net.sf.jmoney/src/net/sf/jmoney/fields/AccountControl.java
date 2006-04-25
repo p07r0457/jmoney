@@ -70,14 +70,12 @@ public class AccountControl extends AccountComposite {
     private Vector allAccounts;
     
 	/**
-	 * The text box containing the date
-	 */
-	private List listControl;
-
-	/**
 	 * Currently selected account, or null if no account selected
 	 */
 	private Account account;
+	
+	/** Element: SelectionListener */
+	private Vector listeners = new Vector();
 	
 	/**
 	 * @param parent
@@ -102,13 +100,14 @@ public class AccountControl extends AccountComposite {
 				
 				shell = new Shell(parent.getShell(), SWT.ON_TOP);
 		        shell.setLayout(new RowLayout());
-		        listControl = new List(shell, SWT.SINGLE | SWT.V_SCROLL);
+
+		        final List listControl = new List(shell, SWT.SINGLE | SWT.V_SCROLL);
 		        RowData rd = new RowData();
 		        rd.height = 100;
 		        listControl.setLayoutData(rd);
 
 		        allAccounts = new Vector();
-		        addAccounts("", session.getAccountCollection(), accountClass);
+		        addAccounts("", session.getAccountCollection(), listControl, accountClass);
 		        
 //		        shell.setSize(listControl.computeSize(SWT.DEFAULT, listControl.getItemHeight()*10));
 		        
@@ -121,6 +120,7 @@ public class AccountControl extends AccountComposite {
 								int selectionIndex = listControl.getSelectionIndex();
 								account = (Account)allAccounts.get(selectionIndex);
 								textControl.setText(account.getName());
+								fireAccountChangeEvent();
 							}
                 		});
 
@@ -195,7 +195,6 @@ public class AccountControl extends AccountComposite {
     	        		closingShell = true;
     	        		shell.close();
     	        		closingShell = false;
-   	        		listControl = null;
     	        	}
     	        });
 			}
@@ -207,7 +206,14 @@ public class AccountControl extends AccountComposite {
 		});
 	}
 
-	private void addAccounts(String prefix, Collection accounts, Class accountClass) {
+	private void fireAccountChangeEvent() {
+		for (Iterator iter = listeners.iterator(); iter.hasNext(); ) {
+			SelectionListener listener = (SelectionListener)iter.next();
+			listener.widgetSelected(null);
+		}
+	}
+	
+	private void addAccounts(String prefix, Collection accounts, List listControl, Class accountClass) {
     	Vector matchingAccounts = new Vector();
         for (Iterator iter = accounts.iterator(); iter.hasNext(); ) {
         	Account account = (Account) iter.next();
@@ -228,7 +234,7 @@ public class AccountControl extends AccountComposite {
 			System.out.println(matchingAccount.getName() + " is of type " + matchingAccount.getClass().getName());
     		allAccounts.add(matchingAccount);
 			listControl.add(prefix + matchingAccount.getName());
-    		addAccounts(prefix + matchingAccount.getName() + ":", matchingAccount.getSubAccountCollection(), accountClass);
+    		addAccounts(prefix + matchingAccount.getName() + ":", matchingAccount.getSubAccountCollection(), listControl, accountClass);
 		}
         
     }
@@ -258,20 +264,14 @@ public class AccountControl extends AccountComposite {
 	 * @param listener
 	 */
 	public void addSelectionListener(SelectionListener listener) {
-		/*
-		 * Currently we pass the listener on to the list box as is,
-		 * but if we allow the user to edit the text box without
-		 * using the list box then we will need to generate our
-		 * own events.
-		 */
-		listControl.addSelectionListener(listener);
+		listeners.add(listener);
 	}
 
 	/**
 	 * @param listener
 	 */
 	public void removeSelectionListener(SelectionListener listener) {
-		textControl.removeSelectionListener(listener);
+		listeners.remove(listener);
 	}
 
 	public Control getControl() {
