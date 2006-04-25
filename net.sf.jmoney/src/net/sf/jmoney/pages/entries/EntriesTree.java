@@ -1065,9 +1065,12 @@ public class EntriesTree extends Composite {
 		} else if (previousData instanceof DisplayableEntry) {
 			previousTransData = ((DisplayableEntry)previousData).transactionData;
 		} else {
-			// We were not on a transaction (we were probably on the
-			// blank 'new transaction' line.
-			previousTransData = null;
+			/*
+			 * We were not on a transaction. This can only happen if we were
+			 * previously on the blank 'new transaction' line. There is no
+			 * previous transaction to check and commit.
+			 */
+			return true;
 		}
 		
 		Transaction previousTransaction = previousTransData.getTransaction();
