@@ -75,8 +75,8 @@ public class PropertyAccessor {
    private IPropertyControlFactory propertyControlFactory;
    
    /**
-    * The class of the property.  It the property is a list
-    * property then the class of the elements in the list.
+    * The class of the property (if the property is a list
+    * property then the class of the elements in the list)
     */
    private Class propertyClass;
    
@@ -91,7 +91,7 @@ public class PropertyAccessor {
    
 	/**
 	 * true if property is a list property, i.e. can contain
-	 * multiple values.  false otherwise.
+	 * multiple values, false otherwise
 	 */
 	private boolean isList;
 	
