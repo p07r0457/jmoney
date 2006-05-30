@@ -60,7 +60,15 @@ public class BankStatement implements Comparable {
                 int month = Integer.parseInt(numbers[1]);
                 int day = Integer.parseInt(numbers[2]);
                 Calendar cal = Calendar.getInstance();
-                cal.set(year, month, day);
+                
+                /*
+				 * First reset all fields. Otherwise differences in the time
+				 * part, even if the difference is only milliseconds, will cause
+				 * the date comparisons to fail.
+				 */ 
+                cal.setTimeInMillis(0);
+                
+                cal.set(year, month-1, day);
                 statementDate = cal.getTime();
             }
         }
