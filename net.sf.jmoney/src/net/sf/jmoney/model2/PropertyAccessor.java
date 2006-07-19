@@ -347,7 +347,16 @@ public class PropertyAccessor {
    }
 
    public IObjectKey invokeObjectKeyField(ExtendableObject object) {
-   	return (IObjectKey)object.getProtectedFieldValue(theObjectKeyField);
+	   if (getPropertySet().isExtension()) {
+		   ExtensionObject extension = object.getExtension(getPropertySet());
+		   if (extension == null) {
+			   return null;
+		   } else {
+			   return (IObjectKey)extension.getProtectedFieldValue(theObjectKeyField);
+		   }
+	   } else {
+		   return (IObjectKey)object.getProtectedFieldValue(theObjectKeyField);
+	   }
    }
 
    /**

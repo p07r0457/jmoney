@@ -21,6 +21,8 @@
  */
 package net.sf.jmoney.model2;
 
+import java.lang.reflect.Field;
+
 
 /**
  * @author Nigel
@@ -42,6 +44,10 @@ public abstract class ExtensionObject {
 
 	public IObjectKey getObjectKey() {
     	return baseObject.getObjectKey();
+	}
+	
+	public Session getSession() {
+    	return baseObject.getSession();
 	}
 	
 	/**
@@ -111,5 +117,25 @@ public abstract class ExtensionObject {
 
 	protected void processPropertyChange(PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 		((ExtendableObject)baseObject).processPropertyChange(propertyAccessor, oldValue, newValue);
+	}
+
+	/**
+	 * This method is used to enable other classes in the package to
+	 * access protected fields in the extension objects.
+	 * 
+	 * @param theObjectKeyField
+	 * @return
+	 */
+	Object getProtectedFieldValue(Field theObjectKeyField) {
+    	try {
+    		return theObjectKeyField.get(this);
+    	} catch (IllegalArgumentException e) {
+    		e.printStackTrace();
+    		throw new RuntimeException("internal error");
+    	} catch (IllegalAccessException e) {
+    		e.printStackTrace();
+    		// TODO: check the protection earlier and raise MalformedPlugin
+    		throw new RuntimeException("internal error - field protection problem");
+    	}
 	}
 }
