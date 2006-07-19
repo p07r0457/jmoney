@@ -197,6 +197,7 @@ public class TransactionManager implements IDataManager {
 		// Set the remaining parameters to the constructor.
 		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+
 			Class valueClass = propertyAccessor.getValueClass(); 
 			Object value;
 			if (propertyAccessor.isList()) {
@@ -227,7 +228,21 @@ public class TransactionManager implements IDataManager {
 			int i = 0;
 			for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); ) {
 				PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIter.next();
-				extensionValues[i++] = committedObject.getPropertyValue(propertyAccessor);
+
+				Class valueClass = propertyAccessor.getValueClass(); 
+				Object value;
+				if (propertyAccessor.isList()) {
+					value = new DeltaListManager(this, committedObject, propertyAccessor);
+				} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
+					IObjectKey committedObjectKey = propertyAccessor.invokeObjectKeyField(committedObject);
+					value = committedObjectKey == null
+					? null
+							: new UncommittedObjectKey(this, committedObjectKey);
+				} else {
+					value = committedObject.getPropertyValue(propertyAccessor);
+				}
+				
+				extensionValues[i++] = value;
 			}
 			extensionMap.put(extensionPropertySet, extensionValues);
 		}
