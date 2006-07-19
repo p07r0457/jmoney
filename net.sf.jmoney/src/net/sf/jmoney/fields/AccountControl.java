@@ -231,7 +231,6 @@ public class AccountControl extends AccountComposite {
 		
 		for (Iterator iter = matchingAccounts.iterator(); iter.hasNext();) {
 			Account matchingAccount = (Account) iter.next();
-			System.out.println(matchingAccount.getName() + " is of type " + matchingAccount.getClass().getName());
     		allAccounts.add(matchingAccount);
 			listControl.add(prefix + matchingAccount.getName());
     		addAccounts(prefix + matchingAccount.getName() + ":", matchingAccount.getSubAccountCollection(), listControl, accountClass);

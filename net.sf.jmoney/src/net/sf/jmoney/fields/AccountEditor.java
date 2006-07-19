@@ -55,11 +55,15 @@ public class AccountEditor implements IPropertyControl {
 
     /** 
      * @param propertyAccessor the accessor for the property to be edited
-     * 			by this control.  The property must be of type Currency.
+     * 			by this control.  The property must be of type Account.
+     * 			If the property is of a type derived from Account
+     * 			(e.g. BankAccount) then the list of accounts presented to
+     * 			the user for selection will be restricted to accounts
+     * 			of the appropriate type.
      * @param session the session whose accounts are listed in the combo box
      */
     public AccountEditor(Composite parent, PropertyAccessor propertyAccessor, Session session) {
-        propertyControl = new AccountControl(parent, session, Account.class);
+        propertyControl = new AccountControl(parent, session, propertyAccessor.getValueClass());
         this.accountPropertyAccessor = propertyAccessor;
 
         /*
