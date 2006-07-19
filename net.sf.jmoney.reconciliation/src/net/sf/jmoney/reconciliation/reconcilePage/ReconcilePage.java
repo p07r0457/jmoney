@@ -36,6 +36,7 @@ import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -46,6 +47,8 @@ import net.sf.jmoney.pages.entries.IEntriesTableProperty;
 import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.IBankStatementSource;
+import net.sf.jmoney.reconciliation.ReconciliationAccount;
+import net.sf.jmoney.reconciliation.ReconciliationAccountInfo;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
 import net.sf.jmoney.views.NodeEditor;
@@ -75,6 +78,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Sash;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
@@ -99,6 +103,19 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
     
 	protected NodeEditor fEditor;
 
+	/**
+	 * The transaction manager used for all changes made by
+	 * this page.  It is created by the page is created and
+	 * remains usable for the rest of the time that this page
+	 * exists.
+	 */
+	// TODO: at some point, see if we can move the transaction
+	// into the EntryTree.  Transactions should be handled
+	// more locally than as currently done.
+	TransactionManager transactionManager = null;
+
+	protected ReconciliationAccount originalAccount = null;
+	
 	/** Element: IEntriesTableProperty */
 	protected Vector allEntryDataObjects = new Vector();
 
@@ -111,20 +128,6 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
     protected UnreconciledSection fUnreconciledSection;
 	protected EntrySection fEntrySection;
 
-	/**
-	 * The transaction manager used for all changes made by
-	 * this page.  It is created by the page is created and
-	 * remains usable for the rest of the time that this page
-	 * exists.
-	 */
-	TransactionManager transactionManager = null;
-
-	/**
-	 * The account being shown in this page.  This account
-	 * object exists in the context of transactionManager.
-	 */
-	private CurrencyAccount account;
-	
 	/**
 	 * The statement currently being shown in this page.
 	 * Null indicates that no statement is currently showing.
@@ -158,7 +161,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
      * @see org.eclipse.ui.forms.editor.FormPage#createFormContent(org.eclipse.ui.forms.IManagedForm)
      */
     protected void createFormContent(IManagedForm managedForm) {
-        CurrencyAccount originalAccount = (CurrencyAccount) fEditor.getSelectedObject();
+        originalAccount = (ReconciliationAccount)((CurrencyAccount) fEditor.getSelectedObject()).getExtension(ReconciliationAccountInfo.getPropertySet(), true);
 
         // Create our own transaction manager.
         // This ensures that uncommitted changes
@@ -166,16 +169,12 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
     	// of this page.
         transactionManager = new TransactionManager(originalAccount.getSession());
     	
-    	// Set the account that this page is viewing and editing.
-    	// We set an account object that is managed by our own
-    	// transaction manager.
-        account = (CurrencyAccount)transactionManager.getCopyInTransaction(originalAccount);
-  
-        // Set the statement to show initially.
-        // If there are any entries in statements after the last
-        // reconciled statement, set the first such unreconciled
-        // statement in this view.  Otherwise set the statement to
-        // null to indicate no statement is to be shown.
+        /*
+		 * Set the statement to show initially. If there are any entries in
+		 * statements after the last reconciled statement, set the first such
+		 * unreconciled statement in this view. Otherwise set the statement to
+		 * null to indicate no statement is to be shown.
+		 */
         // TODO: implement this
         statement = null;
         
@@ -244,7 +243,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         layout.numColumns = 2;
         form.getBody().setLayout(layout);
         
-        fStatementsSection = new StatementsSection(form.getBody(), managedForm.getToolkit(), account);
+        fStatementsSection = new StatementsSection(form.getBody(), managedForm.getToolkit(), originalAccount.getBaseObject());
         GridData data = new GridData(GridData.FILL_VERTICAL);
         data.verticalSpan = 2;
         fStatementsSection.getSection().setLayoutData(data);
@@ -312,7 +311,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 					statement = messageBox.getValue();
 					long openingBalanceOfNewStatement = 
 						lastStatement == null 
-						? account.getStartBalance()
+						? originalAccount.getStartBalance()
 						: lastStatement.getClosingBalance();
 					fStatementSection.setStatement(statement, openingBalanceOfNewStatement);
 				}				
@@ -353,23 +352,37 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 								IBankStatementSource statementSource = (IBankStatementSource)thisElement.createExecutableExtension("class");
 								Collection importedEntries = statementSource.importEntries(getSite().getShell(), getAccount());
 								if (importedEntries != null) {
+							    	/*
+							    	 * Use a transaction to import all the entries.
+							    	 */
+							    	TransactionManager transactionManager = new TransactionManager(originalAccount.getSession());
+							    	
+							    	/**
+							    	 * The account being shown in this page.  This account
+							    	 * object exists in the context of transactionManager.
+							    	 */
+							    	CurrencyAccount accountInTransaction = (CurrencyAccount)transactionManager.getCopyInTransaction(originalAccount.getBaseObject());
+							    	IncomeExpenseAccount defaultCategoryInTransaction = (IncomeExpenseAccount)transactionManager.getCopyInTransaction(originalAccount.getDefaultCategory());
+					           		Session sessionInTransaction = accountInTransaction.getSession();
+							  
 									for (Iterator iter = importedEntries.iterator(); iter.hasNext(); ) {
 										IBankStatementSource.EntryData entryData = (IBankStatementSource.EntryData)iter.next();
-						           		Session session = getAccount().getSession();
 						           		
-						           		// Commit any previous transaction
-						           		//fPage.transactionManager.commit();
-						           		
-						           		Transaction transaction = session.createTransaction();
+						           		Transaction transaction = sessionInTransaction.createTransaction();
 						           		Entry entry1 = transaction.createEntry();
 						           		Entry entry2 = transaction.createEntry();
-						           		entry1.setAccount(getAccount());
+						           		entry1.setAccount(accountInTransaction);
 						           		entry1.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), getStatement());
+						           		entry2.setAccount(defaultCategoryInTransaction);
 						           		entryData.assignPropertyValues(transaction, entry1, entry2);
 									}
-									// refresh the top table.
-									// NO- updates are done through the usual event framework
-									//fStatementSection.fReconciledEntriesControl.refresh();
+									
+									/*
+									 * All entries have been imported and all the properties
+									 * have been set and should be in a valid state, so we
+									 * can now commit the imported entries to the datastore.
+									 */
+									transactionManager.commit();									
 								}
 							} catch (CoreException e) {
 								// TODO Auto-generated catch block
@@ -384,12 +397,40 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 
 		importButton.addListener(SWT.Selection, new Listener() {
 			public void handleEvent(Event event) {
+				if (!originalAccount.isReconcilable()) {
+			        MessageBox diag = new MessageBox(getSite().getShell());
+			        diag.setText("Feature not Available");
+			        diag.setMessage("Before you can import entries from your bank's servers, you must first set the rules for the initial categories for the imported entries.  Press the 'Options...' button to set this up.");
+			        diag.open();
+			        return;
+				}
+				
+				if (statement == null) {
+			        MessageBox diag = new MessageBox(getSite().getShell());
+			        diag.setText("Feature not Available");
+			        diag.setMessage("Before you can import entries from your bank's servers, you must first create or select a bank statement into which the entries will be imported.");
+			        diag.open();
+			        return;
+				}
+				
 				if (event.detail == SWT.ARROW) {
 					Rectangle rect = importButton.getBounds();
 					Point pt = new Point(rect.x, rect.y + rect.height);
 					menu.setLocation(toolBar.toDisplay(pt));
 					menu.setVisible(true);
 				}
+			}
+		});
+
+		Button optionsButton = new Button(actionbarContainer, SWT.PUSH);
+		optionsButton.setText("Options...");
+		optionsButton.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				ImportOptionsDialog messageBox = 
+					new ImportOptionsDialog(getSite().getShell(), originalAccount);
+				if (messageBox.open() == Dialog.OK) {
+					// TODO: update the list in the 'import...' dropdown
+				}				
 			}
 		});
 
@@ -459,7 +500,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         formData.right = new FormAttachment(100, 0);
         fUnreconciledSection.getSection().setLayoutData(formData);
 
-        fEntrySection = new EntrySection(form.getBody(), managedForm.getToolkit(), account.getSession(), account.getCurrency());
+        fEntrySection = new EntrySection(form.getBody(), managedForm.getToolkit(), originalAccount.getSession(), originalAccount.getCurrency());
         data = new GridData(GridData.FILL_HORIZONTAL);
         data.horizontalSpan = 2;
         fEntrySection.getSection().setLayoutData(data);
@@ -490,7 +531,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
     }
     
     public CurrencyAccount getAccount() {
-    	return account;
+    	return originalAccount.getBaseObject();
     }
 
     public BankStatement getStatement() {
@@ -862,13 +903,4 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 			throw new RuntimeException("internal error - attempt to sort on balance");
 		}
     }
-	
-	/**
-	 * Commit the transaction
-	 */
-	public void commitTransaction() {
-		// TODO make a sound
-		
-		transactionManager.commit();
-	}
 }

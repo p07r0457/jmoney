@@ -65,8 +65,14 @@ public class BankStatement implements Comparable {
 				 * First reset all fields. Otherwise differences in the time
 				 * part, even if the difference is only milliseconds, will cause
 				 * the date comparisons to fail.
+				 * 
+				 * Note also it is critical that whatever is done here is exactly the
+				 * same as that done in VerySimpleDateFormat, otherwise dates will not
+				 * match.  For example, if you replace clear() here with setTimeInMillis(0)
+				 * then we get a different object (because data other than the date and time
+				 * such as time zone information will be different).
 				 */ 
-                cal.setTimeInMillis(0);
+                cal.clear();
                 
                 cal.set(year, month-1, day);
                 statementDate = cal.getTime();

@@ -15,13 +15,13 @@
 
    <extension
          point="net.sf.jmoney.fields">
-<!--         
+      
       <extension-property-set
       	id="accountProperties"
           info-class="net.sf.jmoney.reconciliation.ReconciliationAccountInfo"
 	      extendable-property-set="net.sf.jmoney.currencyAccount">
       </extension-property-set>
--->      
+      
       <extension-property-set
       	id="entryProperties"
           info-class="net.sf.jmoney.reconciliation.ReconciliationEntryInfo"
