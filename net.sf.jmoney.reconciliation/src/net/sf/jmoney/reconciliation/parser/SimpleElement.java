@@ -102,9 +102,6 @@ public class SimpleElement {
 
 	public String toXMLString(int spaces) {
 		String trimString = getTrimmedText();
-		System.out.println("text   :"+text);
-		System.out.println("trimmed:"+trimString);
-		System.out.println("--------");
 		StringBuffer sb = new StringBuffer(trimString.length()
 				+ tagName.length() + 2 + 3 * spaces);
 		appendWhiteSpace(spaces, sb);
@@ -131,6 +128,12 @@ public class SimpleElement {
 		}
 	}
 
+	/**
+	 * Returns the child-element of the current element with the given tagName
+	 *  
+	 * @param tagToFind
+	 * @return a child SimpleElement with tagName = tagToFind
+	 */
 	public SimpleElement findElement(String tagToFind) {
 		SimpleElement found = null;
 		if (getTagName().equalsIgnoreCase(tagToFind))
