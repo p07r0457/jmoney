@@ -65,13 +65,14 @@ public interface IBankStatementSource {
 		private Date valueDate = null;
 		private String check = null;
 		private String memo = null;
+		private String name = null;
 		private String payee = null;
 		private long amount = 0;
 		private String uniqueId = null;
 		private Map propertyMap = new HashMap();
 		
 		public void setClearedDate(Date clearedDate) {
-			this.clearedDate = clearedDate;
+			this.clearedDate  = clearedDate;
 		}
 		public void setValueDate(Date valueDate) {
 			this.valueDate = valueDate;
@@ -81,6 +82,9 @@ public interface IBankStatementSource {
 		}
 		public void setMemo(String memo) {
 			this.memo = memo;
+		}
+		public void setName(String name) {
+			this.name = name;
 		}
 		public void setPayee(String payee) {
 			this.payee = payee;
@@ -122,20 +126,16 @@ public interface IBankStatementSource {
 			entry1.setCheck(check);
 			entry1.setPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor(), uniqueId);
 			
-			if (memo == null) {
-				entry1.setMemo(payee);
-			} else {
-				entry1.setMemo(memo);
-			}
-			
-			if (payee == null) {
-				entry2.setDescription(memo);
-			} else {
-				entry2.setDescription(payee);
-			}
+			entry1.setMemo(memo==null? (name==null?payee: name):memo);
+			entry2.setDescription(payee == null?(memo==null?name:memo):payee);
 			
 			entry1.setAmount(amount);
 			entry2.setAmount(-amount);
+		}
+		
+		@Override
+		public String toString() {
+			return "[a:"+amount+";n:"+name+"]";
 		}
 	}
 }
