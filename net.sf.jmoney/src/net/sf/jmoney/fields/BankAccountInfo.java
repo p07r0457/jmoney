@@ -67,11 +67,11 @@ public class BankAccountInfo implements IPropertySetInfo {
 		IPropertyControlFactory textControlFactory = new TextControlFactory();
 		IPropertyControlFactory amountControlFactory = new AmountInCurrencyAccountControlFactory();
 		
-		bankAccessor = propertyRegistrar.addProperty("bank", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), 5, 100, textControlFactory, null);
-		accountNumberAccessor = propertyRegistrar.addProperty("accountNumber", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), 2, 70, textControlFactory, null);
-		minBalanceAccessor = propertyRegistrar.addProperty("minBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.minBalance"), 2, 40, amountControlFactory, null);
+		bankAccessor = propertyRegistrar.addProperty("bank", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), 5, 100, textControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
+		accountNumberAccessor = propertyRegistrar.addProperty("accountNumber", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), 2, 70, textControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
+		minBalanceAccessor = propertyRegistrar.addProperty("minBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.minBalance"), 2, 40, amountControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		propertyRegistrar.setObjectDescription("Bank Account");
+		propertyRegistrar.setObjectDescription(JMoneyPlugin.getResourceString("AccountPropertiesPanel.ObjectDescription")); //$NON-NLS-1$
 	}
 
 	/**

@@ -91,7 +91,7 @@
                label="%MainFrame.undo"
                icon="icons/jlfgr/Undo16.gif"
                tooltip="Undo last change"
-               class="net.sf.jmoney.actions.UndoAction"
+               class="net.sf.jmoney.actions.UndoAction"               
                menubarPath="edit/undoGroup"
                toolbarPath="undoGroup"
                id="net.sf.jmoney.actions.Undo">
@@ -196,7 +196,7 @@
       <pages
             class="net.sf.jmoney.pages.accountProperties.AccountPropertiesPage"
             extendable-property-set="net.sf.jmoney.capitalAccount"
-            id="accountProperties"
+            id="accountProperties"            
             position="2">
       </pages>
    </extension>

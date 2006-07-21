@@ -202,8 +202,8 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 		SectionlessPage formPage = new SectionlessPage(
 				editor,
 				PAGE_ID, 
-				"Properties", 
-				"Account Properties") {
+				JMoneyPlugin.getResourceString("AccountPropertiesPanel.title"),  //$NON-NLS-1$
+				JMoneyPlugin.getResourceString("AccountPropertiesPanel.header")) { //$NON-NLS-1$
 			
 			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
 				CapitalAccount account = (CapitalAccount)nodeObject;

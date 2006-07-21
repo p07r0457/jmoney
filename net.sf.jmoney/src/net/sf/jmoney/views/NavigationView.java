@@ -552,7 +552,7 @@ public class NavigationView extends ViewPart {
 			}
 		};
 		openEditorAction.setText(JMoneyPlugin.getResourceString("MainFrame.openEditor"));
-		openEditorAction.setToolTipText("Open");
+		openEditorAction.setToolTipText(JMoneyPlugin.getResourceString("MainFrame.openEditor"));
 		
 		// For each class of object derived (directly or indirectly)
 		// from the capital account class, and that is not itself
