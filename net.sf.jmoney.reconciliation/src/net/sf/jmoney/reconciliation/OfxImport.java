@@ -27,12 +27,17 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Currency;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.CurrencyAccount;
+import net.sf.jmoney.reconciliation.parser.CurrencyParser;
 import net.sf.jmoney.reconciliation.parser.SimpleDOMParser;
 import net.sf.jmoney.reconciliation.parser.SimpleElement;
 
@@ -47,7 +52,6 @@ import org.eclipse.swt.widgets.Shell;
  * @author Nigel Westbury
  */
 public class OfxImport implements IBankStatementSource {
-
 	public Collection importEntries(Shell shell, CurrencyAccount account) {
 
 		// Prompt the user for the file.
@@ -107,17 +111,26 @@ public class OfxImport implements IBankStatementSource {
 			throws ParseException {
 		Vector<EntryData> v = new Vector<EntryData>();
 		SimpleElement foundElement = rootElement.findElement("CURDEF");
-		
+		Currency currency = null;
+		if (foundElement != null) {
+			// found a default currency to use
+			String currencyCode = foundElement.getTrimmedText();
+			System.out.println("Currency found : " + currencyCode);
+			currency = Currency.getInstance(currencyCode);
+			System.out
+					.println("Currency found : " + currency.getCurrencyCode());
+		}
+
 		foundElement = rootElement.findElement("STMTTRN");
 		while (foundElement != null) {
-			EntryData data = parseSTMTTRN(foundElement);
+			EntryData data = parseSTMTTRN(foundElement, currency);
 			v.add(data);
 			foundElement = foundElement.getNextSibling();
 		}
 		return v;
 	}
 
-	private EntryData parseSTMTTRN(SimpleElement foundElement)
+	private EntryData parseSTMTTRN(SimpleElement foundElement, Currency currency)
 			throws ParseException {
 		EntryData entryData = new EntryData();
 
@@ -146,44 +159,49 @@ public class OfxImport implements IBankStatementSource {
 
 		tmpElement = foundElement.findElement("TRNAMT");
 		data = tmpElement.getTrimmedText();
-		
-		//NOTE [roel] : in Belgium we use ',' as decimal separator
-		//I have tried using DecimalFormat but I am unable to 'guess' the Locale
-		//based on info available in the ofx-file. -> solution : this dirty hack
-		long amount = (long) (Double.parseDouble(data.replace(',', '.')) * 100);
-		
+
+		// long amount = CurrencyParser.parseAmount(data, currency);
+		// NOTE [roel] : in Belgium we use ',' as decimal separator
+		// I have tried using DecimalFormat but I am unable to 'guess' the
+		// Locale based on info available in the ofx-file. -> solution : this
+		// dirty hack
+
+		long amount = CurrencyParser.double2long(currency, Double
+				.parseDouble(data.replace(',', '.')));
+
 		entryData.setAmount(amount);
 
 		tmpElement = foundElement.findElement("FITID");
-		if(tmpElement!=null)
+		if (tmpElement != null)
 			entryData.setUniqueId(tmpElement.getTrimmedText());
 
 		tmpElement = foundElement.findElement("NAME");
-		if(tmpElement!=null)
+		if (tmpElement != null)
 			entryData.setName(tmpElement.getTrimmedText());
 
 		tmpElement = foundElement.findElement("MEMO");
-		if(tmpElement!=null)
+		if (tmpElement != null)
 			entryData.setMemo(tmpElement.getTrimmedText());
 
 		tmpElement = foundElement.findElement("CHECKNUM");
-		if(tmpElement!=null)
+		if (tmpElement != null)
 			entryData.setCheck(tmpElement.getTrimmedText());
 
-		//NOTE [roel] : moved this workaround into EntryData#assignPropertyValues
+		// NOTE [roel] : moved this workaround into
+		// EntryData#assignPropertyValues
 		// It seems that QFX format has a <NAME> and a <MEMO> line,
 		// whereas OFX has only a name.
 		// It is a mess because sometimes the payee name is in the
 		// <NAME> field and sometimes it is in the <MEMO> field.
 		// (At least with the data from Bank of America)
 		// Just combine the two.
-//		if (name == null && memo != null) {
-//			entryData.setMemo(memo);
-//		} else if (name != null && memo == null) {
-//			entryData.setMemo(name);
-//		} else if (name != null && memo != null) {
-//			entryData.setMemo(name + " " + memo);
-//		}
+		// if (name == null && memo != null) {
+		// entryData.setMemo(memo);
+		// } else if (name != null && memo == null) {
+		// entryData.setMemo(name);
+		// } else if (name != null && memo != null) {
+		// entryData.setMemo(name + " " + memo);
+		// }
 
 		return entryData;
 	}
