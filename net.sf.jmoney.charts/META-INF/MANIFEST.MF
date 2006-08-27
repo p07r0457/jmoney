@@ -56,6 +56,6 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  net.sf.jmoney,
  org.eclipse.ui.forms
-Eclipse-AutoStart: true
+Eclipse-LazyStart: true
 Bundle-Vendor: JMoney.sf.net
 Eclipse-PlatformFilter: (| (osgi.os=win32) (osgi.os=linux))

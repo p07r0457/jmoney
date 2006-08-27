@@ -22,5 +22,5 @@ Export-Package: net.sf.jmoney,
  net.sf.jmoney.preferences,
  net.sf.jmoney.resources,
  net.sf.jmoney.views
-Eclipse-AutoStart: true
+Eclipse-LazyStart: true
 Bundle-Vendor: JMoney.sf.net

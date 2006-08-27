@@ -11,5 +11,5 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.forms
 Export-Package: net.sf.jmoney.bookkeepingPages,
  net.sf.jmoney.categoriespanel
-Eclipse-AutoStart: true
+Eclipse-LazyStart: true
 Bundle-Vendor: JMoney.sf.net
