@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.fields.TransactionInfo;
+import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
@@ -85,8 +86,17 @@ public class TransactionDialog {
     /** element: IPropertyControl */
     Vector transactionControls = new Vector();
     
-    public TransactionDialog(Shell parent, Entry accountEntry, Session session) {
-    	this.session = session;
+    public TransactionDialog(Shell parent, Entry originalAccountEntry, Session originalSession) {
+    	
+    	/*
+    	 * Use a transaction manager to hold the changes.
+    	 * This allows the changes to be easily cancelled
+    	 * if the user presses the 'cancel' button.
+    	 */
+    	final TransactionManager transactionManager = new TransactionManager(originalSession);
+    	
+    	this.session = (Session)transactionManager.getCopyInTransaction(originalSession);
+    	Entry accountEntry = (Entry)transactionManager.getCopyInTransaction(originalAccountEntry);
     	
     	this.defaultCurrency = accountEntry.getCommodity() instanceof Currency
     	? (Currency)accountEntry.getCommodity()
@@ -214,10 +224,20 @@ public class TransactionDialog {
         	}
         });
 
-        // Create the 'close' button
-        Button closeButton = new Button(buttonArea, SWT.PUSH);
-        closeButton.setText("Close");
-        closeButton.addSelectionListener(new SelectionAdapter() {
+        // Create the 'OK' button
+        Button okButton = new Button(buttonArea, SWT.PUSH);
+        okButton.setText("OK");
+        okButton.addSelectionListener(new SelectionAdapter() {
+        	public void widgetSelected(SelectionEvent event) {
+        		transactionManager.commit();
+        		shell.close();
+        	}
+        });
+
+        // Create the 'cancel' button
+        Button cancelButton = new Button(buttonArea, SWT.PUSH);
+        cancelButton.setText("Cancel");
+        cancelButton.addSelectionListener(new SelectionAdapter() {
         	public void widgetSelected(SelectionEvent event) {
         		shell.close();
         	}
