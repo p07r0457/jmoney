@@ -28,7 +28,7 @@ import java.util.Map;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IDataManager;
+import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -165,21 +165,24 @@ public class UncommittedObjectKey implements IObjectKey {
 	}
 
 	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
-		// If this object is a new object, never committed to the datastore, then we
-		// have nothing to do.  However, if this object has been committed to the datastore
-		// then we must add the property changes to a map maintained by the transaction manager.
-		// This has two purposes: If other users request the object within the context of this
-		// transaction manager, then the changes can be picked up from the map and seen by the
-		// user.  Secondly, the map is iterated to get the property updates that must be
-		// committed at commit time.
+		/*
+		 * If this object is a new object, never committed to the datastore,
+		 * then we have nothing to do. However, if this object has been
+		 * committed to the datastore then we must add the property changes to a
+		 * map maintained by the transaction manager. This has two purposes: If
+		 * other users request the object within the context of this transaction
+		 * manager, then the changes can be picked up from the map and seen by
+		 * the user. Secondly, the map is iterated to get the property updates
+		 * that must be committed at commit time.
+		 */
 		
 		if (committedObjectKey != null) {
-			Map propertyChangeMap = (Map)transactionManager.modifiedObjects.get(committedObjectKey);
-			if (propertyChangeMap == null) {
-				propertyChangeMap = new HashMap();
-				transactionManager.modifiedObjects.put(committedObjectKey, propertyChangeMap);
+			ModifiedObject modifiedObject = transactionManager.modifiedObjects.get(committedObjectKey);
+			if (modifiedObject == null) {
+				modifiedObject = new ModifiedObject();
+				transactionManager.modifiedObjects.put(committedObjectKey, modifiedObject);
 			}
-			
+
 			int i = 0;
 			for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
 				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
@@ -190,9 +193,9 @@ public class UncommittedObjectKey implements IObjectKey {
 							// propertyChangeMap must contain the UncommittedObjectKey,
 							// not the uncommitted object itself which is passed to this
 							// method.
-							propertyChangeMap.put(propertyAccessor, ((ExtendableObject)newValues[i]).getObjectKey());
+							modifiedObject.put(propertyAccessor, ((ExtendableObject)newValues[i]).getObjectKey());
 						} else {
-							propertyChangeMap.put(propertyAccessor, newValues[i]);
+							modifiedObject.put(propertyAccessor, newValues[i]);
 						}
 					}
 					i++;
@@ -205,7 +208,7 @@ public class UncommittedObjectKey implements IObjectKey {
 		return transactionManager.getSession();
 	}
 
-	public IDataManager getSessionManager() {
+	public DataManager getSessionManager() {
 		// This method is only called to get optimized datastore interfaces
 		// from the session manager adapter, and the transaction manager provides
 		// the implementation for this when the data is uncommitted.

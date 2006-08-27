@@ -23,7 +23,7 @@
 package net.sf.jmoney.actions;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.DatastoreManager;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -54,7 +54,7 @@ public class CloseSessionAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		ISessionManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		if (sessionManager == null) {
 			MessageDialog.openWarning(
 					window.getShell(),

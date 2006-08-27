@@ -484,16 +484,16 @@ public class EntriesTree extends Composite {
 				// Clean up any cell editor
 				closeCellEditor();
 
-        		Entry selectedEntryInAccount = getSelectedEntryInAccount();
-        		if (selectedEntryInAccount != null) {
-				TransactionDialog dialog = new TransactionDialog(
-						getShell(),
-						selectedEntryInAccount,
-						session);
-				dialog.open();
-        		} else {
-        			// No entry selected.
-        		}
+				Entry selectedEntryInAccount = getSelectedEntryInAccount();
+				if (selectedEntryInAccount != null) {
+					TransactionDialog dialog = new TransactionDialog(
+							getShell(),
+							selectedEntryInAccount,
+							session);
+					dialog.open();
+				} else {
+					// No entry selected.
+				}
         	}
         });
         
@@ -840,7 +840,7 @@ public class EntriesTree extends Composite {
 			}
 		});
 		
-		session.addSessionChangeListener(new SessionChangeAdapter() {
+		session.getObjectKey().getSessionManager().addSessionChangeListener(new SessionChangeAdapter() {
 			public void objectAdded(ExtendableObject newObject) {
 				if (newObject instanceof Entry) {
 					Entry newEntry = (Entry) newObject;

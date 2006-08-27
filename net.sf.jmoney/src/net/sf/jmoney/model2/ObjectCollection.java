@@ -51,7 +51,7 @@ public class ObjectCollection implements Collection {
 		parent.getSession().getChangeManager().processObjectCreation(parent, listPropertyAccessor, newObject);
 		
 		// Fire the event.
-		parent.getSession().fireEvent(
+		parent.getObjectKey().getSessionManager().fireEvent(
 				new ISessionChangeFirer() {
 					public void fire(SessionChangeListener listener) {
 						listener.objectAdded(newObject);
@@ -82,7 +82,7 @@ public class ObjectCollection implements Collection {
 		return listManager.contains(arg0);
 	}
 	
-	public Iterator iterator() {
+	public Iterator<ExtendableObject> iterator() {
 		return listManager.iterator();
 	}
 	
@@ -99,24 +99,23 @@ public class ObjectCollection implements Collection {
 	}
 	
 	/**
-	 * The object must exist in the collection.  If it does
-	 * not, the results are undefined.
+	 * Removes an object from the collection.  This method ensures that listeners
+	 * are notified as appropriate.
+	 * 
+	 * @return true if the object existed in this collection,
+	 * 			false if the object was not in the collection
 	 */
 	public boolean remove(Object object) {
-		// Deletion events are fired before the object is removed from the
-		// datastore.  This is necessary because once the object has been
-		// removed from the datastore, it may no longer be possible to fetch
-		// from the datastore lists of objects owned by the object.
-		
-		// We do not bother to check that the object exists in the given list.
-		// Therefore notifications of the deletion of the object will be sent
-		// even if the object does not exist in the list.  This situation should
-		// be considered a bug in the caller code.
-		
 		if (object instanceof ExtendableObject && listManager.contains(object)) {
 			final ExtendableObject extendableObject = (ExtendableObject)object;
 			
-			parent.getSession().fireEvent(
+			/*
+			 * Deletion events are fired before the object is removed from the
+			 * datastore. This is necessary because listeners processing the
+			 * object deletion may need to fetch information about the object
+			 * from the datastore.
+			 */
+			parent.getObjectKey().getSessionManager().fireEvent(
 					new ISessionChangeFirer() {
 						public void fire(SessionChangeListener listener) {
 							listener.objectDeleted(extendableObject);

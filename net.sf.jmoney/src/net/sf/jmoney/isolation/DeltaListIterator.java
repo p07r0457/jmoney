@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IObjectKey;
 
 /**
  * Class imlementing an iterator that wraps a iterator of committed
@@ -38,27 +39,29 @@ import net.sf.jmoney.model2.ExtendableObject;
  * 
  * @author Nigel Westbury
  */
-class DeltaListIterator implements Iterator {
+class DeltaListIterator implements Iterator<ExtendableObject> {
 	TransactionManager transactionManager;
 	boolean processingCommittedObjects = true;
 
 	/**
-	 * Element: ExtendableObject (uncommitted version)
+	 * This collection contains the uncommitted version
+	 * of objects that have been added
 	 */
-	Collection addedObjects;
+	Collection<ExtendableObject> addedObjects;
 	
 	/**
-	 * Element: IObjectKey (committed version)
+	 * The object keys in this collection are the keys for
+	 * the committed version of the objects.
 	 */
-	Collection deletedObjects;
+	Collection<IObjectKey> deletedObjects;
 	
-	Iterator subIterator;
+	Iterator<ExtendableObject> subIterator;
 	
 	/**
 	 * Always non-null if processingCommittedObjects = true
 	 * Not applicable if processingCommittedObjects = false
 	 */
-	Object nextObject;
+	ExtendableObject nextObject;
 	
 	/**
 	 * Construct an iterator that iterates the given iterator,
@@ -79,7 +82,7 @@ class DeltaListIterator implements Iterator {
 	 * 			committedListIterator.  This list contains the committed
 	 * 			object keys.
 	 */
-	DeltaListIterator(TransactionManager transactionManager, Iterator committedListIterator, Collection addedObjects, Collection deletedObjects) {
+	DeltaListIterator(TransactionManager transactionManager, Iterator<ExtendableObject> committedListIterator, Collection<ExtendableObject> addedObjects, Collection<IObjectKey> deletedObjects) {
 		this.transactionManager = transactionManager;
 		subIterator = committedListIterator;
 		this.addedObjects = addedObjects;
@@ -95,18 +98,17 @@ class DeltaListIterator implements Iterator {
 		}
 	}
 	
-	// When processing the list of committed objects
-	// (the first sub-iteration), we always leave the
-	// sub-iterator positioned at the next object to be
-	// returned.  That is, we pass any objects in the set
-	// that are marked for deletion.  Doing this enables
-	// the hasNext() method to easily return the correct
-	// result.  This does mean we must save the next object
-	// to be returned because it will have already been
-	// fetched from the sub-iterator.
-	public Object next() {
+	/*
+	 * When processing the list of committed objects (the first sub-iteration),
+	 * we always leave the sub-iterator positioned at the next object to be
+	 * returned. That is, we pass any objects in the set that are marked for
+	 * deletion. Doing this enables the hasNext() method to easily return the
+	 * correct result. This does mean we must save the next object to be
+	 * returned because it will have already been fetched from the sub-iterator.
+	 */
+	public ExtendableObject next() {
 		if (processingCommittedObjects) {
-			Object objectToReturn = nextObject;
+			ExtendableObject objectToReturn = nextObject;
 			setNextObject();
 			return objectToReturn;
 		} else {
@@ -118,12 +120,12 @@ class DeltaListIterator implements Iterator {
 		throw new RuntimeException("not implemented");
 	}
 
-	// Set nextObject to the first/next object from the committed
-	// list that has not been marked for deletion, or,
-	// if there is no more such objects, set up for returning
-	// the newly added objects by setting the flag and setting
-	// the sub-iterator to be an iterator that iterates the
-	// newly added objects.
+	/**
+	 * Set nextObject to the first/next object from the committed list that has
+	 * not been marked for deletion, or, if there is no more such objects, set
+	 * up for returning the newly added objects by setting the flag and setting
+	 * the sub-iterator to be an iterator that iterates the newly added objects.
+	 */
 	private void setNextObject() {
 		ExtendableObject committedObject;
 		do {
@@ -132,7 +134,7 @@ class DeltaListIterator implements Iterator {
 				subIterator = addedObjects.iterator();
 				return;
 			}
-			committedObject = (ExtendableObject)subIterator.next();
+			committedObject = subIterator.next();
 		} while (deletedObjects.contains(committedObject.getObjectKey()));
 		
 		nextObject = transactionManager.getCopyInTransaction(committedObject);

@@ -36,7 +36,7 @@ import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IDataManager;
+import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ISessionChangeFirer;
 import net.sf.jmoney.model2.ObjectCollection;
@@ -60,41 +60,38 @@ import net.sf.jmoney.model2.Transaction;
  * 
  * @author Nigel Westbury
  */
-public class TransactionManager implements IDataManager {
+public class TransactionManager extends DataManager {
 	// TODO: At some time, review this and ensure that we
 	// really do need both the session objects here.
 	private Session committedSession;
 	private Session uncommittedSession;
 	
 	/**
-	 * Maps IObjectKey to Map, where IObjectKey is the key in the comitted datastore
-	 * and each Map maps PropertyAccessor to the
-	 * value of that property. Every object that has been modified by this
-	 * transaction manager (a scalar property in the object has been changed)
-	 * will have an entry in this map. The map keys are objects from the
-	 * datastore and will contain the property values that are currently
-	 * committed in the datastore. The map values are maps that contain an entry
-	 * for each scalar property in the object that has been changed.
+	 * Maps IObjectKey to Map, where IObjectKey is the key in the comitted
+	 * datastore and each Map maps PropertyAccessor to the value of that
+	 * property. Every object that has been modified by this transaction manager
+	 * (a scalar property in the object has been changed) will have an entry in
+	 * this map. The map keys are objects from the datastore and will contain
+	 * the property values that are currently committed in the datastore. The
+	 * map values are objects that contain details of the changes (changed
+	 * scalar property values, or an indication that the object has been
+	 * deleted).
 	 * <P>
 	 * If a value of a property is a reference to another object then an
 	 * UncommittedObjectKey is stored as the value. By doing this, the
 	 * referenced object does not need to be materialized unless necessary.
 	 * <P>
-	 * Deleted objects will also have an entry in this map (the value will be a
-	 * Boolean object with a value of false). If an object contains list
-	 * properties and the object is deleted then all the objects in the lists
-	 * will also be added to this with a Boolean false value. This is necessary
-	 * because this list is used to determine if an object has been deleted, to
-	 * ensure that we do not attempt to modify a property value in an object
-	 * that has in fact been deleted. (These Boolean false entries are NOT used
-	 * to perform the deletions when the transaction is committed - that is done
-	 * by the list deltas).
+	 * Deleted objects will also have an entry in this map. If an object
+	 * contains list properties and the object is deleted then all the objects
+	 * in the lists will also be added to this map with a ModifiedObject that
+	 * has a 'deleted' indication. This is necessary because this list is used
+	 * to determine if an object has been deleted, to ensure that we do not
+	 * attempt to modify a property value in an object that has in fact been
+	 * deleted.
 	 */
-	Map modifiedObjects = new HashMap();
+	Map<IObjectKey, ModifiedObject> modifiedObjects = new HashMap<IObjectKey, ModifiedObject>();
 	
 	/**
-	 * Maps ParentListPair to ModifiedList.
-	 * <P>
 	 * Every list that has been modified by this transaction manager
 	 * (objects added to the list or objects removed from the list)
 	 * will have an entry in this map.
@@ -104,9 +101,7 @@ public class TransactionManager implements IDataManager {
 	 * the list of objects added to and objects removed from
 	 * that list. 
 	 */
-	Map modifiedLists = new HashMap();
-
-    private Vector sessionChangeListeners = new Vector();
+	Map<ModifiedListKey, ModifiedList> modifiedLists = new HashMap<ModifiedListKey, ModifiedList>();
 
     /**
 	 * Construct a transaction manager for use with the given session.
@@ -247,18 +242,15 @@ public class TransactionManager implements IDataManager {
 			extensionMap.put(extensionPropertySet, extensionValues);
 		}
 
-		Object modifiedValues = modifiedObjects.get(committedObject.getObjectKey());
+		ModifiedObject modifiedValues = modifiedObjects.get(committedObject.getObjectKey());
 		if (modifiedValues != null) {
-			if (modifiedValues instanceof Boolean) {
+			if (modifiedValues.isDeleted()) {
 				throw new RuntimeException("Attempt to get copy of object, but that object has been deleted in the transaction");
 			}
 			
-			Map propertyMap = (Map)modifiedValues;
-			
 			// Overwrite any values from modifiedValues
-			for (Iterator iter2 = propertyMap.entrySet().iterator(); iter2.hasNext(); ) {
-				Map.Entry mapEntry2 = (Map.Entry)iter2.next();
-				PropertyAccessor accessor = (PropertyAccessor)mapEntry2.getKey();
+			for (Map.Entry<PropertyAccessor, Object> mapEntry2: modifiedValues.getMap().entrySet()) {
+				PropertyAccessor accessor = mapEntry2.getKey();
 				Object newValue = mapEntry2.getValue();
 				if (!accessor.getPropertySet().isExtension()) {
 					constructorParameters[accessor.getIndexIntoConstructorParameters()] = newValue;
@@ -334,69 +326,6 @@ public class TransactionManager implements IDataManager {
 		return new ModifiedAccountEntriesList(account);
 	}
 
-    /**
-     * Adds the listener to the collection of listeners who will be notified
-     * when a change is made to the version of the datastore as seen through
-     * this transaction manager.  Notifications will be sent when either a
-     * change is committed to the datastore by another transaction manager
-     * or an uncommitted change is made through this transaction manager.
-     * <P>
-     * When listening for changes to a datastore, there are two options.
-     * If the listener is interested only in receiving committed changes
-     * then the listener should listen to the Session object or the JMoneyPlugin
-     * object.  However, if a listener wants to be notified of changes
-     * made through a transaction manager, even though those changes are
-     * not committed to the datastore, then the listener should add the
-     * listener to the transaction manager using this method.
-     * <P>
-     * The listener will not recieve any notification at the time a transaction
-     * is committed as the listener will already have been notified of the
-     * changes.  However, if the transaction is rolled back then the
-     * listener recieves an appropriate notification reversing the change
-     * (for example, if a property value was changed but the transaction
-     * was rolled back, listeners will receive a property change notification
-     * at the time of the rollback with the original property value as the
-     * new value, and the uncommitted property value as the old value).
-     * <P>
-     */
-    public void addSessionChangeListener(SessionChangeListener l) {
-        sessionChangeListeners.add(l);
-    }
-    
-    /**
-     * Removes the listener from the collection of listeners who will be notified
-     * when a change is made to the version of the datastore as seen through
-     * this transaction manager.
-     */
-    public void removeSessionChangeListener(SessionChangeListener l) {
-        sessionChangeListeners.remove(l);
-    }
-    
-    /**
-     * Send change notifications to all listeners who are listening for
-     * changes to the version of the datastore as seen through this
-     * transaction manager.
-     * <P>
-     */
-    void fireEvent(ISessionChangeFirer firer) {
-    	// TODO: decide if we need to do this here.
-    	//sessionFiring = true;
-    	
-    	// Notify listeners who are listening to us using the
-    	// SessionChangeListener interface.
-        if (!sessionChangeListeners.isEmpty()) {
-        	// Take a copy of the listener list.  By doing this we
-        	// allow listeners to safely add or remove listeners.
-        	SessionChangeListener listenerArray[] = new SessionChangeListener[sessionChangeListeners.size()];
-        	sessionChangeListeners.copyInto(listenerArray);
-        	for (int i = 0; i < listenerArray.length; i++) {
-        		firer.fire(listenerArray[i]);
-        	}
-        }
-
-        //sessionFiring = false;
-    }
-
 	/**
 	 * Apply the changes that are stored in this transaction manager.
 	 * <P>
@@ -409,24 +338,23 @@ public class TransactionManager implements IDataManager {
 	 * 
 	 */
 	public void commit() {
-		IDataManager sessionManager = committedSession.getObjectKey().getSessionManager();
+		DataManager sessionManager = committedSession.getObjectKey().getSessionManager();
 		sessionManager.startTransaction();
 		
 		// Add all the new objects, but set references to other
 		// new objects to null because the other new object may
 		// not have yet been added to the database and thus no
 		// reference can be set to the other object.
-		for (Iterator iter = modifiedLists.entrySet().iterator(); iter.hasNext(); ) {
-			Map.Entry mapEntry = (Map.Entry)iter.next();
-			ModifiedListKey parentListPair = (ModifiedListKey)mapEntry.getKey();
-			ModifiedList modifiedList = (ModifiedList)mapEntry.getValue();
+		for (Map.Entry<ModifiedListKey, ModifiedList> mapEntry: modifiedLists.entrySet()) {
+			ModifiedListKey modifiedListKey = mapEntry.getKey();
+			ModifiedList modifiedList = mapEntry.getValue();
 
-			ExtendableObject parent = parentListPair.parentKey.getObject();
+			ExtendableObject parent = modifiedListKey.parentKey.getObject();
 			
 			for (Iterator iter2 = modifiedList.getAddedObjectIterator(); iter2.hasNext(); ) {
 				ExtendableObject newObject = (ExtendableObject)iter2.next();
 				
-				final ExtendableObject newCommittedObject = commitNewObject(newObject, parent, parentListPair.listAccessor);
+				final ExtendableObject newCommittedObject = commitNewObject(newObject, parent, modifiedListKey.listAccessor);
 
 				// Fire the event.
 				// Note that this must be done after the committed object is set above.  This allows
@@ -434,7 +362,7 @@ public class TransactionManager implements IDataManager {
 				// TODO: decide if this should be here.  The fireEvent should be package protected,
 				// and we are calling it from outside the package.  Also, what are the event firing
 				// rules?
-				parent.getSession().fireEvent(
+				committedSession.getObjectKey().getSessionManager().fireEvent(
 						new ISessionChangeFirer() {
 							public void fire(SessionChangeListener listener) {
 								listener.objectAdded(newCommittedObject);
@@ -445,13 +373,12 @@ public class TransactionManager implements IDataManager {
 		}
 
 		// Update all the updated objects
-		for (Iterator iter = modifiedObjects.entrySet().iterator(); iter.hasNext(); ) {
-			Map.Entry mapEntry = (Map.Entry)iter.next();
-			IObjectKey committedKey = (IObjectKey)mapEntry.getKey();
-			Object newValues = mapEntry.getValue();
+		for (Map.Entry<IObjectKey, ModifiedObject> mapEntry: modifiedObjects.entrySet()) {
+			IObjectKey committedKey = mapEntry.getKey();
+			ModifiedObject newValues = mapEntry.getValue();
 			
-			if (newValues instanceof Map) {
-				Map propertyMap = (Map)newValues;
+			if (!newValues.isDeleted()) {
+				Map<PropertyAccessor, Object> propertyMap = newValues.getMap();
 				
 				for (Iterator iter2 = propertyMap.entrySet().iterator(); iter2.hasNext(); ) {
 					Map.Entry mapEntry2 = (Map.Entry)iter2.next();
@@ -479,29 +406,54 @@ public class TransactionManager implements IDataManager {
 			}
 		}
 		
-		// Update all the objects marked for deletion, setting
-		// any references to other objects also marked for deletion
-		// to be null references.  This allows the other object
-		// to be deleted.
-		for (Iterator iter = modifiedObjects.entrySet().iterator(); iter.hasNext(); ) {
-			Map.Entry mapEntry = (Map.Entry)iter.next();
-			IObjectKey committedKey = (IObjectKey)mapEntry.getKey();
-			Object newValues = mapEntry.getValue();
+		/*
+		 * Delete all object marked for deletion. This is a two-step process.
+		 * The first step involves iterating over all the objects marked for
+		 * deletion and seeing if they contain any references to other objects
+		 * that are also marked for deletion. If any such references are found,
+		 * the reference is set to null. The second step involves actually
+		 * deleting the objects. The reason why we must do this two-step process
+		 * is that there may be circular references between objects marked for
+		 * deletion, and the underlying database may raise a reference constaint
+		 * violation if an object is deleted while other objects contain
+		 * references to it.
+		 * 
+		 * This code is not perfect and needs more work to make it perfect.
+		 * Firstly, there may be a problem if the underlying database does not
+		 * allow null values for a particular reference. In that case, we should
+		 * ignore the failure to set the value to null. We set what we can to
+		 * null and then go on to delete all the values. Secondly, we may have
+		 * to make multiple passes while attempting to delete all the objects
+		 * because if one contains a non-nullable reference to the other then it
+		 * must be deleted first. It should be theoretically possible to delete
+		 * the objects, because the database got into this state in the first
+		 * case, and we can remove the objects by reversing the steps taken to
+		 * get to this state.
+		 */
+
+		/*
+		 * Step 1: Update all the objects marked for deletion, setting any
+		 * references to other objects also marked for deletion to be null
+		 * references.
+		 */
+		for (Map.Entry<IObjectKey, ModifiedObject> mapEntry: modifiedObjects.entrySet()) {
+			IObjectKey committedKey = mapEntry.getKey();
+			ModifiedObject newValues = mapEntry.getValue();
 			
-			if (newValues instanceof Boolean) {
+			if (newValues.isDeleted()) {
 				ExtendableObject deletedObject = committedKey.getObject();
 				
 				PropertySet propertySet = PropertySet.getPropertySet(deletedObject.getClass());
 				for (Iterator iter2 = propertySet.getPropertyIterator3(); iter2.hasNext(); ) {
-					PropertyAccessor accessor = (PropertyAccessor)iter.next();
+					PropertyAccessor accessor = (PropertyAccessor)iter2.next();
 					if (accessor.isScalar()) {
 						Object value = deletedObject.getPropertyValue(accessor);
 						if (value instanceof ExtendableObject) {
 							ExtendableObject referencedObject = (ExtendableObject)value;
 							UncommittedObjectKey referencedKey = (UncommittedObjectKey)referencedObject.getObjectKey();
 							IObjectKey committedReferencedKey = referencedKey.getCommittedObjectKey();
-							Object referencedNewValues = modifiedObjects.get(committedReferencedKey);
-							if (referencedNewValues instanceof Boolean) {
+							ModifiedObject referencedNewValues = modifiedObjects.get(committedReferencedKey);
+							if (referencedNewValues.isDeleted()) {
 								// This is a reference to an object that is marked for deletion.
 								// Set the reference to null
 								deletedObject.setPropertyValue(accessor, null);
@@ -512,18 +464,19 @@ public class TransactionManager implements IDataManager {
 			}
 		}
 		
-		// Delete the deleted objects
-		for (Iterator iter = modifiedLists.entrySet().iterator(); iter.hasNext(); ) {
-			Map.Entry mapEntry = (Map.Entry)iter.next();
-			ModifiedListKey parentListPair = (ModifiedListKey)mapEntry.getKey();
-			ModifiedList modifiedList = (ModifiedList)mapEntry.getValue();
+		/*
+		 * Step 2: Delete the deleted objects
+		 */
+		for (Map.Entry<ModifiedListKey, ModifiedList> mapEntry: modifiedLists.entrySet()) {
+			ModifiedListKey modifiedListKey = mapEntry.getKey();
+			ModifiedList modifiedList = mapEntry.getValue();
 
-			ExtendableObject parent = parentListPair.parentKey.getObject();
+			ExtendableObject parent = modifiedListKey.parentKey.getObject();
 			
 			for (Iterator iter2 = modifiedList.getDeletedObjectIterator(); iter2.hasNext(); ) {
 				IObjectKey objectToDelete = (IObjectKey)iter2.next();
 				
-				parent.getListPropertyValue(parentListPair.listAccessor).remove(objectToDelete.getObject());
+				parent.getListPropertyValue(modifiedListKey.listAccessor).remove(objectToDelete.getObject());
 			}
 		}
 		
@@ -558,7 +511,7 @@ public class TransactionManager implements IDataManager {
 		 * so that such references can be set later after
 		 * all the new objects have been committed.
 		 */
-		Map propertyChangeMap = new HashMap();
+		ModifiedObject propertyChangeMap = new ModifiedObject();
 		
 		int count = 0;
 		
@@ -668,7 +621,7 @@ public class TransactionManager implements IDataManager {
 	 *         may be empty but is never null
 	 */
 	public ModifiedList createModifiedList(ModifiedListKey key) {
-		ModifiedList modifiedList = (ModifiedList)modifiedLists.get(key);
+		ModifiedList modifiedList = modifiedLists.get(key);
 		if (modifiedList == null) {
 			modifiedList = new ModifiedList();
 			modifiedLists.put(key, modifiedList);
@@ -696,7 +649,7 @@ public class TransactionManager implements IDataManager {
 	 *         changes have been made to the given list
 	 */
 	public ModifiedList getModifiedList(ModifiedListKey key) {
-		return (ModifiedList)modifiedLists.get(key);
+		return modifiedLists.get(key);
 	}
 
 	public Object getAdapter(Class adapter) {
@@ -725,17 +678,16 @@ public class TransactionManager implements IDataManager {
 			
 			// This is done each time an iterator is requested.
 			
-			Vector addedEntries = new Vector();
-			Vector removedEntries = new Vector();
+			Vector<ExtendableObject> addedEntries = new Vector<ExtendableObject>();
+			Vector<IObjectKey> removedEntries = new Vector<IObjectKey>();
 			
 			// Process all the new objects added within this transaction
-			for (Iterator iter = modifiedLists.entrySet().iterator(); iter.hasNext(); ) {
-				Map.Entry mapEntry = (Map.Entry)iter.next();
-				ModifiedListKey parentListPair = (ModifiedListKey)mapEntry.getKey();
-				ModifiedList modifiedList = (ModifiedList)mapEntry.getValue();
+			for (Map.Entry<ModifiedListKey, ModifiedList> mapEntry: modifiedLists.entrySet()) {
+				ModifiedListKey modifiedListKey = mapEntry.getKey();
+				ModifiedList modifiedList = mapEntry.getValue();
 				
 				// Find all entries added to existing transactions
-				if (parentListPair.listAccessor == TransactionInfo.getEntriesAccessor()) {
+				if (modifiedListKey.listAccessor == TransactionInfo.getEntriesAccessor()) {
 					for (Iterator iter2 = modifiedList.getAddedObjectIterator(); iter2.hasNext(); ) {
 						Entry newEntry = (Entry)iter2.next();
 						if (account.equals(newEntry.getAccount())) {
@@ -745,7 +697,7 @@ public class TransactionManager implements IDataManager {
 				}
 
 				// Find all entries in new transactions.
-				if (parentListPair.listAccessor == SessionInfo.getTransactionsAccessor()) {
+				if (modifiedListKey.listAccessor == SessionInfo.getTransactionsAccessor()) {
 					for (Iterator iter2 = modifiedList.getAddedObjectIterator(); iter2.hasNext(); ) {
 						Transaction newTransaction = (Transaction)iter2.next();
 						for (Iterator iter3 = newTransaction.getEntryCollection().iterator(); iter3.hasNext(); ) {
@@ -758,23 +710,22 @@ public class TransactionManager implements IDataManager {
 				}
 			}
 			
-			// Process all the changed and deleted objects.
-			// (Deleted objects are processed here and not from
-			// the deletedObjects list in modified lists in the
-			// above code.  This ensures that objects that are
-			// deleted due to the deletion of the parent are also
-			// processed).
-			for (Iterator iter = modifiedObjects.entrySet().iterator(); iter.hasNext(); ) {
-				Map.Entry mapEntry = (Map.Entry)iter.next();
-				IObjectKey committedKey = (IObjectKey)mapEntry.getKey();
-				Object newValues = mapEntry.getValue();
+			/*
+			 * Process all the changed and deleted objects. (Deleted objects are
+			 * processed here and not from the deletedObjects list in modified
+			 * lists in the above code. This ensures that objects that are
+			 * deleted due to the deletion of the parent are also processed).
+			 */
+			for (Map.Entry<IObjectKey, ModifiedObject> mapEntry: modifiedObjects.entrySet()) {
+				IObjectKey committedKey = mapEntry.getKey();
+				ModifiedObject newValues = mapEntry.getValue();
 				
 				ExtendableObject committedObject = committedKey.getObject();
 				
 				if (committedObject instanceof Entry) {
 					Entry entry = (Entry)committedObject;
-					if (newValues instanceof Map) {
-						Map propertyMap = (Map)newValues;
+					if (!newValues.isDeleted()) {
+						Map<PropertyAccessor, Object> propertyMap = newValues.getMap();
 						
 						// Object has changed property values.
 						if (propertyMap.containsKey(EntryInfo.getAccountAccessor())) {
@@ -782,21 +733,21 @@ public class TransactionManager implements IDataManager {
 							boolean nowInIndex = account.equals(((IObjectKey)propertyMap.get(EntryInfo.getAccountAccessor())).getObject());
 							if (wasInIndex) {
 								if (!nowInIndex) {
-									removedEntries.add(committedObject);
+									removedEntries.add(entry.getObjectKey());
 								}
 							} else {
 								if (nowInIndex) {
 									// Note that addedEntries must contain objects that
 									// are being managed by the transaction manager
 									// (not the committed versions).
-									addedEntries.add(getCopyInTransaction(committedObject));
+									addedEntries.add((Entry)getCopyInTransaction(entry));
 								}
 							}
 						}
 					} else {
 						// Object has been deleted.
 						if (entry.getAccount().equals(account)) {
-							removedEntries.add(committedObject);
+							removedEntries.add(entry.getObjectKey());
 						}
 					}
 				}
@@ -809,7 +760,7 @@ public class TransactionManager implements IDataManager {
 				return addedEntries.iterator();
 			} else {
 				Account committedAccount = (Account)committedAccountKey.getObject();
-				Collection committedCollection = committedAccount.getEntries();
+				Collection<ExtendableObject> committedCollection = committedAccount.getEntries();
 				return new DeltaListIterator(TransactionManager.this, committedCollection.iterator(), addedEntries, removedEntries);
 			}
 		}

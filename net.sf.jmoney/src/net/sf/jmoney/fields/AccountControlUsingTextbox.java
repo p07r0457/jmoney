@@ -33,7 +33,7 @@ import org.eclipse.ui.IMemento;
 public class AccountControlUsingTextbox extends AccountComposite {
 	protected AccountControl accountControl;
 	
-	public AccountControlUsingTextbox(Composite parent, Session session, Class classOfAccount) {
+	public AccountControlUsingTextbox(Composite parent, Session session, Class<? extends Account> classOfAccount) {
 		super(parent, SWT.NONE);
 		setLayout(new FillLayout());
 		accountControl = new AccountControl(this, session, classOfAccount);

@@ -63,9 +63,9 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 	// The introduction part in which this composite is contained
 	IIntroPart introPart;
 	// Wizards to dispose
-	private ArrayList createdWizards = new ArrayList();
+	private ArrayList<IWizard> createdWizards = new ArrayList<IWizard>();
 	// Current nested wizards
-	private ArrayList nestedWizards = new ArrayList();
+	private ArrayList<IWizard> nestedWizards = new ArrayList<IWizard>();
 	// The currently displayed page.
 	private IWizardPage currentPage = null;
 	

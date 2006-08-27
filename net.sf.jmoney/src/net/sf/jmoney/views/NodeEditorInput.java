@@ -27,7 +27,7 @@ import java.util.Vector;
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.PageEntry;
 
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -175,7 +175,7 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
 		// for every view and editor.
 		
     	// Save the details of the session.
-    	ISessionManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+    	DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		if (sessionManager != null) {
 			IMemento sessionMemento = memento.createChild("session");
 			IPersistableElement pe = (IPersistableElement)sessionManager.getAdapter(IPersistableElement.class);

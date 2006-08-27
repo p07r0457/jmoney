@@ -178,9 +178,8 @@ public class CategoryPage implements IBookkeepingPageFactory {
 		/**
 		 * List of the PropertyControls objects for the
 		 * properties that can be edited in this panel.
-		 * element: PropertyControls
 		 */
-		Vector propertyList = new Vector();
+		Vector<PropertyControls> propertyList = new Vector<PropertyControls>();
 		
 		private SessionChangeListener listener = new SessionChangeAdapter() {
 			public void sessionReplaced(Session oldSession, Session newSession) {
@@ -312,7 +311,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 								String oldValueText;
 								
 								public void focusLost(FocusEvent e) {
-									if (session.isSessionFiring()) {
+									if (session.getObjectKey().getSessionManager().isSessionFiring()) {
 										return;
 									}
 									

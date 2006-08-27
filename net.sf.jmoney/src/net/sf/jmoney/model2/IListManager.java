@@ -30,7 +30,7 @@ import java.util.Collection;
  * property.  For example, the set of all accounts in a session
  * are managed by an object that implements this interface.
  */
-public interface IListManager extends Collection {
+public interface IListManager extends Collection<ExtendableObject> {
 
 	/**
 	 * This method creates a new object in this collection

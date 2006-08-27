@@ -56,12 +56,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 
     Hashtable currencies = new Hashtable();
         
-    private Vector sessionChangeListeners = new Vector();
-    private Vector sessionChangeFirerListeners = new Vector();
-
 	private ChangeManager changeManager = new ChangeManager();
-
-	private boolean sessionFiring = false;
 
     /**
      * Constructor used by datastore plug-ins to create
@@ -282,132 +277,6 @@ public class Session extends ExtendableObject implements IAdaptable {
     	return new ObjectCollection(transactions, this, SessionInfo.getTransactionsAccessor());
     }
     
-    public void addSessionChangeListener(SessionChangeListener l) {
-        sessionChangeListeners.add(l);
-    }
-    
-	/**
-	 * Adds a change listener.
-	 * <P>
-	 * The listener is active only for as long as the given control exists.  When the
-	 * given control is disposed, the listener is removed and will receive no more
-	 * notifications.
-	 * <P>
-	 * This method is generally used when a listener is used to update contents in a
-	 * control.  Typically multiple controls are updated by a listener and the parent
-	 * composite control is passed to this method.
-	 * 
-	 * @param listener
-	 * @param control
-	 */
-	public void addSessionChangeListener(final SessionChangeListener listener, Control control) {
-        sessionChangeListeners.add(listener);
-        
-		// Remove the listener when the given control is disposed.
-		control.addDisposeListener(new DisposeListener() {
-			public void widgetDisposed(DisposeEvent e) {
-				sessionChangeListeners.remove(listener);
-			}
-		});
-    }
-    
-    public void removeSessionChangeListener(SessionChangeListener l) {
-        sessionChangeListeners.remove(l);
-    }
-    
-    public void addSessionChangeFirerListener(SessionChangeFirerListener l) {
-        sessionChangeFirerListeners.add(l);
-    }
-    
-    public void removeSessionChangeFirerListener(SessionChangeFirerListener l) {
-        sessionChangeFirerListeners.remove(l);
-    }
-    
-    /**
-     * In practice it is likely that the only listener will be the
-     * JMoneyPlugin object.  Views should all listen to the JMoneyPlugin
-     * class for changes to the model.  The JMoneyPlugin object will pass
-     * on events from this session object.
-     * <P>
-     * Listeners may register directly with a session object.  However
-     * if they do so then they must re-register whenever the session
-     * object changes.  If a viewer wants to listen for changes to a
-     * session even if that session is not the session currently shown
-     * in the workbench then it should register with the session object,
-     * but if the viewer wants to be told about changes to the current
-     * workbench window then it should register with the JMoneyPlugin
-     * object.
-     */
-    public void fireEvent(ISessionChangeFirer firer) {
-    	sessionFiring = true;
-    	
-    	// Notify listeners who are listening to us using the
-    	// SessionChangeFirerListener interface.
-        if (!sessionChangeFirerListeners.isEmpty()) {
-        	// Take a copy of the listener list.  By doing this we
-        	// allow listeners to safely add or remove listeners.
-        	SessionChangeFirerListener listenerArray[] = new SessionChangeFirerListener[sessionChangeFirerListeners.size()];
-        	sessionChangeFirerListeners.copyInto(listenerArray);
-        	for (int i = 0; i < listenerArray.length; i++) {
-        		listenerArray[i].sessionChanged(firer);
-        	}
-        }
-    	
-    	// Notify listeners who are listening to us using the
-    	// SessionChangeListener interface.
-        if (!sessionChangeListeners.isEmpty()) {
-        	// Take a copy of the listener list.  By doing this we
-        	// allow listeners to safely add or remove listeners.
-        	SessionChangeListener listenerArray[] = new SessionChangeListener[sessionChangeListeners.size()];
-        	sessionChangeListeners.copyInto(listenerArray);
-        	for (int i = 0; i < listenerArray.length; i++) {
-        		firer.fire(listenerArray[i]);
-        	}
-        }
-
-        sessionFiring = false;
-    }
-
-    /**
-     * This method is used by plug-ins so that they know if
-     * code is being called from within change notification.
-     *
-     * It is important for plug-ins to know this.  Plug-ins
-     * MUST NOT change the session data while a listener is
-     * being notified of a change to the datastore.
-     * This can happen very indirectly.  For example, suppose
-     * an account is deleted.  The navigation view's listener
-     * is notified and so removes the account's node from the
-     * navigation tree.  If an account properties panel is
-     * open, the panel is destroyed.  Because the panel is
-     * being destroyed, the control that had the focus is sent
-     * a 'focus lost' notification.  The 'focus lost' notification
-     * takes the edited data from the control and writes it to
-     * the datastore.
-     * <P>
-     * Writing data to the datastore during session change notifications
-     * can cause serious problems.  The data may conflict.  The
-     * undo/redo operations are almost impossible to manage.
-     * In the above scenario with the deleted account, an attempt
-     * is made to update a property for an object that has been
-     * deleted.  The problems are endless.
-     * <P>
-     * It would be good if the datastore simply ignored such changes.
-     * This would provide more robust support for plug-ins, and plug-ins
-     * would not have to test this flag.  However, for the time being,
-     * plug-ins must test this flag and avoid making changes when this
-     * flag is set.  Plug-ins only need to do this in focus lost events
-     * as that is the only time I can think of where this problem may
-     * occur.
-     *  
-     * @return True if the session is notifying listeners of
-     * 			a change to the session data, otherwise false.
-     */
-    // TODO: Revisit this, especially the last paragraph above.
-    public boolean isSessionFiring() {
-    	return sessionFiring;
-    }
-
 	/**
 	 * Create a new account.  Accounts are abstract, so
 	 * a property set derived from the account property

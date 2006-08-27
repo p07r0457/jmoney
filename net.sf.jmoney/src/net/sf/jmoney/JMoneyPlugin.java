@@ -38,7 +38,7 @@ import net.sf.jmoney.fields.CurrencyInfo;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ISessionChangeFirer;
 import net.sf.jmoney.model2.ISessionFactory;
-import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Propagator;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -78,9 +78,9 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	//Resource bundle.
 	private ResourceBundle resourceBundle;
 	
-    private ISessionManager sessionManager = null;
+    private DatastoreManager sessionManager = null;
 
-    private Vector sessionChangeListeners = new Vector();
+    private Vector<SessionChangeListener> sessionChangeListeners = new Vector<SessionChangeListener>();
     
     // Create a listener that listens for changes to the new session.
     private SessionChangeFirerListener sessionChangeFirerListener =
@@ -200,7 +200,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 		return resourceBundle;
 	}
 	
-    public ISessionManager getSessionManager() {
+    public DatastoreManager getSessionManager() {
         return sessionManager;
     }
    
@@ -248,13 +248,13 @@ public class JMoneyPlugin extends AbstractUIPlugin {
      * both canClose() and close() are called on the previous session.
      * This method will not close any previously set session.
      */
-    public void setSessionManager(ISessionManager newSessionManager) {
+    public void setSessionManager(DatastoreManager newSessionManager) {
         // It is up to the caller to ensure that the previous session
         // has been closed.
 
         if (sessionManager == newSessionManager)
             return;
-        ISessionManager oldSessionManager = sessionManager;
+        DatastoreManager oldSessionManager = sessionManager;
         sessionManager = newSessionManager;
         
     	// If the list of commodities is empty then load
@@ -311,10 +311,10 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         // Stop listening to the old session and start listening to the
         // new session for changes within the session.
         if (oldSessionManager != null) {
-        	oldSessionManager.getSession().removeSessionChangeFirerListener(sessionChangeFirerListener);
+        	oldSessionManager.removeSessionChangeFirerListener(sessionChangeFirerListener);
         }
         if (newSessionManager != null) {
-        	newSessionManager.getSession().addSessionChangeFirerListener(sessionChangeFirerListener);
+        	newSessionManager.addSessionChangeFirerListener(sessionChangeFirerListener);
         }
 	}
 

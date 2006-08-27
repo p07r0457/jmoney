@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IObjectKey;
 
 /**
  * An instance of this class contains the changes that have
@@ -45,14 +46,14 @@ import net.sf.jmoney.model2.ExtendableObject;
 public class ModifiedList {
 
 	/**
-	 * Element: ExtendableObject (uncommitted version)
+	 * The uncommitted versions of the objects that have been added
 	 */
-	Vector addedObjects = new Vector();
+	Vector<ExtendableObject> addedObjects = new Vector<ExtendableObject>();
 	
 	/**
-	 * Element: IObjectKey (committed version)
+	 * The keys to the committed versions of the objects that have been deleted
 	 */
-	Vector deletedObjects = new Vector();
+	Vector<IObjectKey> deletedObjects = new Vector<IObjectKey>();
 	
 	/**
 	 * @param newObject an uncommitted version of an object

@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
@@ -72,13 +73,14 @@ public abstract class ExtendableObject {
 	IObjectKey objectKey;
 	
 	/**
-	 * Extendable objects may have extensions containing additional data
-	 * needed by the plugins.  Each plugin will have a different
-	 * extension.
-	 * This map will map plugins to the appropriate extension object for
-	 * this object.
+	 * Extendable objects may have extensions containing additional data needed
+	 * by the plug-ins. Plug-ins add properties to an object class by creating a
+	 * property set and then adding that property set to the object class. This
+	 * map will map property sets to the appropriate extension object.
 	 */
-	protected Map extensions = new Hashtable();
+	// TODO: the value of this map should be ExtensionObject, but we need to sort
+	// out the strings that contain properties for unknown property sets.
+	protected Map<PropertySet, Object> extensions = new HashMap<PropertySet, Object>();
 	
 	/**
 	 * The key from which this object's parent can be fetched from
@@ -238,7 +240,7 @@ public abstract class ExtendableObject {
 		getSession().getChangeManager().processPropertyUpdate(this, propertyAccessor, oldValue, newValue);
 
 		// Fire an event for this change.
-		getSession().fireEvent(
+		getObjectKey().getSessionManager().fireEvent(
             	new ISessionChangeFirer() {
             		public void fire(SessionChangeListener listener) {
             			listener.objectChanged(ExtendableObject.this, propertyAccessor, oldValue, newValue);
@@ -753,8 +755,7 @@ public abstract class ExtendableObject {
     	try {
     		return theObjectKeyField.get(this);
     	} catch (IllegalArgumentException e) {
-    		e.printStackTrace();
-    		throw new RuntimeException("internal error");
+    		throw new RuntimeException("internal error", e);
     	} catch (IllegalAccessException e) {
     		e.printStackTrace();
     		// TODO: check the protection earlier and raise MalformedPlugin

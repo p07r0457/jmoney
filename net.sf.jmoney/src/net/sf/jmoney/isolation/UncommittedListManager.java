@@ -38,7 +38,7 @@ import net.sf.jmoney.model2.PropertySet;
  * 
  * @author Nigel Westbury
  */
-public class UncommittedListManager extends Vector implements IListManager {
+public class UncommittedListManager extends Vector<ExtendableObject> implements IListManager {
 
 	private static final long serialVersionUID = 196103020038035348L;
 

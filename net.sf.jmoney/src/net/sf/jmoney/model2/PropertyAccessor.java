@@ -346,6 +346,12 @@ public class PropertyAccessor {
 		}
    }
 
+   /**
+    * Given an object (which must be of a class that contains this
+    * property), return  
+    * @param object
+    * @return
+    */
    public IObjectKey invokeObjectKeyField(ExtendableObject object) {
 	   if (getPropertySet().isExtension()) {
 		   ExtensionObject extension = object.getExtension(getPropertySet());

@@ -147,7 +147,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 								String oldValueText;
 								
 								public void focusLost(FocusEvent e) {
-									if (AccountPropertiesControl.this.session.isSessionFiring()) {
+									if (AccountPropertiesControl.this.session.getObjectKey().getSessionManager().isSessionFiring()) {
 										return;
 									}
 									

@@ -32,7 +32,7 @@ import org.eclipse.ui.IWorkbenchWindow;
  * There will always be one SessionManager object for each Session
  * object.
  */
-public interface ISessionManager extends IDataManager {
+public abstract class DatastoreManager extends DataManager {
 
     /** Returns a brief description of the data in the session.
      * This description should be, for example, the file name or the name
@@ -43,7 +43,7 @@ public interface ISessionManager extends IDataManager {
      * Null may be returned.  (This may be done if, say, the data has
      * not yet been saved to a file).
      */
-    String getBriefDescription();
+	public abstract String getBriefDescription();
     
     /**
      * Obtain confirmation and/or information from the user so that this
@@ -64,7 +64,7 @@ public interface ISessionManager extends IDataManager {
      * session but still be able to either keep the old session in the event of a failure
      * or copy data from the previous session to the new session. 
      */
-    boolean canClose(IWorkbenchWindow window);
+	public abstract boolean canClose(IWorkbenchWindow window);
 
     /**
      * Close the datastore.  Once this method has been called, the session
@@ -74,5 +74,5 @@ public interface ISessionManager extends IDataManager {
      * If it does, then such user interfaces should not give the user any
      * opportunity to cancel the operation.
      */
-    void close();
+	public abstract void close();
 }

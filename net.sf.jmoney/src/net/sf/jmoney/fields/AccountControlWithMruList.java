@@ -44,7 +44,7 @@ public class AccountControlWithMruList extends AccountComposite {
     
     protected LinkedList recentlyUsedList = new LinkedList();
     
-	public AccountControlWithMruList(Composite parent, Session session, Class accountClass) {
+	public AccountControlWithMruList(Composite parent, Session session, Class<? extends Account> accountClass) {
 		super(parent, SWT.NONE);
 		this.session = session;
 		

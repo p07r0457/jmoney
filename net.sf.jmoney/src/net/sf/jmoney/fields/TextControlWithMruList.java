@@ -39,7 +39,7 @@ public class TextControlWithMruList extends TextComposite {
     protected List textList;
     protected Text textbox;
 
-    protected LinkedList recentlyUsedList = new LinkedList();
+    protected LinkedList<String> recentlyUsedList = new LinkedList<String>();
     
     public TextControlWithMruList(Composite parent) {
 		super(parent, SWT.NONE);

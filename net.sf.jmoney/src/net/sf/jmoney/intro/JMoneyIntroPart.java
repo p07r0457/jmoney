@@ -86,7 +86,7 @@ public class JMoneyIntroPart extends IntroPart {
 		 * page and so childPages is valid only once the user has
 		 * pressed the Next button to go past this page.
 		 */
-		protected Vector childPages;
+		protected Vector<IWizardPage> childPages;
 		
 		PageWithChildPages(String pageName) {
 			super(pageName);
@@ -175,7 +175,7 @@ public class JMoneyIntroPart extends IntroPart {
 		}
 		
 		public IWizardPage getNextPage() {
-			childPages = new Vector();
+			childPages = new Vector<IWizardPage>();
 			
 			if (quickenButton.getSelection() && msmoneyButton.getSelection()) {
 				childPages.add(closedSourcePage);

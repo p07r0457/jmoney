@@ -202,7 +202,7 @@ class EntryControls {
 			public void focusLost(FocusEvent e) {
 				ExtendableObject object = getExtendableObject();
 				
-				if (object.getSession().isSessionFiring()) {
+				if (object.getObjectKey().getSessionManager().isSessionFiring()) {
 					return;
 				}
 				
@@ -416,7 +416,7 @@ class EntryControls {
 		// Note: composite1 is used as the containing composite,
 		// even tho there are in fact 5 composites across the row.
 		// This is ok because they are all destroyed at the same time.
-		session.addSessionChangeListener(new SessionChangeAdapter() {
+		session.getObjectKey().getSessionManager().addSessionChangeListener(new SessionChangeAdapter() {
 			public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
 				if (changedProperty == EntryInfo.getAccountAccessor()
 						&& changedObject.equals(entry)) {

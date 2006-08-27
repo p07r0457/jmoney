@@ -66,22 +66,23 @@ public class AccountControl extends AccountComposite {
 
 	Text textControl;
 	
-    // List of accounts put into account list.
-    private Vector allAccounts;
+    /**
+     * List of accounts put into account list.
+     */
+    private Vector<Account> allAccounts;
     
 	/**
 	 * Currently selected account, or null if no account selected
 	 */
 	private Account account;
 	
-	/** Element: SelectionListener */
-	private Vector listeners = new Vector();
+	private Vector<SelectionListener> listeners = new Vector<SelectionListener>();
 	
 	/**
 	 * @param parent
 	 * @param style
 	 */
-	public AccountControl(final Composite parent, final Session session, final Class accountClass) {
+	public AccountControl(final Composite parent, final Session session, final Class<? extends Account> accountClass) {
 		super(parent, SWT.NONE);
 
 		setLayout(new FillLayout(SWT.VERTICAL));
@@ -106,7 +107,7 @@ public class AccountControl extends AccountComposite {
 		        rd.height = 100;
 		        listControl.setLayoutData(rd);
 
-		        allAccounts = new Vector();
+		        allAccounts = new Vector<Account>();
 		        addAccounts("", session.getAccountCollection(), listControl, accountClass);
 		        
 //		        shell.setSize(listControl.computeSize(SWT.DEFAULT, listControl.getItemHeight()*10));
@@ -213,24 +214,22 @@ public class AccountControl extends AccountComposite {
 		}
 	}
 	
-	private void addAccounts(String prefix, Collection accounts, List listControl, Class accountClass) {
-    	Vector matchingAccounts = new Vector();
-        for (Iterator iter = accounts.iterator(); iter.hasNext(); ) {
-        	Account account = (Account) iter.next();
+	private void addAccounts(String prefix, Collection<Account> accounts, List listControl, Class<? extends Account> accountClass) {
+    	Vector<Account> matchingAccounts = new Vector<Account>();
+        for (Account account: accounts) {
         	if (accountClass.isAssignableFrom(account.getClass())) {
         		matchingAccounts.add(account);
         	}
         }
 		
 		// Sort the accounts by name.
-		Collections.sort(matchingAccounts, new Comparator() {
-			public int compare(Object arg0, Object arg1) {
-				return ((Account)arg0).getName().compareTo(((Account)arg1).getName());
+		Collections.sort(matchingAccounts, new Comparator<Account>() {
+			public int compare(Account account1, Account account2) {
+				return account1.getName().compareTo(account2.getName());
 			}
 		});
 		
-		for (Iterator iter = matchingAccounts.iterator(); iter.hasNext();) {
-			Account matchingAccount = (Account) iter.next();
+		for (Account matchingAccount: matchingAccounts) {
     		allAccounts.add(matchingAccount);
 			listControl.add(prefix + matchingAccount.getName());
     		addAccounts(prefix + matchingAccount.getName() + ":", matchingAccount.getSubAccountCollection(), listControl, accountClass);

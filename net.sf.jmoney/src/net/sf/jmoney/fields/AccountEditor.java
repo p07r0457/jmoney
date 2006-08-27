@@ -63,7 +63,7 @@ public class AccountEditor implements IPropertyControl {
      * @param session the session whose accounts are listed in the combo box
      */
     public AccountEditor(Composite parent, PropertyAccessor propertyAccessor, Session session) {
-        propertyControl = new AccountControl(parent, session, propertyAccessor.getValueClass());
+        propertyControl = new AccountControl(parent, session, (Class<? extends Account>)propertyAccessor.getValueClass());
         this.accountPropertyAccessor = propertyAccessor;
 
         /*
@@ -78,7 +78,12 @@ public class AccountEditor implements IPropertyControl {
         		save(); 
         	} 
         	public void widgetDefaultSelected(SelectionEvent e) { 
-        		// Should this be here?
+        		/*
+        		 * Although users would normally select an account
+        		 * using a single click, a double click causes a
+        		 * change in the selection and so to be consistent we
+        		 * should propagate the change at this time.
+        		 */
         		save(); 
         	}
         });

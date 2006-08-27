@@ -134,5 +134,5 @@ public interface IObjectKey {
 	/**
 	 * @return
 	 */
-	IDataManager getSessionManager();
+	DataManager getSessionManager();
 }

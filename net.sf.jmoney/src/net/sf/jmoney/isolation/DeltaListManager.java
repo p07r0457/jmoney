@@ -60,7 +60,7 @@ import net.sf.jmoney.model2.PropertySet;
  * 
  * @author Nigel Westbury
  */
-public class DeltaListManager extends AbstractCollection implements IListManager {
+public class DeltaListManager extends AbstractCollection<ExtendableObject> implements IListManager {
 
 	private TransactionManager transactionManager;
 	
@@ -230,7 +230,7 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 	}
 
 	public Iterator iterator() {
-		Iterator committedListIterator = committedList.iterator();
+		Iterator<ExtendableObject> committedListIterator = committedList.iterator();
 
 		ModifiedList modifiedList = transactionManager.getModifiedList(modifiedListKey);
 		if (modifiedList == null) {
@@ -238,7 +238,7 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 			// that returns materializations of the objects that are outside
 			// of the transaction.  We must return objects that are versions
 			// inside the transaction.
-			return new DeltaListIterator(transactionManager, committedListIterator, new Vector(), new Vector());
+			return new DeltaListIterator(transactionManager, committedListIterator, new Vector(), new Vector<IObjectKey>());
 		} else {
 			return new DeltaListIterator(transactionManager, committedListIterator, modifiedList.addedObjects, modifiedList.deletedObjects);
 		}
@@ -262,7 +262,20 @@ public class DeltaListManager extends AbstractCollection implements IListManager
 	}
 
 	public boolean remove(Object object) {
+		ExtendableObject extendableObject = (ExtendableObject)object;
 		ModifiedList modifiedList = transactionManager.createModifiedList(modifiedListKey);
-		return modifiedList.delete((ExtendableObject)object);
+		boolean isRemoved = modifiedList.delete(extendableObject);
+		
+		if (isRemoved) {
+			IObjectKey committedObjectKey = ((UncommittedObjectKey)extendableObject.getObjectKey()).getCommittedObjectKey();
+			ModifiedObject modifiedObject = transactionManager.modifiedObjects.get(committedObjectKey);
+			if (modifiedObject == null) {
+				modifiedObject = new ModifiedObject();
+				transactionManager.modifiedObjects.put(committedObjectKey, modifiedObject);
+			}
+			modifiedObject.setDeleted();
+		}
+		
+		return isRemoved;
 	}
 }

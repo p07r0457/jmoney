@@ -34,7 +34,7 @@ import org.eclipse.ui.IMemento;
 public class TextControlWithMruCombo extends TextComposite {
 
 	protected Combo combo;
-    protected LinkedList recentlyUsedList = new LinkedList();
+    protected LinkedList<String> recentlyUsedList = new LinkedList<String>();
     
     public TextControlWithMruCombo(Composite parent) {
 		super(parent, SWT.NONE);

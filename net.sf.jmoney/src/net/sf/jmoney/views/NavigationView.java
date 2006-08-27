@@ -31,7 +31,7 @@ import net.sf.jmoney.fields.CapitalAccountInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -302,7 +302,7 @@ public class NavigationView extends ViewPart {
     	// Save the information required to re-create this navigation view.
     	
     	// Save the details of the session.
-    	ISessionManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+    	DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		if (sessionManager != null) {
 			IMemento sessionMemento = memento.createChild("session");
 			IPersistableElement pe = (IPersistableElement)sessionManager.getAdapter(IPersistableElement.class);
