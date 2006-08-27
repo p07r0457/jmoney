@@ -200,7 +200,7 @@ public class ListManagerUncached implements IListManager {
 		throw new RuntimeException("method not implemented");
 	}
 
-	public boolean add(Object o) {
+	public boolean add(ExtendableObject o) {
 		throw new RuntimeException("method not implemented");
 	}
 

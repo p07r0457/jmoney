@@ -33,7 +33,7 @@ import java.util.Vector;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.core.runtime.CoreException;
@@ -52,7 +52,7 @@ import org.eclipse.ui.IWorkbenchWindow;
  * implementation must provide an implementation of the
  * ISessionManager interface.
  */
-public class SessionManager implements ISessionManager {
+public class SessionManager extends DatastoreManager {
 
 	private Session session = null;
 

@@ -39,7 +39,7 @@ import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IEntryQueries;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -53,7 +53,7 @@ import org.eclipse.ui.IWorkbenchWindow;
  *
  * @author Nigel Westbury
  */
-public class SessionManager implements ISessionManager, IEntryQueries {
+public class SessionManager extends DatastoreManager implements IEntryQueries {
 	
 	private Connection connection;
 	

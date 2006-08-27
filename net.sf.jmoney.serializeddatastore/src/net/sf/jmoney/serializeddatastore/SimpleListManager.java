@@ -42,7 +42,7 @@ import net.sf.jmoney.model2.PropertySet;
  *
  * @author Nigel Westbury
  */
-public class SimpleListManager extends Vector implements IListManager {
+public class SimpleListManager extends Vector<ExtendableObject> implements IListManager {
 
 	private static final long serialVersionUID = 2090027937924066725L;
 

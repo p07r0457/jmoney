@@ -29,7 +29,7 @@ import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IDataManager;
+import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -96,7 +96,7 @@ public class SimpleObjectKey implements IObjectKey {
 		return sessionManager.getSession();
 	}
 
-	public IDataManager getSessionManager() {
+	public DataManager getSessionManager() {
 		return sessionManager;
 	}
 }

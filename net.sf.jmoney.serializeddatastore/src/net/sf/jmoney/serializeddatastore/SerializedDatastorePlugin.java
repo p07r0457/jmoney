@@ -28,7 +28,7 @@ import java.util.ResourceBundle;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.core.runtime.CoreException;
@@ -257,7 +257,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * 			another plug-in that also implements a datastore.
 	 */
 	public static boolean checkSessionImplementation(IWorkbenchWindow window) {
-		ISessionManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		if (sessionManager == null) {
 			MessageDialog dialog =
 				new MessageDialog(

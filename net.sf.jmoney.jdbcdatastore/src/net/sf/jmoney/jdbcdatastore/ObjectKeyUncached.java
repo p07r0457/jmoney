@@ -26,7 +26,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IDataManager;
+import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;
@@ -162,7 +162,7 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 		return sessionManager.getSession();
 	}
 
-	public IDataManager getSessionManager() {
+	public DataManager getSessionManager() {
 		throw new RuntimeException("should only be called for session keys");
 	}
 
