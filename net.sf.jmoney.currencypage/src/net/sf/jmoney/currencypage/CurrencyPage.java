@@ -149,7 +149,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 	         * Returns the currencies that are available in this accounting datastore.
 	         */
 	        public Object[] getElements(Object parent) {
-	            Vector currencies = new Vector();
+	            Vector<ISOCurrencyData> currencies = new Vector<ISOCurrencyData>();
 
 	            for (Iterator iter = allIsoCurrencies.iterator(); iter.hasNext(); ) {
 	            	ISOCurrencyData isoCurrency = (ISOCurrencyData)iter.next();
@@ -184,7 +184,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 	         * Returns the currencies that are available in this accounting datastore.
 	         */
 	        public Object[] getElements(Object parent) {
-	            Vector currencies = new Vector();
+	            Vector<ISOCurrencyData> currencies = new Vector<ISOCurrencyData>();
 
 	            for (Iterator iter = allIsoCurrencies.iterator(); iter.hasNext(); ) {
 	            	ISOCurrencyData isoCurrency = (ISOCurrencyData)iter.next();
@@ -244,9 +244,9 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 		 * Set of currencies that are used in some way in the current session.
 		 * These currencies cannot be removed from the session.
 		 */
-		private Set usedCurrencies = new HashSet();
+		private Set<ISOCurrencyData> usedCurrencies = new HashSet<ISOCurrencyData>();
 		
-		private Vector allIsoCurrencies = new Vector();
+		private Vector<ISOCurrencyData> allIsoCurrencies = new Vector<ISOCurrencyData>();
 		
 		private SessionChangeListener listener =
 			new SessionChangeAdapter() {
