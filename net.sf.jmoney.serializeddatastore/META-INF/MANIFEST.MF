@@ -13,5 +13,5 @@ Export-Package: net.sf.jmoney.gui,
  net.sf.jmoney.serializeddatastore,
  net.sf.jmoney.serializeddatastore.actions,
  net.sf.jmoney.serializeddatastore.formats
-Eclipse-AutoStart: true
+Eclipse-LazyStart: true
 Bundle-Vendor: JMoney.sf.net
