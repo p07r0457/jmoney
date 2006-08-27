@@ -11,5 +11,5 @@ Require-Bundle: net.sf.jmoney,
  org.eclipse.core.runtime,
  org.eclipse.ui,
  org.eclipse.ui.forms
-Eclipse-AutoStart: true
+Eclipse-LazyStart: true
 Bundle-Vendor: JMoney.sf.net
