@@ -9,7 +9,7 @@ import java.util.ResourceBundle;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -26,7 +26,7 @@ public class CopierPlugin extends AbstractUIPlugin {
 	private static CopierPlugin plugin;
 	//Resource bundle.
 	private ResourceBundle resourceBundle;
-	private static ISessionManager savedSessionManager = null;
+	private static DatastoreManager savedSessionManager = null;
 	
 	/**
 	 * The constructor.
@@ -85,14 +85,14 @@ public class CopierPlugin extends AbstractUIPlugin {
 	/**
 	 * @param sessionManager
 	 */
-	public static void setSessionManager(ISessionManager sessionManager) {
+	public static void setSessionManager(DatastoreManager sessionManager) {
 		savedSessionManager = sessionManager;
 	}
 
 	/**
 	 * @return
 	 */
-	public static ISessionManager getSessionManager() {
+	public static DatastoreManager getSessionManager() {
 		return savedSessionManager;
 	}
 	

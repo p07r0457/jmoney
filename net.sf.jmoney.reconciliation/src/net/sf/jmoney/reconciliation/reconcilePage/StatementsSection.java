@@ -256,7 +256,7 @@ public class StatementsSection extends SectionPart {
 			}
 
 			// Listen for changes so we can keep the tree map upto date.
-			account.getSession().addSessionChangeListener(new SessionChangeAdapter() {
+			account.getObjectKey().getSessionManager().addSessionChangeListener(new SessionChangeAdapter() {
 				public void objectAdded(ExtendableObject newObject) {
 					if (newObject instanceof Entry) {
 						Entry newEntry = (Entry)newObject;

@@ -24,7 +24,7 @@ package net.sf.jmoney.copier.actions;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.copier.CopierPlugin;
-import net.sf.jmoney.model2.ISessionManager;
+import net.sf.jmoney.model2.DatastoreManager;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -56,7 +56,7 @@ public class PasteContentsAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		ISessionManager destinationSessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		DatastoreManager destinationSessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		
 		if (destinationSessionManager == null) {
 			MessageDialog waitDialog =
@@ -73,7 +73,7 @@ public class PasteContentsAction implements IWorkbenchWindowActionDelegate {
 			return;
 		}
 
-		ISessionManager sourceSessionManager = CopierPlugin.getSessionManager();
+		DatastoreManager sourceSessionManager = CopierPlugin.getSessionManager();
 		if (sourceSessionManager == null) {
 			MessageDialog waitDialog =
 				new MessageDialog(
