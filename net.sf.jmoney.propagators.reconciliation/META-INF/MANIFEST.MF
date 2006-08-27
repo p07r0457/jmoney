@@ -10,5 +10,5 @@ Require-Bundle: org.eclipse.core.runtime,
  net.sf.jmoney,
  net.sf.jmoney.qif,
  net.sf.jmoney.reconciliation
-Eclipse-AutoStart: true
+Eclipse-LazyStart: true
 Bundle-Vendor: JMoney.sf.net
