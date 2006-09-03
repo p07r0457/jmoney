@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.model2;
 
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Vector;
 
@@ -38,13 +40,19 @@ import org.eclipse.swt.widgets.Control;
  */
 public abstract class DataManager implements IAdaptable {
 	
+    private Vector<WeakReference<SessionChangeListener>> sessionChangeListenerRefs = new Vector<WeakReference<SessionChangeListener>>();
+
     private Vector<SessionChangeListener> sessionChangeListeners = new Vector<SessionChangeListener>();
 
     private Vector<SessionChangeFirerListener> sessionChangeFirerListeners = new Vector<SessionChangeFirerListener>();
 
 	private boolean sessionFiring = false;
 
+//	private ReferenceQueue referenceQueue = new ReferenceQueue();
+
 	/**
+	 * Adds a change listener.
+	 * <P>
      * Adds the listener to the collection of listeners who will be notified
      * when a change is made to the version of the datastore as seen through
      * this data manager.  Notifications will be sent when either a
@@ -66,9 +74,14 @@ public abstract class DataManager implements IAdaptable {
      * committed, so getting a notification for a change that is never committed is
      * not an issue.  Views should do a full refresh if they change the data manager
      * through which they are obtaining the data to be shown.
+     * <P>
+     * This method maintains only a weak reference to the listener.  Therefore
+     * the caller MUST maintain a reference to the listener.  If the caller does
+     * not maintain a reference to the listener then the listener will be garbage
+     * collected and the caller may wonder why no events are being notified.
 	 */
-	public void addSessionChangeListener(SessionChangeListener l) {
-        sessionChangeListeners.add(l);
+	public void addSessionChangeListener(SessionChangeListener listener) {
+        sessionChangeListenerRefs.add(new WeakReference<SessionChangeListener>(listener));
     }
     
 	/**
@@ -81,6 +94,9 @@ public abstract class DataManager implements IAdaptable {
 	 * This method is generally used when a listener is used to update contents in a
 	 * control.  Typically multiple controls are updated by a listener and the parent
 	 * composite control is passed to this method.
+	 * <P>
+	 * This method creates a strong reference to the listener.  There is thus no need
+	 * for the caller to maintain a reference to the listener.
 	 * 
 	 * @param listener
 	 * @param control
@@ -95,22 +111,13 @@ public abstract class DataManager implements IAdaptable {
 			}
 		});
     }
-    
-    /**
-     * Removes the listener from the collection of listeners who will be notified
-     * when a change is made to the version of the datastore as seen through
-     * this transaction manager.
-     */
-    public void removeSessionChangeListener(SessionChangeListener l) {
-        sessionChangeListeners.remove(l);
+	
+	public void addSessionChangeFirerListener(SessionChangeFirerListener listener) {
+        sessionChangeFirerListeners.add(listener);
     }
     
-    public void addSessionChangeFirerListener(SessionChangeFirerListener l) {
-        sessionChangeFirerListeners.add(l);
-    }
-    
-    public void removeSessionChangeFirerListener(SessionChangeFirerListener l) {
-        sessionChangeFirerListeners.remove(l);
+    public void removeSessionChangeFirerListener(SessionChangeFirerListener listener) {
+        sessionChangeFirerListeners.remove(listener);
     }
     
     /**
@@ -135,11 +142,15 @@ public abstract class DataManager implements IAdaptable {
     public void fireEvent(ISessionChangeFirer firer) {
     	sessionFiring = true;
     	
-    	// Notify listeners who are listening to us using the
-    	// SessionChangeFirerListener interface.
+    	/*
+		 * Notify listeners who are listening to us using the
+		 * SessionChangeFirerListener interface.
+		 */
         if (!sessionChangeFirerListeners.isEmpty()) {
-        	// Take a copy of the listener list.  By doing this we
-        	// allow listeners to safely add or remove listeners.
+        	/*
+			 * Take a copy of the listener list. By doing this we allow
+			 * listeners to safely add or remove listeners.
+			 */
         	SessionChangeFirerListener listenerArray[] = new SessionChangeFirerListener[sessionChangeFirerListeners.size()];
         	sessionChangeFirerListeners.copyInto(listenerArray);
         	for (int i = 0; i < listenerArray.length; i++) {
@@ -147,17 +158,31 @@ public abstract class DataManager implements IAdaptable {
         	}
         }
     	
-    	// Notify listeners who are listening to us using the
-    	// SessionChangeListener interface.
-        if (!sessionChangeListeners.isEmpty()) {
-        	// Take a copy of the listener list.  By doing this we
-        	// allow listeners to safely add or remove listeners.
-        	SessionChangeListener listenerArray[] = new SessionChangeListener[sessionChangeListeners.size()];
-        	sessionChangeListeners.copyInto(listenerArray);
-        	for (int i = 0; i < listenerArray.length; i++) {
-        		firer.fire(listenerArray[i]);
+    	/*
+		 * Notify listeners who are listening to us using the
+		 * SessionChangeListener interface.
+		 */
+
+        /*
+		 * Take a copy of the listener list. By doing this we allow
+		 * listeners to safely add or remove listeners.
+		 */
+        Vector<SessionChangeListener> listenerArray = new Vector<SessionChangeListener>();
+
+        for (WeakReference<SessionChangeListener> listenerRef: sessionChangeListenerRefs) {
+        	SessionChangeListener listener = listenerRef.get();
+        	if (listener != null) {
+        		listenerArray.add(listener);
         	}
         }
+
+        for (SessionChangeListener listener: sessionChangeListeners) {
+        	listenerArray.add(listener);
+        }
+
+        for (SessionChangeListener listener: listenerArray) {
+    		firer.fire(listener);
+    	}
 
         sessionFiring = false;
     }
@@ -249,5 +274,148 @@ public abstract class DataManager implements IAdaptable {
 	 * @param account
 	 * @return
 	 */
-	public abstract Collection getEntries(Account account);
+	public abstract Collection<Entry> getEntries(Account account);
 }
+
+/*
+//@author Santhosh Kumar T - santhosh@in.fiorano.com 
+public class WeakPropertyChangeListener implements PropertyChangeListener{ 
+    WeakReference listenerRef; 
+    Object src; 
+ 
+    public WeakPropertyChangeListener(PropertyChangeListener listener, Object src){ 
+        listenerRef = new WeakReference(listener); 
+        this.src = src; 
+    } 
+ 
+    public void propertyChange(PropertyChangeEvent evt){ 
+        PropertyChangeListener listener = (PropertyChangeListener)listenerRef.get(); 
+        if(listener==null){ 
+            removeListener(); 
+        }else 
+            listener.propertyChange(evt); 
+    } 
+ 
+    private void removeListener(){ 
+        try{ 
+            Method method = src.getClass().getMethod("removePropertyChangeListener" 
+                    , new Class[] {PropertyChangeListener.class}); 
+            method.invoke(src, new Object[]{ this }); 
+        } catch(Exception e){ 
+            e.printStackTrace(); 
+        } 
+    } 
+}
+
+
+How to use this:
+
+KeyboardFocusManager focusManager = 
+   KeyboardFocusManager.getCurrentKeyboardFocusManager(); 
+ 
+// instead of registering direclty use weak listener 
+// focusManager.addPropertyChangeListener(focusOwnerListener); 
+ 
+focusManager.addPropertyChangeListener( 
+    new WeakPropertyChangeListener(focusOwnerListener, focusManager));
+
+
+How does this work:
+
+Instead of registering propertyChangeListener directly to keyboardFocusManager, we wrap it inside WeakPropertyChangeListener and register this weak listener to keyboardFocusManager. This weak listener acts a delegate.
+It receives the propertyChangeEvents from keyboardFocusManager and delegates it the wrapped listener.
+
+The interesting part of this weak listener, it hold a weakReference to the original propertyChangeListener. so this delegate is eligible for garbage collection which it is no longer reachable via references. When it gets garbage
+collection, the weakReference will be pointing to null. On next propertyChangeEvent notification from keyboardFocusManager, it find that the weakReference is pointing to null, and unregisters itself from
+keyboardFocusManager. Thus the weak listener will also become eligible for garbage collection in next gc cycle.
+
+This concept is not something new. If you have a habit of looking into swing sources, you will find that AbstractButton actually adds a weak listener to its action. The weak listener class used for this is :
+javax.swing.AbstractActionPropertyChangeListener; This class is package-private, so you don't find it in javadoc.
+
+The full-fledged, generic implementation of weak listeners is available in Netbeans OpenAPI: WeakListeners.java . It is worth to have a look at it.
+
+We create a subclass of ReferenceQueue, which will help us in performing such resource cleanup very easily:
+
+//	 @author Santhosh Kumar T - santhosh@in.fiorano.com 
+	public class ActiveReferenceQueue 
+	          extends ReferenceQueue implements Runnable{ 
+	    private static ActiveReferenceQueue singleton = null; 
+	 
+	    public static ActiveReferenceQueue getInstance(){ 
+	        if(singleton==null) 
+	            singleton = new ActiveReferenceQueue(); 
+	        return singleton; 
+	    } 
+	 
+	    private ActiveReferenceQueue(){ 
+	        Thread t = new Thread(this, "ActiveReferenceQueue"); 
+	        t.setDaemon(false); 
+	        t.start(); 
+	    } 
+	 
+	    public void run(){ 
+	        for(;;){ 
+	            try{ 
+	                Reference ref = super.remove(0); 
+	                if(ref instanceof Runnable){ 
+	                    try{ 
+	                        ((Runnable)ref).run(); 
+	                    } catch(Exception e){ 
+	                        e.printStackTrace(); 
+	                    } 
+	                } 
+	            } catch(InterruptedException e){ 
+	                e.printStackTrace(); 
+	            } 
+	        } 
+	    } 
+	} 
+
+
+	ActiveReferenceQueue is a singleton class, and starts a thread when it is instantiated. This thread keeps polling for weakReferences that are eligible for garbage collection, and if those weakReferenes implement Runnable interface, it executes them.
+
+	To use this, we can create a subclass of WeakReference implementing Runnable interface, which does the cleanup it run() method.
+
+	Let us see how we will change the WeakPropertyChangeListener to use the above reference queue:
+
+//	 @author Santhosh Kumar T - santhosh@in.fiorano.com 
+	public class WeakPropertyChangeListener implements PropertyChangeListener{ 
+	    WeakReference listenerRef; 
+	    Object src; 
+	 
+	    public WeakPropertyChangeListener(PropertyChangeListener listener, Object src){ 
+	        listenerRef = new ListenerReference(listener, this); 
+	        this.src = src; 
+	    } 
+	 
+	    public void propertyChange(PropertyChangeEvent evt){ 
+	        PropertyChangeListener listener = (PropertyChangeListener)listenerRef.get(); 
+	        if(listener!=null) 
+	            listener.propertyChange(evt); 
+	    } 
+	 
+	    private void removeListener(){ 
+	        try{ 
+	            Method method = src.getClass().getMethod("removePropertyChangeListener" 
+	                    , new Class[] {PropertyChangeListener.class}); 
+	            method.invoke(src, new Object[]{ this }); 
+	        } catch(Exception e){ 
+	            e.printStackTrace(); 
+	        } 
+	    } 
+	 
+	    static class ListenerReference extends WeakReference{ 
+	        WeakPropertyChangeListener listener; 
+	 
+	        public ListenerReference(Object ref, WeakPropertyChangeListener listener){ 
+	            super(ref, ActiveReferenceQueue.getInstance()); 
+	            this.listener = listener; 
+	        } 
+	 
+	        public void run(){ 
+	            listener.removeListener(); 
+	            listener = null; 
+	        } 
+	    } 
+	}
+*/

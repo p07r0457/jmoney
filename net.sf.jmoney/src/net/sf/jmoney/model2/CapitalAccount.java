@@ -45,6 +45,8 @@ import net.sf.jmoney.fields.TransactionInfo;
  */
 public abstract class CapitalAccount extends Account {
 
+	protected IListManager<CapitalAccount> subAccounts;
+	
 	protected String abbreviation = null;
 
 	protected String comment = null;
@@ -63,11 +65,12 @@ public abstract class CapitalAccount extends Account {
 			Map extensions, 
 			IObjectKey parent,
 			String name,
-			IListManager subAccounts,
+			IListManager<CapitalAccount> subAccounts,
 			String abbreviation,
 			String comment) {
-		super(objectKey, extensions, parent, name, subAccounts);
+		super(objectKey, extensions, parent, name);
 		
+		this.subAccounts = subAccounts;
         this.abbreviation = abbreviation;
         this.comment = comment;
 	}
@@ -83,9 +86,10 @@ public abstract class CapitalAccount extends Account {
 			IObjectKey objectKey, 
 			Map extensions, 
 			IObjectKey parent,
-			IListManager subAccounts) {
-		super(objectKey, extensions, parent, JMoneyPlugin.getResourceString("Account.newAccount"), subAccounts);
+			IListManager<CapitalAccount> subAccounts) {
+		super(objectKey, extensions, parent, JMoneyPlugin.getResourceString("Account.newAccount"));
 		
+		this.subAccounts = subAccounts;
         this.abbreviation = null;
         this.comment = null;
 	}
@@ -108,8 +112,8 @@ public abstract class CapitalAccount extends Account {
 		return comment;
 	};
 
-	public ObjectCollection getSubAccountCollection() {
-		return new ObjectCollection(subAccounts, this, CapitalAccountInfo.getSubAccountAccessor());
+	public ObjectCollection<CapitalAccount> getSubAccountCollection() {
+		return new ObjectCollection<CapitalAccount>(subAccounts, this, CapitalAccountInfo.getSubAccountAccessor());
 	}
 
 	/**
@@ -133,19 +137,14 @@ public abstract class CapitalAccount extends Account {
     		// IEntryQueries has not been implemented in the datastore.
     		// We must therefore provide our own implementation.
     		
-    		List sortedEntries = new LinkedList();
+    		List<Entry> sortedEntries = new LinkedList<Entry>(getEntries());
     		
-    		Iterator it = getEntries().iterator();
-    		while (it.hasNext()) {
-    			sortedEntries.add(it.next());
-    		}
-    		
-    		Comparator entryComparator;
+    		Comparator<Entry> entryComparator;
     		if (sortProperty.getPropertySet() == EntryInfo.getPropertySet()) {
-    			entryComparator = new Comparator() {
-    				public int compare(Object a, Object b) {
-    					Object value1 = ((Entry) a).getPropertyValue(sortProperty);
-    					Object value2 = ((Entry) b).getPropertyValue(sortProperty);
+    			entryComparator = new Comparator<Entry>() {
+    				public int compare(Entry entry1, Entry entry2) {
+    					Object value1 = entry1.getPropertyValue(sortProperty);
+    					Object value2 = entry2.getPropertyValue(sortProperty);
     					if (value1 == null && value2 == null) return 0;
     					if (value1 == null) return 1;
     					if (value2 == null) return -1;
@@ -157,10 +156,10 @@ public abstract class CapitalAccount extends Account {
     				}
     			};
     		} else if (sortProperty.getPropertySet() == TransactionInfo.getPropertySet()) {
-    			entryComparator = new Comparator() {
-    				public int compare(Object a, Object b) {
-    					Object value1 = ((Entry) a).getTransaction().getPropertyValue(sortProperty);
-    					Object value2 = ((Entry) b).getTransaction().getPropertyValue(sortProperty);
+    			entryComparator = new Comparator<Entry>() {
+    				public int compare(Entry entry1, Entry entry2) {
+    					Object value1 = entry1.getTransaction().getPropertyValue(sortProperty);
+    					Object value2 = entry2.getTransaction().getPropertyValue(sortProperty);
     					if (value1 == null && value2 == null) return 0;
     					if (value1 == null) return 1;
     					if (value2 == null) return -1;
@@ -172,10 +171,10 @@ public abstract class CapitalAccount extends Account {
     				}
     			};
     		} else if (sortProperty.getPropertySet() == AccountInfo.getPropertySet()) {
-    			entryComparator = new Comparator() {
-    				public int compare(Object a, Object b) {
-    					Object value1 = ((Entry) a).getAccount().getPropertyValue(sortProperty);
-    					Object value2 = ((Entry) b).getAccount().getPropertyValue(sortProperty);
+    			entryComparator = new Comparator<Entry>() {
+    				public int compare(Entry entry1, Entry entry2) {
+    					Object value1 = entry1.getAccount().getPropertyValue(sortProperty);
+    					Object value2 = entry2.getAccount().getPropertyValue(sortProperty);
     					if (value1 == null && value2 == null) return 0;
     					if (value1 == null) return 1;
     					if (value2 == null) return -1;
@@ -191,10 +190,10 @@ public abstract class CapitalAccount extends Account {
     		}
     		
     		if (descending) {
-    			final Comparator ascendingComparator = entryComparator;
-    			entryComparator = new Comparator() {
-    				public int compare(Object a, Object b) {
-    					return ascendingComparator.compare(b, a);
+    			final Comparator<Entry> ascendingComparator = entryComparator;
+    			entryComparator = new Comparator<Entry>() {
+    				public int compare(Entry entry1, Entry entry2) {
+    					return ascendingComparator.compare(entry2, entry1);
     				}
     			};
     		}
@@ -288,16 +287,16 @@ public abstract class CapitalAccount extends Account {
     		// IEntryQueries has not been implemented in the datastore.
     		// We must therefore provide our own implementation.
     		
-    		Vector entriesList = new Vector();
+    		Vector<Entry> entriesList = new Vector<Entry>();
     		entriesList.addAll(getEntries());
     		if (includeSubAccounts) {
     			addEntriesFromSubAccounts(this, entriesList);
     		}
     		
-            Collections.sort(entriesList, new Comparator() {
-                public int compare(Object a, Object b) {
-                    return ((Entry) a).getTransaction().getDate().compareTo(
-                            ((Entry) b).getTransaction().getDate());
+            Collections.sort(entriesList, new Comparator<Entry>() {
+                public int compare(Entry entry1, Entry entry2) {
+                    return entry1.getTransaction().getDate().compareTo(
+                            entry2.getTransaction().getDate());
                 }
             });
 
@@ -345,7 +344,7 @@ public abstract class CapitalAccount extends Account {
     	}
 	}
 
-	public void addEntriesFromSubAccounts(CapitalAccount a, Collection entriesList) {
+	public void addEntriesFromSubAccounts(CapitalAccount a, Collection<Entry> entriesList) {
 		for (Iterator it = a.getSubAccountCollection().iterator(); it.hasNext(); ) {
 			CapitalAccount subAccount = (CapitalAccount)it.next();
 			entriesList.addAll(subAccount.getEntries());

@@ -53,13 +53,13 @@ public class Propagator {
 	 * List of propagator objects.
 	 * This may be temporary depending on the final design.
 	 */
-	private static Vector propagators = new Vector();
+	private static Vector<Object> propagators = new Vector<Object>();
 	
 	/**
 	 * Map of maps.  First key is the PropertySet object for the source,
 	 * and second key is the PropertySet object for the destination.
 	 */
-	private static Map propagatorMap = new Hashtable();
+	private static Map<PropertySet, Map<PropertySet, Method>> propagatorMap = new Hashtable<PropertySet, Map<PropertySet, Method>>();
 	
 	/**
 	 * The set of all properties that have been updated as a result of a single
@@ -68,7 +68,7 @@ public class Propagator {
 	 *
 	 * Null indicates that we are not currently in the process of firing propagators.
 	 */
-	private static Set updatedProperties = null;
+	private static Set<PropertyAccessor> updatedProperties = null;
 	
 	/**
 	 * Loads the propagators.
@@ -185,9 +185,9 @@ public class Propagator {
 					
 					// Method looks ok so add to map.
 					
-					Map secondaryMap = (Map)propagatorMap.get(sourcePropertySet);
+					Map<PropertySet, Method> secondaryMap = propagatorMap.get(sourcePropertySet);
 					if (secondaryMap == null) {
-						secondaryMap = new Hashtable();
+						secondaryMap = new Hashtable<PropertySet, Method>();
 						propagatorMap.put(sourcePropertySet, secondaryMap);
 					}
 					
@@ -241,7 +241,7 @@ public class Propagator {
 		boolean topLevelPropagatorFirer;
 		
 		if (updatedProperties == null) {
-			updatedProperties = new HashSet();
+			updatedProperties = new HashSet<PropertyAccessor>();
 			topLevelPropagatorFirer = true;
 		} else {
 			topLevelPropagatorFirer = false;
@@ -262,12 +262,11 @@ public class Propagator {
 		// Add this property to the map of properties that have been changed.
 		updatedProperties.add(propertyAccessor);
 		
-		Map secondaryMap = (Map)propagatorMap.get(sourcePropertySetKey);
+		Map<PropertySet, Method> secondaryMap = propagatorMap.get(sourcePropertySetKey);
 		if (secondaryMap != null) {
-			for (Iterator iter = secondaryMap.entrySet().iterator(); iter.hasNext(); ) {
-				Map.Entry mapEntry = (Map.Entry)iter.next();
-				PropertySet destinationPropertySetKey = (PropertySet)mapEntry.getKey();
-				Method method = (Method)mapEntry.getValue();
+			for (Map.Entry<PropertySet, Method> mapEntry: secondaryMap.entrySet()) {
+				PropertySet destinationPropertySetKey = mapEntry.getKey();
+				Method method = mapEntry.getValue();
 				
 				Object[] parameters = new Object[3];
 				parameters[0] = propertyAccessor.getLocalName();

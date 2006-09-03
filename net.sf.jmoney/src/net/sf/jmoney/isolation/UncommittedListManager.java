@@ -38,7 +38,7 @@ import net.sf.jmoney.model2.PropertySet;
  * 
  * @author Nigel Westbury
  */
-public class UncommittedListManager extends Vector<ExtendableObject> implements IListManager {
+public class UncommittedListManager<E extends ExtendableObject> extends Vector<E> implements IListManager<E> {
 
 	private static final long serialVersionUID = 196103020038035348L;
 
@@ -58,7 +58,7 @@ public class UncommittedListManager extends Vector<ExtendableObject> implements 
 	 * 'added' list are appended to the items returned by the underlying
 	 * committed list.
 	 */
-	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet) {
+	public E createNewElement(ExtendableObject parent, PropertySet propertySet) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());
@@ -85,7 +85,7 @@ public class UncommittedListManager extends Vector<ExtendableObject> implements 
 		}
 		
 		// We can now create the object.
-		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructDefaultImplementationObject(constructorParameters);
+		E extendableObject = (E)propertySet.constructDefaultImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 
@@ -102,7 +102,7 @@ public class UncommittedListManager extends Vector<ExtendableObject> implements 
 	// This method is never used, because new objects are only created
 	// with non-default values when objects are being committed.
 	// If we support nested transactions then this method will be required.
-	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values/*, ExtensionProperties[] extensionProperties */) {
+	public E createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values/*, ExtensionProperties[] extensionProperties */) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());
@@ -129,7 +129,7 @@ public class UncommittedListManager extends Vector<ExtendableObject> implements 
 		}
 		
 		// We can now create the object.
-		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructDefaultImplementationObject(constructorParameters);
+		E extendableObject = (E)propertySet.constructDefaultImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 

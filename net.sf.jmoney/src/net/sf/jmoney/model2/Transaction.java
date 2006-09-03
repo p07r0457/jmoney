@@ -38,13 +38,13 @@ public class Transaction extends ExtendableObject {
     
     protected Date date = null;
     
-    protected IListManager entries;
+    protected IListManager<Entry> entries;
     
 	public Transaction(
 			IObjectKey objectKey,
     		Map extensions,
 			IObjectKey parentKey,
-    		IListManager entries,
+    		IListManager<Entry> entries,
     		Date date) {
 		super(objectKey, extensions, parentKey);
 
@@ -56,7 +56,7 @@ public class Transaction extends ExtendableObject {
 			IObjectKey objectKey,
     		Map extensions,
 			IObjectKey parentKey,
-    		IListManager entries) {
+    		IListManager<Entry> entries) {
 		super(objectKey, extensions, parentKey);
 
 		this.entries = entries;
@@ -153,8 +153,8 @@ public class Transaction extends ExtendableObject {
      * This class adds a little tighter typing to ObjectCollection,
      * but it is barely worth while having this class.
 	 */
-	public class EntryCollection extends ObjectCollection {
-		EntryCollection(IListManager listManager, ExtendableObject parent, PropertyAccessor listPropertyAccessor) {
+	public class EntryCollection extends ObjectCollection<Entry> {
+		EntryCollection(IListManager<Entry> listManager, ExtendableObject parent, PropertyAccessor listPropertyAccessor) {
 			super(listManager, parent, listPropertyAccessor);
 		}
 		

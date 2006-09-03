@@ -26,6 +26,7 @@ import java.util.Collection;
 
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.IObjectKey;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -45,7 +46,7 @@ import org.eclipse.ui.IMemento;
  */
 public interface ITransactionTemplate {
 
-	void addTransaction(Collection ourEntryList);
+	void addTransaction(Collection<IObjectKey> ourEntryList);
 
 	String getDescription();
 
@@ -95,7 +96,7 @@ public interface ITransactionTemplate {
 	 * 			by the user 
 	 * @return
 	 */
-	Control createControl(Composite parent, boolean expandedControls, Account account, Collection ourEntryList);
+	Control createControl(Composite parent, boolean expandedControls, Account account, Collection<IObjectKey> ourEntryList);
 
 	void init(IMemento memento);
 	void saveState(IMemento memento);

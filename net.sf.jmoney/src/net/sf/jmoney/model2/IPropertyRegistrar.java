@@ -108,7 +108,7 @@ public interface IPropertyRegistrar {
 	PropertyAccessor addPropertyList(
 			String name,
 			String shortDescription, 
-			Class listItemClass,
+			Class<? extends ExtendableObject> listItemClass,
 			IPropertyDependency propertyDependency);
 	
 	/**

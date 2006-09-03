@@ -47,8 +47,7 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
     protected String label;
     protected Image image;
     
-	/** Element: PageEntry */
-    protected Vector pageFactories;
+    protected Vector<PageEntry> pageFactories;
 
     protected IMemento memento;
     
@@ -60,7 +59,7 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
      * 
      * @param nodeObject An extendable object on which this input is based
      */
-    public NodeEditorInput(Object nodeObject, String label, Image image, Vector pageFactories, IMemento memento) {
+    public NodeEditorInput(Object nodeObject, String label, Image image, Vector<PageEntry> pageFactories, IMemento memento) {
         this.nodeObject = nodeObject;
         this.label = label;
         this.image = image;

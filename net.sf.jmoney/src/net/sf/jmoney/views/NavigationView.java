@@ -30,8 +30,9 @@ import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CapitalAccountInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.DatastoreManager;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.PageEntry;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -100,7 +101,7 @@ public class NavigationView extends ViewPart {
 	private ILabelProvider labelProvider; 
 
 	private Action openEditorAction;
-	private Vector newAccountActions = new Vector();  // Element type: Action
+	private Vector<Action> newAccountActions = new Vector<Action>();
 	private Action deleteAccountAction;
 
 	private Session session;
@@ -361,7 +362,7 @@ public class NavigationView extends ViewPart {
 			   			Object selectedObject = iterator.next();
 			   			
 			   			// Find and activate the editor for this node (if any)
-			   			Vector pageFactories = getPageFactories(selectedObject);
+			   			Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
 			   			if (!pageFactories.isEmpty()) {
 			   					IWorkbenchWindow window = getSite().getWorkbenchWindow();
 			   					IEditorInput editorInput = new NodeEditorInput(selectedObject,
@@ -389,7 +390,7 @@ public class NavigationView extends ViewPart {
 				   		for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
 				   			Object selectedObject = iterator.next();
 				   			
-				   			Vector pageFactories = getPageFactories(selectedObject);
+				   			Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
 				   			
 				   			// Create an editor for this node (or active if an editor
 				   			// is already open).  However, if no pages are registered for this
@@ -446,14 +447,14 @@ public class NavigationView extends ViewPart {
 	 * @param selectedObject
 	 * @return a vector of elements of type IBookkeepingPage
 	 */
-	protected Vector getPageFactories(Object selectedObject) {
+	protected Vector<PageEntry> getPageFactories(Object selectedObject) {
 		if (selectedObject instanceof TreeNode) {
 			return ((TreeNode)selectedObject).getPageFactories();
 		} else if (selectedObject instanceof ExtendableObject) {
 			PropertySet propertySet = PropertySet.getPropertySet(selectedObject.getClass());
 			return propertySet.getPageFactories();
 		} else {
-			return new Vector();
+			return new Vector<PageEntry>();
 		}
 	}
 
@@ -477,8 +478,7 @@ public class NavigationView extends ViewPart {
 	}
 
 	private void fillLocalPullDown(IMenuManager manager) {
-		for (Iterator iter = newAccountActions.iterator(); iter.hasNext(); ) {
-			Action newAccountAction = (Action)iter.next();
+		for (Action newAccountAction: newAccountActions) {
 			manager.add(newAccountAction);
 		}
 		manager.add(new Separator());
@@ -502,8 +502,7 @@ public class NavigationView extends ViewPart {
 
 		if (selectedObject instanceof AccountsNode 
 				|| selectedObject instanceof Account) {
-			for (Iterator iter = newAccountActions.iterator(); iter.hasNext(); ) {
-				Action newAccountAction = (Action)iter.next();
+			for (Action newAccountAction: newAccountActions) {
 				manager.add(newAccountAction);
 			}
 			if (selectedObject instanceof Account) {
@@ -532,7 +531,7 @@ public class NavigationView extends ViewPart {
 					break;
 				}
 				
-	   			Vector pageFactories = getPageFactories(selectedObject);
+	   			Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
 	   			JMoneyPlugin.myAssert (!pageFactories.isEmpty());
 	   			
 	   			// Create an editor for this node (or active if an editor

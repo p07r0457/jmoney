@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.fields;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 
 import net.sf.jmoney.model2.Account;
@@ -42,7 +41,7 @@ public class AccountControlWithMruList extends AccountComposite {
     protected List accountList;
     protected AccountControl accountControl;
     
-    protected LinkedList recentlyUsedList = new LinkedList();
+    protected LinkedList<Account> recentlyUsedList = new LinkedList<Account>();
     
 	public AccountControlWithMruList(Composite parent, Session session, Class<? extends Account> accountClass) {
 		super(parent, SWT.NONE);
@@ -60,7 +59,7 @@ public class AccountControlWithMruList extends AccountComposite {
 			public void widgetSelected(SelectionEvent e) {
 				int selection = accountList.getSelectionIndex();
 				if (selection >= 0) {
-					accountControl.setAccount((Account)recentlyUsedList.get(selection));
+					accountControl.setAccount(recentlyUsedList.get(selection));
 				}
 			}
 			public void widgetDefaultSelected(SelectionEvent e) {
@@ -111,8 +110,7 @@ public class AccountControlWithMruList extends AccountComposite {
 	}
 
 	public void saveState(IMemento memento) {
-		for (Iterator iter = recentlyUsedList.iterator(); iter.hasNext(); ) {
-			Account account = (Account)iter.next();
+		for (Account account: recentlyUsedList) {
 			memento.createChild("mruAccount").putString("name", account.getFullAccountName());
 		}
 	}

@@ -72,19 +72,17 @@ public class TransactionDialog {
 
     private Display display;
 
-    Session session;
+    private Session session;
 
-    Currency defaultCurrency;
+    private Currency defaultCurrency;
     
     private Composite transactionArea;
     
-    Composite entriesArea;
+    private Composite entriesArea;
     
-    /** Element: EntryControls */
-    Vector entryControlsList = new Vector();
+    private Vector<EntryControls> entryControlsList = new Vector<EntryControls>();
     
-    /** element: IPropertyControl */
-    Vector transactionControls = new Vector();
+    private Vector<IPropertyControl> transactionControls = new Vector<IPropertyControl>();
     
     public TransactionDialog(Shell parent, Entry originalAccountEntry, Session originalSession) {
     	
@@ -93,7 +91,7 @@ public class TransactionDialog {
     	 * This allows the changes to be easily cancelled
     	 * if the user presses the 'cancel' button.
     	 */
-    	final TransactionManager transactionManager = new TransactionManager(originalSession);
+    	final TransactionManager transactionManager = new TransactionManager(originalSession.getObjectKey().getSessionManager());
     	
     	this.session = (Session)transactionManager.getCopyInTransaction(originalSession);
     	Entry accountEntry = (Entry)transactionManager.getCopyInTransaction(originalAccountEntry);

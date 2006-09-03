@@ -72,7 +72,7 @@ public class PropertySet {
 	private String propertySetId;
 	private IPropertySetInfo propertySetInfo;
 	
-	private Vector properties = new Vector();  // type: PropertyAccessor
+	private Vector<PropertyAccessor> properties = new Vector<PropertyAccessor>();
 	
 	boolean isExtension;
 	
@@ -109,16 +109,20 @@ public class PropertySet {
 	 * and not derivable.
 	 */
 	private String objectDescription;  // defined only if an extendable property set and not derivable
-	
-	private static Map allPropertySetsMap = new HashMap();   // type: String (property set id) to PropertySet
+
+	/**
+	 * Maps property set id to the property set
+	 */
+	private static Map<String, PropertySet> allPropertySetsMap = new HashMap<String, PropertySet>();
 
 	/**
 	 * Map extendable classes to property sets.
 	 */
-	private static Map classToPropertySetMap = new HashMap();   // type: String (property set id) to PropertySet
+	private static Map<Class, PropertySet> classToPropertySetMap = new HashMap<Class, PropertySet>();
 	
 	// TODO clean this up (i.e. remove this)
-	Map extensionPropertySets = null;  // Set only if this is an extendable property set
+	// Set only if this is an extendable property set
+	Map<String, PropertySet> extensionPropertySets = null;  
 
 	// Valid for extendable property sets only
 	PropertySet basePropertySet;
@@ -132,7 +136,7 @@ public class PropertySet {
 	 * (either directly or indirectly) and that are not
 	 * themselves derivable.
 	 */
-	private Vector derivedPropertySets = new Vector();
+	private Vector<PropertySet> derivedPropertySets = new Vector<PropertySet>();
 
 	// Valid for all property sets except those that are
 	// extendable and must be derived from.
@@ -157,7 +161,7 @@ public class PropertySet {
 	 * <P>
 	 * This field is undefined for derivable property sets.
 	 */
-	private Vector constructorProperties;
+	private Vector<PropertyAccessor> constructorProperties;
 	
 	/**
 	 * A list of all properties in this and base property sets that are
@@ -176,14 +180,14 @@ public class PropertySet {
 	 * <P>
 	 * This field is undefined for derivable property sets.
 	 */
-	private Vector defaultConstructorProperties;
+	private Vector<PropertyAccessor> defaultConstructorProperties;
 	
 	private Method theDefaultPropertiesMethod;
 	
 	/**
 	 * This field is valid for non-derivable property sets only.
 	 */
-	private Vector pageExtensions = null;
+	private Vector<PageEntry> pageExtensions = null;
 	
 	/**
 	 * This field is valid for extendable property sets only
@@ -356,7 +360,7 @@ public class PropertySet {
 							return accessor;
 						}
 
-						public PropertyAccessor addPropertyList(String name, String displayName, Class listItemClass, IPropertyDependency propertyDependency) {
+						public PropertyAccessor addPropertyList(String name, String displayName, Class<? extends ExtendableObject> listItemClass, IPropertyDependency propertyDependency) {
 							PropertyAccessor accessor = new PropertyAccessor(PropertySet.this, name, displayName, listItemClass, propertyDependency);
 							properties.add(accessor);
 							return accessor;
@@ -391,15 +395,17 @@ public class PropertySet {
 		allPropertySetsMap.put(propertySetId, this);
 
 		if (!isExtension) {
-			extensionPropertySets = new HashMap();
+			extensionPropertySets = new HashMap<String, PropertySet>();
 		}
 		
-		// Add to the map that maps the extendable classes
-		// to the extendable property sets.
-		// Only final property sets (ones which do not define an enumerated type
-		// to control derived classes) are put in the map.  This is important because
-		// when we are looking for the property set for an instance of an object,
-		// we want to be sure we find only the final property set for that object.
+		/*
+		 * Add to the map that maps the extendable classes to the extendable
+		 * property sets. Only final property sets (ones which do not define an
+		 * enumerated type to control derived classes) are put in the map. This
+		 * is important because when we are looking for the property set for an
+		 * instance of an object, we want to be sure we find only the final
+		 * property set for that object.
+		 */
 		if (!isExtension && !derivable) {
 			Class implementationClass = propertySetInfo.getImplementationClass();
 			if (classToPropertySetMap.containsKey(implementationClass)) {
@@ -407,7 +413,7 @@ public class PropertySet {
 			}
 			classToPropertySetMap.put(implementationClass, this);
 
-			pageExtensions = new Vector();
+			pageExtensions = new Vector<PageEntry>();
 		}
 	}
 
@@ -526,8 +532,8 @@ public class PropertySet {
 			// the 'new object' constructor and another list that
 			// are passed to the 're-instantiating' constructor.
 			
-			constructorProperties = new Vector();
-			defaultConstructorProperties = new Vector();
+			constructorProperties = new Vector<PropertyAccessor>();
+			defaultConstructorProperties = new Vector<PropertyAccessor>();
 		}
 		
 		if (!isExtension) {
@@ -538,7 +544,7 @@ public class PropertySet {
 			// To do this, we first build a list of the base property sets
 			// and we can then iterate through these property sets in
 			// reverse order.
-			Vector basePropertySets = new Vector();
+			Vector<PropertySet> basePropertySets = new Vector<PropertySet>();
 			for (PropertySet base = getBasePropertySet(); base != null; base = base.getBasePropertySet()) {
 				basePropertySets.add(base);
 			}
@@ -641,8 +647,7 @@ public class PropertySet {
 					parameters[i++] = IObjectKey.class;
 				}
 				
-				for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+				for (PropertyAccessor propertyAccessor: constructorProperties) {
 					if (propertyAccessor.isScalar()) {
 						if (ExtendableObject.class.isAssignableFrom(propertyAccessor.getValueClass())) { 		
 							// For extendable objects, we pass not the object
@@ -701,7 +706,7 @@ public class PropertySet {
 					parameters[i++] = IObjectKey.class;
 				}
 				
-				for (Iterator iter = defaultConstructorProperties.iterator(); iter.hasNext(); iter.next()) {
+				for (PropertyAccessor propertyAccessor: defaultConstructorProperties) {
 					parameters[i++] = IListManager.class; 
 				}
 				
@@ -786,7 +791,7 @@ public class PropertySet {
 	 *  
 	 * @return
 	 */
-	public Collection getConstructorProperties() {
+	public Collection<PropertyAccessor> getConstructorProperties() {
 		return constructorProperties;
 	}
 
@@ -805,7 +810,7 @@ public class PropertySet {
 	 *  
 	 * @return
 	 */
-	public Collection getDefaultConstructorProperties() {
+	public Collection<PropertyAccessor> getDefaultConstructorProperties() {
 		return defaultConstructorProperties;
 	}
 
@@ -937,7 +942,7 @@ public class PropertySet {
 		if (extendablePropertySet.isExtension()) {
 			throw new RuntimeException("extension on extension error");
 		}
-		PropertySet key = (PropertySet)extendablePropertySet.extensionPropertySets.get(propertySetId);
+		PropertySet key = extendablePropertySet.extensionPropertySets.get(propertySetId);
 		if (key == null) {
 			key = new PropertySet(propertySetId, true, extendablePropertySetId, null);
 		}
@@ -1090,7 +1095,7 @@ public class PropertySet {
 	public Iterator getPropertyIterator2() {
 		// Build an array - not efficient but easy and avoids concurrency problems.
 		// TODO: write a proper iterator, or at least cache this vector.
-		Vector fields = new Vector();
+		Vector<PropertyAccessor> fields = new Vector<PropertyAccessor>();
 
 		// Properties in this extendable object
 		for (Iterator propertyIterator = getPropertyIterator1(); propertyIterator.hasNext(); ) {
@@ -1099,9 +1104,7 @@ public class PropertySet {
 		}
 
 		// Properties in the extensions
-		for (Iterator propertySetIterator = extensionPropertySets.values().iterator(); propertySetIterator.hasNext(); ) {
-			PropertySet extensionPropertySet = (PropertySet)propertySetIterator.next();
-			
+		for (PropertySet extensionPropertySet: extensionPropertySets.values()) {
 			for (Iterator propertyIterator = extensionPropertySet.getPropertyIterator1(); propertyIterator.hasNext(); ) {
 				PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIterator.next();
 				fields.add(propertyAccessor);
@@ -1138,7 +1141,7 @@ public class PropertySet {
 	public Iterator getPropertyIterator3() {
 		// Build an array - not efficient but easy and avoids concurrency problems.
 		// TODO: write a proper iterator, or at least cache this vector.
-		Vector fields = new Vector();
+		Vector<PropertyAccessor> fields = new Vector<PropertyAccessor>();
 
 		// Properties in this and all the base property sets
 		PropertySet extendablePropertySet = this;
@@ -1176,7 +1179,7 @@ public class PropertySet {
 	public Iterator getPropertyIterator4() {
 		// Build an array - not efficient but easy and avoids concurrency problems.
 		// TODO: write a proper iterator, or at least cache this vector.
-		Vector fields = new Vector();
+		Vector<PropertyAccessor> fields = new Vector<PropertyAccessor>();
 
 		// Properties in this and all the base property sets
 		for (Iterator propertyIterator = getPropertyIterator3(); propertyIterator.hasNext(); ) {
@@ -1194,7 +1197,7 @@ public class PropertySet {
 	// Method valid for extendable property set only.
 	// TODO: This method is broken.  The derived properties sets are all the non-derivable
 	// property sets, including possibly this property set.
-	void addPropertiesFromDerivedPropertySets(Vector fields) {
+	void addPropertiesFromDerivedPropertySets(Vector<PropertyAccessor> fields) {
 		for (Iterator propertySetIterator = derivedPropertySets.iterator(); propertySetIterator.hasNext(); ) {
 			PropertySet derivedPropertySet = (PropertySet)propertySetIterator.next();
 			
@@ -1436,7 +1439,7 @@ public class PropertySet {
 	 * 
 	 * @return a set of objects of type PageEntry
 	 */
-	public Vector getPageFactories() {
+	public Vector<PageEntry> getPageFactories() {
 		return pageExtensions;		
 	}
 

@@ -39,7 +39,7 @@ import net.sf.jmoney.model2.IObjectKey;
  * 
  * @author Nigel Westbury
  */
-class DeltaListIterator implements Iterator<ExtendableObject> {
+class DeltaListIterator<E extends ExtendableObject> implements Iterator<E> {
 	TransactionManager transactionManager;
 	boolean processingCommittedObjects = true;
 
@@ -47,7 +47,7 @@ class DeltaListIterator implements Iterator<ExtendableObject> {
 	 * This collection contains the uncommitted version
 	 * of objects that have been added
 	 */
-	Collection<ExtendableObject> addedObjects;
+	Collection<E> addedObjects;
 	
 	/**
 	 * The object keys in this collection are the keys for
@@ -55,13 +55,13 @@ class DeltaListIterator implements Iterator<ExtendableObject> {
 	 */
 	Collection<IObjectKey> deletedObjects;
 	
-	Iterator<ExtendableObject> subIterator;
+	Iterator<E> subIterator;
 	
 	/**
 	 * Always non-null if processingCommittedObjects = true
 	 * Not applicable if processingCommittedObjects = false
 	 */
-	ExtendableObject nextObject;
+	E nextObject;
 	
 	/**
 	 * Construct an iterator that iterates the given iterator,
@@ -82,7 +82,7 @@ class DeltaListIterator implements Iterator<ExtendableObject> {
 	 * 			committedListIterator.  This list contains the committed
 	 * 			object keys.
 	 */
-	DeltaListIterator(TransactionManager transactionManager, Iterator<ExtendableObject> committedListIterator, Collection<ExtendableObject> addedObjects, Collection<IObjectKey> deletedObjects) {
+	DeltaListIterator(TransactionManager transactionManager, Iterator<E> committedListIterator, Collection<E> addedObjects, Collection<IObjectKey> deletedObjects) {
 		this.transactionManager = transactionManager;
 		subIterator = committedListIterator;
 		this.addedObjects = addedObjects;
@@ -106,9 +106,9 @@ class DeltaListIterator implements Iterator<ExtendableObject> {
 	 * correct result. This does mean we must save the next object to be
 	 * returned because it will have already been fetched from the sub-iterator.
 	 */
-	public ExtendableObject next() {
+	public E next() {
 		if (processingCommittedObjects) {
-			ExtendableObject objectToReturn = nextObject;
+			E objectToReturn = nextObject;
 			setNextObject();
 			return objectToReturn;
 		} else {
@@ -137,6 +137,6 @@ class DeltaListIterator implements Iterator<ExtendableObject> {
 			committedObject = subIterator.next();
 		} while (deletedObjects.contains(committedObject.getObjectKey()));
 		
-		nextObject = transactionManager.getCopyInTransaction(committedObject);
+		nextObject = (E)transactionManager.getCopyInTransaction(committedObject);
 	}
 }

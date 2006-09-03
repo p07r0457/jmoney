@@ -30,7 +30,7 @@ import java.util.Collection;
  * property.  For example, the set of all accounts in a session
  * are managed by an object that implements this interface.
  */
-public interface IListManager extends Collection<ExtendableObject> {
+public interface IListManager<E extends ExtendableObject> extends Collection<E> {
 
 	/**
 	 * This method creates a new object in this collection
@@ -43,7 +43,7 @@ public interface IListManager extends Collection<ExtendableObject> {
 	 * 			the exact type of the object to create must be given).
 	 * @return the newly created object.
 	 */
-	ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet);
+	E createNewElement(ExtendableObject parent, PropertySet propertySet);
 
 	/**
 	 * This method creates a new object in this collection
@@ -53,5 +53,5 @@ public interface IListManager extends Collection<ExtendableObject> {
 	 * @param values values to be set in the properties of the new object 
 	 * @return the newly created object.
 	 */
-	ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object values[]);
+	E createNewElement(ExtendableObject parent, PropertySet propertySet, Object values[]);
 }

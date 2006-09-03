@@ -78,7 +78,7 @@ public class PropertyAccessor {
     * The class of the property (if the property is a list
     * property then the class of the elements in the list)
     */
-   private Class propertyClass;
+   private Class<? extends Object> propertyClass;
    
    // If a list property, this getter returns a collection
    private Method theGetMethod;
@@ -197,7 +197,7 @@ public class PropertyAccessor {
 	 * @param shortDescription
 	 * @param propertyDependency
 	 */
-	public PropertyAccessor(PropertySet propertySet, String localName, String shortDescription, Class listItemClass, IPropertyDependency propertyDependency) {
+	public PropertyAccessor(PropertySet propertySet, String localName, String shortDescription, Class<? extends ExtendableObject> listItemClass, IPropertyDependency propertyDependency) {
    	this.propertySet = propertySet;
        this.localName = localName;
        this.propertyClass = listItemClass;
@@ -373,7 +373,7 @@ public class PropertyAccessor {
     * 
     * @return
     */
-   public Class getValueClass() {
+   public Class<? extends Object> getValueClass() {
        return propertyClass;
    }
    

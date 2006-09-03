@@ -176,10 +176,8 @@ public class EntriesTree extends Composite {
 	 * List of entries to show in the table. Only the top level entries are
 	 * included, the other entries in the transactions, which are shown as child
 	 * items, are not in this list. The elements are not sorted.
-	 * <P>
-	 * Element: DisplayableTransaction
 	 */
-	Vector entries;
+	Vector<DisplayableTransaction> entries;
 
 	/**
 	 * The column on which the items are currently sorted
@@ -214,7 +212,7 @@ public class EntriesTree extends Composite {
 	/**
 	 * Set of listeners for selection changes
 	 */
-	private Vector selectionListeners = new Vector();
+	private Vector<EntryRowSelectionListener> selectionListeners = new Vector<EntryRowSelectionListener>();
 
 	/**
 	 * a kludgy field used to indicate that the next selection
@@ -315,7 +313,7 @@ public class EntriesTree extends Composite {
         		
         		if (selectedEntry != null) {
         			
-    				TransactionManager transactionManager = new TransactionManager(session);
+    				TransactionManager transactionManager = new TransactionManager(session.getObjectKey().getSessionManager());
     				Session sessionInTrans = transactionManager.getSession();
     				
         			Transaction sourceTransaction = selectedEntry.getTransaction();
@@ -1337,7 +1335,7 @@ public class EntriesTree extends Composite {
 	 */
 	private void setTableItems() {
 		// Sort the entries.
-		Comparator rowComparator = new RowComparator(sortColumn, sortAscending);
+		Comparator<DisplayableTransaction> rowComparator = new RowComparator(sortColumn, sortAscending);
 		DisplayableTransaction [] sortedEntries = new DisplayableTransaction [entries.size()];
 		sortedEntries = (DisplayableTransaction [])entries.toArray(sortedEntries);
 		Arrays.sort(sortedEntries, rowComparator); 
@@ -1566,7 +1564,7 @@ public class EntriesTree extends Composite {
         // when the data is set into the table. It is just as easy
         // and efficient to do it then and that reduces the effort
         // to keep the balances updated.
-        entries = new Vector();
+        entries = new Vector<DisplayableTransaction>();
         for (Iterator iter = entriesContent.getEntries().iterator(); iter
                 .hasNext();) {
             Entry accountEntry = (Entry) iter.next();
@@ -1670,16 +1668,13 @@ public class EntriesTree extends Composite {
 		 * A cache of the entries in this transaction excluding
 		 * the entry itself.
 		 */
-		private Vector otherEntries = new Vector();
+		private Vector<Entry> otherEntries = new Vector<Entry>();
 
 		public DisplayableTransaction(Entry entry, long saldo) {
 			this.entry = entry;
 			this.balance = saldo;
-			
-			Iterator itSubEntries = entry.getTransaction().getEntryCollection()
-			.iterator();
-			while (itSubEntries.hasNext()) {
-				Entry entry2 = (Entry) itSubEntries.next();
+
+			for (Entry entry2: entry.getTransaction().getEntryCollection()) {
 				if (!entry2.equals(entry)) {
 					otherEntries.add(entry2);
 				}
@@ -2073,7 +2068,7 @@ public class EntriesTree extends Composite {
 		// Scan the table to find the correct index to insert this row.
 		// Because rows are likely to be inserted near the bottom of
 		// the table, we scan backwards.
-		Comparator rowComparator = new RowComparator(sortColumn, sortAscending);
+		Comparator<DisplayableTransaction> rowComparator = new RowComparator(sortColumn, sortAscending);
 		int parentIndex = 0;
 		long balance = entriesContent.getStartBalance();
 		for (int i = fTable.getItemCount()-1; i >= 0; i--) {
@@ -2510,15 +2505,13 @@ public class EntriesTree extends Composite {
 	 * @param event the event to be passed on to the listeners
 	 */
 	private void fireSelectionChanges(IDisplayableItem data) {
-		for (Iterator iter = selectionListeners.iterator(); iter.hasNext(); ) {
-			EntryRowSelectionListener listener = (EntryRowSelectionListener)iter.next();
+		for (EntryRowSelectionListener listener: selectionListeners) {
 			listener.widgetSelected(data);
 		}
 	}
 
 	private void fireRowDefaultSelection(IDisplayableItem data) {
-		for (Iterator iter = selectionListeners.iterator(); iter.hasNext(); ) {
-			EntryRowSelectionListener listener = (EntryRowSelectionListener)iter.next();
+		for (EntryRowSelectionListener listener: selectionListeners) {
 			listener.widgetDefaultSelected(data);
 		}
 	}
@@ -2541,7 +2534,7 @@ public class EntriesTree extends Composite {
 		dialog.open();
 	}
 	
-	private class RowComparator implements Comparator {
+	private class RowComparator implements Comparator<DisplayableTransaction> {
 		private IEntriesTableProperty sortProperty;
 		private boolean ascending;
 		
@@ -2550,9 +2543,7 @@ public class EntriesTree extends Composite {
 			this.ascending = ascending;
 		}
 		
-		public int compare(Object obj1, Object obj2) {
-			DisplayableTransaction dTrans1 = (DisplayableTransaction) obj1;
-			DisplayableTransaction dTrans2 = (DisplayableTransaction) obj2;
+		public int compare(DisplayableTransaction dTrans1, DisplayableTransaction dTrans2) {
 			int result = sortProperty.compare(dTrans1, dTrans2);
 			return ascending ? result : -result;
 		}

@@ -36,9 +36,9 @@ import java.util.Vector;
 
 import net.sf.jmoney.fields.CurrencyInfo;
 import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ISessionChangeFirer;
 import net.sf.jmoney.model2.ISessionFactory;
-import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Propagator;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;

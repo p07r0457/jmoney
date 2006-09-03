@@ -34,9 +34,9 @@ import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ISessionChangeFirer;
 import net.sf.jmoney.model2.ObjectCollection;
@@ -61,9 +61,10 @@ import net.sf.jmoney.model2.Transaction;
  * @author Nigel Westbury
  */
 public class TransactionManager extends DataManager {
+	private DataManager baseDataManager;
+
 	// TODO: At some time, review this and ensure that we
-	// really do need both the session objects here.
-	private Session committedSession;
+	// really do need the session object here.
 	private Session uncommittedSession;
 	
 	/**
@@ -89,7 +90,29 @@ public class TransactionManager extends DataManager {
 	 * attempt to modify a property value in an object that has in fact been
 	 * deleted.
 	 */
+	// TODO: Now we have the allObjects map, this map can be removed.  The code
+	// should be significantly simplified now that we don't have to re-apply
+	// the changes each time an object is requested.
+	// (Of course, the complications now need to be added to the listener code
+	// that needs to keep the objects in allObjects map up to date
+	// and tell our listeners.
 	Map<IObjectKey, ModifiedObject> modifiedObjects = new HashMap<IObjectKey, ModifiedObject>();
+	
+	/**
+	 * Every extendable object that has ever been created in this transaction and passed
+	 * to the user is in this map.  This is required because all DataManager
+	 * objects must guarantee that there is only ever a single instance of an
+	 * object in existence.
+	 * 
+	 * Objects that were created in this transaction are not in this map.
+	 * There is only one instance of such objects in any case, so only that one
+	 * instance would be returned.
+	 * 
+	 * The object key is the key in the committed datastore.  Only objects
+	 * that exist in the underlying datastore are in this map, and it is
+	 * just easier to use the committed key than to use an uncommitted key.  
+	 */
+	Map<IObjectKey, ExtendableObject> allObjects = new HashMap<IObjectKey, ExtendableObject>();
 	
 	/**
 	 * Every list that has been modified by this transaction manager
@@ -116,9 +139,19 @@ public class TransactionManager extends DataManager {
 	 *  
 	 * @param session the session object from the committed datastore
 	 */
-	public TransactionManager(Session committedSession) {
-		this.committedSession = committedSession;
-		this.uncommittedSession = (Session)getCopyInTransaction(committedSession);
+	public TransactionManager(DataManager baseDataManager) {
+		this.baseDataManager = baseDataManager;
+		this.uncommittedSession = (Session)getCopyInTransaction(baseDataManager.getSession());
+		
+		/*
+		 * Listen for changes to the base data.  Note that
+		 * a weak reference is maintained to this listener
+		 * so we don't have to worry about removing the listener,
+		 * which is just as well because this object may be left
+		 * for the garbage collector without knowing when it is
+		 * no longer being used.
+		 */
+		baseDataManager.addSessionChangeListener(new MySessionChangeListener());
 	}
 
 	/**
@@ -161,6 +194,19 @@ public class TransactionManager extends DataManager {
      * 			given object has been deleted in this transaction 
      */
     public ExtendableObject getCopyInTransaction(ExtendableObject committedObject) {
+
+		ExtendableObject objectInTransaction = allObjects.get(committedObject.getObjectKey());
+		if (objectInTransaction != null) {
+			// TODO: decide if and how we check for deleted objects.
+//			if (objectInTransaction.isDeleted()) {
+//				throw new RuntimeException("Attempt to get copy of object, but that object has been deleted in the transaction");
+//			}
+			return objectInTransaction;
+		}
+			
+    	
+    	
+    	
     	// First look in our map to see if this object has already been
     	// modified within the context of this transaction manager.
     	// If it has, return the modified version.
@@ -180,7 +226,7 @@ public class TransactionManager extends DataManager {
 		IObjectKey committedParentKey = committedObject.getParentKey();
 		UncommittedObjectKey key = new UncommittedObjectKey(this, committedObject.getObjectKey());
 		UncommittedObjectKey parentKey = (committedParentKey==null)?null:new UncommittedObjectKey(this, committedParentKey);
-		Map extensionMap = new HashMap();
+		Map<PropertySet, Object[]> extensionMap = new HashMap<PropertySet, Object[]>();
 		
 		Object[] constructorParameters = new Object[3 + constructorProperties.size()];
 		constructorParameters[0] = key;
@@ -257,7 +303,7 @@ public class TransactionManager extends DataManager {
 				} else {
 					PropertySet extensionPropertySet = accessor.getPropertySet();
 //					ExtensionObject extension = (ExtensionObject)mapEntry.getValue();
-					Object[] extensionValues = (Object[])extensionMap.get(extensionPropertySet);
+					Object[] extensionValues = extensionMap.get(extensionPropertySet);
 					if (extensionValues == null) {
 						int count = 0;
 						for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); propertyIter.next()) {
@@ -280,6 +326,13 @@ public class TransactionManager extends DataManager {
         	
 		// We can now create the object.
     	ExtendableObject copyInTransaction = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
+
+    	/*
+    	 * Now we have created a version of this object that is valid in this datastore,
+    	 * put it in the map so that we can guarantee that we always return the same
+    	 * instance in future.
+    	 */
+    	allObjects.put(committedObject.getObjectKey(), copyInTransaction);
     	
     	// We do not copy lists owned by the object at this time.
     	// If a list is iterated, we must return copies in this transaction.
@@ -322,7 +375,7 @@ public class TransactionManager extends DataManager {
 	 * @param account
 	 * @return
 	 */
-	public Collection getEntries(Account account) {
+	public Collection<Entry> getEntries(Account account) {
 		return new ModifiedAccountEntriesList(account);
 	}
 
@@ -338,8 +391,7 @@ public class TransactionManager extends DataManager {
 	 * 
 	 */
 	public void commit() {
-		DataManager sessionManager = committedSession.getObjectKey().getSessionManager();
-		sessionManager.startTransaction();
+		baseDataManager.startTransaction();
 		
 		// Add all the new objects, but set references to other
 		// new objects to null because the other new object may
@@ -362,7 +414,9 @@ public class TransactionManager extends DataManager {
 				// TODO: decide if this should be here.  The fireEvent should be package protected,
 				// and we are calling it from outside the package.  Also, what are the event firing
 				// rules?
-				committedSession.getObjectKey().getSessionManager().fireEvent(
+				// Also we should be firing the event after the null references to the new objects
+				// have been set....
+				baseDataManager.fireEvent(
 						new ISessionChangeFirer() {
 							public void fire(SessionChangeListener listener) {
 								listener.objectAdded(newCommittedObject);
@@ -450,10 +504,9 @@ public class TransactionManager extends DataManager {
 						Object value = deletedObject.getPropertyValue(accessor);
 						if (value instanceof ExtendableObject) {
 							ExtendableObject referencedObject = (ExtendableObject)value;
-							UncommittedObjectKey referencedKey = (UncommittedObjectKey)referencedObject.getObjectKey();
-							IObjectKey committedReferencedKey = referencedKey.getCommittedObjectKey();
+							IObjectKey committedReferencedKey = referencedObject.getObjectKey();
 							ModifiedObject referencedNewValues = modifiedObjects.get(committedReferencedKey);
-							if (referencedNewValues.isDeleted()) {
+							if (referencedNewValues != null && referencedNewValues.isDeleted()) {
 								// This is a reference to an object that is marked for deletion.
 								// Set the reference to null
 								deletedObject.setPropertyValue(accessor, null);
@@ -480,7 +533,7 @@ public class TransactionManager extends DataManager {
 			}
 		}
 		
-		sessionManager.commitTransaction();
+		baseDataManager.commitTransaction();
 		
 		// Clear out the changes in the object. These changes are the
 		// delta between the datastore and the uncommitted view.
@@ -660,7 +713,7 @@ public class TransactionManager extends DataManager {
 		return null;
 	}
 
-	private class ModifiedAccountEntriesList extends AbstractCollection {
+	private class ModifiedAccountEntriesList extends AbstractCollection<Entry> {
 		
 		Account account;
 		
@@ -672,13 +725,13 @@ public class TransactionManager extends DataManager {
 			throw new RuntimeException("not implemented");
 		}
 
-		public Iterator iterator() {
+		public Iterator<Entry> iterator() {
 			// Build the list of differences between the committed
 			// list and the list in this transaction.
 			
 			// This is done each time an iterator is requested.
 			
-			Vector<ExtendableObject> addedEntries = new Vector<ExtendableObject>();
+			Vector<Entry> addedEntries = new Vector<Entry>();
 			Vector<IObjectKey> removedEntries = new Vector<IObjectKey>();
 			
 			// Process all the new objects added within this transaction
@@ -760,8 +813,8 @@ public class TransactionManager extends DataManager {
 				return addedEntries.iterator();
 			} else {
 				Account committedAccount = (Account)committedAccountKey.getObject();
-				Collection<ExtendableObject> committedCollection = committedAccount.getEntries();
-				return new DeltaListIterator(TransactionManager.this, committedCollection.iterator(), addedEntries, removedEntries);
+				Collection<Entry> committedCollection = committedAccount.getEntries();
+				return new DeltaListIterator<Entry>(TransactionManager.this, committedCollection.iterator(), addedEntries, removedEntries);
 			}
 		}
 	}
@@ -788,5 +841,87 @@ public class TransactionManager extends DataManager {
 		 * this class implements the IDataManager interface.
 		 * However, this method does not need to do anything.
 		 */
+	}
+
+	/**
+	 * This class contains the methods that merge changes
+	 * from the base data into the data for this object,
+	 * and also tell our listeners of such changes.
+	 */
+	private class MySessionChangeListener implements SessionChangeListener {
+
+		public void objectAdded(ExtendableObject newObject) {
+			/*
+			 * The object may contain references to objects
+			 * that have been deleted in this view.  
+			 * 
+			 * In such a situation, the object deleted in this view
+			 * could be first 'undeleted'.  If the undeleted object references
+			 * other objects that were deleted by this view then those
+			 * objects are in turn undeleted in a recursive manner.
+			 * 
+			 * A simpler approach may be to ignore the new object until
+			 * the transaction is committed.  At that time, the commit fails
+			 * with a conflict exception.  
+			 */
+			// TODO Implement this method
+		}
+
+		public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+			/*
+			 * The property may have been changed to reference an
+			 * object that has been deleted in this view.
+			 * 
+			 * In such a situation, the object could be 
+			 * first 'undeleted' in this view.  If the undeleted object references
+			 * other objects that were deleted by this view then those
+			 * objects are in turn undeleted in a recursive manner.
+			 * 
+			 * A simpler approach may be to ignore the new object until
+			 * the transaction is committed.  At that time, the commit fails
+			 * with a conflict exception.
+			 * 
+			 * We also need to consider what happens if this property change made
+			 * another property inapplicable, and that other property was changed
+			 * in this view, or if this property has been made inapplicable as
+			 * a result of a change in this view of another property.
+			 * All sorts of possibilities to consider. 
+			 */
+			// TODO Implement this method
+		}
+
+		public void objectDeleted(ExtendableObject deletedObject) {
+			/*
+			 * If an object is deleted from the base data then we
+			 * know there are no references to the object from the
+			 * base data.  However, it is possible that a reference
+			 * was created to this object in this version of the data.
+			 * 
+			 * If that is the case then we could just not remove the object
+			 * from this view of the data.  The object is removed from
+			 * this view of the data only if all references to it are
+			 * removed from this view.  If references still remain when
+			 * this view is committed then a conflict error occurs.
+			 * The user should be told that the object no longer exists
+			 * and the user must remove references to it before attempting
+			 * again to commit.
+			 * 
+			 * A simpler approach may be to ignore the deletion of the object until
+			 * the transaction is committed.  At that time, the commit fails
+			 * with a conflict exception.  
+			 */
+			// TODO Implement this method
+		}
+
+		public void performRefresh() {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void sessionReplaced(Session oldSession, Session newSession) {
+			// TODO This method is not applicable here.
+			// Do we need a version of this listener that does
+			// not have this method???
+		}
 	}
 }

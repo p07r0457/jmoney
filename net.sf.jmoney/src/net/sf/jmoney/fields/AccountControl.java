@@ -214,7 +214,7 @@ public class AccountControl extends AccountComposite {
 		}
 	}
 	
-	private void addAccounts(String prefix, Collection<Account> accounts, List listControl, Class<? extends Account> accountClass) {
+	private void addAccounts(String prefix, Collection<? extends Account> accounts, List listControl, Class<? extends Account> accountClass) {
     	Vector<Account> matchingAccounts = new Vector<Account>();
         for (Account account: accounts) {
         	if (accountClass.isAssignableFrom(account.getClass())) {

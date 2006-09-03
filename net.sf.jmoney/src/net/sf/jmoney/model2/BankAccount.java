@@ -53,7 +53,7 @@ public class BankAccount extends CurrencyAccount {
 			Map extensions, 
 			IObjectKey parent,
 			String name,
-			IListManager subAccounts,
+			IListManager<CapitalAccount> subAccounts,
 			String abbreviation,
 			String comment,
 			IObjectKey currencyKey,
@@ -79,7 +79,7 @@ public class BankAccount extends CurrencyAccount {
 			IObjectKey objectKey, 
 			Map extensions, 
 			IObjectKey parent,
-			IListManager subAccounts) {
+			IListManager<CapitalAccount> subAccounts) {
 		super(objectKey, extensions, parent, subAccounts);
 		
 		// Overwrite the default name with our own default name.

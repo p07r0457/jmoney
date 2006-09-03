@@ -33,13 +33,13 @@ import net.sf.jmoney.JMoneyPlugin;
  * 
  * @author Nigel Westbury
  */
-public class ObjectCollection implements Collection {
+public class ObjectCollection<E extends ExtendableObject> implements Collection<E> {
 	
-	private IListManager listManager;
+	private IListManager<E> listManager;
 	ExtendableObject parent;
 	PropertyAccessor listPropertyAccessor;
 	
-	ObjectCollection(IListManager listManager, ExtendableObject parent, PropertyAccessor listPropertyAccessor) {
+	ObjectCollection(IListManager<E> listManager, ExtendableObject parent, PropertyAccessor listPropertyAccessor) {
 		this.listManager = listManager;
 		this.parent = parent;
 		this.listPropertyAccessor = listPropertyAccessor;
@@ -82,7 +82,7 @@ public class ObjectCollection implements Collection {
 		return listManager.contains(arg0);
 	}
 	
-	public Iterator<ExtendableObject> iterator() {
+	public Iterator<E> iterator() {
 		return listManager.iterator();
 	}
 	
@@ -90,11 +90,11 @@ public class ObjectCollection implements Collection {
 		return listManager.toArray();
 	}
 	
-	public Object[] toArray(Object[] arg0) {
+	public <T> T[] toArray(T[] arg0) {
 		return listManager.toArray(arg0);
 	}
 	
-	public boolean add(Object arg0) {
+	public boolean add(E arg0) {
 		throw new UnsupportedOperationException();
 	}
 	
@@ -134,20 +134,20 @@ public class ObjectCollection implements Collection {
 		}
 	}
 	
-	public boolean containsAll(Collection arg0) {
+	public boolean containsAll(Collection<?> arg0) {
 		return listManager.containsAll(arg0);
 	}
 	
-	public boolean addAll(Collection arg0) {
+	public boolean addAll(Collection<? extends E> arg0) {
 		throw new UnsupportedOperationException();
 	}
 	
-	public boolean removeAll(Collection arg0) {
+	public boolean removeAll(Collection<?> arg0) {
 		// TODO: implement this
 		throw new RuntimeException("not yet implemented");
 	}
 	
-	public boolean retainAll(Collection arg0) {
+	public boolean retainAll(Collection<?> arg0) {
 		// TODO: implement this
 		throw new RuntimeException("not yet implemented");
 	}
@@ -156,5 +156,4 @@ public class ObjectCollection implements Collection {
 		// TODO: implement this
 		throw new RuntimeException("not yet implemented");
 	}
-	
 }

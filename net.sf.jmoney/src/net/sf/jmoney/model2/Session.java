@@ -36,9 +36,6 @@ import net.sf.jmoney.fields.TransactionInfo;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IWorkbenchWindow;
 
 /**
@@ -48,13 +45,13 @@ public class Session extends ExtendableObject implements IAdaptable {
 
     protected IObjectKey defaultCurrencyKey;
     
-    private IListManager commodities;
+    private IListManager<Commodity> commodities;
     
-    private IListManager accounts;  // Only the Accounts of Level 0
+    private IListManager<Account> accounts;  // Only the Accounts of Level 0
 
-    private IListManager transactions;
+    private IListManager<Transaction> transactions;
 
-    Hashtable currencies = new Hashtable();
+    Hashtable<String, Currency> currencies = new Hashtable<String, Currency>();
         
 	private ChangeManager changeManager = new ChangeManager();
 
@@ -66,9 +63,9 @@ public class Session extends ExtendableObject implements IAdaptable {
     		IObjectKey objectKey,
     		Map extensions,
 			IObjectKey parentKey,
-    		IListManager commodities,
-			IListManager accounts,
-			IListManager transactions,
+    		IListManager<Commodity> commodities,
+			IListManager<Account> accounts,
+			IListManager<Transaction> transactions,
 			IObjectKey defaultCurrencyKey) {
     	super(objectKey, extensions, parentKey);
 
@@ -80,9 +77,8 @@ public class Session extends ExtendableObject implements IAdaptable {
         // Set up a hash table that maps currency codes to
         // the currency object.
     	// It may be that no 
-    	this.currencies = new Hashtable();
-    	for (Iterator iter = commodities.iterator(); iter.hasNext(); ) {
-    		Commodity commodity = (Commodity)iter.next();
+    	this.currencies = new Hashtable<String, Currency>();
+    	for (Commodity commodity: commodities) {
     		if (commodity instanceof Currency) {
     			Currency currency = (Currency)commodity;
     			if (currency.getCode() != null) {
@@ -100,9 +96,9 @@ public class Session extends ExtendableObject implements IAdaptable {
     		IObjectKey objectKey,
     		Map extensions,
 			IObjectKey parentKey,
-    		IListManager commodities,
-			IListManager accounts,
-			IListManager transactions) {
+    		IListManager<Commodity> commodities,
+			IListManager<Account> accounts,
+			IListManager<Transaction> transactions) {
     	super(objectKey, extensions, parentKey);
 
     	this.commodities = commodities;
@@ -112,9 +108,8 @@ public class Session extends ExtendableObject implements IAdaptable {
         // Set up a hash table that maps currency codes to
         // the currency object.
     	// It may be that no 
-    	this.currencies = new Hashtable();
-    	for (Iterator iter = commodities.iterator(); iter.hasNext(); ) {
-    		Commodity commodity = (Commodity)iter.next();
+    	this.currencies = new Hashtable<String, Currency>();
+    	for (Commodity commodity: commodities) {
     		if (commodity instanceof Currency) {
     			Currency currency = (Currency)commodity;
     			if (currency.getCode() != null) {
@@ -149,7 +144,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 	 * @return the corresponding currency.
 	 */
 	public Currency getCurrencyForCode(String code) {
-		return (Currency) currencies.get(code);
+		return currencies.get(code);
 	}
 
 /*   
@@ -179,11 +174,9 @@ public class Session extends ExtendableObject implements IAdaptable {
     }
   */ 
 
-	public Collection getAllAccounts() {
-        Vector all = new Vector();
-        Iterator rootIt = getAccountCollection().iterator();
-        while (rootIt.hasNext()) {
-            Account a = (Account) rootIt.next();
+	public Collection<Account> getAllAccounts() {
+        Vector<Account> all = new Vector<Account>();
+        for (Account a: getAccountCollection()) {
             all.add(a);
             all.addAll(a.getAllSubAccounts());
         }
@@ -265,16 +258,16 @@ public class Session extends ExtendableObject implements IAdaptable {
         };
     }
 
-    public ObjectCollection getCommodityCollection() {
-    	return new ObjectCollection(commodities, this, SessionInfo.getCommoditiesAccessor());
+    public ObjectCollection<Commodity> getCommodityCollection() {
+    	return new ObjectCollection<Commodity>(commodities, this, SessionInfo.getCommoditiesAccessor());
     }
     
-    public ObjectCollection getAccountCollection() {
-    	return new ObjectCollection(accounts, this, SessionInfo.getAccountsAccessor());
+    public ObjectCollection<Account> getAccountCollection() {
+    	return new ObjectCollection<Account>(accounts, this, SessionInfo.getAccountsAccessor());
     }
     
-    public ObjectCollection getTransactionCollection() {
-    	return new ObjectCollection(transactions, this, SessionInfo.getTransactionsAccessor());
+    public ObjectCollection<Transaction> getTransactionCollection() {
+    	return new ObjectCollection<Transaction>(transactions, this, SessionInfo.getTransactionsAccessor());
     }
     
 	/**

@@ -43,12 +43,12 @@ import net.sf.jmoney.model2.IObjectKey;
  * 
  * @author Nigel Westbury
  */
-public class ModifiedList {
+public class ModifiedList<E extends ExtendableObject> {
 
 	/**
 	 * The uncommitted versions of the objects that have been added
 	 */
-	Vector<ExtendableObject> addedObjects = new Vector<ExtendableObject>();
+	Vector<E> addedObjects = new Vector<E>();
 	
 	/**
 	 * The keys to the committed versions of the objects that have been deleted
@@ -59,7 +59,7 @@ public class ModifiedList {
 	 * @param newObject an uncommitted version of an object
 	 * 			being added to the list
 	 */
-	void add(ExtendableObject newObject) {
+	void add(E newObject) {
 		addedObjects.add(newObject);
 	}
 	

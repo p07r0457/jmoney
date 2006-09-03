@@ -69,7 +69,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 		 * List of the IPropertyControl objects for the
 		 * properties that can be edited in this panel.
 		 */
-		Vector propertyControlList = new Vector();
+		Vector<IPropertyControl> propertyControlList = new Vector<IPropertyControl>();
 	
 		// Listen for changes to the account properties.
 		// If anyone else changes any of the account properties
@@ -85,7 +85,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
         	public void objectChanged(ExtendableObject extendableObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
 				if (extendableObject.equals(AccountPropertiesControl.this.account)) {
 					// Find the control for this property.
-					IPropertyControl propertyControl = (IPropertyControl)propertyControlList.get(changedProperty.getIndexIntoScalarProperties());
+					IPropertyControl propertyControl = propertyControlList.get(changedProperty.getIndexIntoScalarProperties());
 					propertyControl.load(account);
 				}
 			}
@@ -186,8 +186,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 			}
 			
 			// Set the values from the account object into the control fields.
-			for (Iterator iter = propertyControlList.iterator(); iter.hasNext(); ) {
-				IPropertyControl propertyControl = (IPropertyControl)iter.next();
+			for (IPropertyControl propertyControl: propertyControlList) {
 				propertyControl.load(account);
 			}
 		}

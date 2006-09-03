@@ -81,7 +81,7 @@ public class ChangeManager {
 	 * is last in the array, so changes are added to the end
 	 * of the array and undone from the end of the array.
 	 */
-	private Vector previousChanges = new Vector();
+	private Vector<UndoableChange> previousChanges = new Vector<UndoableChange>();
 	
 	/**
 	 * Array of undone changes.  These changes may be redone
@@ -89,7 +89,7 @@ public class ChangeManager {
 	 * added to the end of this array.  Changes are redone starting
 	 * at the end of this array.
 	 */
-	private Vector undoneChanges = new Vector();
+	private Vector<UndoableChange> undoneChanges = new Vector<UndoableChange>();
 	
 	private class UndoableChange {
 		private String description;
@@ -100,7 +100,7 @@ public class ChangeManager {
 		 * be undone in reverse order, starting at the end of this
 		 * vector.
 		 */
-		private Vector changes = new Vector();	
+		private Vector<ChangeEntry> changes = new Vector<ChangeEntry>();	
 		
 		/**
 		 * Set the description of this change.
@@ -255,10 +255,7 @@ public class ChangeManager {
 		}
 	}
 	
-	/**
-	 * Map IObjectKey to KeyProxy
-	 */
-	private Map keyProxyMap = new HashMap();
+	private Map<IObjectKey, KeyProxy> keyProxyMap = new HashMap<IObjectKey, KeyProxy>();
 	
 	private KeyProxy getKeyProxy(IObjectKey objectKey) {
 		if (objectKey != null) {
@@ -449,7 +446,7 @@ public class ChangeManager {
 	 */
 	public String getRedoDescription() {
 		if (undoneChanges.size() > 0) {
-			return ((UndoableChange)undoneChanges.lastElement()).getDescription();
+			return undoneChanges.lastElement().getDescription();
 		} else {
 			return null;
 		}

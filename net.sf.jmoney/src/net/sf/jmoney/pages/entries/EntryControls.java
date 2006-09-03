@@ -37,6 +37,7 @@ import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.model2.SessionChangeListener;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
@@ -74,8 +75,7 @@ class EntryControls {
 	private Label creditLabel;
 	private Text creditText;
 	
-	/** element: LabelAndEditControlPair */
-	Vector entryPropertyControls = new Vector();
+	Vector<LabelAndEditControlPair> entryPropertyControls = new Vector<LabelAndEditControlPair>();
 	
 	abstract class LabelAndEditControlPair {
 		private Label label;
@@ -235,6 +235,36 @@ class EntryControls {
 
 	private Composite entriesArea;
 	private Currency defaultCurrency;
+
+	private SessionChangeListener mySessionChangeListener = new SessionChangeAdapter() {
+		public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+			if (changedObject.equals(entry)) {
+
+				/*
+				 * Ultimately we may have a mechanism whereby the determination of whether a
+				 * property is applicable may depend on any number of other properties, not
+				 * just the account property.  This may be particularly so when stock accounts
+				 * are supported.  Until then, assume the applicability of properties will change
+				 * only when the account changes.
+				 */
+				// TODO: improve this.
+				if (changedProperty == EntryInfo.getAccountAccessor()) {
+					updateSetOfEntryControls();
+				}
+
+				// Regardless of the property changed, re-load the control.
+				for (int i = 0; i < entryPropertyControls.size(); i++) {
+					LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
+					if (controlPair.propertyAccessor == changedProperty) {
+						if (controlPair.pairComposite != null) {
+							controlPair.load(entry);
+						}
+					}
+				}
+			}
+		}
+	};
+
 	
 	/**
 	 * This object represents a row of controls that allow
@@ -416,27 +446,8 @@ class EntryControls {
 		// Note: composite1 is used as the containing composite,
 		// even tho there are in fact 5 composites across the row.
 		// This is ok because they are all destroyed at the same time.
-		session.getObjectKey().getSessionManager().addSessionChangeListener(new SessionChangeAdapter() {
-			public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
-				if (changedProperty == EntryInfo.getAccountAccessor()
-						&& changedObject.equals(entry)) {
-					updateSetOfEntryControls();
-				}
-				
-				// If any other properties are changed, re-load the control.
-				if (changedObject.equals(entry)) {
-					for (int i = 0; i < entryPropertyControls.size(); i++) {
-						LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
-						if (controlPair.propertyAccessor == changedProperty) {
-							if (controlPair.pairComposite != null) {
-								controlPair.load(entry);
-							}
-						}
-					}
-				}
-			}
-		}, composite1);
-
+		session.getObjectKey().getSessionManager().addSessionChangeListener(mySessionChangeListener, composite1);
+		
 		// if the entry is known at construct time.  Set it
 		// into the controls.
 		if (entry != null) {

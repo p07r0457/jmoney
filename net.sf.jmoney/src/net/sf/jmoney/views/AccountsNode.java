@@ -46,7 +46,7 @@ class AccountsNode extends TreeNode {
 	public void setSession(Session session) {
 		// Initialize with list of top level accounts from the session.
 		if (children == null) {
-			children = new ArrayList();
+			children = new ArrayList<Object>();
 		} else {
 			children.clear();
 		}

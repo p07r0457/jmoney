@@ -65,8 +65,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
     
 	protected NodeEditor fEditor;
 
-	/** Element: IEntriesTableProperty */
-	protected Vector allEntryDataObjects = new Vector();
+	protected Vector<IEntriesTableProperty> allEntryDataObjects = new Vector<IEntriesTableProperty>();
 
 	IEntriesTableProperty debitColumnManager;
 	IEntriesTableProperty creditColumnManager;
@@ -118,7 +117,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         // This ensures that uncommitted changes
     	// made by this page are isolated from datastore usage outside
     	// of this page.
-        transactionManager = new TransactionManager(originalAccount.getSession());
+        transactionManager = new TransactionManager(originalAccount.getObjectKey().getSessionManager());
     	
     	// Set the account that this page is viewing and editing.
     	// We set an account object that is managed by our own

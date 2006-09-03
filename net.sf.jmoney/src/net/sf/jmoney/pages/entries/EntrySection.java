@@ -72,8 +72,7 @@ public class EntrySection extends SectionPart {
 	 */
 	private EntryControls otherEntryControls;
 	
-	/** element: IPropertyControl */
-	private Vector transactionControls = new Vector();
+	private Vector<IPropertyControl> transactionControls = new Vector<IPropertyControl>();
 	
 	private Composite container;
 	private Composite filler = null;

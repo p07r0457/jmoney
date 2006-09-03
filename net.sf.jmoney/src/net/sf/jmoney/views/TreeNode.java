@@ -52,8 +52,12 @@ import org.eclipse.swt.graphics.Image;
  * (like Task List, for example).
  */
 public class TreeNode implements IAdaptable {
-	/** String (the full id of the node) to TreeNode */
-	private static Map idToNodeMap = new HashMap();
+	
+	/** 
+	 * Maps the full id of the node to the TreeNode.
+	 */
+	private static Map<String, TreeNode> idToNodeMap = new HashMap<String, TreeNode>();
+	
 	private static TreeNode invisibleRoot;
 
 	// TODO: generalize this code
@@ -66,10 +70,9 @@ public class TreeNode implements IAdaptable {
 	private TreeNode parent;
 	private String parentId;
 	private int position;
-	protected ArrayList children = null;
+	protected ArrayList<Object> children = null;
 	
-	/** Element: PageEntry */
-	private Vector pageFactories = new Vector();
+	private Vector<PageEntry> pageFactories = new Vector<PageEntry>();
 
 	/**
 	 * Initialize the navigation tree nodes.
@@ -125,11 +128,10 @@ public class TreeNode implements IAdaptable {
 
 		invisibleRoot = new TreeNode("root", "", null, "", 0);
 
-		for (Iterator iter = idToNodeMap.values().iterator(); iter.hasNext(); ) {
-			TreeNode treeNode = (TreeNode)iter.next();
+		for (TreeNode treeNode: idToNodeMap.values()) {
 			TreeNode parentNode;
 			if (treeNode.getParentId() != null) {
-				parentNode = (TreeNode)idToNodeMap.get(treeNode.getParentId());
+				parentNode = idToNodeMap.get(treeNode.getParentId());
 				if (parentNode == null) {
 					parentNode = invisibleRoot;
 				}
@@ -158,7 +160,7 @@ public class TreeNode implements IAdaptable {
 					}
 
 					if (nodeId != null && nodeId.length() != 0) {
-						TreeNode node = (TreeNode)idToNodeMap.get(nodeId);
+						TreeNode node = idToNodeMap.get(nodeId);
 						if (node != null) {
 							node.addPage(pageId, elements[j], pos);
 						} else {
@@ -226,7 +228,7 @@ public class TreeNode implements IAdaptable {
 	 * @return the node, or null if no node with the given id exists
 	 */
 	public static TreeNode getTreeNode(String nodeId) {
-		return (TreeNode)idToNodeMap.get(nodeId);
+		return idToNodeMap.get(nodeId);
 	}
 	
 	public TreeNode(String id, String label, ImageDescriptor imageDescriptor, String parentId, int position) {
@@ -267,7 +269,7 @@ public class TreeNode implements IAdaptable {
 	}
 	public void addChild(Object child) {
 		if (children == null) {
-			children = new ArrayList();
+			children = new ArrayList<Object>();
 		}
 		children.add(child);
 	}
@@ -312,7 +314,7 @@ public class TreeNode implements IAdaptable {
 	 * 		interface.  The returned value is never null but the Vector may
 	 * 		be empty if there are no pages for this node.
 	 */
-	public Vector getPageFactories() {
+	public Vector<PageEntry> getPageFactories() {
 		return pageFactories;
 	}
 }

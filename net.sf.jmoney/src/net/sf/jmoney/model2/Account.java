@@ -25,7 +25,6 @@ package net.sf.jmoney.model2;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
@@ -39,17 +38,13 @@ public abstract class Account extends ExtendableObject {
 	
 	protected String name;
 
-	protected IListManager subAccounts;
-	
 	protected Account(
 			IObjectKey objectKey, 
 			Map extensions, 
 			IObjectKey parentKey,
-			String name,
-			IListManager subAccounts) {
+			String name) {
 		super(objectKey, extensions, parentKey);
 		this.name = name;
-		this.subAccounts = subAccounts;
 	}
 	
 	/**
@@ -97,13 +92,11 @@ public abstract class Account extends ExtendableObject {
 	 */
 	public abstract Commodity getCommodity(Entry entry);
 
-	public abstract ObjectCollection getSubAccountCollection();
+	public abstract ObjectCollection<? extends Account> getSubAccountCollection();
 
-	public Collection getAllSubAccounts() {
-	    Collection all = new Vector();
-	    Iterator it = getSubAccountCollection().iterator();
-	    while (it.hasNext()) {
-	        Account a = (Account) it.next();
+	public Collection<? extends Account> getAllSubAccounts() {
+	    Collection<Account> all = new Vector<Account>();
+	    for (Account a: getSubAccountCollection()) {
 	        all.add(a);
 	        all.addAll(a.getAllSubAccounts());
 	    }
@@ -120,8 +113,8 @@ public abstract class Account extends ExtendableObject {
 	 * @return A read-only collection with elements of
 	 * 				type <code>Entry</code>
 	 */
-	public Collection getEntries() {
-		Collection accountEntries = getObjectKey().getSessionManager().getEntries(this);
+	public Collection<Entry> getEntries() {
+		Collection<Entry> accountEntries = getObjectKey().getSessionManager().getEntries(this);
 		return Collections.unmodifiableCollection(accountEntries);
 	}
 	

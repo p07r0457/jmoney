@@ -23,12 +23,8 @@
 package net.sf.jmoney.isolation;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Vector;
 
-import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.PropertyAccessor;
 
 /**

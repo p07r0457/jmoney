@@ -65,7 +65,7 @@ public class EntryEditor {
         // The save method takes no parameters and must return void.
     
         try {
-            this.theSaveMethod = editor.getClass().getDeclaredMethod("save", null);
+            this.theSaveMethod = editor.getClass().getDeclaredMethod("save", (Class[])null);
         } catch (NoSuchMethodException e) {
             throw new MalformedPluginException("Method 'save()' in '" + editor.getClass().getName() + "' was not found.");
         }
@@ -102,7 +102,7 @@ public class EntryEditor {
     
     public void save() {
         try {
-            theSaveMethod.invoke(editor, null);
+            theSaveMethod.invoke(editor, (Object[])null);
         } catch (IllegalAccessException e) {
             throw new MalformedPluginException("load must be public");
         } catch (InvocationTargetException e) {

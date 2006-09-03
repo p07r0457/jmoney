@@ -60,7 +60,7 @@ import net.sf.jmoney.model2.PropertySet;
  * 
  * @author Nigel Westbury
  */
-public class DeltaListManager extends AbstractCollection<ExtendableObject> implements IListManager {
+public class DeltaListManager<E extends ExtendableObject> extends AbstractCollection<E> implements IListManager<E> {
 
 	private TransactionManager transactionManager;
 	
@@ -75,7 +75,7 @@ public class DeltaListManager extends AbstractCollection<ExtendableObject> imple
 	/**
 	 * The committed list, set by the constructor
 	 */
-	private ObjectCollection committedList;
+	private ObjectCollection<E> committedList;
 
 	/**
 	 * @param committedParent the object containing the list property.  This
@@ -98,7 +98,7 @@ public class DeltaListManager extends AbstractCollection<ExtendableObject> imple
 	 * 'added' list are appended to the items returned by the underlying
 	 * committed list.
 	 */
-	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet) {
+	public E createNewElement(ExtendableObject parent, PropertySet propertySet) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());
@@ -125,11 +125,11 @@ public class DeltaListManager extends AbstractCollection<ExtendableObject> imple
 		}
 		
 		// We can now create the object.
-		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructDefaultImplementationObject(constructorParameters);
+		E extendableObject = (E)propertySet.constructDefaultImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 
-		ModifiedList modifiedList = transactionManager.createModifiedList(modifiedListKey);
+		ModifiedList<E> modifiedList = transactionManager.createModifiedList(modifiedListKey);
 		modifiedList.add(extendableObject);
 		
 		return extendableObject;
@@ -152,7 +152,7 @@ public class DeltaListManager extends AbstractCollection<ExtendableObject> imple
 	 * object and setting the property values in a single call. That can only be
 	 * done when using a transaction manager.
 	 */
-	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
+	public E createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
 		Collection constructorProperties = propertySet.getConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());
@@ -162,7 +162,7 @@ public class DeltaListManager extends AbstractCollection<ExtendableObject> imple
 		
 		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
 		
-		Map extensionMap = new HashMap();
+		Map<PropertySet, Object[]> extensionMap = new HashMap<PropertySet, Object[]>();
 		
 		constructorParameters[0] = objectKey;
 		constructorParameters[1] = extensionMap;
@@ -195,7 +195,7 @@ public class DeltaListManager extends AbstractCollection<ExtendableObject> imple
 			if (!propertyAccessor.getPropertySet().isExtension()) {
 				constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
 			} else {
-				Object [] extensionConstructorParameters = (Object[])extensionMap.get(propertyAccessor.getPropertySet());
+				Object [] extensionConstructorParameters = extensionMap.get(propertyAccessor.getPropertySet());
 				if (extensionConstructorParameters == null) {
 					extensionConstructorParameters = new Object [propertyAccessor.getPropertySet().getConstructorProperties().size()];
 					extensionMap.put(propertyAccessor.getPropertySet(), extensionConstructorParameters);
@@ -205,11 +205,11 @@ public class DeltaListManager extends AbstractCollection<ExtendableObject> imple
 		}
 		
 		// We can now create the object.
-		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
+		E extendableObject = (E)propertySet.constructImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 
-		ModifiedList modifiedList = transactionManager.createModifiedList(modifiedListKey);
+		ModifiedList<E> modifiedList = transactionManager.createModifiedList(modifiedListKey);
 		modifiedList.add(extendableObject);
 		
 		return extendableObject;
@@ -229,8 +229,8 @@ public class DeltaListManager extends AbstractCollection<ExtendableObject> imple
 		}
 	}
 
-	public Iterator iterator() {
-		Iterator<ExtendableObject> committedListIterator = committedList.iterator();
+	public Iterator<E> iterator() {
+		Iterator<E> committedListIterator = committedList.iterator();
 
 		ModifiedList modifiedList = transactionManager.getModifiedList(modifiedListKey);
 		if (modifiedList == null) {
@@ -238,9 +238,9 @@ public class DeltaListManager extends AbstractCollection<ExtendableObject> imple
 			// that returns materializations of the objects that are outside
 			// of the transaction.  We must return objects that are versions
 			// inside the transaction.
-			return new DeltaListIterator(transactionManager, committedListIterator, new Vector(), new Vector<IObjectKey>());
+			return new DeltaListIterator<E>(transactionManager, committedListIterator, new Vector<E>(), new Vector<IObjectKey>());
 		} else {
-			return new DeltaListIterator(transactionManager, committedListIterator, modifiedList.addedObjects, modifiedList.deletedObjects);
+			return new DeltaListIterator<E>(transactionManager, committedListIterator, modifiedList.addedObjects, modifiedList.deletedObjects);
 		}
 	}
 

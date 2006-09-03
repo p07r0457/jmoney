@@ -32,6 +32,8 @@ import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
  */
 public class IncomeExpenseAccount extends Account {
 
+	protected IListManager<IncomeExpenseAccount> subAccounts;
+	
 	/**
 	 * True if the entries in this account can be in any account,
 	 * false if all the entries must be in the same currency
@@ -52,10 +54,12 @@ public class IncomeExpenseAccount extends Account {
 			Map extensions, 
 			IObjectKey parent,
 			String name,
-			IListManager subAccounts,
+			IListManager<IncomeExpenseAccount> subAccounts,
 			boolean multiCurrency,
 			IObjectKey currencyKey) {
-		super(objectKey, extensions, parent, name, subAccounts);
+		super(objectKey, extensions, parent, name);
+
+		this.subAccounts = subAccounts;
 		this.multiCurrency = multiCurrency;
 		this.currencyKey = currencyKey;
 	}
@@ -64,8 +68,10 @@ public class IncomeExpenseAccount extends Account {
 			IObjectKey objectKey, 
 			Map extensions, 
 			IObjectKey parent,
-			IListManager subAccounts) {
-		super(objectKey, extensions, parent, null, subAccounts);
+			IListManager<IncomeExpenseAccount> subAccounts) {
+		super(objectKey, extensions, parent, null);
+
+		this.subAccounts = subAccounts;
 	}
 
 	protected String getExtendablePropertySetId() {
@@ -143,8 +149,8 @@ public class IncomeExpenseAccount extends Account {
 		}
 	}
 
-	public ObjectCollection getSubAccountCollection() {
-		return new ObjectCollection(subAccounts, this, IncomeExpenseAccountInfo.getSubAccountAccessor());
+	public ObjectCollection<IncomeExpenseAccount> getSubAccountCollection() {
+		return new ObjectCollection<IncomeExpenseAccount>(subAccounts, this, IncomeExpenseAccountInfo.getSubAccountAccessor());
 	}
 
 	/**
