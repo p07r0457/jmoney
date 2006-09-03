@@ -37,7 +37,7 @@ import net.sf.jmoney.model2.PropertySet;
  *
  * @author Nigel Westbury
  */
-public class ListManagerCached extends Vector<ExtendableObject> implements IListManager {
+public class ListManagerCached<E extends ExtendableObject> extends Vector<E> implements IListManager<E> {
 
 	private static final long serialVersionUID = 867883048050895954L;
 
@@ -49,7 +49,7 @@ public class ListManagerCached extends Vector<ExtendableObject> implements IList
 		this.listProperty = listProperty;
 	}
 
-	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet) {
+	public E createNewElement(ExtendableObject parent, PropertySet propertySet) {
 		// We must create the object before we persist it to the database.
 		// The reason why we must do this, and not simply write the
 		// default values, is that the constructor only uses the
@@ -63,7 +63,7 @@ public class ListManagerCached extends Vector<ExtendableObject> implements IList
 		
 		ObjectKeyCached objectKey = new ObjectKeyCached(-1, sessionManager);
 		
-		ExtendableObject extendableObject = JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, true);
+		E extendableObject = (E)JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, true);
 
 		objectKey.setObject(extendableObject);
 		
@@ -86,7 +86,7 @@ public class ListManagerCached extends Vector<ExtendableObject> implements IList
 		return extendableObject;
 	}
 
-	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
+	public E createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
 		// We must create the object before we persist it to the database.
 		// The reason why we must do this, and not simply write the
 		// default values, is that the constructor only uses the
@@ -100,7 +100,7 @@ public class ListManagerCached extends Vector<ExtendableObject> implements IList
 		
 		ObjectKeyCached objectKey = new ObjectKeyCached(-1, sessionManager);
 		
-		ExtendableObject extendableObject = JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, true);
+		E extendableObject = (E)JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, true);
 
 		objectKey.setObject(extendableObject);
 		

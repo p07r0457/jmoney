@@ -310,7 +310,7 @@ public class TransferTemplate implements ITransactionTemplate {
 		    amountControl.rememberChoice();
 		    
 	        // Create our own transaction manager.
-	        TransactionManager transactionManager = new TransactionManager(session);
+	        TransactionManager transactionManager = new TransactionManager(session.getObjectKey().getSessionManager());
 	    	
 	    	// Set the account that this page is viewing and editing.
 	    	// We set an account object that is managed by our own

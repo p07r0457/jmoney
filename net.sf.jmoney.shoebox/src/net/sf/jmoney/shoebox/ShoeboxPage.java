@@ -40,6 +40,7 @@ import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
@@ -81,8 +82,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 	
 	private static final String PAGE_ID = "net.sf.jmoney.shoebox.editor";
 	
-	/** Element: IEntriesTableProperty */
-	protected Vector allEntryDataObjects = new Vector();
+	protected Vector<IEntriesTableProperty> allEntryDataObjects = new Vector<IEntriesTableProperty>();
 
 	IEntriesTableProperty debitColumnManager;
 	IEntriesTableProperty creditColumnManager;
@@ -105,9 +105,9 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
         // This ensures that uncommitted changes
     	// made by this page are isolated from datastore usage outside
     	// of this page.
-		Session session = JMoneyPlugin.getDefault().getSession();
+		DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 
-        transactionManager = new TransactionManager(session);
+        transactionManager = new TransactionManager(sessionManager);
     	
     	// Build an array of all possible properties that may be
     	// displayed in the table.
@@ -196,10 +196,9 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 	    private EntriesTree recentlyAddedEntriesControl;
 	    private IEntriesContent recentEntriesTableContents = null;
 	    
-		Collection ourEntryList = new Vector();
+		Collection<IObjectKey> ourEntryList = new Vector<IObjectKey>();
 		
-		/** element: ITransactionTemplate */
-		public Map transactionTypes = new HashMap();
+		public Map<String, ITransactionTemplate> transactionTypes = new HashMap<String, ITransactionTemplate>();
 
 		ShoeboxFormPage(
 				NodeEditor editor,
@@ -233,10 +232,9 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 					return null;
 				}
 
-				public Collection getEntries() {
-					Collection committedEntries = new Vector();
-					for (Iterator iter = ourEntryList.iterator(); iter.hasNext(); ) {
-						IObjectKey objectKey = (IObjectKey)iter.next();
+				public Collection<Entry> getEntries() {
+					Collection<Entry> committedEntries = new Vector<Entry>();
+					for (IObjectKey objectKey: ourEntryList) {
 						Entry committedEntry = (Entry)((UncommittedObjectKey)objectKey).getCommittedObjectKey().getObject();
 						committedEntries.add(committedEntry);
 					}

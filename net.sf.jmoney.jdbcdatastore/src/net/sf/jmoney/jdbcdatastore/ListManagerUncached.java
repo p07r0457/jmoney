@@ -41,7 +41,7 @@ import net.sf.jmoney.model2.PropertySet;
  *
  * @author Nigel Westbury
  */
-public class ListManagerUncached implements IListManager {
+public class ListManagerUncached<E extends ExtendableObject> implements IListManager<E> {
 	private IDatabaseRowKey parentKey;
 	private SessionManager sessionManager;
 	private PropertyAccessor listProperty;
@@ -69,7 +69,7 @@ public class ListManagerUncached implements IListManager {
 			throw new RuntimeException(valueClass.getName() + " not found.");
 	}
 	
-	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet) {
+	public E createNewElement(ExtendableObject parent, PropertySet propertySet) {
  		// First build the in-memory object.  Even though the object is not
 		// cached in the object key, the object must be constructed to get
 		// the default values to be written to the database and the
@@ -82,7 +82,7 @@ public class ListManagerUncached implements IListManager {
 		// the objects in a list just because the owning object
 		// is materialized.
 
-		ExtendableObject extendableObject = JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, false);
+		E extendableObject = (E)JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, false);
 		
 		// Insert the new object into the tables.
 		
@@ -92,7 +92,7 @@ public class ListManagerUncached implements IListManager {
 		return extendableObject;
 	}
 	
-	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
+	public E createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
  		// First build the in-memory object.  Even though the object is not
 		// cached in the object key, the object must be constructed to get
 		// the default values to be written to the database and the
@@ -105,7 +105,7 @@ public class ListManagerUncached implements IListManager {
 		// the objects in a list just because the owning object
 		// is materialized.
 
-		ExtendableObject extendableObject = JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, false, values);
+		E extendableObject = (E)JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, false, values);
 		
 		// Insert the new object into the tables.
 		

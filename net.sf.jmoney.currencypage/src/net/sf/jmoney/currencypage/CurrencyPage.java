@@ -244,7 +244,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 		 * Set of currencies that are used in some way in the current session.
 		 * These currencies cannot be removed from the session.
 		 */
-		private Set<ISOCurrencyData> usedCurrencies = new HashSet<ISOCurrencyData>();
+		private Set<Currency> usedCurrencies = new HashSet<Currency>();
 		
 		private Vector<ISOCurrencyData> allIsoCurrencies = new Vector<ISOCurrencyData>();
 		
@@ -367,7 +367,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 		 * @param accountIterator
 		 * @param usedCurrencies
 		 */
-		private void findUsedCurrencies(Collection accounts, Set usedCurrencies) {
+		private void findUsedCurrencies(Collection accounts, Set<Currency> usedCurrencies) {
 			for (Iterator accountIterator = accounts.iterator(); accountIterator.hasNext(); ) {
 				Account account = (Account)accountIterator.next();
 				if (account instanceof IncomeExpenseAccount) {
@@ -396,7 +396,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 						Entry entry = (Entry)iter2.next();
 						Commodity commodity = entry.getCommodity();
 						if (commodity instanceof Currency) {
-							usedCurrencies.add(commodity);
+							usedCurrencies.add((Currency)commodity);
 						}
 					}
 				}
@@ -664,11 +664,12 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 		private void handleAddAll() {
 			TableItem[] items = availableListViewer.getTable().getItems();
 
-			ArrayList data = new ArrayList();
-			for (int i = 0; i < items.length; i++) {
-				data.add(items[i].getData());
+			ArrayList<ISOCurrencyData> data = new ArrayList<ISOCurrencyData>();
+			for (TableItem item: items) {
+				ISOCurrencyData currencyData = (ISOCurrencyData) item.getData();
 
-				ISOCurrencyData currencyData = (ISOCurrencyData) items[i].getData();
+				data.add(currencyData);
+
 				Currency newCurrency = (Currency)session.createCommodity(CurrencyInfo.getPropertySet());
 				newCurrency.setName(currencyData.name);
 				newCurrency.setCode(currencyData.code);
@@ -690,7 +691,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 				int index = table.getSelectionIndices()[0];
 				
 				Object [] isoCurrencies = ssel.toArray();
-				ArrayList data = new ArrayList();
+				ArrayList<ISOCurrencyData> data = new ArrayList<ISOCurrencyData>();
 				for (int i = 0; i < ssel.size(); i++) {
 					ISOCurrencyData currencyData = (ISOCurrencyData)isoCurrencies[i];
 					if (!usedCurrencies.contains(currencyData.currency)
@@ -713,7 +714,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 		private void handleRemoveUnused() {
 			TableItem[] items = selectedListViewer.getTable().getItems();
 			
-			ArrayList data = new ArrayList();
+			ArrayList<ISOCurrencyData> data = new ArrayList<ISOCurrencyData>();
 			for (int i = 0; i < items.length; i++) {
 				ISOCurrencyData currencyData = (ISOCurrencyData)items[i].getData();
 				if (!usedCurrencies.contains(currencyData.currency)

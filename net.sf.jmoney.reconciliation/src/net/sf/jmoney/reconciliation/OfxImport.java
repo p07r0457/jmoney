@@ -27,13 +27,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Currency;
-import java.util.HashMap;
-import java.util.Locale;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.CurrencyAccount;

@@ -28,8 +28,11 @@ import java.util.ResourceBundle;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.Transaction;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -303,7 +306,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
     	
     	// Set the initial list of commodities to be the list
     	// of ISO currencies.
-    	SimpleListManager commodities = new SimpleListManager(sessionManager);
+    	SimpleListManager commodities = new SimpleListManager<Commodity>(sessionManager);
     	
     	SimpleObjectKey sessionKey = new SimpleObjectKey(sessionManager);
     	
@@ -315,8 +318,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
     			null,
 				null,
 				commodities,
-				new SimpleListManager(sessionManager),
-				new SimpleListManager(sessionManager),
+				new SimpleListManager<Account>(sessionManager),
+				new SimpleListManager<Transaction>(sessionManager),
 				null
 			);
     	

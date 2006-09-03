@@ -22,21 +22,11 @@
 
 package net.sf.jmoney.reconciliation.reconcilePage;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import net.sf.jmoney.AlternativeContentLayout;
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountControl;
-import net.sf.jmoney.fields.DateControl;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.ReconciliationAccount;
 import net.sf.jmoney.reconciliation.ReconciliationAccountInfo;
 
@@ -44,8 +34,6 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Rectangle;
@@ -104,7 +92,7 @@ class ImportOptionsDialog extends Dialog {
 			/*
 			 * These changes must be done within a transaction.
 			 */
-	    	TransactionManager transactionManager = new TransactionManager(account.getSession());
+	    	TransactionManager transactionManager = new TransactionManager(account.getObjectKey().getSessionManager());
 	    	ExtendableObject ourAccount1 = transactionManager.getCopyInTransaction(account.getBaseObject()); 
 	    	ReconciliationAccount ourAccount2 = (ReconciliationAccount) ourAccount1.getExtension(ReconciliationAccountInfo.getPropertySet(), true);
 	    	

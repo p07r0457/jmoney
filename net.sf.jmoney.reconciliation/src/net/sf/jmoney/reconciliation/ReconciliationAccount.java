@@ -22,9 +22,6 @@
 
 package net.sf.jmoney.reconciliation;
 
-import net.sf.jmoney.fields.SessionInfo;
-import net.sf.jmoney.model2.AccountExtension;
-import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccountExtension;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IncomeExpenseAccount;

@@ -116,8 +116,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 
 	protected ReconciliationAccount originalAccount = null;
 	
-	/** Element: IEntriesTableProperty */
-	protected Vector allEntryDataObjects = new Vector();
+	protected Vector<IEntriesTableProperty> allEntryDataObjects = new Vector<IEntriesTableProperty>();
 
 	IEntriesTableProperty debitColumnManager;
 	IEntriesTableProperty creditColumnManager;
@@ -167,7 +166,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         // This ensures that uncommitted changes
     	// made by this page are isolated from datastore usage outside
     	// of this page.
-        transactionManager = new TransactionManager(originalAccount.getSession());
+        transactionManager = new TransactionManager(originalAccount.getObjectKey().getSessionManager());
     	
         /*
 		 * Set the statement to show initially. If there are any entries in
@@ -355,7 +354,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 							    	/*
 							    	 * Use a transaction to import all the entries.
 							    	 */
-							    	TransactionManager transactionManager = new TransactionManager(originalAccount.getSession());
+							    	TransactionManager transactionManager = new TransactionManager(originalAccount.getObjectKey().getSessionManager());
 							    	
 							    	/**
 							    	 * The account being shown in this page.  This account

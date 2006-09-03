@@ -42,7 +42,7 @@ import net.sf.jmoney.model2.PropertySet;
  *
  * @author Nigel Westbury
  */
-public class SimpleListManager extends Vector<ExtendableObject> implements IListManager {
+public class SimpleListManager<E extends ExtendableObject> extends Vector<E> implements IListManager<E> {
 
 	private static final long serialVersionUID = 2090027937924066725L;
 
@@ -52,7 +52,7 @@ public class SimpleListManager extends Vector<ExtendableObject> implements IList
 	 	this.sessionManager = sessionManager;
 	 }
 
-	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet) {
+	public E createNewElement(ExtendableObject parent, PropertySet propertySet) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		int numberOfParameters = constructorProperties.size();
@@ -84,7 +84,7 @@ public class SimpleListManager extends Vector<ExtendableObject> implements IList
 		}
 		
 		// We can now create the object.
-		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructDefaultImplementationObject(constructorParameters);
+		E extendableObject = (E)propertySet.constructDefaultImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 
@@ -114,7 +114,7 @@ public class SimpleListManager extends Vector<ExtendableObject> implements IList
 		return extendableObject;
 	}
 
-	public ExtendableObject createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
+	public E createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
 		Collection constructorProperties = propertySet.getConstructorProperties();
 		
 		int numberOfParameters = constructorProperties.size();
@@ -125,7 +125,7 @@ public class SimpleListManager extends Vector<ExtendableObject> implements IList
 		
 		SimpleObjectKey objectKey = new SimpleObjectKey(sessionManager);
 		
-		Map extensionMap = new HashMap();
+		Map<PropertySet, Object[]> extensionMap = new HashMap<PropertySet, Object[]>();
 		
 		if (!propertySet.isExtension()) {
 			constructorParameters[0] = objectKey;
@@ -163,7 +163,7 @@ public class SimpleListManager extends Vector<ExtendableObject> implements IList
 		}
 			
 		// We can now create the object.
-		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
+		E extendableObject = (E)propertySet.constructImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 
