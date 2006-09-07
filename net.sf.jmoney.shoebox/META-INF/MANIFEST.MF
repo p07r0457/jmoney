@@ -11,4 +11,4 @@ Require-Bundle: org.eclipse.ui,
  net.sf.jmoney,
  org.eclipse.ui.forms,
  org.vafada.swtcalendar
-Eclipse-AutoStart: true
+Eclipse-LazyStart: true
