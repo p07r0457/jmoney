@@ -291,8 +291,8 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		SAXParserFactory factory = SAXParserFactory.newInstance();
 		try {
             try {
-                idToCommodityMap = new HashMap();
-                idToAccountMap = new HashMap();
+                idToCommodityMap = new HashMap<String, Object>();
+                idToAccountMap = new HashMap<String, Object>();
                 currentSAXEventProcessor = null;
 
                 factory.setValidating(false);
@@ -363,9 +363,9 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				key,
 				null,
 				null,
-				new SimpleListManager(sessionManager),
-				new SimpleListManager(sessionManager),
-				new SimpleListManager(sessionManager),
+				new SimpleListManager<Commodity>(sessionManager),
+				new SimpleListManager<Account>(sessionManager),
+				new SimpleListManager<Transaction>(sessionManager),
 				null
 			);
 			key.setObject(newSessionNewFormat);
@@ -593,14 +593,14 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 * constructor parameters that construct the extension
 		 * objects. 
 		 */
-		private Map extensionMap;
+		private Map<PropertySet, Object[]> extensionMap;
 		
 		/**
 		 * Saved id of objects that are Currency or Account objects.
 		 * This id is saved so that when the object is later created, it can
 		 * be added to a map.
 		 */
-		private Map map;
+		private Map<String, Object> map;
 		private String id;
 
 		private Object value;
@@ -630,7 +630,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				numberOfParameters += 3;
 			}
 			constructorParameters = new Object[numberOfParameters];
-			extensionMap = new HashMap();
+			extensionMap = new HashMap<PropertySet, Object[]>();
 			constructorParameters[0] = objectKey;
 			constructorParameters[1] = extensionMap;
 			if (parent == null) {
@@ -879,7 +879,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			} else {
 				// Property is in an extension.
 				PropertySet extensionPropertySet = propertyAccessor.getPropertySet();
-				Object[] extensionConstructorParameters = (Object[])extensionMap.get(extensionPropertySet);
+				Object[] extensionConstructorParameters = extensionMap.get(extensionPropertySet);
 				if (extensionConstructorParameters == null) {
 					extensionConstructorParameters = new Object[extensionPropertySet.getConstructorProperties().size()];
 					extensionMap.put(extensionPropertySet, extensionConstructorParameters);
@@ -1098,13 +1098,17 @@ public class JMoneyXmlFormat implements IFileDatastore {
 
 
 	// Used for writing
-	private Map namespaceMap;  // PropertySet to String (namespace prefix)
+
+	/**
+	 * PropertySet to String (namespace prefix)
+	 */
+	private Map<PropertySet, String> namespaceMap;
 	private int accountId;
-	private Map accountIdMap;
+	private Map<Account, String> accountIdMap;
 	
 	// Used for reading
-	private Map idToCommodityMap;
-	private Map idToAccountMap;
+	private Map<String, Object> idToCommodityMap;
+	private Map<String, Object> idToAccountMap;
 	
 	/**
 	 * Current event processor.  A stack of event processors
@@ -1200,9 +1204,9 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			bout = new BufferedOutputStream(gout);
 		}
 		
-		namespaceMap = new HashMap();
+		namespaceMap = new HashMap<PropertySet, String>();
 		accountId = 1;
-		accountIdMap = new HashMap();
+		accountIdMap = new HashMap<Account, String>();
 		
 		StreamResult streamResult = new StreamResult(bout);
 		SAXTransformerFactory tf = (SAXTransformerFactory) SAXTransformerFactory.newInstance();
@@ -1267,7 +1271,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			id = ((Currency)object).getCode();
 		} else if (object instanceof Account) {
 			id = "account" + new Integer(accountId++).toString();
-			accountIdMap.put(object, id);
+			accountIdMap.put((Account)object, id);
 		}
 
 		if (id != null) {
@@ -1344,7 +1348,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 						if (propertyAccessor.getValueClass() == Currency.class) {
 							idref = ((Currency)value).getCode();
 						} else if (value instanceof Account) {
-							idref = (String)accountIdMap.get(value);
+							idref = accountIdMap.get(value);
 						}
 						if (idref != null) {
 							atts.addAttribute("", "", "idref", "CDATA", idref);
@@ -1352,7 +1356,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 						
 						String qName;
 						if (propertySet2.isExtension()) {
-							String namespacePrefix = (String)namespaceMap.get(propertySet2); 
+							String namespacePrefix = namespaceMap.get(propertySet2); 
 							qName = namespacePrefix + ":" + name;
 						} else {
 							qName = name;
@@ -1419,7 +1423,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 	 * to ensure backwards compatibility.
 	 */
 	private void convertModelOneFormat(net.sf.jmoney.model.Session oldFormatSession, Session newSession) {
-		Map accountMap = new Hashtable();
+		Map<net.sf.jmoney.model.Account, BankAccount> accountMap = new Hashtable<net.sf.jmoney.model.Account, BankAccount>();
 		
 		// Add the currencies
 		JMoneyPlugin.initSystemCurrency(newSession);
@@ -1479,7 +1483,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		
 		// Here is the set of double entries that have been found but
 		// not yet processed.
-		Set doubleEntriesPreviouslyFound = new HashSet();
+		Set<net.sf.jmoney.model.DoubleEntry> doubleEntriesPreviouslyFound = new HashSet<net.sf.jmoney.model.DoubleEntry>();
 		
 		// See if the plug-in for the reconciliation state is present.
 		// If it is then we can copy the reconciliation state into

@@ -28,6 +28,7 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.Iterator;
 
+import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
@@ -41,7 +42,7 @@ import net.sf.jmoney.model2.PropertySet;
  * 
  * @author Nigel Westbury
  */
-public class AccountEntriesList implements Collection {
+public class AccountEntriesList implements Collection<Entry> {
 	private SessionManager sessionManager;
 	private IDatabaseRowKey keyOfRequiredPropertyValue;
 	private PropertySet propertySet;
@@ -86,7 +87,7 @@ public class AccountEntriesList implements Collection {
 		throw new RuntimeException("method not implemented");
 	}
 	
-	public Iterator iterator() {
+	public Iterator<Entry> iterator() {
 		try {
 			// TODO: This code will not work if the index is indexing
 			// objects of a derivible property set.  Table joins would
@@ -106,11 +107,11 @@ public class AccountEntriesList implements Collection {
 		throw new RuntimeException("method not implemented");
 	}
 	
-	public Object[] toArray(Object[] arg0) {
+	public <T> T[] toArray(T[] arg0) {
 		throw new RuntimeException("method not implemented");
 	}
-	
-	public boolean add(Object arg0) {
+
+	public boolean add(Entry arg0) {
 		// The list is not cached.  
 		// We read from the database every time.
 		// There is therefore nothing to do here.
@@ -122,19 +123,19 @@ public class AccountEntriesList implements Collection {
 		return false;
 	}
 	
-	public boolean containsAll(Collection arg0) {
+	public boolean containsAll(Collection<?> arg0) {
 		throw new RuntimeException("method not implemented");
 	}
 	
-	public boolean addAll(Collection arg0) {
+	public boolean addAll(Collection<? extends Entry> arg0) {
 		throw new RuntimeException("method not implemented");
 	}
 	
-	public boolean removeAll(Collection arg0) {
+	public boolean removeAll(Collection<?> arg0) {
 		throw new RuntimeException("method not implemented");
 	}
 	
-	public boolean retainAll(Collection arg0) {
+	public boolean retainAll(Collection<?> arg0) {
 		throw new RuntimeException("method not implemented");
 	}
 	

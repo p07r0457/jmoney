@@ -32,8 +32,8 @@ import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.DatastoreManager;
+import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.core.runtime.CoreException;
@@ -64,7 +64,7 @@ public class SessionManager extends DatastoreManager {
 
     private boolean modified = false;
 
-    private Map accountEntriesListsMap = new HashMap();
+   private Map<Account, Collection<Entry>> accountEntriesListsMap = new HashMap<Account, Collection<Entry>>();
 	
 	/**
 	 * Construct the session manager.
@@ -191,7 +191,7 @@ public class SessionManager extends DatastoreManager {
             // For time being, we simply use the first entry.
 			try {
 				fileDatastore = (IFileDatastore)elements[0].createExecutableExtension("class");
-				fileDatastoreId = elements[0].getDeclaringExtension().getNamespace() + '.' + elements[0].getAttribute("id");
+				fileDatastoreId = elements[0].getDeclaringExtension().getNamespaceIdentifier() + '.' + elements[0].getAttribute("id");
 			} catch (CoreException e) {
 				e.printStackTrace();
 				throw new RuntimeException("internal error");
@@ -303,7 +303,7 @@ public class SessionManager extends DatastoreManager {
 	 * @param entry
 	 */
 	public void addEntryToList(Account account, Entry entry) {
-		Collection accountEntriesList = (Collection)accountEntriesListsMap.get(account);
+		Collection<Entry> accountEntriesList = accountEntriesListsMap.get(account);
 		accountEntriesList.add(entry);
 	}
 
@@ -312,7 +312,7 @@ public class SessionManager extends DatastoreManager {
 	 * @param entry
 	 */
 	public void removeEntryFromList(Account account, Entry entry) {
-		Collection accountEntriesList = (Collection)accountEntriesListsMap.get(account);
+		Collection<Entry> accountEntriesList = accountEntriesListsMap.get(account);
 		accountEntriesList.remove(entry);
 	}
 
@@ -321,7 +321,7 @@ public class SessionManager extends DatastoreManager {
 	 */
 	public void addAccountList(Account account) {
 		JMoneyPlugin.myAssert(!accountEntriesListsMap.containsKey(account));
-		accountEntriesListsMap.put(account, new Vector());
+		accountEntriesListsMap.put(account, new Vector<Entry>());
 	}
 
 	/**
@@ -333,13 +333,13 @@ public class SessionManager extends DatastoreManager {
 	}
 
 	public boolean hasEntries(Account account) {
-		Collection entriesList = (Collection)accountEntriesListsMap.get(account);
+		Collection<Entry> entriesList = accountEntriesListsMap.get(account);
 		JMoneyPlugin.myAssert(entriesList != null);
 		return !entriesList.isEmpty();
 	}
 
-	public Collection getEntries(Account account) {
-		Collection entriesList = (Collection)accountEntriesListsMap.get(account);
+	public Collection<Entry> getEntries(Account account) {
+		Collection<Entry> entriesList = accountEntriesListsMap.get(account);
 		JMoneyPlugin.myAssert(entriesList != null);
 		return Collections.unmodifiableCollection(entriesList);
 	}

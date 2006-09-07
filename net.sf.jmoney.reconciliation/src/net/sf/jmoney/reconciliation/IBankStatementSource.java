@@ -69,7 +69,7 @@ public interface IBankStatementSource {
 		private String payee = null;
 		private long amount = 0;
 		private String uniqueId = null;
-		private Map propertyMap = new HashMap();
+		private Map<PropertyAccessor, Object> propertyMap = new HashMap<PropertyAccessor, Object>();
 		
 		public void setClearedDate(Date clearedDate) {
 			this.clearedDate  = clearedDate;

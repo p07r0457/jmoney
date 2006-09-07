@@ -99,14 +99,14 @@ public class QIFFileFormat implements FileFormat {
 	 * Before use accountMap must be initialised by calling the buildAccountMap
 	 * method
 	 */
-	private Map accountMap;
+	private Map<String, CapitalAccount> accountMap;
 
 	/**
 	 * A local copy of all categories in the current session, stored by name.
 	 * Before use this must be initialised by calling the buildCategoryMap
 	 * method
 	 */
-	private Map categoryMap;
+	private Map<String, IncomeExpenseAccount> categoryMap;
 
 	/**
 	 * Creates a new QIFFileFormat.
@@ -160,7 +160,7 @@ public class QIFFileFormat implements FileFormat {
 					}
 				} while (line.charAt(0) != QIFCashTransaction.END);
 
-				Account account = getAccount(accountName, session);
+				CapitalAccount account = getAccount(accountName, session);
 				if (!(account instanceof CurrencyAccount)) {
 					// TODO: process error properly
 					if (QIFPlugin.DEBUG) System.out.println("account is not a currency account");
@@ -261,13 +261,11 @@ public class QIFFileFormat implements FileFormat {
 	 */
 	private void buildAccountMap(Session session) {
 		if (accountMap == null)
-			accountMap = new HashMap();
-		Iterator iterator = session.getAccountCollection().iterator();
-		while (iterator.hasNext()) {
-			Account obj = (Account) iterator.next();
-			if (obj instanceof CapitalAccount) {
-				CapitalAccount account = (CapitalAccount) obj;
-				accountMap.put(account.getName(), account);
+			accountMap = new HashMap<String, CapitalAccount>();
+		for (Account account: session.getAccountCollection()) {
+			if (account instanceof CapitalAccount) {
+				CapitalAccount capitalAccount = (CapitalAccount)account;
+				accountMap.put(account.getName(), capitalAccount);
 			}
 		}
 	}
@@ -278,12 +276,10 @@ public class QIFFileFormat implements FileFormat {
 	 */
 	private void buildCategoryMap(Session session) {
 		if (categoryMap == null)
-			categoryMap = new HashMap();
-		Iterator iterator = session.getAccountCollection().iterator();
-		while (iterator.hasNext()) {
-			Account obj = (Account) iterator.next();
-			if (obj instanceof IncomeExpenseAccount) {
-				IncomeExpenseAccount category = (IncomeExpenseAccount) obj;
+			categoryMap = new HashMap<String, IncomeExpenseAccount>();
+		for (Account account: session.getAccountCollection()) {
+			if (account instanceof IncomeExpenseAccount) {
+				IncomeExpenseAccount category = (IncomeExpenseAccount) account;
 				categoryMap.put(category.getName(), category);
 			}
 		}
@@ -774,13 +770,13 @@ public class QIFFileFormat implements FileFormat {
 	 * @param session
 	 *            the session to check for the account
 	 */
-	private Account getAccount(String name, Session session) {
+	private CapitalAccount getAccount(String name, Session session) {
 		// Test to see if we have an account with the same name in our map
-		Account account = (Account) accountMap.get(name);
+		CapitalAccount account = accountMap.get(name);
 		// If not then create a new account, set the name and add it to the map
 		if (account == null) {
 			PropertySet pset = BankAccountInfo.getPropertySet();
-			account = (Account) session.createAccount(pset);
+			account = (CapitalAccount) session.createAccount(pset);
 			account.setName(name);
 			accountMap.put(name, account);
 		}
@@ -793,7 +789,7 @@ public class QIFFileFormat implements FileFormat {
 	 */
 	private IncomeExpenseAccount getCategory(String name, Session session) {
 		IncomeExpenseAccount category;
-		category = (IncomeExpenseAccount) categoryMap.get(name);
+		category = categoryMap.get(name);
 		if (category == null) {
 			category = (IncomeExpenseAccount) session.createAccount(IncomeExpenseAccountInfo.getPropertySet());
 			category.setName(name);

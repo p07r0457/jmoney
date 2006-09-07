@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Vector;

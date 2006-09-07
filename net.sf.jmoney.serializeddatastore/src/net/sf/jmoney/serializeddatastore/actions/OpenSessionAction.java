@@ -83,7 +83,7 @@ public class OpenSessionAction implements IWorkbenchWindowActionDelegate {
                 String fileFormatId;
 				try {
 					fileDatastore = (IFileDatastore)elements[0].createExecutableExtension("class");
-					fileFormatId = elements[0].getDeclaringExtension().getNamespace() + '.' + elements[0].getAttribute("id");
+					fileFormatId = elements[0].getDeclaringExtension().getNamespaceIdentifier() + '.' + elements[0].getAttribute("id");
 				} catch (CoreException e) {
 					e.printStackTrace();
 					throw new RuntimeException("internal error");

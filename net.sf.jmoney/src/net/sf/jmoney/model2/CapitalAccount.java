@@ -129,7 +129,7 @@ public abstract class CapitalAccount extends Account {
 	 * 				given sort order.  The collection is a read-only
 	 * 				collection.
 	 */
-	public Collection getSortedEntries(final PropertyAccessor sortProperty, boolean descending) {
+	public Collection<Entry> getSortedEntries(final PropertyAccessor sortProperty, boolean descending) {
 		IEntryQueries queries = (IEntryQueries)getSession().getAdapter(IEntryQueries.class);
     	if (queries != null) {
     		return queries.getSortedEntries(this, sortProperty, descending);

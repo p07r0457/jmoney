@@ -23,7 +23,6 @@
 package net.sf.jmoney.reconciliation.reconcilePage;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -145,7 +144,7 @@ public class StatementSection extends SectionPart {
 
         reconciledTableContents = new IEntriesContent() {
 
-			public Vector getAllEntryDataObjects() {
+			public Vector<IEntriesTableProperty> getAllEntryDataObjects() {
 				return fPage.allEntryDataObjects;
 			}
 
@@ -161,8 +160,8 @@ public class StatementSection extends SectionPart {
 				return fPage.balanceColumnManager;
 			}
 
-			public Collection getEntries() {
-		        Vector requiredEntries = new Vector();
+			public Collection<Entry> getEntries() {
+		        Vector<Entry> requiredEntries = new Vector<Entry>();
 
 		        // If no statement is set, return an empty collection.
 		        // The table will not be visible in this situation, but
@@ -173,12 +172,11 @@ public class StatementSection extends SectionPart {
 		        }
 		        
 		        CurrencyAccount account = fPage.getAccount();
-		        Collection accountEntries = 
+		        Collection<Entry> accountEntries = 
 		        	account
 						.getSortedEntries(TransactionInfo.getDateAccessor(), false);
 
-		        for (Iterator iter = accountEntries.iterator(); iter.hasNext(); ) {
-		        	Entry entry = (Entry)iter.next();
+		        for (Entry entry: accountEntries) {
 		        	BankStatement statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 		        	if (fPage.getStatement().equals(statement)) {
 		        		requiredEntries.add(entry);

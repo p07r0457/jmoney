@@ -48,6 +48,8 @@ import net.sf.jmoney.fields.CommodityInfo;
 import net.sf.jmoney.fields.CurrencyInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.fields.SessionInfo;
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
@@ -55,6 +57,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.Transaction;
 
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -105,7 +108,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * vector contains a list of the list properties in all property
 	 * sets that contain a list of objects of the property set.
 	 */
-	private static Map tablesMap = null;
+	private static Map<PropertySet, Vector<ParentList>> tablesMap = null;
 	
 	/**
 	 * The constructor.
@@ -274,18 +277,18 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		sessionManager.addCachedPropertySet(commodityPropertySet);
 		sessionManager.addCachedPropertySet(accountPropertySet);
 		
-		Map commodityMap = sessionManager.getMapOfCachedObjects(commodityPropertySet);
-		Map accountsMap = sessionManager.getMapOfCachedObjects(accountPropertySet);
+		Map<Integer, Commodity> commodityMap = (Map<Integer, Commodity>)sessionManager.getMapOfCachedObjects(commodityPropertySet);
+		Map<Integer, Account> accountsMap = (Map<Integer, Account>)sessionManager.getMapOfCachedObjects(accountPropertySet);
 
 		// Find all properties in any property set that are
 		// a list of objects with the type as this property set.
 		// A column must exist in this table for each such property
 		// that exists in another property set.
-		tablesMap = new Hashtable();
+		tablesMap = new Hashtable<PropertySet, Vector<ParentList>>();
 		for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
 			PropertySet propertySet = (PropertySet)iter.next();
 			if (!propertySet.isExtension()) {
-				Vector list = new Vector();  // List of PropertyAccessors
+				Vector<ParentList> list = new Vector<ParentList>();  // List of PropertyAccessors
 				for (Iterator iter2 = PropertySet.getPropertySetIterator(); iter2.hasNext(); ) {
 					PropertySet propertySet2 = (PropertySet)iter2.next();
 					if (!propertySet2.isExtension()) {
@@ -310,14 +313,14 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// Any missing tables or columns are created at this time.
 		checkDatabase(con, stmt);
 		
-		ListManagerCached commodityListManager = new ListManagerCached(sessionManager, SessionInfo.getCommoditiesAccessor());
-		ListManagerCached accountListManager = new ListManagerCached(sessionManager, SessionInfo.getAccountsAccessor());
+		ListManagerCached<Commodity> commodityListManager = new ListManagerCached<Commodity>(sessionManager, SessionInfo.getCommoditiesAccessor());
+		ListManagerCached<Account> accountListManager = new ListManagerCached<Account>(sessionManager, SessionInfo.getAccountsAccessor());
 		
 		// Fetch the currencies
 		rs = stmt.executeQuery("SELECT * FROM net_sf_jmoney_currency JOIN net_sf_jmoney_commodity ON net_sf_jmoney_currency._ID = net_sf_jmoney_commodity._ID");
 
 		while (rs.next()) {
-			ExtendableObject commodityObject = materializeObjectCached(rs, currencyPropertySet, sessionKey, sessionManager);
+			Commodity commodityObject = (Commodity)materializeObjectCached(rs, currencyPropertySet, sessionKey, sessionManager);
 			
 			commodityListManager.add(commodityObject);
 			
@@ -331,7 +334,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// Fetch the capital accounts
 		rs = stmt.executeQuery("SELECT * FROM net_sf_jmoney_capitalAccount JOIN net_sf_jmoney_account ON net_sf_jmoney_capitalAccount._ID = net_sf_jmoney_account._ID");
 		while (rs.next()) {
-			ExtendableObject accountObject = materializeObjectCached(rs, capitalPropertySet, sessionKey, sessionManager);
+			Account accountObject = (Account)materializeObjectCached(rs, capitalPropertySet, sessionKey, sessionManager);
 				
 			accountListManager.add(accountObject);
 			
@@ -343,7 +346,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// Fetch the income and expense accounts
 		rs = stmt.executeQuery("SELECT * FROM net_sf_jmoney_categoryAccount JOIN net_sf_jmoney_account ON net_sf_jmoney_categoryAccount._ID = net_sf_jmoney_account._ID");
 		while (rs.next()) {
-			ExtendableObject accountObject = materializeObjectCached(rs, incomeExpensePropertySet, sessionKey, sessionManager);
+			Account accountObject = (Account)materializeObjectCached(rs, incomeExpensePropertySet, sessionKey, sessionManager);
 				
 			accountListManager.add(accountObject);
 			
@@ -360,7 +363,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// interface (an extension of the Collection interface)
 		// and that returns transactions when requested.
 		
-		IListManager transactionListManager = new ListManagerUncached(sessionKey, sessionManager, SessionInfo.getTransactionsAccessor());
+		IListManager<Transaction> transactionListManager = new ListManagerUncached<Transaction>(sessionKey, sessionManager, SessionInfo.getTransactionsAccessor());
 		
 		// Create the session object.
 		
@@ -398,8 +401,8 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @return A Vector containing objects of class 
 	 * 		<code>ColumnInfo</code>.
 	 */
-	private Vector buildColumnList(PropertySet propertySet) {
-		Vector result = new Vector();
+	private Vector<ColumnInfo> buildColumnList(PropertySet propertySet) {
+		Vector<ColumnInfo> result = new Vector<ColumnInfo>();
 		
 		// The parent column requirements depend on which other
 		// property sets have lists.  A parent column exists in the
@@ -425,18 +428,15 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// the session object.  The names of the columns are the fully qualified
 		// names of the properties that list these objects.
 		
-		Vector list = (Vector)tablesMap.get(propertySet);
+		Vector<ParentList> list = tablesMap.get(propertySet);
 		
 		// Find all properties in any property set that are
 		// a list of objects with the type as this property set.
 		// A column must exist in this table for each such property
 		// that exists in another property set.
-		for (Iterator iter2 = list.iterator(); iter2.hasNext(); ) {
-			ParentList parentList = (ParentList)iter2.next();
-
+		for (ParentList parentList: list) {
 			ColumnInfo info = new ColumnInfo();
 			info.columnName = parentList.columnName;
-			
 			info.columnDefinition = "INT NULL";
 			result.add(info);
 		}
@@ -537,15 +537,14 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			}
 		}
 		
-		// If the property set is a derivable property set
-		// and is the base-most property set
-		// then we must have a column called _PROPERTY_SET.
-		// This column contains the id of the actual 
-		// (non-derivable) property set of this object.
-		// This column is required because otherwise we would not
-		// know which further tables need to be joined to get the
-		// complete set of properties with which we can construct
-		// the object.
+		/*
+		 * If the property set is a derivable property set and is the base-most
+		 * property set then we must have a column called _PROPERTY_SET. This
+		 * column contains the id of the actual (non-derivable) property set of
+		 * this object. This column is required because otherwise we would not
+		 * know which further tables need to be joined to get the complete set
+		 * of properties with which we can construct the object.
+		 */
 		if (propertySet.getBasePropertySet() == null
 		 && propertySet.isDerivable()) {
 			ColumnInfo info = new ColumnInfo();
@@ -791,7 +790,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				// reading the database.  There is nothing in the design
 				// of the caches that prohibit duplicates of the item being
 				// created outside the cache.
-				Map map = sessionManager.getMapOfCachedObjects(propertySetOfProperty);
+				Map<Integer, ? extends ExtendableObject> map = sessionManager.getMapOfCachedObjects(propertySetOfProperty);
 				if (map == null) {
 					value = new ObjectKeyUncached(rowIdOfProperty, propertySetOfProperty, sessionManager);
 				} else {
@@ -856,22 +855,21 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		
 		PropertySet propertySet2 = propertySet;
 		do {
-		Vector list = (Vector)tablesMap.get(propertySet);
-		
-		// Find all properties in any property set that are
-		// a list of objects with the type as this property set.
-		// A column must exist in this table for each such property
-		// that exists in another property set.
-		for (Iterator iter2 = list.iterator(); iter2.hasNext(); ) {
-			ParentList parentList = (ParentList)iter2.next();
+			Vector<ParentList> list = tablesMap.get(propertySet);
 
-			parentId = rs.getInt(parentList.columnName);
-			if (!rs.wasNull()) {		
-				parentPropertySet = parentList.parentPropertySet;
-				nonNullValueFound = true;
-				break;
-			}
-		}	
+			/*
+			 * Find all properties in any property set that are a list of objects
+			 * with the type as this property set. A column must exist in this table
+			 * for each such property that exists in another property set.
+			 */
+			for (ParentList parentList: list) {
+				parentId = rs.getInt(parentList.columnName);
+				if (!rs.wasNull()) {		
+					parentPropertySet = parentList.parentPropertySet;
+					nonNullValueFound = true;
+					break;
+				}
+			}	
 			propertySet2 = propertySet2.getBasePropertySet();
 		} while (propertySet2 != null);	
 			
@@ -968,13 +966,13 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		
 		Statement stmt = sessionManager.getReusableStatement();
 
-		Vector propertySets = new Vector();
+		Vector<PropertySet> propertySets = new Vector<PropertySet>();
 		for (PropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
 			propertySets.add(propertySet2);
 		}
 		
 		for (int index = propertySets.size()-1; index >= 0; index--) {
-			PropertySet propertySet2 = (PropertySet)propertySets.get(index);
+			PropertySet propertySet2 = propertySets.get(index);
 			
 			String sql = "INSERT INTO " 
 				+ propertySet2.getId().replace('.', '_')
@@ -1078,7 +1076,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// We therefore process the tables starting with the base table
 		// first.  This requires first copying the property sets into
 		// an array so that we can iterate them in reverse order.
-		Vector propertySets = new Vector();
+		Vector<PropertySet> propertySets = new Vector<PropertySet>();
 		for (PropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
 			propertySets.add(propertySet2);
 		}
@@ -1086,7 +1084,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		int propertyIndex = 0;
 
 		for (int index = propertySets.size()-1; index >= 0; index--) {
-			PropertySet propertySet2 = (PropertySet)propertySets.get(index);
+			PropertySet propertySet2 = propertySets.get(index);
 			
 			String sql = "UPDATE " 
 				+ propertySet2.getId().replace('.', '_')

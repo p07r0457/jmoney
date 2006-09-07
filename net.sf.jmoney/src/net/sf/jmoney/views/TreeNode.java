@@ -99,11 +99,11 @@ public class TreeNode implements IAdaptable {
 					String position = elements[j].getAttribute("position");
 					
 					if (id != null && id.length() != 0) {
-						String fullNodeId = extensions[i].getNamespace() + '.' + id;
+						String fullNodeId = extensions[i].getNamespaceIdentifier() + '.' + id;
 						ImageDescriptor descriptor = null;
 						if (icon != null) {
 							// Try getting the image from this plug-in.
-							descriptor = JMoneyPlugin.imageDescriptorFromPlugin(extensions[i].getNamespace(), icon); 
+							descriptor = JMoneyPlugin.imageDescriptorFromPlugin(extensions[i].getNamespaceIdentifier(), icon); 
 							if (descriptor == null) {
 								// try getting the image from the JMoney plug-in. 
 								descriptor = JMoneyPlugin.imageDescriptorFromPlugin("net.sf.jmoney", icon);
@@ -150,7 +150,7 @@ public class TreeNode implements IAdaptable {
 				if (elements[j].getName().equals("pages")) {
 					// TODO: remove plug-in as bad if the id is not unique.
 					String id = elements[j].getAttribute("id");
-					String pageId = extensions[i].getNamespace() + '.' + id;
+					String pageId = extensions[i].getNamespaceIdentifier() + '.' + id;
 					String nodeId = elements[j].getAttribute("node");
 
 					String position = elements[j].getAttribute("position");

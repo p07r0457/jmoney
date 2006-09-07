@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.fields;
 
-import java.util.Iterator;
 import java.util.LinkedList;
 
 import org.eclipse.swt.SWT;
@@ -83,8 +82,7 @@ public class TextControlWithMruCombo extends TextComposite {
 	}
 
 	public void saveState(IMemento memento) {
-		for (Iterator iter = recentlyUsedList.iterator(); iter.hasNext(); ) {
-			String text = (String)iter.next();
+		for (String text: recentlyUsedList) {
 			memento.createChild("mruText").putString("text", text);
 		}
 	}

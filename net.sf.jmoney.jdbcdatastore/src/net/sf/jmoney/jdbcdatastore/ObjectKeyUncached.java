@@ -25,8 +25,8 @@ package net.sf.jmoney.jdbcdatastore;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.DataManager;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;

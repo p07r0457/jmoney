@@ -72,7 +72,7 @@ public interface IEntryQueries {
 	 * @param descending if true, sort in descending order
 	 * @return
 	 */
-	Collection getSortedEntries(CapitalAccount account, PropertyAccessor sortProperty, boolean descending);
+	Collection<Entry> getSortedEntries(CapitalAccount account, PropertyAccessor sortProperty, boolean descending);
 
 	/**
 	 * Return the total amount of entries in the account in each month.

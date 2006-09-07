@@ -36,10 +36,11 @@ import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrencyAccount;
+import net.sf.jmoney.model2.DatastoreManager;
+import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IEntryQueries;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -72,7 +73,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * derived property set are put in the map for the base property
 	 * set.
 	 */
-	private Map mapOfCachedObjectMaps = new HashMap();
+	private Map<PropertySet, Map<Integer, ? extends ExtendableObject>> mapOfCachedObjectMaps = new HashMap<PropertySet, Map<Integer, ? extends ExtendableObject>>();
 	
 	public SessionManager(Connection connection, IObjectKey sessionKey) {
 		this.connection = connection;
@@ -183,7 +184,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @param propertySet
 	 */
 	public void addCachedPropertySet(PropertySet propertySet) {
-		mapOfCachedObjectMaps.put(propertySet, new HashMap());
+		mapOfCachedObjectMaps.put(propertySet, new HashMap<Integer, ExtendableObject>());
 	}
 	
 	/**
@@ -193,9 +194,9 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * 			cached, a map of integer id values to cached
 	 * 			objects; otherwise null.
 	 */
-	public Map getMapOfCachedObjects(PropertySet propertySet) {
+	public Map<Integer, ? extends ExtendableObject> getMapOfCachedObjects(PropertySet propertySet) {
 		for (PropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
-			Map result = (Map)mapOfCachedObjectMaps.get(propertySet2);
+			Map<Integer, ? extends ExtendableObject> result = mapOfCachedObjectMaps.get(propertySet2);
 			if (result != null) {
 				return result;
 			}
@@ -240,7 +241,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		return !(new AccountEntriesList(this, (IDatabaseRowKey)account.getObjectKey(), EntryInfo.getAccountAccessor()).isEmpty());
 	}
 
-	public Collection getEntries(Account account) {
+	public Collection<Entry> getEntries(Account account) {
 		return new AccountEntriesList(this, (IDatabaseRowKey)account.getObjectKey(), EntryInfo.getAccountAccessor());
 	}
 

@@ -188,10 +188,7 @@ public class StatementsSection extends SectionPart {
 		
 		private CurrencyAccount account;
 		
-		/**
-		 * Maps BankStatement to StatementDetails
-		 */
-		private SortedMap statementDetailsMap;
+		private SortedMap<BankStatement, StatementDetails> statementDetailsMap;
 
 		StatementContentProvider(TableViewer tableViewer) {
 			this.tableViewer = tableViewer;
@@ -204,7 +201,7 @@ public class StatementsSection extends SectionPart {
 			
 			// We use a tree map in preference to the more efficient
 			// hash map because we can then fetch the results in order.
-			statementDetailsMap = new TreeMap();
+			statementDetailsMap = new TreeMap<BankStatement, StatementDetails>();
 			
 			// When this item is disposed, the input may be set to null.
 			// Return an empty list in this case.
@@ -222,7 +219,7 @@ public class StatementsSection extends SectionPart {
 				
 				// We use a tree map in preference to the more efficient
 				// hash map because we can then fetch the results in order.
-				SortedMap statementTotals = new TreeMap();
+				SortedMap<BankStatement, Long> statementTotals = new TreeMap<BankStatement, Long>();
 				
 				Iterator it = account.getEntries().iterator();
 				while (it.hasNext()) {
@@ -230,7 +227,7 @@ public class StatementsSection extends SectionPart {
 					BankStatement statement = (BankStatement)entry .getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 					
 					if (statement != null) {
-						Long statementTotal = (Long)statementTotals.get(statement);
+						Long statementTotal = statementTotals.get(statement);
 						if (statementTotal == null) {
 							statementTotal = new Long(0);
 						}
@@ -239,10 +236,9 @@ public class StatementsSection extends SectionPart {
 				}
 				
 				long balance = account.getStartBalance();
-				for (Iterator iter = statementTotals.entrySet().iterator(); iter.hasNext(); ) {
-					Map.Entry mapEntry = (Map.Entry)iter.next();
-					BankStatement statement = (BankStatement)mapEntry.getKey();
-					long totalEntriesOnStatement = ((Long)mapEntry.getValue()).longValue();
+				for (Map.Entry<BankStatement, Long> mapEntry: statementTotals.entrySet()) {
+					BankStatement statement = mapEntry.getKey();
+					long totalEntriesOnStatement = (mapEntry.getValue()).longValue();
 					
 					statementDetailsMap.put(
 							statement,
@@ -325,15 +321,15 @@ public class StatementsSection extends SectionPart {
 		 */
 		private void adjustStatement(BankStatement statement, long amount) {
 			if (statement != null) {
-				StatementDetails thisStatementDetails = (StatementDetails)statementDetailsMap.get(statement);
+				StatementDetails thisStatementDetails = statementDetailsMap.get(statement);
 				if (thisStatementDetails == null) {
 					
 					long openingBalance;
-					SortedMap priorStatements = statementDetailsMap.headMap(statement);
+					SortedMap<BankStatement, StatementDetails> priorStatements = statementDetailsMap.headMap(statement);
 					if (priorStatements.isEmpty()) {
 						openingBalance = account.getStartBalance();
 					} else {
-						openingBalance = ((StatementDetails)priorStatements.get(priorStatements.lastKey())).getClosingBalance();
+						openingBalance = priorStatements.get(priorStatements.lastKey()).getClosingBalance();
 					}
 					
 					thisStatementDetails = new StatementDetails(
@@ -359,9 +355,8 @@ public class StatementsSection extends SectionPart {
 				// update.  Note that tailMap returns a collection that
 				// includes the starting key, so we must be sure not to
 				// process that.
-				SortedMap laterStatements = statementDetailsMap.tailMap(statement);
-				for (Iterator iter = laterStatements.values().iterator(); iter.hasNext(); ) {
-					StatementDetails statementDetails = (StatementDetails)iter.next();
+				SortedMap<BankStatement, StatementDetails> laterStatements = statementDetailsMap.tailMap(statement);
+				for (StatementDetails statementDetails: laterStatements.values()) {
 					if (!statementDetails.statement.equals(statement)) {
 						statementDetails.adjustOpeningBalance(amount);
 						
@@ -405,7 +400,7 @@ public class StatementsSection extends SectionPart {
 			if (this.statementDetailsMap.isEmpty()) {
 				return null;
 			} else {
-				return (StatementDetails)statementDetailsMap.get(statementDetailsMap.lastKey());
+				return statementDetailsMap.get(statementDetailsMap.lastKey());
 			}
 		}
 	}

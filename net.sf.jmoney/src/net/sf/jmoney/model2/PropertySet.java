@@ -224,7 +224,7 @@ public class PropertySet {
 						Object listener = elements[j].createExecutableExtension("info-class");
 						if (!(listener instanceof IPropertySetInfo)) {
 							throw new MalformedPluginException(
-									"Plug-in " + extensions[i].getNamespace()
+									"Plug-in " + extensions[i].getNamespaceIdentifier()
 									+ " extends the net.sf.jmoney.fields extension point. "
 									+ "However, the class specified by the info-class attribute "
 									+ "(" + listener.getClass().getName() + ") "
@@ -235,7 +235,7 @@ public class PropertySet {
 
 						IPropertySetInfo pageListener = (IPropertySetInfo)listener;
 						
-						String fullPropertySetId = extensions[i].getNamespace();
+						String fullPropertySetId = extensions[i].getNamespaceIdentifier();
 						String id = elements[j].getAttribute("id");
 						if (id != null && id.length() != 0) {
 							fullPropertySetId = fullPropertySetId + '.' + id;
@@ -250,7 +250,7 @@ public class PropertySet {
 						if (e.getStatus().getException() instanceof ClassNotFoundException) {
 							ClassNotFoundException e2 = (ClassNotFoundException)e.getStatus().getException();
 							throw new MalformedPluginException(
-									"Plug-in " + extensions[i].getNamespace()
+									"Plug-in " + extensions[i].getNamespaceIdentifier()
 									+ " extends the net.sf.jmoney.fields extension point. "
 									+ "However, the class specified by the info-class attribute "
 									+ "(" + e2.getMessage() + ") "
@@ -274,7 +274,7 @@ public class PropertySet {
 						if (listener instanceof IPropertySetInfo) {
 							IPropertySetInfo pageListener = (IPropertySetInfo)listener;
 							
-							String fullPropertySetId = extensions[i].getNamespace();
+							String fullPropertySetId = extensions[i].getNamespaceIdentifier();
 							String id = elements[j].getAttribute("id");
 							if (id != null && id.length() != 0) {
 								fullPropertySetId = fullPropertySetId + '.' + id;

@@ -221,7 +221,7 @@ public class TransactionManager extends DataManager {
 
 		PropertySet propertySet = PropertySet.getPropertySet(committedObject.getClass());
     	
-		Collection constructorProperties = propertySet.getConstructorProperties();
+		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
 		
 		IObjectKey committedParentKey = committedObject.getParentKey();
 		UncommittedObjectKey key = new UncommittedObjectKey(this, committedObject.getObjectKey());
@@ -236,8 +236,7 @@ public class TransactionManager extends DataManager {
 		// Get the values from this object
 		
 		// Set the remaining parameters to the constructor.
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+		for (PropertyAccessor propertyAccessor: constructorProperties) {
 
 			Class valueClass = propertyAccessor.getValueClass(); 
 			Object value;
@@ -434,9 +433,8 @@ public class TransactionManager extends DataManager {
 			if (!newValues.isDeleted()) {
 				Map<PropertyAccessor, Object> propertyMap = newValues.getMap();
 				
-				for (Iterator iter2 = propertyMap.entrySet().iterator(); iter2.hasNext(); ) {
-					Map.Entry mapEntry2 = (Map.Entry)iter2.next();
-					PropertyAccessor accessor = (PropertyAccessor)mapEntry2.getKey();
+				for (Map.Entry<PropertyAccessor, Object> mapEntry2: propertyMap.entrySet()) {
+					PropertyAccessor accessor = mapEntry2.getKey();
 					Object newValue = mapEntry2.getValue();
 			
 					// TODO: If we create a method in IObjectKey for updating properties
@@ -623,8 +621,7 @@ public class TransactionManager extends DataManager {
 		for (Iterator iter3 = actualPropertySet.getPropertyIterator3(); iter3.hasNext(); ) {
 			PropertyAccessor accessor = (PropertyAccessor)iter3.next();
 			if (accessor.isList()) {
-				for (Iterator iter = newObject.getListPropertyValue(accessor).iterator(); iter.hasNext(); ) {
-					ExtendableObject childObject = (ExtendableObject)iter.next(); 
+				for (ExtendableObject childObject: newObject.getListPropertyValue(accessor)) {
 					commitNewObject(childObject, newCommittedObject, accessor);
 				}
 			}
@@ -753,8 +750,7 @@ public class TransactionManager extends DataManager {
 				if (modifiedListKey.listAccessor == SessionInfo.getTransactionsAccessor()) {
 					for (Iterator iter2 = modifiedList.getAddedObjectIterator(); iter2.hasNext(); ) {
 						Transaction newTransaction = (Transaction)iter2.next();
-						for (Iterator iter3 = newTransaction.getEntryCollection().iterator(); iter3.hasNext(); ) {
-							Entry newEntry = (Entry)iter3.next();
+						for (Entry newEntry: newTransaction.getEntryCollection()) {
 							if (account.equals(newEntry.getAccount())) {
 								addedEntries.add(newEntry);
 							}

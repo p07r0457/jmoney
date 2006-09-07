@@ -115,7 +115,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
         // TODO: I think this following line needs to be in the other pages too.
         // (account entries and reconciliation).  We otherwise seem to get the
         // columns added multiple times.
-    	allEntryDataObjects = new Vector();
+    	allEntryDataObjects = new Vector<IEntriesTableProperty>();
         
         // Add properties from the transaction.
         for (Iterator iter = TransactionInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
@@ -247,8 +247,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 					 * this editor. We keep a list of entries that were entered
 					 * through this editor.
 					 */
-					for (Iterator iter = ourEntryList.iterator(); iter.hasNext(); ) {
-						IObjectKey objectKey = (IObjectKey)iter.next();
+					for (IObjectKey objectKey: ourEntryList) {
 						IObjectKey committedKey = ((UncommittedObjectKey)objectKey).getCommittedObjectKey();
 						if (committedKey.equals(entry.getObjectKey())) {
 							return true;

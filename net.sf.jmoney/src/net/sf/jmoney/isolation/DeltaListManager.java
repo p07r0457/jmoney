@@ -85,7 +85,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	public DeltaListManager(TransactionManager transactionManager, ExtendableObject committedParent, PropertyAccessor listProperty) {
 		this.transactionManager = transactionManager;
 		this.modifiedListKey = new ModifiedListKey(committedParent.getObjectKey(), listProperty);
-		this.committedList = committedParent.getListPropertyValue(listProperty);
+		this.committedList = (ObjectCollection<E>)committedParent.getListPropertyValue(listProperty);
 	}
 
 	/**

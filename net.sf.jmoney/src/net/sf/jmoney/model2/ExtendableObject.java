@@ -412,7 +412,7 @@ public abstract class ExtendableObject {
 	 * 			whose values are to be obtained.  The property
 	 * 			must be a list property (and not a scalar property).
 	 */
-	public ObjectCollection getListPropertyValue(PropertyAccessor owningListProperty) {
+	public ObjectCollection<? extends ExtendableObject> getListPropertyValue(PropertyAccessor owningListProperty) {
 		Object objectWithProperties = getMutablePropertySetInterface(owningListProperty.getPropertySet());
 		
 		// If no extension exists then return the empty collection.

@@ -69,7 +69,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
     private DateFormat gnucashDateFormat = new SimpleDateFormat(
             "yyyy-MM-dd HH:mm:ss Z");
 
-    private Hashtable accountsGUIDTable;
+    private Hashtable<String, CapitalAccount> accountsGUIDTable;
 
     private Session session;
 
@@ -128,7 +128,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
      */
     public void run(IProgressMonitor monitor) {
         DOMParser parser = new DOMParser();
-        accountsGUIDTable = new Hashtable(); // hash beetween GUID of the
+        accountsGUIDTable = new Hashtable<String, CapitalAccount>(); // hash beetween GUID of the
                                                 // accounts (hash) and their
                                                 // names (value).
 
@@ -204,8 +204,8 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
      */
     private void createAccounts(XMLDocument doc) {
         Node node; // First child of <gnc-v2>
-        final Hashtable childParent = new Hashtable();
-        List accountToRecreate = new LinkedList();
+        final Hashtable<String, String> childParent = new Hashtable<String, String>();
+        List<String> accountToRecreate = new LinkedList<String>();
 
         // For each account of the file
         for (node = doc.getFirstChild().getNextSibling().getFirstChild()
@@ -267,13 +267,10 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
         // Now link childs and parents. We have to recreate the parents before
         // the children.
         // Therefore, first sort the list
-        Collections.sort(accountToRecreate, new Comparator() {
-            public int compare(Object a, Object b) {
-
-                String GUIDA = (String) a;
-                String GUIDB = (String) b;
-                String GUIDParentOfA = (String) childParent.get(GUIDA);
-                String GUIDParentOfB = (String) childParent.get(GUIDB);
+        Collections.sort(accountToRecreate, new Comparator<String>() {
+            public int compare(String GUIDA, String GUIDB) {
+                String GUIDParentOfA = childParent.get(GUIDA);
+                String GUIDParentOfB = childParent.get(GUIDB);
 
                 // case we compare two root-accounts
                 if (GUIDParentOfA == null & GUIDParentOfB == null)
@@ -298,16 +295,14 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
         });
 
         // Now recreate some accounts.
-        Iterator e = accountToRecreate.iterator();
-        while (e.hasNext()) {
-            String childGUID = (String) e.next();
-            String parentGUID = (String) childParent.get(childGUID);
+        for (String childGUID: accountToRecreate) {
+            String parentGUID = childParent.get(childGUID);
             // if (GnucashXMLPlugin.DEBUG) System.out.println("childGUID:" +
             // childGUID);
             // if (GnucashXMLPlugin.DEBUG) System.out.println("parentGUID:" +
             // parentGUID);
-            CapitalAccount child = (CapitalAccount) getAccountFromGUID(childGUID);
-            CapitalAccount parent = (CapitalAccount) getAccountFromGUID(parentGUID);
+            CapitalAccount child = getAccountFromGUID(childGUID);
+            CapitalAccount parent = getAccountFromGUID(parentGUID);
 
             session.deleteAccount(child);
             CapitalAccount newChild = (CapitalAccount) parent
@@ -476,10 +471,10 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
                 "exportAccount for GnucashXML not implemented !");
     };
 
-    private Account getAccountFromGUID(String GUID) {
+    private CapitalAccount getAccountFromGUID(String GUID) {
         // if (GnucashXMLPlugin.DEBUG) System.out.println("Looking for an
         // account with the GUID " + GUID);
-        return (Account) accountsGUIDTable.get(GUID);
+        return accountsGUIDTable.get(GUID);
     }
 
     /**
@@ -519,7 +514,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
                 // Yes, I found entries with an amount = 0 and as accountGUID
                 // "0000000000000000000"
                 // I have to protect against it -- Faucheux
-                Account account = getAccountFromGUID(accountGUID);
+                CapitalAccount account = getAccountFromGUID(accountGUID);
                 Entry e = t.createEntry();
                 e.setAmount(getLong(value));
                 e.setAccount(account);
@@ -559,16 +554,6 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
         doc = impl.createDocument(null, "gnc-v2", null);
         documentRoot = doc.getDocumentElement();
 
-        // Collect the information
-        LinkedList accountList = new LinkedList();
-        Iterator itList = session.getAllAccounts().iterator();
-        while (itList.hasNext())
-            accountList.add((Account) itList.next());
-        LinkedList transactionList = new LinkedList();
-        Iterator itTransaction = session.getTransactionCollection().iterator();
-        while (itTransaction.hasNext())
-            transactionList.add((Transaction) itTransaction.next());
-
         // Create the header
         Element e1 = doc.createElement("gnc:count-data");
 		e1.setAttribute("cd:type", "book");
@@ -588,8 +573,8 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
         bookElement.appendChild(e1);
 
         // Resume the content
-        Integer numberAccounts = new Integer(accountList.size());
-        Integer numberTransaction = new Integer(transactionList.size());
+        Integer numberAccounts = new Integer(session.getAllAccounts().size());
+        Integer numberTransaction = new Integer(session.getTransactionCollection().size());
         Element element;
         // Number of accounts
         element = doc.createElement("gnc:count-data");
@@ -603,13 +588,15 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
         bookElement.appendChild(element);
 
         // add each account
-        for (int i = 0; i < accountList.size(); i++)
-            exportAccount((Account) accountList.get(i));
-
+        for (Account account: session.getAllAccounts()) {
+            exportAccount(account);
+        }
+        
         // add each transaction
-        for (int i = 0; i < transactionList.size(); i++)
-            exportTransaction((Transaction) transactionList.get(i));
-
+        for (Transaction transaction: session.getTransactionCollection()) {
+            exportTransaction(transaction);
+        }
+        
         // Prepare the output of the result
         Transformer transformer = null;
         try {

@@ -85,7 +85,7 @@ public class QifImport implements IBankStatementSource {
 		}
 		
 		File qifFile = new File(fileName);
-		Vector entries = new Vector();
+		Vector<EntryData> entries = new Vector<EntryData>();
 		
 		Reader reader = null;
 		BufferedReader buffer = null;

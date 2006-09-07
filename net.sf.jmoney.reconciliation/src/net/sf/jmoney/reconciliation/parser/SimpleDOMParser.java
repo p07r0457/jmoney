@@ -17,11 +17,11 @@ public class SimpleDOMParser {
 	private static final int[] cdata_end = {']', ']', '>'};
 
 	private Reader reader;
-	private Stack elements;
+	private Stack<SimpleElement> elements;
 	private SimpleElement currentElement;
 
 	public SimpleDOMParser() {
-		elements = new Stack();
+		elements = new Stack<SimpleElement>();
 		currentElement = null;
 	}
 
@@ -59,7 +59,7 @@ public class SimpleDOMParser {
 					return currentElement;
 				} else {
 					// pop up the previous open tag
-					currentElement = (SimpleElement)elements.pop();
+					currentElement = elements.pop();
 				}
 			} else {
 				// open tag or tag with both open and close tags

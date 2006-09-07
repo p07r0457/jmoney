@@ -140,7 +140,7 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		throw new RuntimeException("method not implemented");
 	}
 
-	public Iterator iterator() {
+	public Iterator<E> iterator() {
 		// We execute a SQL statement and pass to result set
 		// to an UncachedObjectIterator object which will return
 		// the entries in the result set.  However, we must
@@ -196,11 +196,11 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		throw new RuntimeException("method not implemented");
 	}
 
-	public Object[] toArray(Object[] a) {
+	public <T> T[] toArray(T[] arg0) {
 		throw new RuntimeException("method not implemented");
 	}
 
-	public boolean add(ExtendableObject o) {
+	public boolean add(E extendableObject) {
 		throw new RuntimeException("method not implemented");
 	}
 
@@ -211,19 +211,19 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		return JDBCDatastorePlugin.deleteFromDatabase(key.getRowId(), extendableObject, sessionManager);
 	}
 
-	public boolean containsAll(Collection c) {
+	public boolean containsAll(Collection<?> arg0) {
 		throw new RuntimeException("method not implemented");
 	}
 
-	public boolean addAll(Collection c) {
+	public boolean addAll(Collection<? extends E> arg0) {
 		throw new RuntimeException("method not implemented");
 	}
 
-	public boolean removeAll(Collection c) {
+	public boolean removeAll(Collection<?> arg0) {
 		throw new RuntimeException("method not implemented");
 	}
 
-	public boolean retainAll(Collection c) {
+	public boolean retainAll(Collection<?> arg0) {
 		throw new RuntimeException("method not implemented");
 	}
 

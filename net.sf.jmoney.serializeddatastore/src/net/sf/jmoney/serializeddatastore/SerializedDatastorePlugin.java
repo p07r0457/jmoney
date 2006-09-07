@@ -230,7 +230,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			IConfigurationElement[] elements = extensions[i].getConfigurationElements();
 			for (int j = 0; j < elements.length; j++) {
 				if (elements[j].getName().equals("file-format")) {
-					String id2 = extensions[i].getNamespace() + '.' + elements[j].getAttribute("id");
+					String id2 = extensions[i].getNamespaceIdentifier() + '.' + elements[j].getAttribute("id");
 					if (id2.equals(id)) {
 						try {
 							return (IFileDatastore)elements[j].createExecutableExtension("class");

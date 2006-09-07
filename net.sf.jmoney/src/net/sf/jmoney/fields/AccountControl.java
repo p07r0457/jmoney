@@ -25,7 +25,6 @@ package net.sf.jmoney.fields;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.Account;
@@ -208,8 +207,7 @@ public class AccountControl extends AccountComposite {
 	}
 
 	private void fireAccountChangeEvent() {
-		for (Iterator iter = listeners.iterator(); iter.hasNext(); ) {
-			SelectionListener listener = (SelectionListener)iter.next();
+		for (SelectionListener listener: listeners) {
 			listener.widgetSelected(null);
 		}
 	}
