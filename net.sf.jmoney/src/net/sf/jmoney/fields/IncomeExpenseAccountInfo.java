@@ -23,10 +23,12 @@
 package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
@@ -47,10 +49,10 @@ import net.sf.jmoney.model2.PropertySet;
  */
 public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
-	private static PropertySet propertySet = null;
-	private static PropertyAccessor subAccountAccessor = null;
-	private static PropertyAccessor multiCurrencyAccessor = null;
-	private static PropertyAccessor currencyAccessor = null;
+	private static PropertySet<IncomeExpenseAccount> propertySet = null;
+	private static ListPropertyAccessor subAccountAccessor = null;
+	private static ScalarPropertyAccessor<Boolean> multiCurrencyAccessor = null;
+	private static ScalarPropertyAccessor<Currency> currencyAccessor = null;
 	
 	public IncomeExpenseAccountInfo() {
     }
@@ -59,13 +61,15 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 		return IncomeExpenseAccount.class;
 	}
 	
-    public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
-		IncomeExpenseAccountInfo.propertySet = propertySet;
+    public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+		IncomeExpenseAccountInfo.propertySet = propertyRegistrar.addPropertySet(IncomeExpenseAccount.class);
 
 		subAccountAccessor = propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccount.class, null);
 
-		multiCurrencyAccessor = propertyRegistrar.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.multiCurrency"), 0, 10, new CheckBoxControlFactory(), null);
-		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), 2, 20, new CurrencyControlFactory(), multiCurrencyAccessor.getFalseValueDependency());
+	//	PropertyAccessor_Scalar accessor = new PropertyAccessor_Scalar(PropertySet.this, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency);
+		
+		multiCurrencyAccessor = propertyRegistrar.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.multiCurrency"), Boolean.class, 0, 10, new CheckBoxControlFactory(), null); 
+		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), Currency.class, 2, 20, new CurrencyControlFactory(), multiCurrencyAccessor.getFalseValueDependency());
 		
 		// We should define something for the implied enumerated value
 		// that is controlled by the derived class type.  This has not
@@ -78,28 +82,28 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static PropertySet getPropertySet() {
+	public static PropertySet<IncomeExpenseAccount> getPropertySet() {
 		return propertySet;
 	}
 
     /**
 	 * @return
 	 */
-	public static PropertyAccessor getSubAccountAccessor() {
+	public static ListPropertyAccessor getSubAccountAccessor() {
 		return subAccountAccessor;
 	}	
 
     /**
 	 * @return
 	 */
-	public static PropertyAccessor getMultiCurrencyAccessor() {
+	public static ScalarPropertyAccessor<Boolean> getMultiCurrencyAccessor() {
 		return multiCurrencyAccessor;
 	}	
 
     /**
 	 * @return
 	 */
-	public static PropertyAccessor getCurrencyAccessor() {
+	public static ScalarPropertyAccessor<Currency> getCurrencyAccessor() {
 		return currencyAccessor;
 	}	
 }

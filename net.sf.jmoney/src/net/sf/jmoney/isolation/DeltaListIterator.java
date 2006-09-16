@@ -127,7 +127,7 @@ class DeltaListIterator<E extends ExtendableObject> implements Iterator<E> {
 	 * the sub-iterator to be an iterator that iterates the newly added objects.
 	 */
 	private void setNextObject() {
-		ExtendableObject committedObject;
+		E committedObject;
 		do {
 			if (!subIterator.hasNext()) {
 				processingCommittedObjects = false;
@@ -137,6 +137,6 @@ class DeltaListIterator<E extends ExtendableObject> implements Iterator<E> {
 			committedObject = subIterator.next();
 		} while (deletedObjects.contains(committedObject.getObjectKey()));
 		
-		nextObject = (E)transactionManager.getCopyInTransaction(committedObject);
+		nextObject = transactionManager.getCopyInTransaction(committedObject);
 	}
 }

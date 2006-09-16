@@ -60,7 +60,7 @@ import net.sf.jmoney.fields.DateControl;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertyNotFoundException;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -104,11 +104,11 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 	
 	public static String[] filters;
 	
-	public static PropertyAccessor reconciliationStatusAccessor;
+	public static ScalarPropertyAccessor<?> reconciliationStatusAccessor;
 	
 	static {
 		try {
-			reconciliationStatusAccessor = PropertySet.getPropertyAccessor("net.sf.jmoney.reconciliation.entryProperties.status");
+			reconciliationStatusAccessor = (ScalarPropertyAccessor)PropertySet.getPropertyAccessor("net.sf.jmoney.reconciliation.entryProperties.status");
 		} catch (PropertyNotFoundException e) {
 			// The reconciliation plug-in is not installed.
 			// This does not stop operation of this plug-in.  We just have
@@ -738,7 +738,7 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 				// It should not be possible to get to this case if the
 				// property was not found.
 				final int CLEARED = 2;
-				int status = entry.getIntegerPropertyValue(reconciliationStatusAccessor);
+				int status = (Integer)entry.getPropertyValue(reconciliationStatusAccessor);
 				return status == CLEARED;
 			case DATE :
 				return acceptTo(entry.getTransaction().getDate());

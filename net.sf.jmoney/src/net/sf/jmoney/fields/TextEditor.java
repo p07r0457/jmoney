@@ -24,7 +24,7 @@ package net.sf.jmoney.fields;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -38,31 +38,31 @@ import org.eclipse.swt.widgets.Text;
  */
 public class TextEditor implements IPropertyControl {
 
-    private ExtendableObject fExtendableObject;
+    private ExtendableObject extendableObject;
 
-    private PropertyAccessor propertyAccessor;
+    private ScalarPropertyAccessor<String> propertyAccessor;
 
     private Text propertyControl;
 
     /** Creates new TextEditor */
-    public TextEditor(Composite parent, PropertyAccessor propertyAccessor) {
+    public TextEditor(Composite parent, ScalarPropertyAccessor<String> propertyAccessor) {
         propertyControl = new Text(parent, 0);
         this.propertyAccessor = propertyAccessor;
     }
 
     /** Creates new TextEditor */
-    public TextEditor(Composite parent, int style, PropertyAccessor propertyAccessor) {
+    public TextEditor(Composite parent, int style, ScalarPropertyAccessor<String> propertyAccessor) {
         propertyControl = new Text(parent, style);
         this.propertyAccessor = propertyAccessor;
     }
 
     public void load(ExtendableObject object) {
-        fExtendableObject = object;
+        extendableObject = object;
 
         if (object == null) {
             propertyControl.setText("");
     	} else {
-            String text = object.getStringPropertyValue(propertyAccessor);
+            String text = object.getPropertyValue(propertyAccessor);
             propertyControl.setText(text == null ? "" : text);
     	}
     	propertyControl.setEnabled(object != null);
@@ -70,7 +70,7 @@ public class TextEditor implements IPropertyControl {
 
     public void save() {
         String text = propertyControl.getText();
-        fExtendableObject.setStringPropertyValue(propertyAccessor, text.length() == 0 ? null : text);
+        extendableObject.setPropertyValue(propertyAccessor, text.length() == 0 ? null : text);
     }
 
     /* (non-Javadoc)

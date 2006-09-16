@@ -35,6 +35,8 @@ import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
@@ -70,7 +72,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	 * the object (if any) that contains the modifications that have been made
 	 * to the list.
 	 */
-	private ModifiedListKey modifiedListKey;
+	private ModifiedListKey<E> modifiedListKey;
 	
 	/**
 	 * The committed list, set by the constructor
@@ -82,10 +84,10 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	 * 			object must be an uncommitted object 
 	 * @param propertyAccessor the list property
 	 */
-	public DeltaListManager(TransactionManager transactionManager, ExtendableObject committedParent, PropertyAccessor listProperty) {
+	public DeltaListManager(TransactionManager transactionManager, ExtendableObject committedParent, ListPropertyAccessor<E> listProperty) {
 		this.transactionManager = transactionManager;
-		this.modifiedListKey = new ModifiedListKey(committedParent.getObjectKey(), listProperty);
-		this.committedList = (ObjectCollection<E>)committedParent.getListPropertyValue(listProperty);
+		this.modifiedListKey = new ModifiedListKey<E>(committedParent.getObjectKey(), listProperty);
+		this.committedList = committedParent.getListPropertyValue(listProperty);
 	}
 
 	/**
@@ -98,7 +100,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	 * 'added' list are appended to the items returned by the underlying
 	 * committed list.
 	 */
-	public E createNewElement(ExtendableObject parent, PropertySet propertySet) {
+	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());
@@ -125,7 +127,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		}
 		
 		// We can now create the object.
-		E extendableObject = (E)propertySet.constructDefaultImplementationObject(constructorParameters);
+		F extendableObject = propertySet.constructDefaultImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 
@@ -152,7 +154,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	 * object and setting the property values in a single call. That can only be
 	 * done when using a transaction manager.
 	 */
-	public E createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
+	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet, Object[] values) {
 		Collection constructorProperties = propertySet.getConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());
@@ -180,7 +182,8 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 			
 			Object value;
 			if (propertyAccessor.isScalar()) {
-				if (valuesIndex != propertyAccessor.getIndexIntoScalarProperties()) {
+				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
+				if (valuesIndex != scalarAccessor.getIndexIntoScalarProperties()) {
 					throw new RuntimeException("index mismatch");
 				}
 				value = values[valuesIndex++];
@@ -205,7 +208,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		}
 		
 		// We can now create the object.
-		E extendableObject = (E)propertySet.constructImplementationObject(constructorParameters);
+		F extendableObject = propertySet.constructImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 
@@ -232,7 +235,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	public Iterator<E> iterator() {
 		Iterator<E> committedListIterator = committedList.iterator();
 
-		ModifiedList modifiedList = transactionManager.getModifiedList(modifiedListKey);
+		ModifiedList<E> modifiedList = transactionManager.getModifiedList(modifiedListKey);
 		if (modifiedList == null) {
 			// We cannot simply return committedListIterator because
 			// that returns materializations of the objects that are outside

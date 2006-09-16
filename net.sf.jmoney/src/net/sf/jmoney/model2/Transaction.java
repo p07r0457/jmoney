@@ -154,7 +154,7 @@ public class Transaction extends ExtendableObject {
      * but it is barely worth while having this class.
 	 */
 	public class EntryCollection extends ObjectCollection<Entry> {
-		EntryCollection(IListManager<Entry> listManager, ExtendableObject parent, PropertyAccessor listPropertyAccessor) {
+		EntryCollection(IListManager<Entry> listManager, ExtendableObject parent, ListPropertyAccessor listPropertyAccessor) {
 			super(listManager, parent, listPropertyAccessor);
 		}
 		
@@ -169,7 +169,7 @@ public class Transaction extends ExtendableObject {
 	     * Identical to <code>createNewElement</remove> but tighter typing
 		 */
 		public Entry createEntry() {
-			return (Entry)createNewElement(EntryInfo.getPropertySet());
+			return createNewElement(EntryInfo.getPropertySet());
 		}
 	}
 }

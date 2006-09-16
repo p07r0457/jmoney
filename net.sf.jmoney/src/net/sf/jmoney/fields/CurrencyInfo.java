@@ -22,13 +22,18 @@
 
 package net.sf.jmoney.fields;
 
+import org.eclipse.swt.widgets.Composite;
+
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.Session;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -49,9 +54,9 @@ import net.sf.jmoney.model2.PropertySet;
  */
 public class CurrencyInfo implements IPropertySetInfo {
 
-	private static PropertySet propertySet = null;
-	private static PropertyAccessor codeAccessor = null;
-	private static PropertyAccessor decimalsAccessor = null;
+	private static PropertySet<Currency> propertySet = null;
+	private static ScalarPropertyAccessor<String> codeAccessor = null;
+	private static ScalarPropertyAccessor<Integer> decimalsAccessor = null;
 
 	public CurrencyInfo() {
     }
@@ -60,12 +65,32 @@ public class CurrencyInfo implements IPropertySetInfo {
 		return Currency.class;
 	}
 	
-	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
-		CurrencyInfo.propertySet = propertySet;
-		IPropertyControlFactory textControlFactory = new TextControlFactory();
+	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+		CurrencyInfo.propertySet = propertyRegistrar.addPropertySet(Currency.class);
 		
-		codeAccessor = propertyRegistrar.addProperty("code", JMoneyPlugin.getResourceString("Currency.code"), 0, 8, textControlFactory, null);
-		decimalsAccessor = propertyRegistrar.addProperty("decimals", JMoneyPlugin.getResourceString("Currency.decimals"), 0, 8, textControlFactory, null);
+		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
+		
+		IPropertyControlFactory<Integer> numberControlFactory = new IPropertyControlFactory<Integer>() {
+			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Integer> propertyAccessor, Session session) {
+				// Property is not editable
+				return null;
+			}
+
+			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Integer> propertyAccessor) {
+				return extendableObject.getPropertyValue(propertyAccessor).toString();
+			}
+
+			public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Integer> propertyAccessor) {
+				return extendableObject.getPropertyValue(propertyAccessor).toString();
+			}
+
+			public boolean isEditable() {
+				return false;
+			}
+		};
+
+		codeAccessor = propertyRegistrar.addProperty("code", JMoneyPlugin.getResourceString("Currency.code"), String.class, 0, 8, textControlFactory, null);
+		decimalsAccessor = propertyRegistrar.addProperty("decimals", JMoneyPlugin.getResourceString("Currency.decimals"), Integer.class, 0, 8, numberControlFactory, null);
 		
 		propertyRegistrar.setObjectDescription("Currency");
 	}
@@ -73,21 +98,21 @@ public class CurrencyInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static PropertySet getPropertySet() {
+	public static PropertySet<Currency> getPropertySet() {
 		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getCodeAccessor() {
+	public static ScalarPropertyAccessor<String> getCodeAccessor() {
 		return codeAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getDecimalsAccessor() {
+	public static ScalarPropertyAccessor<Integer> getDecimalsAccessor() {
 		return decimalsAccessor;
 	}	
 }

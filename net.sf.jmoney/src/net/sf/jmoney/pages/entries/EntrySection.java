@@ -29,7 +29,7 @@ import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.SWT;
@@ -108,14 +108,13 @@ public class EntrySection extends SectionPart {
 		transactionArea.setLayout(layout1);
 		
 		// Add properties from the transaction.
-		for (Iterator iter = TransactionInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
-			final PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
-			if (propertyAccessor.isScalar()) {
-				IPropertyControl propertyControl = propertyAccessor.createPropertyControl(transactionArea, session);
-				propertyControl.load(null);
-				toolkit.adapt(propertyControl.getControl(), true, true);
-				transactionControls.add(propertyControl);
-			}
+		for (Iterator<ScalarPropertyAccessor> iter = TransactionInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
+			ScalarPropertyAccessor propertyAccessor = iter.next();
+
+			IPropertyControl propertyControl = propertyAccessor.createPropertyControl(transactionArea, session);
+			propertyControl.load(null);
+			toolkit.adapt(propertyControl.getControl(), true, true);
+			transactionControls.add(propertyControl);
 		}
 		
 		// Create the entries area

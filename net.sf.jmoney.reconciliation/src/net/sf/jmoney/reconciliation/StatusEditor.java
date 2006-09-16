@@ -25,7 +25,7 @@ package net.sf.jmoney.reconciliation;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -56,7 +56,7 @@ public class StatusEditor implements IPropertyControl {
      * 			by this control.  This property accessor will always be the
      * 			'status' property in the ReconciliationEntry propery set.
      */
-    public StatusEditor(Composite parent, PropertyAccessor propertyAccessor, String [] items) {
+    public StatusEditor(Composite parent, ScalarPropertyAccessor propertyAccessor, String [] items) {
         propertyControl = new Combo(parent, 0);
 
         propertyControl.setItems(items);
@@ -110,7 +110,7 @@ public class StatusEditor implements IPropertyControl {
     public void save() {
         int index = propertyControl.getSelectionIndex();
         if (index != -1) {
-        	entry.setIntegerPropertyValue(ReconciliationEntryInfo.getStatusAccessor(), index);
+        	entry.setPropertyValue(ReconciliationEntryInfo.getStatusAccessor(), index);
         }
     }
 

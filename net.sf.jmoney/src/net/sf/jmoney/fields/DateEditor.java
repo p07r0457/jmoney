@@ -26,7 +26,7 @@ import java.util.Date;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Composite;
@@ -40,47 +40,47 @@ import org.eclipse.swt.widgets.Control;
  */
 public class DateEditor implements IPropertyControl {
 
-    protected PropertyAccessor fPropertyAccessor;
-    protected DateControl fPropertyControl;
-    protected ExtendableObject fExtendableObject;
+    protected ScalarPropertyAccessor<Date> propertyAccessor;
+    protected DateControl propertyControl;
+    protected ExtendableObject extendableObject;
 
 	/**
      * Create a new date editor.
      */
-    public DateEditor(final Composite parent, PropertyAccessor propertyAccessor) {
-        fPropertyAccessor = propertyAccessor;
+    public DateEditor(final Composite parent, ScalarPropertyAccessor<Date> propertyAccessor) {
+        this.propertyAccessor = propertyAccessor;
         
 		Font font = parent.getFont();
 
-		fPropertyControl = new DateControl(parent);
-		fPropertyControl.setFont(font);
+		propertyControl = new DateControl(parent);
+		propertyControl.setFont(font);
     }
 
     /* (non-Javadoc)
      * @see net.sf.jmoney.model2.IPropertyControl#load(net.sf.jmoney.model2.ExtendableObject)
      */
     public void load(ExtendableObject object) {
-    	this.fExtendableObject = object;
+    	this.extendableObject = object;
     	if (object == null) {
-    		fPropertyControl.setDate(null);
+    		propertyControl.setDate(null);
     	} else {
-            Date d = (Date) object.getPropertyValue(fPropertyAccessor);
-    		fPropertyControl.setDate(d);
+            Date d = object.getPropertyValue(propertyAccessor);
+    		propertyControl.setDate(d);
     	}
-    	fPropertyControl.setEnabled(object != null);
+    	propertyControl.setEnabled(object != null);
     }
 
     /* (non-Javadoc)
      * @see net.sf.jmoney.model2.IPropertyControl#save()
      */
     public void save() {
-        fExtendableObject.setPropertyValue(fPropertyAccessor, fPropertyControl.getDate());
+        extendableObject.setPropertyValue(propertyAccessor, propertyControl.getDate());
     }
 
     /* (non-Javadoc)
      * @see net.sf.jmoney.model2.IPropertyControl#getControl()
      */
     public Control getControl() {
-        return fPropertyControl;
+        return propertyControl;
     }
 }

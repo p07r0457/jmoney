@@ -52,7 +52,7 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 	 	this.sessionManager = sessionManager;
 	 }
 
-	public E createNewElement(ExtendableObject parent, PropertySet propertySet) {
+	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		int numberOfParameters = constructorProperties.size();
@@ -84,7 +84,7 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 		}
 		
 		// We can now create the object.
-		E extendableObject = (E)propertySet.constructDefaultImplementationObject(constructorParameters);
+		F extendableObject = propertySet.constructDefaultImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 
@@ -114,7 +114,7 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 		return extendableObject;
 	}
 
-	public E createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
+	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet, Object[] values) {
 		Collection constructorProperties = propertySet.getConstructorProperties();
 		
 		int numberOfParameters = constructorProperties.size();
@@ -163,7 +163,7 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 		}
 			
 		// We can now create the object.
-		E extendableObject = (E)propertySet.constructImplementationObject(constructorParameters);
+		F extendableObject = propertySet.constructImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 

@@ -159,7 +159,7 @@ public class IncomeExpenseAccount extends Account {
 	 * @return a new sub-account
 	 */
     public IncomeExpenseAccount createSubAccount() {
-    	return (IncomeExpenseAccount)getSubAccountCollection().createNewElement(IncomeExpenseAccountInfo.getPropertySet());
+    	return getSubAccountCollection().createNewElement(IncomeExpenseAccountInfo.getPropertySet());
     }
     
     static public  Object [] getDefaultProperties() {

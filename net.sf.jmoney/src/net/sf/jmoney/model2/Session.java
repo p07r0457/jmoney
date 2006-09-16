@@ -294,8 +294,8 @@ public class Session extends ExtendableObject implements IAdaptable {
 	 * @param account
 	 * @return
 	 */
-	public Account createAccount(PropertySet propertySet) {
-		return (Account)getAccountCollection().createNewElement(propertySet);
+	public <A extends Account> A createAccount(PropertySet<A> propertySet) {
+		return getAccountCollection().createNewElement(propertySet);
 	}
 
 	/**
@@ -322,12 +322,12 @@ public class Session extends ExtendableObject implements IAdaptable {
 	 * @param commodity
 	 * @return
 	 */
-	public Commodity createCommodity(PropertySet propertySet) {
-		return (Commodity)getCommodityCollection().createNewElement(propertySet);
+	public Commodity createCommodity(PropertySet<? extends Commodity> propertySet) {
+		return getCommodityCollection().createNewElement(propertySet);
 	}
 
 	public Transaction createTransaction() {
-		return (Transaction)getTransactionCollection().createNewElement(TransactionInfo.getPropertySet());
+		return getTransactionCollection().createNewElement(TransactionInfo.getPropertySet());
 	}
 	
     public boolean deleteCommodity(Commodity commodity) {

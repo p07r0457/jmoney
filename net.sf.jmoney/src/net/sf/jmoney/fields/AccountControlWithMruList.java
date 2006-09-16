@@ -36,21 +36,21 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.ui.IMemento;
 
-public class AccountControlWithMruList extends AccountComposite {
+public class AccountControlWithMruList<A extends Account> extends AccountComposite<A> {
 	protected Session session;
     protected List accountList;
-    protected AccountControl accountControl;
+    protected AccountControl<A> accountControl;
     
-    protected LinkedList<Account> recentlyUsedList = new LinkedList<Account>();
+    protected LinkedList<A> recentlyUsedList = new LinkedList<A>();
     
-	public AccountControlWithMruList(Composite parent, Session session, Class<? extends Account> accountClass) {
+	public AccountControlWithMruList(Composite parent, Session session, Class<A> accountClass) {
 		super(parent, SWT.NONE);
 		this.session = session;
 		
 		setLayout(new GridLayout(1, false));
 		
         accountList = new List(this, SWT.NONE);
-        accountControl = new AccountControl(this, session, accountClass);
+        accountControl = new AccountControl<A>(this, session, accountClass);
 
         accountList.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
         accountControl.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
@@ -69,7 +69,7 @@ public class AccountControlWithMruList extends AccountComposite {
 	}
 
 	public void rememberChoice() {
-    	Account account = accountControl.getAccount();
+    	A account = accountControl.getAccount();
     	if (account != null) {
     		if (recentlyUsedList.size() != 0) {
     			int index = recentlyUsedList.indexOf(account);
@@ -89,11 +89,11 @@ public class AccountControlWithMruList extends AccountComposite {
     	}
 	}
 
-	public Account getAccount() {
+	public A getAccount() {
 	    return accountControl.getAccount();
 	}
 	
-	public void setAccount(Account account) {
+	public void setAccount(A account) {
 		accountControl.setAccount(account);
 	}
 
@@ -102,7 +102,7 @@ public class AccountControlWithMruList extends AccountComposite {
 			IMemento [] mruAccountMementos = memento.getChildren("mruAccount");
 			for (int i = 0; i < mruAccountMementos.length; i++) {
 				String fullAccountName = mruAccountMementos[i].getString("name");
-				Account account = session.getAccountByFullName(fullAccountName);
+				A account = (A)session.getAccountByFullName(fullAccountName);
 	    		recentlyUsedList.addLast(account);
 	    		accountList.add(account.getName());
 			}

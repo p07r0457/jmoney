@@ -27,7 +27,7 @@ import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
@@ -49,10 +49,10 @@ import net.sf.jmoney.model2.PropertySet;
  */
 public class BankAccountInfo implements IPropertySetInfo {
 
-	private static PropertySet propertySet = null;
-	private static PropertyAccessor bankAccessor = null;
-	private static PropertyAccessor accountNumberAccessor = null;
-	private static PropertyAccessor minBalanceAccessor = null;
+	private static PropertySet<BankAccount> propertySet = null;
+	private static ScalarPropertyAccessor<String> bankAccessor = null;
+	private static ScalarPropertyAccessor<String> accountNumberAccessor = null;
+	private static ScalarPropertyAccessor<Long> minBalanceAccessor = null;
 
     public BankAccountInfo() {
     }
@@ -61,15 +61,15 @@ public class BankAccountInfo implements IPropertySetInfo {
 		return BankAccount.class;
 	}
 
-    public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
-		BankAccountInfo.propertySet = propertySet;
+    public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+		BankAccountInfo.propertySet = propertyRegistrar.addPropertySet(BankAccount.class);
 		
-		IPropertyControlFactory textControlFactory = new TextControlFactory();
-		IPropertyControlFactory amountControlFactory = new AmountInCurrencyAccountControlFactory();
+		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
+		IPropertyControlFactory<Long> amountControlFactory = new AmountInCurrencyAccountControlFactory();
 		
-		bankAccessor = propertyRegistrar.addProperty("bank", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), 5, 100, textControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
-		accountNumberAccessor = propertyRegistrar.addProperty("accountNumber", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), 2, 70, textControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
-		minBalanceAccessor = propertyRegistrar.addProperty("minBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.minBalance"), 2, 40, amountControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
+		bankAccessor          = propertyRegistrar.addProperty("bank", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), String.class, 5, 100, textControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
+		accountNumberAccessor = propertyRegistrar.addProperty("accountNumber", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), String.class, 2, 70, textControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
+		minBalanceAccessor    = propertyRegistrar.addProperty("minBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.minBalance"), Long.class, 2, 40, amountControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		propertyRegistrar.setObjectDescription(JMoneyPlugin.getResourceString("AccountPropertiesPanel.ObjectDescription")); //$NON-NLS-1$
 	}
@@ -77,28 +77,28 @@ public class BankAccountInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static PropertySet getPropertySet() {
+	public static PropertySet<BankAccount> getPropertySet() {
 		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getBankAccessor() {
+	public static ScalarPropertyAccessor<String> getBankAccessor() {
 		return bankAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getAccountNumberAccessor() {
+	public static ScalarPropertyAccessor<String> getAccountNumberAccessor() {
 		return accountNumberAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getMinBalanceAccessor() {
+	public static ScalarPropertyAccessor<Long> getMinBalanceAccessor() {
 		return minBalanceAccessor;
 	}	
 }

@@ -29,7 +29,7 @@ import net.sf.jmoney.VerySimpleDateFormat;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.widgets.Composite;
@@ -39,7 +39,7 @@ import org.eclipse.swt.widgets.Composite;
  * 
  * @author Johann Gyger
  */
-public class DateControlFactory implements IPropertyControlFactory {
+public class DateControlFactory implements IPropertyControlFactory<Date> {
 
     protected VerySimpleDateFormat fDateFormat = new VerySimpleDateFormat(
             JMoneyPlugin.getDefault().getDateFormat());
@@ -70,13 +70,13 @@ public class DateControlFactory implements IPropertyControlFactory {
         this.readOnly = readOnly;
     }
 
-    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor, Session session) {
+    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Date> propertyAccessor, Session session) {
         return new DateEditor(parent, propertyAccessor);
     }
 
     public String formatValueForMessage(ExtendableObject extendableObject,
-            PropertyAccessor propertyAccessor) {
-        Date value = (Date) extendableObject.getPropertyValue(propertyAccessor);
+            ScalarPropertyAccessor<? extends Date> propertyAccessor) {
+        Date value = extendableObject.getPropertyValue(propertyAccessor);
         if (value == null) {
             return "none";
         } else {
@@ -85,8 +85,8 @@ public class DateControlFactory implements IPropertyControlFactory {
     }
 
     public String formatValueForTable(ExtendableObject extendableObject,
-            PropertyAccessor propertyAccessor) {
-        Date value = (Date) extendableObject.getPropertyValue(propertyAccessor);
+            ScalarPropertyAccessor<? extends Date> propertyAccessor) {
+        Date value = extendableObject.getPropertyValue(propertyAccessor);
         return fDateFormat.format(value);
     }
 

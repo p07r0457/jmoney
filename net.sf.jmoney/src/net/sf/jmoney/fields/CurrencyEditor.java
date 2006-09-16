@@ -28,7 +28,7 @@ import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.events.SelectionEvent;
@@ -53,7 +53,7 @@ public class CurrencyEditor implements IPropertyControl {
 
     private ExtendableObject extendableObject;
 
-    private PropertyAccessor currencyPropertyAccessor;
+    private ScalarPropertyAccessor<Currency> currencyPropertyAccessor;
 
     private Combo propertyControl;
 
@@ -61,7 +61,7 @@ public class CurrencyEditor implements IPropertyControl {
      * @param propertyAccessor the accessor for the property to be edited
      * 			by this control.  The property must be of type Currency.
      */
-    public CurrencyEditor(Composite parent, PropertyAccessor propertyAccessor) {
+    public CurrencyEditor(Composite parent, ScalarPropertyAccessor<Currency> propertyAccessor) {
         propertyControl = new Combo(parent, 0);
         this.currencyPropertyAccessor = propertyAccessor;
 
@@ -99,7 +99,7 @@ public class CurrencyEditor implements IPropertyControl {
     	if (extendableObject == null) {
             propertyControl.setText("");
     	} else {
-            Currency currency = (Currency) extendableObject.getPropertyValue(currencyPropertyAccessor);
+            Currency currency = extendableObject.getPropertyValue(currencyPropertyAccessor);
             // Currency should not be null, but check in case of incomplete data.
             // TODO: clean this up when we know the policy on invalid data in the
             // datastore.

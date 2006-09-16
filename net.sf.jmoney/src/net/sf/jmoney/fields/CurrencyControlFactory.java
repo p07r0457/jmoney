@@ -26,7 +26,7 @@ import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.widgets.Composite;
@@ -37,18 +37,18 @@ import org.eclipse.swt.widgets.Composite;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class CurrencyControlFactory implements IPropertyControlFactory {
+public class CurrencyControlFactory implements IPropertyControlFactory<Currency> {
 
-    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor, Session session) {
+    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Currency> propertyAccessor, Session session) {
         return new CurrencyEditor(parent, propertyAccessor);
     }
 
-    public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+    public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Currency> propertyAccessor) {
         Currency value = (Currency) extendableObject.getPropertyValue(propertyAccessor);
         return value == null ? "none" : "'" + value.getName() + "'";
     }
 
-    public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+    public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Currency> propertyAccessor) {
         Currency value = (Currency) extendableObject.getPropertyValue(propertyAccessor);
         return value == null ? "" : value.getCode();
     }

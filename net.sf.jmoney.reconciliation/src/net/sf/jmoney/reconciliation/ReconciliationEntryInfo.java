@@ -22,10 +22,17 @@
 
 package net.sf.jmoney.reconciliation;
 
+import org.eclipse.swt.widgets.Composite;
+
+import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.Session;
 
 /**
  * Provides the metadata for the extra properties added to each
@@ -35,49 +42,99 @@ import net.sf.jmoney.model2.PropertySet;
  */
 public class ReconciliationEntryInfo implements IPropertySetInfo {
 
-	private static PropertySet propertySet = null;
-	private static PropertyAccessor statusAccessor = null;
-	private static PropertyAccessor statementAccessor = null;
-	private static PropertyAccessor uniqueIdAccessor = null;
+	private static PropertySet<ReconciliationEntry> propertySet = null;
+	private static ScalarPropertyAccessor<Integer> statusAccessor = null;
+	private static ScalarPropertyAccessor<BankStatement> statementAccessor = null;
+	private static ScalarPropertyAccessor<String> uniqueIdAccessor = null;
 	
 	public Class getImplementationClass() {
 		return ReconciliationEntry.class;
 	}
 	
-	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
-		ReconciliationEntryInfo.propertySet = propertySet;
+	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+		ReconciliationEntryInfo.propertySet = propertyRegistrar.addPropertySet(ReconciliationEntry.class);
 
-		// TODO: tidy this up
-		statusAccessor    = propertyRegistrar.addProperty("status", ReconciliationPlugin.getResourceString("Entry.statusShort"), 1, 20, new StatusControlFactory(), null);
-		statementAccessor = propertyRegistrar.addProperty("statement", ReconciliationPlugin.getResourceString("Entry.statusShort"), 1, 20, /*new IntegerControlFactory()*/null, null);
-		uniqueIdAccessor  = propertyRegistrar.addProperty("uniqueId", ReconciliationPlugin.getResourceString("Entry.statusShort"), 1, 20, /*new IntegerControlFactory()*/null, null);
+		class NonEditableTextControlFactory implements IPropertyControlFactory<String> {
+			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<String> propertyAccessor, Session session) {
+				// Property is not editable
+				return null;
+			}
+
+			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends String> propertyAccessor) {
+				String value = extendableObject.getPropertyValue(propertyAccessor);
+				return (value == null) ? "<blank>" : value;
+			}
+
+			public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends String> propertyAccessor) {
+				String value = extendableObject.getPropertyValue(propertyAccessor);
+				return (value == null) ? "" : value;
+			}
+
+			public boolean isEditable() {
+				return false;
+			}
+		};
+
+		IPropertyControlFactory<BankStatement> statementControlFactory = new IPropertyControlFactory<BankStatement>() {
+			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<BankStatement> propertyAccessor, Session session) {
+				// Property is not editable
+				return null;
+			}
+
+			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends BankStatement> propertyAccessor) {
+				BankStatement statement = extendableObject.getPropertyValue(propertyAccessor);
+				if (statement == null) {
+					return "unreconciled";
+				} else {
+					return statement.toString();
+				}
+			}
+
+			public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends BankStatement> propertyAccessor) {
+				BankStatement statement = extendableObject.getPropertyValue(propertyAccessor);
+				if (statement == null) {
+					return "unreconciled";
+				} else {
+					return statement.toString();
+				}
+			}
+
+			public boolean isEditable() {
+				return false;
+			}
+		};
+		
+		// TODO: correct localized text:
+		statusAccessor    = propertyRegistrar.addProperty("status", ReconciliationPlugin.getResourceString("Entry.statusShort"), Integer.class, 1, 20, new StatusControlFactory(), null);
+		statementAccessor = propertyRegistrar.addProperty("statement", ReconciliationPlugin.getResourceString("Entry.statementShort"), BankStatement.class, 1, 20, statementControlFactory, null);
+		uniqueIdAccessor  = propertyRegistrar.addProperty("uniqueId", ReconciliationPlugin.getResourceString("Entry.uniqueIdShort"), String.class, 1, 20, new NonEditableTextControlFactory(), null);
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertySet getPropertySet() {
+	public static PropertySet<ReconciliationEntry> getPropertySet() {
 		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getStatusAccessor() {
+	public static ScalarPropertyAccessor<Integer> getStatusAccessor() {
 		return statusAccessor;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getStatementAccessor() {
+	public static ScalarPropertyAccessor<BankStatement> getStatementAccessor() {
 		return statementAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getUniqueIdAccessor() {
+	public static ScalarPropertyAccessor<String> getUniqueIdAccessor() {
 		return uniqueIdAccessor;
 	}
 }

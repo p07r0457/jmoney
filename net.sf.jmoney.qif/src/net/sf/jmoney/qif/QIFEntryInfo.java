@@ -22,10 +22,19 @@
 
 package net.sf.jmoney.qif;
 
+import org.eclipse.swt.widgets.Composite;
+
+import net.sf.jmoney.fields.MultiTextControlFactory;
+import net.sf.jmoney.fields.TextControlFactory;
+import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.Session;
 
 /**
  * Add extra properties to the Entry objects to support QIF import
@@ -55,9 +64,9 @@ import net.sf.jmoney.model2.PropertySet;
  */
 public class QIFEntryInfo implements IPropertySetInfo {
 
-	private static PropertySet propertySet = null;
-	private static PropertyAccessor reconcilingStateAccessor;
-	private static PropertyAccessor addressAccessor;
+	private static PropertySet<QIFEntry> propertySet = null;
+	private static ScalarPropertyAccessor<Character> reconcilingStateAccessor;
+	private static ScalarPropertyAccessor<String> addressAccessor;
 	
     public QIFEntryInfo() {
     }
@@ -66,31 +75,51 @@ public class QIFEntryInfo implements IPropertySetInfo {
 		return QIFEntry.class;
 	}
 	
-	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
-		QIFEntryInfo.propertySet = propertySet;
+	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+		QIFEntryInfo.propertySet = propertyRegistrar.addPropertySet(QIFEntry.class);
 
-		reconcilingStateAccessor = propertyRegistrar.addProperty("reconcilingState", "what???", 1, 20, null, null);
-		addressAccessor = propertyRegistrar.addProperty("address", "what???", 3, 30, null, null);
+		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
+		IPropertyControlFactory<Character> stateControlFactory = new IPropertyControlFactory<Character>() {
+
+			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Character> propertyAccessor, Session session) {
+				// This property is not editable???
+				return null;
+			}
+
+			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Character> propertyAccessor) {
+				return "'" + extendableObject.getPropertyValue(propertyAccessor).toString() + "'";
+			}
+
+			public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Character> propertyAccessor) {
+				return extendableObject.getPropertyValue(propertyAccessor).toString();
+			}
+
+			public boolean isEditable() {
+				return false;
+			}};
+		
+		reconcilingStateAccessor = propertyRegistrar.addProperty("reconcilingState", "Reconciled", Character.class, 1, 20, stateControlFactory, null);
+		addressAccessor = propertyRegistrar.addProperty("address", "Address", String.class, 3, 30, textControlFactory, null);
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertySet getPropertySet() {
+	public static PropertySet<QIFEntry> getPropertySet() {
 		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getReconcilingStateAccessor() {
+	public static ScalarPropertyAccessor<Character> getReconcilingStateAccessor() {
 		return reconcilingStateAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getAddressAccessor() {
+	public static ScalarPropertyAccessor<String> getAddressAccessor() {
 		return addressAccessor;
 	}	
 }

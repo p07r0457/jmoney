@@ -46,6 +46,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.pages.entries.EntriesTree;
@@ -118,15 +119,13 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
     	allEntryDataObjects = new Vector<IEntriesTableProperty>();
         
         // Add properties from the transaction.
-        for (Iterator iter = TransactionInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
-            final PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
-            if (propertyAccessor.isScalar()) {
-            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "transaction") {
-					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
-						return data.getTransactionForTransactionFields();
-					}
-            	});
-            }
+        for (Iterator<ScalarPropertyAccessor> iter = TransactionInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
+        	ScalarPropertyAccessor propertyAccessor = iter.next();
+        	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "transaction") {
+        		public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
+        			return data.getTransactionForTransactionFields();
+        		}
+        	});
         }
 
         /*
@@ -134,17 +133,15 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 		 * properties except the description which come from the other entry,
 		 * and the amount which is shown in the debit and credit columns.
 		 */
-        for (Iterator iter = EntryInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
-            PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
+        for (Iterator<ScalarPropertyAccessor> iter = EntryInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
+            ScalarPropertyAccessor propertyAccessor = iter.next();
             if (propertyAccessor != EntryInfo.getDescriptionAccessor()
-        		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
-            	if (propertyAccessor.isScalar() && propertyAccessor.isEditable()) {
-            		allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "this") {
-    					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
-    						return data.getEntryForAccountFields();
-    					}
-                	});
-            	}
+            		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
+            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "this") {
+            		public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
+            			return data.getEntryForAccountFields();
+            		}
+            	});
             }
         }
 
@@ -153,9 +150,9 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 		 * applicable for capital accounts. For time being, this is just the
 		 * account.
 		 */
-        PropertySet extendablePropertySet = EntryInfo.getPropertySet();
-        for (Iterator iter = extendablePropertySet.getPropertyIterator3(); iter.hasNext();) {
-            PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
+        PropertySet<Entry> extendablePropertySet = EntryInfo.getPropertySet();
+        for (Iterator<ScalarPropertyAccessor> iter = extendablePropertySet.getPropertyIterator_Scalar3(); iter.hasNext();) {
+            ScalarPropertyAccessor propertyAccessor = iter.next();
             if (propertyAccessor == EntryInfo.getAccountAccessor()) {
             	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "common2") {
 					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
@@ -392,16 +389,16 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 	 * @author Nigel Westbury
 	 */
 	abstract class EntriesSectionProperty implements IEntriesTableProperty {
-		private PropertyAccessor accessor;
+		private ScalarPropertyAccessor<?> accessor;
 		private String id;
 		
-		EntriesSectionProperty(PropertyAccessor accessor, String source) {
+		EntriesSectionProperty(ScalarPropertyAccessor accessor, String source) {
 			this.accessor = accessor;
 			this.id = source + '.' + accessor.getName();
 		}
 
 		public String getText() {
-			return accessor.getShortDescription();
+			return accessor.getDisplayName();
 		}
 
 		public String getId() {
@@ -469,53 +466,9 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 		public int compare(DisplayableTransaction trans1, DisplayableTransaction trans2) {
 			ExtendableObject extendableObject1 = getObjectContainingProperty(trans1);
 			ExtendableObject extendableObject2 = getObjectContainingProperty(trans2);
-
-			int result;
-			
-			/*
-			 * First deal with null cases. If no object contains this property
-			 * on this row then the cell is blank.
-			 * 
-			 * Null values are sorted first. It is necessary to put null values
-			 * first because empty strings are sorted first, and users may not
-			 * be aware of the difference.
-			 */
-			if (extendableObject1 == null && extendableObject2 == null) {
-				return 0;
-			} else if (extendableObject1 == null) {
-				return -1;
-			} else if (extendableObject2 == null) {
-				return 1;
-			}
-				
-			Object value1 = extendableObject1.getPropertyValue(accessor);
-			Object value2 = extendableObject2.getPropertyValue(accessor);
-			
-			if (accessor.getCustomComparator() != null) { 
-				result = accessor.getCustomComparator().compare(value1, value2);
-			} else {
-				if (accessor.getValueClass() == Date.class) {
-					result = ((Date)value1).compareTo((Date)value2);
-				} else if (accessor.getValueClass() == Integer.class) {
-					result = ((Integer)value1).compareTo((Integer)value2);
-				} else if (accessor.getValueClass() == Long.class) {
-					result = ((Long)value1).compareTo((Long)value2);
-				} else {
-					/*
-					 * No custom comparator and not a known type, so sort
-					 * according to the text value that is displayed when the
-					 * property is shown in a table (ignoring case).
-					 */
-					String text1 = accessor.formatValueForTable(extendableObject1);
-					String text2 = accessor.formatValueForTable(extendableObject2);
-					result = text1.compareToIgnoreCase(text2);
-				}
-			}
-			
-			return result;
+			return accessor.getComparator().compare(extendableObject1, extendableObject2);
 		}
 	}
-
 	
 	/**
 	 * Represents a table column that is either the debit or the credit column.

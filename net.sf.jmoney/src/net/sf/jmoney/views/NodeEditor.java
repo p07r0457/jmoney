@@ -132,7 +132,7 @@ public class NodeEditor extends FormEditor {
 	 * @param extendableObject
 	 */
 	public static void openEditor(IWorkbenchWindow window, ExtendableObject extendableObject) {
-		PropertySet propertySet = PropertySet.getPropertySet(extendableObject.getClass());
+		PropertySet<?> propertySet = PropertySet.getPropertySet(extendableObject.getClass());
 		Vector<PageEntry> pages = propertySet.getPageFactories();
 		
 		// Create an editor for this node (or active if an editor

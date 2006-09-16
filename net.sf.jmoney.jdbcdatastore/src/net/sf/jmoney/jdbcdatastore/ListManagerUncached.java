@@ -30,7 +30,7 @@ import java.util.Iterator;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
@@ -44,11 +44,11 @@ import net.sf.jmoney.model2.PropertySet;
 public class ListManagerUncached<E extends ExtendableObject> implements IListManager<E> {
 	private IDatabaseRowKey parentKey;
 	private SessionManager sessionManager;
-	private PropertyAccessor listProperty;
+	private ListPropertyAccessor listProperty;
 
 	private PropertySet typedPropertySet;
 	
-	public ListManagerUncached(IDatabaseRowKey parentKey, SessionManager sessionManager, PropertyAccessor listProperty) {
+	public ListManagerUncached(IDatabaseRowKey parentKey, SessionManager sessionManager, ListPropertyAccessor listProperty) {
 		this.parentKey = parentKey;
 		this.sessionManager = sessionManager;
 		this.listProperty = listProperty;

@@ -25,7 +25,7 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 /**
  * A control factory to edit an amount of a commodity.
@@ -33,10 +33,10 @@ import net.sf.jmoney.model2.PropertyAccessor;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public abstract class AmountControlFactory implements IPropertyControlFactory {
+public abstract class AmountControlFactory implements IPropertyControlFactory<Long> {
 
-    public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        Long amount = (Long) extendableObject.getPropertyValue(propertyAccessor);
+    public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
+        Long amount = extendableObject.getPropertyValue(propertyAccessor);
         if (amount == null) {
             return "none";
         } else {
@@ -44,7 +44,7 @@ public abstract class AmountControlFactory implements IPropertyControlFactory {
         }
     }
 
-    public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+    public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
         Long amount = (Long) extendableObject.getPropertyValue(propertyAccessor);
         if (amount == null) {
             return "";

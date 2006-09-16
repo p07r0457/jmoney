@@ -29,6 +29,8 @@ package net.sf.jmoney.model2;
  */
 public interface IPropertyRegistrar {
 	
+	// E may be an ExtendableObject or an ExtensionObject
+	<E extends Object> PropertySet<E> addPropertySet(Class<E> classOfImplementationObject);
 	
 	/**
 	 * Creates an enumerated value.
@@ -83,12 +85,14 @@ public interface IPropertyRegistrar {
 	 * @param currencyControlFactory
 	 * @param propertyDependency
 	 */
-	PropertyAccessor addProperty(
+//	void addProperty(PropertyAccessor_Scalar accessor);
+	<V> ScalarPropertyAccessor<V> addProperty(
 			String name, 
-			String displayName, 
+			String displayName,
+			Class<V> classOfValue,
 			int weight,
 			int minimumWidth,
-			IPropertyControlFactory controlFactory,
+			IPropertyControlFactory<V> controlFactory,
 			IPropertyDependency propertyDependency);
 	
 	/**
@@ -99,16 +103,16 @@ public interface IPropertyRegistrar {
 	 * ObjectCollection, where 'foo' is the name of the list property.   
 	 *
 	 * @param name
-	 * @param shortDescription
+	 * @param displayName
 	 * @param listItemClass The class for all items in the list.
 	 * 			Items in the list may be of a class derived from
 	 * 			this class.
 	 * @param propertyDependency
 	 */
-	PropertyAccessor addPropertyList(
+	<E extends ExtendableObject> ListPropertyAccessor<E> addPropertyList(
 			String name,
-			String shortDescription, 
-			Class<? extends ExtendableObject> listItemClass,
+			String displayName, 
+			Class<E> listItemClass,
 			IPropertyDependency propertyDependency);
 	
 	/**

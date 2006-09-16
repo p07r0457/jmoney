@@ -33,7 +33,7 @@ import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.PageEntry;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
@@ -163,7 +163,8 @@ public class NavigationView extends ViewPart {
 			if (obj instanceof TreeNode) {
 				return ((TreeNode)obj).getImage();
 			} else if (obj instanceof ExtendableObject) {
-				return PropertySet.getPropertySet(obj.getClass()).getIcon();
+				ExtendableObject extendableObject = (ExtendableObject)obj;
+				return PropertySet.getPropertySet(extendableObject.getClass()).getIcon();
 			} else {
 				throw new RuntimeException("");
 			}
@@ -214,7 +215,7 @@ public class NavigationView extends ViewPart {
 			refreshViewer();
 		}
 		
-		public void objectAdded(ExtendableObject newObject) {
+		public void objectInserted(ExtendableObject newObject) {
 			if (newObject instanceof CapitalAccount) {
 				CapitalAccount newAccount = (CapitalAccount)newObject;
 				if (newAccount.getParent() == null) {
@@ -228,7 +229,7 @@ public class NavigationView extends ViewPart {
 			}
 		}
 
-		public void objectDeleted(ExtendableObject deletedObject) {
+		public void objectRemoved(ExtendableObject deletedObject) {
 			if (deletedObject instanceof CapitalAccount) {
 				CapitalAccount deletedAccount = (CapitalAccount)deletedObject;
 				if (deletedAccount.getParent() == null) {
@@ -242,7 +243,7 @@ public class NavigationView extends ViewPart {
 			}
 		}
 		
-		public void objectChanged(ExtendableObject changedObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 			if (changedObject instanceof CapitalAccount
 					&& propertyAccessor == AccountInfo.getNameAccessor()) {
 				final CapitalAccount account = (CapitalAccount)changedObject;
@@ -451,7 +452,8 @@ public class NavigationView extends ViewPart {
 		if (selectedObject instanceof TreeNode) {
 			return ((TreeNode)selectedObject).getPageFactories();
 		} else if (selectedObject instanceof ExtendableObject) {
-			PropertySet propertySet = PropertySet.getPropertySet(selectedObject.getClass());
+			ExtendableObject extendableObject = (ExtendableObject)selectedObject;
+			PropertySet<?> propertySet = PropertySet.getPropertySet(extendableObject.getClass());
 			return propertySet.getPageFactories();
 		} else {
 			return new Vector<PageEntry>();
@@ -557,8 +559,8 @@ public class NavigationView extends ViewPart {
 		// from the capital account class, and that is not itself
 		// derivable, add a menu item to create a new account of
 		// that type.
-		for (Iterator iter = CapitalAccountInfo.getPropertySet().getDerivedPropertySetIterator(); iter.hasNext(); ) {
-			final PropertySet derivedPropertySet = (PropertySet)iter.next();
+		for (Iterator<PropertySet<? extends CapitalAccount>> iter = CapitalAccountInfo.getPropertySet().getDerivedPropertySetIterator(); iter.hasNext(); ) {
+			final PropertySet<? extends CapitalAccount> derivedPropertySet = iter.next();
 			
 			Action newAccountAction = new Action() {
 				public void run() {

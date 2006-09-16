@@ -69,6 +69,8 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertyNotFoundException;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
@@ -573,7 +575,8 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 * If we have processed the start of an element representing
 		 * a property but have not yet processed the end of the element
 		 * then this field is the property accessor.  Otherwise this
-		 * field is null.
+		 * field is null.  This property may be a scalar property
+		 * (containing an extendable object) or a list property.
 		 */
 		private PropertyAccessor propertyAccessor = null;
 		
@@ -716,8 +719,13 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					return;
 			}
 			
-			Class propertyClass = propertyAccessor.getValueClass();
-
+			Class propertyClass;
+			if (propertyAccessor.isScalar()) {
+				propertyClass = ((ScalarPropertyAccessor)propertyAccessor).getClassOfValueObject();
+			} else {
+				propertyClass = ((ListPropertyAccessor)propertyAccessor).getValueClass();
+			}
+			
 			map = null;
 			id = null;
 			
@@ -855,10 +863,11 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				int index = propertyAccessor.getIndexIntoConstructorParameters(); 
 				if (index != -1) {
 					if (propertyAccessor.isScalar()) {
-						if (propertyAccessor.getValueClass().isPrimitive()
-								|| propertyAccessor.getValueClass() == String.class
-								|| propertyAccessor.getValueClass() == Long.class
-								|| propertyAccessor.getValueClass() == Date.class) {
+						ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
+						if (scalarAccessor.getClassOfValueObject().isPrimitive()
+								|| scalarAccessor.getClassOfValueObject() == String.class
+								|| scalarAccessor.getClassOfValueObject() == Long.class
+								|| scalarAccessor.getClassOfValueObject() == Date.class) {
 							constructorParameters[index] = value;
 						} else {
 							constructorParameters[index] = ((ExtendableObject)value).getObjectKey();
@@ -888,7 +897,8 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				int index = propertyAccessor.getIndexIntoConstructorParameters(); 
 				if (index != -1) {
 					if (propertyAccessor.isScalar()) {
-						if (ExtendableObject.class.isAssignableFrom(propertyAccessor.getValueClass())) {
+						ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
+						if (ExtendableObject.class.isAssignableFrom(scalarAccessor.getClassOfValueObject())) {
 							extensionConstructorParameters[index] = ((ExtendableObject)value).getObjectKey();
 						} else {
 							extensionConstructorParameters[index] = value;
@@ -1239,7 +1249,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 	 */
 	void writeObject(TransformerHandler hd, ExtendableObject object, String elementName, Class propertyType) throws SAXException {
 		// Find the property set information for this object.
-		PropertySet propertySet = PropertySet.getPropertySet(object.getClass());
+		PropertySet<?> propertySet = PropertySet.getPropertySet(object.getClass());
 
 		AttributesImpl atts = new AttributesImpl();
 		
@@ -1305,77 +1315,76 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 			if (propertyAccessor.isList()) {
+				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
 				PropertySet propertySet2 = propertyAccessor.getPropertySet(); 
 				if (!propertySet2.isExtension()
 						|| object.getExtension(propertySet2) != null) {
-					for (Iterator elementIter = object.getListPropertyValue(propertyAccessor).iterator(); elementIter.hasNext(); ) {
-						ExtendableObject listElement = (ExtendableObject)elementIter.next();
-						writeObject(hd, listElement, propertyAccessor.getLocalName(), propertyAccessor.getValueClass());
+					for (Iterator<? extends ExtendableObject> elementIter = object.getListPropertyValue(listAccessor).iterator(); elementIter.hasNext(); ) {
+						ExtendableObject listElement = elementIter.next();
+						writeObject(hd, listElement, propertyAccessor.getLocalName(), listAccessor.getValueClass());
 					}
 				}
 			}
 		}
 		
-		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			if (propertyAccessor.isScalar()) {
-				PropertySet propertySet2 = propertyAccessor.getPropertySet(); 
-				if (!propertySet2.isExtension()
-						|| object.getExtension(propertySet2) != null) {
-					String name = propertyAccessor.getLocalName();
-					Object value = object.getPropertyValue(propertyAccessor);
+		for (Iterator<ScalarPropertyAccessor> iter = propertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
+			ScalarPropertyAccessor<?> propertyAccessor = iter.next();
+			PropertySet propertySet2 = propertyAccessor.getPropertySet(); 
+			if (!propertySet2.isExtension()
+					|| object.getExtension(propertySet2) != null) {
+				String name = propertyAccessor.getLocalName();
+				Object value = object.getPropertyValue(propertyAccessor);
 
-					/*
-					 * If no element for a property exists in the file then the
-					 * property value is treated as null. Therefore, if the
-					 * property value is null, we do not write out an element.
-					 * 
-					 * Strings are a special case because JMoney treats null
-					 * strings and empty strings the same. If a string is empty,
-					 * we treat the string as null and do not write out the
-					 * value.
-					 */ 
-					 
-					if (value instanceof String 
-							&& ((String)value).length() == 0) {
-						value = null;
+				/*
+				 * If no element for a property exists in the file then the
+				 * property value is treated as null. Therefore, if the
+				 * property value is null, we do not write out an element.
+				 * 
+				 * Strings are a special case because JMoney treats null
+				 * strings and empty strings the same. If a string is empty,
+				 * we treat the string as null and do not write out the
+				 * value.
+				 */ 
+
+				if (value instanceof String 
+						&& ((String)value).length() == 0) {
+					value = null;
+				}
+
+				if (value != null) {
+					atts.clear();
+
+					String idref = null;
+					if (propertyAccessor.getClassOfValueObject() == Currency.class) {
+						idref = ((Currency)value).getCode();
+					} else if (value instanceof Account) {
+						idref = accountIdMap.get(value);
 					}
-					 
-					if (value != null) {
-						atts.clear();
-						
-						String idref = null;
-						if (propertyAccessor.getValueClass() == Currency.class) {
-							idref = ((Currency)value).getCode();
-						} else if (value instanceof Account) {
-							idref = accountIdMap.get(value);
-						}
-						if (idref != null) {
-							atts.addAttribute("", "", "idref", "CDATA", idref);
-						}
-						
-						String qName;
-						if (propertySet2.isExtension()) {
-							String namespacePrefix = namespaceMap.get(propertySet2); 
-							qName = namespacePrefix + ":" + name;
+					if (idref != null) {
+						atts.addAttribute("", "", "idref", "CDATA", idref);
+					}
+
+					String qName;
+					if (propertySet2.isExtension()) {
+						String namespacePrefix = namespaceMap.get(propertySet2); 
+						qName = namespacePrefix + ":" + name;
+					} else {
+						qName = name;
+					}
+					hd.startElement("", "", qName, atts);
+
+					if (idref == null) {
+						String text;
+						if (value instanceof Date) {
+							Date date = (Date)value;
+							text = dateFormat.format(date);
 						} else {
-							qName = name;
+							text = value.toString();
 						}
-						hd.startElement("", "", qName, atts);
-						
-						if (idref == null) {
-							String text;
-							if (value instanceof Date) {
-								Date date = (Date)value;
-								text = dateFormat.format(date);
-							} else {
-								text = value.toString();
-							}
-							hd.characters(text.toCharArray(), 0, text.length());
-						}
-						
-						hd.endElement("", "", qName);
+						hd.characters(text.toCharArray(), 0, text.length());
 					}
+
+					hd.endElement("", "", qName);
 				}
 			}
 		}
@@ -1490,11 +1499,11 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		// the extension for this plug-in.
 		// This is an example of a plug-in that does not depend on another
 		// plug-in but will use it if it is there.
-		PropertyAccessor statusProperty = null;
+		ScalarPropertyAccessor statusProperty = null;
 		try {
 			PropertySet reconciliationProperties = PropertySet.getPropertySet("net.sf.jmoney.reconciliation.entryProperties");
 			if (reconciliationProperties.isExtensionClassKnown()) {
-				statusProperty = reconciliationProperties.getProperty("status");
+				statusProperty = (ScalarPropertyAccessor)reconciliationProperties.getProperty("status");
 			}
 		} catch (PropertySetNotFoundException e) {
 			// If the property set is not found then this means
@@ -1642,14 +1651,14 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		}
 	}
 	
-	private void copyEntryProperties(net.sf.jmoney.model.Entry oldEntry, Entry entry, PropertyAccessor statusProperty) {
+	private void copyEntryProperties(net.sf.jmoney.model.Entry oldEntry, Entry entry, ScalarPropertyAccessor<?> statusProperty) {
 		entry.setCheck(oldEntry.getCheck());
 		entry.setCreation(oldEntry.getCreation());
 		entry.setDescription(oldEntry.getDescription());
 		entry.setMemo(oldEntry.getMemo());
 		entry.setValuta(oldEntry.getValuta());
 		if (statusProperty != null && oldEntry.getStatus() != 0) {
-			entry.setIntegerPropertyValue(statusProperty, oldEntry.getStatus());
+			entry.setPropertyValue((ScalarPropertyAccessor<Integer>)statusProperty, oldEntry.getStatus());
 		}
 	}
 

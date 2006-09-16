@@ -23,11 +23,12 @@
 package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
@@ -49,9 +50,9 @@ import net.sf.jmoney.model2.PropertySet;
  */
 public class CurrencyAccountInfo implements IPropertySetInfo {
 
-	private static PropertySet propertySet = null;
-	private static PropertyAccessor currencyAccessor = null;
-	private static PropertyAccessor startBalanceAccessor = null;
+	private static PropertySet<CurrencyAccount> propertySet = null;
+	private static ScalarPropertyAccessor<Currency> currencyAccessor = null;
+	private static ScalarPropertyAccessor<Long> startBalanceAccessor = null;
 
     public CurrencyAccountInfo() {
     }
@@ -60,14 +61,14 @@ public class CurrencyAccountInfo implements IPropertySetInfo {
 		return CurrencyAccount.class;
 	}
 
-    public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
+    public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		CurrencyAccountInfo.propertySet = propertySet;
 		
-		IPropertyControlFactory amountControlFactory = new AmountInCurrencyAccountControlFactory();
-		IPropertyControlFactory currencyControlFactory = new CurrencyControlFactory();
+		IPropertyControlFactory<Long> amountControlFactory = new AmountInCurrencyAccountControlFactory();
+		IPropertyControlFactory<Currency> currencyControlFactory = new CurrencyControlFactory();
 		
-		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), 3, 30, currencyControlFactory, null);
-		startBalanceAccessor = propertyRegistrar.addProperty("startBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.startBalance"), 2, 40, amountControlFactory, null);
+		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), Currency.class, 3, 30, currencyControlFactory, null);
+		startBalanceAccessor = propertyRegistrar.addProperty("startBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.startBalance"), Long.class, 2, 40, amountControlFactory, null);
 
 		propertyRegistrar.setDerivableInfo();
 	}
@@ -75,21 +76,21 @@ public class CurrencyAccountInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static PropertySet getPropertySet() {
+	public static PropertySet<CurrencyAccount> getPropertySet() {
 		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getCurrencyAccessor() {
+	public static ScalarPropertyAccessor<Currency> getCurrencyAccessor() {
 		return currencyAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getStartBalanceAccessor() {
+	public static ScalarPropertyAccessor<Long> getStartBalanceAccessor() {
 		return startBalanceAccessor;
 	}	
 }

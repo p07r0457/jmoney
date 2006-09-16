@@ -71,51 +71,19 @@ public abstract class ExtensionObject {
     	return baseObject.getExtension(propertySet);
     }
     
-    public Object getPropertyValue(PropertyAccessor propertyAccessor) {
+    public <V> V getPropertyValue(ScalarPropertyAccessor<V> propertyAccessor) {
         return baseObject.getPropertyValue(propertyAccessor);
     }
     
-	public ObjectCollection getListPropertyValue(PropertyAccessor propertyAccessor) {
+	public <E extends ExtendableObject> ObjectCollection<E> getListPropertyValue(ListPropertyAccessor<E> propertyAccessor) {
     	return baseObject.getListPropertyValue(propertyAccessor);
 	}
 	
-    public int getIntegerPropertyValue(PropertyAccessor propertyAccessor) {
-        return baseObject.getIntegerPropertyValue(propertyAccessor);
-    }
-    
-    public long getLongPropertyValue(PropertyAccessor propertyAccessor) {
-        return getLongPropertyValue(propertyAccessor);
-    }
-    
-    public String getStringPropertyValue(PropertyAccessor propertyAccessor) {
-        return getStringPropertyValue(propertyAccessor);
-    }
-    
-    public char getCharacterPropertyValue(PropertyAccessor propertyAccessor) {
-        return baseObject.getCharacterPropertyValue(propertyAccessor);
-    }
-    
-    public void setPropertyValue(PropertyAccessor propertyAccessor, Object value) {
+    public <V> void setPropertyValue(ScalarPropertyAccessor<V> propertyAccessor, V value) {
     	baseObject.setPropertyValue(propertyAccessor, value);
     }
 
-    public void setIntegerPropertyValue(PropertyAccessor propertyAccessor, int value) {
-    	baseObject.setIntegerPropertyValue(propertyAccessor, value);
-    }
-    
-    public void setLongPropertyValue(PropertyAccessor propertyAccessor, long value) {
-    	baseObject.setLongPropertyValue(propertyAccessor, value);
-    }
-    
-    public void setStringPropertyValue(PropertyAccessor propertyAccessor, String value) {
-    	baseObject.setStringPropertyValue(propertyAccessor, value);
-    }
-    
-    public void setCharacterPropertyValue(PropertyAccessor propertyAccessor, char value) {
-    	baseObject.setCharacterPropertyValue(propertyAccessor, value);
-    }
-
-	protected void processPropertyChange(PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+	protected void processPropertyChange(ScalarPropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 		((ExtendableObject)baseObject).processPropertyChange(propertyAccessor, oldValue, newValue);
 	}
 

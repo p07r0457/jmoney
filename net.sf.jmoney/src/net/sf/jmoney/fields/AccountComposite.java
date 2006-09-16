@@ -27,14 +27,14 @@ import net.sf.jmoney.model2.Account;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IMemento;
 
-public abstract class AccountComposite extends Composite {
+public abstract class AccountComposite<A extends Account> extends Composite {
 	
 	public AccountComposite(Composite parent, int style) {
 		super(parent, style);
 	}
 	
-	public abstract Account getAccount();
-	public abstract void setAccount(Account account);
+	public abstract A getAccount();
+	public abstract void setAccount(A account);
 	public abstract void rememberChoice();
 	public abstract void init(IMemento memento);
 	public abstract void saveState(IMemento memento);

@@ -12,6 +12,8 @@ import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 
@@ -144,25 +146,35 @@ public class CopierPlugin extends AbstractUIPlugin {
 
     private void copyProperty(PropertyAccessor propertyAccessor, ExtendableObject oldObject, ExtendableObject newObject, Map objectMap) {
     	if (propertyAccessor.isScalar()) {
-    		Object oldValue = oldObject.getPropertyValue(propertyAccessor);
-    		Object newValue;
+    		ScalarPropertyAccessor<?> scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
+    		copyScalarProperty(scalarAccessor, oldObject, newObject, objectMap);
+    	} else {
+    		// Property is a list property.
+    		ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
+    		copyList(newObject, oldObject, listAccessor, objectMap);
+    	}
+    }
+    
+    private <V> void copyScalarProperty(ScalarPropertyAccessor<V> propertyAccessor, ExtendableObject oldObject, ExtendableObject newObject, Map objectMap) {
+    		V oldValue = oldObject.getPropertyValue(propertyAccessor);
+    		V newValue;
     		if (oldValue instanceof ExtendableObject) {
-    			newValue = objectMap.get(oldValue);
+    			newValue = (V)objectMap.get(oldValue);
     		} else {
     			newValue = oldValue;
     		}
 			newObject.setPropertyValue(
-    				propertyAccessor,
+					propertyAccessor,
 					newValue);
-    	} else {
-    		// Property is a list property.
-    		ObjectCollection newList = newObject.getListPropertyValue(propertyAccessor);
-    		for (Iterator listIter = oldObject.getListPropertyValue(propertyAccessor).iterator(); listIter.hasNext(); ) {
-    			ExtendableObject oldSubObject = (ExtendableObject)listIter.next();
-    			PropertySet listElementPropertySet = PropertySet.getPropertySet(oldSubObject.getClass());
-    			ExtendableObject newSubObject = newList.createNewElement(listElementPropertySet);
-    			populateObject(listElementPropertySet, oldSubObject, newSubObject, objectMap);
-    		}
-    	}
+    }
+    
+    private <E extends ExtendableObject> void copyList(ExtendableObject newParent, ExtendableObject oldParent, ListPropertyAccessor<E> listAccessor, Map objectMap) {
+		ObjectCollection<E> newList = newParent.getListPropertyValue(listAccessor);
+		for (Iterator<E> listIter = oldParent.getListPropertyValue(listAccessor).iterator(); listIter.hasNext(); ) {
+			E oldSubObject = listIter.next();
+			PropertySet<? extends E> listElementPropertySet = PropertySet.getPropertySet(oldSubObject.getClass());
+			ExtendableObject newSubObject = newList.createNewElement(listElementPropertySet);
+			populateObject(listElementPropertySet, oldSubObject, newSubObject, objectMap);
+		}
     }
 }

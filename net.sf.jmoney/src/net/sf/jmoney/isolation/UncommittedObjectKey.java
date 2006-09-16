@@ -28,7 +28,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 
@@ -162,7 +162,7 @@ public class UncommittedObjectKey implements IObjectKey {
 		}
 	}
 
-	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
+	public void updateProperties(PropertySet<?> actualPropertySet, Object[] oldValues, Object[] newValues) {
 		/*
 		 * If this object is a new object, never committed to the datastore,
 		 * then we have nothing to do. However, if this object has been
@@ -182,19 +182,17 @@ public class UncommittedObjectKey implements IObjectKey {
 			}
 
 			int i = 0;
-			for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
-				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-				if (propertyAccessor.isScalar()) {
-					// If values are different, put in the map
-					if (!JMoneyPlugin.areEqual(oldValues[i], newValues[i])) {
-						if (newValues[i] instanceof ExtendableObject) {
-							// propertyChangeMap must contain the UncommittedObjectKey,
-							// not the uncommitted object itself which is passed to this
-							// method.
-							modifiedObject.put(propertyAccessor, ((ExtendableObject)newValues[i]).getObjectKey());
-						} else {
-							modifiedObject.put(propertyAccessor, newValues[i]);
-						}
+			for (Iterator<ScalarPropertyAccessor> iter = actualPropertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
+				ScalarPropertyAccessor propertyAccessor = iter.next();
+				// If values are different, put in the map
+				if (!JMoneyPlugin.areEqual(oldValues[i], newValues[i])) {
+					if (newValues[i] instanceof ExtendableObject) {
+						// propertyChangeMap must contain the UncommittedObjectKey,
+						// not the uncommitted object itself which is passed to this
+						// method.
+						modifiedObject.put(propertyAccessor, ((ExtendableObject)newValues[i]).getObjectKey());
+					} else {
+						modifiedObject.put(propertyAccessor, newValues[i]);
 					}
 					i++;
 				}

@@ -27,7 +27,7 @@ import java.util.Vector;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
@@ -42,9 +42,9 @@ public class ListManagerCached<E extends ExtendableObject> extends Vector<E> imp
 	private static final long serialVersionUID = 867883048050895954L;
 
 	private SessionManager sessionManager;
-	private PropertyAccessor listProperty;
+	private ListPropertyAccessor listProperty;
 	
-	public ListManagerCached(SessionManager sessionManager, PropertyAccessor listProperty) {
+	public ListManagerCached(SessionManager sessionManager, ListPropertyAccessor listProperty) {
 		this.sessionManager = sessionManager;
 		this.listProperty = listProperty;
 	}

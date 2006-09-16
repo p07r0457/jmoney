@@ -31,15 +31,15 @@ public class InconsistentCircularPropagatorsException extends RuntimeException {
 
 	private static final long serialVersionUID = -385956833951648836L;
 
-	private PropertyAccessor[] propertyAccessorList;
+	private String[] propertyIdList;
     private Object[] valueList;
 
     /** 
      * Creates a new instance of InconsistentCircularPropagatorsException
      * when the circular error is initially detected. 
      */
-    public InconsistentCircularPropagatorsException(PropertyAccessor propertyAccessor, Object newValue) {
-        propertyAccessorList = new PropertyAccessor[] { propertyAccessor };
+    public InconsistentCircularPropagatorsException(String propertyId, Object newValue) {
+        propertyIdList = new String[] { propertyId };
         valueList = new Object[] { newValue };
     }
     
@@ -48,16 +48,16 @@ public class InconsistentCircularPropagatorsException extends RuntimeException {
      * in which we are adding more information to a previously throw
      * InconsistentCircularPropagatorsException.
      */
-    public InconsistentCircularPropagatorsException(PropertyAccessor propertyAccessor, Object newValue, InconsistentCircularPropagatorsException previousException) {
-        int size = propertyAccessorList.length;
+    public InconsistentCircularPropagatorsException(String propertyId, Object newValue, InconsistentCircularPropagatorsException previousException) {
+        int size = propertyIdList.length;
         
-        propertyAccessorList = new PropertyAccessor[size + 1];
+        propertyIdList = new String[size + 1];
         valueList = new Object[size + 1];
         
-        propertyAccessorList[0] = propertyAccessor;
+        propertyIdList[0] = propertyId;
         valueList[0] = newValue;
         for (int i = 0; i < size; i++) {
-            propertyAccessorList[i+1] = previousException.propertyAccessorList[i];
+            propertyIdList[i+1] = previousException.propertyIdList[i];
             valueList[i+1] = previousException.valueList[i];
         }
     }

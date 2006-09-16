@@ -92,7 +92,7 @@ public class ModifiedList<E extends ExtendableObject> {
 	 * 			type ExtendableObject, being the uncommitted versions
 	 * 			of the objects being added
 	 */
-	Iterator getAddedObjectIterator() {
+	Iterator<E> getAddedObjectIterator() {
 		return addedObjects.iterator();
 	}
 
@@ -104,7 +104,7 @@ public class ModifiedList<E extends ExtendableObject> {
 	 * 			type IObjectKey, being the committed keys
 	 * 			of the objects being deleted
 	 */
-	Iterator getDeletedObjectIterator() {
+	Iterator<IObjectKey> getDeletedObjectIterator() {
 		return deletedObjects.iterator();
 	}
 }

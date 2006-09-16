@@ -31,7 +31,7 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 
@@ -137,15 +137,14 @@ public class TransactionDialog {
         entriesArea.setLayout(entriesAreaLayout);
 
         // Add properties from the transaction.
-        for (Iterator iter = TransactionInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
-            final PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
-            if (propertyAccessor.isScalar()) {
-        		Label propertyLabel = new Label(transactionArea, 0);
-        		propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
-        		IPropertyControl propertyControl = propertyAccessor.createPropertyControl(transactionArea, session);
-        		propertyControl.load(null);
-        		transactionControls.add(propertyControl);
-            }
+        for (Iterator<ScalarPropertyAccessor> iter = TransactionInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
+        	ScalarPropertyAccessor propertyAccessor = iter.next();
+ 
+        	Label propertyLabel = new Label(transactionArea, 0);
+        	propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
+        	IPropertyControl propertyControl = propertyAccessor.createPropertyControl(transactionArea, session);
+        	propertyControl.load(null);
+        	transactionControls.add(propertyControl);
         }
 
     	// Create the button area

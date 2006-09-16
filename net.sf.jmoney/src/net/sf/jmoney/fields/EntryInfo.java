@@ -22,15 +22,19 @@
 
 package net.sf.jmoney.fields;
 
+import java.util.Date;
+
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
@@ -56,15 +60,15 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class EntryInfo implements IPropertySetInfo {
 
-	private static PropertySet propertySet = null;
-	private static PropertyAccessor checkAccessor = null;
-	private static PropertyAccessor descriptionAccessor = null;
-	private static PropertyAccessor accountAccessor = null;
-	private static PropertyAccessor valutaAccessor = null;
-	private static PropertyAccessor memoAccessor = null;
-	private static PropertyAccessor amountAccessor = null;
-	private static PropertyAccessor creationAccessor = null;
-	private static PropertyAccessor incomeExpenseCurrencyAccessor = null;
+	private static PropertySet<Entry> propertySet = null;
+	private static ScalarPropertyAccessor<String> checkAccessor = null;
+	private static ScalarPropertyAccessor<String> descriptionAccessor = null;
+	private static ScalarPropertyAccessor<Account> accountAccessor = null;
+	private static ScalarPropertyAccessor<Date> valutaAccessor = null;
+	private static ScalarPropertyAccessor<String> memoAccessor = null;
+	private static ScalarPropertyAccessor<Long> amountAccessor = null;
+	private static ScalarPropertyAccessor<Long> creationAccessor = null;
+	private static ScalarPropertyAccessor<Currency> incomeExpenseCurrencyAccessor = null;
 
 	public EntryInfo() {
     }
@@ -73,26 +77,27 @@ public class EntryInfo implements IPropertySetInfo {
 		return Entry.class;
 	}
 	
-	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
-		EntryInfo.propertySet = propertySet;
+	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+		EntryInfo.propertySet = propertyRegistrar.addPropertySet(Entry.class);
 		
-		IPropertyControlFactory textControlFactory = new TextControlFactory();
-        IPropertyControlFactory dateControlFactory = new DateControlFactory();
-        IPropertyControlFactory accountControlFactory = new AccountControlFactory();
-		IPropertyControlFactory amountControlFactory = new AmountControlFactory() {
+		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
+        IPropertyControlFactory<Date> dateControlFactory = new DateControlFactory();
+        IPropertyControlFactory<Account> accountControlFactory = new AccountControlFactory<Account>();
+
+        IPropertyControlFactory<Long> amountControlFactory = new AmountControlFactory() {
 
 			protected Commodity getCommodity(ExtendableObject object) {
 	    	    return ((Entry) object).getCommodity();
 			}
 
-			public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor, Session session) {
+			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor, Session session) {
 		    	final AmountEditor editor = new AmountEditor(parent, propertyAccessor, this);
 		        
 		    	// The format of the amount will change if either
 		    	// the account property of the entry changes or if
 		    	// the commodity property of the account changes.
 		        editor.setListener(new SessionChangeAdapter() {
-		        		public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+		        		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 		        			Entry entry = (Entry)editor.getObject();
 		        			if (entry == null) {
 		        			    return;
@@ -128,14 +133,36 @@ public class EntryInfo implements IPropertySetInfo {
 		        return editor;
 			}};
 
-		checkAccessor       = propertyRegistrar.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),       2, 50,  textControlFactory, null);
-		descriptionAccessor = propertyRegistrar.addProperty("description", JMoneyPlugin.getResourceString("Entry.description"), 5, 100, textControlFactory, null);
-		accountAccessor     = propertyRegistrar.addProperty("account",     JMoneyPlugin.getResourceString("Entry.category"),    2, 70,  accountControlFactory, null);
-		valutaAccessor      = propertyRegistrar.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      0, 76,  dateControlFactory, null);
-		memoAccessor        = propertyRegistrar.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        5, 100, textControlFactory, null);
-		amountAccessor      = propertyRegistrar.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      2, 70,  amountControlFactory, null);
-		creationAccessor    = propertyRegistrar.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    0, 70,  new DateControlFactory(true), null);
-		incomeExpenseCurrencyAccessor = propertyRegistrar.addProperty("incomeExpenseCurrency",    JMoneyPlugin.getResourceString("Entry.currency"),    2, 70, new CurrencyControlFactory(), null);
+		IPropertyControlFactory<Long> creationControlFactory = new IPropertyControlFactory<Long>() {
+
+			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor, Session session) {
+				// This property is not editable
+		    	return null;
+			}
+
+			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
+				long creation = extendableObject.getPropertyValue(propertyAccessor);
+				return Long.toString(creation);
+			}
+
+			public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
+				long creation = extendableObject.getPropertyValue(propertyAccessor);
+				return Long.toString(creation);
+			}
+
+			public boolean isEditable() {
+				return false;
+			}
+		};
+
+		checkAccessor       = propertyRegistrar.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),       String.class, 2, 50,  textControlFactory, null);
+		descriptionAccessor = propertyRegistrar.addProperty("description", JMoneyPlugin.getResourceString("Entry.description"), String.class, 5, 100, textControlFactory, null);
+		accountAccessor     = propertyRegistrar.addProperty("account",     JMoneyPlugin.getResourceString("Entry.category"),    Account.class, 2, 70,  accountControlFactory, null);
+		valutaAccessor      = propertyRegistrar.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      Date.class, 0, 76,  dateControlFactory, null);
+		memoAccessor        = propertyRegistrar.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        String.class, 5, 100, textControlFactory, null);
+		amountAccessor      = propertyRegistrar.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      Long.class, 2, 70,  amountControlFactory, null);
+		creationAccessor    = propertyRegistrar.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    Long.class, 0, 70,  creationControlFactory, null);
+		incomeExpenseCurrencyAccessor = propertyRegistrar.addProperty("incomeExpenseCurrency",    JMoneyPlugin.getResourceString("Entry.currency"),    Currency.class, 2, 70, new CurrencyControlFactory(), null);
 		
 		propertyRegistrar.setObjectDescription("Accounting Entry");
 	}
@@ -143,63 +170,63 @@ public class EntryInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static PropertySet getPropertySet() {
+	public static PropertySet<Entry> getPropertySet() {
 		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getCheckAccessor() {
+	public static ScalarPropertyAccessor<String> getCheckAccessor() {
 		return checkAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getDescriptionAccessor() {
+	public static ScalarPropertyAccessor<String> getDescriptionAccessor() {
 		return descriptionAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getAccountAccessor() {
+	public static ScalarPropertyAccessor<Account> getAccountAccessor() {
 		return accountAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getValutaAccessor() {
+	public static ScalarPropertyAccessor<Date> getValutaAccessor() {
 		return valutaAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getMemoAccessor() {
+	public static ScalarPropertyAccessor<String> getMemoAccessor() {
 		return memoAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getAmountAccessor() {
+	public static ScalarPropertyAccessor<Long> getAmountAccessor() {
 		return amountAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getCreationAccessor() {
+	public static ScalarPropertyAccessor<Long> getCreationAccessor() {
 		return creationAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getIncomeExpenseCurrencyAccessor() {
+	public static ScalarPropertyAccessor<Currency> getIncomeExpenseCurrencyAccessor() {
 		return incomeExpenseCurrencyAccessor;
 	}	
 }

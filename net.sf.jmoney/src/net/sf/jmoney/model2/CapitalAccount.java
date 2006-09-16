@@ -129,7 +129,7 @@ public abstract class CapitalAccount extends Account {
 	 * 				given sort order.  The collection is a read-only
 	 * 				collection.
 	 */
-	public Collection<Entry> getSortedEntries(final PropertyAccessor sortProperty, boolean descending) {
+	public Collection<Entry> getSortedEntries(final ScalarPropertyAccessor<?> sortProperty, boolean descending) {
 		IEntryQueries queries = (IEntryQueries)getSession().getAdapter(IEntryQueries.class);
     	if (queries != null) {
     		return queries.getSortedEntries(this, sortProperty, descending);
@@ -143,46 +143,19 @@ public abstract class CapitalAccount extends Account {
     		if (sortProperty.getPropertySet() == EntryInfo.getPropertySet()) {
     			entryComparator = new Comparator<Entry>() {
     				public int compare(Entry entry1, Entry entry2) {
-    					Object value1 = entry1.getPropertyValue(sortProperty);
-    					Object value2 = entry2.getPropertyValue(sortProperty);
-    					if (value1 == null && value2 == null) return 0;
-    					if (value1 == null) return 1;
-    					if (value2 == null) return -1;
-    					if (Comparable.class.isAssignableFrom(sortProperty.getValueClass())) {
-    						return ((Comparable)value1).compareTo(value2);
-    					} else {
-    						throw new RuntimeException("not yet implemented");
-    					}
+    					return sortProperty.getComparator().compare(entry1, entry2);
     				}
     			};
     		} else if (sortProperty.getPropertySet() == TransactionInfo.getPropertySet()) {
     			entryComparator = new Comparator<Entry>() {
     				public int compare(Entry entry1, Entry entry2) {
-    					Object value1 = entry1.getTransaction().getPropertyValue(sortProperty);
-    					Object value2 = entry2.getTransaction().getPropertyValue(sortProperty);
-    					if (value1 == null && value2 == null) return 0;
-    					if (value1 == null) return 1;
-    					if (value2 == null) return -1;
-    					if (Comparable.class.isAssignableFrom(sortProperty.getValueClass())) {
-    						return ((Comparable)value1).compareTo(value2);
-    					} else {
-    						throw new RuntimeException("not yet implemented");
-    					}
+    					return sortProperty.getComparator().compare(entry1.getTransaction(), entry2.getTransaction());
     				}
     			};
     		} else if (sortProperty.getPropertySet() == AccountInfo.getPropertySet()) {
     			entryComparator = new Comparator<Entry>() {
     				public int compare(Entry entry1, Entry entry2) {
-    					Object value1 = entry1.getAccount().getPropertyValue(sortProperty);
-    					Object value2 = entry2.getAccount().getPropertyValue(sortProperty);
-    					if (value1 == null && value2 == null) return 0;
-    					if (value1 == null) return 1;
-    					if (value2 == null) return -1;
-    					if (Comparable.class.isAssignableFrom(sortProperty.getValueClass())) {
-    						return ((Comparable)value1).compareTo(value2);
-    					} else {
-    						throw new RuntimeException("not yet implemented");
-    					}
+    					return sortProperty.getComparator().compare(entry1.getAccount(), entry2.getAccount());
     				}
     			};
     		} else {
@@ -256,8 +229,8 @@ public abstract class CapitalAccount extends Account {
 	 * 			the property set for the type of capital account
 	 * 			to be created.
 	 */
-	public CapitalAccount createSubAccount(PropertySet propertySet) {
-		return (CapitalAccount)getSubAccountCollection().createNewElement(propertySet);
+	public CapitalAccount createSubAccount(PropertySet<? extends CapitalAccount> propertySet) {
+		return getSubAccountCollection().createNewElement(propertySet);
 	}
         
 	/**

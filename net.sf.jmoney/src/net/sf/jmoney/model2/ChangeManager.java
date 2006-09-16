@@ -161,7 +161,7 @@ public class ChangeManager {
 	}
 	
 	class ChangeEntry_Update extends ChangeEntry {
-		PropertyAccessor propertyAccessor;
+		ScalarPropertyAccessor propertyAccessor;
 		//		PropertySet actualPropertySet;
 		Object oldValue;
 		//		Object newValue;
@@ -181,7 +181,7 @@ public class ChangeManager {
 	
 	class ChangeEntry_Insert extends ChangeEntry {
 		ExtendableObject parent;
-		PropertyAccessor owningListProperty;
+		ListPropertyAccessor<?> owningListProperty;
 		
 		void undo() {
 			// Delete the object.
@@ -192,11 +192,17 @@ public class ChangeManager {
 		}
 	}
 	
-	class ChangeEntry_Delete extends ChangeEntry {
+	/**
+	 * 
+	 * @author Nigel
+	 *
+	 * @param <E> the type of the object being deleted
+	 */
+	class ChangeEntry_Delete<E extends ExtendableObject> extends ChangeEntry {
 		Object [] oldValues;
 		ExtendableObject parent;
-		PropertyAccessor owningListProperty;
-		PropertySet actualPropertySet;
+		ListPropertyAccessor<? super E> owningListProperty;
+		PropertySet<? extends E> actualPropertySet;
 		
 		void undo() {
 			// Create the object in the datastore.
@@ -205,14 +211,12 @@ public class ChangeManager {
 			// Set the properties to the values that were set before
 			// the object was deleted.
 			int index = 0;
-			for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
-				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-				if (propertyAccessor.isScalar()) {
-					if (index != propertyAccessor.getIndexIntoScalarProperties()) {
-						throw new RuntimeException("index mismatch");
-					}
-					object.setPropertyValue(propertyAccessor, oldValues[index++]);
+			for (Iterator<ScalarPropertyAccessor> iter = actualPropertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
+				ScalarPropertyAccessor propertyAccessor = iter.next();
+				if (index != propertyAccessor.getIndexIntoScalarProperties()) {
+					throw new RuntimeException("index mismatch");
 				}
+				object.setPropertyValue(propertyAccessor, oldValues[index++]);
 			}
 			
 			// Set the new object key back into the proxy.
@@ -307,7 +311,7 @@ public class ChangeManager {
 	 */
 	public void processPropertyUpdate(
 			ExtendableObject object,
-			PropertyAccessor propertyAccessor,
+			ScalarPropertyAccessor propertyAccessor,
 			Object oldValue,
 			Object newValue) {
 		
@@ -316,7 +320,7 @@ public class ChangeManager {
 		newChangeEntry.objectKeyProxy = getKeyProxy(object.getObjectKey());
 		
 		// Replace any keys with proxy keys
-		if (propertyAccessor.getValueClass().isAssignableFrom(ExtendableObject.class)) {
+		if (propertyAccessor.getClassOfValueObject().isAssignableFrom(ExtendableObject.class)) {
 			newChangeEntry.oldValue = getKeyProxy((IObjectKey)oldValue);
 			//			newChangeEntry.newValue = getKeyProxy((IObjectKey)newValue);
 		} else {
@@ -333,7 +337,7 @@ public class ChangeManager {
 	
 	public void processObjectCreation(
 			ExtendableObject parent,
-			PropertyAccessor owningListProperty,
+			ListPropertyAccessor owningListProperty,
 			ExtendableObject newObject) {
 		
 		ChangeEntry_Insert newChangeEntry = new ChangeEntry_Insert();
@@ -345,16 +349,16 @@ public class ChangeManager {
 		getCurrentUndoableChange().addChange(newChangeEntry);
 	}
 	
-	public void processObjectDeletion(
+	public <E extends ExtendableObject> void processObjectDeletion(
 			ExtendableObject parent,
-			PropertyAccessor owningListProperty,
-			ExtendableObject oldObject) {
+			ListPropertyAccessor<? super E> owningListProperty,
+			E oldObject) {
 		
 		// TODO: We must also process objects owned by this object in a recursive
 		// manner.  Otherwise, undoing the deletion of an object will not restore
 		// any objects owned by that object.
 		
-		ChangeEntry_Delete newChangeEntry = new ChangeEntry_Delete();
+		ChangeEntry_Delete<E> newChangeEntry = new ChangeEntry_Delete<E>();
 		
 		newChangeEntry.objectKeyProxy = getKeyProxy(oldObject.getObjectKey());
 		newChangeEntry.parent = parent;
@@ -379,14 +383,12 @@ public class ChangeManager {
 		}
 		newChangeEntry.oldValues = new Object[count];
 		int index = 0;
-		for (Iterator iter = newChangeEntry.actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			if (propertyAccessor.isScalar()) {
-				if (index != propertyAccessor.getIndexIntoScalarProperties()) {
-					throw new RuntimeException("index mismatch");
-				}
-				newChangeEntry.oldValues[index++] = oldObject.getPropertyValue(propertyAccessor);
+		for (Iterator<ScalarPropertyAccessor> iter = newChangeEntry.actualPropertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
+			ScalarPropertyAccessor<?> propertyAccessor = iter.next();
+			if (index != propertyAccessor.getIndexIntoScalarProperties()) {
+				throw new RuntimeException("index mismatch");
 			}
+			newChangeEntry.oldValues[index++] = oldObject.getPropertyValue(propertyAccessor);
 		}
 		
 		getCurrentUndoableChange().addChange(newChangeEntry);

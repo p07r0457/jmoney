@@ -75,7 +75,7 @@ public class NodeEditorFactory implements IElementFactory {
 			if (JMoneyPlugin.DEBUG) System.out.println("editor factory, session = " + session);
 			Account account = JMoneyPlugin.getDefault().getSession().getAccountByFullName(fullAccountName);
 			if (account != null) {
-   				PropertySet propertySet = PropertySet.getPropertySet(account.getClass());
+   				PropertySet<?> propertySet = PropertySet.getPropertySet(account.getClass());
 				return new NodeEditorInput(
 						account, 
 						account.toString(), 

@@ -54,6 +54,8 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;
@@ -294,10 +296,12 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					if (!propertySet2.isExtension()) {
 						for (Iterator iter3 = propertySet2.getPropertyIterator2(); iter3.hasNext(); ) {
 							PropertyAccessor propertyAccessor = (PropertyAccessor)iter3.next();
-							if (propertyAccessor.isList()
-							 && propertySet.getImplementationClass() == propertyAccessor.getValueClass()) {
-								// Add to the list of possible parents.
-								list.add(new ParentList(propertySet2, propertyAccessor));
+							if (propertyAccessor.isList()) {
+								ListPropertyAccessor listAccessor = (ListPropertyAccessor)propertyAccessor;
+								if (propertySet.getImplementationClass() == listAccessor.getValueClass()) {
+									// Add to the list of possible parents.
+									list.add(new ParentList(propertySet2, propertyAccessor));
+								}
 							}
 						}
 					}
@@ -443,98 +447,96 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		
 		// The columns for each property in this property set
 		// (including the extension property sets).
-		for (Iterator iter = propertySet.getPropertyIterator2(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			if (propertyAccessor.isScalar()) {
-				ColumnInfo info = new ColumnInfo();
-				
-				if (propertyAccessor.getPropertySet().isExtension()) {
-					info.columnName = propertyAccessor.getName().replace('.', '_');
-				} else {
-					info.columnName = propertyAccessor.getLocalName();
-				}
-				
-				boolean nullable = true;
-				Class valueClass = propertyAccessor.getValueClass();
-				if (valueClass == Integer.class) {
-					info.columnDefinition = "INT";
-					nullable = true;
-				} else if (valueClass == int.class) {
-					info.columnDefinition = "INT";
-					nullable = false;
-				} if (valueClass == Long.class) {
-					info.columnDefinition = "BIGINT";
-					nullable = true;
-				} else if (valueClass == long.class) {
-					info.columnDefinition = "BIGINT";
-					nullable = false;
-				} else if (valueClass == Character.class) {
-					info.columnDefinition = "CHAR";
-					nullable = true;
-				} else if (valueClass == char.class) {
-					info.columnDefinition = "CHAR";
-					nullable = false;
-				} else if (valueClass == boolean.class) {
-					info.columnDefinition = "BIT";
-					nullable = false;
-				} else if (valueClass == String.class) {
-					info.columnDefinition = "VARCHAR";
-					nullable = true;
-				} else if (valueClass == Boolean.class) {
-					info.columnDefinition = "BIT";
-					nullable = true;
-				} else if (valueClass == Date.class) {
-					info.columnDefinition = "DATE";
-					nullable = true;
-				} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
-					info.columnDefinition = "INT";
-					nullable = true;
-					
-					// This call does not work.  The method works only when the class
-					// is a class of an actual object and only non-derivable property
-					// sets are returned.
-					// info.foreignKeyPropertySet = PropertySet.getPropertySet(valueClass);
-					
-					// This works.
-					// The return type from a getter for a property that is a reference
-					// to an extendable object must be the getter interface.
-					info.foreignKeyPropertySet = null;
-					for (Iterator iter2 = PropertySet.getPropertySetIterator(); iter2.hasNext(); ) {
-						PropertySet propertySet2 = (PropertySet)iter2.next();
-						if (propertySet2.getImplementationClass() == valueClass) {
-							info.foreignKeyPropertySet = propertySet2;
-							break;
-						}
-					}
-				} else { 
-					// All other types are stored as a string by 
-					// using the String constructor and
-					// the toString method for conversion.
-					info.columnDefinition = "VARCHAR";
-					nullable = true;
-				}
-				
-				// If the property is an extension property then we set
-				// a default value.  This saves us from having to set default
-				// value in every insert statement and is a better solution
-				// if other applications (outside JMoney) access the database.
-					
-				if (propertyAccessor.getPropertySet().isExtension()) {
-					// TODO: fix the following line.
-					// It currently assumes only one property per extension
-					// property set.
-					Object defaultValue = propertyAccessor.getPropertySet().getDefaultPropertyValues2()[0];
-					info.columnDefinition +=
-						" DEFAULT " + valueToSQLText(defaultValue);
-				}
-				
-				if (nullable) {
-					info.columnDefinition += " NULL";
-				} else {
-					info.columnDefinition += " NOT NULL";
-				}
-				result.add(info);
+		for (Iterator<ScalarPropertyAccessor> iter = propertySet.getPropertyIterator_Scalar2(); iter.hasNext(); ) {
+			ScalarPropertyAccessor propertyAccessor = iter.next();
+			ColumnInfo info = new ColumnInfo();
+
+			if (propertyAccessor.getPropertySet().isExtension()) {
+				info.columnName = propertyAccessor.getName().replace('.', '_');
+			} else {
+				info.columnName = propertyAccessor.getLocalName();
 			}
+
+			boolean nullable = true;
+			Class valueClass = propertyAccessor.getClassOfValueObject();
+			if (valueClass == Integer.class) {
+				info.columnDefinition = "INT";
+				nullable = true;
+			} else if (valueClass == int.class) {
+				info.columnDefinition = "INT";
+				nullable = false;
+			} if (valueClass == Long.class) {
+				info.columnDefinition = "BIGINT";
+				nullable = true;
+			} else if (valueClass == long.class) {
+				info.columnDefinition = "BIGINT";
+				nullable = false;
+			} else if (valueClass == Character.class) {
+				info.columnDefinition = "CHAR";
+				nullable = true;
+			} else if (valueClass == char.class) {
+				info.columnDefinition = "CHAR";
+				nullable = false;
+			} else if (valueClass == boolean.class) {
+				info.columnDefinition = "BIT";
+				nullable = false;
+			} else if (valueClass == String.class) {
+				info.columnDefinition = "VARCHAR";
+				nullable = true;
+			} else if (valueClass == Boolean.class) {
+				info.columnDefinition = "BIT";
+				nullable = true;
+			} else if (valueClass == Date.class) {
+				info.columnDefinition = "DATE";
+				nullable = true;
+			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
+				info.columnDefinition = "INT";
+				nullable = true;
+
+				// This call does not work.  The method works only when the class
+				// is a class of an actual object and only non-derivable property
+				// sets are returned.
+				// info.foreignKeyPropertySet = PropertySet.getPropertySet(valueClass);
+
+				// This works.
+				// The return type from a getter for a property that is a reference
+				// to an extendable object must be the getter interface.
+				info.foreignKeyPropertySet = null;
+				for (Iterator iter2 = PropertySet.getPropertySetIterator(); iter2.hasNext(); ) {
+					PropertySet propertySet2 = (PropertySet)iter2.next();
+					if (propertySet2.getImplementationClass() == valueClass) {
+						info.foreignKeyPropertySet = propertySet2;
+						break;
+					}
+				}
+			} else { 
+				// All other types are stored as a string by 
+				// using the String constructor and
+				// the toString method for conversion.
+				info.columnDefinition = "VARCHAR";
+				nullable = true;
+			}
+
+			// If the property is an extension property then we set
+			// a default value.  This saves us from having to set default
+			// value in every insert statement and is a better solution
+			// if other applications (outside JMoney) access the database.
+
+			if (propertyAccessor.getPropertySet().isExtension()) {
+				// TODO: fix the following line.
+				// It currently assumes only one property per extension
+				// property set.
+				Object defaultValue = propertyAccessor.getPropertySet().getDefaultPropertyValues2()[0];
+				info.columnDefinition +=
+					" DEFAULT " + valueToSQLText(defaultValue);
+			}
+
+			if (nullable) {
+				info.columnDefinition += " NULL";
+			} else {
+				info.columnDefinition += " NOT NULL";
+			}
+			result.add(info);
 		}
 		
 		/*
@@ -750,54 +752,58 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 			String columnName = propertyAccessor.getLocalName();
-			Class valueClass = propertyAccessor.getValueClass(); 
 			Object value;
 			if (propertyAccessor.isList()) {
-				value = new ListManagerCached(sessionManager, propertyAccessor);
-			} else if (valueClass == int.class) {
-				value = new Integer(rs.getInt(columnName));
-			} else if (valueClass == long.class) {
-				value = new Long(rs.getLong(columnName));
-			} else if (valueClass == Long.class) {
-				value = new Long(rs.getLong(columnName));
-			} else if (valueClass == String.class) {
-				value = rs.getString(columnName);
-			} else if (valueClass == Date.class) {
-				value = rs.getDate(columnName);
-			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
-				int rowIdOfProperty = rs.getInt(columnName);
-				PropertySet propertySetOfProperty = PropertySet.getPropertySet(valueClass);
-				
-				// We have a problem here.
-				// It may be that the type of this property is a derivable property set,
-				// so the value of the property is a property set that is derived from the
-				// property set for the type of this property.
-				// It may also be that the property set for the type of this property
-				// is not cached but the value itself is of a derived property set
-				// that is cached.
-				// Therefore we cannot necessarily know if a property value is
-				// cached or not until we have read the type of the
-				// instance of the property value from the database.
-				// That would defeat the performance benefits of caching.
-				// Alternatively we could look up the item in all the possible
-				// maps of cached derived types.
-				// However, that involves some work for what is really
-				// a rare scenario.  Therefore we take another approach.
-				// We just don't cache the object.  This means even if
-				// a property set is set to be cached, there may be some
-				// instances of that property set that are read not from the
-				// cache but for which another instance is created by
-				// reading the database.  There is nothing in the design
-				// of the caches that prohibit duplicates of the item being
-				// created outside the cache.
-				Map<Integer, ? extends ExtendableObject> map = sessionManager.getMapOfCachedObjects(propertySetOfProperty);
-				if (map == null) {
-					value = new ObjectKeyUncached(rowIdOfProperty, propertySetOfProperty, sessionManager);
-				} else {
-					value = ((ExtendableObject)map.get(new Integer(rowIdOfProperty))).getObjectKey();
-				}
+				ListPropertyAccessor listAccessor = (ListPropertyAccessor)propertyAccessor; 
+				value = new ListManagerCached(sessionManager, listAccessor);
 			} else {
-				throw new RuntimeException("unknown type");
+				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor; 
+				Class valueClass = scalarAccessor.getClassOfValueObject(); 
+				if (valueClass == int.class) {
+					value = new Integer(rs.getInt(columnName));
+				} else if (valueClass == long.class) {
+					value = new Long(rs.getLong(columnName));
+				} else if (valueClass == Long.class) {
+					value = new Long(rs.getLong(columnName));
+				} else if (valueClass == String.class) {
+					value = rs.getString(columnName);
+				} else if (valueClass == Date.class) {
+					value = rs.getDate(columnName);
+				} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
+					int rowIdOfProperty = rs.getInt(columnName);
+					PropertySet propertySetOfProperty = PropertySet.getPropertySet(valueClass);
+
+					// We have a problem here.
+					// It may be that the type of this property is a derivable property set,
+					// so the value of the property is a property set that is derived from the
+					// property set for the type of this property.
+					// It may also be that the property set for the type of this property
+					// is not cached but the value itself is of a derived property set
+					// that is cached.
+					// Therefore we cannot necessarily know if a property value is
+					// cached or not until we have read the type of the
+					// instance of the property value from the database.
+					// That would defeat the performance benefits of caching.
+					// Alternatively we could look up the item in all the possible
+					// maps of cached derived types.
+					// However, that involves some work for what is really
+					// a rare scenario.  Therefore we take another approach.
+					// We just don't cache the object.  This means even if
+					// a property set is set to be cached, there may be some
+					// instances of that property set that are read not from the
+					// cache but for which another instance is created by
+					// reading the database.  There is nothing in the design
+					// of the caches that prohibit duplicates of the item being
+					// created outside the cache.
+					Map<Integer, ? extends ExtendableObject> map = sessionManager.getMapOfCachedObjects(propertySetOfProperty);
+					if (map == null) {
+						value = new ObjectKeyUncached(rowIdOfProperty, propertySetOfProperty, sessionManager);
+					} else {
+						value = ((ExtendableObject)map.get(new Integer(rowIdOfProperty))).getObjectKey();
+					}
+				} else {
+					throw new RuntimeException("unknown type");
+				}
 			}
 			
 			if (rs.wasNull()) {
@@ -953,7 +959,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * 
 	 * @return The id of the inserted row
 	 */
-	public static int insertIntoDatabase(PropertySet propertySet, ExtendableObject newObject, PropertyAccessor listProperty, ExtendableObject parent, SessionManager sessionManager) {
+	public static int insertIntoDatabase(PropertySet propertySet, ExtendableObject newObject, ListPropertyAccessor listProperty, ExtendableObject parent, SessionManager sessionManager) {
 		int rowId = -1;
 
 		// We must insert into the base table first, then the table for the objects
@@ -992,7 +998,9 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 				
 				if (propertyAccessor.isScalar()) {
-					String columnName;
+		    		ScalarPropertyAccessor<?> scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
+
+		    		String columnName;
 					if (propertyAccessor.getPropertySet().isExtension()) {
 						columnName = propertyAccessor.getName().replace('.', '_');
 					} else {
@@ -1000,7 +1008,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					}
 					
 					// Get the value from the passed property value array.
-					Object value = newObject.getPropertyValue(propertyAccessor);
+					Object value = newObject.getPropertyValue(scalarAccessor);
 
 					columnNames += separator + "\"" + columnName + "\"";
 					columnValues += separator + valueToSQLText(value);
@@ -1084,7 +1092,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		int propertyIndex = 0;
 
 		for (int index = propertySets.size()-1; index >= 0; index--) {
-			PropertySet propertySet2 = propertySets.get(index);
+			PropertySet<?> propertySet2 = propertySets.get(index);
 			
 			String sql = "UPDATE " 
 				+ propertySet2.getId().replace('.', '_')
@@ -1094,32 +1102,29 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			String whereTerms = "";
 			String separator = "";
 			
-			for (Iterator iter = propertySet2.getPropertyIterator2(); iter.hasNext(); ) {
-				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-				
-				if (propertyAccessor.isScalar()) {
-					
-					if (propertyAccessor.getIndexIntoScalarProperties() != propertyIndex) {
-						throw new RuntimeException("index mismatch");
+			for (Iterator<ScalarPropertyAccessor> iter = propertySet2.getPropertyIterator_Scalar2(); iter.hasNext(); ) {
+				ScalarPropertyAccessor propertyAccessor = iter.next();
+
+				if (propertyAccessor.getIndexIntoScalarProperties() != propertyIndex) {
+					throw new RuntimeException("index mismatch");
+				}
+				// See if the value of the property has changed.
+				Object oldValue = oldValues[propertyIndex];
+				Object newValue = newValues[propertyIndex];
+				propertyIndex++;
+
+				if (!JMoneyPlugin.areEqual(oldValue, newValue)) {
+					String columnName;
+					if (propertyAccessor.getPropertySet().isExtension()) {
+						columnName = propertyAccessor.getName().replace('.', '_');
+					} else {
+						columnName = propertyAccessor.getLocalName();
 					}
-					// See if the value of the property has changed.
-					Object oldValue = oldValues[propertyIndex];
-					Object newValue = newValues[propertyIndex];
-					propertyIndex++;
-					
-					if (!JMoneyPlugin.areEqual(oldValue, newValue)) {
-						String columnName;
-						if (propertyAccessor.getPropertySet().isExtension()) {
-							columnName = propertyAccessor.getName().replace('.', '_');
-						} else {
-							columnName = propertyAccessor.getLocalName();
-						}
-						
-						updateClauses += separator + "\"" + columnName + "\"=" + valueToSQLText(newValue);
-						whereTerms += " AND \"" + columnName + "\"=" + valueToSQLText(oldValue);
-						
-						separator = ", ";
-					}
+
+					updateClauses += separator + "\"" + columnName + "\"=" + valueToSQLText(newValue);
+					whereTerms += " AND \"" + columnName + "\"=" + valueToSQLText(oldValue);
+
+					separator = ", ";
 				}
 			}
 			
@@ -1266,14 +1271,16 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 			int index = propertyAccessor.getIndexIntoConstructorParameters();
 			if (propertyAccessor.isScalar()) {
+				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor; 
+				
 				// Get the value from the array of values.
 				Object value = defaultValues[indexIntoDefaultValues++];
 				
 				if (value != null) {
-					if (propertyAccessor.getValueClass().isPrimitive()
-							|| propertyAccessor.getValueClass() == String.class
-							|| propertyAccessor.getValueClass() == Long.class
-							|| propertyAccessor.getValueClass() == Date.class) {
+					if (scalarAccessor.getClassOfValueObject().isPrimitive()
+							|| scalarAccessor.getClassOfValueObject() == String.class
+							|| scalarAccessor.getClassOfValueObject() == Long.class
+							|| scalarAccessor.getClassOfValueObject() == Date.class) {
 						constructorParameters[index] = value;
 					} else {
 						constructorParameters[index] = ((ExtendableObject)value).getObjectKey();
@@ -1282,11 +1289,13 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					constructorParameters[index] = null;
 				}
 			} else {
+				ListPropertyAccessor listAccessor = (ListPropertyAccessor)propertyAccessor; 
+
 				// Must be an element in an array.
 				if (constructWithCachedLists) {
-					constructorParameters[index] = new ListManagerCached(sessionManager, propertyAccessor);
+					constructorParameters[index] = new ListManagerCached(sessionManager, listAccessor);
 				} else {
-					constructorParameters[index] = new ListManagerUncached(objectKey, sessionManager, propertyAccessor);
+					constructorParameters[index] = new ListManagerUncached(objectKey, sessionManager, listAccessor);
 				}
 			}
 		}
@@ -1346,10 +1355,11 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 			int index = propertyAccessor.getIndexIntoConstructorParameters();
 			if (propertyAccessor.isList()) {
+				ListPropertyAccessor listAccessor = (ListPropertyAccessor)propertyAccessor;
 				if (constructWithCachedLists) {
-					constructorParameters[index] = new ListManagerCached(sessionManager, propertyAccessor);
+					constructorParameters[index] = new ListManagerCached(sessionManager, listAccessor);
 				} else {
-					constructorParameters[index] = new ListManagerUncached(objectKey, sessionManager, propertyAccessor);
+					constructorParameters[index] = new ListManagerUncached(objectKey, sessionManager, listAccessor);
 				}
 			}
 		}

@@ -39,8 +39,10 @@ import net.sf.jmoney.fields.TextControlWithSimpleTextbox;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.BankAccount;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
@@ -78,8 +80,8 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
 	Account account;
 	
 	DateComposite dateControl;
-	AccountComposite accountControl;
-	AccountComposite categoryControl;
+	AccountComposite<BankAccount> accountControl;
+	AccountComposite<IncomeExpenseAccount> categoryControl;
 	TextComposite memoControl;
 	TextComposite numberControl;
 	TextComposite descriptionControl;
@@ -101,7 +103,7 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
 		return true;
 	}
 	
-	public Control createControl(Composite parent, boolean expandedControls, Account account, Collection ourEntryList) {
+	public Control createControl(Composite parent, boolean expandedControls, Account account, Collection<IObjectKey> ourEntryList) {
 		this.account = account;
 		
 		Composite areaComposite = new Composite(parent, SWT.NULL);
@@ -128,7 +130,7 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
 
 		if (account == null) {
 			new Label(areaComposite, 0).setText("Bank Account:");
-			accountControl = new AccountControlUsingTextbox(areaComposite, session, BankAccount.class);
+			accountControl = new AccountControlUsingTextbox<BankAccount>(areaComposite, session, BankAccount.class);
 			GridData gd = new GridData(SWT.FILL, SWT.FILL, true, false);
 			gd.horizontalSpan = 3;
 			accountControl.setLayoutData(gd);
@@ -145,7 +147,7 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
 		numberControl.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
 		new Label(areaComposite, 0).setText("Category:");
-        categoryControl = new AccountControlUsingTextbox(areaComposite, session, IncomeExpenseAccount.class);
+        categoryControl = new AccountControlUsingTextbox<IncomeExpenseAccount>(areaComposite, session, IncomeExpenseAccount.class);
         GridData gdCategory = new GridData(SWT.FILL, SWT.FILL, true, false);
         gdCategory.widthHint = 200;
         categoryControl.setLayoutData(gdCategory);
@@ -198,12 +200,12 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
 		new Label(areaComposite, 0).setText("Category");
 		new Label(areaComposite, 0).setText("Amount");
 
-		accountControl = new AccountControlWithMruList(areaComposite, session, BankAccount.class);
+		accountControl = new AccountControlWithMruList<BankAccount>(areaComposite, session, BankAccount.class);
 		GridData gdAccount = new GridData(SWT.FILL, SWT.FILL, false, true);
 		gdAccount.widthHint = 200;
 		accountControl.setLayoutData(gdAccount);
 		
-		categoryControl = new AccountControlWithMruList(areaComposite, session, IncomeExpenseAccount.class);
+		categoryControl = new AccountControlWithMruList<IncomeExpenseAccount>(areaComposite, session, IncomeExpenseAccount.class);
 		GridData gdCategory = new GridData(SWT.FILL, SWT.FILL, false, true);
 		gdCategory.widthHint = 200;
 		categoryControl.setLayoutData(gdCategory);
@@ -230,7 +232,7 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
         return areaComposite;
 	}
 
-	private Control createButtonArea(Composite parent, final Collection ourEntryList) {
+	private Control createButtonArea(Composite parent, final Collection<IObjectKey> ourEntryList) {
 		Composite buttonArea = new Composite(parent, SWT.NULL);
 		
 		RowLayout layout = new RowLayout();
@@ -272,7 +274,7 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
         descriptionControl.saveState(memento.createChild("description"));
     }
     
-	public void addTransaction(Collection ourEntryList) {
+	public void addTransaction(Collection<IObjectKey> ourEntryList) {
 		// TODO: This is not quite right - we should obtain
 		// the currency given the account information.
 		Currency currency = session.getDefaultCurrency();

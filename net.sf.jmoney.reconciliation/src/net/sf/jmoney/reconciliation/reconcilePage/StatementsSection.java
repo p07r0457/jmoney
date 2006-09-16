@@ -31,7 +31,7 @@ import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.reconciliation.BankStatement;
@@ -253,7 +253,7 @@ public class StatementsSection extends SectionPart {
 
 			// Listen for changes so we can keep the tree map upto date.
 			account.getObjectKey().getSessionManager().addSessionChangeListener(new SessionChangeAdapter() {
-				public void objectAdded(ExtendableObject newObject) {
+				public void objectInserted(ExtendableObject newObject) {
 					if (newObject instanceof Entry) {
 						Entry newEntry = (Entry)newObject;
 						if (account.equals(newEntry.getAccount())) {
@@ -263,7 +263,7 @@ public class StatementsSection extends SectionPart {
 					}
 				}
 				
-				public void objectDeleted(ExtendableObject deletedObject) {
+				public void objectRemoved(ExtendableObject deletedObject) {
 					if (deletedObject instanceof Entry) {
 						Entry deletedEntry = (Entry)deletedObject;
 						if (account.equals(deletedEntry.getAccount())) {
@@ -282,7 +282,7 @@ public class StatementsSection extends SectionPart {
 					}
 				}
 				
-				public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+				public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 					if (changedObject instanceof Entry) {
 						Entry entry = (Entry)changedObject;
 						

@@ -60,7 +60,7 @@ class ImportOptionsDialog extends Dialog {
 
 	private Button reconcilableButton;
 	
-	private AccountControl defaultAccountControl;
+	private AccountControl<IncomeExpenseAccount> defaultAccountControl;
 
 	/**
 	 * Ok button widget.
@@ -103,14 +103,14 @@ class ImportOptionsDialog extends Dialog {
 			if (isReconcilable) {
 				// TODO: implement decorators etc. and stop OK being pressed if
 				// no account is selected.
-				Account defaultCategory = defaultAccountControl.getAccount();
+				IncomeExpenseAccount defaultCategory = defaultAccountControl.getAccount();
 				
 				if (defaultCategory == null) {
 					// TODO: Set the error message.
 					return;
 				}
 				
-				IncomeExpenseAccount defaultCategoryInTransaction = (IncomeExpenseAccount)transactionManager.getCopyInTransaction(defaultCategory);
+				IncomeExpenseAccount defaultCategoryInTransaction = transactionManager.getCopyInTransaction(defaultCategory);
 				ourAccount2.setDefaultCategory(defaultCategoryInTransaction);
 			} else {
 				ourAccount2.setDefaultCategory(null);
@@ -187,7 +187,7 @@ class ImportOptionsDialog extends Dialog {
 		composite.setLayout(new GridLayout(2, false));
 		
 		new Label(composite, SWT.NONE).setText("Default category:");
-		defaultAccountControl = new AccountControl(composite, account.getSession(), IncomeExpenseAccount.class);
+		defaultAccountControl = new AccountControl<IncomeExpenseAccount>(composite, account.getSession(), IncomeExpenseAccount.class);
 		GridData accountData = new GridData();
 		accountData.widthHint = 200;
 		defaultAccountControl.setLayoutData(accountData);

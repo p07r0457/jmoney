@@ -22,12 +22,15 @@
 
 package net.sf.jmoney.fields;
 
+import java.util.Date;
+
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Transaction;
 
@@ -50,9 +53,9 @@ import net.sf.jmoney.model2.Transaction;
  */
 public class TransactionInfo implements IPropertySetInfo {
 
-	private static PropertySet propertySet = null;
-	private static PropertyAccessor dateAccessor = null;
-	private static PropertyAccessor entriesAccessor = null;
+	private static PropertySet<Transaction> propertySet = null;
+	private static ScalarPropertyAccessor<Date> dateAccessor = null;
+	private static ListPropertyAccessor<Entry> entriesAccessor = null;
 
 	public TransactionInfo() {
     }
@@ -61,13 +64,13 @@ public class TransactionInfo implements IPropertySetInfo {
 		return Transaction.class;
 	}
 	
-	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
-		TransactionInfo.propertySet = propertySet;
+	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+		TransactionInfo.propertySet = propertyRegistrar.addPropertySet(Transaction.class);
 
-        IPropertyControlFactory dateControlFactory = new DateControlFactory();
+        IPropertyControlFactory<Date> dateControlFactory = new DateControlFactory();
 		
 		entriesAccessor = propertyRegistrar.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), Entry.class, null);
-		dateAccessor = propertyRegistrar.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), 0, 76, dateControlFactory, null);
+		dateAccessor = propertyRegistrar.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), Date.class, 0, 76, dateControlFactory, null);
 		
 		propertyRegistrar.setObjectDescription("Financial Transaction");
 	}
@@ -75,21 +78,21 @@ public class TransactionInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static PropertySet getPropertySet() {
+	public static PropertySet<Transaction> getPropertySet() {
 		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getEntriesAccessor() {
+	public static ListPropertyAccessor<Entry> getEntriesAccessor() {
 		return entriesAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getDateAccessor() {
+	public static ScalarPropertyAccessor<Date> getDateAccessor() {
 		return dateAccessor;
 	}	
 

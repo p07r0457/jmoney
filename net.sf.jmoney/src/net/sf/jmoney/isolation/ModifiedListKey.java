@@ -22,8 +22,9 @@
 
 package net.sf.jmoney.isolation;
 
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ListPropertyAccessor;
 
 /**
  * This class is the class of the keys in the modifiedLists map. An instance of
@@ -36,11 +37,11 @@ import net.sf.jmoney.model2.PropertyAccessor;
  * 
  * @author Nigel Westbury
  */
-class ModifiedListKey {
+class ModifiedListKey<E extends ExtendableObject> {
 	IObjectKey parentKey;
-	PropertyAccessor listAccessor;
+	ListPropertyAccessor<E> listAccessor;
 	
-	ModifiedListKey(IObjectKey parentKey, PropertyAccessor listAccessor) {
+	ModifiedListKey(IObjectKey parentKey, ListPropertyAccessor<E> listAccessor) {
 		this.parentKey = parentKey;
 		this.listAccessor = listAccessor;
 	}

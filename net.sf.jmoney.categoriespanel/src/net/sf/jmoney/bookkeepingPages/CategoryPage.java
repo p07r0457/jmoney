@@ -39,6 +39,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyDependency;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
@@ -187,7 +188,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 				// and possibly re-built, so do nothing here.
 			}
 			
-			public void objectAdded(ExtendableObject newObject) {
+			public void objectInserted(ExtendableObject newObject) {
 				if (newObject instanceof IncomeExpenseAccount) {
 					IncomeExpenseAccount newAccount = (IncomeExpenseAccount)newObject;
 					Account parent = newAccount.getParent();
@@ -199,7 +200,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 				}
 			}
 			
-			public void objectDeleted(ExtendableObject deletedObject) {
+			public void objectRemoved(ExtendableObject deletedObject) {
                 if (deletedObject instanceof IncomeExpenseAccount) {
                     IncomeExpenseAccount deletedAccount = (IncomeExpenseAccount) deletedObject;
                     viewer.setSelection(null);
@@ -207,7 +208,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
                 }
             }
 			
-			public void objectChanged(ExtendableObject changedObject, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+			public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 				if (changedObject instanceof IncomeExpenseAccount) {
 					IncomeExpenseAccount account = (IncomeExpenseAccount)changedObject;
 					if (propertyAccessor == AccountInfo.getNameAccessor()) {
@@ -296,77 +297,75 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			});
 			
 			// Add the properties for category.
-			PropertySet extendablePropertySet = IncomeExpenseAccountInfo.getPropertySet();
-			for (Iterator iter = extendablePropertySet.getPropertyIterator3(); iter.hasNext(); ) {
-				final PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-				if (propertyAccessor.isScalar()) {
-					final Label propertyLabel = new Label(topLevelControl, 0);
-					propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
-					final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(topLevelControl, session);
-					propertyControl.getControl().addFocusListener(
-							new FocusAdapter() {
-								
-								// When a control gets the focus, save the old value here.
-								// This value is used in the change message.
-								String oldValueText;
-								
-								public void focusLost(FocusEvent e) {
-									if (session.getObjectKey().getSessionManager().isSessionFiring()) {
-										return;
-									}
-									
-									propertyControl.save();
-									String newValueText = propertyAccessor.formatValueForMessage(
-											selectedAccount);
-									
-									String description;
-									if (propertyAccessor == AccountInfo.getNameAccessor()) {
-										description = 
-											"rename account from " + oldValueText
-											+ " to " + newValueText;
-									} else {
-										description = 
-											"change " + propertyAccessor.getShortDescription() + " property"
-											+ " in '" + selectedAccount.getName() + "' account"
-											+ " from " + oldValueText
-											+ " to " + newValueText;
-									}
-									session.registerUndoableChange(description);
+			PropertySet<IncomeExpenseAccount> extendablePropertySet = IncomeExpenseAccountInfo.getPropertySet();
+			for (Iterator<ScalarPropertyAccessor> iter = extendablePropertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
+				final ScalarPropertyAccessor propertyAccessor = iter.next();
+				final Label propertyLabel = new Label(topLevelControl, 0);
+				propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
+				final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(topLevelControl, session);
+				propertyControl.getControl().addFocusListener(
+						new FocusAdapter() {
+
+							// When a control gets the focus, save the old value here.
+							// This value is used in the change message.
+							String oldValueText;
+
+							public void focusLost(FocusEvent e) {
+								if (session.getObjectKey().getSessionManager().isSessionFiring()) {
+									return;
 								}
-								public void focusGained(FocusEvent e) {
-									// Save the old value of this property for use in our 'undo' message.
-									oldValueText = propertyAccessor.formatValueForMessage(
-											selectedAccount);
+
+								propertyControl.save();
+								String newValueText = propertyAccessor.formatValueForMessage(
+										selectedAccount);
+
+								String description;
+								if (propertyAccessor == AccountInfo.getNameAccessor()) {
+									description = 
+										"rename account from " + oldValueText
+										+ " to " + newValueText;
+								} else {
+									description = 
+										"change " + propertyAccessor.getDisplayName() + " property"
+										+ " in '" + selectedAccount.getName() + "' account"
+										+ " from " + oldValueText
+										+ " to " + newValueText;
 								}
-							});
-					
-					// No account is initially set.  It is not really
-					// obvious in what state the controls should be when no
-					// account is set, so let's leave any that could be
-					// inapplicable as invisible, and the others visible
-					// but disabled.
-					if (propertyAccessor.getDependency() != null) {
-						propertyLabel.setVisible(false);
-						propertyControl.getControl().setVisible(false);
-					}
-					
-					// Add to our list of controls.
-					propertyList.add(
-							new PropertyControls(propertyAccessor, propertyLabel, propertyControl));
-					
-					toolkit.adapt(propertyLabel, false, false);
-					toolkit.adapt(propertyControl.getControl(), true, true);
-					
-					// Make the control take up the full width
-					GridData gridData5 = new GridData();
-					gridData.horizontalAlignment = GridData.FILL;
-					gridData5.grabExcessHorizontalSpace = true;
-					propertyControl.getControl().setLayoutData(gridData5);
-					
-					// Set the control to have no account set (control
-					// is disabled)
-					propertyControl.load(null);
+								session.registerUndoableChange(description);
+							}
+							public void focusGained(FocusEvent e) {
+								// Save the old value of this property for use in our 'undo' message.
+								oldValueText = propertyAccessor.formatValueForMessage(
+										selectedAccount);
+							}
+						});
+
+				// No account is initially set.  It is not really
+				// obvious in what state the controls should be when no
+				// account is set, so let's leave any that could be
+				// inapplicable as invisible, and the others visible
+				// but disabled.
+				if (propertyAccessor.getDependency() != null) {
+					propertyLabel.setVisible(false);
+					propertyControl.getControl().setVisible(false);
 				}
+
+				// Add to our list of controls.
+				propertyList.add(
+						new PropertyControls(propertyAccessor, propertyLabel, propertyControl));
+
+				toolkit.adapt(propertyLabel, false, false);
+				toolkit.adapt(propertyControl.getControl(), true, true);
+
+				// Make the control take up the full width
+				GridData gridData5 = new GridData();
+				gridData.horizontalAlignment = GridData.FILL;
+				gridData5.grabExcessHorizontalSpace = true;
+				propertyControl.getControl().setLayoutData(gridData5);
+
+				// Set the control to have no account set (control
+				// is disabled)
+				propertyControl.load(null);
 			}
 			
 			

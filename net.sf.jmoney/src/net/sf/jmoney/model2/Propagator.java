@@ -216,7 +216,7 @@ public class Propagator {
 		}
 	}
 	
-	public static synchronized void fireAdaptors(ExtendableObject source, PropertyAccessor propertyAccessor) {
+	public static synchronized void fireAdaptors(ExtendableObject source, ScalarPropertyAccessor<?> propertyAccessor) {
 		// We must be very careful when firing propagators.  Propagators usually work two-way,
 		// with updates to one property being reflected in another property and updates
 		// to the other property being reflected in the first property.  There may be
@@ -256,7 +256,7 @@ public class Propagator {
 		
 		if (updatedProperties.contains(propertyAccessor)) {
 			// Actually should not be a runtime exception
-			throw new InconsistentCircularPropagatorsException(propertyAccessor, source.getPropertyValue(propertyAccessor));
+			throw new InconsistentCircularPropagatorsException(propertyAccessor.getName(), source.getPropertyValue(propertyAccessor));
 		}
 		
 		// Add this property to the map of properties that have been changed.
@@ -291,7 +291,7 @@ public class Propagator {
 					}
 					if (e.getCause() instanceof InconsistentCircularPropagatorsException) {
 						InconsistentCircularPropagatorsException exception = (InconsistentCircularPropagatorsException)e.getCause();
-						throw new InconsistentCircularPropagatorsException(propertyAccessor, source.getPropertyValue(propertyAccessor), exception);  
+						throw new InconsistentCircularPropagatorsException(propertyAccessor.getName(), source.getPropertyValue(propertyAccessor), exception);  
 					} else {
 						// TODO: Figure out what to do here
 						e.printStackTrace();

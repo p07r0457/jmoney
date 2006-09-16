@@ -190,13 +190,13 @@ public abstract class ExtendableObject {
 	// Should allow default package access and protected access
 	// but not public access.  Unfortunately this cannot be done
 	// so for time being allow public access.
-	public void processPropertyChange(final PropertyAccessor propertyAccessor, final Object oldValue, final Object newValue) {
+	public void processPropertyChange(final ScalarPropertyAccessor propertyAccessor, final Object oldValue, final Object newValue) {
 		if (oldValue == newValue ||
 				(oldValue != null && oldValue.equals(newValue)))
 					return;
 
 		// Update the database.
-		PropertySet actualPropertySet = PropertySet.getPropertySet(this.getClass());
+		PropertySet<?> actualPropertySet = PropertySet.getPropertySet(this.getClass());
 		
 		// Build two arrays of old and new values.
 		// Ultimately we will have a layer between that does this
@@ -219,19 +219,17 @@ public abstract class ExtendableObject {
 		Object [] newValues = new Object[count];
 		
 		int i = 0;
-		for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor2 = (PropertyAccessor)iter.next();
-			if (propertyAccessor2.isScalar()) {
-				if (propertyAccessor2 == propertyAccessor) {
-					oldValues[i] = oldValue;
-					newValues[i] = newValue;
-				} else {
-					Object value = getPropertyValue(propertyAccessor2);
-					oldValues[i] = value;
-					newValues[i] = value;
-				}
-				i++;
+		for (Iterator<ScalarPropertyAccessor> iter = actualPropertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
+			ScalarPropertyAccessor<?> propertyAccessor2 = iter.next();
+			if (propertyAccessor2 == propertyAccessor) {
+				oldValues[i] = oldValue;
+				newValues[i] = newValue;
+			} else {
+				Object value = getPropertyValue(propertyAccessor2);
+				oldValues[i] = value;
+				newValues[i] = value;
 			}
+			i++;
 		}
 		objectKey.updateProperties(actualPropertySet, oldValues, newValues);
 
@@ -353,26 +351,6 @@ public abstract class ExtendableObject {
 		return extension;
 	}
 	
-	public int getIntegerPropertyValue(PropertyAccessor propertyAccessor) {
-		return ((Integer)getPropertyValue(propertyAccessor)).intValue();
-	}
-	
-    public long getLongPropertyValue(PropertyAccessor propertyAccessor) {
-        return ((Long)getPropertyValue(propertyAccessor)).longValue();
-    }
-    
-    public String getStringPropertyValue(PropertyAccessor propertyAccessor) {
-        return (String)getPropertyValue(propertyAccessor);
-    }
-    
-    public char getCharacterPropertyValue(PropertyAccessor propertyAccessor) {
-        return ((Character)getPropertyValue(propertyAccessor)).charValue();
-    }
-    
-    public boolean getBooleanPropertyValue(PropertyAccessor propertyAccessor) {
-        return ((Boolean)getPropertyValue(propertyAccessor)).booleanValue();
-    }
-    
     /**
      * Returns the value of a given property.
      * <P>
@@ -388,7 +366,7 @@ public abstract class ExtendableObject {
      * not exist in this object then the default value of the
      * property is returned.
      */
-	public Object getPropertyValue(PropertyAccessor propertyAccessor) {
+	public <T> T getPropertyValue(ScalarPropertyAccessor<T> propertyAccessor) {
 		Object objectWithProperties = getPropertySetInterface(propertyAccessor.getPropertySet());
 		
 		// If there is no extension then we use a default extension
@@ -402,7 +380,7 @@ public abstract class ExtendableObject {
 			objectWithProperties = propertyAccessor.getPropertySet().getDefaultPropertyValues();
 		}
 		
-		return  propertyAccessor.invokeGetMethod(objectWithProperties);
+		return propertyAccessor.invokeGetMethod(objectWithProperties);
 	}
 	
 	/**
@@ -412,7 +390,7 @@ public abstract class ExtendableObject {
 	 * 			whose values are to be obtained.  The property
 	 * 			must be a list property (and not a scalar property).
 	 */
-	public ObjectCollection<? extends ExtendableObject> getListPropertyValue(PropertyAccessor owningListProperty) {
+	public <E extends ExtendableObject> ObjectCollection<E> getListPropertyValue(ListPropertyAccessor<E> owningListProperty) {
 		Object objectWithProperties = getMutablePropertySetInterface(owningListProperty.getPropertySet());
 		
 		// If no extension exists then return the empty collection.
@@ -424,10 +402,10 @@ public abstract class ExtendableObject {
 			throw new RuntimeException("list properties in extension not yet fully implemented");
 		}
 		
-		return (ObjectCollection)owningListProperty.invokeGetMethod(objectWithProperties);
+		return owningListProperty.invokeGetMethod(objectWithProperties);
 	}
 	
-	public void setPropertyValue(PropertyAccessor propertyAccessor, Object value) {
+	public <V> void setPropertyValue(ScalarPropertyAccessor<V> propertyAccessor, V value) {
 		// The problem here is that the XML parser sets the properties directly in
 		// the object, without going through a mutable object.
 		// We cannot therefore rely on this object being mutable, so temporarily
@@ -476,22 +454,6 @@ public abstract class ExtendableObject {
 		}
 	}
 	
-	public void setIntegerPropertyValue(PropertyAccessor propertyAccessor, int value) {
-		setPropertyValue(propertyAccessor, new Integer(value));
-	}
-	
-    public void setLongPropertyValue(PropertyAccessor propertyAccessor, long value) {
-        setPropertyValue(propertyAccessor, new Long(value));
-    }
-    
-    public void setStringPropertyValue(PropertyAccessor propertyAccessor, String value) {
-        setPropertyValue(propertyAccessor, value);
-    }
-    
-	public void setCharacterPropertyValue(PropertyAccessor propertyAccessor, char value) {
-		setPropertyValue(propertyAccessor, new Character(value));
-	}
-
 	/**
 	 * Return a list of extension that exist for this object.
 	 * This is the list of extensions that have actually been

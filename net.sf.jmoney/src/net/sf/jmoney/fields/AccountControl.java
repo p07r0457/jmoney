@@ -61,19 +61,19 @@ import org.eclipse.ui.IMemento;
  * 
  * @author Nigel Westbury
  */
-public class AccountControl extends AccountComposite {
+public class AccountControl<A extends Account> extends AccountComposite<A> {
 
 	Text textControl;
 	
     /**
      * List of accounts put into account list.
      */
-    private Vector<Account> allAccounts;
+    private Vector<A> allAccounts;
     
 	/**
 	 * Currently selected account, or null if no account selected
 	 */
-	private Account account;
+	private A account;
 	
 	private Vector<SelectionListener> listeners = new Vector<SelectionListener>();
 	
@@ -81,7 +81,7 @@ public class AccountControl extends AccountComposite {
 	 * @param parent
 	 * @param style
 	 */
-	public AccountControl(final Composite parent, final Session session, final Class<? extends Account> accountClass) {
+	public AccountControl(final Composite parent, final Session session, final Class<A> accountClass) {
 		super(parent, SWT.NONE);
 
 		setLayout(new FillLayout(SWT.VERTICAL));
@@ -106,7 +106,7 @@ public class AccountControl extends AccountComposite {
 		        rd.height = 100;
 		        listControl.setLayoutData(rd);
 
-		        allAccounts = new Vector<Account>();
+		        allAccounts = new Vector<A>();
 		        addAccounts("", session.getAccountCollection(), listControl, accountClass);
 		        
 //		        shell.setSize(listControl.computeSize(SWT.DEFAULT, listControl.getItemHeight()*10));
@@ -118,7 +118,7 @@ public class AccountControl extends AccountComposite {
                 		new SelectionAdapter() {
 							public void widgetSelected(SelectionEvent e) {
 								int selectionIndex = listControl.getSelectionIndex();
-								account = (Account)allAccounts.get(selectionIndex);
+								account = allAccounts.get(selectionIndex);
 								textControl.setText(account.getName());
 								fireAccountChangeEvent();
 							}
@@ -162,7 +162,7 @@ public class AccountControl extends AccountComposite {
     						} while (i != startIndex);
     						
     						if (match != -1) {
-    							account = (Account)allAccounts.get(match);
+    							account = allAccounts.get(match);
     							listControl.select(match);
     							listControl.setTopIndex(match);
     							textControl.setText(account.getName());
@@ -212,11 +212,11 @@ public class AccountControl extends AccountComposite {
 		}
 	}
 	
-	private void addAccounts(String prefix, Collection<? extends Account> accounts, List listControl, Class<? extends Account> accountClass) {
-    	Vector<Account> matchingAccounts = new Vector<Account>();
+	private void addAccounts(String prefix, Collection<? extends Account> accounts, List listControl, Class<A> accountClass) {
+    	Vector<A> matchingAccounts = new Vector<A>();
         for (Account account: accounts) {
         	if (accountClass.isAssignableFrom(account.getClass())) {
-        		matchingAccounts.add(account);
+        		matchingAccounts.add(accountClass.cast(account));
         	}
         }
 		
@@ -227,7 +227,7 @@ public class AccountControl extends AccountComposite {
 			}
 		});
 		
-		for (Account matchingAccount: matchingAccounts) {
+		for (A matchingAccount: matchingAccounts) {
     		allAccounts.add(matchingAccount);
 			listControl.add(prefix + matchingAccount.getName());
     		addAccounts(prefix + matchingAccount.getName() + ":", matchingAccount.getSubAccountCollection(), listControl, accountClass);
@@ -238,7 +238,7 @@ public class AccountControl extends AccountComposite {
     /**
 	 * @param object
 	 */
-	public void setAccount(Account account) {
+	public void setAccount(A account) {
 		this.account = account;
 		
 		if (account == null) {
@@ -252,7 +252,7 @@ public class AccountControl extends AccountComposite {
 	 * @return the date, or null if a valid date is not set in
 	 * 				the control
 	 */
-	public Account getAccount() {
+	public A getAccount() {
 		return account;
 	}
 

@@ -24,7 +24,7 @@ package net.sf.jmoney.fields;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -40,23 +40,23 @@ import org.eclipse.swt.widgets.Control;
  */
 public class CheckMarkEditor implements IPropertyControl {
 
-    protected PropertyAccessor fPropertyAccessor;
-    protected Button fPropertyControl;
-    protected ExtendableObject fExtendableObject;
+    protected ScalarPropertyAccessor<Boolean> propertyAccessor;
+    protected Button propertyControl;
+    protected ExtendableObject extendableObject;
 
     /**
      * Create a new date editor.
      */
-    public CheckMarkEditor(Composite parent, PropertyAccessor propertyAccessor) {
-        fPropertyControl = new Button(parent, SWT.CHECK);
-        fPropertyAccessor = propertyAccessor;
+    public CheckMarkEditor(Composite parent, ScalarPropertyAccessor<Boolean> propertyAccessor) {
+        propertyControl = new Button(parent, SWT.CHECK);
+        this.propertyAccessor = propertyAccessor;
 
         // Selection changes are reflected immediately in the
         // datastore.  This allows controls for other properties,
         // which may depend on this property, to be immediately made
         // visible or invisible.
 
-        fPropertyControl.addSelectionListener(new SelectionAdapter() {
+        propertyControl.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(SelectionEvent e) {
                 save();
             }
@@ -67,29 +67,29 @@ public class CheckMarkEditor implements IPropertyControl {
      * @see net.sf.jmoney.model2.IPropertyControl#load(net.sf.jmoney.model2.ExtendableObject)
      */
     public void load(ExtendableObject object) {
-    	this.fExtendableObject = object;
+    	this.extendableObject = object;
     	if (object == null) {
-            fPropertyControl.setSelection(false);
+            propertyControl.setSelection(false);
     	} else {
-            Boolean value = (Boolean)object.getPropertyValue(fPropertyAccessor);
-            fPropertyControl.setSelection(value.booleanValue());
+            Boolean value = object.getPropertyValue(propertyAccessor);
+            propertyControl.setSelection(value.booleanValue());
     	}
-    	fPropertyControl.setEnabled(object != null);
+    	propertyControl.setEnabled(object != null);
     }
 
     /* (non-Javadoc)
      * @see net.sf.jmoney.model2.IPropertyControl#save()
      */
     public void save() {
-        boolean value = fPropertyControl.getSelection();
-        fExtendableObject.setPropertyValue(fPropertyAccessor, new Boolean(value));
+        boolean value = propertyControl.getSelection();
+        extendableObject.setPropertyValue(propertyAccessor, new Boolean(value));
     }
 
     /* (non-Javadoc)
      * @see net.sf.jmoney.model2.IPropertyControl#getControl()
      */
     public Control getControl() {
-        return fPropertyControl;
+        return propertyControl;
     }
 
 }

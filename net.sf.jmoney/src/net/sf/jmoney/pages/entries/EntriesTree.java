@@ -41,6 +41,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
@@ -839,7 +840,7 @@ public class EntriesTree extends Composite {
 		});
 		
 		session.getObjectKey().getSessionManager().addSessionChangeListener(new SessionChangeAdapter() {
-			public void objectAdded(ExtendableObject newObject) {
+			public void objectInserted(ExtendableObject newObject) {
 				if (newObject instanceof Entry) {
 					Entry newEntry = (Entry) newObject;
 					// if the entry is in this table, add it
@@ -872,7 +873,7 @@ public class EntriesTree extends Composite {
 				}
 			}
 
-			public void objectDeleted(ExtendableObject deletedObject) {
+			public void objectRemoved(ExtendableObject deletedObject) {
 				if (deletedObject instanceof Entry) {
 					Entry deletedEntry = (Entry) deletedObject;
 					// if the entry is in this table, remove it.
@@ -921,7 +922,7 @@ public class EntriesTree extends Composite {
 			}
 
 			public void objectChanged(ExtendableObject extendableObject,
-					PropertyAccessor propertyAccessor, Object oldValue,
+					ScalarPropertyAccessor propertyAccessor, Object oldValue,
 					Object newValue) {
 				if (extendableObject instanceof Entry) {
 					Entry entry = (Entry) extendableObject;

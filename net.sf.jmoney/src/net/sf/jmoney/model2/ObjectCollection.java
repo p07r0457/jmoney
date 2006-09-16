@@ -37,16 +37,25 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	
 	private IListManager<E> listManager;
 	ExtendableObject parent;
-	PropertyAccessor listPropertyAccessor;
+	ListPropertyAccessor listPropertyAccessor;
 	
-	ObjectCollection(IListManager<E> listManager, ExtendableObject parent, PropertyAccessor listPropertyAccessor) {
+	ObjectCollection(IListManager<E> listManager, ExtendableObject parent, ListPropertyAccessor listPropertyAccessor) {
 		this.listManager = listManager;
 		this.parent = parent;
 		this.listPropertyAccessor = listPropertyAccessor;
 	}
-	
-	public ExtendableObject createNewElement(PropertySet actualPropertySet) {
-		final ExtendableObject newObject = listManager.createNewElement(parent, actualPropertySet);
+
+	/**
+	 * This version of this method is called only by the end-user code, i.e. this method
+	 * is not called when a transaction manager is committing its changes to the underlying
+	 * data manager.
+	 *  
+	 * @param <F> the class of the object being created in this list
+	 * @param actualPropertySet
+	 * @return
+	 */
+	public <F extends E> F createNewElement(PropertySet<F> actualPropertySet) {
+		final F newObject = listManager.createNewElement(parent, actualPropertySet);
 		
 		parent.getSession().getChangeManager().processObjectCreation(parent, listPropertyAccessor, newObject);
 		
@@ -54,18 +63,50 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 		parent.getObjectKey().getSessionManager().fireEvent(
 				new ISessionChangeFirer() {
 					public void fire(SessionChangeListener listener) {
-						listener.objectAdded(newObject);
+						listener.objectInserted(newObject);
+						listener.objectCreated(newObject);
 					}
 				});
-		
 		
 		return newObject;
 	}
 	
-	public ExtendableObject createNewElement(PropertySet actualPropertySet, Object values[]) {
-		final ExtendableObject newObject = listManager.createNewElement(parent, actualPropertySet, values);
+	/**
+	 * This version of this method is called only from within a transaction. The values of
+	 * the scalar properties are passed so that:
+	 * 
+	 * - the underlying database need only do a single insert, instead of inserting with
+	 *   default values and then updating each value as they are set.
+	 *   
+	 * - a single notification is fired, passing the object with its final property values,
+	 *   rather than sending out an object with default values and then a property change
+	 *   notification for each property.
+	 *   
+	 * This may be a top level insert or a descendent of an object that was inserted in
+	 * the same transaction.  We must know the difference so we can fire the objectInserted
+	 * event methods correctly. We therefore need a flag to indicate this.
+	 * 
+	 * @param isDescendentInsert true if this object is being inserted because its parent is
+	 * 			being inserted in the same transaction, false if this object is being inserted
+	 *          into a list that existed prior to this transaction
+	 */
+	public <F extends E> F createNewElement(PropertySet<F> actualPropertySet, Object values[], final boolean isDescendentInsert) {
+		final F newObject = listManager.createNewElement(parent, actualPropertySet, values);
 		
 		parent.getSession().getChangeManager().processObjectCreation(parent, listPropertyAccessor, newObject);
+		
+		/*
+		 * This version of this method is called only from within a transaction.   
+		 */
+		parent.getObjectKey().getSessionManager().fireEvent(
+				new ISessionChangeFirer() {
+					public void fire(SessionChangeListener listener) {
+						if (!isDescendentInsert) {
+							listener.objectInserted(newObject);
+						}
+						listener.objectCreated(newObject);
+					}
+				});
 		
 		return newObject;
 	}
@@ -118,7 +159,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 			parent.getObjectKey().getSessionManager().fireEvent(
 					new ISessionChangeFirer() {
 						public void fire(SessionChangeListener listener) {
-							listener.objectDeleted(extendableObject);
+							listener.objectRemoved(extendableObject);
 						}
 					});
 			

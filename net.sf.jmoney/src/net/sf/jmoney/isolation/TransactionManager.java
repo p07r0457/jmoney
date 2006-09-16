@@ -41,6 +41,8 @@ import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ISessionChangeFirer;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeListener;
@@ -126,6 +128,13 @@ public class TransactionManager extends DataManager {
 	 */
 	Map<ModifiedListKey, ModifiedList> modifiedLists = new HashMap<ModifiedListKey, ModifiedList>();
 
+	/**
+	 * true if a nested transaction is in the process of applying its
+	 * changes to our data
+	 */
+	// TODO: use this flag to ensure that performRefresh is called correctly.
+	private boolean insideTransaction = false;
+
     /**
 	 * Construct a transaction manager for use with the given session.
 	 * The transaction manager does not become the active transaction
@@ -141,7 +150,7 @@ public class TransactionManager extends DataManager {
 	 */
 	public TransactionManager(DataManager baseDataManager) {
 		this.baseDataManager = baseDataManager;
-		this.uncommittedSession = (Session)getCopyInTransaction(baseDataManager.getSession());
+		this.uncommittedSession = getCopyInTransaction(baseDataManager.getSession());
 		
 		/*
 		 * Listen for changes to the base data.  Note that
@@ -193,7 +202,7 @@ public class TransactionManager extends DataManager {
      * 			of the object in this transaction, or null if the
      * 			given object has been deleted in this transaction 
      */
-    public ExtendableObject getCopyInTransaction(ExtendableObject committedObject) {
+    public <E extends ExtendableObject> E getCopyInTransaction(E committedObject) {
 
 		ExtendableObject objectInTransaction = allObjects.get(committedObject.getObjectKey());
 		if (objectInTransaction != null) {
@@ -201,7 +210,7 @@ public class TransactionManager extends DataManager {
 //			if (objectInTransaction.isDeleted()) {
 //				throw new RuntimeException("Attempt to get copy of object, but that object has been deleted in the transaction");
 //			}
-			return objectInTransaction;
+			return committedObject.getClass().cast(objectInTransaction);
 		}
 			
     	
@@ -219,7 +228,7 @@ public class TransactionManager extends DataManager {
     	// manager and all other objects are obtained by traversing
     	// from that object.  However, it is good to check.
 
-		PropertySet propertySet = PropertySet.getPropertySet(committedObject.getClass());
+		PropertySet<? extends E> propertySet = PropertySet.getPropertySet(committedObject.getClass());
     	
 		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
 		
@@ -238,17 +247,21 @@ public class TransactionManager extends DataManager {
 		// Set the remaining parameters to the constructor.
 		for (PropertyAccessor propertyAccessor: constructorProperties) {
 
-			Class valueClass = propertyAccessor.getValueClass(); 
 			Object value;
 			if (propertyAccessor.isList()) {
-				value = new DeltaListManager(this, committedObject, propertyAccessor);
-			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
-				IObjectKey committedObjectKey = propertyAccessor.invokeObjectKeyField(committedObject);
-				value = committedObjectKey == null
-				? null
-						: new UncommittedObjectKey(this, committedObjectKey);
+				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
+				value = createDeltaListManager(committedObject, listAccessor);
 			} else {
-				value = committedObject.getPropertyValue(propertyAccessor);
+				ScalarPropertyAccessor<?> scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
+				Class valueClass = scalarAccessor.getClassOfValueObject(); 
+				if (ExtendableObject.class.isAssignableFrom(valueClass)) {
+					IObjectKey committedObjectKey = scalarAccessor.invokeObjectKeyField(committedObject);
+					value = committedObjectKey == null
+					? null
+							: new UncommittedObjectKey(this, committedObjectKey);
+				} else {
+					value = committedObject.getPropertyValue(scalarAccessor);
+				}
 			}
 			
 			constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
@@ -269,17 +282,22 @@ public class TransactionManager extends DataManager {
 			for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); ) {
 				PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIter.next();
 
-				Class valueClass = propertyAccessor.getValueClass(); 
 				Object value;
 				if (propertyAccessor.isList()) {
-					value = new DeltaListManager(this, committedObject, propertyAccessor);
-				} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
-					IObjectKey committedObjectKey = propertyAccessor.invokeObjectKeyField(committedObject);
-					value = committedObjectKey == null
-					? null
-							: new UncommittedObjectKey(this, committedObjectKey);
+					ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
+					value = createDeltaListManager(committedObject, listAccessor);
 				} else {
-					value = committedObject.getPropertyValue(propertyAccessor);
+					ScalarPropertyAccessor<?> scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
+					Class valueClass = scalarAccessor.getClassOfValueObject(); 
+					if (ExtendableObject.class.isAssignableFrom(valueClass)) {
+
+						IObjectKey committedObjectKey = scalarAccessor.invokeObjectKeyField(committedObject);
+						value = committedObjectKey == null
+						? null
+								: new UncommittedObjectKey(this, committedObjectKey);
+					} else {
+						value = committedObject.getPropertyValue(scalarAccessor);
+					}
 				}
 				
 				extensionValues[i++] = value;
@@ -294,8 +312,8 @@ public class TransactionManager extends DataManager {
 			}
 			
 			// Overwrite any values from modifiedValues
-			for (Map.Entry<PropertyAccessor, Object> mapEntry2: modifiedValues.getMap().entrySet()) {
-				PropertyAccessor accessor = mapEntry2.getKey();
+			for (Map.Entry<ScalarPropertyAccessor, Object> mapEntry2: modifiedValues.getMap().entrySet()) {
+				ScalarPropertyAccessor accessor = mapEntry2.getKey();
 				Object newValue = mapEntry2.getValue();
 				if (!accessor.getPropertySet().isExtension()) {
 					constructorParameters[accessor.getIndexIntoConstructorParameters()] = newValue;
@@ -312,7 +330,26 @@ public class TransactionManager extends DataManager {
 						int i = 0;
 						for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); ) {
 							PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIter.next();
-							extensionValues[i++] = committedObject.getPropertyValue(propertyAccessor);
+
+							Object value;
+							if (propertyAccessor.isList()) {
+								ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
+								value = createDeltaListManager(committedObject, listAccessor);
+							} else {
+								ScalarPropertyAccessor<?> scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
+								Class valueClass = scalarAccessor.getClassOfValueObject(); 
+								if (ExtendableObject.class.isAssignableFrom(valueClass)) {
+
+									IObjectKey committedObjectKey = scalarAccessor.invokeObjectKeyField(committedObject);
+									value = committedObjectKey == null
+									? null
+											: new UncommittedObjectKey(this, committedObjectKey);
+								} else {
+									value = committedObject.getPropertyValue(scalarAccessor);
+								}
+							}
+							
+							extensionValues[i++] = value;
 						}
 						extensionMap.put(extensionPropertySet, extensionValues);
 					}
@@ -324,7 +361,7 @@ public class TransactionManager extends DataManager {
 		}
         	
 		// We can now create the object.
-    	ExtendableObject copyInTransaction = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
+    	E copyInTransaction = propertySet.constructImplementationObject(constructorParameters);
 
     	/*
     	 * Now we have created a version of this object that is valid in this datastore,
@@ -360,6 +397,10 @@ public class TransactionManager extends DataManager {
     	// that is a view of the committed items in the list)
 
     	return copyInTransaction;
+    }
+
+    private <E extends ExtendableObject> DeltaListManager<E> createDeltaListManager(ExtendableObject committedParent, ListPropertyAccessor<E> listProperty) {
+		return new DeltaListManager<E>(this, committedParent, listProperty);
     }
     
 	/**
@@ -397,32 +438,10 @@ public class TransactionManager extends DataManager {
 		// not have yet been added to the database and thus no
 		// reference can be set to the other object.
 		for (Map.Entry<ModifiedListKey, ModifiedList> mapEntry: modifiedLists.entrySet()) {
-			ModifiedListKey modifiedListKey = mapEntry.getKey();
-			ModifiedList modifiedList = mapEntry.getValue();
+			ModifiedListKey<?> modifiedListKey = mapEntry.getKey();
+			ModifiedList<?> modifiedList = mapEntry.getValue();
 
-			ExtendableObject parent = modifiedListKey.parentKey.getObject();
-			
-			for (Iterator iter2 = modifiedList.getAddedObjectIterator(); iter2.hasNext(); ) {
-				ExtendableObject newObject = (ExtendableObject)iter2.next();
-				
-				final ExtendableObject newCommittedObject = commitNewObject(newObject, parent, modifiedListKey.listAccessor);
-
-				// Fire the event.
-				// Note that this must be done after the committed object is set above.  This allows
-				// listeners to connect the event to an uncommitted object.
-				// TODO: decide if this should be here.  The fireEvent should be package protected,
-				// and we are calling it from outside the package.  Also, what are the event firing
-				// rules?
-				// Also we should be firing the event after the null references to the new objects
-				// have been set....
-				baseDataManager.fireEvent(
-						new ISessionChangeFirer() {
-							public void fire(SessionChangeListener listener) {
-								listener.objectAdded(newCommittedObject);
-							}
-						}
-				);
-			}
+			commitObjectsInList(modifiedListKey, modifiedList);
 		}
 
 		// Update all the updated objects
@@ -431,10 +450,10 @@ public class TransactionManager extends DataManager {
 			ModifiedObject newValues = mapEntry.getValue();
 			
 			if (!newValues.isDeleted()) {
-				Map<PropertyAccessor, Object> propertyMap = newValues.getMap();
+				Map<ScalarPropertyAccessor, Object> propertyMap = newValues.getMap();
 				
-				for (Map.Entry<PropertyAccessor, Object> mapEntry2: propertyMap.entrySet()) {
-					PropertyAccessor accessor = mapEntry2.getKey();
+				for (Map.Entry<ScalarPropertyAccessor, Object> mapEntry2: propertyMap.entrySet()) {
+					ScalarPropertyAccessor accessor = mapEntry2.getKey();
 					Object newValue = mapEntry2.getValue();
 			
 					// TODO: If we create a method in IObjectKey for updating properties
@@ -494,21 +513,19 @@ public class TransactionManager extends DataManager {
 			
 			if (newValues.isDeleted()) {
 				ExtendableObject deletedObject = committedKey.getObject();
-				
-				PropertySet propertySet = PropertySet.getPropertySet(deletedObject.getClass());
-				for (Iterator iter2 = propertySet.getPropertyIterator3(); iter2.hasNext(); ) {
-					PropertyAccessor accessor = (PropertyAccessor)iter2.next();
-					if (accessor.isScalar()) {
-						Object value = deletedObject.getPropertyValue(accessor);
-						if (value instanceof ExtendableObject) {
-							ExtendableObject referencedObject = (ExtendableObject)value;
-							IObjectKey committedReferencedKey = referencedObject.getObjectKey();
-							ModifiedObject referencedNewValues = modifiedObjects.get(committedReferencedKey);
-							if (referencedNewValues != null && referencedNewValues.isDeleted()) {
-								// This is a reference to an object that is marked for deletion.
-								// Set the reference to null
-								deletedObject.setPropertyValue(accessor, null);
-							}
+
+				PropertySet<?> propertySet = PropertySet.getPropertySet(deletedObject.getClass());
+				for (Iterator<ScalarPropertyAccessor> iter2 = propertySet.getPropertyIterator_Scalar3(); iter2.hasNext(); ) {
+					ScalarPropertyAccessor<?> accessor = iter2.next();
+					Object value = deletedObject.getPropertyValue(accessor);
+					if (value instanceof ExtendableObject) {
+						ExtendableObject referencedObject = (ExtendableObject)value;
+						IObjectKey committedReferencedKey = referencedObject.getObjectKey();
+						ModifiedObject referencedNewValues = modifiedObjects.get(committedReferencedKey);
+						if (referencedNewValues != null && referencedNewValues.isDeleted()) {
+							// This is a reference to an object that is marked for deletion.
+							// Set the reference to null
+							deletedObject.setPropertyValue(accessor, null);
 						}
 					}
 				}
@@ -519,13 +536,13 @@ public class TransactionManager extends DataManager {
 		 * Step 2: Delete the deleted objects
 		 */
 		for (Map.Entry<ModifiedListKey, ModifiedList> mapEntry: modifiedLists.entrySet()) {
-			ModifiedListKey modifiedListKey = mapEntry.getKey();
-			ModifiedList modifiedList = mapEntry.getValue();
+			ModifiedListKey<?> modifiedListKey = mapEntry.getKey();
+			ModifiedList<?> modifiedList = mapEntry.getValue();
 
 			ExtendableObject parent = modifiedListKey.parentKey.getObject();
 			
-			for (Iterator iter2 = modifiedList.getDeletedObjectIterator(); iter2.hasNext(); ) {
-				IObjectKey objectToDelete = (IObjectKey)iter2.next();
+			for (Iterator<IObjectKey> iter2 = modifiedList.getDeletedObjectIterator(); iter2.hasNext(); ) {
+				IObjectKey objectToDelete = iter2.next();
 				
 				parent.getListPropertyValue(modifiedListKey.listAccessor).remove(objectToDelete.getObject());
 			}
@@ -552,8 +569,8 @@ public class TransactionManager extends DataManager {
 	 * @param listAccessor
 	 * @return the committed version of the object
 	 */
-	private ExtendableObject commitNewObject(ExtendableObject newObject, ExtendableObject parent, PropertyAccessor listAccessor) {
-		PropertySet actualPropertySet = PropertySet.getPropertySet(newObject.getClass());
+	private <E extends ExtendableObject> E commitNewObject(E newObject, ExtendableObject parent, ListPropertyAccessor<? super E> listAccessor, boolean isDescendentInsert) {
+		PropertySet<? extends E> actualPropertySet = PropertySet.getPropertySet(newObject.getClass());
 		
 		/**
 		 * Maps PropertyAccessor to property value
@@ -566,52 +583,48 @@ public class TransactionManager extends DataManager {
 		
 		int count = 0;
 		
-		for (Iterator iter3 = actualPropertySet.getPropertyIterator3(); iter3.hasNext(); ) {
-			PropertyAccessor accessor = (PropertyAccessor)iter3.next();
-			if (accessor.isScalar()) {
-				count++;
-			}
+		for (Iterator<ScalarPropertyAccessor> iter3 = actualPropertySet.getPropertyIterator_Scalar3(); iter3.hasNext(); ) {
+			ScalarPropertyAccessor accessor = iter3.next();
+			count++;
 		}
 		
 		Object [] values = new Object[count];
 		
 		int index = 0;
-		for (Iterator iter3 = actualPropertySet.getPropertyIterator3(); iter3.hasNext(); ) {
-			PropertyAccessor accessor = (PropertyAccessor)iter3.next();
-			if (accessor.isScalar()) {
+		for (Iterator<ScalarPropertyAccessor> iter3 = actualPropertySet.getPropertyIterator_Scalar3(); iter3.hasNext(); ) {
+			ScalarPropertyAccessor<?> accessor = iter3.next();
 
-				Object value = newObject.getPropertyValue(accessor);
-				if (value instanceof ExtendableObject) {
-					ExtendableObject referencedObject = (ExtendableObject)value;
-					UncommittedObjectKey key = (UncommittedObjectKey)referencedObject.getObjectKey();
-					
-					// TODO: We do not really have to instantiate the object here.
-					// We can set an object reference just from the key.  However,
-					// we don't have the methods available to do that at this time.
-					
-					IObjectKey committedKey = key.getCommittedObjectKey();
-					if (committedKey != null) {
-						values[index] = committedKey;
-					} else {
-						// The property value is a reference to an object that has not have yet been committed to
-						// the datastore.  Such values cannot be set in the datastore.  We therefore avoid such
-						// properties here and set them later when all the new objects have been committed.
-						
-						// Add this property change to a map of property changes that we
-						// must do later.
-						values[index] = null;
-						propertyChangeMap.put(accessor, key);
-					}
+			Object value = newObject.getPropertyValue(accessor);
+			if (value instanceof ExtendableObject) {
+				ExtendableObject referencedObject = (ExtendableObject)value;
+				UncommittedObjectKey key = (UncommittedObjectKey)referencedObject.getObjectKey();
+
+				// TODO: We do not really have to instantiate the object here.
+				// We can set an object reference just from the key.  However,
+				// we don't have the methods available to do that at this time.
+
+				IObjectKey committedKey = key.getCommittedObjectKey();
+				if (committedKey != null) {
+					values[index] = committedKey;
 				} else {
-					values[index] = value;
+					// The property value is a reference to an object that has not have yet been committed to
+					// the datastore.  Such values cannot be set in the datastore.  We therefore avoid such
+					// properties here and set them later when all the new objects have been committed.
+
+					// Add this property change to a map of property changes that we
+					// must do later.
+					values[index] = null;
+					propertyChangeMap.put(accessor, key);
 				}
-				index++;
+			} else {
+				values[index] = value;
 			}
+			index++;
 		}
 		
 		// Create the object with the appropriate property values
-		ObjectCollection propertyValues = parent.getListPropertyValue(listAccessor); 
-		final ExtendableObject newCommittedObject = propertyValues.createNewElement(actualPropertySet, values);
+		ObjectCollection<? super E> propertyValues = parent.getListPropertyValue(listAccessor); 
+		final E newCommittedObject = propertyValues.createNewElement(actualPropertySet, values, isDescendentInsert);
 
 		// Update the uncommitted object key to indicate that there is now a committed
 		// version of the object in the datastore
@@ -619,11 +632,10 @@ public class TransactionManager extends DataManager {
 
 		// Commit all the child objects in the list properties.
 		for (Iterator iter3 = actualPropertySet.getPropertyIterator3(); iter3.hasNext(); ) {
-			PropertyAccessor accessor = (PropertyAccessor)iter3.next();
-			if (accessor.isList()) {
-				for (ExtendableObject childObject: newObject.getListPropertyValue(accessor)) {
-					commitNewObject(childObject, newCommittedObject, accessor);
-				}
+			PropertyAccessor propertyAccessor = (PropertyAccessor)iter3.next();
+			if (propertyAccessor.isList()) {
+				ListPropertyAccessor<?> subListAccessor = (ListPropertyAccessor)propertyAccessor;
+				commitChildren(newObject, newCommittedObject, subListAccessor);
 			}
 		}
 		
@@ -636,11 +648,46 @@ public class TransactionManager extends DataManager {
 		return newCommittedObject;
 	}
 
+	
+	private <E extends ExtendableObject> void commitChildren(ExtendableObject newObject, ExtendableObject newCommittedObject, ListPropertyAccessor<E> subListAccessor) {
+		for (E childObject: newObject.getListPropertyValue(subListAccessor)) {
+			commitNewObject(childObject, newCommittedObject, subListAccessor, true);
+		}
+	}
+
+	private <E extends ExtendableObject> void commitObjectsInList(ModifiedListKey<E> modifiedListKey, ModifiedList<?> untypedModifiedList) {
+		ModifiedList<E> modifiedList = (ModifiedList<E>)untypedModifiedList;
+		
+		ExtendableObject parent = modifiedListKey.parentKey.getObject();
+		
+		for (Iterator<E> iter2 = modifiedList.getAddedObjectIterator(); iter2.hasNext(); ) {
+			E newObject = iter2.next();
+			
+			final ExtendableObject newCommittedObject = commitNewObject(newObject, parent, modifiedListKey.listAccessor, false);
+
+			// Fire the event.
+			// Note that this must be done after the committed object is set above.  This allows
+			// listeners to connect the event to an uncommitted object.
+			// TODO: decide if this should be here.  The fireEvent should be package protected,
+			// and we are calling it from outside the package.  Also, what are the event firing
+			// rules?
+			// Also we should be firing the event after the null references to the new objects
+			// have been set....
+			baseDataManager.fireEvent(
+					new ISessionChangeFirer() {
+						public void fire(SessionChangeListener listener) {
+							listener.objectInserted(newCommittedObject);
+						}
+					}
+			);
+		}
+	}
+	
 	class DeletedObject {
 		private ExtendableObject parent;
-		private PropertyAccessor owningListProperty;
+		private ListPropertyAccessor<?> owningListProperty;
 		
-		DeletedObject(ExtendableObject parent, PropertyAccessor owningListProperty) {
+		DeletedObject(ExtendableObject parent, ListPropertyAccessor owningListProperty) {
 			this.parent = parent;
 			this.owningListProperty = owningListProperty;
 		}
@@ -670,10 +717,10 @@ public class TransactionManager extends DataManager {
 	 * @return an object containing the changes to the given list. This object
 	 *         may be empty but is never null
 	 */
-	public ModifiedList createModifiedList(ModifiedListKey key) {
-		ModifiedList modifiedList = modifiedLists.get(key);
+	public <E extends ExtendableObject> ModifiedList<E> createModifiedList(ModifiedListKey<E> key) {
+		ModifiedList<E> modifiedList = modifiedLists.get(key);
 		if (modifiedList == null) {
-			modifiedList = new ModifiedList();
+			modifiedList = new ModifiedList<E>();
 			modifiedLists.put(key, modifiedList);
 		}
 		return modifiedList;
@@ -698,7 +745,7 @@ public class TransactionManager extends DataManager {
 	 * @return an object containing the changes to the given list, or null if no
 	 *         changes have been made to the given list
 	 */
-	public ModifiedList getModifiedList(ModifiedListKey key) {
+	public <E extends ExtendableObject> ModifiedList<E> getModifiedList(ModifiedListKey<E> key) {
 		return modifiedLists.get(key);
 	}
 
@@ -774,7 +821,7 @@ public class TransactionManager extends DataManager {
 				if (committedObject instanceof Entry) {
 					Entry entry = (Entry)committedObject;
 					if (!newValues.isDeleted()) {
-						Map<PropertyAccessor, Object> propertyMap = newValues.getMap();
+						Map<ScalarPropertyAccessor, Object> propertyMap = newValues.getMap();
 						
 						// Object has changed property values.
 						if (propertyMap.containsKey(EntryInfo.getAccountAccessor())) {
@@ -815,6 +862,10 @@ public class TransactionManager extends DataManager {
 		}
 	}
 
+	/**
+	 * This method is called when a nested transaction manager is about to apply its
+	 * changes to our data.
+	 */
 	public void startTransaction() {
 		/*
 		 * This method is called only when transaction are nested.
@@ -825,18 +876,35 @@ public class TransactionManager extends DataManager {
 		 * this class implements the IDataManager interface.
 		 * However, this method does not need to do anything.
 		 */
+		
+		insideTransaction = true;
 	}
 
+	/**
+	 * This method is called when a nested transaction manager has completed
+	 * making changes to our data.
+	 */
 	public void commitTransaction() {
 		/*
 		 * This method is called only when transaction are nested.
-		 * The nested transaction will call this method before it
-		 * applies the changes to this transaction.
+		 * The nested transaction will call this method after it has
+		 * applied the changes to this transaction.
 		 * 
-		 * An implementation of this method must be provided because
-		 * this class implements the IDataManager interface.
-		 * However, this method does not need to do anything.
+		 * Changes are applied to this object's data as the changes are
+		 * made and there is nothing we need do to 'commit' the changes.
+		 * However, we do need to fire the performRefresh event method
+		 * at this time.  This event notifies our listeners that a batch
+		 * of changes has completed and now is a good time to refresh
+		 * views.
 		 */
+		fireEvent(
+				new ISessionChangeFirer() {
+					public void fire(SessionChangeListener listener) {
+						listener.performRefresh();
+					}
+				});
+		
+		insideTransaction = false;
 	}
 
 	/**
@@ -846,7 +914,7 @@ public class TransactionManager extends DataManager {
 	 */
 	private class MySessionChangeListener implements SessionChangeListener {
 
-		public void objectAdded(ExtendableObject newObject) {
+		public void objectInserted(ExtendableObject newObject) {
 			/*
 			 * The object may contain references to objects
 			 * that have been deleted in this view.  
@@ -863,7 +931,12 @@ public class TransactionManager extends DataManager {
 			// TODO Implement this method
 		}
 
-		public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+		public void objectCreated(ExtendableObject newObject) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 			/*
 			 * The property may have been changed to reference an
 			 * object that has been deleted in this view.
@@ -886,7 +959,7 @@ public class TransactionManager extends DataManager {
 			// TODO Implement this method
 		}
 
-		public void objectDeleted(ExtendableObject deletedObject) {
+		public void objectRemoved(ExtendableObject deletedObject) {
 			/*
 			 * If an object is deleted from the base data then we
 			 * know there are no references to the object from the
@@ -907,6 +980,11 @@ public class TransactionManager extends DataManager {
 			 * with a conflict exception.  
 			 */
 			// TODO Implement this method
+		}
+
+		public void objectDestroyed(ExtendableObject deletedObject) {
+			// TODO Auto-generated method stub
+			
 		}
 
 		public void performRefresh() {

@@ -27,7 +27,8 @@ import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
@@ -49,10 +50,10 @@ import net.sf.jmoney.model2.PropertySet;
  */
 public class CapitalAccountInfo implements IPropertySetInfo {
 
-	private static PropertySet propertySet = null;
-	private static PropertyAccessor subAccountAccessor = null;
-	private static PropertyAccessor abbreviationAccessor = null;
-	private static PropertyAccessor commentAccessor = null;
+	private static PropertySet<CapitalAccount> propertySet = null;
+	private static ListPropertyAccessor<CapitalAccount> subAccountAccessor = null;
+	private static ScalarPropertyAccessor<String> abbreviationAccessor = null;
+	private static ScalarPropertyAccessor<String> commentAccessor = null;
 
     public CapitalAccountInfo() {
     }
@@ -61,15 +62,15 @@ public class CapitalAccountInfo implements IPropertySetInfo {
 		return CapitalAccount.class;
 	}
 
-    public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
-		CapitalAccountInfo.propertySet = propertySet;
+    public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+		CapitalAccountInfo.propertySet = propertyRegistrar.addPropertySet(CapitalAccount.class);
 		
-		IPropertyControlFactory textControlFactory = new TextControlFactory();
-		IPropertyControlFactory commentControlFactory = new MultiTextControlFactory();
+		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
+		IPropertyControlFactory<String> commentControlFactory = new MultiTextControlFactory();
 		
 		subAccountAccessor = propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), CapitalAccount.class, null);
-		abbreviationAccessor = propertyRegistrar.addProperty("abbreviation", JMoneyPlugin.getResourceString("AccountPropertiesPanel.abbrevation"), 5, 70, textControlFactory, null);
-		commentAccessor = propertyRegistrar.addProperty("comment", JMoneyPlugin.getResourceString("AccountPropertiesPanel.comment"), 5, 150, commentControlFactory, null);
+		abbreviationAccessor = propertyRegistrar.addProperty("abbreviation", JMoneyPlugin.getResourceString("AccountPropertiesPanel.abbrevation"), String.class, 5, 70, textControlFactory, null);
+		commentAccessor      = propertyRegistrar.addProperty("comment", JMoneyPlugin.getResourceString("AccountPropertiesPanel.comment"), String.class, 5, 150, commentControlFactory, null);
 		
 		propertyRegistrar.setDerivableInfo();
 		propertyRegistrar.setIcon("icons/account.gif");
@@ -78,28 +79,28 @@ public class CapitalAccountInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static PropertySet getPropertySet() {
+	public static PropertySet<CapitalAccount> getPropertySet() {
 		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getSubAccountAccessor() {
+	public static ListPropertyAccessor<CapitalAccount> getSubAccountAccessor() {
 		return subAccountAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getAbbreviationAccessor() {
+	public static ScalarPropertyAccessor<String> getAbbreviationAccessor() {
 		return abbreviationAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getCommentAccessor() {
+	public static ScalarPropertyAccessor<String> getCommentAccessor() {
 		return commentAccessor;
 	}	
 }

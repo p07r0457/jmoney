@@ -25,7 +25,7 @@ package net.sf.jmoney.reconciliation;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.widgets.Composite;
@@ -36,7 +36,7 @@ import org.eclipse.swt.widgets.Composite;
  * 
  * @author Nigel Westbury
  */
-public class StatusControlFactory implements IPropertyControlFactory {
+public class StatusControlFactory implements IPropertyControlFactory<Integer> {
 
 	/**
 	 * Localized descriptions of the reconciled/cleared status
@@ -56,17 +56,17 @@ public class StatusControlFactory implements IPropertyControlFactory {
 			ReconciliationPlugin.getResourceString("Entry.clearedShort"),
 	};
 	
-    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor, Session session) {
+    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor propertyAccessor, Session session) {
         return new StatusEditor(parent, propertyAccessor, statusText);
     }
 
-    public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        int status = extendableObject.getIntegerPropertyValue(propertyAccessor);
+    public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Integer> propertyAccessor) {
+        int status = extendableObject.getPropertyValue(propertyAccessor);
         return statusText[status];
     }
 
-    public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        int status = extendableObject.getIntegerPropertyValue(propertyAccessor);
+    public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Integer> propertyAccessor) {
+        int status = extendableObject.getPropertyValue(propertyAccessor);
         return shortStatusText[status];
     }
 

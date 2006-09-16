@@ -25,7 +25,7 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.widgets.Composite;
@@ -35,17 +35,17 @@ import org.eclipse.swt.widgets.Composite;
  * 
  * @author Nigel Westbury
  */
-public class CheckBoxControlFactory implements IPropertyControlFactory {
+public class CheckBoxControlFactory implements IPropertyControlFactory<Boolean> {
 
     public CheckBoxControlFactory() {
     }
     
-    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor, Session session) {
+    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Boolean> propertyAccessor, Session session) {
   		return new CheckMarkEditor(parent, propertyAccessor);
     }
 
-    public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        Boolean value = (Boolean) extendableObject.getPropertyValue(propertyAccessor);
+    public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Boolean> propertyAccessor) {
+        Boolean value = extendableObject.getPropertyValue(propertyAccessor);
         if (value == null) {
             return "N/A";
         } else {
@@ -53,8 +53,8 @@ public class CheckBoxControlFactory implements IPropertyControlFactory {
         }
     }
 
-    public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        Boolean value = (Boolean) extendableObject.getPropertyValue(propertyAccessor);
+    public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Boolean> propertyAccessor) {
+        Boolean value = extendableObject.getPropertyValue(propertyAccessor);
         if (value == null) {
             return "";
         } else {

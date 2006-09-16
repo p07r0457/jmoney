@@ -22,13 +22,7 @@
 
 package net.sf.jmoney.model2;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Comparator;
-import java.util.Iterator;
-
-import org.eclipse.swt.widgets.Composite;
 
 /**
 * This class contains information about a property.  The property may be in the base
@@ -54,47 +48,17 @@ import org.eclipse.swt.widgets.Composite;
 * 
 * @author  Nigel Westbury
 */
-public class PropertyAccessor {
+public abstract class PropertyAccessor {
    
    private PropertySet propertySet;
    
    private String localName;    
    
-   private String shortDescription;
-   
-   // Applies only if scalar property
-   private int weight;    
-   
-   // Applies only if scalar property
-   private int minimumWidth;    
-   
-   // Applies only if scalar property
-   private boolean sortable;
-   
-   // Applies only if scalar property
-   private IPropertyControlFactory propertyControlFactory;
-   
-   /**
-    * The class of the property (if the property is a list
-    * property then the class of the elements in the list)
-    */
-   private Class<? extends Object> propertyClass;
+   private String displayName;
    
    // If a list property, this getter returns a collection
-   private Method theGetMethod;
+   protected Method theGetMethod;
    
-   // Applies only if scalar property
-   private Method theSetMethod;
-   
-   // Applies only if scalar property of type ExtendableObject
-   private Field theObjectKeyField;
-   
-	/**
-	 * true if property is a list property, i.e. can contain
-	 * multiple values, false otherwise
-	 */
-	private boolean isList;
-	
 	/**
 	 * Index into the list of parameters passed to the constructor.
 	 * Zero indicates that this property is passed as the first
@@ -103,89 +67,13 @@ public class PropertyAccessor {
 	 */
 	private int indexIntoConstructorParameters = -1;
 	
-	/**
-	 * Index into the array of scalar properties.
-	 */
-	private int indexIntoScalarProperties = -1;
-
 	private IPropertyDependency dependency;
 	
-   public PropertyAccessor(PropertySet propertySet, String localName, String shortDescription, int weight, int minimumWidth, IPropertyControlFactory propertyControlFactory, IPropertyDependency propertyDependency) {
+   public PropertyAccessor(PropertySet propertySet, String localName, String displayName, IPropertyDependency propertyDependency) {
    	this.propertySet = propertySet;
        this.localName = localName;
-       this.shortDescription = shortDescription;
-       this.weight = weight;
-       this.minimumWidth = minimumWidth;
-       this.sortable = true;
-       this.propertyControlFactory = propertyControlFactory;
+       this.displayName = displayName;
        this.dependency = propertyDependency;
-       
-       isList = false;
-      
-       Class implementationClass = propertySet.getImplementationClass();
-       
-       // Use introspection on the interface to find the getter method.
-       // Following the Java beans pattern, we allow the getter for a
-       // boolean property to have a prefix of either "get" or "is".
-       try {
-       	theGetMethod = findMethod("get", localName, null);
-       } catch (MalformedPluginException e) {
-           try {
-           	theGetMethod = findMethod("is", localName, null);
-               if (theGetMethod.getReturnType() != boolean.class) {
-                   throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + implementationClass.getName() + "' must return boolean.");
-               }
-           } catch (MalformedPluginException e2) {
-       		String propertyNamePart =
-       			localName.toUpperCase().substring(0, 1)
-					  + localName.substring(1, localName.length());
-   			throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a method with a signature of get" + propertyNamePart + "() or, if a boolean property, a signature of is" + propertyNamePart + "().");
-           }
-       }
-       
-       if (theGetMethod.getReturnType() == void.class) {
-           throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + implementationClass.getName() + "' must not return void.");
-       }
-       
-       this.propertyClass = theGetMethod.getReturnType();
-       
-       // Use introspection on the implementation class to find the setter method.
-       Class parameterTypes[] = {propertyClass};
-		theSetMethod = findMethod("set", localName, parameterTypes);
-       
-       if (theSetMethod.getReturnType() != void.class) {
-           throw new MalformedPluginException("Method '" + theSetMethod.getName() + "' in '" + implementationClass.getName() + "' must return void type .");
-       }
-       
-       // If the property value is an extendable object, use introspection on
-		// the implementation class to find the field containing
-		// the object key for the object referenced by this property.
-       if (ExtendableObject.class.isAssignableFrom(propertyClass)) { 		
-       	String fieldName = localName + "Key";
-       	
-       	Class classToTry = propertySet.getImplementationClass();
-       	do {
-       		try {
-       			theObjectKeyField = classToTry.getDeclaredField(fieldName);
-       			break;
-       		} catch (NoSuchFieldException e) {
-       			classToTry = classToTry.getSuperclass();
-       		}
-       	} while (classToTry != null);
-       	
-       	if (theObjectKeyField == null) {
-       		throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a field called " + fieldName + ".");
-       	}
-       	
-       	if (!IObjectKey.class.isAssignableFrom(theObjectKeyField.getType())) {
-       		throw new MalformedPluginException("Field '" + fieldName + "' in '" + implementationClass.getName() + "' must reference an object type that implements IObjectKey.");
-       	}
-
-			// (1 is public,  2 is private, 4 is protected, 1,2 & 4 bits off is default).
-			if ((theObjectKeyField.getModifiers() & 5) == 0) {
-				throw new MalformedPluginException("Field '" + fieldName + "' in '" + implementationClass.getName() + "' must be protected (or public if you insist).");
-			}
-       }
    }
    
    /**
@@ -194,23 +82,13 @@ public class PropertyAccessor {
 	 * @param set
 	 * @param name
 	 * @param listItemClass
-	 * @param shortDescription
+	 * @param displayName
 	 * @param propertyDependency
 	 */
-	public PropertyAccessor(PropertySet propertySet, String localName, String shortDescription, Class<? extends ExtendableObject> listItemClass, IPropertyDependency propertyDependency) {
+	public PropertyAccessor(PropertySet propertySet, String localName, String displayName, Class<? extends ExtendableObject> listItemClass, IPropertyDependency propertyDependency) {
    	this.propertySet = propertySet;
        this.localName = localName;
-       this.propertyClass = listItemClass;
-       this.shortDescription = shortDescription;
-       
-       isList = true;
-
-		// Use introspection on the interface to find the getXxxCollection method.
-		theGetMethod = findMethod("get", localName + "Collection", null);
-		
-       if (!ObjectCollection.class.isAssignableFrom(theGetMethod.getReturnType())) { 		
-			throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + propertySet.getImplementationClass().getName() + "' must return an ObjectSet type.");
-		}
+       this.displayName = displayName;
 	}
 
 	/**
@@ -307,81 +185,12 @@ public class PropertyAccessor {
 		}
    }
    
-	/**
-	 * If the property is a list property then the getter returns
-	 * an <code>ObjectSet</code>.
-	 */
-   public Object invokeGetMethod(Object invocationTarget) {
-		try {
-			return theGetMethod.invoke(invocationTarget, (Object [])null);
-		} catch (InvocationTargetException e) {
-			// TODO Process this properly
-			e.printStackTrace();
-			throw new RuntimeException("Plugin error");
-		} catch (Exception e) {
-			// IllegalAccessException and IllegalArgumentException exceptions should
-			// not be possible here because the method was checked
-			// for correct access rights and parameters during initialization.
-			// Therefore throw a runtime exception.
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		}
-   }
-   
-   public void invokeSetMethod(Object invocationTarget, Object value) {
-		try {
-			Object parameters[] = new Object[] { value };
-			theSetMethod.invoke(invocationTarget, parameters);
-		} catch (InvocationTargetException e) {
-			// TODO Process this properly
-			e.getCause().printStackTrace();
-			throw new RuntimeException("Plugin error");
-		} catch (Exception e) {
-			// IllegalAccessException and IllegalArgumentException exceptions should
-			// not be possible here because the method was checked
-			// for correct access rights and parameters during initialization.
-			// Therefore throw a runtime exception.
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		}
-   }
-
-   /**
-    * Given an object (which must be of a class that contains this
-    * property), return  
-    * @param object
-    * @return
-    */
-   public IObjectKey invokeObjectKeyField(ExtendableObject object) {
-	   if (getPropertySet().isExtension()) {
-		   ExtensionObject extension = object.getExtension(getPropertySet());
-		   if (extension == null) {
-			   return null;
-		   } else {
-			   return (IObjectKey)extension.getProtectedFieldValue(theObjectKeyField);
-		   }
-	   } else {
-		   return (IObjectKey)object.getProtectedFieldValue(theObjectKeyField);
-	   }
-   }
-
-   /**
-    * Returns the class for the values of this property.
-    * This is the class that is returned by the getter method
-    * If this property is a list property then this method
-    * returns the class of the elements in the list.
-    * 
-    * @return
-    */
-   public Class<? extends Object> getValueClass() {
-       return propertyClass;
-   }
-   
    /**
     * Returns the PropertySet for the values of this property.
     * This property must contain a value or values that are
     * extendable objects. 
     */
+/* not used.   
    public PropertySet getValuePropertySet() {
 		for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
 			PropertySet propertySet = (PropertySet)iter.next();
@@ -394,7 +203,7 @@ public class PropertyAccessor {
 		
        throw new RuntimeException("No property set found for extendable class object" + propertyClass.getName() + ".");
    }
-   
+*/   
    /**
     * Return a name for this property.
     *
@@ -427,135 +236,23 @@ public class PropertyAccessor {
     * A short description that is suitable as a column header when this
     * property is displayed in a table.
     */
-   public String getShortDescription() {
-       return shortDescription;
-   }
-   
-   /**
-    * The width weighting to be used when this property is displayed
-    * in a table or a grid.  If the width available for the table
-    * or grid is more than the sum of the minimum widths then the
-    * excess width is distributed across the columns.
-    * This weight indicates how much the property
-    * can benefit from being given excess width.  For example
-    * a property containing a description can benefit, whereas
-    * a property containing a date cannot. 
-    */
-   public int getWeight() {
-       return weight;
-   }
-
-   /**
-    * The minimum width to be used when this property is displayed
-    * in a table or a grid.  
-    */
-   public int getMinimumWidth() {
-       return minimumWidth;
-   }
-
-   /**
-    * Indicates whether users are able to sort views based on this property.
-    */
-   public boolean isSortable() {
-       return sortable;
+   public String getDisplayName() {
+       return displayName;
    }
    
    /**
     * Indicates if the property is a list of intrinsic values or objects.
     */
-   public boolean isList() {
-       return isList;
-   }
+   public abstract boolean isList();
    
    /**
     * Indicates if the property is a single intrinsic value or object
     * (not a list of values)
     */
    public boolean isScalar() {
-       return !isList;
+       return !isList();
    }
    
-   /**
-    * Indicates whether the property may be edited by the user.
-    */
-   public boolean isEditable() {
-       return (propertyControlFactory != null && propertyControlFactory.isEditable());
-   }
-   
-   /**
-    * If the property definition defines a custom comparator for this property then fetch it.
-    * Otherwise return null to indicate that the default comparator for the type
-    * should be used.
-    */
-   public Comparator getCustomComparator() {
-       return null;
-   }
-
-	/**
-	 * Create a Control object that edits the property.
-	 * 
-	 * @param parent
-	 * @return An interface to a wrapper class.
-	 */
-	public IPropertyControl createPropertyControl(Composite parent, Session session) {
-		// When a PropertyAccessor object is created, it is
-		// provided with an interface to a factory that constructs
-		// control objects that edit the property.
-		// We call into that factory to create an edit control.
-		return propertyControlFactory.createPropertyControl(parent, this, session);
-	}
-
-	/**
-	 * Format the value of a property so it can be embedded into a
-	 * message.
-	 *
-	 * The returned value will look sensible when embedded in a message.
-	 * Therefore null values and empty values are returned as non-empty
-	 * text such as "none" or "empty".  Text values are placed in
-	 * quotes unless sure that only a single word will be returned that
-	 * would be readable without quotes.
-	 *
-	 * @return The value of the property formatted as appropriate.
-	 */
-	public String formatValueForMessage(ExtendableObject object) {
-		// When a PropertyAccessor object is created, it is
-		// provided with an interface to a factory that constructs
-		// control objects that edit the property.
-		// This factory can also format values for us.
-		// We call into that factory to obtain the property value
-		// and format it.
-
-		// If null or the empty string is returned to us, 
-		// change to "empty".
-		String formattedValue = propertyControlFactory.formatValueForMessage(object, this);
-		return (formattedValue == null || formattedValue.length() == 0)
-			? "empty" : formattedValue;
-	}
-
-	/**
-	 * Format the value of a property as appropriate for displaying in a
-	 * table.
-	 * 
-	 * The returned value is expected to be displayed in a table or some similar
-	 * view.  Null and empty values are therefore returned as empty strings.
-	 * Text values are not quoted.
-	 * 
-	 * @return The value of the property formatted as appropriate.
-	 */
-	public String formatValueForTable(ExtendableObject object) {
-		// When a PropertyAccessor object is created, it is
-		// provided with an interface to a factory that constructs
-		// control objects that edit the property.
-		// This factory can also format values for us.
-		// We call into that factory to obtain the property value
-		// and format it.
-		
-		// If null is returned to us, change to the empty string.
-		String formattedValue = propertyControlFactory.formatValueForTable(object, this);
-		return (formattedValue == null)
-			? "" : formattedValue;
-	}
-
 	/**
 	 * @return the index into the constructor parameters, where
 	 * 		an index of zero indicates that the property is the
@@ -570,32 +267,6 @@ public class PropertyAccessor {
 	}
 
 	/**
-	 * It is often useful to have an array of property values
-	 * of an extendable object.  This array contains all scalar
-	 * properties in the extendable object, including extension
-	 * properties and properties from any base property sets.
-	 * <P>
-	 * In these arrays, the properties (including extension properties)
-	 * from the base property sets are put first in the array.
-	 * This means a given property will always be at the same index
-	 * in the array regardless of the actual derived property set.
-	 * <P>
-	 * This index is guaranteed to match the order in which
-	 * properties are returned by the PropertySet.getPropertyIterator3().
-	 * i.e. if this method returns n then in every case where the
-	 * iterator returned by getPropertyIterator3 returns this property,
-	 * this property will be returned as the (n+1)'th element in the iterator.
-	 * 
-	 * @return the index of this property in the list of scalar
-	 * 			properties for the class.  This method returns zero
-	 * 			for the first scalar property returned by
-	 * 			PropertySet.getPropertyIterator3() and so on. 
-	 */
-	public int getIndexIntoScalarProperties() {
-		return indexIntoScalarProperties;
-	}
-	
-	/**
 	 * 
 	 * @param indexIntoConstructorParameters
 	 */
@@ -603,56 +274,6 @@ public class PropertyAccessor {
 	public void setIndexIntoConstructorParameters(int indexIntoConstructorParameters) {
 		this.indexIntoConstructorParameters = indexIntoConstructorParameters;
 	}
-
-	public void setIndexIntoScalarProperties(int indexIntoScalarProperties) {
-		this.indexIntoScalarProperties = indexIntoScalarProperties;
-	}
-
-	/**
-	 * Create a dependency that can be used when the applicability of another
-	 * property depends on this property.
-	 * 
-	 * This method may only be called if this property is a boolean property.
-	 * 
-	 * @return
-	 */
-	// TODO: Should this be a member of PropertyAssessor, or should it
-	// be outside?????
-	public IPropertyDependency getTrueValueDependency() {
-		if (propertyClass != boolean.class) {
-			throw new MalformedPluginException("getTrueValueDependency called on property that is not a boolean.");
-		}
-		
-		return new IPropertyDependency() {
-			public boolean isSelected(ExtendableObject object) {
-				return object.getBooleanPropertyValue(PropertyAccessor.this);
-			}
-		};
-	}
-
-	/**
-	 * Create a dependency that can be used when the applicability of another
-	 * property depends on this property.
-	 * 
-	 * This method may only be called if this property is a boolean property.
-	 * 
-	 * @return
-	 */
-	public IPropertyDependency getFalseValueDependency() {
-        if (propertyClass != boolean.class) {
-            throw new MalformedPluginException(
-                    "getTrueValueDependency called on property that is not a boolean.");
-        }
-
-        return new IPropertyDependency() {
-            public boolean isSelected(ExtendableObject object) {
-                if (object == null) {
-                    return false;
-                }
-                return !object.getBooleanPropertyValue(PropertyAccessor.this);
-            }
-        };
-    }
 
 	/**
 	 * Returns an object that indicates whether this property is applicable,

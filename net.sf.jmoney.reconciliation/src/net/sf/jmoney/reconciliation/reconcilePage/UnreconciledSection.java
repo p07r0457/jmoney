@@ -102,13 +102,12 @@ public class UnreconciledSection extends SectionPart {
 
 			public Collection getEntries() {
 		        CurrencyAccount account = fPage.getAccount();
-		        Collection accountEntries = 
+		        Collection<Entry> accountEntries = 
 		        	account
 						.getSortedEntries(TransactionInfo.getDateAccessor(), false);
 		        
-		        Vector requiredEntries = new Vector();
-		        for (Iterator iter = accountEntries.iterator(); iter.hasNext(); ) {
-		        	Entry entry = (Entry)iter.next();
+		        Vector<Entry> requiredEntries = new Vector<Entry>();
+		        for (Entry entry: accountEntries) {
 		        	if (entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor()) == null) {
 		        		requiredEntries.add(entry);
 		        	}

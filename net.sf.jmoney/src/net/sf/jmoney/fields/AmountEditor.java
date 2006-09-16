@@ -26,7 +26,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeListener;
 
 import org.eclipse.swt.widgets.Composite;
@@ -60,7 +60,7 @@ public class AmountEditor implements IPropertyControl {
 
     private Commodity fCommodity;
     
-    private PropertyAccessor amountPropertyAccessor;
+    private ScalarPropertyAccessor<Long> amountPropertyAccessor;
     
     private AmountControlFactory factory;
     
@@ -69,7 +69,7 @@ public class AmountEditor implements IPropertyControl {
     /**
      * Create a new amount editor.
      */
-    public AmountEditor(Composite parent, PropertyAccessor propertyAccessor, AmountControlFactory factory) {
+    public AmountEditor(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor, AmountControlFactory factory) {
     	propertyControl = new Text(parent, 0);
     	this.amountPropertyAccessor = propertyAccessor;
     	this.factory = factory;
@@ -148,7 +148,7 @@ public class AmountEditor implements IPropertyControl {
     	if (!amountString.equals("")) {
     		long amount = newCommodity.parse(amountString);
     		propertyControl.setText(newCommodity.format(amount));
-    		fObject.setLongPropertyValue(amountPropertyAccessor, amount);
+    		fObject.setPropertyValue(amountPropertyAccessor, amount);
     	}
     }
     
@@ -164,14 +164,14 @@ public class AmountEditor implements IPropertyControl {
      */
     public void save() {
         String amountString = propertyControl.getText();
-        if (amountString.length() == 0 && amountPropertyAccessor.getValueClass() == Long.class) {
+        if (amountString.length() == 0 && amountPropertyAccessor.getClassOfValueObject() == Long.class) {
             // The text box is empty and the property is Long
             // (not long) thus allowing nulls.  Therefore
             // we set the property value to be null.
             fObject.setPropertyValue(amountPropertyAccessor, null);
         } else {
             long amount = fCommodity.parse(amountString);
-            fObject.setLongPropertyValue(amountPropertyAccessor, amount);
+            fObject.setPropertyValue(amountPropertyAccessor, amount);
         }
     }
 

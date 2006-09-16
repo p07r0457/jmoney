@@ -26,7 +26,7 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.widgets.Composite;
@@ -37,18 +37,18 @@ import org.eclipse.swt.widgets.Composite;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class AccountControlFactory implements IPropertyControlFactory {
+public class AccountControlFactory<A extends Account> implements IPropertyControlFactory<A> {
     
-    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor, Session session) {
-        return new AccountEditor(parent, propertyAccessor, session);
+    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<A> propertyAccessor, Session session) {
+        return new AccountEditor<A>(parent, propertyAccessor, session);
     }
 
-	public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        Account value = (Account) extendableObject.getPropertyValue(propertyAccessor);
+	public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends A> propertyAccessor) {
+        Account value = extendableObject.getPropertyValue(propertyAccessor);
         return value == null ? "<none>" : value.getFullAccountName();
     }
 
-    public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
+    public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends A> propertyAccessor) {
         Account value = (Account) extendableObject.getPropertyValue(propertyAccessor);
         return value == null ? "" : value.getFullAccountName();
     }

@@ -50,6 +50,7 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
@@ -255,7 +256,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 				// and possibly re-built, so do nothing here.
 			}
 			
-			public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+			public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 				if (changedObject.equals(session)
 						&& changedProperty == SessionInfo.getDefaultCurrencyAccessor()) {
 					TableItem[] items = selectedListViewer.getTable().getItems();
@@ -269,11 +270,11 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 				}
 			}
 			
-			public void objectAdded(ExtendableObject newObject) {
+			public void objectInserted(ExtendableObject newObject) {
 				// TODO: currency added
 			}
 
-			public void objectDeleted(ExtendableObject deletedObject) {
+			public void objectRemoved(ExtendableObject deletedObject) {
 				// TODO: currency removed
 			}
 

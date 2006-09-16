@@ -125,5 +125,5 @@ public interface IPropertySetInfo {
      * @param propertyRegistrar The interface to be used by this method
      * 		to register the properties.
      */
-    void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar);
+    void registerProperties(IPropertyRegistrar propertyRegistrar);
 }

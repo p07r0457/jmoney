@@ -30,20 +30,20 @@ import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IMemento;
 
-public class AccountControlUsingTextbox extends AccountComposite {
-	protected AccountControl accountControl;
+public class AccountControlUsingTextbox<A extends Account> extends AccountComposite<A> {
+	protected AccountControl<A> accountControl;
 	
-	public AccountControlUsingTextbox(Composite parent, Session session, Class<? extends Account> classOfAccount) {
+	public AccountControlUsingTextbox(Composite parent, Session session, Class<A> classOfAccount) {
 		super(parent, SWT.NONE);
 		setLayout(new FillLayout());
-		accountControl = new AccountControl(this, session, classOfAccount);
+		accountControl = new AccountControl<A>(this, session, classOfAccount);
 	}
 
-	public Account getAccount() {
+	public A getAccount() {
 		return accountControl.getAccount();
 	}
 
-	public void setAccount(Account account) {
+	public void setAccount(A account) {
 		accountControl.setAccount(account);
 	}
     

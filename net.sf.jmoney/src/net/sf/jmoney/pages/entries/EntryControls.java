@@ -34,7 +34,7 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
@@ -80,7 +80,7 @@ class EntryControls {
 	abstract class LabelAndEditControlPair {
 		private Label label;
 		IPropertyControl propertyControl;
-		PropertyAccessor propertyAccessor;
+		ScalarPropertyAccessor propertyAccessor;
 		Composite pairComposite;
 		
 		/**
@@ -97,7 +97,7 @@ class EntryControls {
 		 * @param propertyLabel
 		 * @param propertyControl
 		 */
-		public LabelAndEditControlPair(PropertyAccessor propertyAccessor) {
+		public LabelAndEditControlPair(ScalarPropertyAccessor propertyAccessor) {
 			this.propertyAccessor = propertyAccessor;
 			
 			/*
@@ -148,7 +148,7 @@ class EntryControls {
 					pairComposite.setLayout(layout);
 					
 					label = new Label(pairComposite, 0);
-					label.setText(propertyAccessor.getShortDescription() + ':');
+					label.setText(propertyAccessor.getDisplayName() + ':');
 					label.setBackground(entryColor);
 					propertyControl = propertyAccessor.createPropertyControl(pairComposite, session);
 
@@ -186,7 +186,7 @@ class EntryControls {
 		}
 		abstract class PropertyControlFocusListener extends FocusAdapter {
 			
-			private PropertyAccessor propertyAccessor;
+			private ScalarPropertyAccessor propertyAccessor;
 			private IPropertyControl propertyControl;
 			
 			// When a control gets the focus, save the old value here.
@@ -194,7 +194,7 @@ class EntryControls {
 			private String oldValueText;
 			
 			
-			PropertyControlFocusListener(PropertyAccessor propertyAccessor, IPropertyControl propertyControl) {
+			PropertyControlFocusListener(ScalarPropertyAccessor propertyAccessor, IPropertyControl propertyControl) {
 				this.propertyAccessor = propertyAccessor;
 				this.propertyControl = propertyControl;
 			}
@@ -210,7 +210,7 @@ class EntryControls {
 				String newValueText = propertyAccessor.formatValueForMessage(object);
 				
 				String description = 
-					"change " + propertyAccessor.getShortDescription() + " property"
+					"change " + propertyAccessor.getDisplayName() + " property"
 					+ " from " + oldValueText
 					+ " to " + newValueText;
 				
@@ -237,7 +237,7 @@ class EntryControls {
 	private Currency defaultCurrency;
 
 	private SessionChangeListener mySessionChangeListener = new SessionChangeAdapter() {
-		public void objectChanged(ExtendableObject changedObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 			if (changedObject.equals(entry)) {
 
 				/*
@@ -422,8 +422,8 @@ class EntryControls {
 					}
 				});
 
-		for (Iterator iter = EntryInfo.getPropertySet().getPropertyIterator3(); iter.hasNext();) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor) iter.next();
+		for (Iterator<ScalarPropertyAccessor> iter = EntryInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
+			ScalarPropertyAccessor propertyAccessor = iter.next();
 			if (propertyAccessor.isEditable()
 					&& propertyAccessor.isScalar()
 					&& propertyAccessor != EntryInfo.getAccountAccessor() 

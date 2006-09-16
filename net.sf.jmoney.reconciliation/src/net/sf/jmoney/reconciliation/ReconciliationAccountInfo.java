@@ -24,9 +24,11 @@ package net.sf.jmoney.reconciliation;
 
 import net.sf.jmoney.fields.AccountControlFactory;
 import net.sf.jmoney.fields.CheckBoxControlFactory;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
@@ -37,41 +39,41 @@ import net.sf.jmoney.model2.PropertySet;
  */
 public class ReconciliationAccountInfo implements IPropertySetInfo {
 
-	private static PropertySet propertySet = null;
-	private static PropertyAccessor reconcilableAccessor = null;
-	private static PropertyAccessor defaultCategoryAccessor = null;
+	private static PropertySet<ReconciliationAccount> propertySet = null;
+	private static ScalarPropertyAccessor<Boolean> reconcilableAccessor = null;
+	private static ScalarPropertyAccessor<IncomeExpenseAccount> defaultCategoryAccessor = null;
 	
 	public Class getImplementationClass() {
 		return ReconciliationAccount.class;
 	}
 	
-	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
-		ReconciliationAccountInfo.propertySet = propertySet;
+	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
+		ReconciliationAccountInfo.propertySet = propertyRegistrar.addPropertySet(ReconciliationAccount.class);
 
-		AccountControlFactory accountControlFactory = new AccountControlFactory();
+		AccountControlFactory<IncomeExpenseAccount> accountControlFactory = new AccountControlFactory<IncomeExpenseAccount>();
 		
-		reconcilableAccessor    = propertyRegistrar.addProperty("reconcilable", ReconciliationPlugin.getResourceString("Account.isReconcilable"), 1, 5, new CheckBoxControlFactory(), null);
-		defaultCategoryAccessor = propertyRegistrar.addProperty("defaultCategory", ReconciliationPlugin.getResourceString("Account.defaultCategory"), 1, 20, accountControlFactory, null);
+		reconcilableAccessor = propertyRegistrar.addProperty("reconcilable", ReconciliationPlugin.getResourceString("Account.isReconcilable"), Boolean.class, 1, 5, new CheckBoxControlFactory(), null);
+		defaultCategoryAccessor = propertyRegistrar.addProperty("defaultCategory", ReconciliationPlugin.getResourceString("Account.defaultCategory"), IncomeExpenseAccount.class, 1, 20, accountControlFactory, null);
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertySet getPropertySet() {
+	public static PropertySet<ReconciliationAccount> getPropertySet() {
 		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getReconcilableAccessor() {
+	public static ScalarPropertyAccessor<Boolean> getReconcilableAccessor() {
 		return reconcilableAccessor;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getDefaultCategoryAccessor() {
+	public static ScalarPropertyAccessor<IncomeExpenseAccount> getDefaultCategoryAccessor() {
 		return defaultCategoryAccessor;
 	}	
 }

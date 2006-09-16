@@ -32,7 +32,7 @@ import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
@@ -82,7 +82,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 		
 		private SessionChangeListener listener =
 			new SessionChangeAdapter() {
-        	public void objectChanged(ExtendableObject extendableObject, PropertyAccessor changedProperty, Object oldValue, Object newValue) {
+        	public void objectChanged(ExtendableObject extendableObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 				if (extendableObject.equals(AccountPropertiesControl.this.account)) {
 					// Find the control for this property.
 					IPropertyControl propertyControl = propertyControlList.get(changedProperty.getIndexIntoScalarProperties());
@@ -113,76 +113,74 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 			// Create the controls to edit the properties.
 			
 			// Add the properties for the Account objects.
-			PropertySet extendablePropertySet = PropertySet.getPropertySet(account.getClass());
-			for (Iterator iter = extendablePropertySet.getPropertyIterator3(); iter.hasNext(); ) {
-				final PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-				if (propertyAccessor.isScalar()) {
-					Label propertyLabel = new Label(this, 0);
-					propertyLabel.setText(propertyAccessor.getShortDescription() + ':');
-					final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(this, session);
-		
-					/*
-					 * If the control factory set up grid data then leave it
-					 * alone. Otherwise set up the grid data based on the
-					 * properties minimum sizes and expansion weights. <P> The
-					 * control widths are set to the minimum width plus 10 times
-					 * the expansion weight. (As we are not short of space, we
-					 * make them a little bigger than their minimum sizes). A
-					 * minimum of 100 pixels is then applied because this makes
-					 * the right sides of the smaller controls line up, which
-					 * looks a little more tidy.
-					 */  
-					if (propertyControl.getControl().getLayoutData() == null) {
-						GridData gridData = new GridData();
-						gridData.minimumWidth = propertyAccessor.getMinimumWidth();
-						gridData.widthHint = Math.max(propertyAccessor.getMinimumWidth() + 10 * propertyAccessor.getWeight(), 100);
-						propertyControl.getControl().setLayoutData(gridData);
-					}
+			PropertySet<?> extendablePropertySet = PropertySet.getPropertySet(account.getClass());
+			for (Iterator<ScalarPropertyAccessor> iter = extendablePropertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
+				final ScalarPropertyAccessor propertyAccessor = iter.next();
 
-					propertyControl.getControl().addFocusListener(
-							new FocusAdapter() {
+				Label propertyLabel = new Label(this, 0);
+				propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
+				final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(this, session);
 
-								// When a control gets the focus, save the old value here.
-								// This value is used in the change message.
-								String oldValueText;
-								
-								public void focusLost(FocusEvent e) {
-									if (AccountPropertiesControl.this.session.getObjectKey().getSessionManager().isSessionFiring()) {
-										return;
-									}
-									
-									propertyControl.save();
-									String newValueText = propertyAccessor.formatValueForMessage(
-											AccountPropertiesControl.this.account);
-									
-									String description;
-									if (propertyAccessor == AccountInfo.getNameAccessor()) {
-										description = 
-											"rename account from " + oldValueText
-											+ " to " + newValueText;
-									} else {
-										description = 
-											"change " + propertyAccessor.getShortDescription() + " property"
-											+ " in '" + AccountPropertiesControl.this.account.getName() + "' account"
-											+ " from " + oldValueText
-											+ " to " + newValueText;
-									}
-									AccountPropertiesControl.this.session.registerUndoableChange(description);
-								}
-								public void focusGained(FocusEvent e) {
-									// Save the old value of this property for use in our 'undo' message.
-									oldValueText = propertyAccessor.formatValueForMessage(
-											AccountPropertiesControl.this.account);
-								}
-							});
-					
-					// Add to our list of controls.
-					propertyControlList.add(propertyControl);
-
-					toolkit.adapt(propertyLabel, false, false);
-					toolkit.adapt(propertyControl.getControl(), true, true);
+				/*
+				 * If the control factory set up grid data then leave it
+				 * alone. Otherwise set up the grid data based on the
+				 * properties minimum sizes and expansion weights. <P> The
+				 * control widths are set to the minimum width plus 10 times
+				 * the expansion weight. (As we are not short of space, we
+				 * make them a little bigger than their minimum sizes). A
+				 * minimum of 100 pixels is then applied because this makes
+				 * the right sides of the smaller controls line up, which
+				 * looks a little more tidy.
+				 */  
+				if (propertyControl.getControl().getLayoutData() == null) {
+					GridData gridData = new GridData();
+					gridData.minimumWidth = propertyAccessor.getMinimumWidth();
+					gridData.widthHint = Math.max(propertyAccessor.getMinimumWidth() + 10 * propertyAccessor.getWeight(), 100);
+					propertyControl.getControl().setLayoutData(gridData);
 				}
-				
+
+				propertyControl.getControl().addFocusListener(
+						new FocusAdapter() {
+
+							// When a control gets the focus, save the old value here.
+							// This value is used in the change message.
+							String oldValueText;
+
+							public void focusLost(FocusEvent e) {
+								if (AccountPropertiesControl.this.session.getObjectKey().getSessionManager().isSessionFiring()) {
+									return;
+								}
+
+								propertyControl.save();
+								String newValueText = propertyAccessor.formatValueForMessage(
+										AccountPropertiesControl.this.account);
+
+								String description;
+								if (propertyAccessor == AccountInfo.getNameAccessor()) {
+									description = 
+										"rename account from " + oldValueText
+										+ " to " + newValueText;
+								} else {
+									description = 
+										"change " + propertyAccessor.getDisplayName() + " property"
+										+ " in '" + AccountPropertiesControl.this.account.getName() + "' account"
+										+ " from " + oldValueText
+										+ " to " + newValueText;
+								}
+								AccountPropertiesControl.this.session.registerUndoableChange(description);
+							}
+							public void focusGained(FocusEvent e) {
+								// Save the old value of this property for use in our 'undo' message.
+								oldValueText = propertyAccessor.formatValueForMessage(
+										AccountPropertiesControl.this.account);
+							}
+						});
+
+				// Add to our list of controls.
+				propertyControlList.add(propertyControl);
+
+				toolkit.adapt(propertyLabel, false, false);
+				toolkit.adapt(propertyControl.getControl(), true, true);
 			}
 			
 			// Set the values from the account object into the control fields.

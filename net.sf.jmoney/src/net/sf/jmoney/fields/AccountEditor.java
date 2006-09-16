@@ -25,7 +25,7 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.events.SelectionEvent;
@@ -45,13 +45,13 @@ import org.eclipse.swt.widgets.Control;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class AccountEditor implements IPropertyControl {
+public class AccountEditor<A extends Account> implements IPropertyControl {
 
     private ExtendableObject extendableObject;
 
-    private PropertyAccessor accountPropertyAccessor;
+    private ScalarPropertyAccessor<A> accountPropertyAccessor;
 
-    private AccountControl propertyControl;
+    private AccountControl<A> propertyControl;
 
     /** 
      * @param propertyAccessor the accessor for the property to be edited
@@ -62,8 +62,8 @@ public class AccountEditor implements IPropertyControl {
      * 			of the appropriate type.
      * @param session the session whose accounts are listed in the combo box
      */
-    public AccountEditor(Composite parent, PropertyAccessor propertyAccessor, Session session) {
-        propertyControl = new AccountControl(parent, session, (Class<? extends Account>)propertyAccessor.getValueClass());
+    public AccountEditor(Composite parent, ScalarPropertyAccessor<A> propertyAccessor, Session session) {
+        propertyControl = new AccountControl<A>(parent, session, propertyAccessor.getClassOfValueObject());
         this.accountPropertyAccessor = propertyAccessor;
 
         /*
@@ -95,7 +95,7 @@ public class AccountEditor implements IPropertyControl {
     public void load(ExtendableObject object) {
     	extendableObject = object;
     	
-		Account account = (Account) object.getPropertyValue(accountPropertyAccessor);
+		A account = object.getPropertyValue(accountPropertyAccessor);
         propertyControl.setAccount(account);
     }
 
@@ -114,7 +114,7 @@ public class AccountEditor implements IPropertyControl {
      * so we can assume that <code>extendableObject</code> is not null.
      */
     public void save() {
-        Account account = propertyControl.getAccount();
+        A account = propertyControl.getAccount();
        	extendableObject.setPropertyValue(accountPropertyAccessor, account);
     }
 

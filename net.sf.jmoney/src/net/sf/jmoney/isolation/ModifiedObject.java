@@ -25,7 +25,7 @@ package net.sf.jmoney.isolation;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 /**
  * An instance of this class contains the changes that have been made to an
@@ -48,9 +48,9 @@ public class ModifiedObject {
 	 * The map of properties of the object that have been changed, or a null map
 	 * reference to indicate that the object has been deleted altogether
 	 */
-	Map<PropertyAccessor, Object> modifiedProperties = new HashMap<PropertyAccessor, Object>();
+	Map<ScalarPropertyAccessor, Object> modifiedProperties = new HashMap<ScalarPropertyAccessor, Object>();
 
-	public void put(PropertyAccessor accessor, Object value) {
+	public void put(ScalarPropertyAccessor accessor, Object value) {
 		/*
 		 * If modifiedProperties is null then an attempt to change a property of
 		 * an object that has been deleted. This indicates a bug in
@@ -84,7 +84,7 @@ public class ModifiedObject {
 		return modifiedProperties.isEmpty();
 	}
 
-	public Map<PropertyAccessor, Object> getMap() {
+	public Map<ScalarPropertyAccessor, Object> getMap() {
 		/*
 		 * If modifiedProperties is null then the object has been deleted. This
 		 * method is not defined in such a case and this indicates a bug in

@@ -58,7 +58,7 @@ public class UncommittedListManager<E extends ExtendableObject> extends Vector<E
 	 * 'added' list are appended to the items returned by the underlying
 	 * committed list.
 	 */
-	public E createNewElement(ExtendableObject parent, PropertySet propertySet) {
+	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());
@@ -85,7 +85,7 @@ public class UncommittedListManager<E extends ExtendableObject> extends Vector<E
 		}
 		
 		// We can now create the object.
-		E extendableObject = (E)propertySet.constructDefaultImplementationObject(constructorParameters);
+		F extendableObject = propertySet.constructDefaultImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 
@@ -102,7 +102,7 @@ public class UncommittedListManager<E extends ExtendableObject> extends Vector<E
 	// This method is never used, because new objects are only created
 	// with non-default values when objects are being committed.
 	// If we support nested transactions then this method will be required.
-	public E createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values/*, ExtensionProperties[] extensionProperties */) {
+	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet, Object[] values/*, ExtensionProperties[] extensionProperties */) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());
@@ -129,7 +129,7 @@ public class UncommittedListManager<E extends ExtendableObject> extends Vector<E
 		}
 		
 		// We can now create the object.
-		E extendableObject = (E)propertySet.constructDefaultImplementationObject(constructorParameters);
+		F extendableObject = propertySet.constructDefaultImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
 

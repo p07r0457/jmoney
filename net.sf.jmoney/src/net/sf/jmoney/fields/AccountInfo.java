@@ -27,7 +27,7 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 
 /**
@@ -50,7 +50,7 @@ import net.sf.jmoney.model2.PropertySet;
 public class AccountInfo implements IPropertySetInfo {
 
 	private static PropertySet propertySet = null;
-	private static PropertyAccessor nameAccessor = null;
+	private static ScalarPropertyAccessor<String> nameAccessor = null;
 
 	public AccountInfo() {
     }
@@ -59,12 +59,12 @@ public class AccountInfo implements IPropertySetInfo {
 		return Account.class;
 	}
 
-	public void registerProperties(PropertySet propertySet, IPropertyRegistrar propertyRegistrar) {
+	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
 		AccountInfo.propertySet = propertySet;
 		
-		IPropertyControlFactory textControlFactory = new TextControlFactory();
+		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		
-		nameAccessor = propertyRegistrar.addProperty("name", JMoneyPlugin.getResourceString("AccountPropertiesPanel.name"), 5, 100, textControlFactory, null);
+		nameAccessor = propertyRegistrar.addProperty("name", JMoneyPlugin.getResourceString("AccountPropertiesPanel.name"), String.class, 5, 100, textControlFactory, null);
 		propertyRegistrar.setDerivableInfo();
 	}
 
@@ -78,7 +78,7 @@ public class AccountInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static PropertyAccessor getNameAccessor() {
+	public static ScalarPropertyAccessor<String> getNameAccessor() {
 		return nameAccessor;
 	}	
 }

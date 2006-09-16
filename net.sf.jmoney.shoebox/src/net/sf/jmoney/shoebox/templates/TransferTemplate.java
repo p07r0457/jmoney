@@ -41,6 +41,7 @@ import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
@@ -70,8 +71,8 @@ public class TransferTemplate implements ITransactionTemplate {
 		Account account;
 		
 		DateComposite dateControl;
-		AccountComposite sourceAccountControl;
-		AccountComposite destinationAccountControl;
+		AccountComposite<CapitalAccount> sourceAccountControl;
+		AccountComposite<CapitalAccount> destinationAccountControl;
 	    TextComposite sourceMemoControl;
 	    TextComposite numberControl;
 	    TextComposite destinationMemoControl;
@@ -91,7 +92,7 @@ public class TransferTemplate implements ITransactionTemplate {
 			return account == null || account instanceof CapitalAccount;
 		}
 		
-		public Control createControl(Composite parent, boolean expandedControls, Account account, Collection ourEntryList) {
+		public Control createControl(Composite parent, boolean expandedControls, Account account, Collection<IObjectKey> ourEntryList) {
 			this.account = account;
 			
 			Composite areaComposite = new Composite(parent, SWT.NULL);
@@ -118,7 +119,7 @@ public class TransferTemplate implements ITransactionTemplate {
 
 			if (account == null) {
 				new Label(areaComposite, 0).setText("Bank Account:");
-				sourceAccountControl = new AccountControlWithMruList(areaComposite, session, BankAccount.class);
+				sourceAccountControl = new AccountControlWithMruList<CapitalAccount>(areaComposite, session, CapitalAccount.class);
 				GridData gd = new GridData(SWT.FILL, SWT.FILL, true, false);
 				gd.horizontalSpan = 3;
 				sourceAccountControl.setLayoutData(gd);
@@ -133,7 +134,7 @@ public class TransferTemplate implements ITransactionTemplate {
 			numberControl.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
 			new Label(areaComposite, 0).setText("Category:");
-			destinationAccountControl = new AccountControlWithMruList(areaComposite, session, IncomeExpenseAccount.class);
+			destinationAccountControl = new AccountControlWithMruList<CapitalAccount>(areaComposite, session, CapitalAccount.class);
 	        destinationAccountControl.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
 			new Label(areaComposite, 0).setText("Date:");
@@ -182,12 +183,12 @@ public class TransferTemplate implements ITransactionTemplate {
 			new Label(areaComposite, 0).setText("Receiving Account");
 			new Label(areaComposite, 0).setText("Amount");
 
-			sourceAccountControl = new AccountControlWithMruList(areaComposite, session, CapitalAccount.class);
+			sourceAccountControl = new AccountControlWithMruList<CapitalAccount>(areaComposite, session, CapitalAccount.class);
 			GridData gdAccount = new GridData(SWT.FILL, SWT.FILL, false, true);
 			gdAccount.widthHint = 200;
 			sourceAccountControl.setLayoutData(gdAccount);
 			
-			destinationAccountControl = new AccountControlWithMruList(areaComposite, session, CapitalAccount.class);
+			destinationAccountControl = new AccountControlWithMruList<CapitalAccount>(areaComposite, session, CapitalAccount.class);
 			GridData gdCategory = new GridData(SWT.FILL, SWT.FILL, false, true);
 			gdCategory.widthHint = 200;
 			destinationAccountControl.setLayoutData(gdCategory);
@@ -214,7 +215,7 @@ public class TransferTemplate implements ITransactionTemplate {
 	        return areaComposite;
 		}
 
-		private Control createButtonArea(Composite parent, final Collection ourEntryList) {
+		private Control createButtonArea(Composite parent, final Collection<IObjectKey> ourEntryList) {
 			Composite buttonArea = new Composite(parent, SWT.NULL);
 			
 			RowLayout layout = new RowLayout();
@@ -256,7 +257,7 @@ public class TransferTemplate implements ITransactionTemplate {
 	        destinationMemoControl.saveState(memento.createChild("memo2"));
 	    }
 
-	    public void addTransaction(Collection ourEntryList) {
+	    public void addTransaction(Collection<IObjectKey> ourEntryList) {
 			// TODO: This is not quite right - we should obtain
 			// the currency given the account information,
 	    	// and we must cope with the case where the two accounts

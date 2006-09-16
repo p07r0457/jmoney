@@ -25,7 +25,7 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.SWT;
@@ -38,9 +38,9 @@ import org.eclipse.swt.widgets.Composite;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class MultiTextControlFactory implements IPropertyControlFactory {
+public class MultiTextControlFactory implements IPropertyControlFactory<String> {
 
-    public IPropertyControl createPropertyControl(Composite parent, PropertyAccessor propertyAccessor, Session session) {
+    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<String> propertyAccessor, Session session) {
         IPropertyControl multiText = new TextEditor(parent, SWT.MULTI | SWT.WRAP, propertyAccessor);
         GridData gridData = new GridData();
         gridData.verticalAlignment = GridData.FILL;
@@ -51,8 +51,8 @@ public class MultiTextControlFactory implements IPropertyControlFactory {
         return multiText;
     }
 
-    public String formatValueForMessage(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        String value = extendableObject.getStringPropertyValue(propertyAccessor);
+    public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends String> propertyAccessor) {
+        String value = extendableObject.getPropertyValue(propertyAccessor);
         if (value == null || value.length() == 0) {
             return "empty";
         } else {
@@ -60,8 +60,8 @@ public class MultiTextControlFactory implements IPropertyControlFactory {
         }
     }
 
-    public String formatValueForTable(ExtendableObject extendableObject, PropertyAccessor propertyAccessor) {
-        return extendableObject.getStringPropertyValue(propertyAccessor);
+    public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends String> propertyAccessor) {
+        return extendableObject.getPropertyValue(propertyAccessor);
     }
 
 	public boolean isEditable() {
