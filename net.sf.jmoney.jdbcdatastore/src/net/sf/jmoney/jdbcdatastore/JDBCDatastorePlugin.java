@@ -53,11 +53,11 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.ListPropertyAccessor;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 

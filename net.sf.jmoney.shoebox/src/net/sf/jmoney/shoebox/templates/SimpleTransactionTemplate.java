@@ -39,7 +39,6 @@ import net.sf.jmoney.fields.TextControlWithSimpleTextbox;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.BankAccount;
-import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IObjectKey;

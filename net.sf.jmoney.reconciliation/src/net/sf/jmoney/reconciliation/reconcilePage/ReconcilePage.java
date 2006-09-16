@@ -22,7 +22,6 @@
 package net.sf.jmoney.reconciliation.reconcilePage;
 
 import java.util.Collection;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -38,7 +37,6 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.pages.entries.EntrySection;

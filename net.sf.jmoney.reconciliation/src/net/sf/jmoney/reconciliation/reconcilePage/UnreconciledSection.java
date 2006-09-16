@@ -23,7 +23,6 @@
 package net.sf.jmoney.reconciliation.reconcilePage;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;

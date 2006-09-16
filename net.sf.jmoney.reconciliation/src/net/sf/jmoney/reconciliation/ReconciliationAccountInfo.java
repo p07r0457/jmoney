@@ -24,12 +24,11 @@ package net.sf.jmoney.reconciliation;
 
 import net.sf.jmoney.fields.AccountControlFactory;
 import net.sf.jmoney.fields.CheckBoxControlFactory;
-import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 /**
  * Provides the metadata for the extra properties added to each

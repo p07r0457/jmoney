@@ -24,7 +24,6 @@ package net.sf.jmoney.reconciliation.reconcilePage;
 
 import net.sf.jmoney.fields.AccountControl;
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.reconciliation.ReconciliationAccount;
