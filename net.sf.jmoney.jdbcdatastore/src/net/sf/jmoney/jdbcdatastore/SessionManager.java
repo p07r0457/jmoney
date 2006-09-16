@@ -194,9 +194,9 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * 			cached, a map of integer id values to cached
 	 * 			objects; otherwise null.
 	 */
-	public Map<Integer, ? extends ExtendableObject> getMapOfCachedObjects(PropertySet propertySet) {
+	public <E extends ExtendableObject> Map<Integer, E> getMapOfCachedObjects(PropertySet<E> propertySet) {
 		for (PropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
-			Map<Integer, ? extends ExtendableObject> result = mapOfCachedObjectMaps.get(propertySet2);
+			Map<Integer, E> result = (Map<Integer, E>)mapOfCachedObjectMaps.get(propertySet2);
 			if (result != null) {
 				return result;
 			}
@@ -268,7 +268,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.model2.IEntryQueries#getSortedReadOnlyCollection(net.sf.jmoney.model2.CapitalAccount, net.sf.jmoney.model2.PropertyAccessor, boolean)
 	 */
-	public Collection getSortedEntries(CapitalAccount account, PropertyAccessor sortProperty, boolean descending) {
+	public Collection<Entry> getSortedEntries(CapitalAccount account, PropertyAccessor sortProperty, boolean descending) {
 		// TODO implement this.
 		throw new RuntimeException("must implement");
 	}

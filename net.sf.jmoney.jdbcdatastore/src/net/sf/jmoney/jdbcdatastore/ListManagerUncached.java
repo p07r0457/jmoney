@@ -46,7 +46,7 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 	private SessionManager sessionManager;
 	private ListPropertyAccessor listProperty;
 
-	private PropertySet typedPropertySet;
+	private PropertySet<E> typedPropertySet;
 	
 	public ListManagerUncached(IDatabaseRowKey parentKey, SessionManager sessionManager, ListPropertyAccessor listProperty) {
 		this.parentKey = parentKey;
@@ -69,7 +69,7 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 			throw new RuntimeException(valueClass.getName() + " not found.");
 	}
 	
-	public E createNewElement(ExtendableObject parent, PropertySet propertySet) {
+	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet) {
  		// First build the in-memory object.  Even though the object is not
 		// cached in the object key, the object must be constructed to get
 		// the default values to be written to the database and the
@@ -82,7 +82,7 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		// the objects in a list just because the owning object
 		// is materialized.
 
-		E extendableObject = (E)JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, false);
+		F extendableObject = JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, false);
 		
 		// Insert the new object into the tables.
 		
@@ -92,7 +92,7 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		return extendableObject;
 	}
 	
-	public E createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
+	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet, Object[] values) {
  		// First build the in-memory object.  Even though the object is not
 		// cached in the object key, the object must be constructed to get
 		// the default values to be written to the database and the
@@ -105,7 +105,7 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		// the objects in a list just because the owning object
 		// is materialized.
 
-		E extendableObject = (E)JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, false, values);
+		F extendableObject = JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, false, values);
 		
 		// Insert the new object into the tables.
 		

@@ -51,7 +51,7 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 	 * until the object is read from the database and therefore
 	 * is not passed to the constructor.
 	 */
-	private PropertySet typedPropertySet;
+	private PropertySet<? extends ExtendableObject> typedPropertySet;
 	private SessionManager sessionManager;
 	
 	/**
@@ -64,7 +64,7 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 	 * 		until the object is read from the database and therefore
 	 * 		is not passed to the constructor.
 	 */
-	ObjectKeyUncached(int rowId, PropertySet typedPropertySet, SessionManager sessionManager) {
+	ObjectKeyUncached(int rowId, PropertySet<? extends ExtendableObject> typedPropertySet, SessionManager sessionManager) {
 		this.rowId = rowId;
 		this.typedPropertySet = typedPropertySet;
 		this.sessionManager = sessionManager;

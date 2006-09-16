@@ -49,7 +49,7 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  */
 public class AccountInfo implements IPropertySetInfo {
 
-	private static PropertySet propertySet = null;
+	private static PropertySet<Account> propertySet = null;
 	private static ScalarPropertyAccessor<String> nameAccessor = null;
 
 	public AccountInfo() {
@@ -71,7 +71,7 @@ public class AccountInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static PropertySet getPropertySet() {
+	public static PropertySet<Account> getPropertySet() {
 		return propertySet;
 	}
 

@@ -49,10 +49,13 @@ import net.sf.jmoney.fields.CurrencyInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -259,11 +262,11 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	
 	
 	SessionManager initGeneralized(Connection con) throws SQLException {
-		PropertySet commodityPropertySet = CommodityInfo.getPropertySet();
-		PropertySet currencyPropertySet = CurrencyInfo.getPropertySet();
-		PropertySet accountPropertySet = AccountInfo.getPropertySet();
-		PropertySet capitalPropertySet = CapitalAccountInfo.getPropertySet();
-		PropertySet incomeExpensePropertySet = IncomeExpenseAccountInfo.getPropertySet();
+		PropertySet<Commodity> commodityPropertySet = CommodityInfo.getPropertySet();
+		PropertySet<Currency> currencyPropertySet = CurrencyInfo.getPropertySet();
+		PropertySet<Account> accountPropertySet = AccountInfo.getPropertySet();
+		PropertySet<CapitalAccount> capitalPropertySet = CapitalAccountInfo.getPropertySet();
+		PropertySet<IncomeExpenseAccount> incomeExpensePropertySet = IncomeExpenseAccountInfo.getPropertySet();
 		
 		SessionKey sessionKey = new SessionKey();
 		
@@ -279,8 +282,8 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		sessionManager.addCachedPropertySet(commodityPropertySet);
 		sessionManager.addCachedPropertySet(accountPropertySet);
 		
-		Map<Integer, Commodity> commodityMap = (Map<Integer, Commodity>)sessionManager.getMapOfCachedObjects(commodityPropertySet);
-		Map<Integer, Account> accountsMap = (Map<Integer, Account>)sessionManager.getMapOfCachedObjects(accountPropertySet);
+		Map<Integer, Commodity> commodityMap = sessionManager.getMapOfCachedObjects(commodityPropertySet);
+		Map<Integer, Account> accountsMap = sessionManager.getMapOfCachedObjects(accountPropertySet);
 
 		// Find all properties in any property set that are
 		// a list of objects with the type as this property set.
@@ -324,7 +327,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		rs = stmt.executeQuery("SELECT * FROM net_sf_jmoney_currency JOIN net_sf_jmoney_commodity ON net_sf_jmoney_currency._ID = net_sf_jmoney_commodity._ID");
 
 		while (rs.next()) {
-			Commodity commodityObject = (Commodity)materializeObjectCached(rs, currencyPropertySet, sessionKey, sessionManager);
+			Commodity commodityObject = materializeObjectCached(rs, currencyPropertySet, sessionKey, sessionManager);
 			
 			commodityListManager.add(commodityObject);
 			
@@ -405,7 +408,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @return A Vector containing objects of class 
 	 * 		<code>ColumnInfo</code>.
 	 */
-	private Vector<ColumnInfo> buildColumnList(PropertySet propertySet) {
+	private Vector<ColumnInfo> buildColumnList(PropertySet<?> propertySet) {
 		Vector<ColumnInfo> result = new Vector<ColumnInfo>();
 		
 		// The parent column requirements depend on which other
@@ -705,11 +708,11 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		columnResultSet.close();
 	}
 
-	static ExtendableObject materializeObjectCached(ResultSet rs, PropertySet propertySet, IObjectKey parentKey, SessionManager sessionManager) throws SQLException {
+	static <E extends ExtendableObject> E materializeObjectCached(ResultSet rs, PropertySet<E> propertySet, IObjectKey parentKey, SessionManager sessionManager) throws SQLException {
 		int rowId = rs.getInt(1); // '_ID' column
 		ObjectKeyCached key = new ObjectKeyCached(rowId, sessionManager);
 		
-		ExtendableObject extendableObject = materializeObject(rs, propertySet, key, parentKey, sessionManager);
+		E extendableObject = materializeObject(rs, propertySet, key, parentKey, sessionManager);
 		
 		key.setObject(extendableObject);
 		
@@ -734,7 +737,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @return
 	 * @throws SQLException
 	 */ 
-	static ExtendableObject materializeObject(ResultSet rs, PropertySet propertySet, IObjectKey key, IObjectKey parentKey, SessionManager sessionManager) throws SQLException {
+	static <E extends ExtendableObject> E materializeObject(ResultSet rs, PropertySet<E> propertySet, IObjectKey key, IObjectKey parentKey, SessionManager sessionManager) throws SQLException {
 		/**
 		 * The list of parameters to be passed to the constructor
 		 * of this object.
@@ -758,20 +761,21 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				value = new ListManagerCached(sessionManager, listAccessor);
 			} else {
 				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor; 
-				Class valueClass = scalarAccessor.getClassOfValueObject(); 
+				Class<?> valueClass = scalarAccessor.getClassOfValueObject(); 
 				if (valueClass == int.class) {
-					value = new Integer(rs.getInt(columnName));
+					value = rs.getInt(columnName);
 				} else if (valueClass == long.class) {
-					value = new Long(rs.getLong(columnName));
+					value = rs.getLong(columnName);
 				} else if (valueClass == Long.class) {
-					value = new Long(rs.getLong(columnName));
+					value = rs.getLong(columnName);
 				} else if (valueClass == String.class) {
 					value = rs.getString(columnName);
 				} else if (valueClass == Date.class) {
 					value = rs.getDate(columnName);
 				} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
+					Class<? extends ExtendableObject> objectClass = valueClass.asSubclass(ExtendableObject.class);
 					int rowIdOfProperty = rs.getInt(columnName);
-					PropertySet propertySetOfProperty = PropertySet.getPropertySet(valueClass);
+					PropertySet<? extends ExtendableObject> propertySetOfProperty = PropertySet.getPropertySet(objectClass);
 
 					// We have a problem here.
 					// It may be that the type of this property is a derivable property set,
@@ -795,7 +799,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					// reading the database.  There is nothing in the design
 					// of the caches that prohibit duplicates of the item being
 					// created outside the cache.
-					Map<Integer, ? extends ExtendableObject> map = sessionManager.getMapOfCachedObjects(propertySetOfProperty);
+					Map<Integer, ?> map = sessionManager.getMapOfCachedObjects(propertySetOfProperty);
 					if (map == null) {
 						value = new ObjectKeyUncached(rowIdOfProperty, propertySetOfProperty, sessionManager);
 					} else {
@@ -813,7 +817,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		}
 		
 		// We can now create the object.
-		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
+		E extendableObject = propertySet.constructImplementationObject(constructorParameters);
 		
 		return extendableObject;
 	}
@@ -833,7 +837,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @return
 	 * @throws SQLException
 	 */
-	static ExtendableObject materializeObject(ResultSet rs, PropertySet propertySet, IObjectKey key, SessionManager sessionManager) throws SQLException {
+	static <E extends ExtendableObject> E materializeObject(ResultSet rs, PropertySet<E> propertySet, IObjectKey key, SessionManager sessionManager) throws SQLException {
 		// We need to obtain the key for the parent object.
 		// The parent object may be cached or may be uncached.
 		
@@ -906,7 +910,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			parentKey = sessionManager.lookupObject(parentPropertySet, parentId).getObjectKey();
 		}
 		
-		ExtendableObject extendableObject = JDBCDatastorePlugin.materializeObject(rs, propertySet, key, parentKey, sessionManager);
+		E extendableObject = JDBCDatastorePlugin.materializeObject(rs, propertySet, key, parentKey, sessionManager);
 		
 		return extendableObject;
 	}
@@ -1246,7 +1250,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @param constructWithCachedLists
 	 * @return
 	 */
-	public static ExtendableObject constructExtendableObject(PropertySet propertySet, SessionManager sessionManager, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists) {
+	public static <E extends ExtendableObject> E constructExtendableObject(PropertySet<E> propertySet, SessionManager sessionManager, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists) {
 		Collection constructorProperties = propertySet.getConstructorProperties();
 		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {
@@ -1301,7 +1305,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		}
 		
 		// We can now create the object.
-		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
+		E extendableObject = propertySet.constructImplementationObject(constructorParameters);
 		
 		return extendableObject;
 	}
@@ -1322,7 +1326,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * 			with ExtendableObject properties having the object key in this array 
 	 * @return
 	 */
-	public static ExtendableObject constructExtendableObject(PropertySet propertySet, SessionManager sessionManager, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists, Object[] values) {
+	public static <E extends ExtendableObject> E constructExtendableObject(PropertySet<E> propertySet, SessionManager sessionManager, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists, Object[] values) {
 		Collection constructorProperties = propertySet.getConstructorProperties();
 		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {
@@ -1365,7 +1369,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		}
 		
 		// We can now create the object.
-		ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
+		E extendableObject = propertySet.constructImplementationObject(constructorParameters);
 		
 		return extendableObject;
 	}

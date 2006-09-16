@@ -43,7 +43,7 @@ import net.sf.jmoney.model2.PropertySet;
  */
 class UncachedObjectIterator implements Iterator {
 	private ResultSet resultSet;
-	private PropertySet propertySet;
+	private PropertySet<? extends ExtendableObject> propertySet;
 	private IObjectKey parentKey;
 	private SessionManager sessionManager;
 	private boolean isAnother;
@@ -60,7 +60,7 @@ class UncachedObjectIterator implements Iterator {
 	 * 			parents then pass null.
 	 * @param sessionManager
 	 */
-	UncachedObjectIterator(ResultSet resultSet, PropertySet propertySet, IObjectKey parentKey, SessionManager sessionManager) {
+	UncachedObjectIterator(ResultSet resultSet, PropertySet<? extends ExtendableObject> propertySet, IObjectKey parentKey, SessionManager sessionManager) {
 		this.resultSet = resultSet;
 		this.propertySet = propertySet;
 		this.parentKey = parentKey;

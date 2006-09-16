@@ -49,7 +49,7 @@ public class ListManagerCached<E extends ExtendableObject> extends Vector<E> imp
 		this.listProperty = listProperty;
 	}
 
-	public E createNewElement(ExtendableObject parent, PropertySet propertySet) {
+	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet) {
 		// We must create the object before we persist it to the database.
 		// The reason why we must do this, and not simply write the
 		// default values, is that the constructor only uses the
@@ -63,7 +63,7 @@ public class ListManagerCached<E extends ExtendableObject> extends Vector<E> imp
 		
 		ObjectKeyCached objectKey = new ObjectKeyCached(-1, sessionManager);
 		
-		E extendableObject = (E)JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, true);
+		F extendableObject = JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, true);
 
 		objectKey.setObject(extendableObject);
 		
@@ -80,13 +80,13 @@ public class ListManagerCached<E extends ExtendableObject> extends Vector<E> imp
 		// TODO: This does not work if we have uncached derivable property sets
 		// (Which, at time of writing, we don't), because the parameter passed to
 		// getMapOfCachedObjects must be a base-most property set (I think).
-		Map map = sessionManager.getMapOfCachedObjects(propertySet);
+		Map<Integer, F> map = sessionManager.getMapOfCachedObjects(propertySet);
 		map.put(new Integer(rowId), extendableObject);
 
 		return extendableObject;
 	}
 
-	public E createNewElement(ExtendableObject parent, PropertySet propertySet, Object[] values) {
+	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet, Object[] values) {
 		// We must create the object before we persist it to the database.
 		// The reason why we must do this, and not simply write the
 		// default values, is that the constructor only uses the
@@ -100,7 +100,7 @@ public class ListManagerCached<E extends ExtendableObject> extends Vector<E> imp
 		
 		ObjectKeyCached objectKey = new ObjectKeyCached(-1, sessionManager);
 		
-		E extendableObject = (E)JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, true);
+		F extendableObject = JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, true);
 
 		objectKey.setObject(extendableObject);
 		
@@ -117,7 +117,7 @@ public class ListManagerCached<E extends ExtendableObject> extends Vector<E> imp
 		// TODO: This does not work if we have uncached derivable property sets
 		// (Which, at time of writing, we don't), because the parameter passed to
 		// getMapOfCachedObjects must be a base-most property set (I think).
-		Map map = sessionManager.getMapOfCachedObjects(propertySet);
+		Map<Integer, F> map = sessionManager.getMapOfCachedObjects(propertySet);
 		map.put(new Integer(rowId), extendableObject);
 
 		return extendableObject;
