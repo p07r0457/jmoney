@@ -97,7 +97,7 @@ public class QIFEntry extends EntryExtension {
 	public void setReconcilingState(char reconcilingState) {
 		char oldReconcilingState = this.reconcilingState;
 		this.reconcilingState = reconcilingState;
-		processPropertyChange(QIFEntryInfo.getReconcilingStateAccessor(), new Character(oldReconcilingState), new Character(reconcilingState));
+		processPropertyChange(QIFEntryInfo.getReconcilingStateAccessor(), oldReconcilingState, reconcilingState);
 	}
 
 	/**
