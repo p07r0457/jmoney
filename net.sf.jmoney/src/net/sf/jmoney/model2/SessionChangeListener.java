@@ -31,17 +31,6 @@ import java.util.EventListener;
  */
 public interface SessionChangeListener extends EventListener {
 	/**
-	 * The session has been replaced.  All views of session data
-	 * should be fully refreshed.
-	 * 
-	 * @param oldSession the previous open session, or null if no
-	 * 		session was previously open
-	 * @param newSession the new session, or null if the previous
-	 *      session was closed using the File, Close action
-	 */
-    void sessionReplaced(Session oldSession, Session newSession);
-	
-	/**
 	 * An extendable object has been added to the datastore.
 	 * <P>
 	 * If an object with child objects is added to the datastore as a single

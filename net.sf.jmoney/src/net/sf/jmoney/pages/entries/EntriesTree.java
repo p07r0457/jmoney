@@ -839,7 +839,7 @@ public class EntriesTree extends Composite {
 			}
 		});
 		
-		session.getObjectKey().getSessionManager().addSessionChangeListener(new SessionChangeAdapter() {
+		session.getObjectKey().getSessionManager().addChangeListener(new SessionChangeAdapter() {
 			public void objectInserted(ExtendableObject newObject) {
 				if (newObject instanceof Entry) {
 					Entry newEntry = (Entry) newObject;

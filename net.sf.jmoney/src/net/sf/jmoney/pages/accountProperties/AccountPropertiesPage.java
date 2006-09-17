@@ -104,7 +104,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 			// TODO: what is this?
 			pack();
 			
-			JMoneyPlugin.getDefault().addSessionChangeListener(listener, this);
+			session.getObjectKey().getSessionManager().addChangeListener(listener, this);
 
 			this.account = account;
 			

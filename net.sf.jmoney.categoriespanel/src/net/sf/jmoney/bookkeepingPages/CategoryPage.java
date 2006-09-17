@@ -183,11 +183,6 @@ public class CategoryPage implements IBookkeepingPageFactory {
 		Vector<PropertyControls> propertyList = new Vector<PropertyControls>();
 		
 		private SessionChangeListener listener = new SessionChangeAdapter() {
-			public void sessionReplaced(Session oldSession, Session newSession) {
-				// When the session is replaced, this view will be disposed
-				// and possibly re-built, so do nothing here.
-			}
-			
 			public void objectInserted(ExtendableObject newObject) {
 				if (newObject instanceof IncomeExpenseAccount) {
 					IncomeExpenseAccount newAccount = (IncomeExpenseAccount)newObject;
@@ -272,7 +267,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			viewer.setInput(session);
 
 			// Listen for changes to the category list.
-			JMoneyPlugin.getDefault().addSessionChangeListener(listener, viewer.getControl());
+			session.getObjectKey().getSessionManager().addChangeListener(listener, viewer.getControl());
 			
 			// Listen for changes in the selection and update the 
 			// edit controls.

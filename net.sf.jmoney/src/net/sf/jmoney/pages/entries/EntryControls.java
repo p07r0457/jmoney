@@ -446,7 +446,7 @@ class EntryControls {
 		// Note: composite1 is used as the containing composite,
 		// even tho there are in fact 5 composites across the row.
 		// This is ok because they are all destroyed at the same time.
-		session.getObjectKey().getSessionManager().addSessionChangeListener(mySessionChangeListener, composite1);
+		session.getObjectKey().getSessionManager().addChangeListener(mySessionChangeListener, composite1);
 		
 		// if the entry is known at construct time.  Set it
 		// into the controls.

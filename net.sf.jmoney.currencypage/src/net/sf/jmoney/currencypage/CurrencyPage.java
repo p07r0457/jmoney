@@ -250,11 +250,6 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 		
 		private SessionChangeListener listener =
 			new SessionChangeAdapter() {
-			public void sessionReplaced(Session oldSession, Session newSession) {
-				// When the session is replaced, this view will be disposed
-				// and possibly re-built, so do nothing here.
-			}
-			
 			public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 				if (changedObject.equals(session)
 						&& changedProperty == SessionInfo.getDefaultCurrencyAccessor()) {
@@ -340,7 +335,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			updateCount();
 			
 			// Listen for changes to the session data.
-			JMoneyPlugin.getDefault().addSessionChangeListener(listener, parent);
+			session.getObjectKey().getSessionManager().addChangeListener(listener, parent);
 			
 			addViewerListeners();
 			

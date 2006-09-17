@@ -79,7 +79,7 @@ public abstract class DataManager implements IAdaptable {
      * not maintain a reference to the listener then the listener will be garbage
      * collected and the caller may wonder why no events are being notified.
 	 */
-	public void addSessionChangeListener(SessionChangeListener listener) {
+	public void addChangeListenerWeakly(SessionChangeListener listener) {
         sessionChangeListenerRefs.add(new WeakReference<SessionChangeListener>(listener));
     }
     
@@ -100,7 +100,7 @@ public abstract class DataManager implements IAdaptable {
 	 * @param listener
 	 * @param control
 	 */
-	public void addSessionChangeListener(final SessionChangeListener listener, Control control) {
+	public void addChangeListener(final SessionChangeListener listener, Control control) {
         sessionChangeListeners.add(listener);
         
 		// Remove the listener when the given control is disposed.

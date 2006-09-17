@@ -36,6 +36,7 @@ import java.util.Vector;
 
 import net.sf.jmoney.fields.CurrencyInfo;
 import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.CurrentSessionChangeListener;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ISessionChangeFirer;
 import net.sf.jmoney.model2.ISessionFactory;
@@ -80,7 +81,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	
     private DatastoreManager sessionManager = null;
 
-    private Vector<SessionChangeListener> sessionChangeListeners = new Vector<SessionChangeListener>();
+    private Vector<CurrentSessionChangeListener> sessionChangeListeners = new Vector<CurrentSessionChangeListener>();
     
     // Create a listener that listens for changes to the new session.
     private SessionChangeFirerListener sessionChangeFirerListener =
@@ -298,7 +299,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         if (!sessionChangeListeners.isEmpty()) {
         	// Take a copy of the listener list.  By doing this we
         	// allow listeners to safely add or remove listeners.
-        	SessionChangeListener listenerArray[] = new SessionChangeListener[sessionChangeListeners.size()];
+        	CurrentSessionChangeListener listenerArray[] = new CurrentSessionChangeListener[sessionChangeListeners.size()];
         	sessionChangeListeners.copyInto(listenerArray);
         	for (int i = 0; i < listenerArray.length; i++) {
         		listenerArray[i].sessionReplaced(
@@ -386,10 +387,6 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         session.setDefaultCurrency(currency);
     }
 
-	public void addSessionChangeListener(SessionChangeListener l) {
-        sessionChangeListeners.add(l);
-    }
-    
 	/**
 	 * Adds a change listener.
 	 * <P>
@@ -404,7 +401,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	 * @param listener
 	 * @param control
 	 */
-	public void addSessionChangeListener(final SessionChangeListener listener, Control control) {
+	public void addSessionChangeListener(final CurrentSessionChangeListener listener, Control control) {
         sessionChangeListeners.add(listener);
         
 		// Remove the listener when the given control is disposed.
@@ -413,10 +410,6 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 				sessionChangeListeners.remove(listener);
 			}
 		});
-    }
-    
-    public void removeSessionChangeListener(SessionChangeListener l) {
-        sessionChangeListeners.remove(l);
     }
 
     // Preferences

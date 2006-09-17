@@ -122,7 +122,7 @@ public class AmountEditor implements IPropertyControl {
 
     	// Note that we cannot get the session from fObject because fObject
 		// may be null.
-		JMoneyPlugin.getDefault().getSessionManager().addSessionChangeListener(commodityChangeListener, propertyControl);
+		JMoneyPlugin.getDefault().getSessionManager().addChangeListener(commodityChangeListener, propertyControl);
     }
     
     public void updateCommodity(Commodity newCommodity) {

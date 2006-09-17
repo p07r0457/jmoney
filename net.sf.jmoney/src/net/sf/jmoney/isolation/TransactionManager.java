@@ -160,7 +160,7 @@ public class TransactionManager extends DataManager {
 		 * for the garbage collector without knowing when it is
 		 * no longer being used.
 		 */
-		baseDataManager.addSessionChangeListener(new MySessionChangeListener());
+		baseDataManager.addChangeListenerWeakly(new MySessionChangeListener());
 	}
 
 	/**

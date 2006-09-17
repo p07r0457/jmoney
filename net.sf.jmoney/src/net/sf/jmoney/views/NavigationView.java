@@ -30,6 +30,7 @@ import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CapitalAccountInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CurrentSessionChangeListener;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.PageEntry;
@@ -182,8 +183,7 @@ public class NavigationView extends ViewPart {
 		}
 	}
 
-	private SessionChangeListener listener =
-		new SessionChangeAdapter() {
+	private class MyCurrentSessionChangeListener extends SessionChangeAdapter implements CurrentSessionChangeListener {
 		public void sessionReplaced(Session oldSession, Session newSession) {
 			// Close all editors
 			IWorkbenchWindow window = getSite().getWorkbenchWindow();
@@ -345,7 +345,7 @@ public class NavigationView extends ViewPart {
 		// Listen for changes to the account list.
 		// (The node containing the list of accounts is currently
 		// hard coded into this view).
-		JMoneyPlugin.getDefault().addSessionChangeListener(listener);
+		JMoneyPlugin.getDefault().addSessionChangeListener(new MyCurrentSessionChangeListener(), viewer.getControl());
 		
 		viewer.expandAll();
 		makeActions();
