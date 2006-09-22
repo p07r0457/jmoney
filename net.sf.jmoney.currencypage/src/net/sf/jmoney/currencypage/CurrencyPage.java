@@ -63,6 +63,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.DialogPage;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.DoubleClickEvent;
@@ -337,17 +338,25 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			// Listen for changes to the session data.
 			session.getObjectKey().getSessionManager().addChangeListener(listener, parent);
 			
-			addViewerListeners();
-			
-			Dialog.applyDialogFont(container);
-			
-			// Listen for events on the table.  The user may double click currencies from
-			// the available list to add them.
+			/*
+			 * Listen for events on the tables. The user may double click
+			 * currencies from the available list to add them or may click
+			 * double click on currencies in the selected list (provided the
+			 * currency is not in use) to de-selected the currency.
+			 */
 			availableListViewer.addDoubleClickListener(new IDoubleClickListener() {
 				public void doubleClick(DoubleClickEvent event) {
 					handleAdd();
 				}
 			});
+					
+			selectedListViewer.addDoubleClickListener(new IDoubleClickListener() {
+				public void doubleClick(DoubleClickEvent event) {
+					handleRemove();
+				}
+			});
+			
+			Dialog.applyDialogFont(container);
 			
 			// Set up the context menus.
 			hookContextMenu(fEditor.getSite());
@@ -405,20 +414,6 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			// We could save the current category selection
 			// and the expand/collapse state of each node
 			// but it is not worthwhile.
-		}
-
-		private void addViewerListeners() {
-			availableListViewer.addDoubleClickListener(new IDoubleClickListener() {
-				public void doubleClick(DoubleClickEvent event) {
-					handleAdd();
-				}
-			});
-					
-			selectedListViewer.addDoubleClickListener(new IDoubleClickListener() {
-				public void doubleClick(DoubleClickEvent event) {
-					handleRemove();
-				}
-			});
 		}
 
 		private Composite createAvailableList(FormToolkit toolkit, Composite parent) {
@@ -605,7 +600,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 	        TableLayout tlayout = new TableLayout();
 	        
 	        new TableColumn(table, SWT.LEFT);
-	        tlayout.addColumnData(new ColumnWeightData(1, 100));
+	        tlayout.addColumnData(new ColumnWeightData(0, 100));
 
 	        new TableColumn(table, SWT.LEFT);
 	        tlayout.addColumnData(new ColumnWeightData(0, 70));
@@ -694,6 +689,15 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 						data.add(currencyData);
 						session.deleteCommodity(currencyData.currency);
 						currencyData.currency = null;
+					} else {
+						MessageDialog dialog = new MessageDialog(
+								this.getSite().getShell(),
+								"Disallowed Action",
+								null, // accept the default window icon
+								"You cannot remove the default currency or any currencies that are in use.",
+								MessageDialog.ERROR,
+								new String[] { IDialogConstants.OK_LABEL }, 0);
+						dialog.open();
 					}
 				}
 				
