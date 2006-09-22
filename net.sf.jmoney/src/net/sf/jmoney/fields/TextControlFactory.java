@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.fields;
 
+import java.util.Comparator;
+
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
@@ -57,5 +59,13 @@ public class TextControlFactory implements IPropertyControlFactory<String> {
 
 	public boolean isEditable() {
 		return true;
+	}
+
+	public Comparator<String> getComparator() {
+		return new Comparator<String>() {
+			public int compare(String text1, String text2) {
+				return text1.compareTo(text2);
+			}
+		};
 	}
 }

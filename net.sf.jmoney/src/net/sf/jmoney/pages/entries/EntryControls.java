@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.pages.entries;
 
-import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.fields.EntryInfo;
@@ -422,8 +421,7 @@ class EntryControls {
 					}
 				});
 
-		for (Iterator<ScalarPropertyAccessor> iter = EntryInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
-			ScalarPropertyAccessor propertyAccessor = iter.next();
+   		for (ScalarPropertyAccessor propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
 			if (propertyAccessor.isEditable()
 					&& propertyAccessor.isScalar()
 					&& propertyAccessor != EntryInfo.getAccountAccessor() 

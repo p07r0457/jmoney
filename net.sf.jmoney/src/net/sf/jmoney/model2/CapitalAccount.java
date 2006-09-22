@@ -213,11 +213,6 @@ public abstract class CapitalAccount extends Account {
 		    }
 	}
 
-	public int compareTo(Object o) {
-		CapitalAccount a = (CapitalAccount) o;
-		return getName().compareTo(a.getName());
-	}
-
 	/**
 	 * Create a sub-account of this account.  This method is
 	 * identical to calling 

@@ -78,6 +78,20 @@ public class PropertySet<E> {
 	private IPropertySetInfo propertySetInfo;
 	
 	private Vector<PropertyAccessor> properties = new Vector<PropertyAccessor>();
+
+	/**
+	 * This array is built on first use and then cached.
+	 */
+	private Vector<ScalarPropertyAccessor> scalarProperties1 = null;
+	private Vector<ListPropertyAccessor> listProperties1 = null;
+
+	private Vector<PropertyAccessor> properties2 = null;
+	private Vector<ScalarPropertyAccessor> scalarProperties2 = null;
+	private Vector<ListPropertyAccessor> listProperties2 = null;
+
+	private Vector<PropertyAccessor> properties3 = null;
+	private Vector<ScalarPropertyAccessor> scalarProperties3 = null;
+	private Vector<ListPropertyAccessor> listProperties3 = null;
 	
 	boolean isExtension;
 	
@@ -573,10 +587,9 @@ public class PropertySet<E> {
 			int scalarIndex = 0;
 			
 			for (int i = basePropertySets.size()-1; i >= 0; i--) {
-				PropertySet base = (PropertySet)basePropertySets.get(i);
+				PropertySet<?> base = basePropertySets.get(i);
 
-				for (Iterator iter = base.getPropertyIterator1(); iter.hasNext(); ) {
-					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+	    		for (PropertyAccessor propertyAccessor: base.properties) {
 					if (!isDerivable()) {
 						constructorProperties.add(propertyAccessor);
 						if (propertyAccessor.isList()) {
@@ -587,17 +600,11 @@ public class PropertySet<E> {
 					parameterIndex++;
 				}
 
-				for (Iterator iter = base.getPropertyIterator2(); iter.hasNext(); ) {
-					PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-					if (propertyAccessor.isScalar()) {
-						scalarIndex++;
-					}
-				}
+	    		scalarIndex += base.getScalarProperties2().size();
 			}
 			
 			// Process the properties in this property set.
-			for (Iterator iter = getPropertyIterator1(); iter.hasNext(); ) {
-				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+    		for (PropertyAccessor propertyAccessor: properties) {
 				propertyAccessor.setIndexIntoConstructorParameters(parameterIndex++);
 				if (!isDerivable()) {
 					constructorProperties.add(propertyAccessor);
@@ -607,8 +614,7 @@ public class PropertySet<E> {
 				}
 			}
 			
-			for (Iterator<ScalarPropertyAccessor> iter = getPropertyIterator_Scalar2(); iter.hasNext(); ) {
-				ScalarPropertyAccessor propertyAccessor = iter.next();
+			for (ScalarPropertyAccessor propertyAccessor: getScalarProperties2()) {
 				propertyAccessor.setIndexIntoScalarProperties(scalarIndex++);
 			}
 			
@@ -630,8 +636,7 @@ public class PropertySet<E> {
 		} else {
 			// This property set is an extension.
 			int parameterIndex = 0;
-			for (Iterator iter = getPropertyIterator1(); iter.hasNext(); ) {
-				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+    		for (PropertyAccessor propertyAccessor: properties) {
 				constructorProperties.add(propertyAccessor);
 				propertyAccessor.setIndexIntoConstructorParameters(parameterIndex++);
 				if (propertyAccessor.isList()) {
@@ -1074,45 +1079,110 @@ public class PropertySet<E> {
 	 * 		in this property set, returning, for each property,
 	 * 		the PropertyAccessor object for that property.
 	 */
-	public Iterator getPropertyIterator1() {
-		return properties.iterator();
+	// What is the difference between this and the construction
+	// properties????
+	public Collection<PropertyAccessor> getProperties1() {
+		return properties;
 	}
 	
-	/**
-	 * Returns an iterator which iterates over all properties
-	 * of the given set of property sets, including both properties in the 
-	 * extendable object and properties in extension property sets.
-	 * <P>
-	 * Properties from base property sets and properties from
-	 * derived property sets are not returned.
-	 * 
-	 * @ return An iterator which iterates over a set of
-	 * 		<code>PropertyAccessor</code> objects.
-	 */
-	// This method may be called on extendable property sets only
-	// (i.e. not on extension property sets).
-	public Iterator getPropertyIterator2() {
-		// Build an array - not efficient but easy and avoids concurrency problems.
-		// TODO: write a proper iterator, or at least cache this vector.
-		Vector<PropertyAccessor> fields = new Vector<PropertyAccessor>();
-
-		// Properties in this extendable object
-		for (Iterator propertyIterator = getPropertyIterator1(); propertyIterator.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIterator.next();
-			fields.add(propertyAccessor);
-		}
-
-		// Properties in the extensions
-		for (PropertySet extensionPropertySet: extensionPropertySets.values()) {
-			for (Iterator propertyIterator = extensionPropertySet.getPropertyIterator1(); propertyIterator.hasNext(); ) {
-				PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIterator.next();
-				fields.add(propertyAccessor);
+	public Collection<ScalarPropertyAccessor> getScalarProperties1() {
+		if (scalarProperties1 == null) {
+			scalarProperties1 = new Vector<ScalarPropertyAccessor>();
+			for (PropertyAccessor propertyAccessor: properties) {
+				if (propertyAccessor instanceof ScalarPropertyAccessor) {
+					scalarProperties1.add((ScalarPropertyAccessor)propertyAccessor);
+				}
 			}
 		}
 		
-		return fields.iterator();
+		return scalarProperties1;
+	}
+	
+	public Collection<ListPropertyAccessor> getListProperties1() {
+		if (listProperties1 == null) {
+			listProperties1 = new Vector<ListPropertyAccessor>();
+			for (PropertyAccessor propertyAccessor: properties) {
+				if (propertyAccessor instanceof ListPropertyAccessor) {
+					listProperties1.add((ListPropertyAccessor)propertyAccessor);
+				}
+			}
+		}
+		
+		return listProperties1;
+	}
+	
+	/**
+	 * Returns the set of all properties of the given set of property sets,
+	 * including both properties in the extendable object and properties in
+	 * extension property sets.
+	 * <P>
+	 * Properties from base property sets and properties from derived property
+	 * sets are not returned.
+	 * 
+	 * @return a collection of <code>PropertyAccessor</code> objects
+	 */
+	// This method may be called on extendable property sets only
+	// (i.e. not on extension property sets).
+	private Collection<PropertyAccessor> getProperties2() {
+		if (properties2 == null) {
+			properties2 = new Vector<PropertyAccessor>();
+
+			// Properties in this extendable object
+			for (PropertyAccessor propertyAccessor: properties) {
+				properties2.add(propertyAccessor);
+			}
+
+			// Properties in the extensions
+			for (PropertySet<?> extensionPropertySet: extensionPropertySets.values()) {
+				for (PropertyAccessor propertyAccessor: extensionPropertySet.properties) {
+					properties2.add(propertyAccessor);
+				}
+			}
+		}
+
+		return properties2;
 	}
 
+	public Collection<ScalarPropertyAccessor> getScalarProperties2() {
+		if (scalarProperties2 == null) {
+			scalarProperties2 = new Vector<ScalarPropertyAccessor>();
+
+			// Properties in this extendable object
+			for (ScalarPropertyAccessor propertyAccessor: getScalarProperties1()) {
+				scalarProperties2.add(propertyAccessor);
+			}
+
+			// Properties in the extensions
+			for (PropertySet<?> extensionPropertySet: extensionPropertySets.values()) {
+				for (ScalarPropertyAccessor propertyAccessor: extensionPropertySet.getScalarProperties1()) {
+					scalarProperties2.add(propertyAccessor);
+				}
+			}
+		}
+
+		return scalarProperties2;
+	}
+
+	public Collection<ListPropertyAccessor> getListProperties2() {
+		if (listProperties2 == null) {
+			listProperties2 = new Vector<ListPropertyAccessor>();
+
+			// Properties in this extendable object
+			for (ListPropertyAccessor propertyAccessor: getListProperties1()) {
+				listProperties2.add(propertyAccessor);
+			}
+
+			// Properties in the extensions
+			for (PropertySet<?> extensionPropertySet: extensionPropertySets.values()) {
+				for (ListPropertyAccessor propertyAccessor: extensionPropertySet.getListProperties1()) {
+					listProperties2.add(propertyAccessor);
+				}
+			}
+		}
+
+		return listProperties2;
+	}
+/*
 	// This method may be called on extendable property sets only
 	// (i.e. not on extension property sets).
 	public Iterator<ScalarPropertyAccessor> getPropertyIterator_Scalar2() {
@@ -1121,17 +1191,15 @@ public class PropertySet<E> {
 		Vector<ScalarPropertyAccessor> fields = new Vector<ScalarPropertyAccessor>();
 
 		// Properties in this extendable object
-		for (Iterator propertyIterator = getPropertyIterator1(); propertyIterator.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIterator.next();
+		for (PropertyAccessor propertyAccessor: getProperties1()) {
 			if (propertyAccessor instanceof ScalarPropertyAccessor) {
 				fields.add((ScalarPropertyAccessor)propertyAccessor);
 			}
 		}
 
 		// Properties in the extensions
-		for (PropertySet extensionPropertySet: extensionPropertySets.values()) {
-			for (Iterator propertyIterator = extensionPropertySet.getPropertyIterator1(); propertyIterator.hasNext(); ) {
-				PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIterator.next();
+		for (PropertySet<?> extensionPropertySet: extensionPropertySets.values()) {
+    		for (PropertyAccessor propertyAccessor: extensionPropertySet.getProperties1()) {
 				if (propertyAccessor instanceof ScalarPropertyAccessor) {
 					fields.add((ScalarPropertyAccessor)propertyAccessor);
 				}
@@ -1140,7 +1208,7 @@ public class PropertySet<E> {
 		
 		return fields.iterator();
 	}
-
+*/
 
 	/**
 	 * Returns an iterator which iterates over all properties
@@ -1165,17 +1233,17 @@ public class PropertySet<E> {
 	 */
 	// This method may be called on extendable property sets only
 	// (i.e. not on extension property sets).
+/*
 	public Iterator getPropertyIterator3() {
 		// Build an array - not efficient but easy and avoids concurrency problems.
 		// TODO: write a proper iterator, or at least cache this vector.
 		Vector<PropertyAccessor> fields = new Vector<PropertyAccessor>();
 
 		// Properties in this and all the base property sets
-		PropertySet extendablePropertySet = this;
+		PropertySet<?> extendablePropertySet = this;
 		do {
 			int index= 0;
-			for (Iterator propertyIterator = extendablePropertySet.getPropertyIterator2(); propertyIterator.hasNext(); ) {
-				PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIterator.next();
+			for (PropertyAccessor propertyAccessor: extendablePropertySet.getProperties2()) {
 				fields.insertElementAt(propertyAccessor, index++);
 			}
 			extendablePropertySet = extendablePropertySet.getBasePropertySet();
@@ -1183,24 +1251,65 @@ public class PropertySet<E> {
 
 		return fields.iterator();
 	}
+*/
+	public Collection<PropertyAccessor> getProperties3() {
+		if (properties3 == null) {
+			Vector<PropertyAccessor> v = new Vector<PropertyAccessor>();
 
-	public Iterator<ScalarPropertyAccessor> getPropertyIterator_Scalar3() {
-		// Build an array - not efficient but easy and avoids concurrency problems.
-		// TODO: write a proper iterator, or at least cache this vector.
-		Vector<ScalarPropertyAccessor> fields = new Vector<ScalarPropertyAccessor>();
+			// Properties in this and all the base property sets
+			PropertySet<?> extendablePropertySet = this;
+			do {
+				int index= 0;
+				for (PropertyAccessor propertyAccessor: extendablePropertySet.getProperties2()) {
+					v.insertElementAt(propertyAccessor, index++);
+				}
+				extendablePropertySet = extendablePropertySet.getBasePropertySet();
+			} while (extendablePropertySet != null);
+			
+			properties3 = v;
+		}
 
-		// Properties in this and all the base property sets
-		PropertySet<?> extendablePropertySet = this;
-		do {
-			int index= 0;
-			for (Iterator<ScalarPropertyAccessor> propertyIterator = extendablePropertySet.getPropertyIterator_Scalar2(); propertyIterator.hasNext(); ) {
-				ScalarPropertyAccessor propertyAccessor = propertyIterator.next();
-				fields.insertElementAt(propertyAccessor, index++);
-			}
-			extendablePropertySet = extendablePropertySet.getBasePropertySet();
-		} while (extendablePropertySet != null);
+		return properties3;
+	}
 
-		return fields.iterator();
+	public Collection<ScalarPropertyAccessor> getScalarProperties3() {
+		if (scalarProperties3 == null) {
+			Vector<ScalarPropertyAccessor> v = new Vector<ScalarPropertyAccessor>();
+
+			// Properties in this and all the base property sets
+			PropertySet<?> extendablePropertySet = this;
+			do {
+				int index= 0;
+				for (ScalarPropertyAccessor propertyAccessor: extendablePropertySet.getScalarProperties2()) {
+					v.insertElementAt(propertyAccessor, index++);
+				}
+				extendablePropertySet = extendablePropertySet.getBasePropertySet();
+			} while (extendablePropertySet != null);
+			
+			scalarProperties3 = v;
+		}
+
+		return scalarProperties3;
+	}
+
+	public Collection<ListPropertyAccessor> getListProperties3() {
+		if (listProperties3 == null) {
+			Vector<ListPropertyAccessor> v = new Vector<ListPropertyAccessor>();
+
+			// Properties in this and all the base property sets
+			PropertySet<?> extendablePropertySet = this;
+			do {
+				int index= 0;
+				for (ListPropertyAccessor propertyAccessor: extendablePropertySet.getListProperties2()) {
+					v.insertElementAt(propertyAccessor, index++);
+				}
+				extendablePropertySet = extendablePropertySet.getBasePropertySet();
+			} while (extendablePropertySet != null);
+			
+			listProperties3 = v;
+		}
+
+		return listProperties3;
 	}
 
 	/**
@@ -1220,6 +1329,7 @@ public class PropertySet<E> {
 	 * @ return An iterator which iterates over a set of
 	 * 		<code>PropertyAccessor</code> objects.
 	 */
+/*	
 	// This method may be called on extendable property sets only
 	// (i.e. not on extension property sets).
 	public Iterator getPropertyIterator4() {
@@ -1255,7 +1365,7 @@ public class PropertySet<E> {
 			derivedPropertySet.addPropertiesFromDerivedPropertySets(fields);
 		}
 	}		
-
+*/
 	/**
 	 * Gets a list of all property sets that extend the given property
 	 * set.  This method is used by the Propagator class only.

@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.reconciliation;
 
+import java.util.Comparator;
+
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
@@ -56,7 +58,7 @@ public class StatusControlFactory implements IPropertyControlFactory<Integer> {
 			ReconciliationPlugin.getResourceString("Entry.clearedShort"),
 	};
 	
-    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor propertyAccessor, Session session) {
+    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Integer> propertyAccessor, Session session) {
         return new StatusEditor(parent, propertyAccessor, statusText);
     }
 
@@ -72,5 +74,13 @@ public class StatusControlFactory implements IPropertyControlFactory<Integer> {
 
 	public boolean isEditable() {
 		return true;
+	}
+
+	public Comparator<Integer> getComparator() {
+		return new Comparator<Integer> () {
+			public int compare(Integer status1, Integer status2) {
+				return status1 - status2;
+			}
+		};
 	}
 }

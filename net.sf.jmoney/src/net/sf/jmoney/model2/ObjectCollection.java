@@ -37,9 +37,9 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	
 	private IListManager<E> listManager;
 	ExtendableObject parent;
-	ListPropertyAccessor listPropertyAccessor;
+	ListPropertyAccessor<E> listPropertyAccessor;
 	
-	ObjectCollection(IListManager<E> listManager, ExtendableObject parent, ListPropertyAccessor listPropertyAccessor) {
+	ObjectCollection(IListManager<E> listManager, ExtendableObject parent, ListPropertyAccessor<E> listPropertyAccessor) {
 		this.listManager = listManager;
 		this.parent = parent;
 		this.listPropertyAccessor = listPropertyAccessor;
@@ -147,32 +147,35 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	 * 			false if the object was not in the collection
 	 */
 	public boolean remove(Object object) {
-		if (object instanceof ExtendableObject && listManager.contains(object)) {
-			final ExtendableObject extendableObject = (ExtendableObject)object;
-			
-			/*
-			 * Deletion events are fired before the object is removed from the
-			 * datastore. This is necessary because listeners processing the
-			 * object deletion may need to fetch information about the object
-			 * from the datastore.
-			 */
-			parent.getObjectKey().getSessionManager().fireEvent(
-					new ISessionChangeFirer() {
-						public void fire(SessionChangeListener listener) {
-							listener.objectRemoved(extendableObject);
-						}
-					});
-			
-			// Notify the change manager.
-			parent.getSession().getChangeManager().processObjectDeletion(parent, listPropertyAccessor, extendableObject);
-			
-			boolean found = listManager.remove(object);
-			JMoneyPlugin.myAssert(found);
-			
-			return true;
-		} else {
-			return false;
+		for (E extendableObject: this) {
+			if (extendableObject == object) {
+				final E objectToRemove = extendableObject;
+				
+				/*
+				 * Deletion events are fired before the object is removed from the
+				 * datastore. This is necessary because listeners processing the
+				 * object deletion may need to fetch information about the object
+				 * from the datastore.
+				 */
+				parent.getObjectKey().getSessionManager().fireEvent(
+						new ISessionChangeFirer() {
+							public void fire(SessionChangeListener listener) {
+								listener.objectRemoved(objectToRemove);
+							}
+						});
+				
+				// Notify the change manager.
+				parent.getSession().getChangeManager().processObjectDeletion(parent, listPropertyAccessor, objectToRemove);
+				
+				boolean found = listManager.remove(object);
+				JMoneyPlugin.myAssert(found);
+				
+				return true;
+			}
 		}
+
+		// Object was not in the collection
+		return false;
 	}
 	
 	public boolean containsAll(Collection<?> arg0) {

@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.fields;
 
+import java.util.Comparator;
 import java.util.Date;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -94,4 +95,11 @@ public class DateControlFactory implements IPropertyControlFactory<Date> {
         return !readOnly;
     }
 
+	public Comparator<Date> getComparator() {
+		return new Comparator<Date>() {
+			public int compare(Date date1, Date date2) {
+				return date1.compareTo(date2);
+			}
+		};
+	}
 }

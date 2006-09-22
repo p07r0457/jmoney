@@ -30,7 +30,7 @@ import net.sf.jmoney.fields.CommodityInfo;
  *
  * @author  Nigel
  */
-public abstract class Commodity extends ExtendableObject {
+public abstract class Commodity extends ExtendableObject implements Comparable<Commodity> {
 
 	private String name;
 	
@@ -63,6 +63,10 @@ public abstract class Commodity extends ExtendableObject {
 	 */
 	public String toString() {
 		return name;
+	}
+
+	public int compareTo(Commodity other) {
+		return name.compareToIgnoreCase(other.name);
 	}
 	
     /**

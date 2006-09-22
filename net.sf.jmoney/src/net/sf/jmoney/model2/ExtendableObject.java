@@ -207,20 +207,12 @@ public abstract class ExtendableObject {
 		// TODO: Do we really need this, or, now that transactional
 		// processing is supported, is it unnecessary to support the
 		// passing of multiple values???
-		int count = 0;
-		for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor2 = (PropertyAccessor)iter.next();
-			if (propertyAccessor2.isScalar()) {
-				count++;
-			}
-		}
-		
+		int count = actualPropertySet.getScalarProperties3().size();
 		Object [] oldValues = new Object[count];
 		Object [] newValues = new Object[count];
 		
 		int i = 0;
-		for (Iterator<ScalarPropertyAccessor> iter = actualPropertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
-			ScalarPropertyAccessor<?> propertyAccessor2 = iter.next();
+		for (ScalarPropertyAccessor<?> propertyAccessor2: actualPropertySet.getScalarProperties3()) {
 			if (propertyAccessor2 == propertyAccessor) {
 				oldValues[i] = oldValue;
 				newValues[i] = newValue;

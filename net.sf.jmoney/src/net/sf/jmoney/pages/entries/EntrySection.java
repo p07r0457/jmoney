@@ -108,9 +108,7 @@ public class EntrySection extends SectionPart {
 		transactionArea.setLayout(layout1);
 		
 		// Add properties from the transaction.
-		for (Iterator<ScalarPropertyAccessor> iter = TransactionInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
-			ScalarPropertyAccessor propertyAccessor = iter.next();
-
+   		for (ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
 			IPropertyControl propertyControl = propertyAccessor.createPropertyControl(transactionArea, session);
 			propertyControl.load(null);
 			toolkit.adapt(propertyControl.getControl(), true, true);

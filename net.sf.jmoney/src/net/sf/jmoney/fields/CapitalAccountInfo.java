@@ -63,7 +63,7 @@ public class CapitalAccountInfo implements IPropertySetInfo {
 	}
 
     public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		CapitalAccountInfo.propertySet = propertyRegistrar.addPropertySet(CapitalAccount.class);
+		propertySet = propertyRegistrar.addPropertySet(CapitalAccount.class);
 		
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		IPropertyControlFactory<String> commentControlFactory = new MultiTextControlFactory();

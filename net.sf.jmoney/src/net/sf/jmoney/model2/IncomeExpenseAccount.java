@@ -111,7 +111,15 @@ public class IncomeExpenseAccount extends Account {
 	public void setMultiCurrency(boolean multiCurrency) {
         boolean oldMultiCurrency = this.multiCurrency;
 		this.multiCurrency = multiCurrency;
-
+/* No, this is not good code to have here.  Firstly we set the currency field but we
+ * don't call processPropertyChange, so no listeners are told, the property may not be
+ * stored in the database etc.
+ *
+ * But also, changing properties other than the property set by the user is bad news.
+ * It is upto the user to ensure the properties are set to valid values.  We really need
+ * to get the dependency code working, so the currency property is properly indicated
+ * as being appropriate only if not multi-currency.
+ * 
 		// When turning off multi-currency, we must set an appropriate 
 		// currency.
 		if (!multiCurrency && currencyKey == null) {
@@ -120,7 +128,7 @@ public class IncomeExpenseAccount extends Account {
 			// For time being, set to default currency.
 			currencyKey = getSession().getDefaultCurrency().getObjectKey();
 		}
-		
+*/		
 		// Notify the change manager.
 		processPropertyChange(IncomeExpenseAccountInfo.getMultiCurrencyAccessor(), new Boolean(oldMultiCurrency), new Boolean(multiCurrency));
 		

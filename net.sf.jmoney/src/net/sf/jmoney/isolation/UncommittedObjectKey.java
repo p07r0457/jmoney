@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.isolation;
 
-import java.util.Iterator;
-
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -182,8 +180,7 @@ public class UncommittedObjectKey implements IObjectKey {
 			}
 
 			int i = 0;
-			for (Iterator<ScalarPropertyAccessor> iter = actualPropertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
-				ScalarPropertyAccessor propertyAccessor = iter.next();
+			for (ScalarPropertyAccessor<?> propertyAccessor: actualPropertySet.getScalarProperties3()) {
 				// If values are different, put in the map
 				if (!JMoneyPlugin.areEqual(oldValues[i], newValues[i])) {
 					if (newValues[i] instanceof ExtendableObject) {
@@ -194,8 +191,8 @@ public class UncommittedObjectKey implements IObjectKey {
 					} else {
 						modifiedObject.put(propertyAccessor, newValues[i]);
 					}
-					i++;
 				}
+				i++;
 			}
 		}
 	}

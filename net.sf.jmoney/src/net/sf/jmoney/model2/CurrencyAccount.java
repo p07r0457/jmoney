@@ -45,7 +45,7 @@ public class CurrencyAccount extends CapitalAccount {
 
 	/**
 	 * The full constructor for a CurrencyAccount object.  This constructor is called
-	 * only be the datastore when loading data from the datastore.  The properties
+	 * only by the datastore plug-in when loading data from the datastore.  The properties
 	 * passed to this constructor must be valid because datastores should only pass back
 	 * values that were previously saved from a CapitalAccount object.  So, for example,
 	 * we can be sure that a non-null name and currency are passed to this constructor.
@@ -64,8 +64,25 @@ public class CurrencyAccount extends CapitalAccount {
 			long startBalance) {
 		super(objectKey, extensions, parent, name, subAccounts, abbreviation, comment);
 		
-		this.currencyKey = currencyKey;
-        this.startBalance = startBalance;
+		/*
+		 * The currency for this account is not allowed to be null, because
+		 * users of this class may assume it to be non-null and would not know
+		 * how to handle this account if it were null.
+		 * 
+		 * A null currency might be passed if the datastore implementation
+		 * decides to use this method instead of the 'default' constructor to
+		 * construct an initial object. The datastore implementation will pass
+		 * the values from the array of default property values. If the currency
+		 * passed to this constructor is null then we use the session default
+		 * currency, which should never be null.
+		 */
+		if (currencyKey != null) {
+			this.currencyKey = currencyKey;
+		} else {
+			this.currencyKey = objectKey.getSession().getDefaultCurrency().getObjectKey();
+		}
+
+		this.startBalance = startBalance;
 	}
 
 	/**
@@ -82,7 +99,7 @@ public class CurrencyAccount extends CapitalAccount {
 			IListManager<CapitalAccount> subAccounts) {
 		super(objectKey, extensions, parent, subAccounts);
 		
-		// Overwrite the default name with our own default name.
+		// Set a default name.
 		this.name = JMoneyPlugin.getResourceString("Account.newAccount");
 		
 		// Set the currency to the session default currency.
@@ -103,7 +120,7 @@ public class CurrencyAccount extends CapitalAccount {
 	}
 
 	public Currency getCurrency() {
-            return (Currency)currencyKey.getObject();
+        return (Currency)currencyKey.getObject();
 	}
 
 	public Commodity getCommodity(Entry entry) {
@@ -131,14 +148,14 @@ public class CurrencyAccount extends CapitalAccount {
 
 	/**
 	 * Sets the initial balance of this account.
-	 * @param s the start balance
+	 * @param startBalance the start balance
 	 */
-	public void setStartBalance(long s) {
+	public void setStartBalance(long startBalance) {
         long oldStartBalance = this.startBalance;
-		this.startBalance = s;
+		this.startBalance = startBalance;
 
 		// Notify the change manager.
-		processPropertyChange(CurrencyAccountInfo.getStartBalanceAccessor(), new Long(oldStartBalance), new Long(s));
+		processPropertyChange(CurrencyAccountInfo.getStartBalanceAccessor(), oldStartBalance, startBalance);
 	}
 
 	public String toString() {
@@ -151,11 +168,6 @@ public class CurrencyAccount extends CapitalAccount {
 		    } else {
 		        return getParent().getFullAccountName() + "." + this.name;
 		    }
-	}
-
-	public int compareTo(Object o) {
-		CurrencyAccount a = (CurrencyAccount) o;
-		return getName().compareTo(a.getName());
 	}
 
 	/**

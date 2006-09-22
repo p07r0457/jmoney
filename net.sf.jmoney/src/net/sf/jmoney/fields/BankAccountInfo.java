@@ -62,7 +62,7 @@ public class BankAccountInfo implements IPropertySetInfo {
 	}
 
     public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		BankAccountInfo.propertySet = propertyRegistrar.addPropertySet(BankAccount.class);
+		propertySet = propertyRegistrar.addPropertySet(BankAccount.class);
 		
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		IPropertyControlFactory<Long> amountControlFactory = new AmountInCurrencyAccountControlFactory();

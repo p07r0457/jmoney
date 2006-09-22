@@ -36,7 +36,7 @@ public class ListPropertyAccessor<E extends ExtendableObject> extends PropertyAc
 		 * 
 		 * @return
 		 */
-	   public Class<? extends ExtendableObject> getValueClass() {
+	   public Class<E> getValueClass() {
 	       return propertyClass;
 	   }
 	   

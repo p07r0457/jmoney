@@ -34,7 +34,7 @@ import net.sf.jmoney.fields.AccountInfo;
 /**
  * An implementation of the Account interface
  */
-public abstract class Account extends ExtendableObject {
+public abstract class Account extends ExtendableObject implements Comparable<Account> {
 	
 	protected String name;
 
@@ -133,9 +133,8 @@ public abstract class Account extends ExtendableObject {
 		return getName();
 	}
 	
-	public int compareTo(Object o) {
-		Account c = (Account) o;
-		return getName().compareTo(c.getName());
+	public int compareTo(Account other) {
+		return getName().compareTo(other.getName());
 	}
 
     public int getLevel () {

@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.isolation;
 
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.ExtendableObject;
@@ -92,8 +92,8 @@ public class ModifiedList<E extends ExtendableObject> {
 	 * 			type ExtendableObject, being the uncommitted versions
 	 * 			of the objects being added
 	 */
-	Iterator<E> getAddedObjectIterator() {
-		return addedObjects.iterator();
+	Collection<E> getAddedObjects() {
+		return addedObjects;
 	}
 
 	/**
@@ -104,7 +104,7 @@ public class ModifiedList<E extends ExtendableObject> {
 	 * 			type IObjectKey, being the committed keys
 	 * 			of the objects being deleted
 	 */
-	Iterator<IObjectKey> getDeletedObjectIterator() {
-		return deletedObjects.iterator();
+	Collection<IObjectKey> getDeletedObjects() {
+		return deletedObjects;
 	}
 }

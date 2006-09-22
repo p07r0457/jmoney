@@ -89,7 +89,7 @@ public class AmountEditor implements IPropertyControl {
     		// Some amounts may be of type Long, not long, so that 
     		// they can be null, so we must get the property
     		// value as a Long.
-    		Long amount = (Long) fObject.getPropertyValue(amountPropertyAccessor);
+    		Long amount = fObject.getPropertyValue(amountPropertyAccessor);
     		if (amount == null) {
     			propertyControl.setText("");
     		} else {

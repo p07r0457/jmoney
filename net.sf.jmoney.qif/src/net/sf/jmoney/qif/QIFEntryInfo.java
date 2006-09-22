@@ -28,6 +28,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
@@ -74,10 +75,10 @@ public class QIFEntryInfo implements IPropertySetInfo {
 	}
 	
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		QIFEntryInfo.propertySet = propertyRegistrar.addPropertySet(QIFEntry.class);
+		propertySet = propertyRegistrar.addPropertySet(QIFEntry.class);
 
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
-		IPropertyControlFactory<Character> stateControlFactory = new IPropertyControlFactory<Character>() {
+		IPropertyControlFactory<Character> stateControlFactory = new PropertyControlFactory<Character>() {
 
 			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Character> propertyAccessor, Session session) {
 				// This property is not editable???
@@ -86,10 +87,6 @@ public class QIFEntryInfo implements IPropertySetInfo {
 
 			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Character> propertyAccessor) {
 				return "'" + extendableObject.getPropertyValue(propertyAccessor).toString() + "'";
-			}
-
-			public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Character> propertyAccessor) {
-				return extendableObject.getPropertyValue(propertyAccessor).toString();
 			}
 
 			public boolean isEditable() {

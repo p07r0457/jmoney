@@ -281,11 +281,11 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 						"Menu item unavailable", 
 						null, // accept the default window icon
 						"This session cannot be saved using this 'save' action.  " +
-						"More than one plug-in is installed that provides a" +
-						"datastore implementation.  The current session was" +
-						"created using a different plug-in from the plug-in that" +
-						"created this 'save' action.  You can only use this 'save'" +
-						"action if the session was created using the corresponding" +
+						"More than one plug-in is installed that provides a " +
+						"datastore implementation.  The current session was " +
+						"created using a different plug-in from the plug-in that " +
+						"created this 'save' action.  You can only use this 'save' " +
+						"action if the session was created using the corresponding " +
 						"'new' or 'open' action.", 
 						MessageDialog.ERROR, 
 						new String[] { IDialogConstants.OK_LABEL }, 0);

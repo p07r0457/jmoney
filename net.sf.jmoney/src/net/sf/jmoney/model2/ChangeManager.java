@@ -23,7 +23,6 @@
 package net.sf.jmoney.model2;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
@@ -211,8 +210,7 @@ public class ChangeManager {
 			// Set the properties to the values that were set before
 			// the object was deleted.
 			int index = 0;
-			for (Iterator<ScalarPropertyAccessor> iter = actualPropertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
-				ScalarPropertyAccessor propertyAccessor = iter.next();
+			for (ScalarPropertyAccessor propertyAccessor: actualPropertySet.getScalarProperties3()) {
 				if (index != propertyAccessor.getIndexIntoScalarProperties()) {
 					throw new RuntimeException("index mismatch");
 				}
@@ -311,7 +309,7 @@ public class ChangeManager {
 	 */
 	public void processPropertyUpdate(
 			ExtendableObject object,
-			ScalarPropertyAccessor propertyAccessor,
+			ScalarPropertyAccessor<?> propertyAccessor,
 			Object oldValue,
 			Object newValue) {
 		
@@ -374,17 +372,10 @@ public class ChangeManager {
 		// Save all the property values from the deleted object.
 		// We need these to re-create the object if this change
 		// is undone.
-		int count = 0;
-		for (Iterator iter = newChangeEntry.actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			if (propertyAccessor.isScalar()) {
-				count++;
-			}
-		}
+		int count = newChangeEntry.actualPropertySet.getScalarProperties3().size();
 		newChangeEntry.oldValues = new Object[count];
 		int index = 0;
-		for (Iterator<ScalarPropertyAccessor> iter = newChangeEntry.actualPropertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
-			ScalarPropertyAccessor<?> propertyAccessor = iter.next();
+		for (ScalarPropertyAccessor<?> propertyAccessor: newChangeEntry.actualPropertySet.getScalarProperties3()) {
 			if (index != propertyAccessor.getIndexIntoScalarProperties()) {
 				throw new RuntimeException("index mismatch");
 			}

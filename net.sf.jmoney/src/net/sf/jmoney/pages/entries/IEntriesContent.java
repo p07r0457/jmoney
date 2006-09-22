@@ -44,7 +44,7 @@ public interface IEntriesContent {
 	 * If the entries are being filtered, those entries that are
 	 * filtered out will still be included in this list.
 	 */
-	Collection getEntries();
+	Collection<Entry> getEntries();
 
 	/**
 	 * Determine if a given entry is included in the list.

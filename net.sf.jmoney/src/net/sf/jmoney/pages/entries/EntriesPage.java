@@ -21,7 +21,6 @@
  */
 package net.sf.jmoney.pages.entries;
 
-import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.IBookkeepingPage;
@@ -36,7 +35,6 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
@@ -127,23 +125,19 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
     	// displayed in the table.
         
         // Add properties from the transaction.
-        for (Iterator<ScalarPropertyAccessor> iter = TransactionInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
-            final ScalarPropertyAccessor propertyAccessor = iter.next();
-            if (propertyAccessor.isScalar()) {
-            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "transaction") {
-					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
-						return data.getTransactionForTransactionFields();
-					}
-            	});
-            }
+        for (ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
+        	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "transaction") {
+        		public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
+        			return data.getTransactionForTransactionFields();
+        		}
+        	});
         }
 
         // Add properties from this entry.
         // For time being, this is all the properties except the account and description
         // which come from the other entry, and the amount which is shown in the debit and
         // credit columns.
-        for (Iterator<ScalarPropertyAccessor> iter = EntryInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
-            ScalarPropertyAccessor propertyAccessor = iter.next();
+   		for (ScalarPropertyAccessor propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
             if (propertyAccessor != EntryInfo.getAccountAccessor() 
            		&& propertyAccessor != EntryInfo.getDescriptionAccessor()
            		&& propertyAccessor != EntryInfo.getIncomeExpenseCurrencyAccessor()
@@ -161,9 +155,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         // Add properties from the other entry where the property also is
         // applicable for capital accounts.
         // For time being, this is just the account.
-        PropertySet<Entry> extendablePropertySet = EntryInfo.getPropertySet();
-        for (Iterator<ScalarPropertyAccessor> iter = extendablePropertySet.getPropertyIterator_Scalar3(); iter.hasNext();) {
-            ScalarPropertyAccessor propertyAccessor = iter.next();
+   		for (ScalarPropertyAccessor propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
             if (propertyAccessor == EntryInfo.getAccountAccessor()) {
             	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "common2") {
 					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {

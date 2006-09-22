@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.fields;
 
+import java.util.Comparator;
+
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
@@ -64,5 +66,13 @@ public class CheckBoxControlFactory implements IPropertyControlFactory<Boolean> 
 
 	public boolean isEditable() {
 		return true;
+	}
+
+	public Comparator<Boolean> getComparator() {
+		return new Comparator<Boolean>() {
+			public int compare(Boolean flag1, Boolean flag2) {
+				return flag1.compareTo(flag2);
+			}
+		};
 	}
 }

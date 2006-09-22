@@ -111,14 +111,22 @@ public class CopierPlugin extends AbstractUIPlugin {
     	populateObject(propertySet, oldSession, newSession, objectMap);
     }
 
-    private void populateObject(PropertySet propertySet, ExtendableObject oldObject, ExtendableObject newObject, Map objectMap) {
+    private void populateObject(PropertySet<?> propertySet, ExtendableObject oldObject, ExtendableObject newObject, Map objectMap) {
     	// For all non-extension properties (including properties
     	// in base classes), read the property value from the
     	// old object and write it to the new object.
-    	for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
-    		PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-    		if (!propertyAccessor.getPropertySet().isExtension()) {
-    			copyProperty(propertyAccessor, oldObject, newObject, objectMap);
+    	
+    	// The scalar properties
+    	for (ScalarPropertyAccessor<?> scalarAccessor: propertySet.getScalarProperties3()) {
+    		if (!scalarAccessor.getPropertySet().isExtension()) {
+				copyScalarProperty(scalarAccessor, oldObject, newObject, objectMap);
+    		}
+    	}
+    	
+    	// The list properties
+    	for (ListPropertyAccessor<?> listAccessor: propertySet.getListProperties3()) {
+    		if (!listAccessor.getPropertySet().isExtension()) {
+				copyList(newObject, oldObject, listAccessor, objectMap);
     		}
     	}
     	
@@ -127,10 +135,16 @@ public class CopierPlugin extends AbstractUIPlugin {
     	// copy the properties to the new object.
     	for (Iterator extensionIter = oldObject.getExtensionIterator(); extensionIter.hasNext(); ) {
     		Map.Entry mapEntry = (Map.Entry)extensionIter.next();
-    		PropertySet extensionPropertySet = (PropertySet)mapEntry.getKey();
-    		for (Iterator propertyIter = extensionPropertySet.getPropertyIterator1(); propertyIter.hasNext(); ) {
-    			PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIter.next();
-    			copyProperty(propertyAccessor, oldObject, newObject, objectMap);
+    		PropertySet<?> extensionPropertySet = (PropertySet)mapEntry.getKey();
+    		for (PropertyAccessor propertyAccessor: extensionPropertySet.getProperties1()) {
+    			if (propertyAccessor.isScalar()) {
+					ScalarPropertyAccessor<?> scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
+					copyScalarProperty(scalarAccessor, oldObject, newObject, objectMap);
+				} else {
+					// Property is a list property.
+					ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
+					copyList(newObject, oldObject, listAccessor, objectMap);
+				}
     		}
     	}
     
@@ -144,17 +158,6 @@ public class CopierPlugin extends AbstractUIPlugin {
     	}
     }
 
-    private void copyProperty(PropertyAccessor propertyAccessor, ExtendableObject oldObject, ExtendableObject newObject, Map objectMap) {
-    	if (propertyAccessor.isScalar()) {
-    		ScalarPropertyAccessor<?> scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
-    		copyScalarProperty(scalarAccessor, oldObject, newObject, objectMap);
-    	} else {
-    		// Property is a list property.
-    		ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
-    		copyList(newObject, oldObject, listAccessor, objectMap);
-    	}
-    }
-    
     private <V> void copyScalarProperty(ScalarPropertyAccessor<V> propertyAccessor, ExtendableObject oldObject, ExtendableObject newObject, Map objectMap) {
     		V oldValue = oldObject.getPropertyValue(propertyAccessor);
     		V newValue;

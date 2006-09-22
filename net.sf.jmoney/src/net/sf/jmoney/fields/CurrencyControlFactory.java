@@ -25,7 +25,7 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.IPropertyControlFactory;
+import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
@@ -37,7 +37,7 @@ import org.eclipse.swt.widgets.Composite;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class CurrencyControlFactory implements IPropertyControlFactory<Currency> {
+public class CurrencyControlFactory extends PropertyControlFactory<Currency> {
 
     public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Currency> propertyAccessor, Session session) {
         return new CurrencyEditor(parent, propertyAccessor);

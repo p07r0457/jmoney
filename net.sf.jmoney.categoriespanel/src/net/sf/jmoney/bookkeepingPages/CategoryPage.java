@@ -39,7 +39,6 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyDependency;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
@@ -292,9 +291,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			});
 			
 			// Add the properties for category.
-			PropertySet<IncomeExpenseAccount> extendablePropertySet = IncomeExpenseAccountInfo.getPropertySet();
-			for (Iterator<ScalarPropertyAccessor> iter = extendablePropertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
-				final ScalarPropertyAccessor propertyAccessor = iter.next();
+	   		for (final ScalarPropertyAccessor propertyAccessor: IncomeExpenseAccountInfo.getPropertySet().getScalarProperties3()) {
 				final Label propertyLabel = new Label(topLevelControl, 0);
 				propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
 				final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(topLevelControl, session);

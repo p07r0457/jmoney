@@ -24,7 +24,6 @@ package net.sf.jmoney.pages.entries;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.util.Iterator;
 
 import net.sf.jmoney.Constants;
 
@@ -124,8 +123,7 @@ public class EntriesFilter implements Constants {
 			if (filterColumnIndex == 0) {
 				// 'Entry' selected.  Entry matches if any of the properties
 				// match.
-				for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext(); ) {
-					IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)iter.next();
+				for (IEntriesTableProperty entriesSectionProperty: fPage.allEntryDataObjects) {
 					String text = entriesSectionProperty.getValueFormattedForTable(data);
 					if (containsPattern(text)) {
 						return true;

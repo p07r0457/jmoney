@@ -65,7 +65,7 @@ public class TransactionInfo implements IPropertySetInfo {
 	}
 	
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		TransactionInfo.propertySet = propertyRegistrar.addPropertySet(Transaction.class);
+		propertySet = propertyRegistrar.addPropertySet(Transaction.class);
 
         IPropertyControlFactory<Date> dateControlFactory = new DateControlFactory();
 		

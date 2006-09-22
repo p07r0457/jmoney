@@ -34,6 +34,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
@@ -78,7 +79,7 @@ public class EntryInfo implements IPropertySetInfo {
 	}
 	
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		EntryInfo.propertySet = propertyRegistrar.addPropertySet(Entry.class);
+		propertySet = propertyRegistrar.addPropertySet(Entry.class);
 		
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
         IPropertyControlFactory<Date> dateControlFactory = new DateControlFactory();
@@ -133,21 +134,11 @@ public class EntryInfo implements IPropertySetInfo {
 		        return editor;
 			}};
 
-		IPropertyControlFactory<Long> creationControlFactory = new IPropertyControlFactory<Long>() {
+		IPropertyControlFactory<Long> creationControlFactory = new PropertyControlFactory<Long>() {
 
 			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor, Session session) {
 				// This property is not editable
 		    	return null;
-			}
-
-			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
-				long creation = extendableObject.getPropertyValue(propertyAccessor);
-				return Long.toString(creation);
-			}
-
-			public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
-				long creation = extendableObject.getPropertyValue(propertyAccessor);
-				return Long.toString(creation);
 			}
 
 			public boolean isEditable() {

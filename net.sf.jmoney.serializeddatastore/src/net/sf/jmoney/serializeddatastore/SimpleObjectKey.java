@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.serializeddatastore;
 
-import java.util.Iterator;
-
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Account;
@@ -31,8 +29,8 @@ import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
 /**
@@ -61,29 +59,25 @@ public class SimpleObjectKey implements IObjectKey {
 		this.extendableObject = extendableObject;
 	}
 
-	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
+	public void updateProperties(PropertySet<?> actualPropertySet, Object[] oldValues, Object[] newValues) {
 		// If the account property of an entry is changed then we
 		// must update the lists of entries in each account.
 		if (extendableObject instanceof Entry) {
 			int i = 0;
-			for (Iterator iter = actualPropertySet.getPropertyIterator3(); iter.hasNext(); ) {
-				PropertyAccessor propertyAccessor2 = (PropertyAccessor)iter.next();
-				if (propertyAccessor2.isScalar()) {
-					if (propertyAccessor2 == EntryInfo.getAccountAccessor()) {
-						if (!JMoneyPlugin.areEqual(oldValues[i], newValues[i])) {
-							if (oldValues[i] != null) {
-								sessionManager.removeEntryFromList((Account)oldValues[i], (Entry)extendableObject);
-							}
-							if (newValues[i] != null) {
-								sessionManager.addEntryToList((Account)newValues[i], (Entry)extendableObject);
-							}
+			for (ScalarPropertyAccessor propertyAccessor2: actualPropertySet.getScalarProperties3()) {
+				if (propertyAccessor2 == EntryInfo.getAccountAccessor()) {
+					if (!JMoneyPlugin.areEqual(oldValues[i], newValues[i])) {
+						if (oldValues[i] != null) {
+							sessionManager.removeEntryFromList((Account)oldValues[i], (Entry)extendableObject);
 						}
-						break;
+						if (newValues[i] != null) {
+							sessionManager.addEntryToList((Account)newValues[i], (Entry)extendableObject);
+						}
 					}
-					i++;
+					break;
 				}
+				i++;
 			}
-			
 		}
 		
 		// There is no backend datastore that needs updating, so we

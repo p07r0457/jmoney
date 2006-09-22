@@ -154,7 +154,7 @@ public class Transaction extends ExtendableObject {
      * but it is barely worth while having this class.
 	 */
 	public class EntryCollection extends ObjectCollection<Entry> {
-		EntryCollection(IListManager<Entry> listManager, ExtendableObject parent, ListPropertyAccessor listPropertyAccessor) {
+		EntryCollection(IListManager<Entry> listManager, ExtendableObject parent, ListPropertyAccessor<Entry> listPropertyAccessor) {
 			super(listManager, parent, listPropertyAccessor);
 		}
 		

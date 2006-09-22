@@ -49,16 +49,12 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  * in this transaction. These differences are applied to the collection of
  * committed objects returned by the underlying datastore.
  * <P>
- * The differences (objects added and objects deleted) between the committed
- * list and the list in this transaction are kept not by this object but by the
- * transaction manager. The reason for this is that the user could potentially
- * get to the same list by two different routes. If objects are read from a
- * database upon demand then there could be two or more DeltaListManager objects
- * that in fact refer to the same list. Modifications to one list should be seen
- * in all the other lists. The only reasonable way to do this, without keeping a
- * map of every DeltaListManager in existence, is to have the DeltaListManager
- * objects ask the TransactionManager for the delta information each time this
- * is needed.
+ * This class keeps a reference to a ModifiedList object which contains the actual
+ * lists of inserted and deleted objects.  All data managers must guarantee that only
+ * a single instance of the same object is returned, and as DeltaListManager objects
+ * are held by extendable objects, we can be sure that only a single instance of this
+ * object will exist for a given list.  Furthermore, all updates are made through this
+ * object, so if a ModifiedList object is created, this object will know about it.
  * 
  * @author Nigel Westbury
  */
@@ -73,7 +69,13 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	 * to the list.
 	 */
 	private ModifiedListKey<E> modifiedListKey;
-	
+
+	/**
+	 * The modified list.
+	 * Null indicates no modification yet to this list.
+	 */
+	private ModifiedList<E> modifiedList = null;
+
 	/**
 	 * The committed list, set by the constructor
 	 */
@@ -131,7 +133,10 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		
 		objectKey.setObject(extendableObject);
 
-		ModifiedList<E> modifiedList = transactionManager.createModifiedList(modifiedListKey);
+		if (modifiedList == null) {
+			modifiedList = new ModifiedList<E>();
+			transactionManager.putModifiedList(modifiedListKey, modifiedList);
+		}
 		modifiedList.add(extendableObject);
 		
 		return extendableObject;
@@ -177,8 +182,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		// of getIndexIntoScalarProperties().  We only need one loop.
 		
 		int valuesIndex = 0;
-		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+		for (PropertyAccessor propertyAccessor: propertySet.getProperties3()) {
 			
 			Object value;
 			if (propertyAccessor.isScalar()) {
@@ -212,7 +216,10 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		
 		objectKey.setObject(extendableObject);
 
-		ModifiedList<E> modifiedList = transactionManager.createModifiedList(modifiedListKey);
+		if (modifiedList == null) {
+			modifiedList = new ModifiedList<E>();
+			transactionManager.putModifiedList(modifiedListKey, modifiedList);
+		}
 		modifiedList.add(extendableObject);
 		
 		return extendableObject;
@@ -224,7 +231,6 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		
 		int committedCount = committedList.size();
 
-		ModifiedList modifiedList = transactionManager.getModifiedList(modifiedListKey);
 		if (modifiedList == null) {
 			return committedCount; 
 		} else {
@@ -235,7 +241,6 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	public Iterator<E> iterator() {
 		Iterator<E> committedListIterator = committedList.iterator();
 
-		ModifiedList<E> modifiedList = transactionManager.getModifiedList(modifiedListKey);
 		if (modifiedList == null) {
 			// We cannot simply return committedListIterator because
 			// that returns materializations of the objects that are outside
@@ -250,7 +255,6 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	public boolean contains(Object object) {
 		IObjectKey committedObjectKey = ((UncommittedObjectKey)((ExtendableObject)object).getObjectKey()).getCommittedObjectKey();
 
-		ModifiedList modifiedList = transactionManager.getModifiedList(modifiedListKey);
 		if (modifiedList != null) {
 			if (modifiedList.addedObjects.contains(object)) {
 				return true; 
@@ -266,7 +270,10 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 
 	public boolean remove(Object object) {
 		ExtendableObject extendableObject = (ExtendableObject)object;
-		ModifiedList modifiedList = transactionManager.createModifiedList(modifiedListKey);
+		if (modifiedList == null) {
+			modifiedList = new ModifiedList<E>();
+			transactionManager.putModifiedList(modifiedListKey, modifiedList);
+		}
 		boolean isRemoved = modifiedList.delete(extendableObject);
 		
 		if (isRemoved) {

@@ -65,8 +65,8 @@ import org.eclipse.swt.widgets.Shell;
  */
 public class TransactionDialog {
 
-	private static final Color yellow = new Color(Display.getCurrent(), 255, 255, 200);
-	private static final Color green  = new Color(Display.getCurrent(), 225, 255, 225);
+	private static final Color yellow        = new Color(Display.getCurrent(), 255, 255, 200);
+	private static final Color green         = new Color(Display.getCurrent(), 225, 255, 225);
 
     private Shell shell;
 
@@ -137,9 +137,7 @@ public class TransactionDialog {
         entriesArea.setLayout(entriesAreaLayout);
 
         // Add properties from the transaction.
-        for (Iterator<ScalarPropertyAccessor> iter = TransactionInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
-        	ScalarPropertyAccessor propertyAccessor = iter.next();
- 
+   		for (ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
         	Label propertyLabel = new Label(transactionArea, 0);
         	propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
         	IPropertyControl propertyControl = propertyAccessor.createPropertyControl(transactionArea, session);
@@ -170,8 +168,7 @@ public class TransactionDialog {
            		Commodity commodity = null;
            		boolean mismatchedCommodities = false;
            		long totalAmount = 0;
-                for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
-                	Entry entry = (Entry)iter.next();
+                for (Entry entry: transaction.getEntryCollection()) {
                 	if (commodity == null) {
                 		// No commodity yet determined, so set to the commodity for
                 		// this entry, if any.

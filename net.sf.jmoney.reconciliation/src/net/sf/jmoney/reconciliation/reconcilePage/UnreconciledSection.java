@@ -99,7 +99,7 @@ public class UnreconciledSection extends SectionPart {
 				return fPage.balanceColumnManager;
 			}
 
-			public Collection getEntries() {
+			public Collection<Entry> getEntries() {
 		        CurrencyAccount account = fPage.getAccount();
 		        Collection<Entry> accountEntries = 
 		        	account

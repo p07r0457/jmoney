@@ -46,8 +46,9 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 		 */
 		private int indexIntoScalarProperties = -1;
 
-	   
-	public ScalarPropertyAccessor(Class<V> classOfValueObject, PropertySet propertySet, String localName, String displayName, int weight, int minimumWidth, IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency propertyDependency) {
+		private Comparator<ExtendableObject> parentComparator;
+		
+	public ScalarPropertyAccessor(Class<V> classOfValueObject, PropertySet propertySet, String localName, String displayName, int weight, int minimumWidth, final IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency propertyDependency) {
 		super(propertySet, localName, displayName, propertyDependency);
 
 	       this.weight = weight;
@@ -145,6 +146,30 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 					throw new MalformedPluginException("Field '" + fieldName + "' in '" + implementationClass.getName() + "' must be protected (or public if you insist).");
 				}
 	       }
+	       
+		   /*
+		    * Set the comparator, if any.
+		    * 
+		    * If this object has been given a comparator to compare the values of
+		    * the properties, then return a comparator that compares the parent
+		    * objects by getting the property value from each parent and comparing
+		    * those values.  Otherwise return null to indicate that there is no
+		    * ordering.
+		    */
+		   if (propertyControlFactory.getComparator() != null) {
+			   parentComparator = new Comparator<ExtendableObject> () {
+				   public int compare(ExtendableObject object1, ExtendableObject object2) {
+					   V value1 = object1.getPropertyValue(ScalarPropertyAccessor.this);
+					   V value2 = object2.getPropertyValue(ScalarPropertyAccessor.this);
+					   if (value1 == null && value2 == null) return 0;
+					   if (value1 == null) return 1;
+					   if (value2 == null) return -1;
+					   return propertyControlFactory.getComparator().compare(value1, value2);
+				   }
+			   };
+		   } else {
+			   parentComparator =  null;
+		   }
 	}
 
 	   /**
@@ -184,57 +209,16 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	   }
 	   
 	   /**
-	    * Return a comparator to be used to compare values of this property.
-	    * If the property definition defines a custom comparator for this property then return that,
-	    * otherwise if the values are of a class that implements the Comparable interface,
-	    * use that, otherwise return a comparator that orders the values by getting the String
-	    * values to be used when displaying the properties in a table and ordering those
-	    * strings.
+	    * Return a comparator to be used to compare two extendable objects based on the value
+	    * of this property.  This method looks to the comparator, if any, provided by
+	    * the IPropertyControlFactory implementation.  The ordering is thus defined by the
+	    * plug-in that added this property.
 	    * 
-	    * Note that the comparator defines an ordering of the objects that contain the properties,
-	    * not the values of the properties.  You should pass the ExtendableObject objects
-	    * to the comparator and the comparator will then lookup the values.
-	    * 
-	    * This method always returns a non-null comparator.
+	    * @return a comparator, or null if no comparator was provided
+	    * 		for use with this property
 	    */
 	   public Comparator<ExtendableObject> getComparator() {
-		   /*
-		    * No support has yet been added to allow custom comparators to
-		    * be defined for properties.  We therefore return default comparators
-		    * based on the type of the values.
-		    * 
-		    */
-		   if (Comparable.class.isAssignableFrom(getClassOfValueObject())) {
-			   return new Comparator<ExtendableObject> () {
-				   public int compare(ExtendableObject object1, ExtendableObject object2) {
-					   V value1 = object1.getPropertyValue(ScalarPropertyAccessor.this);
-					   V value2 = object2.getPropertyValue(ScalarPropertyAccessor.this);
-					   if (value1 == null && value2 == null) return 0;
-					   if (value1 == null) return 1;
-					   if (value2 == null) return -1;
-
-					   return ((Comparable)value1).compareTo(value2);
-				   }
-			   };
-		   }
-
-		   /* No custom comparator and not a known type, so sort according to the
-			 text value that is displayed when the property is shown
-			 in a table (ignoring case).
-		    */
-		   return new Comparator<ExtendableObject> () {
-			   public int compare(ExtendableObject object1, ExtendableObject object2) {
-				   String text1 = propertyControlFactory.formatValueForTable(object1, ScalarPropertyAccessor.this);
-				   if (text1 == null) {
-					   text1 = "";
-				   }
-				   String text2 = propertyControlFactory.formatValueForTable(object2, ScalarPropertyAccessor.this);
-				   if (text2 == null) {
-					   text2 = "";
-				   }
-				   return text1.compareToIgnoreCase(text2);
-			   }
-		   };		   
+		   return parentComparator;
 	   }
 
 		/**
@@ -366,7 +350,7 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 			 * 
 			 * @return
 			 */
-		   Class<?> getClassOfValueType() {
+		   public Class<?> getClassOfValueType() {
 		       return classOfValueType;
 		   }
 		   

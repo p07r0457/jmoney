@@ -45,7 +45,6 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.pages.entries.EntriesTree;
@@ -118,8 +117,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
     	allEntryDataObjects = new Vector<IEntriesTableProperty>();
         
         // Add properties from the transaction.
-        for (Iterator<ScalarPropertyAccessor> iter = TransactionInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
-        	ScalarPropertyAccessor propertyAccessor = iter.next();
+   		for (ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
         	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "transaction") {
         		public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
         			return data.getTransactionForTransactionFields();
@@ -132,8 +130,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 		 * properties except the description which come from the other entry,
 		 * and the amount which is shown in the debit and credit columns.
 		 */
-        for (Iterator<ScalarPropertyAccessor> iter = EntryInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
-            ScalarPropertyAccessor propertyAccessor = iter.next();
+   		for (ScalarPropertyAccessor propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
             if (propertyAccessor != EntryInfo.getDescriptionAccessor()
             		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
             	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "this") {
@@ -149,9 +146,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 		 * applicable for capital accounts. For time being, this is just the
 		 * account.
 		 */
-        PropertySet<Entry> extendablePropertySet = EntryInfo.getPropertySet();
-        for (Iterator<ScalarPropertyAccessor> iter = extendablePropertySet.getPropertyIterator_Scalar3(); iter.hasNext();) {
-            ScalarPropertyAccessor propertyAccessor = iter.next();
+   		for (ScalarPropertyAccessor propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
             if (propertyAccessor == EntryInfo.getAccountAccessor()) {
             	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "common2") {
 					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
@@ -435,7 +430,11 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			Session session = data.getTransaction().getSession();
 			
 			IPropertyControl propertyControl = accessor.createPropertyControl(parent, session); 
-				
+			if (propertyControl == null) {
+				// Property is not editable
+				return null;
+			}
+			
 			ExtendableObject extendableObject = getObjectContainingProperty(data);
 
 			/*

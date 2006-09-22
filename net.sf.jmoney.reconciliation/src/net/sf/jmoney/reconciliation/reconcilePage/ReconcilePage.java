@@ -179,8 +179,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
     	// displayed in the table.
         
         // Add properties from the transaction.
-        for (Iterator<ScalarPropertyAccessor> iter = TransactionInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
-        	final ScalarPropertyAccessor propertyAccessor = iter.next();
+   		for (final ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
         	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "transaction") {
         		public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
         			return data.getTransactionForTransactionFields();
@@ -192,8 +191,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         // For time being, this is all the properties except the account and description
         // which come from the other entry, and the amount which is shown in the debit and
         // credit columns.
-        for (Iterator<ScalarPropertyAccessor> iter = EntryInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
-        	final ScalarPropertyAccessor propertyAccessor = iter.next();
+   		for (ScalarPropertyAccessor<?> propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
             if (propertyAccessor != EntryInfo.getAccountAccessor() 
            		&& propertyAccessor != EntryInfo.getDescriptionAccessor()
            		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
@@ -208,8 +206,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         // Add properties from the other entry where the property also is
         // applicable for capital accounts.
         // For time being, this is just the account.
-        for (Iterator<ScalarPropertyAccessor> iter = EntryInfo.getPropertySet().getPropertyIterator_Scalar3(); iter.hasNext();) {
-        	ScalarPropertyAccessor propertyAccessor = iter.next();
+   		for (ScalarPropertyAccessor<?> propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
             if (propertyAccessor == EntryInfo.getAccountAccessor()) {
             	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "common2") {
 					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {

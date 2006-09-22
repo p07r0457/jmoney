@@ -863,15 +863,10 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				int index = propertyAccessor.getIndexIntoConstructorParameters(); 
 				if (index != -1) {
 					if (propertyAccessor.isScalar()) {
-						ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
-						if (scalarAccessor.getClassOfValueObject().isPrimitive()
-								|| scalarAccessor.getClassOfValueObject() == String.class
-								|| scalarAccessor.getClassOfValueObject() == Long.class
-								|| scalarAccessor.getClassOfValueObject() == Date.class) {
-							constructorParameters[index] = value;
-						} else {
+						if (value instanceof ExtendableObject) {
 							constructorParameters[index] = ((ExtendableObject)value).getObjectKey();
-							//extendableObject.setPropertyValue(propertyAccessor, value);
+						} else {
+							constructorParameters[index] = value;
 						}
 					} else {
 						// Must be an element in an array.
@@ -1312,23 +1307,18 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 * TODO: we cannot rely on this mechanism to ensure all idref's are
 		 * written before they are used.
 		 */
-		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			if (propertyAccessor.isList()) {
-				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
-				PropertySet propertySet2 = propertyAccessor.getPropertySet(); 
-				if (!propertySet2.isExtension()
-						|| object.getExtension(propertySet2) != null) {
-					for (Iterator<? extends ExtendableObject> elementIter = object.getListPropertyValue(listAccessor).iterator(); elementIter.hasNext(); ) {
-						ExtendableObject listElement = elementIter.next();
-						writeObject(hd, listElement, propertyAccessor.getLocalName(), listAccessor.getValueClass());
-					}
+		for (ListPropertyAccessor<?> listAccessor: propertySet.getListProperties3()) {
+			PropertySet propertySet2 = listAccessor.getPropertySet(); 
+			if (!propertySet2.isExtension()
+					|| object.getExtension(propertySet2) != null) {
+				for (Iterator<? extends ExtendableObject> elementIter = object.getListPropertyValue(listAccessor).iterator(); elementIter.hasNext(); ) {
+					ExtendableObject listElement = elementIter.next();
+					writeObject(hd, listElement, listAccessor.getLocalName(), listAccessor.getValueClass());
 				}
 			}
 		}
 		
-		for (Iterator<ScalarPropertyAccessor> iter = propertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
-			ScalarPropertyAccessor<?> propertyAccessor = iter.next();
+		for (ScalarPropertyAccessor<?> propertyAccessor: propertySet.getScalarProperties3()) {
 			PropertySet propertySet2 = propertyAccessor.getPropertySet(); 
 			if (!propertySet2.isExtension()
 					|| object.getExtension(propertySet2) != null) {

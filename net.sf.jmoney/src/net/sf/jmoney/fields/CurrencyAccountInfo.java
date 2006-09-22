@@ -62,7 +62,7 @@ public class CurrencyAccountInfo implements IPropertySetInfo {
 	}
 
     public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		CurrencyAccountInfo.propertySet = propertySet;
+		propertySet = propertyRegistrar.addPropertySet(CurrencyAccount.class);
 		
 		IPropertyControlFactory<Long> amountControlFactory = new AmountInCurrencyAccountControlFactory();
 		IPropertyControlFactory<Currency> currencyControlFactory = new CurrencyControlFactory();

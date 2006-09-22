@@ -47,7 +47,7 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 	}
 	
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		ReconciliationAccountInfo.propertySet = propertyRegistrar.addPropertySet(ReconciliationAccount.class);
+		propertySet = propertyRegistrar.addPropertySet(ReconciliationAccount.class);
 
 		AccountControlFactory<IncomeExpenseAccount> accountControlFactory = new AccountControlFactory<IncomeExpenseAccount>();
 		

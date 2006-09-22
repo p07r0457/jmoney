@@ -68,7 +68,7 @@ public class SessionInfo implements IPropertySetInfo {
 	}
 	
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		SessionInfo.propertySet = propertyRegistrar.addPropertySet(Session.class);
+		propertySet = propertyRegistrar.addPropertySet(Session.class);
 
 		IPropertyControlFactory<Currency> currencyControlFactory = new CurrencyControlFactory();
 
@@ -84,28 +84,28 @@ public class SessionInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static PropertySet getPropertySet() {
+	public static PropertySet<Session> getPropertySet() {
 		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static ListPropertyAccessor getCommoditiesAccessor() {
+	public static ListPropertyAccessor<Commodity> getCommoditiesAccessor() {
 		return commoditiesAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static ListPropertyAccessor getAccountsAccessor() {
+	public static ListPropertyAccessor<Account> getAccountsAccessor() {
 		return accountsAccessor;
 	}	
 
 	/**
 	 * @return
 	 */
-	public static ListPropertyAccessor getTransactionsAccessor() {
+	public static ListPropertyAccessor<Transaction> getTransactionsAccessor() {
 		return transactionsAccessor;
 	}	
 

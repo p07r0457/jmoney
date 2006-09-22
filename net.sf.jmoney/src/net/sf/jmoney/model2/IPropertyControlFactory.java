@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Comparator;
+
 import org.eclipse.swt.widgets.Composite;
 
 /**
@@ -88,4 +90,13 @@ public interface IPropertyControlFactory<V> {
 	 * 			the property
 	 */
 	boolean isEditable();
+
+	/**
+	 * Many views allow sorting based on property values.  This method
+	 * allows the comparator to be used for sorting to be specified.
+	 * 
+	 * @return a comparator if sorting is to be allowed, or null if sorting
+	 * 		based on this property is not to be allowed
+	 */
+	Comparator<V> getComparator();
 }

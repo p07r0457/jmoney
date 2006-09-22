@@ -130,7 +130,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		return fPage.balanceColumnManager;
 	}
 
-	public Collection getEntries() {
+	public Collection<Entry> getEntries() {
 /* The caller always sorts, so there is no point in us returning
  * sorted results.  It may be at some point we decide it is more
  * efficient to get the database to sort for us, but that would

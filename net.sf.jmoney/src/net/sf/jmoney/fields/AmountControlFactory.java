@@ -24,7 +24,7 @@ package net.sf.jmoney.fields;
 
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IPropertyControlFactory;
+import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 /**
@@ -33,7 +33,7 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public abstract class AmountControlFactory implements IPropertyControlFactory<Long> {
+public abstract class AmountControlFactory extends PropertyControlFactory<Long> {
 
     public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
         Long amount = extendableObject.getPropertyValue(propertyAccessor);
@@ -45,7 +45,7 @@ public abstract class AmountControlFactory implements IPropertyControlFactory<Lo
     }
 
     public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
-        Long amount = (Long) extendableObject.getPropertyValue(propertyAccessor);
+        Long amount = extendableObject.getPropertyValue(propertyAccessor);
         if (amount == null) {
             return "";
         } else {

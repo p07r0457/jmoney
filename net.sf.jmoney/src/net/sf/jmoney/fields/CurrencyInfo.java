@@ -24,11 +24,11 @@ package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
@@ -66,22 +66,14 @@ public class CurrencyInfo implements IPropertySetInfo {
 	}
 	
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		CurrencyInfo.propertySet = propertyRegistrar.addPropertySet(Currency.class);
+		propertySet = propertyRegistrar.addPropertySet(Currency.class);
 		
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		
-		IPropertyControlFactory<Integer> numberControlFactory = new IPropertyControlFactory<Integer>() {
+		IPropertyControlFactory<Integer> numberControlFactory = new PropertyControlFactory<Integer>() {
 			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Integer> propertyAccessor, Session session) {
 				// Property is not editable
 				return null;
-			}
-
-			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Integer> propertyAccessor) {
-				return extendableObject.getPropertyValue(propertyAccessor).toString();
-			}
-
-			public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Integer> propertyAccessor) {
-				return extendableObject.getPropertyValue(propertyAccessor).toString();
 			}
 
 			public boolean isEditable() {

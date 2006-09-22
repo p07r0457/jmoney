@@ -21,8 +21,6 @@
  */
 package net.sf.jmoney.pages.entries;
 
-import java.util.Iterator;
-
 import net.sf.jmoney.JMoneyPlugin;
 
 import org.eclipse.swt.SWT;
@@ -100,8 +98,7 @@ public class EntriesFilterSection extends SectionPart {
         String[] filterTypes = new String[fPage.allEntryDataObjects.size() + 1];
         int i = 0;
         filterTypes[i++] = JMoneyPlugin.getResourceString("EntryFilter.entry"); 
-        for (Iterator iter = fPage.allEntryDataObjects.iterator(); iter.hasNext(); ) {
-        	IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty)iter.next();
+        for (IEntriesTableProperty entriesSectionProperty: fPage.allEntryDataObjects) {
             filterTypes[i++] = entriesSectionProperty.getText();
         }
         

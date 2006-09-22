@@ -1566,9 +1566,7 @@ public class EntriesTree extends Composite {
         // and efficient to do it then and that reduces the effort
         // to keep the balances updated.
         entries = new Vector<DisplayableTransaction>();
-        for (Iterator iter = entriesContent.getEntries().iterator(); iter
-                .hasNext();) {
-            Entry accountEntry = (Entry) iter.next();
+        for (Entry accountEntry: entriesContent.getEntries()) {
             DisplayableTransaction data = new DisplayableTransaction(
                     accountEntry, 0);
             if (matchesFilter(data)) {
@@ -2411,9 +2409,7 @@ public class EntriesTree extends Composite {
 			// newEntry, entryInAccount, and one other.
 			// We need to find the other.
 			Entry otherEntry = null;
-			for (Iterator iter = transaction.getEntryCollection().iterator(); iter
-					.hasNext();) {
-				Entry entry = (Entry) iter.next();
+			for (Entry entry: transaction.getEntryCollection()) {
 				if (!entry.equals(entryInAccount) && !entry.equals(newEntry)) {
 					if (otherEntry != null) {
 						throw new RuntimeException("internal inconsistency");

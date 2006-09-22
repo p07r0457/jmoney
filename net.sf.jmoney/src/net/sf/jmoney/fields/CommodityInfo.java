@@ -60,7 +60,7 @@ public class CommodityInfo implements IPropertySetInfo {
 	}
 
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		CommodityInfo.propertySet = propertyRegistrar.addPropertySet(Commodity.class);
+		propertySet = propertyRegistrar.addPropertySet(Commodity.class);
 		
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		

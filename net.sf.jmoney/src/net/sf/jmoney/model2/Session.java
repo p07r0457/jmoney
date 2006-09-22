@@ -131,6 +131,12 @@ public class Session extends ExtendableObject implements IAdaptable {
 				: (Currency)defaultCurrencyKey.getObject();
     }
     
+    /**
+     * 
+     * @param defaultCurrency the default currency, which cannot
+     * 			be null because a default currency must always
+     * 			be set for a session
+     */
     public void setDefaultCurrency(Currency defaultCurrency) {
         Currency oldDefaultCurrency = getDefaultCurrency();
         this.defaultCurrencyKey = defaultCurrency.getObjectKey();
@@ -146,33 +152,6 @@ public class Session extends ExtendableObject implements IAdaptable {
 	public Currency getCurrencyForCode(String code) {
 		return currencies.get(code);
 	}
-
-/*   
-    public Iterator getAccountIterator() {
-        return new Iterator() {
-        	Iterator iter = accounts.iterator();
-        	boolean inAccounts = true;
-        	
-			public boolean hasNext() {
-				if (iter.hasNext()) {
-					return true;
-				} else if (inAccounts) {
-					inAccounts = false;
-					iter = categories.iterator();
-					return iter.hasNext();
-				} else {
-					return false; 
-				}
-			}
-			public Object next() {
-				return iter.next();
-			}
-			public void remove() {
-				throw new UnsupportedOperationException();
-			}
-        };
-    }
-  */ 
 
 	public Collection<Account> getAllAccounts() {
         Vector<Account> all = new Vector<Account>();
@@ -219,22 +198,6 @@ public class Session extends ExtendableObject implements IAdaptable {
         return list;
     }
     
-    /**
-     * @author Faucheux
-     */
-    
-    public Iterator getCapitalAccountIteratorByLevel(int level) {
-    	Iterator itAccounts = getAllAccounts().iterator();
-    	Vector   vecResult = new Vector();
-    	while (itAccounts.hasNext()) {
-    	    Account a = (Account) itAccounts.next();
-       	    if (a instanceof CapitalAccount && ((CapitalAccount) a).getLevel() == level) {
-    	        vecResult.add(a);
-    	    }
-    	}
-    	return vecResult.iterator();
-    }
-
        public Iterator getIncomeExpenseAccountIterator() {
         return new Iterator() {
         	Iterator iter = accounts.iterator();
@@ -370,20 +333,6 @@ public class Session extends ExtendableObject implements IAdaptable {
 		return new Object [] { null };
 	}
 	
-	/**
-	 * @author Faucheux
-	 */
-    public Vector getAccountsUntilLevel(int level) {
-    	Iterator i = getAllAccounts().iterator();
-    	Vector v = new Vector();
-    	while (i.hasNext()) {
-    		Account a = (Account) i.next();
-    		if (a.getLevel() <= level) v.add(a);
-    	}
-    	
-    	return v;
-    }
-
     /**
      * @author Faucheux
      * TODO: Faucheux - not the better algorythm!

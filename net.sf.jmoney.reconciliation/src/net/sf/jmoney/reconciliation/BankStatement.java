@@ -36,7 +36,7 @@ import net.sf.jmoney.VerySimpleDateFormat;
  * TODO To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-public class BankStatement implements Comparable {
+public class BankStatement implements Comparable<BankStatement> {
 
 	/**
 	 * Date format used for dates in this file format:
@@ -117,8 +117,7 @@ public class BankStatement implements Comparable {
 	 * datastore objects.  However, we do want to be able to sort
 	 * statements into order.
 	 */
-	public int compareTo(Object other) {
-		BankStatement otherStatement = (BankStatement)other;
+	public int compareTo(BankStatement otherStatement) {
 		if (this.statementDate == null && otherStatement.statementDate == null) {
 			return this.statementNumber - otherStatement.statementNumber;
 		} else if (this.statementDate != null && otherStatement.statementDate != null) {

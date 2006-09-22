@@ -134,8 +134,7 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 		}
 		
 		int indexIntoValues = 0;
-		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+		for (PropertyAccessor propertyAccessor: propertySet.getProperties3()) {
 			
 			// For this property, determine the parameter value to be passed to the
 			// constructor.

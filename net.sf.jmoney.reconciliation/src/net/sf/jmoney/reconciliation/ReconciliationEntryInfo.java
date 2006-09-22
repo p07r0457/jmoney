@@ -27,6 +27,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
@@ -51,9 +52,9 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 	}
 	
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		ReconciliationEntryInfo.propertySet = propertyRegistrar.addPropertySet(ReconciliationEntry.class);
+		propertySet = propertyRegistrar.addPropertySet(ReconciliationEntry.class);
 
-		class NonEditableTextControlFactory implements IPropertyControlFactory<String> {
+		class NonEditableTextControlFactory extends PropertyControlFactory<String> {
 			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<String> propertyAccessor, Session session) {
 				// Property is not editable
 				return null;
@@ -74,7 +75,7 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 			}
 		};
 
-		IPropertyControlFactory<BankStatement> statementControlFactory = new IPropertyControlFactory<BankStatement>() {
+		IPropertyControlFactory<BankStatement> statementControlFactory = new PropertyControlFactory<BankStatement>() {
 			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<BankStatement> propertyAccessor, Session session) {
 				// Property is not editable
 				return null;

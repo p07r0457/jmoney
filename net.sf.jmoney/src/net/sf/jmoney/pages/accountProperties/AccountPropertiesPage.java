@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.pages.accountProperties;
 
-import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.IBookkeepingPage;
@@ -104,8 +103,6 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 			// TODO: what is this?
 			pack();
 			
-			session.getObjectKey().getSessionManager().addChangeListener(listener, this);
-
 			this.account = account;
 			
 			session = account.getSession();
@@ -114,8 +111,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 			
 			// Add the properties for the Account objects.
 			PropertySet<?> extendablePropertySet = PropertySet.getPropertySet(account.getClass());
-			for (Iterator<ScalarPropertyAccessor> iter = extendablePropertySet.getPropertyIterator_Scalar3(); iter.hasNext(); ) {
-				final ScalarPropertyAccessor propertyAccessor = iter.next();
+			for (final ScalarPropertyAccessor<?> propertyAccessor: extendablePropertySet.getScalarProperties3()) {
 
 				Label propertyLabel = new Label(this, 0);
 				propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
@@ -187,6 +183,8 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 			for (IPropertyControl propertyControl: propertyControlList) {
 				propertyControl.load(account);
 			}
+
+			session.getObjectKey().getSessionManager().addChangeListener(listener, this);
 		}
 	}
 

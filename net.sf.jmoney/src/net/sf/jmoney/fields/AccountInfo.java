@@ -60,7 +60,7 @@ public class AccountInfo implements IPropertySetInfo {
 	}
 
 	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		AccountInfo.propertySet = propertySet;
+		propertySet = propertyRegistrar.addPropertySet(Account.class);
 		
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		

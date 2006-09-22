@@ -50,7 +50,7 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
 public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
 	private static PropertySet<IncomeExpenseAccount> propertySet = null;
-	private static ListPropertyAccessor subAccountAccessor = null;
+	private static ListPropertyAccessor<IncomeExpenseAccount> subAccountAccessor = null;
 	private static ScalarPropertyAccessor<Boolean> multiCurrencyAccessor = null;
 	private static ScalarPropertyAccessor<Currency> currencyAccessor = null;
 	
@@ -62,12 +62,10 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 	}
 	
     public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		IncomeExpenseAccountInfo.propertySet = propertyRegistrar.addPropertySet(IncomeExpenseAccount.class);
+		propertySet = propertyRegistrar.addPropertySet(IncomeExpenseAccount.class);
 
 		subAccountAccessor = propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccount.class, null);
 
-	//	PropertyAccessor_Scalar accessor = new PropertyAccessor_Scalar(PropertySet.this, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency);
-		
 		multiCurrencyAccessor = propertyRegistrar.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.multiCurrency"), Boolean.class, 0, 10, new CheckBoxControlFactory(), null); 
 		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), Currency.class, 2, 20, new CurrencyControlFactory(), multiCurrencyAccessor.getFalseValueDependency());
 		
@@ -89,7 +87,7 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
     /**
 	 * @return
 	 */
-	public static ListPropertyAccessor getSubAccountAccessor() {
+	public static ListPropertyAccessor<IncomeExpenseAccount> getSubAccountAccessor() {
 		return subAccountAccessor;
 	}	
 

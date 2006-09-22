@@ -258,12 +258,15 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         DatastoreManager oldSessionManager = sessionManager;
         sessionManager = newSessionManager;
         
-    	// If the list of commodities is empty then load
-    	// the full list of ISO currencies.
+    	/*
+		 * JMoney depends on having at least one currency, which must also be
+		 * set as the default currency. If there is no default currency then
+		 * this must be a new datastore and we must set a default currency.
+		 */
         if (newSessionManager != null) {
-        	if (getSession().getCommodityCollection().isEmpty()) {
+        	if (getSession().getDefaultCurrency() == null) {
         		initSystemCurrency(getSession());
-        		getSession().registerUndoableChange("add ISO currencies");
+        		getSession().registerUndoableChange("add default currency");
         	}
         }
 
@@ -384,6 +387,10 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         NumberFormat format = NumberFormat.getCurrencyInstance(defaultLocale);
         String code = format.getCurrency().getCurrencyCode();
         Currency currency = getIsoCurrency(session, code);
+        if (currency == null) {
+        	// JMoney depends on a default currency
+        	currency = getIsoCurrency(session, "USD");
+        }
         session.setDefaultCurrency(currency);
     }
 

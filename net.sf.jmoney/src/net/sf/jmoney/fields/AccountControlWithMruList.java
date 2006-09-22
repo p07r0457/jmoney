@@ -40,12 +40,14 @@ public class AccountControlWithMruList<A extends Account> extends AccountComposi
 	protected Session session;
     protected List accountList;
     protected AccountControl<A> accountControl;
+    protected Class<A> accountClass;
     
     protected LinkedList<A> recentlyUsedList = new LinkedList<A>();
     
 	public AccountControlWithMruList(Composite parent, Session session, Class<A> accountClass) {
 		super(parent, SWT.NONE);
 		this.session = session;
+		this.accountClass = accountClass;
 		
 		setLayout(new GridLayout(1, false));
 		
@@ -102,9 +104,11 @@ public class AccountControlWithMruList<A extends Account> extends AccountComposi
 			IMemento [] mruAccountMementos = memento.getChildren("mruAccount");
 			for (int i = 0; i < mruAccountMementos.length; i++) {
 				String fullAccountName = mruAccountMementos[i].getString("name");
-				A account = (A)session.getAccountByFullName(fullAccountName);
-	    		recentlyUsedList.addLast(account);
-	    		accountList.add(account.getName());
+				Account account = session.getAccountByFullName(fullAccountName);
+				if (accountClass.isInstance(account)) {
+					recentlyUsedList.addLast(accountClass.cast(account));
+					accountList.add(account.getName());
+				}
 			}
 		}
 	}

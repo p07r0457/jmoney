@@ -38,7 +38,6 @@ import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
-import net.sf.jmoney.model2.SessionChangeListener;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
