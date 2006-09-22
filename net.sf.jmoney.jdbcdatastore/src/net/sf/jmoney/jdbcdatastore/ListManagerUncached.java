@@ -44,11 +44,11 @@ import net.sf.jmoney.model2.PropertySet;
 public class ListManagerUncached<E extends ExtendableObject> implements IListManager<E> {
 	private IDatabaseRowKey parentKey;
 	private SessionManager sessionManager;
-	private ListPropertyAccessor listProperty;
+	private ListPropertyAccessor<E> listProperty;
 
 	private PropertySet<E> typedPropertySet;
 	
-	public ListManagerUncached(IDatabaseRowKey parentKey, SessionManager sessionManager, ListPropertyAccessor listProperty) {
+	public ListManagerUncached(IDatabaseRowKey parentKey, SessionManager sessionManager, ListPropertyAccessor<E> listProperty) {
 		this.parentKey = parentKey;
 		this.sessionManager = sessionManager;
 		this.listProperty = listProperty;
@@ -56,15 +56,8 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		// TODO: Cache this to improve performance.
 
 		// Find the property set returned by the list.
-		Class valueClass = listProperty.getValueClass();
-		typedPropertySet = null;
-		for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
-			PropertySet propertySet = (PropertySet)iter.next();
-			if (propertySet.getImplementationClass() == valueClass) {
-				typedPropertySet = propertySet;
-				break;
-			}
-		}
+		Class<E> valueClass = listProperty.getValueClass();
+		typedPropertySet = PropertySet.getPropertySet(valueClass);
 		if (typedPropertySet == null)
 			throw new RuntimeException(valueClass.getName() + " not found.");
 	}

@@ -1296,7 +1296,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 			int index = propertyAccessor.getIndexIntoConstructorParameters();
 			if (propertyAccessor.isScalar()) {
-				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor; 
+//				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor; 
 				
 				// Get the value from the array of values.
 				Object value = defaultValues[indexIntoDefaultValues++];
@@ -1307,14 +1307,10 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					constructorParameters[index] = value;
 				}
 			} else {
-				ListPropertyAccessor listAccessor = (ListPropertyAccessor)propertyAccessor; 
+				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor; 
 
 				// Must be an element in an array.
-				if (constructWithCachedLists) {
-					constructorParameters[index] = new ListManagerCached(sessionManager, listAccessor);
-				} else {
-					constructorParameters[index] = new ListManagerUncached(objectKey, sessionManager, listAccessor);
-				}
+				constructorParameters[index] = createListManager(objectKey, sessionManager, listAccessor, constructWithCachedLists);
 			}
 		}
 		
@@ -1322,6 +1318,14 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		E extendableObject = propertySet.constructImplementationObject(constructorParameters);
 		
 		return extendableObject;
+	}
+
+	private static <E2 extends ExtendableObject> IListManager createListManager(IDatabaseRowKey objectKey, SessionManager sessionManager, ListPropertyAccessor<E2> listAccessor, boolean constructWithCachedLists) {
+		if (constructWithCachedLists) {
+			return new ListManagerCached(sessionManager, listAccessor);
+		} else {
+			return new ListManagerUncached<E2>(objectKey, sessionManager, listAccessor);
+		}
 	}
 
 	/**
@@ -1370,12 +1374,9 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 			int index = propertyAccessor.getIndexIntoConstructorParameters();
 			if (propertyAccessor.isList()) {
-				ListPropertyAccessor listAccessor = (ListPropertyAccessor)propertyAccessor;
-				if (constructWithCachedLists) {
-					constructorParameters[index] = new ListManagerCached(sessionManager, listAccessor);
-				} else {
-					constructorParameters[index] = new ListManagerUncached(objectKey, sessionManager, listAccessor);
-				}
+				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
+				// Must be an element in an array.
+				constructorParameters[index] = createListManager(objectKey, sessionManager, listAccessor, constructWithCachedLists);
 			}
 		}
 		
