@@ -11,8 +11,8 @@
 
          <action
                label="%MainFrame.open"
-               icon="icons/Open16.gif"
-               tooltip="Open SQL Server Session"
+               icon="icons/database.gif"
+               tooltip="Open JDBC Database"
                class="net.sf.jmoney.jdbcdatastore.actions.OpenSessionAction"
                menubarPath="file/fileGroup"
                toolbarPath="fileGroup"
