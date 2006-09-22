@@ -81,7 +81,7 @@ public class CurrencyPagePlugin extends AbstractUIPlugin {
 	 * @param strings
 	 * @return
 	 */
-	public static String getFormattedMessage(String key, String[] args) {
+	public static String getFormattedMessage(String key, Object[] args) {
 		String text = getResourceString(key);
 		return java.text.MessageFormat.format(text, args);
 	}

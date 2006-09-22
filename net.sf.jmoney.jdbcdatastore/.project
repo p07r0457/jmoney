@@ -2,9 +2,6 @@
 <projectDescription>
 	<name>net.sf.jmoney.jdbcdatastore</name>
 	<comment></comment>
-	<projects>
-		<project>net.sf.jmoney</project>
-	</projects>
 	<buildSpec>
 		<buildCommand>
 			<name>org.eclipse.jdt.core.javabuilder</name>
