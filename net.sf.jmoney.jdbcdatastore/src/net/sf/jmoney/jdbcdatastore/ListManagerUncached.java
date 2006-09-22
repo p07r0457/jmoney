@@ -185,7 +185,7 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		try {
 			Statement stmt = sessionManager.getConnection().createStatement();
 			ResultSet resultSet = stmt.executeQuery(sql);
-			return new UncachedObjectIterator(resultSet, typedPropertySet, parentKey, sessionManager);
+			return new UncachedObjectIterator<E>(resultSet, typedPropertySet, parentKey, sessionManager);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException("internal error");

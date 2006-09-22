@@ -32,7 +32,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrencyAccount;
@@ -183,8 +182,8 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * 
 	 * @param propertySet
 	 */
-	public void addCachedPropertySet(PropertySet propertySet) {
-		mapOfCachedObjectMaps.put(propertySet, new HashMap<Integer, ExtendableObject>());
+	public <E extends ExtendableObject> void addCachedPropertySet(PropertySet<E> propertySet, Map<Integer, E> objectMap) {
+		mapOfCachedObjectMaps.put(propertySet, objectMap);
 	}
 	
 	/**
@@ -224,9 +223,9 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @return
 	 */
 	// TODO: We may not need this method.
-	public ExtendableObject lookupObject(PropertySet propertySet, int id) {
-		Map mapOfObjects = getMapOfCachedObjects(propertySet);
-		return (ExtendableObject)mapOfObjects.get(new Integer(id));
+	public ExtendableObject lookupObject(PropertySet<? extends ExtendableObject> propertySet, int id) {
+		Map<Integer, ? extends ExtendableObject> mapOfObjects = getMapOfCachedObjects(propertySet);
+		return mapOfObjects.get(new Integer(id));
 	}
 
 	/* (non-Javadoc)
@@ -238,11 +237,11 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		// call getEntries().isEmpty() ??????
 		// As long as collections are not being copied unneccessarily,
 		// this is probably better.
-		return !(new AccountEntriesList(this, (IDatabaseRowKey)account.getObjectKey(), EntryInfo.getAccountAccessor()).isEmpty());
+		return !(new AccountEntriesList(this, (IDatabaseRowKey)account.getObjectKey()).isEmpty());
 	}
 
 	public Collection<Entry> getEntries(Account account) {
-		return new AccountEntriesList(this, (IDatabaseRowKey)account.getObjectKey(), EntryInfo.getAccountAccessor());
+		return new AccountEntriesList(this, (IDatabaseRowKey)account.getObjectKey());
 	}
 
 	/**

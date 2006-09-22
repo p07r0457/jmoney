@@ -41,9 +41,9 @@ import net.sf.jmoney.model2.PropertySet;
  *
  * @author Nigel Westbury
  */
-class UncachedObjectIterator implements Iterator {
+class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> {
 	private ResultSet resultSet;
-	private PropertySet<? extends ExtendableObject> propertySet;
+	private PropertySet<E> propertySet;
 	private IObjectKey parentKey;
 	private SessionManager sessionManager;
 	private boolean isAnother;
@@ -60,7 +60,7 @@ class UncachedObjectIterator implements Iterator {
 	 * 			parents then pass null.
 	 * @param sessionManager
 	 */
-	UncachedObjectIterator(ResultSet resultSet, PropertySet<? extends ExtendableObject> propertySet, IObjectKey parentKey, SessionManager sessionManager) {
+	UncachedObjectIterator(ResultSet resultSet, PropertySet<E> propertySet, IObjectKey parentKey, SessionManager sessionManager) {
 		this.resultSet = resultSet;
 		this.propertySet = propertySet;
 		this.parentKey = parentKey;
@@ -85,12 +85,12 @@ class UncachedObjectIterator implements Iterator {
 	// a derivable property set.  To materialize the actual
 	// objects, we need to query the rows from the tables for
 	// the derived property sets appropriate for each object.
-	public Object next() {
+	public E next() {
 		try {
 			int id = resultSet.getInt("_ID");
 			ObjectKeyCached key = new ObjectKeyCached(id, sessionManager);
 			
-			ExtendableObject extendableObject;
+			E extendableObject;
 			if (parentKey == null) {
 				extendableObject = JDBCDatastorePlugin.materializeObject(resultSet, propertySet, key, sessionManager);
 			} else {

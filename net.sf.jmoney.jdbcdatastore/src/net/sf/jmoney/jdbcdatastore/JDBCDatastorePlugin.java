@@ -43,13 +43,13 @@ import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
-import net.sf.jmoney.fields.CapitalAccountInfo;
+import net.sf.jmoney.fields.BankAccountInfo;
 import net.sf.jmoney.fields.CommodityInfo;
 import net.sf.jmoney.fields.CurrencyInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -59,7 +59,6 @@ import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
@@ -67,7 +66,6 @@ import net.sf.jmoney.model2.Transaction;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -96,12 +94,12 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	}
 
 	private class ParentList {
-		ParentList(PropertySet parentPropertySet, PropertyAccessor listProperty) {
+		ParentList(PropertySet<? extends ExtendableObject> parentPropertySet, PropertyAccessor listProperty) {
 			this.parentPropertySet = parentPropertySet;
 			this.columnName = listProperty.getName().replace('.', '_');
 		}
 		
-		PropertySet parentPropertySet;
+		PropertySet<? extends ExtendableObject> parentPropertySet;
 		String columnName;
 	}
 	
@@ -167,22 +165,6 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 */
 	public ResourceBundle getResourceBundle() {
 		return resourceBundle;
-	}
-	
-    // Preferences
-    
-	/** 
-	 * Initializes a preference store with default preference values 
-	 * for this plug-in.
-	 */
-	protected void initializeDefaultPreferences(IPreferenceStore store) {
-    	store.setDefault("promptEachTime", true);
-		store.setDefault("driverOption", "Other");
-		store.setDefault("driver", "org.hsqldb.jdbcDriver");
-		store.setDefault("subProtocol", "hsqldb");
-		store.setDefault("subProtocolData", "hsql://localhost/accounts");
-		store.setDefault("user", "sa");
-		store.setDefault("password", "");
 	}
 	
 	/**
@@ -265,7 +247,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		PropertySet<Commodity> commodityPropertySet = CommodityInfo.getPropertySet();
 		PropertySet<Currency> currencyPropertySet = CurrencyInfo.getPropertySet();
 		PropertySet<Account> accountPropertySet = AccountInfo.getPropertySet();
-		PropertySet<CapitalAccount> capitalPropertySet = CapitalAccountInfo.getPropertySet();
+		PropertySet<BankAccount> bankAccountPropertySet = BankAccountInfo.getPropertySet();
 		PropertySet<IncomeExpenseAccount> incomeExpensePropertySet = IncomeExpenseAccountInfo.getPropertySet();
 		
 		SessionKey sessionKey = new SessionKey();
@@ -279,12 +261,12 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		
 		SessionManager sessionManager = new SessionManager(con, sessionKey);
 
-		sessionManager.addCachedPropertySet(commodityPropertySet);
-		sessionManager.addCachedPropertySet(accountPropertySet);
-		
-		Map<Integer, Commodity> commodityMap = sessionManager.getMapOfCachedObjects(commodityPropertySet);
-		Map<Integer, Account> accountsMap = sessionManager.getMapOfCachedObjects(accountPropertySet);
+		Map<Integer, Commodity> commodityMap = new HashMap<Integer, Commodity>();
+		Map<Integer, Account> accountsMap = new HashMap<Integer, Account>();
 
+		sessionManager.addCachedPropertySet(commodityPropertySet, commodityMap);
+		sessionManager.addCachedPropertySet(accountPropertySet, accountsMap);
+		
 		// Find all properties in any property set that are
 		// a list of objects with the type as this property set.
 		// A column must exist in this table for each such property
@@ -295,16 +277,13 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			if (!propertySet.isExtension()) {
 				Vector<ParentList> list = new Vector<ParentList>();  // List of PropertyAccessors
 				for (Iterator iter2 = PropertySet.getPropertySetIterator(); iter2.hasNext(); ) {
-					PropertySet propertySet2 = (PropertySet)iter2.next();
+					PropertySet<?> propertySet2 = (PropertySet)iter2.next();
 					if (!propertySet2.isExtension()) {
-						for (Iterator iter3 = propertySet2.getPropertyIterator2(); iter3.hasNext(); ) {
-							PropertyAccessor propertyAccessor = (PropertyAccessor)iter3.next();
-							if (propertyAccessor.isList()) {
-								ListPropertyAccessor listAccessor = (ListPropertyAccessor)propertyAccessor;
-								if (propertySet.getImplementationClass() == listAccessor.getValueClass()) {
-									// Add to the list of possible parents.
-									list.add(new ParentList(propertySet2, propertyAccessor));
-								}
+						PropertySet<? extends ExtendableObject> propertySet2b = (PropertySet<? extends ExtendableObject>)propertySet2;
+						for (ListPropertyAccessor listAccessor: propertySet2.getListProperties2()) {
+							if (propertySet.getImplementationClass() == listAccessor.getValueClass()) {
+								// Add to the list of possible parents.
+								list.add(new ParentList(propertySet2b, listAccessor));
 							}
 						}
 					}
@@ -320,6 +299,59 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// Any missing tables or columns are created at this time.
 		checkDatabase(con, stmt);
 		
+		/*
+		 * Create the single row in the session table, if it does not
+		 * already exist. 
+		 */
+		String sql = "SELECT * FROM " 
+			+ SessionInfo.getPropertySet().getId().replace('.', '_');
+		ResultSet rs3 = stmt.executeQuery(sql);
+		if (!rs3.next()) {
+
+			sql = "INSERT INTO " 
+				+ SessionInfo.getPropertySet().getId().replace('.', '_')
+				+ " (";
+
+			String columnNames = "_ID";
+			String columnValues = "IDENTITY()";
+			String separator = ", ";
+
+			for (ScalarPropertyAccessor<?> propertyAccessor: SessionInfo.getPropertySet().getScalarProperties2()) {
+				String columnName;
+				if (propertyAccessor.getPropertySet().isExtension()) {
+					columnName = propertyAccessor.getName().replace('.', '_');
+				} else {
+					columnName = propertyAccessor.getLocalName();
+				}
+
+				// Get the value from the passed property value array.
+				// TODO: This next line needs a bit of work.
+				// For time being, as the only property here is the default currency,
+				// just use null
+//				Object value = propertyAccessor.getPropertySet().getDefaultPropertyValues2()[propertyAccessor.getIndexIntoConstructorParameters()];
+				Object value = null;
+				
+				columnNames += separator + "\"" + columnName + "\"";
+				columnValues += separator + valueToSQLText(value);
+
+				separator = ", ";
+			}
+
+			sql += columnNames + ") VALUES(" + columnValues + ")";
+
+			try {
+				stmt.executeQuery(sql);
+			} catch (SQLException e) {
+				// TODO Handle this properly
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			}
+		}
+
+		// TODO: use the actual row id, and not the hard coded value of 0, in the session key.
+
+		
+		
 		ListManagerCached<Commodity> commodityListManager = new ListManagerCached<Commodity>(sessionManager, SessionInfo.getCommoditiesAccessor());
 		ListManagerCached<Account> accountListManager = new ListManagerCached<Account>(sessionManager, SessionInfo.getAccountsAccessor());
 		
@@ -332,33 +364,33 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			commodityListManager.add(commodityObject);
 			
 			int currencyId = rs.getInt(1);  // _ID
-			commodityMap.put(new Integer(currencyId), commodityObject);
+			commodityMap.put(currencyId, commodityObject);
 		}
 		rs.close();
 		
 		// Fetch the accounts
 		
-		// Fetch the capital accounts
-		rs = stmt.executeQuery("SELECT * FROM net_sf_jmoney_capitalAccount JOIN net_sf_jmoney_account ON net_sf_jmoney_capitalAccount._ID = net_sf_jmoney_account._ID");
+		// Fetch the bank accounts
+		rs = stmt.executeQuery("SELECT * FROM net_sf_jmoney_bankAccount JOIN net_sf_jmoney_currencyAccount ON net_sf_jmoney_bankAccount._ID = net_sf_jmoney_currencyAccount._ID JOIN net_sf_jmoney_capitalAccount ON net_sf_jmoney_currencyAccount._ID = net_sf_jmoney_capitalAccount._ID JOIN net_sf_jmoney_account ON net_sf_jmoney_capitalAccount._ID = net_sf_jmoney_account._ID");
 		while (rs.next()) {
-			Account accountObject = (Account)materializeObjectCached(rs, capitalPropertySet, sessionKey, sessionManager);
+			Account accountObject = materializeObjectCached(rs, bankAccountPropertySet, sessionKey, sessionManager);
 				
 			accountListManager.add(accountObject);
 			
 			int accountId = rs.getInt(1);  // _ID
-			accountsMap.put(new Integer(accountId), accountObject);
+			accountsMap.put(accountId, accountObject);
 		}
 		rs.close();
 
 		// Fetch the income and expense accounts
 		rs = stmt.executeQuery("SELECT * FROM net_sf_jmoney_categoryAccount JOIN net_sf_jmoney_account ON net_sf_jmoney_categoryAccount._ID = net_sf_jmoney_account._ID");
 		while (rs.next()) {
-			Account accountObject = (Account)materializeObjectCached(rs, incomeExpensePropertySet, sessionKey, sessionManager);
+			Account accountObject = materializeObjectCached(rs, incomeExpensePropertySet, sessionKey, sessionManager);
 				
 			accountListManager.add(accountObject);
 			
 			int accountId = rs.getInt(1);  // _ID
-			accountsMap.put(new Integer(accountId), accountObject);
+			accountsMap.put(accountId, accountObject);
 		}
 		rs.close();
 
@@ -450,8 +482,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		
 		// The columns for each property in this property set
 		// (including the extension property sets).
-		for (Iterator<ScalarPropertyAccessor> iter = propertySet.getPropertyIterator_Scalar2(); iter.hasNext(); ) {
-			ScalarPropertyAccessor propertyAccessor = iter.next();
+		for (ScalarPropertyAccessor propertyAccessor: propertySet.getScalarProperties2()) {
 			ColumnInfo info = new ColumnInfo();
 
 			if (propertyAccessor.getPropertySet().isExtension()) {
@@ -461,7 +492,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			}
 
 			boolean nullable = true;
-			Class valueClass = propertyAccessor.getClassOfValueObject();
+			Class valueClass = propertyAccessor.getClassOfValueType();
 			if (valueClass == Integer.class) {
 				info.columnDefinition = "INT";
 				nullable = true;
@@ -483,11 +514,11 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			} else if (valueClass == boolean.class) {
 				info.columnDefinition = "BIT";
 				nullable = false;
-			} else if (valueClass == String.class) {
-				info.columnDefinition = "VARCHAR";
-				nullable = true;
 			} else if (valueClass == Boolean.class) {
 				info.columnDefinition = "BIT";
+				nullable = true;
+			} else if (valueClass == String.class) {
+				info.columnDefinition = "VARCHAR";
 				nullable = true;
 			} else if (valueClass == Date.class) {
 				info.columnDefinition = "DATE";
@@ -762,14 +793,16 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			} else {
 				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor; 
 				Class<?> valueClass = scalarAccessor.getClassOfValueObject(); 
-				if (valueClass == int.class) {
-					value = rs.getInt(columnName);
-				} else if (valueClass == long.class) {
-					value = rs.getLong(columnName);
+				if (valueClass == Character.class) {
+					value = rs.getString(columnName).charAt(0);
 				} else if (valueClass == Long.class) {
 					value = rs.getLong(columnName);
+				} else if (valueClass == Integer.class) {
+					value = rs.getInt(columnName);
 				} else if (valueClass == String.class) {
 					value = rs.getString(columnName);
+				} else if (valueClass == Boolean.class) {
+					value = rs.getBoolean(columnName);
 				} else if (valueClass == Date.class) {
 					value = rs.getDate(columnName);
 				} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
@@ -859,7 +892,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// For each list that may contain this object, see if the
 		// appropriate column is non-null.
 		
-		PropertySet parentPropertySet = null;
+		PropertySet<? extends ExtendableObject> parentPropertySet = null;
 		int parentId = -1;
 		boolean nonNullValueFound = false;
 		
@@ -887,12 +920,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			// A database optimization causes no parent column to
 			// exist for the case where the parent object is the
 			// session.
-			try {
-				parentPropertySet = PropertySet.getPropertySet("net.sf.jmoney.session");
-			} catch (PropertySetNotFoundException e) {
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
-			}
+			parentPropertySet = SessionInfo.getPropertySet();
 			// TODO: Is zero always the id of the session object?
 			parentId = 0;
 		}
@@ -982,7 +1010,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		}
 		
 		for (int index = propertySets.size()-1; index >= 0; index--) {
-			PropertySet propertySet2 = propertySets.get(index);
+			PropertySet<?> propertySet2 = propertySets.get(index);
 			
 			String sql = "INSERT INTO " 
 				+ propertySet2.getId().replace('.', '_')
@@ -998,27 +1026,21 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				separator = ", ";
 			}
 			
-			for (Iterator iter = propertySet2.getPropertyIterator2(); iter.hasNext(); ) {
-				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-				
-				if (propertyAccessor.isScalar()) {
-		    		ScalarPropertyAccessor<?> scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
-
-		    		String columnName;
-					if (propertyAccessor.getPropertySet().isExtension()) {
-						columnName = propertyAccessor.getName().replace('.', '_');
-					} else {
-						columnName = propertyAccessor.getLocalName();
-					}
-					
-					// Get the value from the passed property value array.
-					Object value = newObject.getPropertyValue(scalarAccessor);
-
-					columnNames += separator + "\"" + columnName + "\"";
-					columnValues += separator + valueToSQLText(value);
-					
-					separator = ", ";
+			for (ScalarPropertyAccessor<?> propertyAccessor: propertySet2.getScalarProperties2()) {
+				String columnName;
+				if (propertyAccessor.getPropertySet().isExtension()) {
+					columnName = propertyAccessor.getName().replace('.', '_');
+				} else {
+					columnName = propertyAccessor.getLocalName();
 				}
+
+				// Get the value from the passed property value array.
+				Object value = newObject.getPropertyValue(propertyAccessor);
+
+				columnNames += separator + "\"" + columnName + "\"";
+				columnValues += separator + valueToSQLText(value);
+
+				separator = ", ";
 			}
 
 			// Set the parent id in the appropriate column
@@ -1106,8 +1128,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			String whereTerms = "";
 			String separator = "";
 			
-			for (Iterator<ScalarPropertyAccessor> iter = propertySet2.getPropertyIterator_Scalar2(); iter.hasNext(); ) {
-				ScalarPropertyAccessor propertyAccessor = iter.next();
+			for (ScalarPropertyAccessor<?> propertyAccessor: propertySet2.getScalarProperties2()) {
 
 				if (propertyAccessor.getIndexIntoScalarProperties() != propertyIndex) {
 					throw new RuntimeException("index mismatch");
@@ -1280,17 +1301,10 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				// Get the value from the array of values.
 				Object value = defaultValues[indexIntoDefaultValues++];
 				
-				if (value != null) {
-					if (scalarAccessor.getClassOfValueObject().isPrimitive()
-							|| scalarAccessor.getClassOfValueObject() == String.class
-							|| scalarAccessor.getClassOfValueObject() == Long.class
-							|| scalarAccessor.getClassOfValueObject() == Date.class) {
-						constructorParameters[index] = value;
-					} else {
-						constructorParameters[index] = ((ExtendableObject)value).getObjectKey();
-					}
+				if (value instanceof ExtendableObject) {
+					constructorParameters[index] = ((ExtendableObject)value).getObjectKey();
 				} else { 
-					constructorParameters[index] = null;
+					constructorParameters[index] = value;
 				}
 			} else {
 				ListPropertyAccessor listAccessor = (ListPropertyAccessor)propertyAccessor; 
@@ -1339,14 +1353,11 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		constructorParameters[2] = parent.getObjectKey();
 	
 		int indexIntoValues = 0;
-		for (Iterator iter = propertySet.getPropertyIterator3(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next(); 
-			if (propertyAccessor.isScalar()) {
-				if (!propertyAccessor.getPropertySet().isExtension()) {
-					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = values[indexIntoValues];
-				}
-				indexIntoValues++;
+		for (PropertyAccessor propertyAccessor: propertySet.getScalarProperties3()) {
+			if (!propertyAccessor.getPropertySet().isExtension()) {
+				constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = values[indexIntoValues];
 			}
+			indexIntoValues++;
 		}
 			
 		// For all lists, set the Collection object to be a Vector.

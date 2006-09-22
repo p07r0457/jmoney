@@ -83,7 +83,7 @@ public class ObjectKeyCached implements IDatabaseRowKey {
 	}
 
 	public DataManager getSessionManager() {
-		throw new RuntimeException("should only be called for session keys");
+		return sessionManager;
 	}
 
 	/**

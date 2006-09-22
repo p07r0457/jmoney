@@ -28,9 +28,8 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.Iterator;
 
+import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.PropertySet;
 
 /**
  * This class is used to get the list of entries in a given account. Entries are
@@ -45,23 +44,15 @@ import net.sf.jmoney.model2.PropertySet;
 public class AccountEntriesList implements Collection<Entry> {
 	private SessionManager sessionManager;
 	private IDatabaseRowKey keyOfRequiredPropertyValue;
-	private PropertySet propertySet;
 	private String tableName;
 	private String columnName;
 	
-	public AccountEntriesList(SessionManager sessionManager, IDatabaseRowKey keyOfRequiredPropertyValue, PropertyAccessor propertyAccessor) {
+	public AccountEntriesList(SessionManager sessionManager, IDatabaseRowKey keyOfRequiredPropertyValue) {
 		this.sessionManager = sessionManager;
 		this.keyOfRequiredPropertyValue = keyOfRequiredPropertyValue;
 		
-		propertySet = propertyAccessor.getPropertySet();
-		
-		tableName = propertySet.getId().replace('.', '_');
-		
-		if (propertySet.isExtension()) {
-			columnName = propertyAccessor.getName().replace('.', '_');
-		} else {
-			columnName = propertyAccessor.getLocalName();
-		}
+		tableName = EntryInfo.getPropertySet().getId().replace('.', '_');
+		columnName = EntryInfo.getAccountAccessor().getLocalName();
 	}
 	
 	public int size() {
@@ -80,7 +71,16 @@ public class AccountEntriesList implements Collection<Entry> {
 	}
 	
 	public boolean isEmpty() {
-		throw new RuntimeException("method not implemented");
+		try {
+			ResultSet resultSet = sessionManager.getReusableStatement().executeQuery(
+					"SELECT * FROM " + tableName
+					+ " WHERE \"" + columnName + "\" = " + keyOfRequiredPropertyValue.getRowId());
+			boolean hasNext = resultSet.next();
+			return !hasNext;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Exception: " + e.getMessage());
+		}
 	}
 	
 	public boolean contains(Object arg0) {
@@ -96,7 +96,7 @@ public class AccountEntriesList implements Collection<Entry> {
 			ResultSet resultSet = stmt.executeQuery(
 					"SELECT * FROM " + tableName 
 					+ " WHERE \"" + columnName + "\" = " + keyOfRequiredPropertyValue.getRowId());
-			return new UncachedObjectIterator(resultSet, propertySet, null, sessionManager);
+			return new UncachedObjectIterator<Entry>(resultSet, EntryInfo.getPropertySet(), null, sessionManager);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException("internal error");
