@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import junit.framework.TestCase;
-
 import net.sf.jmoney.reconciliation.IBankStatementSource.EntryData;
 
 /**
