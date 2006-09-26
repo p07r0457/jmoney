@@ -22,26 +22,10 @@
 
 package net.sf.jmoney.model2;
 
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.beans.PropertyDescriptor;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * This is the base class for all objects that may have extension
@@ -79,7 +63,7 @@ public abstract class ExtendableObject {
 	 */
 	// TODO: the value of this map should be ExtensionObject, but we need to sort
 	// out the strings that contain properties for unknown property sets.
-	protected Map<PropertySet, Object> extensions = new HashMap<PropertySet, Object>();
+	protected Map<PropertySet, ExtensionObject> extensions = new HashMap<PropertySet, ExtensionObject>();
 	
 	/**
 	 * The key from which this object's parent can be fetched from
@@ -261,11 +245,9 @@ public abstract class ExtendableObject {
 	 * a given plug-in.
 	 */
 	public ExtensionObject getExtension(PropertySet propertySet) {
-		Object extensionObject = extensions.get(propertySet);
+		ExtensionObject extension = extensions.get(propertySet);
 		
-		ExtensionObject extension;
-		
-		if (extensionObject == null) {
+		if (extension == null) {
 			// Extension does not exist.
 			
 			if (alwaysReturnNonNullExtensions) {
@@ -299,6 +281,7 @@ public abstract class ExtendableObject {
 			}
 		} else {
 			// The extension exists.
+/*			
 			// However, it may be in string format.
 			// If the extension is in string format then it must be
 			// converted to the appropriate extension object before
@@ -333,11 +316,12 @@ public abstract class ExtendableObject {
 				extensions.put(propertySet, extension);
 				stringToExtension(extensionString, extension);
 			} else {
+*/			
 				// Extension object is not a string so it must be
 				// an extension object in the de-serialized state.
 				// Return the extension as is.
-				extension = (ExtensionObject)extensionObject;
-			}
+//				extension = (ExtensionObject)extensionObject;
+//			}
 		}
 		
 		return extension;
@@ -473,6 +457,8 @@ public abstract class ExtendableObject {
 	 * in this object for the given property set id.  The results are
 	 * undetermined if the extension already exists.
 	 */
+/*	
+remove this...	
 	protected void importExtensionString(String propertySetId, String extensionString) {
 		// This is a bit of a kludge.  We need to put the object
 		// into editable mode.  This ensures that a request for an
@@ -610,7 +596,7 @@ public abstract class ExtendableObject {
 		 * @exception org.xml.sax.SAXException Any SAX exception, possibly
 		 *            wrapping another exception.
 		 * @see org.xml.sax.ContentHandler#startElement
-		 */
+		 * /
 		public void startElement(String uri, String localName,
 				String qName, Attributes attributes)
 		throws SAXException {
@@ -645,7 +631,7 @@ public abstract class ExtendableObject {
 		 * @exception org.xml.sax.SAXException Any SAX exception, possibly
 		 *            wrapping another exception.
 		 * @see org.xml.sax.ContentHandler#endElement
-		 */
+		 * /
 		public void endElement(String uri, String localName, String qName)
 		throws SAXException {
 			writeMethod = null;
@@ -665,7 +651,7 @@ public abstract class ExtendableObject {
 		 * @exception org.xml.sax.SAXException Any SAX exception, possibly
 		 *            wrapping another exception.
 		 * @see org.xml.sax.ContentHandler#characters
-		 */
+		 * /
 		public void characters(char ch[], int start, int length)
 		throws SAXException {
 			if (writeMethod != null) {
@@ -696,7 +682,7 @@ public abstract class ExtendableObject {
 			}
 		}
 	}
-
+*/
 	/**
 	 * This method is used to enable other classes in the package to
 	 * access protected fields in the extendable objects.

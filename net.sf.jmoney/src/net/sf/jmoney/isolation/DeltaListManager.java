@@ -26,6 +26,7 @@ import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Vector;
 
@@ -49,12 +50,11 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  * in this transaction. These differences are applied to the collection of
  * committed objects returned by the underlying datastore.
  * <P>
- * This class keeps a reference to a ModifiedList object which contains the actual
- * lists of inserted and deleted objects.  All data managers must guarantee that only
- * a single instance of the same object is returned, and as DeltaListManager objects
- * are held by extendable objects, we can be sure that only a single instance of this
- * object will exist for a given list.  Furthermore, all updates are made through this
- * object, so if a ModifiedList object is created, this object will know about it.
+ * This class keeps lists of inserted and deleted objects. It is ok for this
+ * object to maintain these lists because all data managers must guarantee that
+ * only a single instance of the same object is returned, and as
+ * DeltaListManager objects are held by extendable objects, we can be sure that
+ * only a single instance of this object will exist for a given list.
  * 
  * @author Nigel Westbury
  */
@@ -62,19 +62,24 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 
 	private TransactionManager transactionManager;
 	
-	/**
-	 * Key, containing the parent object and the list accessor, that uniquely
-	 * identifies a list. This key is used to fetch from the transaction manager
-	 * the object (if any) that contains the modifications that have been made
-	 * to the list.
-	 */
-	private ModifiedListKey<E> modifiedListKey;
+	IObjectKey parentKey;
+
+	ListPropertyAccessor<E> listAccessor;
 
 	/**
 	 * The modified list.
 	 * Null indicates no modification yet to this list.
 	 */
-	private ModifiedList<E> modifiedList = null;
+	/**
+	 * The uncommitted versions of the objects that have been added
+	 */
+	LinkedList<E> addedObjects = new LinkedList<E>();
+	
+	/**
+	 * The keys to the committed versions of the objects that have been deleted
+	 */
+	LinkedList<IObjectKey> deletedObjects = new LinkedList<IObjectKey>();
+	
 
 	/**
 	 * The committed list, set by the constructor
@@ -88,7 +93,8 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	 */
 	public DeltaListManager(TransactionManager transactionManager, ExtendableObject committedParent, ListPropertyAccessor<E> listProperty) {
 		this.transactionManager = transactionManager;
-		this.modifiedListKey = new ModifiedListKey<E>(committedParent.getObjectKey(), listProperty);
+		this.parentKey = committedParent.getObjectKey();
+		this.listAccessor = listProperty;
 		this.committedList = committedParent.getListPropertyValue(listProperty);
 	}
 
@@ -132,12 +138,14 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		F extendableObject = propertySet.constructDefaultImplementationObject(constructorParameters);
 		
 		objectKey.setObject(extendableObject);
-
-		if (modifiedList == null) {
-			modifiedList = new ModifiedList<E>();
-			transactionManager.putModifiedList(modifiedListKey, modifiedList);
-		}
-		modifiedList.add(extendableObject);
+		
+		addedObjects.add(extendableObject);
+		
+		/*
+		 * Ensure this list is in the list of lists that have been
+		 * modified within this transaction manager.
+		 */
+		transactionManager.modifiedLists.add(this);
 		
 		return extendableObject;
 	}
@@ -216,11 +224,13 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		
 		objectKey.setObject(extendableObject);
 
-		if (modifiedList == null) {
-			modifiedList = new ModifiedList<E>();
-			transactionManager.putModifiedList(modifiedListKey, modifiedList);
-		}
-		modifiedList.add(extendableObject);
+		addedObjects.add(extendableObject);
+		
+		/*
+		 * Ensure this list is in the list of lists that have been
+		 * modified within this transaction manager.
+		 */
+		transactionManager.modifiedLists.add(this);
 		
 		return extendableObject;
 	}
@@ -229,39 +239,31 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		// This method is called, for example when getting the number of entries
 		// in a transaction.
 		
-		int committedCount = committedList.size();
-
-		if (modifiedList == null) {
-			return committedCount; 
-		} else {
-			return committedCount + modifiedList.addedObjects.size() - modifiedList.deletedObjects.size();
-		}
+		return committedList.size()
+			+ addedObjects.size() 
+			- deletedObjects.size(); 
 	}
 
 	public Iterator<E> iterator() {
 		Iterator<E> committedListIterator = committedList.iterator();
 
-		if (modifiedList == null) {
-			// We cannot simply return committedListIterator because
-			// that returns materializations of the objects that are outside
-			// of the transaction.  We must return objects that are versions
-			// inside the transaction.
-			return new DeltaListIterator<E>(transactionManager, committedListIterator, new Vector<E>(), new Vector<IObjectKey>());
-		} else {
-			return new DeltaListIterator<E>(transactionManager, committedListIterator, modifiedList.addedObjects, modifiedList.deletedObjects);
-		}
+		/*
+		 * Even if there were no changes to the list, we cannot simply return
+		 * committedListIterator because that returns materializations of the
+		 * objects that are outside of the transaction. We must return objects
+		 * that are versions inside the transaction.
+		 */
+		return new DeltaListIterator<E>(transactionManager, committedListIterator, addedObjects, deletedObjects);
 	}
 
 	public boolean contains(Object object) {
 		IObjectKey committedObjectKey = ((UncommittedObjectKey)((ExtendableObject)object).getObjectKey()).getCommittedObjectKey();
 
-		if (modifiedList != null) {
-			if (modifiedList.addedObjects.contains(object)) {
+		if (addedObjects.contains(object)) {
 				return true; 
-			} else if (modifiedList.deletedObjects.contains(committedObjectKey)) {
+			} else if (deletedObjects.contains(committedObjectKey)) {
 				return false;
 			}
-		}
 		
 		// The object has neither been added or removed by us, so
 		// pass the request on the the underlying datastore.
@@ -270,13 +272,32 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 
 	public boolean remove(Object object) {
 		ExtendableObject extendableObject = (ExtendableObject)object;
-		if (modifiedList == null) {
-			modifiedList = new ModifiedList<E>();
-			transactionManager.putModifiedList(modifiedListKey, modifiedList);
+
+		boolean isRemoved;
+		
+		UncommittedObjectKey uncommittedKey = (UncommittedObjectKey)extendableObject.getObjectKey();
+		if (uncommittedKey.isNewObject()) {
+			isRemoved = addedObjects.remove(extendableObject);
+		} else {
+			if (deletedObjects.contains(uncommittedKey.getCommittedObjectKey())) {
+				isRemoved = false;
+			} else {
+			deletedObjects.add(uncommittedKey.getCommittedObjectKey());
+			
+			// TODO: following return value may not be correct.
+			// However, it is expensive to see if the object
+			// exists in the original list, so assume it does.
+			isRemoved = true;
+			}
 		}
-		boolean isRemoved = modifiedList.delete(extendableObject);
+		
 		
 		if (isRemoved) {
+			/* Ensure this object is in the transaction manager's
+			list of lists that have changes
+			*/
+			transactionManager.modifiedLists.add(this);
+			
 			IObjectKey committedObjectKey = ((UncommittedObjectKey)extendableObject.getObjectKey()).getCommittedObjectKey();
 			ModifiedObject modifiedObject = transactionManager.modifiedObjects.get(committedObjectKey);
 			if (modifiedObject == null) {
@@ -287,5 +308,27 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		}
 		
 		return isRemoved;
+	}
+
+	/**
+	 * Return the collection of objects in the list that do not exist in the
+	 * committed datastore but which are being added by this transaction.
+	 * 
+	 * @return collection of elements of type ExtendableObject, being the
+	 *         uncommitted versions of the objects being added
+	 */
+	Collection<E> getAddedObjects() {
+		return addedObjects;
+	}
+
+	/**
+	 * Return the collection of objects in the list that exist in the committed
+	 * datastore but which are being deleted by this transaction.
+	 * 
+	 * @return a collection of elements of type IObjectKey, being the committed
+	 *         keys of the objects being deleted
+	 */
+	Collection<IObjectKey> getDeletedObjects() {
+		return deletedObjects;
 	}
 }

@@ -23,10 +23,15 @@
 package net.sf.jmoney.isolation;
 
 import java.util.AbstractCollection;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -119,14 +124,11 @@ public class TransactionManager extends DataManager {
 	/**
 	 * Every list that has been modified by this transaction manager
 	 * (objects added to the list or objects removed from the list)
-	 * will have an entry in this map.
-	 * <P>
-	 * Given a parent object and a property accessor for
-	 * a list property, we can look up an object that contains
-	 * the list of objects added to and objects removed from
-	 * that list. 
+	 * will have an entry in this set.  This enables the transaction
+	 * manager to easily find the added and deleted objects when committing
+	 * the changes.
 	 */
-	Map<ModifiedListKey, ModifiedList> modifiedLists = new HashMap<ModifiedListKey, ModifiedList>();
+	Set<DeltaListManager> modifiedLists = new HashSet<DeltaListManager>();
 
 	/**
 	 * true if a nested transaction is in the process of applying its
@@ -433,11 +435,8 @@ public class TransactionManager extends DataManager {
 		// new objects to null because the other new object may
 		// not have yet been added to the database and thus no
 		// reference can be set to the other object.
-		for (Map.Entry<ModifiedListKey, ModifiedList> mapEntry: modifiedLists.entrySet()) {
-			ModifiedListKey<?> modifiedListKey = mapEntry.getKey();
-			ModifiedList<?> modifiedList = mapEntry.getValue();
-
-			commitObjectsInList(modifiedListKey, modifiedList);
+		for (DeltaListManager<?> modifiedList: modifiedLists) {
+			commitObjectsInList(modifiedList);
 		}
 
 		// Update all the updated objects
@@ -571,14 +570,12 @@ public class TransactionManager extends DataManager {
 		/*
 		 * Step 2: Delete the deleted objects
 		 */
-		for (Map.Entry<ModifiedListKey, ModifiedList> mapEntry: modifiedLists.entrySet()) {
-			ModifiedListKey<?> modifiedListKey = mapEntry.getKey();
-			ModifiedList<?> modifiedList = mapEntry.getValue();
+		for (DeltaListManager<?> modifiedList: modifiedLists) {
 
-			ExtendableObject parent = modifiedListKey.parentKey.getObject();
+			ExtendableObject parent = modifiedList.parentKey.getObject();
 			
 			for (IObjectKey objectToDelete: modifiedList.getDeletedObjects()) {
-				parent.getListPropertyValue(modifiedListKey.listAccessor).remove(objectToDelete.getObject());
+				parent.getListPropertyValue(modifiedList.listAccessor).remove(objectToDelete.getObject());
 			}
 		}
 		
@@ -588,6 +585,10 @@ public class TransactionManager extends DataManager {
 		// delta between the datastore and the uncommitted view.
 		// Now that the changes have been committed, these changes
 		// must be cleared.
+		for (DeltaListManager<?> modifiedList: modifiedLists) {
+			modifiedList.addedObjects.clear();
+			modifiedList.deletedObjects.clear();
+		}
 		modifiedLists.clear();
 		modifiedObjects.clear();
 	}
@@ -681,16 +682,15 @@ public class TransactionManager extends DataManager {
 		}
 	}
 
-	private <E extends ExtendableObject> void commitObjectsInList(ModifiedListKey<E> modifiedListKey, ModifiedList<?> untypedModifiedList) {
+	private <E extends ExtendableObject> void commitObjectsInList(DeltaListManager<E> modifiedList) {
 //		ModifiedList<E> modifiedList = (ModifiedList<E>)untypedModifiedList;
-		ModifiedList<?> modifiedList = untypedModifiedList;
 		
-		ExtendableObject parent = modifiedListKey.parentKey.getObject();
+		ExtendableObject parent = modifiedList.parentKey.getObject();
 		
 		for (ExtendableObject newUntypedObject: modifiedList.getAddedObjects()) {
-			E newObject = modifiedListKey.listAccessor.getValueClass().cast(newUntypedObject);
+			E newObject = modifiedList.listAccessor.getValueClass().cast(newUntypedObject);
 
-			final ExtendableObject newCommittedObject = commitNewObject(newObject, parent, modifiedListKey.listAccessor, false);
+			final ExtendableObject newCommittedObject = commitNewObject(newObject, parent, modifiedList.listAccessor, false);
 
 			// Fire the event.
 			// Note that this must be done after the committed object is set above.  This allows
@@ -754,10 +754,11 @@ public class TransactionManager extends DataManager {
 		return modifiedList;
 	}
 */
-	public <E extends ExtendableObject> void putModifiedList(ModifiedListKey<E> key, ModifiedList<E> list) {
+/*	
+	public <E extends ExtendableObject> void putModifiedList(ModifiedListKey<E> key, DeltaListManager<E> list) {
 		modifiedLists.put(key, list);
 	}
-
+*/
 	/**
 	 * Given a list property in an object, get the object that maintains the
 	 * changes that have been made to that list within a transaction. The
@@ -812,12 +813,10 @@ public class TransactionManager extends DataManager {
 			Vector<IObjectKey> removedEntries = new Vector<IObjectKey>();
 			
 			// Process all the new objects added within this transaction
-			for (Map.Entry<ModifiedListKey, ModifiedList> mapEntry: modifiedLists.entrySet()) {
-				ModifiedListKey modifiedListKey = mapEntry.getKey();
-				ModifiedList<?> modifiedList = mapEntry.getValue();
+			for (DeltaListManager<?> modifiedList: modifiedLists) {
 				
 				// Find all entries added to existing transactions
-				if (modifiedListKey.listAccessor == TransactionInfo.getEntriesAccessor()) {
+				if (modifiedList.listAccessor == TransactionInfo.getEntriesAccessor()) {
 					for (ExtendableObject newObject: modifiedList.getAddedObjects()) {
 						Entry newEntry = (Entry)newObject;
 						if (account.equals(newEntry.getAccount())) {
@@ -827,7 +826,7 @@ public class TransactionManager extends DataManager {
 				}
 
 				// Find all entries in new transactions.
-				if (modifiedListKey.listAccessor == SessionInfo.getTransactionsAccessor()) {
+				if (modifiedList.listAccessor == SessionInfo.getTransactionsAccessor()) {
 					for (ExtendableObject newObject: modifiedList.getAddedObjects()) {
 						Transaction newTransaction = (Transaction)newObject;
 						for (Entry newEntry: newTransaction.getEntryCollection()) {

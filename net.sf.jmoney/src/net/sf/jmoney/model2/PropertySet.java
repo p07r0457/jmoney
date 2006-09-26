@@ -63,19 +63,15 @@ import org.eclipse.swt.graphics.Image;
  * 
  * @see <a href="propertySets.html">Property Set Documentation</a>
  * @see <a href="extendingDatamodel.html#propertySets">Property Set Documentation</a>
- * @author Nigel Westbury
-*/
-
-//TODO: do we really need the info to be kept here at all????
-
-/**
  * @param E the type of the implementation object, which must be
  * 		either an ExtendableObject or an ExtensionObject 
- */
+ * @author Nigel Westbury
+*/
 public class PropertySet<E> {
 	
 	private String propertySetId;
-	private IPropertySetInfo propertySetInfo;
+	
+	private Class<E> classOfObject;
 	
 	private Vector<PropertyAccessor> properties = new Vector<PropertyAccessor>();
 
@@ -112,7 +108,7 @@ public class PropertySet<E> {
 	// because plugins have no need for it and can cause chaos if
 	// they alter it.  However it is useful for use inside the
 	// package.
-	private ExtensionObject defaultExtension;  // defined only if an extension property set
+	private E defaultExtension;  // defined only if an extension property set
 
 	/**
 	 * true if further property sets must be derived from this property set,
@@ -147,7 +143,7 @@ public class PropertySet<E> {
 	PropertySet<? super E> basePropertySet;
 	
 	// Valid for extension property sets only
-	PropertySet<E> extendablePropertySet;	
+	PropertySet<?> extendablePropertySet;	
 
 	// Valid for extendable property sets only
 	/**
@@ -333,93 +329,16 @@ public class PropertySet<E> {
 	}
 	
 	
-	private PropertySet(String propertySetId, boolean isExtension, String baseOrExtendablePropertySetId, IPropertySetInfo propertySetInfo) {
+	private PropertySet(String propertySetId, boolean isExtension, String baseOrExtendablePropertySetId, Class<E> classOfObject) {
 		this.propertySetId = propertySetId;
-		this.propertySetInfo  = propertySetInfo;
 		this.isExtension = isExtension;
 		this.baseOrExtendablePropertySetId = baseOrExtendablePropertySetId;
-		
+		this.classOfObject = classOfObject;
+
 		derivable = false;
 		objectDescription = null;
 		iconFileName = null;
-		
-		// propertySetInfo will be null if data is found in the datastore
-		// but no plug-in exists for the data.  This can happen if a plug-in
-		// creates an additional set of properties and puts data into those
-		// properties.  The data is saved to the datastore but the plug-in
-		// is then un-installed.  For time being, just bypass
-		// this code.
-		// TODO: implement and test this scenario.
-		if (propertySetInfo != null) {
-			// Set up the list of properties.
-			// This is done by calling the registerExtensionProperties
-			// method of the supplied interface.  We must pass an
-			// IPropertyRegistrar implementation.  registerExtensionProperties
-			// will call back into this interface to register each
-			// property.
-			
-			
-			propertySetInfo.registerProperties(
-					new IPropertyRegistrar() {
 
-						public <E2 extends Object> PropertySet<E2> addPropertySet(Class<E2> classOfImplementationObject) {
-							return (PropertySet<E2>)PropertySet.this;
-						}
-						
-						public EnumerationAccessor addEnumeratedValue(PropertyAccessor propertyAccessor, String internalName, String displayName) {
-							// TODO Auto-generated method stub
-							return null;
-						}
-						
-						public EnumerationAccessor addEnumeratedValue(PropertyAccessor propertyAccessor, String internalName, String displayName, Class derivedClass) {
-							// TODO Auto-generated method stub
-							return null;
-						}
-						
-//						public void addProperty(PropertyAccessor_Scalar accessor) {
-//							properties.add(accessor);
-//						}
-						public <V> ScalarPropertyAccessor<V> addProperty(String name, String displayName, Class<V> classOfValue, int weight, int minimumWidth, IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency propertyDependency) {
-							if (propertyControlFactory == null) {
-								throw new MalformedPluginException(
-										"No IPropertyControlFactory object has been specified for property " + name
-										+ ".  This is needed even if the property is not editable.  (Though the method that gets the" +
-												" control may return null if the property is not editable).");
-							}
-							
-							ScalarPropertyAccessor<V> accessor = new ScalarPropertyAccessor<V>(classOfValue, PropertySet.this, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency);
-							properties.add(accessor);
-							return accessor;
-						}
-
-						public <E2 extends ExtendableObject> ListPropertyAccessor<E2> addPropertyList(String name, String displayName, Class<E2> listItemClass, IPropertyDependency propertyDependency) {
-							ListPropertyAccessor<E2> accessor = new ListPropertyAccessor<E2>(PropertySet.this, name, displayName, listItemClass, propertyDependency);
-							properties.add(accessor);
-							return accessor;
-						}
-						
-						public PropertyAccessor setDerivableInfo(String name, String displayName) {
-							derivable = true;
-							// TODO Auto-generated method stub
-							return null;
-						}
-						
-						public PropertyAccessor setDerivableInfo() {
-							derivable = true;
-							return null;
-						}
-
-						public void setObjectDescription(String description) {
-							objectDescription = description;
-						}
-
-						public void setIcon(String iconFileName) {
-							PropertySet.this.iconFileName = iconFileName;
-						}
-					}
-			);
-		}
-		
 		// Add to our map that maps ids to PropertySet objects.
 		if (allPropertySetsMap.containsKey(propertySetId)) {
 			throw new MalformedPluginException("More than one property set has an id of " + propertySetId);
@@ -439,11 +358,10 @@ public class PropertySet<E> {
 		 * property set for that object.
 		 */
 		if (!isExtension && !derivable) {
-			Class implementationClass = propertySetInfo.getImplementationClass();
-			if (classToPropertySetMap.containsKey(implementationClass)) {
-				throw new MalformedPluginException("More than one property set uses " + implementationClass + " as the Java implementation class.");
+			if (classToPropertySetMap.containsKey(classOfObject)) {
+				throw new MalformedPluginException("More than one property set uses " + classOfObject + " as the Java implementation class.");
 			}
-			classToPropertySetMap.put(implementationClass, this);
+			classToPropertySetMap.put(classOfObject, this);
 
 			pageExtensions = new Vector<PageEntry>();
 		}
@@ -484,7 +402,7 @@ public class PropertySet<E> {
 			}
 			
 		} else {
-			extendablePropertySet = (PropertySet)allPropertySetsMap.get(baseOrExtendablePropertySetId);
+			extendablePropertySet = allPropertySetsMap.get(baseOrExtendablePropertySetId);
 			if (extendablePropertySet == null) {
 				throw new MalformedPluginException("No extendable property set with an id of " + baseOrExtendablePropertySetId + " exists.");
 			}
@@ -500,21 +418,13 @@ public class PropertySet<E> {
 			extendablePropertySet.extensionPropertySets.put(propertySetId, this);
 
 			// Set up the extension that contains the default property values.
-			if (propertySetInfo != null) {
-				try {
-					if (propertySetInfo.getImplementationClass() != null) {
-						defaultExtension = (ExtensionObject)
-						propertySetInfo.getImplementationClass().newInstance();
-						// TODO: plugin error if null is returned
-					}
-				} catch (Exception e) {
-					// TODO: deal with this error
-					// Plug-in error if no default constructor.
-					e.printStackTrace();
-					throw new RuntimeException();
-				}
-			} else {
-				defaultExtension = null;
+			try {
+				defaultExtension = classOfObject.newInstance();
+			} catch (Exception e) {
+				// TODO: deal with this error
+				// Plug-in error if no default constructor.
+				e.printStackTrace();
+				throw new RuntimeException();
 			}
 		}
 		
@@ -691,7 +601,7 @@ public class PropertySet<E> {
 				
 				try {
 					implementationClassConstructor =
-						propertySetInfo.getImplementationClass().getConstructor(parameters);
+						classOfObject.getConstructor(parameters);
 				} catch (SecurityException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -703,7 +613,7 @@ public class PropertySet<E> {
 						}
 						parameterText = parameterText + parameters[paramIndex].getName();
 					}
-					throw new MalformedPluginException("The " + propertySetInfo.getImplementationClass().getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
+					throw new MalformedPluginException("The " + classOfObject.getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
 				}
 			}
 			
@@ -741,7 +651,7 @@ public class PropertySet<E> {
 				
 				try {
 					defaultImplementationClassConstructor =
-						propertySetInfo.getImplementationClass().getConstructor(parameters);
+						classOfObject.getConstructor(parameters);
 				} catch (SecurityException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -753,7 +663,7 @@ public class PropertySet<E> {
 						}
 						parameterText = parameterText + parameters[paramIndex].getName();
 					}
-					throw new MalformedPluginException("The " + propertySetInfo.getImplementationClass().getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
+					throw new MalformedPluginException("The " + classOfObject.getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
 				}
 			}
 			
@@ -763,7 +673,7 @@ public class PropertySet<E> {
 			
 			try {
 				theDefaultPropertiesMethod =
-					propertySetInfo.getImplementationClass().getDeclaredMethod("getDefaultProperties", parameters);
+					classOfObject.getDeclaredMethod("getDefaultProperties", parameters);
 			} catch (SecurityException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -779,18 +689,18 @@ public class PropertySet<E> {
 						parameterText = parameterText + parameters[paramIndex].getName();
 					}
 				}
-				throw new MalformedPluginException("The " + propertySetInfo.getImplementationClass().getName() + " class must have a 'getDefaultProperties' method that takes parameters of types (" + parameterText + ").");
+				throw new MalformedPluginException("The " + classOfObject.getName() + " class must have a 'getDefaultProperties' method that takes parameters of types (" + parameterText + ").");
 			}
 			
 			// The '8' bit indicates that the method is static.
 			if ((theDefaultPropertiesMethod.getModifiers() & 8) != 8) {
-				throw new MalformedPluginException("The 'getDefaultProperties' method in " + propertySetInfo.getImplementationClass().getName() + " class must be static.");
+				throw new MalformedPluginException("The 'getDefaultProperties' method in " + classOfObject.getName() + " class must be static.");
 			}
 			
 			// The '1' bit indicates that the method is public.
 			// (2 is private, 4 is protected, 1,2 & 4 bits off is default).
 			if ((theDefaultPropertiesMethod.getModifiers() & 7) != 1) {
-				throw new MalformedPluginException("The 'getDefaultProperties' method in " + propertySetInfo.getImplementationClass().getName() + " class must be public.");
+				throw new MalformedPluginException("The 'getDefaultProperties' method in " + classOfObject.getName() + " class must be public.");
 			}
 		} else {
 			// No default properties method is required for derived property sets
@@ -853,12 +763,82 @@ public class PropertySet<E> {
 	 * @param propertySetInfo Null if property set data is found in
 	 * 			the datastore but no plug-in defined a property set
 	 * 			with this id. 
+	 * @param class1 
 	 * @return
 	 */
-	static private void registerExtendablePropertySet(String propertySetId, String basePropertySetId, IPropertySetInfo propertySetInfo) {
-		// Objects of this class self-register, so we need
-		// only construct the object.
-		new PropertySet(propertySetId, false, basePropertySetId, propertySetInfo);
+	static private void registerExtendablePropertySet(final String propertySetId, final String basePropertySetId, IPropertySetInfo propertySetInfo) {
+		
+		// Set up the list of properties.
+		// This is done by calling the registerExtensionProperties
+		// method of the supplied interface.  We must pass an
+		// IPropertyRegistrar implementation.  registerExtensionProperties
+		// will call back into this interface to register each
+		// property.
+		propertySetInfo.registerProperties(
+				new IPropertyRegistrar() {
+
+					PropertySet<?> propertySet = null;
+					
+					public <E extends Object> PropertySet<E> addPropertySet(Class<E> classOfImplementationObject) {
+						// Objects of this class self-register, so we need
+						// only construct the object.
+						PropertySet<E> propertySet = new PropertySet<E>(propertySetId, false, basePropertySetId, classOfImplementationObject);
+						this.propertySet = propertySet;
+						return propertySet;
+					}
+
+					public EnumerationAccessor addEnumeratedValue(PropertyAccessor propertyAccessor, String internalName, String displayName) {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public EnumerationAccessor addEnumeratedValue(PropertyAccessor propertyAccessor, String internalName, String displayName, Class derivedClass) {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+//					public void addProperty(PropertyAccessor_Scalar accessor) {
+//					properties.add(accessor);
+//					}
+					public <V> ScalarPropertyAccessor<V> addProperty(String name, String displayName, Class<V> classOfValue, int weight, int minimumWidth, IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency propertyDependency) {
+						if (propertyControlFactory == null) {
+							throw new MalformedPluginException(
+									"No IPropertyControlFactory object has been specified for property " + name
+									+ ".  This is needed even if the property is not editable.  (Though the method that gets the" +
+							" control may return null if the property is not editable).");
+						}
+
+						ScalarPropertyAccessor<V> accessor = new ScalarPropertyAccessor<V>(classOfValue, propertySet, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency);
+						propertySet.properties.add(accessor);
+						return accessor;
+					}
+
+					public <E2 extends ExtendableObject> ListPropertyAccessor<E2> addPropertyList(String name, String displayName, Class<E2> listItemClass, IPropertyDependency propertyDependency) {
+						ListPropertyAccessor<E2> accessor = new ListPropertyAccessor<E2>(propertySet, name, displayName, listItemClass, propertyDependency);
+						propertySet.properties.add(accessor);
+						return accessor;
+					}
+
+					public PropertyAccessor setDerivableInfo(String name, String displayName) {
+						propertySet.derivable = true;
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public PropertyAccessor setDerivableInfo() {
+						propertySet.derivable = true;
+						return null;
+					}
+
+					public void setObjectDescription(String description) {
+						propertySet.objectDescription = description;
+					}
+
+					public void setIcon(String iconFileName) {
+						propertySet.iconFileName = iconFileName;
+					}
+				}
+		);
 	}
 	
 	/**
@@ -869,10 +849,78 @@ public class PropertySet<E> {
 	 * 			with this id. 
 	 * @return
 	 */
-	static private void registerExtensionPropertySet(String propertySetId, String extendablePropertySetId, IPropertySetInfo propertySetInfo) {
-		// Objects of this class self-register, so we need
-		// only construct the object.
-		new PropertySet(propertySetId, true, extendablePropertySetId, propertySetInfo);
+	static private void registerExtensionPropertySet(final String propertySetId, final String extendablePropertySetId, IPropertySetInfo propertySetInfo) {
+		// Set up the list of properties.
+		// This is done by calling the registerExtensionProperties
+		// method of the supplied interface.  We must pass an
+		// IPropertyRegistrar implementation.  registerExtensionProperties
+		// will call back into this interface to register each
+		// property.
+		propertySetInfo.registerProperties(
+				new IPropertyRegistrar() {
+
+					PropertySet<?> propertySet = null;
+					
+					public <E2 extends Object> PropertySet<E2> addPropertySet(Class<E2> classOfObject) {
+						// Objects of this class self-register, so we need
+						// only construct the object.
+						PropertySet<E2> propertySet = new PropertySet<E2>(propertySetId, true, extendablePropertySetId, classOfObject);
+						this.propertySet = propertySet;
+						return propertySet;
+					}
+
+					public EnumerationAccessor addEnumeratedValue(PropertyAccessor propertyAccessor, String internalName, String displayName) {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public EnumerationAccessor addEnumeratedValue(PropertyAccessor propertyAccessor, String internalName, String displayName, Class derivedClass) {
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+//					public void addProperty(PropertyAccessor_Scalar accessor) {
+//					properties.add(accessor);
+//					}
+					public <V> ScalarPropertyAccessor<V> addProperty(String name, String displayName, Class<V> classOfValue, int weight, int minimumWidth, IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency propertyDependency) {
+						if (propertyControlFactory == null) {
+							throw new MalformedPluginException(
+									"No IPropertyControlFactory object has been specified for property " + name
+									+ ".  This is needed even if the property is not editable.  (Though the method that gets the" +
+							" control may return null if the property is not editable).");
+						}
+
+						ScalarPropertyAccessor<V> accessor = new ScalarPropertyAccessor<V>(classOfValue, propertySet, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency);
+						propertySet.properties.add(accessor);
+						return accessor;
+					}
+
+					public <E2 extends ExtendableObject> ListPropertyAccessor<E2> addPropertyList(String name, String displayName, Class<E2> listItemClass, IPropertyDependency propertyDependency) {
+						ListPropertyAccessor<E2> accessor = new ListPropertyAccessor<E2>(propertySet, name, displayName, listItemClass, propertyDependency);
+						propertySet.properties.add(accessor);
+						return accessor;
+					}
+
+					public PropertyAccessor setDerivableInfo(String name, String displayName) {
+						propertySet.derivable = true;
+						// TODO Auto-generated method stub
+						return null;
+					}
+
+					public PropertyAccessor setDerivableInfo() {
+						propertySet.derivable = true;
+						return null;
+					}
+
+					public void setObjectDescription(String description) {
+						propertySet.objectDescription = description;
+					}
+
+					public void setIcon(String iconFileName) {
+						propertySet.iconFileName = iconFileName;
+					}
+				}
+		);
 	}
 	
 	/**
@@ -883,7 +931,7 @@ public class PropertySet<E> {
 	 * (not an error from the user's perspective).
 	 */
 	static public PropertySet getPropertySet(String propertySetId) throws PropertySetNotFoundException {
-		PropertySet propertySet = (PropertySet)allPropertySetsMap.get(propertySetId);
+		PropertySet propertySet = allPropertySetsMap.get(propertySetId);
 		if (propertySet == null) {
 			throw new PropertySetNotFoundException(propertySetId);
 		}
@@ -938,6 +986,7 @@ public class PropertySet<E> {
 	 * we create one.  However there will be no class or informatation
 	 * available about the property set.
 	 */
+/*	
 	static public PropertySet getPropertySetCreatingIfNecessary(String propertySetId, String extendablePropertySetId) {
 		PropertySet extendablePropertySet = (PropertySet)allPropertySetsMap.get(extendablePropertySetId);
 		if (extendablePropertySet == null) {
@@ -952,7 +1001,7 @@ public class PropertySet<E> {
 		}
 		return key;
 	}
-	
+*/	
 	public String toString() {
 		return propertySetId;
 	}
@@ -963,29 +1012,6 @@ public class PropertySet<E> {
 	 */
 	public String getId() {
 		return propertySetId;
-	}
-	
-	/**
-	 * Indicates if the plug-in that had created these properties
-	 * is installed.
-	 * <P>
-	 * The datastore may contain data in properties that had 
-	 * been added by a plug-in but that plug-in may not be installed.
-	 * The plug-in may have been un-installed since the data was
-	 * entered, or the files containing the accounting data may
-	 * have been copied to another computer which does not have
-	 * the plug-in installed.  
-	 * <P>
-	 * JMoney does not drop the data in such circumstances.
-	 * The data is maintained, even though it cannot be
-	 * processed except in a very generic way.
-	 * 
-	 * @see doc on data without plug-in
-	 * @return
-	 */
-	// TODO: more work needed in this area
-	public boolean isExtensionClassKnown() {
-		return propertySetInfo != null;
 	}
 	
 	/**
@@ -1004,7 +1030,7 @@ public class PropertySet<E> {
 	 * @return the implementation class
 	 */
 	public Class getImplementationClass() {
-		return propertySetInfo.getImplementationClass();
+		return classOfObject;
 	}
 	
 	/**
@@ -1041,7 +1067,7 @@ public class PropertySet<E> {
 	/**
 	 * @return
 	 */
-	public ExtensionObject getDefaultPropertyValues() {
+	public E getDefaultPropertyValues() {
 		return defaultExtension;
 	}
 	
