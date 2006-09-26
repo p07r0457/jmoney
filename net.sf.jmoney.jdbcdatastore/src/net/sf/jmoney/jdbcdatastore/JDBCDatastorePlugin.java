@@ -301,7 +301,8 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		
 		/*
 		 * Create the single row in the session table, if it does not
-		 * already exist. 
+		 * already exist.  Create this row with default values for
+		 * the session properties. 
 		 */
 		String sql = "SELECT * FROM " 
 			+ SessionInfo.getPropertySet().getId().replace('.', '_');
@@ -324,12 +325,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					columnName = propertyAccessor.getLocalName();
 				}
 
-				// Get the value from the passed property value array.
-				// TODO: This next line needs a bit of work.
-				// For time being, as the only property here is the default currency,
-				// just use null
-//				Object value = propertyAccessor.getPropertySet().getDefaultPropertyValues2()[propertyAccessor.getIndexIntoConstructorParameters()];
-				Object value = null;
+				Object value = propertyAccessor.getDefaultValue();
 				
 				columnNames += separator + "\"" + columnName + "\"";
 				columnValues += separator + valueToSQLText(value);

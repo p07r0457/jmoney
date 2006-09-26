@@ -72,6 +72,11 @@ public class StatusControlFactory implements IPropertyControlFactory<Integer> {
         return shortStatusText[status];
     }
 
+	public Integer getDefaultValue() {
+		// By default, unreconciled
+		return ReconciliationEntry.UNCLEARED;
+	}
+
 	public boolean isEditable() {
 		return true;
 	}

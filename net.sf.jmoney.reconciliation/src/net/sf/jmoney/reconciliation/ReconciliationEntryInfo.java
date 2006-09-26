@@ -70,6 +70,10 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 				return (value == null) ? "" : value;
 			}
 
+			public String getDefaultValue() {
+				return null;
+			}
+
 			public boolean isEditable() {
 				return false;
 			}
@@ -97,6 +101,11 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 				} else {
 					return statement.toString();
 				}
+			}
+
+			public BankStatement getDefaultValue() {
+				// By default, not on any statement (unreconciled)
+				return null;
 			}
 
 			public boolean isEditable() {
