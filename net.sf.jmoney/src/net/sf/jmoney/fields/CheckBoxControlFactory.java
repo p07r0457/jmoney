@@ -64,6 +64,10 @@ public class CheckBoxControlFactory implements IPropertyControlFactory<Boolean> 
         }
     }
 
+	public Boolean getDefaultValue() {
+		return false;
+	}
+
 	public boolean isEditable() {
 		return true;
 	}

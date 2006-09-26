@@ -61,8 +61,6 @@ public abstract class ExtendableObject {
 	 * property set and then adding that property set to the object class. This
 	 * map will map property sets to the appropriate extension object.
 	 */
-	// TODO: the value of this map should be ExtensionObject, but we need to sort
-	// out the strings that contain properties for unknown property sets.
 	protected Map<PropertySet, ExtensionObject> extensions = new HashMap<PropertySet, ExtensionObject>();
 	
 	/**

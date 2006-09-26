@@ -53,6 +53,10 @@ public class AccountControlFactory<A extends Account> extends PropertyControlFac
         return value == null ? "" : value.getFullAccountName();
     }
 
+	public A getDefaultValue() {
+		return null;
+	}
+
 	public boolean isEditable() {
 		return true;
 	}

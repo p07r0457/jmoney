@@ -9,22 +9,23 @@ import org.eclipse.swt.widgets.Composite;
 
 public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 
-	// Applies only if scalar property
 	private int weight;    
 
-	// Applies only if scalar property
 	private int minimumWidth;    
 
-	// Applies only if scalar property
 	private boolean sortable;
 
-	// Applies only if scalar property
+	/**
+	 * never null
+	 */
 	private IPropertyControlFactory<V> propertyControlFactory;
 
-	// Applies only if scalar property
+	/**
+	 * never null
+	 */
 	private Method theSetMethod;
 
-	// Applies only if scalar property of type ExtendableObject
+	// Applies only if this property is of type ExtendableObject
 	private Field theObjectKeyField;
 
 	/**
@@ -214,10 +215,29 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	}
 
 	/**
+	 * The default value for a property is suitable for uses such
+	 * as:
+	 * 
+	 * - setting the default columnn value in a database
+	 * - providing values when the value is missing from an
+	 * 		XML file
+	 * 
+	 * It is expected that this value is constant (the same value
+	 * is always returned for a given property).  The results will
+	 * be unpredicable if this is not the case.
+	 * 
+	 * @return the default value to use for this property, which may
+	 * 		be null if the property is of a nullable type
+	 */
+	public V getDefaultValue() {
+		return propertyControlFactory.getDefaultValue();
+	}
+	
+	/**
 	 * Indicates whether the property may be edited by the user.
 	 */
 	public boolean isEditable() {
-		return (propertyControlFactory != null && propertyControlFactory.isEditable());
+		return (propertyControlFactory.isEditable());
 	}
 
 	/**

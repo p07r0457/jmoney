@@ -60,6 +60,10 @@ public abstract class AmountControlFactory extends PropertyControlFactory<Long> 
         }
     }
 
+	public Long getDefaultValue() {
+		return 0L;
+	}
+
 	public boolean isEditable() {
 		return true;
 	}

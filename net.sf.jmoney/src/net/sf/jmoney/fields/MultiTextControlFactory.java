@@ -66,6 +66,10 @@ public class MultiTextControlFactory implements IPropertyControlFactory<String> 
         return extendableObject.getPropertyValue(propertyAccessor);
     }
 
+	public String getDefaultValue() {
+		return null;
+	}
+
 	public boolean isEditable() {
 		return true;
 	}

@@ -53,6 +53,10 @@ public class CurrencyControlFactory extends PropertyControlFactory<Currency> {
         return value == null ? "" : value.getCode();
     }
 
+	public Currency getDefaultValue() {
+		return null;
+	}
+
 	public boolean isEditable() {
 		return true;
 	}

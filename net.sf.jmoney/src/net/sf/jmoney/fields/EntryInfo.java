@@ -141,6 +141,10 @@ public class EntryInfo implements IPropertySetInfo {
 		    	return null;
 			}
 
+			public Long getDefaultValue() {
+				return 0L;
+			}
+
 			public boolean isEditable() {
 				return false;
 			}

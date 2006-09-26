@@ -76,6 +76,10 @@ public class CurrencyInfo implements IPropertySetInfo {
 				return null;
 			}
 
+			public Integer getDefaultValue() {
+				return 0;
+			}
+
 			public boolean isEditable() {
 				return false;
 			}

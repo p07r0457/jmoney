@@ -91,6 +91,10 @@ public class DateControlFactory implements IPropertyControlFactory<Date> {
         return fDateFormat.format(value);
     }
 
+	public Date getDefaultValue() {
+		return null;
+	}
+
     public boolean isEditable() {
         return !readOnly;
     }
