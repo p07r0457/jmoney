@@ -978,15 +978,15 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		throws SAXException {
 			
 			// TODO: change this.  Find a constructor from string.
-			if (propertyClass.equals(int.class)) {
+			if (propertyClass.equals(Integer.class)) {
 				value = new Integer(s);
-			} else if (propertyClass.equals(long.class) || propertyClass.equals(Long.class)) {
+			} else if (propertyClass.equals(Long.class)) {
 				value = new Long(s);
 			} else if (propertyClass.equals(String.class)) {
 				value = s;
-			} else if (propertyClass.equals(char.class)) {
+			} else if (propertyClass.equals(Character.class)) {
 				value = new Character(s.charAt(0));
-			} else if (propertyClass.equals(boolean.class)) {
+			} else if (propertyClass.equals(Boolean.class)) {
 				value = new Boolean(s);
 			} else if (propertyClass.equals(Date.class)) {
 				try {

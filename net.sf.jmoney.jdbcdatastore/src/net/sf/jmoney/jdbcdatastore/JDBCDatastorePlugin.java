@@ -491,41 +491,21 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				info.columnName = propertyAccessor.getLocalName();
 			}
 
-			boolean nullable = true;
-			Class valueClass = propertyAccessor.getClassOfValueType();
+			Class valueClass = propertyAccessor.getClassOfValueObject();
 			if (valueClass == Integer.class) {
 				info.columnDefinition = "INT";
-				nullable = true;
-			} else if (valueClass == int.class) {
-				info.columnDefinition = "INT";
-				nullable = false;
 			} if (valueClass == Long.class) {
 				info.columnDefinition = "BIGINT";
-				nullable = true;
-			} else if (valueClass == long.class) {
-				info.columnDefinition = "BIGINT";
-				nullable = false;
 			} else if (valueClass == Character.class) {
 				info.columnDefinition = "CHAR";
-				nullable = true;
-			} else if (valueClass == char.class) {
-				info.columnDefinition = "CHAR";
-				nullable = false;
-			} else if (valueClass == boolean.class) {
-				info.columnDefinition = "BIT";
-				nullable = false;
 			} else if (valueClass == Boolean.class) {
 				info.columnDefinition = "BIT";
-				nullable = true;
 			} else if (valueClass == String.class) {
 				info.columnDefinition = "VARCHAR";
-				nullable = true;
 			} else if (valueClass == Date.class) {
 				info.columnDefinition = "DATE";
-				nullable = true;
 			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
 				info.columnDefinition = "INT";
-				nullable = true;
 
 				// This call does not work.  The method works only when the class
 				// is a class of an actual object and only non-derivable property
@@ -548,7 +528,6 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				// using the String constructor and
 				// the toString method for conversion.
 				info.columnDefinition = "VARCHAR";
-				nullable = true;
 			}
 
 			// If the property is an extension property then we set
@@ -565,7 +544,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 					" DEFAULT " + valueToSQLText(defaultValue);
 			}
 
-			if (nullable) {
+			if (propertyAccessor.isNullAllowed()) {
 				info.columnDefinition += " NULL";
 			} else {
 				info.columnDefinition += " NOT NULL";

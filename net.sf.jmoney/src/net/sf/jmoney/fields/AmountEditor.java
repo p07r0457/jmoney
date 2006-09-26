@@ -164,7 +164,7 @@ public class AmountEditor implements IPropertyControl {
      */
     public void save() {
         String amountString = propertyControl.getText();
-        if (amountString.length() == 0 && amountPropertyAccessor.getClassOfValueObject() == Long.class) {
+        if (amountString.length() == 0 && amountPropertyAccessor.isNullAllowed()) {
             // The text box is empty and the property is Long
             // (not long) thus allowing nulls.  Therefore
             // we set the property value to be null.
