@@ -89,9 +89,14 @@ public class QIFEntryInfo implements IPropertySetInfo {
 				return "'" + extendableObject.getPropertyValue(propertyAccessor).toString() + "'";
 			}
 
+			public Character getDefaultValue() {
+				return ' ';
+			}
+
 			public boolean isEditable() {
 				return false;
-			}};
+			}
+		};
 		
 		reconcilingStateAccessor = propertyRegistrar.addProperty("reconcilingState", "Reconciled", Character.class, 1, 20, stateControlFactory, null);
 		addressAccessor = propertyRegistrar.addProperty("address", "Address", String.class, 3, 30, textControlFactory, null);
