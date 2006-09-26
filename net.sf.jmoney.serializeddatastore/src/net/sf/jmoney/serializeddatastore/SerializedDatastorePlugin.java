@@ -304,10 +304,6 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		// no file format) associated with it.
     	SessionManager sessionManager = new SessionManager(null, null, null);
     	
-    	// Set the initial list of commodities to be the list
-    	// of ISO currencies.
-    	SimpleListManager commodities = new SimpleListManager<Commodity>(sessionManager);
-    	
     	SimpleObjectKey sessionKey = new SimpleObjectKey(sessionManager);
     	
     	// TODO: rather than hard code this constructor, use
@@ -317,7 +313,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
     			sessionKey,
     			null,
 				null,
-				commodities,
+				new SimpleListManager<Commodity>(sessionManager),
 				new SimpleListManager<Account>(sessionManager),
 				new SimpleListManager<Transaction>(sessionManager),
 				null

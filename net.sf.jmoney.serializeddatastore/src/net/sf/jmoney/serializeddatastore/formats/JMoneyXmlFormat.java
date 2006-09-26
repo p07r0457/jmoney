@@ -1492,9 +1492,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		ScalarPropertyAccessor statusProperty = null;
 		try {
 			PropertySet reconciliationProperties = PropertySet.getPropertySet("net.sf.jmoney.reconciliation.entryProperties");
-			if (reconciliationProperties.isExtensionClassKnown()) {
-				statusProperty = (ScalarPropertyAccessor)reconciliationProperties.getProperty("status");
-			}
+			statusProperty = (ScalarPropertyAccessor)reconciliationProperties.getProperty("status");
 		} catch (PropertySetNotFoundException e) {
 			// If the property set is not found then this means
 			// the reconciliation plug-in is not installed.
