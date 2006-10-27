@@ -10,6 +10,7 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -107,11 +108,11 @@ public class CopierPlugin extends AbstractUIPlugin {
     public void populateSession(Session newSession, Session oldSession) {
         Map objectMap = new Hashtable();
         
-        PropertySet propertySet = PropertySet.getPropertySet(oldSession.getClass());
+        ExtendablePropertySet propertySet = PropertySet.getPropertySet(oldSession.getClass());
     	populateObject(propertySet, oldSession, newSession, objectMap);
     }
 
-    private void populateObject(PropertySet<?> propertySet, ExtendableObject oldObject, ExtendableObject newObject, Map objectMap) {
+    private void populateObject(ExtendablePropertySet<?> propertySet, ExtendableObject oldObject, ExtendableObject newObject, Map objectMap) {
     	// For all non-extension properties (including properties
     	// in base classes), read the property value from the
     	// old object and write it to the new object.
@@ -173,9 +174,8 @@ public class CopierPlugin extends AbstractUIPlugin {
     
     private <E extends ExtendableObject> void copyList(ExtendableObject newParent, ExtendableObject oldParent, ListPropertyAccessor<E> listAccessor, Map objectMap) {
 		ObjectCollection<E> newList = newParent.getListPropertyValue(listAccessor);
-		for (Iterator<E> listIter = oldParent.getListPropertyValue(listAccessor).iterator(); listIter.hasNext(); ) {
-			E oldSubObject = listIter.next();
-			PropertySet<? extends E> listElementPropertySet = PropertySet.getPropertySet(oldSubObject.getClass());
+		for (E oldSubObject: oldParent.getListPropertyValue(listAccessor)) {
+			ExtendablePropertySet<? extends E> listElementPropertySet = listAccessor.getElementPropertySet().getActualPropertySet(oldSubObject.getClass());
 			ExtendableObject newSubObject = newList.createNewElement(listElementPropertySet);
 			populateObject(listElementPropertySet, oldSubObject, newSubObject, objectMap);
 		}

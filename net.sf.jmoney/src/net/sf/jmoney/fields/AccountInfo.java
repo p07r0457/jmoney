@@ -24,8 +24,8 @@ package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
@@ -49,29 +49,31 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  */
 public class AccountInfo implements IPropertySetInfo {
 
-	private static PropertySet<Account> propertySet = null;
+	/**
+	 * An instance of this object is created initially for all property sets.
+	 * Other property sets reference this to indicate base or extendable
+	 * property sets, and also the property sets used in lists.
+	 * This enables type safety and also avoids the need to worry about
+	 * the order in which 
+	 */
+	private static ExtendablePropertySet<Account> propertySet = PropertySet.addBasePropertySet(Account.class);
+
 	private static ScalarPropertyAccessor<String> nameAccessor = null;
 
-	public AccountInfo() {
-    }
-
-	public Class getImplementationClass() {
-		return Account.class;
-	}
-
-	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		propertySet = propertyRegistrar.addPropertySet(Account.class);
-		
+	public PropertySet registerProperties() {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		
-		nameAccessor = propertyRegistrar.addProperty("name", JMoneyPlugin.getResourceString("AccountPropertiesPanel.name"), String.class, 5, 100, textControlFactory, null);
-		propertyRegistrar.setDerivableInfo();
+		nameAccessor = propertySet.addProperty("name", JMoneyPlugin.getResourceString("AccountPropertiesPanel.name"), String.class, 5, 100, textControlFactory, null);
+		
+		propertySet.setDerivable();
+		
+		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertySet<Account> getPropertySet() {
+	public static ExtendablePropertySet<Account> getPropertySet() {
 		return propertySet;
 	}
 

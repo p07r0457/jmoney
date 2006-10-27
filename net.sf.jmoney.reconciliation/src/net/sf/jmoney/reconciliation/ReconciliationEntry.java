@@ -124,8 +124,4 @@ public class ReconciliationEntry extends EntryExtension {
 		this.uniqueId = uniqueId;
 		processPropertyChange(ReconciliationEntryInfo.getUniqueIdAccessor(), oldUniqueId, uniqueId);
 	}
-	
-	static public Object [] getDefaultProperties() {
-		return new Object [] { new Integer(UNCLEARED), null, null };
-	}
 }

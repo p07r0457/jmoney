@@ -38,6 +38,7 @@ import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IEntryQueries;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -193,8 +194,8 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * 			cached, a map of integer id values to cached
 	 * 			objects; otherwise null.
 	 */
-	public <E extends ExtendableObject> Map<Integer, E> getMapOfCachedObjects(PropertySet<E> propertySet) {
-		for (PropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
+	public <E extends ExtendableObject> Map<Integer, E> getMapOfCachedObjects(ExtendablePropertySet<E> propertySet) {
+		for (ExtendablePropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
 			Map<Integer, E> result = (Map<Integer, E>)mapOfCachedObjectMaps.get(propertySet2);
 			if (result != null) {
 				return result;
@@ -223,7 +224,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @return
 	 */
 	// TODO: We may not need this method.
-	public ExtendableObject lookupObject(PropertySet<? extends ExtendableObject> propertySet, int id) {
+	public ExtendableObject lookupObject(ExtendablePropertySet<? extends ExtendableObject> propertySet, int id) {
 		Map<Integer, ? extends ExtendableObject> mapOfObjects = getMapOfCachedObjects(propertySet);
 		return mapOfObjects.get(new Integer(id));
 	}

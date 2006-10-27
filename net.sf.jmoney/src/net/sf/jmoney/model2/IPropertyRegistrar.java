@@ -30,7 +30,8 @@ package net.sf.jmoney.model2;
 public interface IPropertyRegistrar {
 	
 	// E may be an ExtendableObject or an ExtensionObject
-	<E extends Object> PropertySet<E> addPropertySet(Class<E> classOfImplementationObject);
+	// TODO: remove implementation of this...
+//	<E extends Object> PropertySet<E> addPropertySet(Class<E> classOfImplementationObject);
 	
 	/**
 	 * Creates an enumerated value.

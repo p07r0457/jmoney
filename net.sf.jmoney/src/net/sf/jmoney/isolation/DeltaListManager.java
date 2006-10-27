@@ -31,6 +31,7 @@ import java.util.Map;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
@@ -107,7 +108,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	 * 'added' list are appended to the items returned by the underlying
 	 * committed list.
 	 */
-	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet) {
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());
@@ -166,7 +167,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	 * object and setting the property values in a single call. That can only be
 	 * done when using a transaction manager.
 	 */
-	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet, Object[] values) {
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, Object[] values) {
 		Collection constructorProperties = propertySet.getConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());
@@ -292,18 +293,29 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		
 		
 		if (isRemoved) {
-			/* Ensure this object is in the transaction manager's
-			list of lists that have changes
-			*/
+			/*
+			 * Ensure this object is in the transaction manager's list of lists
+			 * that have changes.
+			 */
 			transactionManager.modifiedLists.add(this);
 			
+			/*
+			 * Add this object to the map so that it is indicated as having been
+			 * deleted. (But if we are deleting an object that was created in
+			 * this same transaction and has never been committed then we must
+			 * not add to the list).
+			 */
+			// TODO: This code may not be necessary.  It is probably better to flag the object itself
+			// when an object is deleted.
 			IObjectKey committedObjectKey = ((UncommittedObjectKey)extendableObject.getObjectKey()).getCommittedObjectKey();
-			ModifiedObject modifiedObject = transactionManager.modifiedObjects.get(committedObjectKey);
-			if (modifiedObject == null) {
-				modifiedObject = new ModifiedObject();
-				transactionManager.modifiedObjects.put(committedObjectKey, modifiedObject);
+			if (committedObjectKey != null) {
+				ModifiedObject modifiedObject = transactionManager.modifiedObjects.get(committedObjectKey);
+				if (modifiedObject == null) {
+					modifiedObject = new ModifiedObject();
+					transactionManager.modifiedObjects.put(committedObjectKey, modifiedObject);
+				}
+				modifiedObject.setDeleted();
 			}
-			modifiedObject.setDeleted();
 		}
 		
 		return isRemoved;

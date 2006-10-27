@@ -144,11 +144,6 @@ public class Transaction extends ExtendableObject {
         return anotherEntry;
     }
     
-	static public Object [] getDefaultProperties() {
-		// TODO: Check if this is set to the current day.
-		return new Object [] { new Date() };
-	}
-	
     /**
      * This class adds a little tighter typing to ObjectCollection,
      * but it is barely worth while having this class.

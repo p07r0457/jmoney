@@ -114,8 +114,4 @@ public class QIFEntry extends EntryExtension {
 		this.address = address;
 		processPropertyChange(QIFEntryInfo.getAddressAccessor(), oldAddress, address);
 	}
-
-	static public Object [] getDefaultProperties() {
-		return new Object [] { new Character(' '), null };
-	}
 }

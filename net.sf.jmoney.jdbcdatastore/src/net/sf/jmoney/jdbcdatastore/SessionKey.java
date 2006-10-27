@@ -24,7 +24,7 @@ package net.sf.jmoney.jdbcdatastore;
 
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.Session;
 
 /**
@@ -64,7 +64,7 @@ public class SessionKey implements IDatabaseRowKey {
 		return 0;
 	}
 
-	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
+	public void updateProperties(ExtendablePropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
 		// actualPropertySet is always the session property set.
 		JDBCDatastorePlugin.updateProperties(actualPropertySet, 0, oldValues, newValues, sessionManager);
 	}

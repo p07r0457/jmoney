@@ -35,10 +35,12 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.fields.TransactionInfo;
+import net.sf.jmoney.model2.AbstractDataOperation;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ISessionChangeFirer;
 import net.sf.jmoney.model2.ListPropertyAccessor;
@@ -49,6 +51,13 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeListener;
 import net.sf.jmoney.model2.Transaction;
+
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.operations.IOperationHistory;
+import org.eclipse.core.commands.operations.IUndoContext;
+import org.eclipse.core.commands.operations.IUndoableOperation;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 
 /**
  * A transaction manager must be set before the datastore can be modified.
@@ -227,7 +236,7 @@ public class TransactionManager extends DataManager {
     	// manager and all other objects are obtained by traversing
     	// from that object.  However, it is good to check.
 
-		PropertySet<? extends E> propertySet = PropertySet.getPropertySet(committedObject.getClass());
+		PropertySet<?> propertySet = PropertySet.getPropertySet(committedObject.getClass());
     	
 		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
 		
@@ -356,7 +365,7 @@ public class TransactionManager extends DataManager {
 		}
 */        	
 		// We can now create the object.
-    	E copyInTransaction = propertySet.constructImplementationObject(constructorParameters);
+    	E copyInTransaction = committedObject.getClass().cast(propertySet.constructImplementationObject(constructorParameters));
 
     	/*
     	 * Now we have created a version of this object that is valid in this datastore,
@@ -547,7 +556,7 @@ public class TransactionManager extends DataManager {
 			if (newValues.isDeleted()) {
 				ExtendableObject deletedObject = committedKey.getObject();
 
-				PropertySet<?> propertySet = PropertySet.getPropertySet(deletedObject.getClass());
+				ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(deletedObject.getClass());
 				for (ScalarPropertyAccessor<?> accessor: propertySet.getScalarProperties3()) {
 					Object value = deletedObject.getPropertyValue(accessor);
 					if (value instanceof ExtendableObject) {
@@ -590,6 +599,36 @@ public class TransactionManager extends DataManager {
 		modifiedObjects.clear();
 	}
 
+	/**
+	 * This method does the same as the commit() method but the changes
+	 * may be undone and redone.  This support is available with no
+	 * coding needed by the caller other than to pass the label to be
+	 * used to describe the operation.
+	 * 
+	 * @param label the label to be used to describe this operation
+	 * 			for undo/redo purposes
+	 */
+	public void commit(String label) {
+		IUndoContext undoContext = baseDataManager.getSession().getUndoContext();
+		IOperationHistory history = JMoneyPlugin.getDefault().getWorkbench().getOperationSupport().getOperationHistory();
+		
+		IUndoableOperation operation = new AbstractDataOperation(baseDataManager.getSession(), label) {
+			@Override
+			public IStatus execute() throws ExecutionException {
+				commit();
+				return Status.OK_STATUS;
+			}
+		};
+		
+		operation.addContext(undoContext);
+		try {
+			history.execute(operation, null, null);
+		} catch (ExecutionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	private <V> void setProperty(ExtendableObject committedObject, ScalarPropertyAccessor<V> accessor, Object newValue) {
 		committedObject.setPropertyValue(accessor, accessor.getClassOfValueObject().cast(newValue));
 	}
@@ -605,8 +644,8 @@ public class TransactionManager extends DataManager {
 	 * @param listAccessor
 	 * @return the committed version of the object
 	 */
-	private <E extends ExtendableObject> E commitNewObject(E newObject, ExtendableObject parent, ListPropertyAccessor<? super E> listAccessor, boolean isDescendentInsert) {
-		PropertySet<? extends E> actualPropertySet = PropertySet.getPropertySet(newObject.getClass());
+	private <E extends ExtendableObject> E commitNewObject(E newObject, ExtendableObject parent, ListPropertyAccessor<E> listAccessor, boolean isDescendentInsert) {
+		ExtendablePropertySet<? extends E> actualPropertySet = listAccessor.getElementPropertySet().getActualPropertySet(newObject.getClass());
 		
 		/**
 		 * Maps PropertyAccessor to property value
@@ -685,7 +724,7 @@ public class TransactionManager extends DataManager {
 		ExtendableObject parent = modifiedList.parentKey.getObject();
 		
 		for (ExtendableObject newUntypedObject: modifiedList.getAddedObjects()) {
-			E newObject = modifiedList.listAccessor.getValueClass().cast(newUntypedObject);
+			E newObject = modifiedList.listAccessor.getElementPropertySet().getImplementationClass().cast(newUntypedObject);
 
 			final ExtendableObject newCommittedObject = commitNewObject(newObject, parent, modifiedList.listAccessor, false);
 

@@ -30,9 +30,9 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
@@ -61,7 +61,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class EntryInfo implements IPropertySetInfo {
 
-	private static PropertySet<Entry> propertySet = null;
+	private static ExtendablePropertySet<Entry> propertySet = PropertySet.addBasePropertySet(Entry.class);
 	private static ScalarPropertyAccessor<String> checkAccessor = null;
 	private static ScalarPropertyAccessor<String> descriptionAccessor = null;
 	private static ScalarPropertyAccessor<Account> accountAccessor = null;
@@ -71,16 +71,7 @@ public class EntryInfo implements IPropertySetInfo {
 	private static ScalarPropertyAccessor<Long> creationAccessor = null;
 	private static ScalarPropertyAccessor<Currency> incomeExpenseCurrencyAccessor = null;
 
-	public EntryInfo() {
-    }
-
-	public Class getImplementationClass() {
-		return Entry.class;
-	}
-	
-	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		propertySet = propertyRegistrar.addPropertySet(Entry.class);
-		
+	public PropertySet registerProperties() {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
         IPropertyControlFactory<Date> dateControlFactory = new DateControlFactory();
         IPropertyControlFactory<Account> accountControlFactory = new AccountControlFactory<Account>();
@@ -150,22 +141,24 @@ public class EntryInfo implements IPropertySetInfo {
 			}
 		};
 
-		checkAccessor       = propertyRegistrar.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),       String.class, 2, 50,  textControlFactory, null);
-		descriptionAccessor = propertyRegistrar.addProperty("description", JMoneyPlugin.getResourceString("Entry.description"), String.class, 5, 100, textControlFactory, null);
-		accountAccessor     = propertyRegistrar.addProperty("account",     JMoneyPlugin.getResourceString("Entry.category"),    Account.class, 2, 70,  accountControlFactory, null);
-		valutaAccessor      = propertyRegistrar.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      Date.class, 0, 76,  dateControlFactory, null);
-		memoAccessor        = propertyRegistrar.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        String.class, 5, 100, textControlFactory, null);
-		amountAccessor      = propertyRegistrar.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      Long.class, 2, 70,  amountControlFactory, null);
-		creationAccessor    = propertyRegistrar.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    Long.class, 0, 70,  creationControlFactory, null);
-		incomeExpenseCurrencyAccessor = propertyRegistrar.addProperty("incomeExpenseCurrency",    JMoneyPlugin.getResourceString("Entry.currency"),    Currency.class, 2, 70, new CurrencyControlFactory(), null);
+		checkAccessor       = propertySet.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),       String.class, 2, 50,  textControlFactory, null);
+		descriptionAccessor = propertySet.addProperty("description", JMoneyPlugin.getResourceString("Entry.description"), String.class, 5, 100, textControlFactory, null);
+		accountAccessor     = propertySet.addProperty("account",     JMoneyPlugin.getResourceString("Entry.category"),    Account.class, 2, 70,  accountControlFactory, null);
+		valutaAccessor      = propertySet.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      Date.class, 0, 76,  dateControlFactory, null);
+		memoAccessor        = propertySet.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        String.class, 5, 100, textControlFactory, null);
+		amountAccessor      = propertySet.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      Long.class, 2, 70,  amountControlFactory, null);
+		creationAccessor    = propertySet.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    Long.class, 0, 70,  creationControlFactory, null);
+		incomeExpenseCurrencyAccessor = propertySet.addProperty("incomeExpenseCurrency",    JMoneyPlugin.getResourceString("Entry.currency"),    Currency.class, 2, 70, new CurrencyControlFactory(), null);
 		
-		propertyRegistrar.setObjectDescription("Accounting Entry");
+		propertySet.setDescription("Accounting Entry");
+		
+		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertySet<Entry> getPropertySet() {
+	public static ExtendablePropertySet<Entry> getPropertySet() {
 		return propertySet;
 	}
 

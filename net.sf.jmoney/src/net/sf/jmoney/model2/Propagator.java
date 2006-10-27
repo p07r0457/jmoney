@@ -24,6 +24,7 @@ package net.sf.jmoney.model2;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -141,18 +142,14 @@ public class Propagator {
 					// the extension must know of the extendable class so can
 					// more efficiently listen for property changes.
 					
-					for (Iterator extendableIter = PropertySet.getPropertySetIterator(); extendableIter.hasNext(); ) {
-						PropertySet extendablePropertySet = (PropertySet)extendableIter.next();
-						if (!extendablePropertySet.isExtension()) {
+					for (ExtendablePropertySet propertySet: PropertySet.getAllExtendablePropertySets()) {
+							CheckExtensions(propertySet, propertySet, methods[i]);
 							
-							CheckExtensions(extendablePropertySet, extendablePropertySet, methods[i]);
-							
-							for (PropertySet basePropertySet = extendablePropertySet.getBasePropertySet(); basePropertySet != null; basePropertySet = basePropertySet.getBasePropertySet()) {
-								CheckExtensions(basePropertySet, extendablePropertySet, methods[i]);
-								CheckExtensions(extendablePropertySet, basePropertySet, methods[i]);
-								CheckPropertySetAgainstExtensions(extendablePropertySet, basePropertySet, methods[i]);
+							for (ExtendablePropertySet basePropertySet = propertySet.getBasePropertySet(); basePropertySet != null; basePropertySet = basePropertySet.getBasePropertySet()) {
+								CheckExtensions(basePropertySet, propertySet, methods[i]);
+								CheckExtensions(propertySet, basePropertySet, methods[i]);
+								CheckPropertySetAgainstExtensions(propertySet, basePropertySet, methods[i]);
 							}
-						}
 					}
 				}
 			}
@@ -162,9 +159,11 @@ public class Propagator {
 	/**
 	 * @param method
 	 */    
-	private static void CheckExtensions(PropertySet extendablePropertySet1, PropertySet extendablePropertySet2, Method method) {
-		for (Iterator sourceIter = PropertySet.getExtensionPropertySetIterator(extendablePropertySet1); sourceIter.hasNext(); ) {
-			PropertySet sourcePropertySet = (PropertySet)sourceIter.next();
+	private static void CheckExtensions(ExtendablePropertySet extendablePropertySet1, ExtendablePropertySet extendablePropertySet2, Method method) {
+		// Why does this not compile????
+		Collection<ExtensionPropertySet> x = extendablePropertySet1.getExtensionPropertySets();
+		for (ExtensionPropertySet sourcePropertySet: x) {
+//		for (ExtensionPropertySet sourcePropertySet: extendablePropertySet1.getExtensionPropertySets()) {
 			CheckPropertySetAgainstExtensions(sourcePropertySet, extendablePropertySet2, method);
 		}
 	}
@@ -172,15 +171,16 @@ public class Propagator {
 	/**
 	 * Check propertySet1 itself against all of the extensions for propertySet2.
 	 */
-	private static void CheckPropertySetAgainstExtensions(PropertySet propertySet1, PropertySet extendablePropertySet2, Method method) {
+	private static void CheckPropertySetAgainstExtensions(PropertySet propertySet1, ExtendablePropertySet extendablePropertySet2, Method method) {
 		Class [] parameters = method.getParameterTypes();
 		
 		PropertySet sourcePropertySet = propertySet1;
 		if (sourcePropertySet.getImplementationClass().equals(parameters[1])) {
-			
-			for (Iterator destinationIter = PropertySet.getExtensionPropertySetIterator(extendablePropertySet2); destinationIter.hasNext(); ) {
-				PropertySet destinationPropertySet = (PropertySet)destinationIter.next();
-				
+
+			// Why does this not compile????
+			Collection<ExtensionPropertySet> x = extendablePropertySet2.getExtensionPropertySets();
+			for (ExtensionPropertySet destinationPropertySet: x) {
+//			for (ExtensionPropertySet destinationPropertySet: extendablePropertySet2.getExtensionPropertySets()) {
 				if (destinationPropertySet.getImplementationClass().equals(parameters[2])) {
 					
 					// Method looks ok so add to map.

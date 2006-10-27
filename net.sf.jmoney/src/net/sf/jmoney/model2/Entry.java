@@ -33,7 +33,7 @@ import net.sf.jmoney.fields.EntryInfo;
 /**
  * The data model for an entry.
  */
-public class Entry extends ExtendableObject {
+public final class Entry extends ExtendableObject {
 	
 	protected long creation = Calendar.getInstance().getTime().getTime();
 	
@@ -375,31 +375,4 @@ public class Entry extends ExtendableObject {
 		// Notify the change manager.
 		processPropertyChange(EntryInfo.getIncomeExpenseCurrencyAccessor(), oldIncomeExpenseCurrency, incomeExpenseCurrency);
 	}
-	
-	protected Object [] getProperties() {
-		return new Object [] { 
-				null,
-				null,
-				null,
-				null,
-				null,
-				new Long(0),
-				new Long(0),  // creation, should be now.
-				null,
-				};
-	}
-	
-	static public Object [] getDefaultProperties() {
-		return new Object [] { 
-				null,
-				null,
-				null,
-				null,
-				null,
-				new Long(0),
-				new Long(0),  // creation, should be now.
-				null,
-				};
-	}
-
 }

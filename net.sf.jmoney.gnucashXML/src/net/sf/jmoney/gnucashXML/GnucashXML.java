@@ -163,8 +163,12 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
             createTransactions(doc);
 
             // Commit the changes to the datastore
+/* TODO: decide if we are going to support import as an undoable operation.
+ * This old mechanism is no longer supported, and building a full
+ * undo history could be expensive in this case.
             session.registerUndoableChange(GnucashXMLPlugin
                     .getResourceString("importDescription"));
+*/                    
         } catch (MalformedURLException e) {
             JMoneyPlugin.log(e);
         } catch (IOException e) {

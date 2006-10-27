@@ -24,14 +24,13 @@ package net.sf.jmoney.model2;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
-
-import net.sf.jmoney.JMoneyPlugin;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -39,7 +38,6 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.swt.graphics.Image;
 
 /**
  * A <code>PropertySet</code> contains information about a
@@ -67,92 +65,37 @@ import org.eclipse.swt.graphics.Image;
  * 		either an ExtendableObject or an ExtensionObject 
  * @author Nigel Westbury
 */
-public class PropertySet<E> {
+public abstract class PropertySet<E> {
 	
-	private String propertySetId;
+	protected String propertySetId;
 	
-	private Class<E> classOfObject;
+	protected Class<E> classOfObject;
 	
-	private Vector<PropertyAccessor> properties = new Vector<PropertyAccessor>();
+	protected Vector<PropertyAccessor> properties = new Vector<PropertyAccessor>();
 
 	/**
-	 * This array is built on first use and then cached.
+	 * These arrays are built on first use and then cached.
 	 */
 	private Vector<ScalarPropertyAccessor> scalarProperties1 = null;
 	private Vector<ListPropertyAccessor> listProperties1 = null;
 
-	private Vector<PropertyAccessor> properties2 = null;
-	private Vector<ScalarPropertyAccessor> scalarProperties2 = null;
-	private Vector<ListPropertyAccessor> listProperties2 = null;
-
-	private Vector<PropertyAccessor> properties3 = null;
-	private Vector<ScalarPropertyAccessor> scalarProperties3 = null;
-	private Vector<ListPropertyAccessor> listProperties3 = null;
-	
 	boolean isExtension;
 	
-	/**
-	 * Used only to store the id passed to the constructor until it 
-	 * can be reconciled to the base or extended PropertySet object
-	 * by init().
-	 */
-	private String baseOrExtendablePropertySetId;
+	static Vector<PropertySet> allPropertySets = new Vector<PropertySet>();
+	static Set<String> allPropertySetIds = new HashSet<String>();
 	
-	// If there is no extension then certain methods that obtain
-	// property values should fetch default values.
-	// We determine the default values by constructing an extension
-	// object using the default constructor.  To avoid constructing
-	// a default extension multiple times, one is cached inside this
-	// object.
-	// This default extension should never be passed outside this package
-	// because plugins have no need for it and can cause chaos if
-	// they alter it.  However it is useful for use inside the
-	// package.
-	private E defaultExtension;  // defined only if an extension property set
-
-	/**
-	 * true if further property sets must be derived from this property set,
-	 * false if property sets cannot be derived from this property set.
-	 */
-	private boolean derivable; // defined only if an extendable property set
-	
-	/**
-	 * Localized text describing the type of object represented
-	 * by this property set.
-	 * <P>
-	 * This field is defined only if an extendable property set 
-	 * and not derivable.
-	 */
-	private String objectDescription;  // defined only if an extendable property set and not derivable
-
 	/**
 	 * Maps property set id to the property set
 	 */
-	private static Map<String, PropertySet> allPropertySetsMap = new HashMap<String, PropertySet>();
+//	protected static Map<String, PropertySet> allPropertySetsMap = new HashMap<String, PropertySet>();
+	protected static Map<String, ExtendablePropertySet> allExtendablePropertySetsMap = new HashMap<String, ExtendablePropertySet>();
+	protected static Map<String, ExtensionPropertySet> allExtensionPropertySetsMap = new HashMap<String, ExtensionPropertySet>();
 
 	/**
 	 * Map extendable classes to property sets.
 	 */
-	private static Map<Class, PropertySet> classToPropertySetMap = new HashMap<Class, PropertySet>();
+	protected static Map<Class<? extends ExtendableObject>, ExtendablePropertySet> classToPropertySetMap = new HashMap<Class<? extends ExtendableObject>, ExtendablePropertySet>();
 	
-	// TODO clean this up (i.e. remove this)
-	// Set only if this is an extendable property set
-	Map<String, PropertySet> extensionPropertySets = null;  
-
-	// Valid for extendable property sets only
-	PropertySet<? super E> basePropertySet;
-	
-	// Valid for extension property sets only
-	PropertySet<?> extendablePropertySet;	
-
-	// Valid for extendable property sets only
-	/**
-	 * Set of property sets that are derived from this property set
-	 * (either directly or indirectly) and that are not
-	 * themselves derivable.
-	 */
-	private Vector<PropertySet<? extends E>> derivedPropertySets = new Vector<PropertySet<? extends E>>();
-
 	// Valid for all property sets except those that are
 	// extendable and must be derived from.
 	private Constructor<E> implementationClassConstructor;
@@ -176,7 +119,7 @@ public class PropertySet<E> {
 	 * <P>
 	 * This field is undefined for derivable property sets.
 	 */
-	private Vector<PropertyAccessor> constructorProperties;
+	protected Vector<PropertyAccessor> constructorProperties;
 	
 	/**
 	 * A list of all properties in this and base property sets that are
@@ -195,22 +138,36 @@ public class PropertySet<E> {
 	 * <P>
 	 * This field is undefined for derivable property sets.
 	 */
-	private Vector<PropertyAccessor> defaultConstructorProperties;
+	protected Vector<PropertyAccessor> defaultConstructorProperties;
 	
-	private Method theDefaultPropertiesMethod;
+//	private Method theDefaultPropertiesMethod;
+	
+	protected PropertySet() {
+		// Add to our list of all property sets
+		allPropertySets.add(this);
+	}
 	
 	/**
-	 * This field is valid for non-derivable property sets only.
+	 * This method is called after all the properties in this property set have
+	 * been set.  It completes the initialization of this object.
+	 * 
+	 * This cannot be done in the constructor because there may be circular references
+	 * between property sets, properties in those property sets, and property sets for
+	 * the objects referenced by those properties.
+	 * 
+	 * @param propertySetId 
+	 *
 	 */
-	private Vector<PageEntry> pageExtensions = null;
-	
-	/**
-	 * This field is valid for extendable property sets only
-	 */
-	private String iconFileName = null;
-
-	/** cached value */
-	private Image iconImage = null;
+	public void initProperties(String propertySetId) {
+		/*
+		 * Check that the property set id is unique.
+		 */
+		if (allPropertySetIds.contains(propertySetId)) {
+			throw new MalformedPluginException("More than one property set has an id of " + propertySetId);
+		}
+		this.propertySetId = propertySetId;
+		allPropertySetIds.add(propertySetId);
+	}
 	
 	/**
 	 * Loads the property sets.
@@ -308,372 +265,84 @@ public class PropertySet<E> {
 				}
 			}
 		}
-		
-		// Make a second pass thru the property sets.
-		// This finds the base property set or the extendable property set for
-		// each property set.
-		for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
-			PropertySet propertySet = (PropertySet)iter.next();
-			propertySet.initPropertiesPass1();
+
+		/*
+		 * Check for property sets that have been created (because
+		 * other property sets depended on them) but that have no entry
+		 * in a plugin.xml file.  
+		 */
+		for (PropertySet propertySet: PropertySet.allPropertySets) {
+			if (propertySet.getId() == null) {
+				throw new MalformedPluginException("The property set for " + propertySet.getImplementationClass().getName() + " has not been registered in the plugin.xml file.");
+			}
 		}
 		
-		// Make a third pass thru the property sets.
-		// This finishes initialization that requires going up the chain of base
-		// property sets.  This part of the initialization cannot be done in pass 1
-		// because the base class may not have had its base class resolved until
-		// pass 1 is complete.
-		for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
-			PropertySet propertySet = (PropertySet)iter.next();
+		/*
+		 * After all property information has been registered, make a second
+		 * pass through the extendable objects. In this pass we do processing of
+		 * extendable property sets that requires the complete set of extension
+		 * property sets to be available and complete.
+		 */
+		for (ExtendablePropertySet propertySet: PropertySet.getAllExtendablePropertySets()) {
 			propertySet.initPropertiesPass2();
 		}
 	}
 	
-	
-	private PropertySet(String propertySetId, boolean isExtension, String baseOrExtendablePropertySetId, Class<E> classOfObject) {
-		this.propertySetId = propertySetId;
-		this.isExtension = isExtension;
-		this.baseOrExtendablePropertySetId = baseOrExtendablePropertySetId;
-		this.classOfObject = classOfObject;
-
-		derivable = false;
-		objectDescription = null;
-		iconFileName = null;
-
-		// Add to our map that maps ids to PropertySet objects.
-		if (allPropertySetsMap.containsKey(propertySetId)) {
-			throw new MalformedPluginException("More than one property set has an id of " + propertySetId);
-		}
-		allPropertySetsMap.put(propertySetId, this);
-
-		if (!isExtension) {
-			extensionPropertySets = new HashMap<String, PropertySet>();
-		}
-		
-		/*
-		 * Add to the map that maps the extendable classes to the extendable
-		 * property sets. Only final property sets (ones which do not define an
-		 * enumerated type to control derived classes) are put in the map. This
-		 * is important because when we are looking for the property set for an
-		 * instance of an object, we want to be sure we find only the final
-		 * property set for that object.
-		 */
-		if (!isExtension && !derivable) {
-			if (classToPropertySetMap.containsKey(classOfObject)) {
-				throw new MalformedPluginException("More than one property set uses " + classOfObject + " as the Java implementation class.");
-			}
-			classToPropertySetMap.put(classOfObject, this);
-
-			pageExtensions = new Vector<PageEntry>();
-		}
-	}
-
-	
 	/**
-	 * This method is called to perform pass 1 of the initialization process.
-	 * Some parts of the initialization require access to a complete list of
-	 * all the PropertySet objects and therefore cannot be done in the
-	 * PropertySet constructor.
-	 * <P>
-	 * The following are initialized by this method:
-	 * <UL>
-	 * <LI>this.extendablePropertySet</LI>
-	 * <LI>this.basePropertySet</LI>
-	 * <LI>this.defaultExtension</LI>
-	 * <LI>in the base class, derivedPropertySets</LI>
-	 * </UL>
+	 * Helper method to find the constructors.
+	 * 
+	 * This method is called both for extendable property
+	 * sets (final, not derivable) and extension property
+	 * sets.
+	 *  
+	 * @param isExtension
 	 */
-	private void initPropertiesPass1() {
-		if (!isExtension) {
-			if (baseOrExtendablePropertySetId != null) {
-				basePropertySet = allPropertySetsMap.get(baseOrExtendablePropertySetId);
-				if (basePropertySet == null) {
-					throw new MalformedPluginException("No extendable property set with an id of " + baseOrExtendablePropertySetId + " exists.");
-				}
-				
-				if (basePropertySet.isExtension()) {
-					throw new MalformedPluginException(baseOrExtendablePropertySetId + " is a base property set.  Extension property sets cannot be extended, but " + propertySetId + " is declared as a base of " + baseOrExtendablePropertySetId + ".");
-				}
-				
-				if (!basePropertySet.isDerivable()) {
-					throw new MalformedPluginException(baseOrExtendablePropertySetId + " is a base property for " + propertySetId + ".  However, " + baseOrExtendablePropertySetId + " is not derivable (IPropertyRegistrar.setDerivableInfo not called from the IPropertySetInfo implementation).");
-				}
-			} else {
-				basePropertySet = null;
+	protected void findConstructors(boolean isExtension) {
+		// Build the list of properties that are passed to
+		// the 'new object' constructor and another list that
+		// are passed to the 're-instantiating' constructor.
+		{
+			int i = 0;
+			int parameterCount = constructorProperties.size();
+			if (!isExtension) {
+				parameterCount += 3;
+			}
+			Class parameters[] = new Class[parameterCount];
+			
+			// In the extendable objects, the first parameters are always:
+			// - the key to this object
+			// - a map of extensions
+			// - the key to the object which is the parent of this object
+			if (!isExtension) {
+				parameters[i++] = IObjectKey.class;
+				parameters[i++] = Map.class;
+				parameters[i++] = IObjectKey.class;
 			}
 			
-		} else {
-			extendablePropertySet = allPropertySetsMap.get(baseOrExtendablePropertySetId);
-			if (extendablePropertySet == null) {
-				throw new MalformedPluginException("No extendable property set with an id of " + baseOrExtendablePropertySetId + " exists.");
-			}
-			
-			if (extendablePropertySet.isExtension()) {
-				throw new MalformedPluginException(baseOrExtendablePropertySetId + " is an extension property set.  Extension property sets cannot be extended, but " + propertySetId + " is declared as an extension of " + baseOrExtendablePropertySetId + ".");
-			}
-
-			// We have already checked that all property sets have unique ids, so a
-			// property set with the same id cannot already exist as an extension
-			// to the extendable property set.
-			JMoneyPlugin.myAssert (!extendablePropertySet.extensionPropertySets.containsKey(propertySetId));
-			extendablePropertySet.extensionPropertySets.put(propertySetId, this);
-
-			// Set up the extension that contains the default property values.
-			try {
-				defaultExtension = classOfObject.newInstance();
-			} catch (Exception e) {
-				// TODO: deal with this error
-				// Plug-in error if no default constructor.
-				e.printStackTrace();
-				throw new RuntimeException();
-			}
-		}
-		
-		if (!isExtension && !derivable) {
-			if (objectDescription == null) {
-				throw new MalformedPluginException("IPropertyRegistrar.setObjectDescription is not called from the IPropertyInfo implementation for " + propertySetId + ", nor is the property set derivable or an extension.");
-			}
-			
-			// Add this property set to the list of derived property sets
-			// for this and all the base classes.
-			for (PropertySet<? super E> base = this; base != null; base = base.getBasePropertySet()) {
-				base.derivedPropertySets.add(this);
-			}
-		} else {
-			if (objectDescription != null) {
-				if (isExtension) {
-					throw new MalformedPluginException("IPropertyRegistrar.setObjectDescription is called from the IPropertyInfo implementation for " + propertySetId + ", but the property set is an extension.");
-				} else {
-					throw new MalformedPluginException("IPropertyRegistrar.setObjectDescription is called from the IPropertyInfo implementation for " + propertySetId + ", but the property set is derivable.");
-				}
-			}
-		}
-	}
-	
-	
-	/**
-	 * This method is called to complete the initialization of this object.
-	 * Some parts of the initialization require access to a complete list of
-	 * all the PropertySet objects and also require that every property set
-	 * has the reference to the base property set correctly set.
-	 * Therefore the code in this method cannot be executed in
-	 * initPropertiesPass1.
-	 * <P>
-	 * The following are initialized by this method:
-	 * <UL>
-	 * <LI>this.constructorParameters</LI>
-	 * <LI>this.defaultConstructorParameters</LI>
-	 * <LI>this.implementationClassConstructor</LI>
-	 * <LI>this.defaultImplementationClassConstructor</LI>
-	 * <LI>indexIntoScalarProperties, for each scalar PropertyAccessor in this property set</LI>
-	 * <LI>indexIntoConstructorParameters, for each PropertyAccessor in this property set</LI>
-	 * </UL>
-	 */
-	private void initPropertiesPass2() {
-		if (isExtension || !derivable) {
-			// Build the list of properties that are passed to
-			// the 'new object' constructor and another list that
-			// are passed to the 're-instantiating' constructor.
-			
-			constructorProperties = new Vector<PropertyAccessor>();
-			defaultConstructorProperties = new Vector<PropertyAccessor>();
-		}
-		
-		if (!isExtension) {
-			
-			// We need to be able to iterate through property sets
-			// starting at the base property set and continuing through
-			// derived property sets until we get to this property set.
-			// To do this, we first build a list of the base property sets
-			// and we can then iterate through these property sets in
-			// reverse order.
-			Vector<PropertySet> basePropertySets = new Vector<PropertySet>();
-			for (PropertySet base = getBasePropertySet(); base != null; base = base.getBasePropertySet()) {
-				basePropertySets.add(base);
-			}
-			
-			// Add the appropriate properties from the base classes to
-			// the constructorParameters and defaultConstructorParameters arrays.
-			int parameterIndex = 3;
-			int scalarIndex = 0;
-			
-			for (int i = basePropertySets.size()-1; i >= 0; i--) {
-				PropertySet<?> base = basePropertySets.get(i);
-
-	    		for (PropertyAccessor propertyAccessor: base.properties) {
-					if (!isDerivable()) {
-						constructorProperties.add(propertyAccessor);
-						if (propertyAccessor.isList()) {
-							defaultConstructorProperties.add(propertyAccessor);
-						}
-					}
-					
-					parameterIndex++;
-				}
-
-	    		scalarIndex += base.getScalarProperties2().size();
-			}
-			
-			// Process the properties in this property set.
-    		for (PropertyAccessor propertyAccessor: properties) {
-				propertyAccessor.setIndexIntoConstructorParameters(parameterIndex++);
-				if (!isDerivable()) {
-					constructorProperties.add(propertyAccessor);
-					if (propertyAccessor.isList()) {
-						defaultConstructorProperties.add(propertyAccessor);
-					}
-				}
-			}
-			
-			for (ScalarPropertyAccessor propertyAccessor: getScalarProperties2()) {
-				propertyAccessor.setIndexIntoScalarProperties(scalarIndex++);
-			}
-			
-			// Set the icon associated with this property set.
-			// The icon will already have been set in any property set
-			// for which an icon is specifically set.  However, icons
-			// also apply to derived property sets for which no icon
-			// has been set.  So, if the icon is null, go up the list
-			// of base property sets until we find a non-null icon.
-			if (iconFileName == null) {
-				for (PropertySet base = getBasePropertySet(); base != null; base = base.getBasePropertySet()) {
-					if (base.getIconFileName() != null) {
-						iconFileName = base.getIconFileName();
-						break;
-					}
-				}
-			}
-			
-		} else {
-			// This property set is an extension.
-			int parameterIndex = 0;
-    		for (PropertyAccessor propertyAccessor: properties) {
-				constructorProperties.add(propertyAccessor);
-				propertyAccessor.setIndexIntoConstructorParameters(parameterIndex++);
-				if (propertyAccessor.isList()) {
-					defaultConstructorProperties.add(propertyAccessor);
-				}
-			}
-		}
-		
-		// Find the full constructor (unless this is a derivable
-		// property set, in which case no constructor is needed).
-
-		// Build the list of types of the constructor parameters.
-		if (isExtension || !derivable) {
-			{
-				int i = 0;
-				int parameterCount = constructorProperties.size();
-				if (!isExtension) {
-					parameterCount += 3;
-				}
-				Class parameters[] = new Class[parameterCount];
-				
-				// In the extendable objects, the first parameters are always:
-				// - the key to this object
-				// - a map of extensions
-				// - the key to the object which is the parent of this object
-				if (!isExtension) {
-					parameters[i++] = IObjectKey.class;
-					parameters[i++] = Map.class;
-					parameters[i++] = IObjectKey.class;
-				}
-				
-				for (PropertyAccessor propertyAccessor: constructorProperties) {
-					if (propertyAccessor.isScalar()) {
-						ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
-						if (ExtendableObject.class.isAssignableFrom(scalarAccessor.getClassOfValueType())) { 		
-							// For extendable objects, we pass not the object
-							// but a key to the object.  This is so that we do not
-							// have to read the object from the database unless it
-							// is necessary.
-							parameters[i] = IObjectKey.class; 
-						} else {
-							// The property type is either a primative (int, boolean etc),
-							// or a non-extendable class (Long, String, Date)
-							// or a non-extendable class added by a plug-in.
-							parameters[i] = scalarAccessor.getClassOfValueType();
-						}
+			for (PropertyAccessor propertyAccessor: constructorProperties) {
+				if (propertyAccessor.isScalar()) {
+					ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
+					if (ExtendableObject.class.isAssignableFrom(scalarAccessor.getClassOfValueType())) { 		
+						// For extendable objects, we pass not the object
+						// but a key to the object.  This is so that we do not
+						// have to read the object from the database unless it
+						// is necessary.
+						parameters[i] = IObjectKey.class; 
 					} else {
-						parameters[i] = IListManager.class; 
+						// The property type is either a primative (int, boolean etc),
+						// or a non-extendable class (Long, String, Date)
+						// or a non-extendable class added by a plug-in.
+						parameters[i] = scalarAccessor.getClassOfValueType();
 					}
-					i++;
+				} else {
+					parameters[i] = IListManager.class; 
 				}
-				
-				try {
-					implementationClassConstructor =
-						classOfObject.getConstructor(parameters);
-				} catch (SecurityException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (NoSuchMethodException e) {
-					String parameterText = "";
-					for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
-						if (paramIndex > 0) {
-							parameterText = parameterText + ", ";
-						}
-						parameterText = parameterText + parameters[paramIndex].getName();
-					}
-					throw new MalformedPluginException("The " + classOfObject.getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
-				}
+				i++;
 			}
-			
-			// Find the 'new object' constructor which sets the default values for
-			// the scalar properties.
-			// Build the list of types of the constructor parameters.
-			{
-				int i = 0;
-				int parameterCount = defaultConstructorProperties.size();
-				if (!isExtension) {
-					parameterCount += 3;
-				}
-				Class parameters[] = new Class[parameterCount];
-				
-				// In the extendable objects, the first parameters are always:
-				// - the key to this object
-				// - a map of extensions
-				// - the key to the object which is the parent of this object
-				if (!isExtension) {
-					parameters[i++] = IObjectKey.class;
-					parameters[i++] = Map.class;
-					parameters[i++] = IObjectKey.class;
-				}
-				
-				/*
-				 * The default constructor takes a parameter for each list property
-				 * but does not take any parameters for the scalar properties.  All
-				 * list property parameters are of type IListManager, so add 
-				 * IListManager class to the constructor prototype once for each
-				 * list property.
-				 */
-				for (int j = 0; j < defaultConstructorProperties.size(); j++) {
-					parameters[i++] = IListManager.class; 
-				}
-				
-				try {
-					defaultImplementationClassConstructor =
-						classOfObject.getConstructor(parameters);
-				} catch (SecurityException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (NoSuchMethodException e) {
-					String parameterText = "";
-					for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
-						if (paramIndex > 0) {
-							parameterText = parameterText + ", ";
-						}
-						parameterText = parameterText + parameters[paramIndex].getName();
-					}
-					throw new MalformedPluginException("The " + classOfObject.getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
-				}
-			}
-			
-			// Find the getDefaultProperties method.
-			
-			Class parameters[] = new Class[] { };
 			
 			try {
-				theDefaultPropertiesMethod =
-					classOfObject.getDeclaredMethod("getDefaultProperties", parameters);
+				implementationClassConstructor =
+					classOfObject.getConstructor(parameters);
 			} catch (SecurityException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -683,39 +352,63 @@ public class PropertySet<E> {
 					if (paramIndex > 0) {
 						parameterText = parameterText + ", ";
 					}
-					if (parameters[paramIndex].isArray()) {
-						parameterText = parameterText + "net.sf.jmoney.model2.ExtensionProperties[]";
-					} else {
-						parameterText = parameterText + parameters[paramIndex].getName();
-					}
+					parameterText = parameterText + parameters[paramIndex].getName();
 				}
-				throw new MalformedPluginException("The " + classOfObject.getName() + " class must have a 'getDefaultProperties' method that takes parameters of types (" + parameterText + ").");
+				throw new MalformedPluginException("The " + classOfObject.getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
 			}
-			
-			// The '8' bit indicates that the method is static.
-			if ((theDefaultPropertiesMethod.getModifiers() & 8) != 8) {
-				throw new MalformedPluginException("The 'getDefaultProperties' method in " + classOfObject.getName() + " class must be static.");
-			}
-			
-			// The '1' bit indicates that the method is public.
-			// (2 is private, 4 is protected, 1,2 & 4 bits off is default).
-			if ((theDefaultPropertiesMethod.getModifiers() & 7) != 1) {
-				throw new MalformedPluginException("The 'getDefaultProperties' method in " + classOfObject.getName() + " class must be public.");
-			}
-		} else {
-			// No default properties method is required for derived property sets
-			// so set to null.
-			theDefaultPropertiesMethod = null;
 		}
 		
-		// Complete the initialization of the properties
-		
-		for (Iterator iter = properties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
-			propertyAccessor.initMethods();
+		// Find the 'new object' constructor which sets the default values for
+		// the scalar properties.
+		// Build the list of types of the constructor parameters.
+		{
+			int i = 0;
+			int parameterCount = defaultConstructorProperties.size();
+			if (!isExtension) {
+				parameterCount += 3;
+			}
+			Class parameters[] = new Class[parameterCount];
+			
+			// In the extendable objects, the first parameters are always:
+			// - the key to this object
+			// - a map of extensions
+			// - the key to the object which is the parent of this object
+			if (!isExtension) {
+				parameters[i++] = IObjectKey.class;
+				parameters[i++] = Map.class;
+				parameters[i++] = IObjectKey.class;
+			}
+			
+			/*
+			 * The default constructor takes a parameter for each list property
+			 * but does not take any parameters for the scalar properties.  All
+			 * list property parameters are of type IListManager, so add 
+			 * IListManager class to the constructor prototype once for each
+			 * list property.
+			 */
+			for (int j = 0; j < defaultConstructorProperties.size(); j++) {
+				parameters[i++] = IListManager.class; 
+			}
+			
+			try {
+				defaultImplementationClassConstructor =
+					classOfObject.getConstructor(parameters);
+			} catch (SecurityException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (NoSuchMethodException e) {
+				String parameterText = "";
+				for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
+					if (paramIndex > 0) {
+						parameterText = parameterText + ", ";
+					}
+					parameterText = parameterText + parameters[paramIndex].getName();
+				}
+				throw new MalformedPluginException("The " + classOfObject.getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
+			}
 		}
 	}
-
+	
 	/**
 	 * Returns the list of properties whose values are passed as
 	 * parameters to the 're-instantiating' constructor of the implementation class.
@@ -769,76 +462,10 @@ public class PropertySet<E> {
 	static private void registerExtendablePropertySet(final String propertySetId, final String basePropertySetId, IPropertySetInfo propertySetInfo) {
 		
 		// Set up the list of properties.
-		// This is done by calling the registerExtensionProperties
-		// method of the supplied interface.  We must pass an
-		// IPropertyRegistrar implementation.  registerExtensionProperties
-		// will call back into this interface to register each
-		// property.
-		propertySetInfo.registerProperties(
-				new IPropertyRegistrar() {
-
-					PropertySet<?> propertySet = null;
-					
-					public <E extends Object> PropertySet<E> addPropertySet(Class<E> classOfImplementationObject) {
-						// Objects of this class self-register, so we need
-						// only construct the object.
-						PropertySet<E> propertySet = new PropertySet<E>(propertySetId, false, basePropertySetId, classOfImplementationObject);
-						this.propertySet = propertySet;
-						return propertySet;
-					}
-
-					public EnumerationAccessor addEnumeratedValue(PropertyAccessor propertyAccessor, String internalName, String displayName) {
-						// TODO Auto-generated method stub
-						return null;
-					}
-
-					public EnumerationAccessor addEnumeratedValue(PropertyAccessor propertyAccessor, String internalName, String displayName, Class derivedClass) {
-						// TODO Auto-generated method stub
-						return null;
-					}
-
-//					public void addProperty(PropertyAccessor_Scalar accessor) {
-//					properties.add(accessor);
-//					}
-					public <V> ScalarPropertyAccessor<V> addProperty(String name, String displayName, Class<V> classOfValue, int weight, int minimumWidth, IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency propertyDependency) {
-						if (propertyControlFactory == null) {
-							throw new MalformedPluginException(
-									"No IPropertyControlFactory object has been specified for property " + name
-									+ ".  This is needed even if the property is not editable.  (Though the method that gets the" +
-							" control may return null if the property is not editable).");
-						}
-
-						ScalarPropertyAccessor<V> accessor = new ScalarPropertyAccessor<V>(classOfValue, propertySet, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency);
-						propertySet.properties.add(accessor);
-						return accessor;
-					}
-
-					public <E2 extends ExtendableObject> ListPropertyAccessor<E2> addPropertyList(String name, String displayName, Class<E2> listItemClass, IPropertyDependency propertyDependency) {
-						ListPropertyAccessor<E2> accessor = new ListPropertyAccessor<E2>(propertySet, name, displayName, listItemClass, propertyDependency);
-						propertySet.properties.add(accessor);
-						return accessor;
-					}
-
-					public PropertyAccessor setDerivableInfo(String name, String displayName) {
-						propertySet.derivable = true;
-						// TODO Auto-generated method stub
-						return null;
-					}
-
-					public PropertyAccessor setDerivableInfo() {
-						propertySet.derivable = true;
-						return null;
-					}
-
-					public void setObjectDescription(String description) {
-						propertySet.objectDescription = description;
-					}
-
-					public void setIcon(String iconFileName) {
-						propertySet.iconFileName = iconFileName;
-					}
-				}
-		);
+		// This is done by calling the registerProperties
+		// method of the supplied interface.
+		PropertySet propertySet = propertySetInfo.registerProperties();
+		propertySet.initProperties(propertySetId);
 	}
 	
 	/**
@@ -851,78 +478,25 @@ public class PropertySet<E> {
 	 */
 	static private void registerExtensionPropertySet(final String propertySetId, final String extendablePropertySetId, IPropertySetInfo propertySetInfo) {
 		// Set up the list of properties.
-		// This is done by calling the registerExtensionProperties
-		// method of the supplied interface.  We must pass an
-		// IPropertyRegistrar implementation.  registerExtensionProperties
-		// will call back into this interface to register each
-		// property.
-		propertySetInfo.registerProperties(
-				new IPropertyRegistrar() {
-
-					PropertySet<?> propertySet = null;
-					
-					public <E2 extends Object> PropertySet<E2> addPropertySet(Class<E2> classOfObject) {
-						// Objects of this class self-register, so we need
-						// only construct the object.
-						PropertySet<E2> propertySet = new PropertySet<E2>(propertySetId, true, extendablePropertySetId, classOfObject);
-						this.propertySet = propertySet;
-						return propertySet;
-					}
-
-					public EnumerationAccessor addEnumeratedValue(PropertyAccessor propertyAccessor, String internalName, String displayName) {
-						// TODO Auto-generated method stub
-						return null;
-					}
-
-					public EnumerationAccessor addEnumeratedValue(PropertyAccessor propertyAccessor, String internalName, String displayName, Class derivedClass) {
-						// TODO Auto-generated method stub
-						return null;
-					}
-
-//					public void addProperty(PropertyAccessor_Scalar accessor) {
-//					properties.add(accessor);
-//					}
-					public <V> ScalarPropertyAccessor<V> addProperty(String name, String displayName, Class<V> classOfValue, int weight, int minimumWidth, IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency propertyDependency) {
-						if (propertyControlFactory == null) {
-							throw new MalformedPluginException(
-									"No IPropertyControlFactory object has been specified for property " + name
-									+ ".  This is needed even if the property is not editable.  (Though the method that gets the" +
-							" control may return null if the property is not editable).");
-						}
-
-						ScalarPropertyAccessor<V> accessor = new ScalarPropertyAccessor<V>(classOfValue, propertySet, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency);
-						propertySet.properties.add(accessor);
-						return accessor;
-					}
-
-					public <E2 extends ExtendableObject> ListPropertyAccessor<E2> addPropertyList(String name, String displayName, Class<E2> listItemClass, IPropertyDependency propertyDependency) {
-						ListPropertyAccessor<E2> accessor = new ListPropertyAccessor<E2>(propertySet, name, displayName, listItemClass, propertyDependency);
-						propertySet.properties.add(accessor);
-						return accessor;
-					}
-
-					public PropertyAccessor setDerivableInfo(String name, String displayName) {
-						propertySet.derivable = true;
-						// TODO Auto-generated method stub
-						return null;
-					}
-
-					public PropertyAccessor setDerivableInfo() {
-						propertySet.derivable = true;
-						return null;
-					}
-
-					public void setObjectDescription(String description) {
-						propertySet.objectDescription = description;
-					}
-
-					public void setIcon(String iconFileName) {
-						propertySet.iconFileName = iconFileName;
-					}
-				}
-		);
+		// This is done by calling the registerProperties
+		// method of the supplied interface.
+		PropertySet propertySet = propertySetInfo.registerProperties();
+		propertySet.initProperties(propertySetId);
 	}
 	
+	/**
+	 * This method is called when a property set id in plugin.xml references
+	 * an extendable property set.  The property set object is
+	 * returned.
+	 */
+	static public ExtendablePropertySet getExtendablePropertySet(String propertySetId) throws PropertySetNotFoundException {
+		ExtendablePropertySet propertySet = allExtendablePropertySetsMap.get(propertySetId);
+		if (propertySet == null) {
+			throw new PropertySetNotFoundException(propertySetId);
+		}
+		return propertySet;
+	}
+
 	/**
 	 * This method is called when one plug-in wants to access a property
 	 * in another plug-in's property set.  Callers must be able to handle
@@ -930,8 +504,8 @@ public class PropertySet<E> {
 	 * must catch PropertySetNotFoundException and supply appropriate behavior
 	 * (not an error from the user's perspective).
 	 */
-	static public PropertySet getPropertySet(String propertySetId) throws PropertySetNotFoundException {
-		PropertySet propertySet = allPropertySetsMap.get(propertySetId);
+	static public ExtensionPropertySet getExtensionPropertySet(String propertySetId) throws PropertySetNotFoundException {
+		ExtensionPropertySet propertySet = allExtensionPropertySetsMap.get(propertySetId);
 		if (propertySet == null) {
 			throw new PropertySetNotFoundException(propertySetId);
 		}
@@ -955,57 +529,13 @@ public class PropertySet<E> {
 	 * is a bank account, credit card account properties if the
 	 * object is a credit card account and so on).
 	 */
-	// TODO: This is no longer required to be so complicated.
-	// There should always be an exact match, so just look up in the 
-	// map, I think.
-	static public <E extends ExtendableObject> PropertySet<E> getPropertySet(Class<E> propertySetClass) {
-		// The classToPropertySetMap contains mappings for final extendable property
-		// sets only, so there should only be a single interface or superclass found
-		// in the object's class hierarchy that is in the map.
-		
-		// Check the superclasses
-		Class<? super E> thisClass = propertySetClass;
-		do {
-			PropertySet<E> result = (PropertySet<E>)classToPropertySetMap.get(thisClass);
-			if (result != null) {
-				return result;
-			}
-			
-			thisClass = thisClass.getSuperclass();
-		} while (!thisClass.equals(Object.class));
-		
-		throw new RuntimeException("No property set found for object of class " + propertySetClass.getName() + ".");
+	static public <E extends ExtendableObject> ExtendablePropertySet<?> getPropertySet(Class<E> propertySetClass) {
+		return classToPropertySetMap.get(propertySetClass);
 	}
 
-	
-	/**
-	 * This method is called when loading data from an extension
-	 * in a datastore.
-	 * The datastore will store the property set id and will pass it.
-	 * If no property set with the given id exists in the map then
-	 * we create one.  However there will be no class or informatation
-	 * available about the property set.
-	 */
-/*	
-	static public PropertySet getPropertySetCreatingIfNecessary(String propertySetId, String extendablePropertySetId) {
-		PropertySet extendablePropertySet = (PropertySet)allPropertySetsMap.get(extendablePropertySetId);
-		if (extendablePropertySet == null) {
-			throw new RuntimeException("No extendable property set with an id of " + extendablePropertySetId + " exists.");
-		}
-		if (extendablePropertySet.isExtension()) {
-			throw new RuntimeException("extension on extension error");
-		}
-		PropertySet key = (PropertySet)extendablePropertySet.extensionPropertySets.get(propertySetId);
-		if (key == null) {
-			key = new PropertySet(propertySetId, true, extendablePropertySetId, null);
-		}
-		return key;
-	}
-*/	
 	public String toString() {
 		return propertySetId;
 	}
-	
 	
 	/**
 	 * @return The globally unique id of the property set.
@@ -1029,58 +559,23 @@ public class PropertySet<E> {
 	 * @see doc on implemetation classes
 	 * @return the implementation class
 	 */
-	public Class getImplementationClass() {
+	public Class<E> getImplementationClass() {
 		return classOfObject;
 	}
 	
 	/**
-	 * This is used in two situations:
-	 * - when data is read from an XML file and there is no value for a
-	 * property in the file.  The property from this method is passed
-	 * to the constructor.
-	 * - when a SQL column is created, the value from this method is
-	 * used as the default value.
+	 * Get the property accessor for a property in a 
+	 * property set.
 	 * 
-	 * @return an array of default property values, there being a value
-	 * 				for each scalar property (but not the list properties)
-	 */
-	public Object[] getDefaultPropertyValues2() {
-		// We do not cache the array returned by this method.
-		// The reason is that the default values may contain a
-		// timestamp or may depend on user options.
-		try {
-			Object [] values = (Object[])theDefaultPropertiesMethod.invoke(null, (Object [])null);
-			return values;
-		} catch (IllegalAccessException e) {
-			throw new MalformedPluginException("Method '" + theDefaultPropertiesMethod.getName() + "' in '" + getImplementationClass().getName() + "' must be public.");
-		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		}
-	}
-
-	/**
-	 * @return
-	 */
-	public E getDefaultPropertyValues() {
-		return defaultExtension;
-	}
-	
-	/**
-	 * Get the property accessor for a property in an 
-	 * extension property set.
+	 * This method looks in only in the given property set
+	 * (it will not look in base property sets or extension
+	 * property sets).
 	 *
 	 * @param name The local name of the property.  This name does not
 	 *          include the dotted prefix.
 	 */
 	public PropertyAccessor getProperty(String name) throws PropertyNotFoundException {
-		for (Iterator propertyIterator = properties.iterator(); propertyIterator.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIterator.next();
+		for (PropertyAccessor propertyAccessor: properties) {
 			if (propertyAccessor.getLocalName().equals(name)) {
 				return propertyAccessor;
 			}
@@ -1089,15 +584,21 @@ public class PropertySet<E> {
 	}
 	
 	/**
-	 * Gets a list of all property sets.  This method is used
-	 * by the Propagator class and also by the datastore plug-ins.
+	 * Gets a list of all extension property sets.
 	 *  
-	 * @return An iterator that will iterate over the full set
-	 * 		of property sets, returning for each the PropertySet
-	 * 		object.
+	 * @return the collection of all property sets
 	 */
-	static public Iterator getPropertySetIterator() {
-		return allPropertySetsMap.values().iterator();
+	static public Collection<ExtensionPropertySet> getAllExtensionPropertySets() {
+		return allExtensionPropertySetsMap.values();
+	}
+	
+	/**
+	 * Gets a list of all extendable property sets.
+	 *  
+	 * @return the collection of all property sets
+	 */
+	static public Collection<ExtendablePropertySet> getAllExtendablePropertySets() {
+		return allExtendablePropertySetsMap.values();
 	}
 	
 	/**
@@ -1138,402 +639,12 @@ public class PropertySet<E> {
 	}
 	
 	/**
-	 * Returns the set of all properties of the given set of property sets,
-	 * including both properties in the extendable object and properties in
-	 * extension property sets.
-	 * <P>
-	 * Properties from base property sets and properties from derived property
-	 * sets are not returned.
-	 * 
-	 * @return a collection of <code>PropertyAccessor</code> objects
-	 */
-	// This method may be called on extendable property sets only
-	// (i.e. not on extension property sets).
-	private Collection<PropertyAccessor> getProperties2() {
-		if (properties2 == null) {
-			properties2 = new Vector<PropertyAccessor>();
-
-			// Properties in this extendable object
-			for (PropertyAccessor propertyAccessor: properties) {
-				properties2.add(propertyAccessor);
-			}
-
-			// Properties in the extensions
-			for (PropertySet<?> extensionPropertySet: extensionPropertySets.values()) {
-				for (PropertyAccessor propertyAccessor: extensionPropertySet.properties) {
-					properties2.add(propertyAccessor);
-				}
-			}
-		}
-
-		return properties2;
-	}
-
-	public Collection<ScalarPropertyAccessor> getScalarProperties2() {
-		if (scalarProperties2 == null) {
-			scalarProperties2 = new Vector<ScalarPropertyAccessor>();
-
-			// Properties in this extendable object
-			for (ScalarPropertyAccessor propertyAccessor: getScalarProperties1()) {
-				scalarProperties2.add(propertyAccessor);
-			}
-
-			// Properties in the extensions
-			for (PropertySet<?> extensionPropertySet: extensionPropertySets.values()) {
-				for (ScalarPropertyAccessor propertyAccessor: extensionPropertySet.getScalarProperties1()) {
-					scalarProperties2.add(propertyAccessor);
-				}
-			}
-		}
-
-		return scalarProperties2;
-	}
-
-	public Collection<ListPropertyAccessor> getListProperties2() {
-		if (listProperties2 == null) {
-			listProperties2 = new Vector<ListPropertyAccessor>();
-
-			// Properties in this extendable object
-			for (ListPropertyAccessor propertyAccessor: getListProperties1()) {
-				listProperties2.add(propertyAccessor);
-			}
-
-			// Properties in the extensions
-			for (PropertySet<?> extensionPropertySet: extensionPropertySets.values()) {
-				for (ListPropertyAccessor propertyAccessor: extensionPropertySet.getListProperties1()) {
-					listProperties2.add(propertyAccessor);
-				}
-			}
-		}
-
-		return listProperties2;
-	}
-/*
-	// This method may be called on extendable property sets only
-	// (i.e. not on extension property sets).
-	public Iterator<ScalarPropertyAccessor> getPropertyIterator_Scalar2() {
-		// Build an array - not efficient but easy and avoids concurrency problems.
-		// TODO: write a proper iterator, or at least cache this vector.
-		Vector<ScalarPropertyAccessor> fields = new Vector<ScalarPropertyAccessor>();
-
-		// Properties in this extendable object
-		for (PropertyAccessor propertyAccessor: getProperties1()) {
-			if (propertyAccessor instanceof ScalarPropertyAccessor) {
-				fields.add((ScalarPropertyAccessor)propertyAccessor);
-			}
-		}
-
-		// Properties in the extensions
-		for (PropertySet<?> extensionPropertySet: extensionPropertySets.values()) {
-    		for (PropertyAccessor propertyAccessor: extensionPropertySet.getProperties1()) {
-				if (propertyAccessor instanceof ScalarPropertyAccessor) {
-					fields.add((ScalarPropertyAccessor)propertyAccessor);
-				}
-			}
-		}
-		
-		return fields.iterator();
-	}
-*/
-
-	/**
-	 * Returns an iterator which iterates over all properties
-	 * of the given set of property sets, including all
-	 * extension properties, and all base properties including
-	 * all extension properties to the base property sets.
-	 * <P>
-	 * This is the set of properties that can be set against
-	 * an object that implements this property set.
-	 * <P>
-	 * Properties are returned with the properties from the
-	 * base-most class first, then properties from the class
-	 * immediately derived from the base-most class, and so
-	 * on with the properties from this property set being
-	 * last.  This order gives the most intuitive order from
-	 * the user's perspective.  This order also ensures that
-	 * a property in a base class has the same index in the returned order,
-	 * regardless of the actual derived property set.
-	 * 
-	 * @ return An iterator which iterates over a set of
-	 * 		<code>PropertyAccessor</code> objects.
-	 */
-	// This method may be called on extendable property sets only
-	// (i.e. not on extension property sets).
-/*
-	public Iterator getPropertyIterator3() {
-		// Build an array - not efficient but easy and avoids concurrency problems.
-		// TODO: write a proper iterator, or at least cache this vector.
-		Vector<PropertyAccessor> fields = new Vector<PropertyAccessor>();
-
-		// Properties in this and all the base property sets
-		PropertySet<?> extendablePropertySet = this;
-		do {
-			int index= 0;
-			for (PropertyAccessor propertyAccessor: extendablePropertySet.getProperties2()) {
-				fields.insertElementAt(propertyAccessor, index++);
-			}
-			extendablePropertySet = extendablePropertySet.getBasePropertySet();
-		} while (extendablePropertySet != null);
-
-		return fields.iterator();
-	}
-*/
-	public Collection<PropertyAccessor> getProperties3() {
-		if (properties3 == null) {
-			Vector<PropertyAccessor> v = new Vector<PropertyAccessor>();
-
-			// Properties in this and all the base property sets
-			PropertySet<?> extendablePropertySet = this;
-			do {
-				int index= 0;
-				for (PropertyAccessor propertyAccessor: extendablePropertySet.getProperties2()) {
-					v.insertElementAt(propertyAccessor, index++);
-				}
-				extendablePropertySet = extendablePropertySet.getBasePropertySet();
-			} while (extendablePropertySet != null);
-			
-			properties3 = v;
-		}
-
-		return properties3;
-	}
-
-	public Collection<ScalarPropertyAccessor> getScalarProperties3() {
-		if (scalarProperties3 == null) {
-			Vector<ScalarPropertyAccessor> v = new Vector<ScalarPropertyAccessor>();
-
-			// Properties in this and all the base property sets
-			PropertySet<?> extendablePropertySet = this;
-			do {
-				int index= 0;
-				for (ScalarPropertyAccessor propertyAccessor: extendablePropertySet.getScalarProperties2()) {
-					v.insertElementAt(propertyAccessor, index++);
-				}
-				extendablePropertySet = extendablePropertySet.getBasePropertySet();
-			} while (extendablePropertySet != null);
-			
-			scalarProperties3 = v;
-		}
-
-		return scalarProperties3;
-	}
-
-	public Collection<ListPropertyAccessor> getListProperties3() {
-		if (listProperties3 == null) {
-			Vector<ListPropertyAccessor> v = new Vector<ListPropertyAccessor>();
-
-			// Properties in this and all the base property sets
-			PropertySet<?> extendablePropertySet = this;
-			do {
-				int index= 0;
-				for (ListPropertyAccessor propertyAccessor: extendablePropertySet.getListProperties2()) {
-					v.insertElementAt(propertyAccessor, index++);
-				}
-				extendablePropertySet = extendablePropertySet.getBasePropertySet();
-			} while (extendablePropertySet != null);
-			
-			listProperties3 = v;
-		}
-
-		return listProperties3;
-	}
-
-	/**
-	 * Returns an iterator which iterates over all properties
-	 * of the given set of property sets, including both properties in the 
-	 * extendable object and properties in extension property sets.
-	 * <P>
-	 * This method does not have access to an instance of the property set class,
-	 * and so it must return all properties that may be in an
-	 * object including properties that may not be applicable in
-	 * some objects.  We therefore include all properties in
-	 * all base classes, all classes derived from this class, and all
-	 * extensions to any base or derived classes.  (Properties in classes
-	 * or extensions of classes that are derived from a base class of
-	 * the given class are not returned).
-	 * 
-	 * @ return An iterator which iterates over a set of
-	 * 		<code>PropertyAccessor</code> objects.
-	 */
-/*	
-	// This method may be called on extendable property sets only
-	// (i.e. not on extension property sets).
-	public Iterator getPropertyIterator4() {
-		// Build an array - not efficient but easy and avoids concurrency problems.
-		// TODO: write a proper iterator, or at least cache this vector.
-		Vector<PropertyAccessor> fields = new Vector<PropertyAccessor>();
-
-		// Properties in this and all the base property sets
-		for (Iterator propertyIterator = getPropertyIterator3(); propertyIterator.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIterator.next();
-			fields.add(propertyAccessor);
-		}
-		
-		// Properties from derived property sets
-		addPropertiesFromDerivedPropertySets(fields);
-		
-		return fields.iterator();
-	}
-
-	// private helper method.
-	// Method valid for extendable property set only.
-	// TODO: This method is broken.  The derived properties sets are all the non-derivable
-	// property sets, including possibly this property set.
-	void addPropertiesFromDerivedPropertySets(Vector<PropertyAccessor> fields) {
-		for (Iterator<PropertySet<? extends E>> propertySetIterator = derivedPropertySets.iterator(); propertySetIterator.hasNext(); ) {
-			PropertySet<? extends E> derivedPropertySet = propertySetIterator.next();
-			
-			for (Iterator propertyIterator = derivedPropertySet.getPropertyIterator2(); propertyIterator.hasNext(); ) {
-				PropertyAccessor propertyAccessor = (PropertyAccessor)propertyIterator.next();
-				fields.add(propertyAccessor);
-			}
-			
-			derivedPropertySet.addPropertiesFromDerivedPropertySets(fields);
-		}
-	}		
-*/
-	/**
-	 * Gets a list of all property sets that extend the given property
-	 * set.  This method is used by the Propagator class only.
-	 * <P>
-	 * Note:
-	 * This method does not return derived property sets.
-	 * This method does not return property sets that extend any 
-	 * property sets from which this property set is derived.
-	 *  
-	 * @param extendablePropertySetId
-	 * @return An iterator that iterates over the property sets
-	 * 			that extend the given extendable property set,
-	 * 			returning for each property set a String containing
-	 * 			the id of that property set.
-	 */
-	static Iterator getExtensionPropertySetIterator(PropertySet extendablePropertySet) {
-		if (extendablePropertySet.isExtension()) {
-			throw new RuntimeException("cannot iterate extension property sets of an extension");
-		}
-		return extendablePropertySet.extensionPropertySets.values().iterator();
-	}
-	
-	
-	/**
-	 * Gets the accessor for a property given the full name of the property.
-	 *
-	 * This method is used when a column name is persisted in, say, a preferences file.
-	 * This method is also used to get the base properties that are hard coded
-	 * into both the framework and possibly plug-ins.
-	 * 
-	 * @param name The fully qualified property name
-	 */
-	public static PropertyAccessor getPropertyAccessor(String fullPropertyName) throws PropertyNotFoundException {
-		// The local name for properties are the property names that
-		// match the getter and setter method names according to the
-		// Java Bean property patterns.  They cannot therefore contain
-		// a dot.  We are therefore able to separate the property set id
-		// and the local property name by looking for the last dot in
-		// the full property name.
-		
-		int dotLocation = fullPropertyName.lastIndexOf('.');
-		if (dotLocation <= 0) return null;
-		if (dotLocation == fullPropertyName.length() - 1) return null;
-		
-		String propertySetId = fullPropertyName.substring(0, dotLocation);
-		String localName = fullPropertyName.substring(dotLocation + 1);
-		
-		PropertySet propertySet = (PropertySet)allPropertySetsMap.get(propertySetId);
-		if (propertySet == null) {
-			// TODO should we use the different exception for
-			// the case where the property set is not found?
-			throw new PropertyNotFoundException(propertySetId, localName);
-		}
-		
-		PropertyAccessor propertyAccessor = propertySet.getProperty(localName);
-		if (propertyAccessor == null) {
-			throw new PropertyNotFoundException(propertySetId, localName);
-		} 
-		
-		return propertyAccessor;
-	}
-	
-	
-	/**
-	 * Gets the accessor for a property given the local name of the property.
-	 *
-	 * This method searches only this property set and any base
-	 * property sets.  No extensions are searched.
-	 * <P>
-	 * This method is used when a column name is persisted in, say, a file
-	 * and we are keen to keep the data in the file as simple and short as
-	 * possible.  We therefore allow local names only to be specified.
-	 * Local names may not be unique when extensions are included, so we
-	 * must require fully qualified names for extensions.
-	 * 
-	 * @param name The local property name
-	 */
-	public PropertyAccessor getPropertyAccessorGivenLocalNameAndExcludingExtensions(String localPropertyName) throws PropertyNotFoundException {
-		PropertySet thisPropertySet = this;
-		do {
-			try {
-				return thisPropertySet.getProperty(localPropertyName);
-			} catch (PropertyNotFoundException e) {
-			}
-			thisPropertySet = thisPropertySet.getBasePropertySet();
-		} while (thisPropertySet != null);
-		
-		throw new PropertyNotFoundException(propertySetId, localPropertyName);
-	}
-	
-	
-	/**
 	 * @return
 	 */
 	public boolean isExtension() {
 		return isExtension;
 	}
-
-
-	/**
-	 * @return localized text describing the type of object
-	 * 			represented by this property set
-	 */
-	public String getObjectDescription() {
-		if (isExtension() || isDerivable()) {
-			throw new RuntimeException("internal error");
-		}
-		return objectDescription;
-	}
-
-
-	/**
-	 * This method is valid for extendable property sets only.
-	 * Do not call this method on extension property sets.
-	 * 
-	 * @return If this property set is derived from another property
-	 * 			set then the base property set is returned, otherwise
-	 * 			null is returned.
-	 */
-	public PropertySet<? super E> getBasePropertySet() {
-		if (isExtension) {
-			throw new RuntimeException("getBasePropertySet called for an extension.");
-		}
-		
-		return basePropertySet;
-	}
 	
-	/**
-	 * This method is valid for extension property sets only.
-	 * Do not call this method on extendable property sets.
-	 * 
-	 * @return The property set being extended by this property set.
-	 */
-	public PropertySet getExtendablePropertySet() {
-		if (!isExtension) {
-			throw new RuntimeException("getExtensionPropertySet called for an extendable property set.");
-		}
-		
-		return extendablePropertySet;
-	}	
-
-
 	/**
 	 * This method should be used only by plug-ins that implement
 	 * a datastore.
@@ -1592,78 +703,36 @@ public class PropertySet<E> {
 	}
 
 
-	/**
-	 * @return True if this property set can only be used by
-	 * 			deriving another property set from it, false
-	 * 			if property sets cannot be derived from this
-	 * 			property set.
-	 */
-	public boolean isDerivable() {
-		return derivable;
+
+	public static <E2 extends ExtendableObject> ExtendablePropertySet<E2> addBasePropertySet(Class<E2> classOfImplementationObject) {
+		return new ExtendablePropertySet<E2>(classOfImplementationObject);
 	}
 
-
-	/**
-	 * 
-	 * @return an Iterator that iterates over all the property sets
-	 * 				that are derived from this property set and
-	 * 				that are themselves not derivable
-	 */
-	public Iterator<PropertySet<? extends E>> getDerivedPropertySetIterator() {
-		return derivedPropertySets.iterator();
+	public static <E extends ExtendableObject> ExtendablePropertySet<E> addDerivedPropertySet(Class<E> classOfImplementationObject, ExtendablePropertySet<? super E> basePropertySet) {
+		return new ExtendablePropertySet<E>(classOfImplementationObject, basePropertySet);
 	}
 
-	/**
-	 * Returns the set of tabbed pages that are to be shown in the
-	 * editor associated with extendable objects of this property set.
-	 * <P>
-	 * This method is valid only for non-derivable extendable property sets.
-	 * 
-	 * @return a set of objects of type PageEntry
-	 */
-	public Vector<PageEntry> getPageFactories() {
-		return pageExtensions;		
+	public static <E extends ExtensionObject> ExtensionPropertySet<E> addExtensionPropertySet(Class<E> classOfImplementationObject, ExtendablePropertySet<?> extendablePropertySet) {
+		return new ExtensionPropertySet<E>(classOfImplementationObject, extendablePropertySet, true);
 	}
 
-
-	/**
-	 * @param pageEntry
-	 */
-	public void addPage(PageEntry newPage) {
-		int addIndex = pageExtensions.size();
-		for (int i = 0; i < pageExtensions.size(); i++) {
-			PageEntry page = (PageEntry) pageExtensions.get(i);
-			if (newPage.getPosition() < page.getPosition()) {
-				addIndex = i;
-				break;
-			}
+	public <V> ScalarPropertyAccessor<V> addProperty(String name, String displayName, Class<V> classOfValue, int weight, int minimumWidth, IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency propertyDependency) {
+		if (propertyControlFactory == null) {
+			throw new MalformedPluginException(
+					"No IPropertyControlFactory object has been specified for property " + name
+					+ ".  This is needed even if the property is not editable.  (Though the method that gets the" +
+			" control may return null if the property is not editable).");
 		}
-		pageExtensions.add(addIndex, newPage);
+
+		ScalarPropertyAccessor<V> accessor = new ScalarPropertyAccessor<V>(classOfValue, this, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency);
+		properties.add(accessor);
+		return accessor;
 	}
 
-
-	/** used internally */
-	String getIconFileName() {
-		return iconFileName;
+	public <E2 extends ExtendableObject> ListPropertyAccessor<E2> addPropertyList(String name, String displayName, ExtendablePropertySet<E2> elementPropertySet, IPropertyDependency propertyDependency) {
+		ListPropertyAccessor<E2> accessor = new ListPropertyAccessor<E2>(this, name, displayName, elementPropertySet, propertyDependency);
+		properties.add(accessor);
+		return accessor;
 	}
-
-	/**
-	 * This method creates the image on first call.  It is very
-	 * important that the image is not created when the this PropertySet
-	 * object is initialized.  The reason is that this PropertySet is
-	 * initialized by a different thread than the UI thread.  Images
-	 * must be created by UI thread.
-	 * <P>
-	 * This method is valid for extendable property sets only.
-	 * 
-	 * @return the icon associated with objects that implement
-	 * 			this property set.
-	 */
-	public Image getIcon() {
-		if (iconImage == null)
-			iconImage = JMoneyPlugin.createImage(iconFileName);
-		return iconImage;
-	}
-
 
 }

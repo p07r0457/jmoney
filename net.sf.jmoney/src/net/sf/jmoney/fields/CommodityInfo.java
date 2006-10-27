@@ -24,8 +24,8 @@ package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
@@ -49,36 +49,30 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  */
 public class CommodityInfo implements IPropertySetInfo {
 
-	private static PropertySet<Commodity> propertySet = null;
+	private static ExtendablePropertySet<Commodity> propertySet = PropertySet.addBasePropertySet(Commodity.class);
 	private static ScalarPropertyAccessor<String> nameAccessor = null;
 
-	public CommodityInfo() {
-    }
-
-	public Class getImplementationClass() {
-		return Commodity.class;
-	}
-
-	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		propertySet = propertyRegistrar.addPropertySet(Commodity.class);
-		
+	public PropertySet registerProperties() {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		
-		nameAccessor = propertyRegistrar.addProperty("name", JMoneyPlugin.getResourceString("Commodity.name"), String.class, 3, 20, textControlFactory, null);
-		propertyRegistrar.setDerivableInfo("commodityType", "Commodity Type");
-	}
+		nameAccessor = propertySet.addProperty("name", JMoneyPlugin.getResourceString("Commodity.name"), String.class, 3, 20, textControlFactory, null);
 
-	/**
-	 * @return
-	 */
-	public static PropertySet<Commodity> getPropertySet() {
+		propertySet.setDerivable();
+		
 		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static ScalarPropertyAccessor getNameAccessor() {
+	public static ExtendablePropertySet<Commodity> getPropertySet() {
+		return propertySet;
+	}
+
+	/**
+	 * @return
+	 */
+	public static ScalarPropertyAccessor<String> getNameAccessor() {
 		return nameAccessor;
 	}	
 }

@@ -169,15 +169,6 @@ public class CurrencyAccount extends CapitalAccount {
 		        return getParent().getFullAccountName() + "." + this.name;
 		    }
 	}
-
-	/**
-	 * Required by JMoney.
-	 */
-	// TODO: remove all of these and instead specify any 'unusual'
-	// default values (if required at all) in the property registration.
-	static public Object [] getDefaultProperties() {
-		return new Object [] { "new account", null, null, null, new Long(0), null, null, null };
-	}
 	
 	/**
 	 * Get the balance at a given date

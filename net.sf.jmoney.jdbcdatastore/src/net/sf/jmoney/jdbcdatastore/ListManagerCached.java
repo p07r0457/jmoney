@@ -26,9 +26,9 @@ import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.ListPropertyAccessor;
-import net.sf.jmoney.model2.PropertySet;
 
 /**
  * Every datastore implementation must provide an implementation
@@ -49,7 +49,7 @@ public class ListManagerCached<E extends ExtendableObject> extends Vector<E> imp
 		this.listProperty = listProperty;
 	}
 
-	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet) {
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
 		// We must create the object before we persist it to the database.
 		// The reason why we must do this, and not simply write the
 		// default values, is that the constructor only uses the
@@ -86,7 +86,7 @@ public class ListManagerCached<E extends ExtendableObject> extends Vector<E> imp
 		return extendableObject;
 	}
 
-	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet, Object[] values) {
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, Object[] values) {
 		// We must create the object before we persist it to the database.
 		// The reason why we must do this, and not simply write the
 		// default values, is that the constructor only uses the

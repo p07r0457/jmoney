@@ -267,7 +267,7 @@ public class EntriesTree extends Composite {
 				if (!checkAndCommitTransaction(null)) {
 					return;
 				}
-           		
+//TODO: NRWNRW Problem: we get here while not in a transaction.  Not allowed.           		
            		Transaction transaction = session.createTransaction();
            		Entry entry1 = transaction.createEntry();
            		Entry entry2 = transaction.createEntry();
@@ -359,8 +359,7 @@ public class EntriesTree extends Composite {
         			
         			Transaction transaction = selectedEntry.getTransaction();
         			transaction.getSession().deleteTransaction(transaction);
-        			transaction.getSession().registerUndoableChange("Delete Transaction");
-        			transactionManager.commit();
+        			transactionManager.commit("Delete Transaction");
         		}
         	}
         });
@@ -423,8 +422,6 @@ public class EntriesTree extends Composite {
             			newEntry.setIncomeExpenseCurrency((Currency)selectedEntry.getCommodity());
         			}
         			
-        			transaction.getSession().registerUndoableChange("New Split");
-        			
                		// Select the new entry in the entries list.
                     setSelection(selectedEntry, newEntry);
         		} else {
@@ -471,7 +468,6 @@ public class EntriesTree extends Composite {
     				
         			Transaction transaction = selectedEntry.getTransaction();
         			transaction.deleteEntry(selectedEntry);
-        			transaction.getSession().registerUndoableChange("Delete Split");
         		}
         	}
         });

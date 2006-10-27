@@ -25,8 +25,8 @@ package net.sf.jmoney.isolation;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
@@ -160,7 +160,7 @@ public class UncommittedObjectKey implements IObjectKey {
 		}
 	}
 
-	public void updateProperties(PropertySet<?> actualPropertySet, Object[] oldValues, Object[] newValues) {
+	public void updateProperties(ExtendablePropertySet<?> actualPropertySet, Object[] oldValues, Object[] newValues) {
 		/*
 		 * If this object is a new object, never committed to the datastore,
 		 * then we have nothing to do. However, if this object has been

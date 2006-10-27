@@ -22,11 +22,12 @@
 
 package net.sf.jmoney.qif;
 
+import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TextControlFactory;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtensionPropertySet;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
@@ -63,20 +64,11 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class QIFEntryInfo implements IPropertySetInfo {
 
-	private static PropertySet<QIFEntry> propertySet = null;
+	private static ExtensionPropertySet<QIFEntry> propertySet = PropertySet.addExtensionPropertySet(QIFEntry.class, EntryInfo.getPropertySet());
 	private static ScalarPropertyAccessor<Character> reconcilingStateAccessor;
 	private static ScalarPropertyAccessor<String> addressAccessor;
 	
-    public QIFEntryInfo() {
-    }
-
-	public Class getImplementationClass() {
-		return QIFEntry.class;
-	}
-	
-	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		propertySet = propertyRegistrar.addPropertySet(QIFEntry.class);
-
+	public PropertySet registerProperties() {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		IPropertyControlFactory<Character> stateControlFactory = new PropertyControlFactory<Character>() {
 
@@ -98,14 +90,16 @@ public class QIFEntryInfo implements IPropertySetInfo {
 			}
 		};
 		
-		reconcilingStateAccessor = propertyRegistrar.addProperty("reconcilingState", "Reconciled", Character.class, 1, 20, stateControlFactory, null);
-		addressAccessor = propertyRegistrar.addProperty("address", "Address", String.class, 3, 30, textControlFactory, null);
+		reconcilingStateAccessor = propertySet.addProperty("reconcilingState", "Reconciled", Character.class, 1, 20, stateControlFactory, null);
+		addressAccessor = propertySet.addProperty("address", "Address", String.class, 3, 30, textControlFactory, null);
+		
+		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertySet<QIFEntry> getPropertySet() {
+	public static ExtensionPropertySet<QIFEntry> getPropertySet() {
 		return propertySet;
 	}
 

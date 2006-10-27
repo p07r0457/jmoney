@@ -24,6 +24,7 @@ package net.sf.jmoney.views;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 
@@ -75,7 +76,7 @@ public class NodeEditorFactory implements IElementFactory {
 			if (JMoneyPlugin.DEBUG) System.out.println("editor factory, session = " + session);
 			Account account = JMoneyPlugin.getDefault().getSession().getAccountByFullName(fullAccountName);
 			if (account != null) {
-   				PropertySet<?> propertySet = PropertySet.getPropertySet(account.getClass());
+   				ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(account.getClass());
 				return new NodeEditorInput(
 						account, 
 						account.toString(), 

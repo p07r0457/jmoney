@@ -165,9 +165,5 @@ public class Currency extends Commodity {
 	public short getScaleFactor() {
 		return SCALE_FACTOR[decimals];
 	}
-
-	static public Object [] getDefaultProperties() {
-		return new Object [] { "new currency", null, new Integer(2) };
-	}
 }
 

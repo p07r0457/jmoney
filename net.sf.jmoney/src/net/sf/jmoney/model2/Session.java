@@ -33,10 +33,12 @@ import java.util.Vector;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.fields.TransactionInfo;
+import net.sf.jmoney.isolation.TransactionManager;
 
+import org.eclipse.core.commands.operations.IUndoContext;
+import org.eclipse.core.commands.operations.UndoContext;
 import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.internal.Workbench;
 
 /**
  * Holds the fields that will be saved in a file.
@@ -55,7 +57,9 @@ public class Session extends ExtendableObject implements IAdaptable {
         
 	private ChangeManager changeManager = new ChangeManager();
 
-    /**
+	private IUndoContext undoContext = new UndoContext();
+
+	/**
      * Constructor used by datastore plug-ins to create
      * a session object.
      */
@@ -257,7 +261,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 	 * @param account
 	 * @return
 	 */
-	public <A extends Account> A createAccount(PropertySet<A> propertySet) {
+	public <A extends Account> A createAccount(ExtendablePropertySet<A> propertySet) {
 		return getAccountCollection().createNewElement(propertySet);
 	}
 
@@ -285,7 +289,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 	 * @param commodity
 	 * @return
 	 */
-	public Commodity createCommodity(PropertySet<? extends Commodity> propertySet) {
+	public Commodity createCommodity(ExtendablePropertySet<? extends Commodity> propertySet) {
 		return getCommodityCollection().createNewElement(propertySet);
 	}
 
@@ -317,7 +321,7 @@ public class Session extends ExtendableObject implements IAdaptable {
         	return getAccountCollection().remove(account);
         } else {
         	// Pass the request on to the parent account.
-            return ((Account)parent).deleteSubAccount(account);
+            return parent.deleteSubAccount(account);
         }
     }
 
@@ -329,10 +333,6 @@ public class Session extends ExtendableObject implements IAdaptable {
 		return changeManager;
 	}
 
-	static public Object [] getDefaultProperties() {
-		return new Object [] { null };
-	}
-	
     /**
      * @author Faucheux
      * TODO: Faucheux - not the better algorythm!
@@ -372,68 +372,6 @@ public class Session extends ExtendableObject implements IAdaptable {
 	    return foundAccount;
 	}
 
-	
-	/**
-	 * Indicates the completion of a set of changes to the datastore 
-	 * that make a single undo/redo change.  This undo/redo change
-	 * will be added to the list of past changes that can be undone.
-	 * If there are any undone changes that can be redone then those
-	 * are cleared because once a new change is made, undo changes cannot
-	 * be redone.
-	 * <P>
-	 * If no changes were made then this method does nothing.
-	 * The change will not appear in the list of changes that can
-	 * be undone and the list of changes that can be redone is not cleared.
-	 * 
-	 * @param string Localized text describing the change.
-	 */
-	public void registerUndoableChange(String description) {
-		// Pass the request on to the change manager.
-		changeManager.registerChanges(description);
-	}
-
-	/**
-	 * @param string
-	 */
-	public void undoChange(IWorkbenchWindow window) {
-		String nextUndoDescription = changeManager.getUndoDescription();
-		if (nextUndoDescription == null) {
-			MessageDialog.openInformation(
-					window.getShell(),
-					"Jmoney Plug-in",
-					"No change that can be 'undone'.");
-			return;
-		}
-		
- 		if (MessageDialog.openQuestion(
-				window.getShell(),
-				"Jmoney Plug-in",
-				"Undo " + nextUndoDescription + "?")) {
- 			changeManager.undoChange();
- 		}
-	}
-
-	/**
-	 * @param string
-	 */
-	public void redoChange(IWorkbenchWindow window) {
-		String nextRedoDescription = changeManager.getRedoDescription();
-		if (nextRedoDescription == null) {
-			MessageDialog.openInformation(
-					window.getShell(),
-					"Jmoney Plug-in",
-					"No change that can be 'redone'.");
-			return;
-		}
-		
- 		if (MessageDialog.openQuestion(
-				window.getShell(),
-				"Jmoney Plug-in",
-				"Redo " + nextRedoDescription + "?")) {
- 			changeManager.redoChange();
- 		}
-	}
-
 	/**
 	 * Certain operations may be executed more efficiently by the datastore.
 	 * For example, if the datastore is implemented on top of a database and
@@ -470,6 +408,31 @@ public class Session extends ExtendableObject implements IAdaptable {
 
 	public class SeveralAccountsFoundException extends Exception {
 		private static final long serialVersionUID = -6427097946645258873L;
-	};
+	}
 
+	/**
+	 * JMoney supports undo/redo using a context that is based on the data
+	 * manager.
+	 * 
+	 * The underlying data manager (supported by the underlying datastore) and
+	 * the transaction manager session objects each have a different context.
+	 * 
+	 * Changes within a transaction manager have a separate context. This is
+	 * necessary because if a view is making changes to an through a transaction
+	 * manager to an uncommitted version of the datastore then the undo/redo
+	 * menu needs to show those changes for the view.
+	 * 
+	 * @return the undo/redo context to be used for changes made to this session
+	 */
+	public IUndoContext getUndoContext() {
+		// If not in a transaction, use the workbench context.
+		// This may need some tidying up, but by using a common context,
+		// this allows undo/redo to work even across a closing or
+		// opening of a session.  There may be a better way of doing this.
+		if (this.getObjectKey().getSessionManager() instanceof TransactionManager) {
+			return undoContext;
+		} else {
+			return JMoneyPlugin.getDefault().getWorkbench().getOperationSupport().getUndoContext();
+		}
+	};
 }

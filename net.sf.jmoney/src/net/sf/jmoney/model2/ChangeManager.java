@@ -26,25 +26,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
-
 /**
- * Keeps track of changes made to the model.
+ * Keeps track of changes made to the model.  This is done to enable the 
+ * undo/redo feature.
  * 
- * There are two purposes for keeping track of changes:
- * <UL>
- * <LI>Support for the undo/redo feature</LI>
- * <LI>Changes to any underlying database can be made more efficient
- * 		by combining changes.  For example, if an object is created
- * 		and then properties are set, and a SQL database is used for storage,
- * 		what would be an insert and multiple updates can be merged into
- * 		a single insert.</LI>
- * <LI>Changes made within a transaction should not be visible to others
- * 		until the transaction is committed.</LI>
- * <UL>
- * 
- * This class solves the first of the two above problems only.
- * <P>
  * As changes are undone and redone, the id of each object may change.
  * For example, in the serializeddatastore plug-in, the id of each object
  * is a reference to the object itself, i.e. the java identity.  Unless
@@ -59,38 +44,12 @@ import net.sf.jmoney.JMoneyPlugin;
  * deleted.  When an object is deleted, all old values that reference
  * the object are replaced with references to the delete entry.
  * This allows the data to be re-created correctly by the undo method.
- * <P>
- * The changes are made to the database by this class when the changes are
- * passed to this class.  Although it may be more efficient to execute
- * the changes in the database when they are committed, this would result
- * in changes not being reflected in query statements that are submitted
- * after the changes were made by the plug-in but before the plug-in
- * committed the changes.
  * 
- *  @author Nigel Westbury
- *
+ * @author Nigel Westbury
  */
 public class ChangeManager {
 	
-	private final int MAXIMUM_UNDOABLE_CHANGES = 50;
-	
-	/**
-	 * Array of previous changes.  These changes may be
-	 * undone using the 'undo' action.  The last change made
-	 * is last in the array, so changes are added to the end
-	 * of the array and undone from the end of the array.
-	 */
-	private Vector<UndoableChange> previousChanges = new Vector<UndoableChange>();
-	
-	/**
-	 * Array of undone changes.  These changes may be redone
-	 * using the 'redo' action.  As a change is undone, it is
-	 * added to the end of this array.  Changes are redone starting
-	 * at the end of this array.
-	 */
-	private Vector<UndoableChange> undoneChanges = new Vector<UndoableChange>();
-	
-	private class UndoableChange {
+	public class UndoableChange {
 		private String description;
 		
 		/**
@@ -123,7 +82,7 @@ public class ChangeManager {
 		public void undoChanges() {
 			// Undo the changes in reverse order.
 			for (int i = changes.size()-1; i >= 0; i--) {
-				ChangeEntry changeEntry = (ChangeEntry)changes.get(i);
+				ChangeEntry changeEntry = changes.get(i);
 				changeEntry.undo();
 			}
 		}
@@ -159,25 +118,31 @@ public class ChangeManager {
 		}
 	}
 	
-	class ChangeEntry_Update extends ChangeEntry {
-		ScalarPropertyAccessor propertyAccessor;
-		//		PropertySet actualPropertySet;
-		Object oldValue;
-		//		Object newValue;
+	class ChangeEntry_Update<V> extends ChangeEntry {
+		ScalarPropertyAccessor<V> propertyAccessor;
+		V oldValue = null;  // if not an extendable object
+		KeyProxy oldValueProxy = null; // If an extendable object
+		
 		void undo() {
 			ExtendableObject object = objectKeyProxy.key.getObject();  // efficient???
-			object.setPropertyValue(propertyAccessor, oldValue);
+			if (propertyAccessor.getClassOfValueObject().isAssignableFrom(ExtendableObject.class)) {
+				// If IObjectKey had a type parameter, we would not need
+				// this cast.
+				object.setPropertyValue(propertyAccessor, propertyAccessor.getClassOfValueObject().cast(oldValueProxy.key.getObject()));
+			} else {
+				object.setPropertyValue(propertyAccessor, oldValue);
+			}
 		}
 		
 		void destroy() {
 			super.destroy();
-			if (oldValue instanceof KeyProxy) {
-				ChangeManager.this.release((KeyProxy)oldValue);
+			if (oldValueProxy != null) {
+				ChangeManager.this.release(oldValueProxy);
 			}
 			
 		}
 	}
-	
+
 	class ChangeEntry_Insert extends ChangeEntry {
 		ExtendableObject parent;
 		ListPropertyAccessor<?> owningListProperty;
@@ -201,22 +166,12 @@ public class ChangeManager {
 		Object [] oldValues;
 		ExtendableObject parent;
 		ListPropertyAccessor<? super E> owningListProperty;
-		PropertySet<? extends E> actualPropertySet;
+		ExtendablePropertySet<? extends E> actualPropertySet;
 		
 		void undo() {
 			// Create the object in the datastore.
-			ExtendableObject object = parent.getListPropertyValue(owningListProperty).createNewElement(actualPropertySet);
-			
-			// Set the properties to the values that were set before
-			// the object was deleted.
-			int index = 0;
-			for (ScalarPropertyAccessor propertyAccessor: actualPropertySet.getScalarProperties3()) {
-				if (index != propertyAccessor.getIndexIntoScalarProperties()) {
-					throw new RuntimeException("index mismatch");
-				}
-				object.setPropertyValue(propertyAccessor, oldValues[index++]);
-			}
-			
+			ExtendableObject object = parent.getListPropertyValue(owningListProperty).createNewElement(actualPropertySet, oldValues, false);
+
 			// Set the new object key back into the proxy.
 			// This ensures earlier changes to this object will
 			// be undone in this object.
@@ -259,6 +214,8 @@ public class ChangeManager {
 	
 	private Map<IObjectKey, KeyProxy> keyProxyMap = new HashMap<IObjectKey, KeyProxy>();
 	
+	private UndoableChange currentUndoableChange = null;
+	
 	private KeyProxy getKeyProxy(IObjectKey objectKey) {
 		if (objectKey != null) {
 			KeyProxy keyProxy = (KeyProxy)keyProxyMap.get(objectKey);
@@ -291,8 +248,6 @@ public class ChangeManager {
 		}
 	}
 	
-	private UndoableChange currentUndoableChange = null;
-	
 	private UndoableChange getCurrentUndoableChange() {
 		if (currentUndoableChange == null) {
 			currentUndoableChange = new UndoableChange();
@@ -307,32 +262,28 @@ public class ChangeManager {
 	 * the class of this object or which extends any super class
 	 * of the class of this object.
 	 */
-	public void processPropertyUpdate(
+	public <V> void processPropertyUpdate(
 			ExtendableObject object,
-			ScalarPropertyAccessor<?> propertyAccessor,
-			Object oldValue,
-			Object newValue) {
-		
-		ChangeEntry_Update newChangeEntry = new ChangeEntry_Update();
+			ScalarPropertyAccessor<V> propertyAccessor,
+			V oldValue,
+			V newValue) {
+
+		ChangeEntry_Update<V> newChangeEntry = new ChangeEntry_Update<V>();
 		
 		newChangeEntry.objectKeyProxy = getKeyProxy(object.getObjectKey());
 		
 		// Replace any keys with proxy keys
 		if (propertyAccessor.getClassOfValueObject().isAssignableFrom(ExtendableObject.class)) {
-			newChangeEntry.oldValue = getKeyProxy((IObjectKey)oldValue);
-			//			newChangeEntry.newValue = getKeyProxy((IObjectKey)newValue);
+			newChangeEntry.oldValueProxy = getKeyProxy((IObjectKey)oldValue);
 		} else {
 			newChangeEntry.oldValue = oldValue;
-			//			newChangeEntry.newValue = newValue;
 		}
 		
 		newChangeEntry.propertyAccessor = propertyAccessor;
-		//		newChangeEntry.actualPropertySet = PropertySet.getPropertySet(object.getClass());
 		
 		getCurrentUndoableChange().addChange(newChangeEntry);
-		
 	}
-	
+
 	public void processObjectCreation(
 			ExtendableObject parent,
 			ListPropertyAccessor owningListProperty,
@@ -349,7 +300,7 @@ public class ChangeManager {
 	
 	public <E extends ExtendableObject> void processObjectDeletion(
 			ExtendableObject parent,
-			ListPropertyAccessor<? super E> owningListProperty,
+			ListPropertyAccessor<E> owningListProperty,
 			E oldObject) {
 		
 		// TODO: We must also process objects owned by this object in a recursive
@@ -361,7 +312,7 @@ public class ChangeManager {
 		newChangeEntry.objectKeyProxy = getKeyProxy(oldObject.getObjectKey());
 		newChangeEntry.parent = parent;
 		newChangeEntry.owningListProperty = owningListProperty;
-		newChangeEntry.actualPropertySet = PropertySet.getPropertySet(oldObject.getClass());
+		newChangeEntry.actualPropertySet = owningListProperty.getElementPropertySet().getActualPropertySet(oldObject.getClass());
 		
 		// The actual key is no longer valid, so we remove the proxy
 		// from the map that maps object keys to proxies.
@@ -384,114 +335,14 @@ public class ChangeManager {
 		
 		getCurrentUndoableChange().addChange(newChangeEntry);
 	}
-	
-	/**
-	 * Register the end of a set of changes that constitute
-	 * a single undo/redo change.
-	 * <P>
-	 * If no changes have been made to the datastore since
-	 * the last time this method was called then this method
-	 * does nothing.  No change is registered and the change
-	 * will no appear in the undo/redo list.
-	 * 
-	 * @param description The name given to the change.
-	 * 		This name should be localized text.
-	 */
-	public void registerChanges(String description) {
-		if (currentUndoableChange != null) {
-			currentUndoableChange.setDescription(description);
-			
-			// Add to our list of changes.
-			// We must also clear out undone changes because
-			// once a new change has been made, any undone changes
-			// cannot be redone.
-			previousChanges.add(currentUndoableChange);
-			undoneChanges.clear();
-			
-			currentUndoableChange = null;
-			
-			// Check the number of undoable changes is not over the limit.
-			// If it is, delete the oldest change.
-			if (previousChanges.size() > MAXIMUM_UNDOABLE_CHANGES) {
-				((UndoableChange)previousChanges.get(0)).destroy();
-				previousChanges.remove(0);
-			}
-		}
+
+	public void setUndoableChange() {
+		currentUndoableChange = new UndoableChange();
 	}
-	
-	/**
-	 * @return If there are changes that can be undone,
-	 * 		the description of the last change,
-	 * 		otherwise null.
-	 */
-	public String getUndoDescription() {
-		if (previousChanges.size() > 0) {
-			return ((UndoableChange)previousChanges.lastElement()).getDescription();
-		} else {
-			return null;
-		}
-	}
-	
-	/**
-	 * @return If there are undone changes that can be redone,
-	 * 		the description of the last undone change,
-	 * 		otherwise null.
-	 */
-	public String getRedoDescription() {
-		if (undoneChanges.size() > 0) {
-			return undoneChanges.lastElement().getDescription();
-		} else {
-			return null;
-		}
-	}
-	
-	/**
-	 */
-	public void undoChange() {
-		
-		UndoableChange lastChange = (UndoableChange)previousChanges.lastElement();
-		
-		if (JMoneyPlugin.DEBUG) System.out.println("start undo of changes: " + lastChange.getDescription());
-		lastChange.undoChanges();
-		if (JMoneyPlugin.DEBUG) System.out.println("finish undo of changes: " + lastChange.getDescription());
-		
-		// The above call to undoChanges sent changes to the
-		// datastore.  These changes are stored in the
-		// current UndoableChange object.  That object must be
-		// saved because, by undoing the changes in that object,
-		// we are re-doing the original changes.
-		// We put this change into a separate list.  This is the
-		// list of 'undo' changes that must be themselves 'undone'
-		// if we want to redo the change.
-		
-		previousChanges.remove(previousChanges.size()-1);
-		
-		// Add to our list of undone changes.
-		currentUndoableChange.setDescription(lastChange.getDescription());
-		undoneChanges.add(currentUndoableChange);
-		
+
+	public UndoableChange takeUndoableChange() {
+		UndoableChange result = currentUndoableChange;
 		currentUndoableChange = null;
+		return result;
 	}
-	
-	/**
-	 */
-	public void redoChange() {
-		UndoableChange nextChange = (UndoableChange)undoneChanges.lastElement();
-		nextChange.undoChanges();
-		
-		// The above call to undoChanges sent changes to the
-		// datastore.  These changes are stored in the
-		// current UndoableChange object.  That object must be
-		// saved because, by undoing the changes in the redo object,
-		// we are again undoing the original changes.
-		
-		undoneChanges.remove(undoneChanges.size()-1);
-		
-		// Add back to our list of past changes.
-		currentUndoableChange.setDescription(nextChange.getDescription());
-		previousChanges.add(currentUndoableChange);
-		
-		currentUndoableChange = null;
-	}
-	
 }

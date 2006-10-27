@@ -29,9 +29,9 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.ListPropertyAccessor;
-import net.sf.jmoney.model2.PropertySet;
 
 /**
  * Every datastore implementation must provide an implementation
@@ -45,30 +45,20 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 	private IDatabaseRowKey parentKey;
 	private SessionManager sessionManager;
 	private ListPropertyAccessor<E> listProperty;
-
-	private PropertySet<E> typedPropertySet;
 	
 	public ListManagerUncached(IDatabaseRowKey parentKey, SessionManager sessionManager, ListPropertyAccessor<E> listProperty) {
 		this.parentKey = parentKey;
 		this.sessionManager = sessionManager;
 		this.listProperty = listProperty;
-
-		// TODO: Cache this to improve performance.
-
-		// Find the property set returned by the list.
-		Class<E> valueClass = listProperty.getValueClass();
-		typedPropertySet = PropertySet.getPropertySet(valueClass);
-		if (typedPropertySet == null)
-			throw new RuntimeException(valueClass.getName() + " not found.");
 	}
 	
-	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet) {
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
  		// First build the in-memory object.  Even though the object is not
 		// cached in the object key, the object must be constructed to get
 		// the default values to be written to the database and the
 		// object must be constructed so it can be returned to the caller.
 		
-		ObjectKeyUncached objectKey = new ObjectKeyUncached(-1, typedPropertySet, sessionManager);
+		ObjectKeyUncached objectKey = new ObjectKeyUncached(-1, listProperty.getElementPropertySet(), sessionManager);
 		
 		// If an object is not cached, then neither are
 		// any lists in the object.  i.e. do not materialized
@@ -85,13 +75,13 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		return extendableObject;
 	}
 	
-	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet, Object[] values) {
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, Object[] values) {
  		// First build the in-memory object.  Even though the object is not
 		// cached in the object key, the object must be constructed to get
 		// the default values to be written to the database and the
 		// object must be constructed so it can be returned to the caller.
 		
-		ObjectKeyUncached objectKey = new ObjectKeyUncached(-1, typedPropertySet, sessionManager);
+		ObjectKeyUncached objectKey = new ObjectKeyUncached(-1, listProperty.getElementPropertySet(), sessionManager);
 		
 		// If an object is not cached, then neither are
 		// any lists in the object.  i.e. do not materialized
@@ -110,7 +100,7 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 
 	public int size() {
 		try {
-			String tableName = typedPropertySet.getId().replace('.', '_');
+			String tableName = listProperty.getElementPropertySet().getId().replace('.', '_');
 			String columnName = listProperty.getName().replace('.', '_');
 			ResultSet resultSet = sessionManager.getReusableStatement().executeQuery(
 					"SELECT COUNT(*) FROM " + tableName
@@ -155,9 +145,9 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		// table represented by typedPropertySet and the larger
 		// tables are the base tables.
 		
-		String tableName = typedPropertySet.getId().replace('.', '_');
+		String tableName = listProperty.getElementPropertySet().getId().replace('.', '_');
 		String sql = "SELECT * FROM " + tableName;
-		for (PropertySet propertySet2 = typedPropertySet.getBasePropertySet(); propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
+		for (ExtendablePropertySet propertySet2 = listProperty.getElementPropertySet().getBasePropertySet(); propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
 			String tableName2 = propertySet2.getId().replace('.', '_');
 			sql += " JOIN " + tableName2
 					+ " ON " + tableName + "._ID = " + tableName2 + "._ID";
@@ -178,7 +168,7 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		try {
 			Statement stmt = sessionManager.getConnection().createStatement();
 			ResultSet resultSet = stmt.executeQuery(sql);
-			return new UncachedObjectIterator<E>(resultSet, typedPropertySet, parentKey, sessionManager);
+			return new UncachedObjectIterator<E>(resultSet, listProperty.getElementPropertySet(), parentKey, sessionManager);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException("internal error");

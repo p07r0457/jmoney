@@ -206,6 +206,10 @@ class EntryControls {
 				}
 				
 				propertyControl.save();
+				
+/* We need to decide at what granularity we want to support undo/redo.
+ * Every individual property change may be too small, so remove this.
+
 				String newValueText = propertyAccessor.formatValueForMessage(object);
 				
 				String description = 
@@ -214,6 +218,7 @@ class EntryControls {
 					+ " to " + newValueText;
 				
 				object.getSession().registerUndoableChange(description);
+*/				
 			}
 			public void focusGained(FocusEvent e) {
 				// Save the old value of this property for use in our 'undo' message.

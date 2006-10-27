@@ -28,6 +28,7 @@ import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.PageEntry;
 import net.sf.jmoney.model2.PropertySet;
 
@@ -37,7 +38,9 @@ import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.actions.ActionGroup;
 import org.eclipse.ui.forms.editor.FormEditor;
+import org.eclipse.ui.operations.UndoRedoActionGroup;
 
 /**
  * TODO
@@ -98,6 +101,13 @@ public class NodeEditor extends FormEditor {
 
        	setPartName(cInput.getName());
 		setTitleImage(cInput.getImage());
+		
+		ActionGroup ag = new UndoRedoActionGroup(
+//				getSite(), 
+				site, 
+				getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
+				true);
+		ag.fillActionBars(site.getActionBars());
     }
 
     /* (non-Javadoc)
@@ -132,7 +142,7 @@ public class NodeEditor extends FormEditor {
 	 * @param extendableObject
 	 */
 	public static void openEditor(IWorkbenchWindow window, ExtendableObject extendableObject) {
-		PropertySet<?> propertySet = PropertySet.getPropertySet(extendableObject.getClass());
+		ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(extendableObject.getClass());
 		Vector<PageEntry> pages = propertySet.getPageFactories();
 		
 		// Create an editor for this node (or active if an editor

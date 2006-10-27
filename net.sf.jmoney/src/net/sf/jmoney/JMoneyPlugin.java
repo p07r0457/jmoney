@@ -266,7 +266,6 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         if (newSessionManager != null) {
         	if (getSession().getDefaultCurrency() == null) {
         		initSystemCurrency(getSession());
-        		getSession().registerUndoableChange("add default currency");
         	}
         }
 
@@ -391,6 +390,13 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         	// JMoney depends on a default currency
         	currency = getIsoCurrency(session, "USD");
         }
+        
+        /*
+         * Note that although we are modifying the datastore,
+         * we do not make this an undoable operation.  The user
+         * did not set this currency and the user should not be
+         * able to undo it.
+         */
         session.setDefaultCurrency(currency);
     }
 

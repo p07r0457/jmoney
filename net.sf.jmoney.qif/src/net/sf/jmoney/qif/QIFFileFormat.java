@@ -44,13 +44,11 @@ import net.sf.jmoney.fields.BankAccountInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.qif.format.QIFCashTransaction;
@@ -172,8 +170,6 @@ public class QIFFileFormat implements FileFormat {
 				currencyAccount.setStartBalance(startBalance);
 				
 				importAccount(session, currencyAccount, buffer);
-
-				session.registerUndoableChange("import QIF account");
 			}
 
 			// import transactions of a investment account
@@ -776,8 +772,7 @@ public class QIFFileFormat implements FileFormat {
 		CapitalAccount account = accountMap.get(name);
 		// If not then create a new account, set the name and add it to the map
 		if (account == null) {
-			PropertySet<BankAccount> pset = BankAccountInfo.getPropertySet();
-			account = session.createAccount(pset);
+			account = session.createAccount(BankAccountInfo.getPropertySet());
 			account.setName(name);
 			accountMap.put(name, account);
 		}

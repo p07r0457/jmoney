@@ -107,7 +107,7 @@ public interface IObjectKey {
 	 * @param extensionProperties
 	 */
 	// TODO: PropertySet must be of class that extends referenced class
-	void updateProperties(PropertySet<?> actualPropertySet, Object[] oldValues, Object[] newValues);
+	void updateProperties(ExtendablePropertySet<?> actualPropertySet, Object[] oldValues, Object[] newValues);
 
 	/**
 	 * Returns the session object.  Objects often need access to the session object.

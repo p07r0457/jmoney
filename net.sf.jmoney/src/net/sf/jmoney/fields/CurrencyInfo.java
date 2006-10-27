@@ -24,9 +24,9 @@ package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.IPropertyRegistrar;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
@@ -54,20 +54,11 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class CurrencyInfo implements IPropertySetInfo {
 
-	private static PropertySet<Currency> propertySet = null;
+	private static ExtendablePropertySet<Currency> propertySet = PropertySet.addDerivedPropertySet(Currency.class, CommodityInfo.getPropertySet());
 	private static ScalarPropertyAccessor<String> codeAccessor = null;
 	private static ScalarPropertyAccessor<Integer> decimalsAccessor = null;
 
-	public CurrencyInfo() {
-    }
-
-	public Class getImplementationClass() {
-		return Currency.class;
-	}
-	
-	public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		propertySet = propertyRegistrar.addPropertySet(Currency.class);
-		
+	public PropertySet registerProperties() {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		
 		IPropertyControlFactory<Integer> numberControlFactory = new PropertyControlFactory<Integer>() {
@@ -85,16 +76,18 @@ public class CurrencyInfo implements IPropertySetInfo {
 			}
 		};
 
-		codeAccessor = propertyRegistrar.addProperty("code", JMoneyPlugin.getResourceString("Currency.code"), String.class, 0, 8, textControlFactory, null);
-		decimalsAccessor = propertyRegistrar.addProperty("decimals", JMoneyPlugin.getResourceString("Currency.decimals"), Integer.class, 0, 8, numberControlFactory, null);
+		codeAccessor = propertySet.addProperty("code", JMoneyPlugin.getResourceString("Currency.code"), String.class, 0, 8, textControlFactory, null);
+		decimalsAccessor = propertySet.addProperty("decimals", JMoneyPlugin.getResourceString("Currency.decimals"), Integer.class, 0, 8, numberControlFactory, null);
 		
-		propertyRegistrar.setObjectDescription("Currency");
+		propertySet.setDescription("Currency");
+		
+		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertySet<Currency> getPropertySet() {
+	public static ExtendablePropertySet<Currency> getPropertySet() {
 		return propertySet;
 	}
 

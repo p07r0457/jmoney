@@ -42,6 +42,8 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
 
     private final IWorkbenchWindow window;
     private IAction quitAction;
+    private IAction undoAction;
+    private IAction redoAction;
     private IAction preferencesAction;
     private IAction introAction;
     private IAction aboutAction;
@@ -61,6 +63,12 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
         preferencesAction = ActionFactory.PREFERENCES.create(window);
         register(preferencesAction);
 
+        undoAction = ActionFactory.UNDO.create(window);
+        register(undoAction);
+        
+        redoAction = ActionFactory.REDO.create(window);
+        register(redoAction);
+        
         if (window.getWorkbench().getIntroManager().hasIntro()) {
             introAction = ActionFactory.INTRO.create(window);
             register(introAction);
@@ -75,6 +83,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
      */
     protected void fillMenuBar(IMenuManager menuBar) {
         menuBar.add(createFileMenu());
+        menuBar.add(createEditMenu());
         menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         menuBar.add(createWindowMenu());
         menuBar.add(createHelpMenu());
@@ -97,6 +106,22 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
 
         menu.add(new Separator());
         menu.add(quitAction);
+        menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_END));
+
+        return menu;
+    }   
+
+    /**
+     * Creates and returns the File menu.
+     */
+    private MenuManager createEditMenu() {
+        MenuManager menu = new MenuManager("&Edit", IWorkbenchActionConstants.M_EDIT);
+
+        menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_START));
+        menu.add(undoAction);
+        menu.add(redoAction);
+        menu.add(new Separator());
+        menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_END));
 
         return menu;

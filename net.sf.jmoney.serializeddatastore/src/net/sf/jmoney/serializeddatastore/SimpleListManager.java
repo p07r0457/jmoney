@@ -31,6 +31,7 @@ import java.util.Vector;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -52,7 +53,7 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 	 	this.sessionManager = sessionManager;
 	 }
 
-	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet) {
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		int numberOfParameters = constructorProperties.size();
@@ -114,7 +115,7 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 		return extendableObject;
 	}
 
-	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet, Object[] values) {
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, Object[] values) {
 		Collection constructorProperties = propertySet.getConstructorProperties();
 		
 		int numberOfParameters = constructorProperties.size();

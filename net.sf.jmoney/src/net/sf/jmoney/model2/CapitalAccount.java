@@ -224,7 +224,7 @@ public abstract class CapitalAccount extends Account {
 	 * 			the property set for the type of capital account
 	 * 			to be created.
 	 */
-	public CapitalAccount createSubAccount(PropertySet<? extends CapitalAccount> propertySet) {
+	public CapitalAccount createSubAccount(ExtendablePropertySet<? extends CapitalAccount> propertySet) {
 		return getSubAccountCollection().createNewElement(propertySet);
 	}
         
@@ -235,10 +235,6 @@ public abstract class CapitalAccount extends Account {
 	 */
 	boolean deleteSubAccount(CapitalAccount subAccount) {
 		return getSubAccountCollection().remove(subAccount);
-	}
-	
-	static public Object [] getDefaultProperties() {
-		return new Object [] { "new account", null, null, null, new Long(0), null, null, null };
 	}
 
 	/**

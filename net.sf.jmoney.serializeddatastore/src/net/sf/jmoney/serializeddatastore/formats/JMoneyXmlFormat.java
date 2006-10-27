@@ -67,6 +67,8 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.ExtensionPropertySet;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -569,7 +571,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 	 */
 	private class ObjectProcessor extends SAXEventProcessor {
 		
-		private PropertySet propertySet;
+		private ExtendablePropertySet propertySet;
 		
 		/**
 		 * If we have processed the start of an element representing
@@ -622,7 +624,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			objectKey = new SimpleObjectKey(sessionManager);
 
 			try {
-				this.propertySet = PropertySet.getPropertySet(propertySetId);
+				this.propertySet = PropertySet.getExtendablePropertySet(propertySetId);
 			} catch (PropertySetNotFoundException e) {
 				throw new RuntimeException("internal error");
 			}
@@ -646,14 +648,13 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			// For all other parameters, the value is set when the property
 			// value is found.  We initialize to null here so a null value
 			// will be passed to the constructor if no value is found.
-			Object[] defaultProperties = propertySet.getDefaultPropertyValues2();
-			int i = 0;
 			for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
 				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 				if (propertyAccessor.isList()) {
 					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = new SimpleListManager(sessionManager);
 				} else {
-					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = defaultProperties[i++];
+					ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor; 
+					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = scalarAccessor.getDefaultValue();
 				}
 			}
 		}
@@ -702,12 +703,18 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					// but exclude extensions.  
 					propertyAccessor = propertySet.getPropertyAccessorGivenLocalNameAndExcludingExtensions(localName);
 				} else {
-					// Get the property based on the fully qualified name.
-					// TODO this is not very efficient.  We combine the propertySetId
-					// and the local name, but the first thing the following method
-					// does is to split them apart again!
-					propertyAccessor = PropertySet.getPropertyAccessor(namespace + "." + localName);
+					ExtensionPropertySet propertySet = PropertySet.getExtensionPropertySet(namespace);
+					propertyAccessor = propertySet.getProperty(localName);
 				}
+			} catch (PropertySetNotFoundException e) {
+				// The property no longer exists.
+				// TODO: Log this.  When changing the properties,
+				// one is supposed to provide upgrader properties
+				// for all obsoleted properties.
+				// We drop the value.
+				// Ignore content
+				currentSAXEventProcessor = new IgnoreElementProcessor(sessionManager, this, null);
+				return;
 			} catch (PropertyNotFoundException e) {
 					// The property no longer exists.
 					// TODO: Log this.  When changing the properties,
@@ -723,7 +730,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			if (propertyAccessor.isScalar()) {
 				propertyClass = ((ScalarPropertyAccessor)propertyAccessor).getClassOfValueObject();
 			} else {
-				propertyClass = ((ListPropertyAccessor)propertyAccessor).getValueClass();
+				propertyClass = ((ListPropertyAccessor)propertyAccessor).getElementPropertySet().getImplementationClass();
 			}
 			
 			map = null;
@@ -1244,7 +1251,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 	 */
 	void writeObject(TransformerHandler hd, ExtendableObject object, String elementName, Class propertyType) throws SAXException {
 		// Find the property set information for this object.
-		PropertySet<?> propertySet = PropertySet.getPropertySet(object.getClass());
+		ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(object.getClass());
 
 		AttributesImpl atts = new AttributesImpl();
 		
@@ -1258,16 +1265,12 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			atts.addAttribute("", "", "xmlns", "CDATA", "http://jmoney.sf.net");
 
 			int suffix = 1;
-			for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
-				PropertySet extensionPropertySet = (PropertySet)iter.next();
-				
-				if (extensionPropertySet.isExtension()) {
-					// Put into our map.
-					String namespacePrefix = "ns" + new Integer(suffix++).toString();
-					namespaceMap.put(extensionPropertySet, namespacePrefix);
-					
-					atts.addAttribute("", "", "xmlns:" + namespacePrefix, "CDATA", "http://jmoney.sf.net/" + extensionPropertySet.getId());
-				}
+			for (ExtensionPropertySet extensionPropertySet: PropertySet.getAllExtensionPropertySets()) {
+				// Put into our map.
+				String namespacePrefix = "ns" + new Integer(suffix++).toString();
+				namespaceMap.put(extensionPropertySet, namespacePrefix);
+
+				atts.addAttribute("", "", "xmlns:" + namespacePrefix, "CDATA", "http://jmoney.sf.net/" + extensionPropertySet.getId());
 			}
 		}
 		
@@ -1313,7 +1316,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					|| object.getExtension(propertySet2) != null) {
 				for (Iterator<? extends ExtendableObject> elementIter = object.getListPropertyValue(listAccessor).iterator(); elementIter.hasNext(); ) {
 					ExtendableObject listElement = elementIter.next();
-					writeObject(hd, listElement, listAccessor.getLocalName(), listAccessor.getValueClass());
+					writeObject(hd, listElement, listAccessor.getLocalName(), listAccessor.getElementPropertySet().getImplementationClass());
 				}
 			}
 		}
@@ -1491,7 +1494,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		// plug-in but will use it if it is there.
 		ScalarPropertyAccessor statusProperty = null;
 		try {
-			PropertySet reconciliationProperties = PropertySet.getPropertySet("net.sf.jmoney.reconciliation.entryProperties");
+			ExtensionPropertySet reconciliationProperties = PropertySet.getExtensionPropertySet("net.sf.jmoney.reconciliation.entryProperties");
 			statusProperty = (ScalarPropertyAccessor)reconciliationProperties.getProperty("status");
 		} catch (PropertySetNotFoundException e) {
 			// If the property set is not found then this means

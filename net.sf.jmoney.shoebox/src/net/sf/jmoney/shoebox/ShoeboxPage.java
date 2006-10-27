@@ -454,16 +454,12 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			return propertyControl;
 		}
 
-		/**
-		 * @return
-		 */
-		public boolean isTransactionProperty() {
-			return accessor.getExtendablePropertySet() == TransactionInfo.getPropertySet();
-		}
-
 		public int compare(DisplayableTransaction trans1, DisplayableTransaction trans2) {
 			ExtendableObject extendableObject1 = getObjectContainingProperty(trans1);
 			ExtendableObject extendableObject2 = getObjectContainingProperty(trans2);
+			if (extendableObject1 == null && extendableObject2 == null) return 0;
+			if (extendableObject1 == null) return 1;
+			if (extendableObject2 == null) return -1;
 			return accessor.getComparator().compare(extendableObject1, extendableObject2);
 		}
 	}

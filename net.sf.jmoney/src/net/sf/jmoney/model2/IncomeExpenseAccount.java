@@ -169,8 +169,4 @@ public class IncomeExpenseAccount extends Account {
     public IncomeExpenseAccount createSubAccount() {
     	return getSubAccountCollection().createNewElement(IncomeExpenseAccountInfo.getPropertySet());
     }
-    
-    static public  Object [] getDefaultProperties() {
-		return new Object [] { "new category", new Boolean(true), null };
-	}
 }

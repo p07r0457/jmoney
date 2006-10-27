@@ -28,17 +28,24 @@ import java.util.Vector;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CapitalAccountInfo;
+import net.sf.jmoney.model2.AbstractDataOperation;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrentSessionChangeListener;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.PageEntry;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.operations.IOperationHistory;
+import org.eclipse.core.commands.operations.IUndoableOperation;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -54,7 +61,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
@@ -77,6 +83,8 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.actions.ActionGroup;
+import org.eclipse.ui.operations.UndoRedoActionGroup;
 import org.eclipse.ui.part.DrillDownAdapter;
 import org.eclipse.ui.part.ViewPart;
 
@@ -232,13 +240,14 @@ public class NavigationView extends ViewPart {
 			if (deletedObject instanceof CapitalAccount) {
 				CapitalAccount deletedAccount = (CapitalAccount)deletedObject;
 				if (deletedAccount.getParent() == null) {
-					// An array of top level accounts is cached, so we add it now.
+					// An array of top level accounts is cached, so we remove it now.
 					TreeNode.getAccountsRootNode().removeChild(deletedAccount);
 				} else {
 					// Sub-accounts are not cached in any tree node, so there is
 					// nothing to do except to refresh the viewer.
 				}
-				refreshViewer ();
+				
+                viewer.remove(deletedAccount);
 			}
 		}
 		
@@ -259,9 +268,17 @@ public class NavigationView extends ViewPart {
 	};
 	
 	/**
-	 * Refresh the viewer Object thread-safe. 
+	 * Refresh the viewer Object thread-safe.
+	 * 
+	 * Actually, JMoney is single threaded, and all processing is on the SWT thread by
+	 * default, so this is not necessary.  In the exceptional case where a plug-in does
+	 * use another thread, it must be up to that thread to queue SWT methods on the SWT
+	 * thread.
 	 *
+	 * My best guess is that this method was originally added back when JMoney still had
+	 * some Swing code running on another thead.
 	 */
+	// TODO: remove this method????
 	private void refreshViewer () {
         Display.getDefault().syncExec( new Runnable() {
             public void run() {
@@ -452,7 +469,7 @@ public class NavigationView extends ViewPart {
 			return ((TreeNode)selectedObject).getPageFactories();
 		} else if (selectedObject instanceof ExtendableObject) {
 			ExtendableObject extendableObject = (ExtendableObject)selectedObject;
-			PropertySet<?> propertySet = PropertySet.getPropertySet(extendableObject.getClass());
+			ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(extendableObject.getClass());
 			return propertySet.getPageFactories();
 		} else {
 			return new Vector<PageEntry>();
@@ -476,6 +493,12 @@ public class NavigationView extends ViewPart {
 		IActionBars bars = getViewSite().getActionBars();
 		fillLocalPullDown(bars.getMenuManager());
 		fillLocalToolBar(bars.getToolBarManager());
+		
+		ActionGroup ag = new UndoRedoActionGroup(
+				getSite(), 
+				this.getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
+				true);
+		ag.fillActionBars(bars);
 	}
 
 	private void fillLocalPullDown(IMenuManager manager) {
@@ -484,6 +507,14 @@ public class NavigationView extends ViewPart {
 		}
 		manager.add(new Separator());
 		manager.add(deleteAccountAction);
+
+		
+		ActionGroup ag = new UndoRedoActionGroup(
+				this.getSite(), 
+				this.getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
+				true);
+		ag.fillContextMenu(manager);
+		
 	}
 
 	private void fillContextMenu(IMenuManager manager) {
@@ -513,6 +544,14 @@ public class NavigationView extends ViewPart {
 
 		manager.add(new Separator());
 
+		
+		ActionGroup ag = new UndoRedoActionGroup(
+				this.getSite(), 
+				this.getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
+				true);
+		ag.fillContextMenu(manager);
+		
+		
 		drillDownAdapter.addNavigationActions(manager);
 		// Other plug-ins can contribute there actions here
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -558,8 +597,7 @@ public class NavigationView extends ViewPart {
 		// from the capital account class, and that is not itself
 		// derivable, add a menu item to create a new account of
 		// that type.
-		for (Iterator<PropertySet<? extends CapitalAccount>> iter = CapitalAccountInfo.getPropertySet().getDerivedPropertySetIterator(); iter.hasNext(); ) {
-			final PropertySet<? extends CapitalAccount> derivedPropertySet = iter.next();
+		for (final ExtendablePropertySet<? extends CapitalAccount> derivedPropertySet: CapitalAccountInfo.getPropertySet().getDerivedPropertySets()) {
 			
 			Action newAccountAction = new Action() {
 				public void run() {
@@ -572,19 +610,36 @@ public class NavigationView extends ViewPart {
 							break;
 						}
 					}
+					final CapitalAccount account2 = account;
+				
+					IOperationHistory history = JMoneyPlugin.getDefault().getWorkbench().getOperationSupport().getOperationHistory();
 					
-					CapitalAccount newAccount;
-					if (account == null) {
-						newAccount = (CapitalAccount)session.createAccount(derivedPropertySet);
-					} else {
-						newAccount = (CapitalAccount)account.createSubAccount(derivedPropertySet);
+					IUndoableOperation operation = new AbstractDataOperation(session, "add new account") {
+						@Override
+						public IStatus execute() throws ExecutionException {
+							CapitalAccount newAccount;
+							if (account2 == null) {
+								newAccount = session.createAccount(derivedPropertySet);
+							} else {
+								newAccount = account2.createSubAccount(derivedPropertySet);
+							}
+							newAccount.setName(JMoneyPlugin.getResourceString("Account.newAccount"));
+							
+							return Status.OK_STATUS;
+						}
+					};
+					
+					operation.addContext(session.getUndoContext());
+					try {
+						history.execute(operation, null, null);
+					} catch (ExecutionException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-					//		        newAccount.setName(JMoneyPlugin.getResourceString("Account.newAccount"));
-					session.registerUndoableChange("add new account");
-					
+
 					// Having added the new account, set it as the selected
 					// account in the tree viewer.
-					viewer.setSelection(new StructuredSelection(newAccount), true);
+//?????					viewer.setSelection(new StructuredSelection(newAccount), true);
 				}
 			};
 			
@@ -612,7 +667,7 @@ public class NavigationView extends ViewPart {
 		
 		deleteAccountAction = new Action() {
 			public void run() {
-				Session session = JMoneyPlugin.getDefault().getSession();
+				final Session session = JMoneyPlugin.getDefault().getSession();
 				CapitalAccount account = null;
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 				for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
@@ -621,8 +676,26 @@ public class NavigationView extends ViewPart {
 					break;
 				}
 				if (account != null) {
-					session.deleteAccount(account);
-			        session.registerUndoableChange("delete account");
+					final CapitalAccount account2 = account;
+
+					IOperationHistory history = NavigationView.this.getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getOperationHistory();
+					
+					IUndoableOperation operation = new AbstractDataOperation(session, "delete account") {
+						@Override
+						public IStatus execute() throws ExecutionException {
+							session.deleteAccount(account2);
+							return Status.OK_STATUS;
+						}
+					};
+					
+					operation.addContext(session.getUndoContext());
+					try {
+						history.execute(operation, null, null);
+					} catch (ExecutionException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
 				}
 			}
 		};

@@ -104,8 +104,8 @@ public abstract class PropertyAccessor {
 	 * return type of the 'get' method, and the class of other properties is
 	 * required by this method.
 	 */
-	public void initMethods() {
-	}
+//	public void initMethods() {
+//	}
 
 	public Method findMethod(String prefix, String propertyName, Class [] parameters) {
 		String methodName = prefix
@@ -177,6 +177,7 @@ public abstract class PropertyAccessor {
     * the property set being extended is returned.
     */
    // TODO: Consider removing this method.  It is not used.
+/*	
 	public PropertySet getExtendablePropertySet() {
 		if (propertySet.isExtension()) {
 			return propertySet.getExtendablePropertySet();
@@ -184,7 +185,7 @@ public abstract class PropertyAccessor {
 			return propertySet;
 		}
    }
-   
+*/   
    /**
     * Returns the PropertySet for the values of this property.
     * This property must contain a value or values that are

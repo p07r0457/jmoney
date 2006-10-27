@@ -46,6 +46,14 @@ import net.sf.jmoney.model2.SessionChangeListener;
 import net.sf.jmoney.views.NodeEditor;
 import net.sf.jmoney.views.SectionlessPage;
 
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.operations.AbstractOperation;
+import org.eclipse.core.commands.operations.IOperationHistory;
+import org.eclipse.core.commands.operations.IUndoableOperation;
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -218,8 +226,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 					
 					if (account.equals(selectedAccount)) {
 						// Update the visibility of controls.
-						for (Iterator iter = propertyList.iterator(); iter.hasNext(); ) {
-							PropertyControls propertyControls = (PropertyControls)iter.next();
+						for (PropertyControls propertyControls: propertyList) {
 							propertyControls.setVisibility();
 						}
 					}
@@ -274,7 +281,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 				public void selectionChanged(SelectionChangedEvent event) {
 					// If a selection already selected, commit any changes
 					if (selectedAccount != null) {
-						session.registerUndoableChange("change category properties");
+//						session.registerUndoableChange("change category properties");
 					}
 					
 					// Set the new selection
@@ -283,54 +290,20 @@ public class CategoryPage implements IBookkeepingPageFactory {
 					
 					// Set the values from the account object into the control fields,
 					// or disable the controls if the account is null.
-					for (Iterator iter = propertyList.iterator(); iter.hasNext(); ) {
-						PropertyControls propertyControls = (PropertyControls)iter.next();
+					for (PropertyControls propertyControls: propertyList) {
 						propertyControls.load(selectedAccount);
 					}
 				}
 			});
 			
 			// Add the properties for category.
-	   		for (final ScalarPropertyAccessor propertyAccessor: IncomeExpenseAccountInfo.getPropertySet().getScalarProperties3()) {
+	   		for (final ScalarPropertyAccessor<?> propertyAccessor: IncomeExpenseAccountInfo.getPropertySet().getScalarProperties3()) {
 				final Label propertyLabel = new Label(topLevelControl, 0);
 				propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
-				final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(topLevelControl, session);
-				propertyControl.getControl().addFocusListener(
-						new FocusAdapter() {
+				
+				IPropertyControl propertyControl = propertyAccessor.createPropertyControl(topLevelControl, session);
 
-							// When a control gets the focus, save the old value here.
-							// This value is used in the change message.
-							String oldValueText;
-
-							public void focusLost(FocusEvent e) {
-								if (session.getObjectKey().getSessionManager().isSessionFiring()) {
-									return;
-								}
-
-								propertyControl.save();
-								String newValueText = propertyAccessor.formatValueForMessage(
-										selectedAccount);
-
-								String description;
-								if (propertyAccessor == AccountInfo.getNameAccessor()) {
-									description = 
-										"rename account from " + oldValueText
-										+ " to " + newValueText;
-								} else {
-									description = 
-										"change " + propertyAccessor.getDisplayName() + " property"
-										+ " in '" + selectedAccount.getName() + "' account"
-										+ " from " + oldValueText
-										+ " to " + newValueText;
-								}
-								session.registerUndoableChange(description);
-							}
-							public void focusGained(FocusEvent e) {
-								// Save the old value of this property for use in our 'undo' message.
-								oldValueText = propertyAccessor.formatValueForMessage(
-										selectedAccount);
-							}
-						});
+				createAndAddFocusListener(propertyControl, propertyAccessor);
 
 				// No account is initially set.  It is not really
 				// obvious in what state the controls should be when no
@@ -368,6 +341,77 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			return topLevelControl;
 		}
 		
+		private <V> void createAndAddFocusListener(final IPropertyControl propertyControl, final ScalarPropertyAccessor<V> propertyAccessor) {
+			propertyControl.getControl().addFocusListener(
+					new FocusAdapter() {
+
+						// When a control gets the focus, save the old value here.
+						// This value is used in the change message.
+						V oldValue;
+						String oldValueText;
+
+						public void focusLost(FocusEvent e) {
+							if (session.getObjectKey().getSessionManager().isSessionFiring()) {
+								return;
+							}
+
+							propertyControl.save();
+
+							String newValueText = propertyAccessor.formatValueForMessage(selectedAccount);
+							final V newValue = selectedAccount.getPropertyValue(propertyAccessor);
+
+							String description;
+							if (propertyAccessor == AccountInfo.getNameAccessor()) {
+								description = 
+									"rename account from " + oldValueText
+									+ " to " + newValueText;
+							} else {
+								description = 
+									"change " + propertyAccessor.getDisplayName() + " property"
+									+ " in '" + selectedAccount.getName() + "' account"
+									+ " from " + oldValueText
+									+ " to " + newValueText;
+							}
+
+							IOperationHistory history = JMoneyPlugin.getDefault().getWorkbench().getOperationSupport().getOperationHistory();
+
+							IUndoableOperation operation = new AbstractOperation(description) {
+								@Override
+								public IStatus execute(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+									// Change has already been made, so do nothing here.
+									return Status.OK_STATUS;
+								}
+
+								@Override
+								public IStatus redo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+									selectedAccount.setPropertyValue(propertyAccessor, oldValue);
+									return Status.OK_STATUS;
+								}
+
+								@Override
+								public IStatus undo(IProgressMonitor monitor, IAdaptable info) throws ExecutionException {
+									selectedAccount.setPropertyValue(propertyAccessor, newValue);
+									return Status.OK_STATUS;
+								}
+							};
+
+							operation.addContext(session.getUndoContext());
+							try {
+								history.execute(operation, null, null);
+							} catch (ExecutionException e2) {
+								// TODO Auto-generated catch block
+								e2.printStackTrace();
+							}
+						}
+						public void focusGained(FocusEvent e) {
+							// Save the old value of this property for use in 'undo'.
+							oldValue = selectedAccount.getPropertyValue(propertyAccessor);
+							oldValueText = propertyAccessor.formatValueForMessage(selectedAccount);
+
+						}
+					});
+		}
+
 		public void saveState(IMemento memento) {
 			// We could save the current category selection
 			// and the expand/collapse state of each node
@@ -414,7 +458,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
                     IncomeExpenseAccount account = (IncomeExpenseAccount) session.createAccount(IncomeExpenseAccountInfo
                             .getPropertySet());
                     account.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-                    session.registerUndoableChange("add new category");
+//                  session.registerUndoableChange("add new category");
                     viewer.setSelection(new StructuredSelection(account), true);
                 }
             };
@@ -426,7 +470,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
                     if (selectedAccount != null) {
                         IncomeExpenseAccount subAccount = selectedAccount.createSubAccount();
                         subAccount.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
-                        session.registerUndoableChange("add new category");
+//                      session.registerUndoableChange("add new category");
                         viewer.setSelection(new StructuredSelection(subAccount), true);
                     }
                 }

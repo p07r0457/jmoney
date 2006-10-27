@@ -54,7 +54,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	 * @param actualPropertySet
 	 * @return
 	 */
-	public <F extends E> F createNewElement(PropertySet<F> actualPropertySet) {
+	public <F extends E> F createNewElement(ExtendablePropertySet<F> actualPropertySet) {
 		final F newObject = listManager.createNewElement(parent, actualPropertySet);
 		
 		parent.getSession().getChangeManager().processObjectCreation(parent, listPropertyAccessor, newObject);
@@ -90,7 +90,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	 * 			being inserted in the same transaction, false if this object is being inserted
 	 *          into a list that existed prior to this transaction
 	 */
-	public <F extends E> F createNewElement(PropertySet<F> actualPropertySet, Object values[], final boolean isDescendentInsert) {
+	public <F extends E> F createNewElement(ExtendablePropertySet<F> actualPropertySet, Object values[], final boolean isDescendentInsert) {
 		final F newObject = listManager.createNewElement(parent, actualPropertySet, values);
 		
 		parent.getSession().getChangeManager().processObjectCreation(parent, listPropertyAccessor, newObject);

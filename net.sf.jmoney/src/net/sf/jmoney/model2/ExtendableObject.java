@@ -172,13 +172,13 @@ public abstract class ExtendableObject {
 	// Should allow default package access and protected access
 	// but not public access.  Unfortunately this cannot be done
 	// so for time being allow public access.
-	public void processPropertyChange(final ScalarPropertyAccessor propertyAccessor, final Object oldValue, final Object newValue) {
+	public <V> void processPropertyChange(final ScalarPropertyAccessor<V> propertyAccessor, final V oldValue, final V newValue) {
 		if (oldValue == newValue ||
 				(oldValue != null && oldValue.equals(newValue)))
 					return;
 
 		// Update the database.
-		PropertySet<?> actualPropertySet = PropertySet.getPropertySet(this.getClass());
+		ExtendablePropertySet<?> actualPropertySet = PropertySet.getPropertySet(this.getClass());
 		
 		// Build two arrays of old and new values.
 		// Ultimately we will have a layer between that does this
@@ -351,7 +351,8 @@ public abstract class ExtendableObject {
 		// they alter it.  However it is useful for use inside the
 		// package such as here.
 		if (objectWithProperties == null) {
-			objectWithProperties = propertyAccessor.getPropertySet().getDefaultPropertyValues();
+			return propertyAccessor.getDefaultValue();
+//			objectWithProperties = propertyAccessor.getPropertySet().getDefaultPropertyValues();
 		}
 		
 		return propertyAccessor.invokeGetMethod(objectWithProperties);

@@ -24,11 +24,11 @@ package net.sf.jmoney.views;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.PageEntry;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
@@ -177,11 +177,10 @@ public class TreeNode implements IAdaptable {
 						String propertySetId = elements[j].getAttribute("extendable-property-set");
 						if (propertySetId != null) {
 							try {
-								PropertySet pagePropertySet = PropertySet.getPropertySet(propertySetId);
+								ExtendablePropertySet<?> pagePropertySet = PropertySet.getExtendablePropertySet(propertySetId);
 								PageEntry pageEntry = new PageEntry(pageId, elements[j], pos);  
 								
-								for (Iterator iter = pagePropertySet.getDerivedPropertySetIterator(); iter.hasNext(); ) {
-									PropertySet derivedPropertySet = (PropertySet)iter.next();
+								for (ExtendablePropertySet derivedPropertySet: pagePropertySet.getDerivedPropertySets()) {
 									derivedPropertySet.addPage(pageEntry);
 								}
 							} catch (PropertySetNotFoundException e1) {

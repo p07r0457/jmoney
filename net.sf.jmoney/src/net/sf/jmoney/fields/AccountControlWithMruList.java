@@ -77,7 +77,7 @@ public class AccountControlWithMruList<A extends Account> extends AccountComposi
     			int index = recentlyUsedList.indexOf(account);
     			if (index == -1) {
     				// Drop off head if list is already full
-    	    		if (recentlyUsedList.size() >= 5) {
+    	    		if (recentlyUsedList.size() >= 10) {
     	    			recentlyUsedList.removeFirst();
     	    			accountList.remove(0);
     	    		}

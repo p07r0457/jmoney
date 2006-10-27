@@ -103,8 +103,4 @@ public class ReconciliationAccount extends CurrencyAccountExtension {
 		// Notify the change manager.
 		processPropertyChange(ReconciliationAccountInfo.getDefaultCategoryAccessor(), oldDefaultCategory, defaultCategory);
 	}
-
-	static public Object [] getDefaultProperties() {
-		return new Object [] { new Boolean(false), null };
-	}
 }

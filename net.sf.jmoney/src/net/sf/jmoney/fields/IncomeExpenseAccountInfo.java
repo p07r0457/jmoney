@@ -24,7 +24,7 @@ package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.IPropertyRegistrar;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ListPropertyAccessor;
@@ -49,38 +49,31 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  */
 public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
-	private static PropertySet<IncomeExpenseAccount> propertySet = null;
+	private static ExtendablePropertySet<IncomeExpenseAccount> propertySet = PropertySet.addDerivedPropertySet(IncomeExpenseAccount.class, AccountInfo.getPropertySet());
 	private static ListPropertyAccessor<IncomeExpenseAccount> subAccountAccessor = null;
 	private static ScalarPropertyAccessor<Boolean> multiCurrencyAccessor = null;
 	private static ScalarPropertyAccessor<Currency> currencyAccessor = null;
 	
-	public IncomeExpenseAccountInfo() {
-    }
+    public PropertySet registerProperties() {
+		subAccountAccessor = propertySet.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccountInfo.getPropertySet(), null);
 
-	public Class getImplementationClass() {
-		return IncomeExpenseAccount.class;
-	}
-	
-    public void registerProperties(IPropertyRegistrar propertyRegistrar) {
-		propertySet = propertyRegistrar.addPropertySet(IncomeExpenseAccount.class);
-
-		subAccountAccessor = propertyRegistrar.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccount.class, null);
-
-		multiCurrencyAccessor = propertyRegistrar.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.multiCurrency"), Boolean.class, 0, 10, new CheckBoxControlFactory(), null); 
-		currencyAccessor = propertyRegistrar.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), Currency.class, 2, 20, new CurrencyControlFactory(), multiCurrencyAccessor.getFalseValueDependency());
+		multiCurrencyAccessor = propertySet.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.multiCurrency"), Boolean.class, 0, 10, new CheckBoxControlFactory(), null); 
+		currencyAccessor = propertySet.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), Currency.class, 2, 20, new CurrencyControlFactory(), multiCurrencyAccessor.getFalseValueDependency());
 		
 		// We should define something for the implied enumerated value
 		// that is controlled by the derived class type.  This has not
 		// been designed yet, so for time being we have nothing to do.
 		
-		propertyRegistrar.setObjectDescription("Income or Expense Category");
-		propertyRegistrar.setIcon("icons/category.gif");
+		propertySet.setDescription("Income or Expense Category");
+		propertySet.setIcon("icons/category.gif");
+		
+		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static PropertySet<IncomeExpenseAccount> getPropertySet() {
+	public static ExtendablePropertySet<IncomeExpenseAccount> getPropertySet() {
 		return propertySet;
 	}
 

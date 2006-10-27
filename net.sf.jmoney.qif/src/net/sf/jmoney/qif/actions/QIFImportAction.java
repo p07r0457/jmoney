@@ -25,11 +25,17 @@ package net.sf.jmoney.qif.actions;
 import java.io.File;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.AbstractDataOperation;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.qif.FileFormat;
 import net.sf.jmoney.qif.QIFFileFormat;
 import net.sf.jmoney.qif.QIFPlugin;
 
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.operations.IOperationHistory;
+import org.eclipse.core.commands.operations.IUndoableOperation;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -62,7 +68,7 @@ public class QIFImportAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		Session session = JMoneyPlugin.getDefault().getSession();
+		final Session session = JMoneyPlugin.getDefault().getSession();
 
 		// Original JMoney disabled the import menu items when no
 		// session was open. I don't know how to do that in Eclipse,
@@ -87,9 +93,31 @@ public class QIFImportAction implements IWorkbenchWindowActionDelegate {
 		String fileName = qifFileChooser.open();
 
 		if (fileName != null) {
-			File qifFile = new File(fileName);
-			FileFormat qif = new QIFFileFormat();
-			qif.importFile(session, qifFile);
+			final File qifFile = new File(fileName);
+			final FileFormat qif = new QIFFileFormat();
+
+			/*
+			 * Import the file, using the undo/redo mechanism
+			 * so the user can undo and redo the import.
+			 */
+
+			IOperationHistory history = JMoneyPlugin.getDefault().getWorkbench().getOperationSupport().getOperationHistory();
+			
+			IUndoableOperation operation = new AbstractDataOperation(session, "Import Account from " + qifFile) {
+				@Override
+				public IStatus execute() throws ExecutionException {
+					qif.importFile(session, qifFile);
+					return Status.OK_STATUS;
+				}
+			};
+			
+			operation.addContext(session.getUndoContext());
+			try {
+				history.execute(operation, null, null);
+			} catch (ExecutionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
 	}

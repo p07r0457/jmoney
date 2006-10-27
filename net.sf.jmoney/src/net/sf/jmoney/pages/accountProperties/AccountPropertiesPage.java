@@ -28,8 +28,10 @@ import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
+import net.sf.jmoney.model2.AbstractDataOperation;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
@@ -39,6 +41,11 @@ import net.sf.jmoney.model2.SessionChangeListener;
 import net.sf.jmoney.views.NodeEditor;
 import net.sf.jmoney.views.SectionlessPage;
 
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.operations.IOperationHistory;
+import org.eclipse.core.commands.operations.IUndoableOperation;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
@@ -110,7 +117,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 			// Create the controls to edit the properties.
 			
 			// Add the properties for the Account objects.
-			PropertySet<?> extendablePropertySet = PropertySet.getPropertySet(account.getClass());
+			ExtendablePropertySet<?> extendablePropertySet = PropertySet.getPropertySet(account.getClass());
 			for (final ScalarPropertyAccessor<?> propertyAccessor: extendablePropertySet.getScalarProperties3()) {
 
 				Label propertyLabel = new Label(this, 0);
@@ -147,7 +154,6 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 									return;
 								}
 
-								propertyControl.save();
 								String newValueText = propertyAccessor.formatValueForMessage(
 										AccountPropertiesControl.this.account);
 
@@ -163,7 +169,24 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 										+ " from " + oldValueText
 										+ " to " + newValueText;
 								}
-								AccountPropertiesControl.this.session.registerUndoableChange(description);
+								
+								IOperationHistory history = JMoneyPlugin.getDefault().getWorkbench().getOperationSupport().getOperationHistory();
+								
+								IUndoableOperation operation = new AbstractDataOperation(session, description) {
+									@Override
+									public IStatus execute() throws ExecutionException {
+										propertyControl.save();
+										return Status.OK_STATUS;
+									}
+								};
+								
+								operation.addContext(session.getUndoContext());
+								try {
+									history.execute(operation, null, null);
+								} catch (ExecutionException e2) {
+									// TODO Auto-generated catch block
+									e2.printStackTrace();
+								}
 							}
 							public void focusGained(FocusEvent e) {
 								// Save the old value of this property for use in our 'undo' message.

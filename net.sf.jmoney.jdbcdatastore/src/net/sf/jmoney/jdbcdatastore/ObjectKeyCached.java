@@ -24,7 +24,7 @@ package net.sf.jmoney.jdbcdatastore;
 
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.Session;
 
 /**
@@ -74,7 +74,7 @@ public class ObjectKeyCached implements IDatabaseRowKey {
 		return rowId;
 	}
 
-	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
+	public void updateProperties(ExtendablePropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
 		JDBCDatastorePlugin.updateProperties(actualPropertySet, rowId, oldValues, newValues, sessionManager);
 	}
 

@@ -59,11 +59,6 @@ public interface IEntriesTableProperty {
 	 */
 	IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data);
 	
-	/**
-	 * @return
-	 */
-	boolean isTransactionProperty();
-
 	int compare(DisplayableTransaction trans1, DisplayableTransaction trans2);
 }
 

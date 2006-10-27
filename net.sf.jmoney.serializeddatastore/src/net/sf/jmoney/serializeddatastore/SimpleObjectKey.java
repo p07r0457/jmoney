@@ -28,8 +28,8 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
@@ -59,7 +59,7 @@ public class SimpleObjectKey implements IObjectKey {
 		this.extendableObject = extendableObject;
 	}
 
-	public void updateProperties(PropertySet<?> actualPropertySet, Object[] oldValues, Object[] newValues) {
+	public void updateProperties(ExtendablePropertySet<?> actualPropertySet, Object[] oldValues, Object[] newValues) {
 		// If the account property of an entry is changed then we
 		// must update the lists of entries in each account.
 		if (extendableObject instanceof Entry) {

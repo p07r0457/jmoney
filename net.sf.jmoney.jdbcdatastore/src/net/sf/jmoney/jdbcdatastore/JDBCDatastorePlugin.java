@@ -46,13 +46,16 @@ import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.BankAccountInfo;
 import net.sf.jmoney.fields.CommodityInfo;
 import net.sf.jmoney.fields.CurrencyInfo;
+import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.fields.SessionInfo;
+import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
@@ -94,12 +97,12 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	}
 
 	private class ParentList {
-		ParentList(PropertySet<? extends ExtendableObject> parentPropertySet, PropertyAccessor listProperty) {
+		ParentList(ExtendablePropertySet<?> parentPropertySet, PropertyAccessor listProperty) {
 			this.parentPropertySet = parentPropertySet;
 			this.columnName = listProperty.getName().replace('.', '_');
 		}
 		
-		PropertySet<? extends ExtendableObject> parentPropertySet;
+		ExtendablePropertySet<?> parentPropertySet;
 		String columnName;
 	}
 	
@@ -272,24 +275,17 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// A column must exist in this table for each such property
 		// that exists in another property set.
 		tablesMap = new Hashtable<PropertySet, Vector<ParentList>>();
-		for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
-			PropertySet propertySet = (PropertySet)iter.next();
-			if (!propertySet.isExtension()) {
-				Vector<ParentList> list = new Vector<ParentList>();  // List of PropertyAccessors
-				for (Iterator iter2 = PropertySet.getPropertySetIterator(); iter2.hasNext(); ) {
-					PropertySet<?> propertySet2 = (PropertySet)iter2.next();
-					if (!propertySet2.isExtension()) {
-						PropertySet<? extends ExtendableObject> propertySet2b = (PropertySet<? extends ExtendableObject>)propertySet2;
-						for (ListPropertyAccessor listAccessor: propertySet2.getListProperties2()) {
-							if (propertySet.getImplementationClass() == listAccessor.getValueClass()) {
-								// Add to the list of possible parents.
-								list.add(new ParentList(propertySet2b, listAccessor));
-							}
-						}
+		for (ExtendablePropertySet propertySet: PropertySet.getAllExtendablePropertySets()) {
+			Vector<ParentList> list = new Vector<ParentList>();  // List of PropertyAccessors
+			for (ExtendablePropertySet<?> propertySet2: PropertySet.getAllExtendablePropertySets()) {
+				for (ListPropertyAccessor listAccessor: propertySet2.getListProperties2()) {
+					if (propertySet.getImplementationClass() == listAccessor.getElementPropertySet().getImplementationClass()) {
+						// Add to the list of possible parents.
+						list.add(new ParentList(propertySet2, listAccessor));
 					}
 				}
-				tablesMap.put(propertySet, list);
 			}
+			tablesMap.put(propertySet, list);
 		}
 		
 		// Create a statement for our use.
@@ -436,7 +432,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @return A Vector containing objects of class 
 	 * 		<code>ColumnInfo</code>.
 	 */
-	private Vector<ColumnInfo> buildColumnList(PropertySet<?> propertySet) {
+	private Vector<ColumnInfo> buildColumnList(ExtendablePropertySet<?> propertySet) {
 		Vector<ColumnInfo> result = new Vector<ColumnInfo>();
 		
 		// The parent column requirements depend on which other
@@ -512,8 +508,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				// The return type from a getter for a property that is a reference
 				// to an extendable object must be the getter interface.
 				info.foreignKeyPropertySet = null;
-				for (Iterator iter2 = PropertySet.getPropertySetIterator(); iter2.hasNext(); ) {
-					PropertySet propertySet2 = (PropertySet)iter2.next();
+				for (ExtendablePropertySet propertySet2: PropertySet.getAllExtendablePropertySets()) {
 					if (propertySet2.getImplementationClass() == valueClass) {
 						info.foreignKeyPropertySet = propertySet2;
 						break;
@@ -532,10 +527,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			// if other applications (outside JMoney) access the database.
 
 			if (propertyAccessor.getPropertySet().isExtension()) {
-				// TODO: fix the following line.
-				// It currently assumes only one property per extension
-				// property set.
-				Object defaultValue = propertyAccessor.getPropertySet().getDefaultPropertyValues2()[0];
+				Object defaultValue = propertyAccessor.getDefaultValue();
 				info.columnDefinition +=
 					" DEFAULT " + valueToSQLText(defaultValue);
 			}
@@ -606,43 +598,40 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		
 		DatabaseMetaData dmd = con.getMetaData();
 		
-		for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
-			PropertySet propertySet = (PropertySet)iter.next();
-			if (!propertySet.isExtension()) {
-				String tableName = propertySet.getId().replace('.', '_');
-				
-				// Check that the table exists.
-				ResultSet tableResultSet = dmd.getTables(null, null, tableName.toUpperCase(), tableOnlyType);
-				
-				if (tableResultSet.next()) {
-					Vector columnInfos = buildColumnList(propertySet);
-					
-					for (Iterator iter2 = columnInfos.iterator(); iter2.hasNext(); ) {
-						ColumnInfo columnInfo = (ColumnInfo)iter2.next();
-						
-						ResultSet columnResultSet = dmd.getColumns(null, null, tableName.toUpperCase(), columnInfo.columnName);
-						if (columnResultSet.next()) {
-							// int dataType = columnResultSet.getInt("DATA_TYPE");
-							// String typeName = columnResultSet.getString("TYPE_NAME");
-							// TODO: Check that the column information is
-							// correct.  Display a fatal error if it is not.
-						} else {
-							// The column does not exist so we add it.
-							String sql = 
-								"ALTER TABLE " + tableName
-								+ " ADD \"" + columnInfo.columnName
-								+ "\" " + columnInfo.columnDefinition;
-							stmt.executeUpdate(sql);	
-						}
-						columnResultSet.close();
+		for (ExtendablePropertySet propertySet: PropertySet.getAllExtendablePropertySets()) {
+			String tableName = propertySet.getId().replace('.', '_');
+
+			// Check that the table exists.
+			ResultSet tableResultSet = dmd.getTables(null, null, tableName.toUpperCase(), tableOnlyType);
+
+			if (tableResultSet.next()) {
+				Vector columnInfos = buildColumnList(propertySet);
+
+				for (Iterator iter2 = columnInfos.iterator(); iter2.hasNext(); ) {
+					ColumnInfo columnInfo = (ColumnInfo)iter2.next();
+
+					ResultSet columnResultSet = dmd.getColumns(null, null, tableName.toUpperCase(), columnInfo.columnName);
+					if (columnResultSet.next()) {
+						// int dataType = columnResultSet.getInt("DATA_TYPE");
+						// String typeName = columnResultSet.getString("TYPE_NAME");
+						// TODO: Check that the column information is
+						// correct.  Display a fatal error if it is not.
+					} else {
+						// The column does not exist so we add it.
+						String sql = 
+							"ALTER TABLE " + tableName
+							+ " ADD \"" + columnInfo.columnName
+							+ "\" " + columnInfo.columnDefinition;
+						stmt.executeUpdate(sql);	
 					}
-				} else {
-					// Table does not exist, so create it.
-					createTable(propertySet, stmt);
+					columnResultSet.close();
 				}
-				
-				tableResultSet.close();
+			} else {
+				// Table does not exist, so create it.
+				createTable(propertySet, stmt);
 			}
+
+			tableResultSet.close();
 		}
 		
 		// Having ensured that all the tables exist, now
@@ -650,30 +639,26 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// This must be done in a second pass because
 		// otherwise we might try to create a foreign key
 		// constraint before the foreign key has been created.
-		for (Iterator iter = PropertySet.getPropertySetIterator(); iter.hasNext(); ) {
-			PropertySet propertySet = (PropertySet)iter.next();
-			
-			if (!propertySet.isExtension()) {
-				String tableName = propertySet.getId().replace('.', '_');
-				
-				// Check the foreign keys in derived tables that point to the
-				// base table entries.
-				
-				if (propertySet.getBasePropertySet() != null) {
-					String primaryTableName = propertySet.getBasePropertySet().getId().replace('.', '_');
-					checkForeignKey(dmd, stmt, tableName, "_ID", primaryTableName);
-				}
-				
-				// Check all the other foreign keys.
-				Vector columnInfos = buildColumnList(propertySet);
-				
-				for (Iterator iter2 = columnInfos.iterator(); iter2.hasNext(); ) {
-					ColumnInfo columnInfo = (ColumnInfo)iter2.next();
-					
-					if (columnInfo.foreignKeyPropertySet != null) {
-						String primaryTableName = columnInfo.foreignKeyPropertySet.getId().replace('.', '_');
-						checkForeignKey(dmd, stmt, tableName, columnInfo.columnName, primaryTableName);
-					}
+		for (ExtendablePropertySet propertySet: PropertySet.getAllExtendablePropertySets()) {
+			String tableName = propertySet.getId().replace('.', '_');
+
+			// Check the foreign keys in derived tables that point to the
+			// base table entries.
+
+			if (propertySet.getBasePropertySet() != null) {
+				String primaryTableName = propertySet.getBasePropertySet().getId().replace('.', '_');
+				checkForeignKey(dmd, stmt, tableName, "_ID", primaryTableName);
+			}
+
+			// Check all the other foreign keys.
+			Vector columnInfos = buildColumnList(propertySet);
+
+			for (Iterator iter2 = columnInfos.iterator(); iter2.hasNext(); ) {
+				ColumnInfo columnInfo = (ColumnInfo)iter2.next();
+
+				if (columnInfo.foreignKeyPropertySet != null) {
+					String primaryTableName = columnInfo.foreignKeyPropertySet.getId().replace('.', '_');
+					checkForeignKey(dmd, stmt, tableName, columnInfo.columnName, primaryTableName);
 				}
 			}
 		}		
@@ -783,7 +768,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 				} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
 					Class<? extends ExtendableObject> objectClass = valueClass.asSubclass(ExtendableObject.class);
 					int rowIdOfProperty = rs.getInt(columnName);
-					PropertySet<? extends ExtendableObject> propertySetOfProperty = PropertySet.getPropertySet(objectClass);
+					ExtendablePropertySet<? extends ExtendableObject> propertySetOfProperty = PropertySet.getPropertySet(objectClass);
 
 					// We have a problem here.
 					// It may be that the type of this property is a derivable property set,
@@ -845,7 +830,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @return
 	 * @throws SQLException
 	 */
-	static <E extends ExtendableObject> E materializeObject(ResultSet rs, PropertySet<E> propertySet, IObjectKey key, SessionManager sessionManager) throws SQLException {
+	static <E extends ExtendableObject> E materializeObject(ResultSet rs, ExtendablePropertySet<E> propertySet, IObjectKey key, SessionManager sessionManager) throws SQLException {
 		// We need to obtain the key for the parent object.
 		// The parent object may be cached or may be uncached.
 		
@@ -867,11 +852,11 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// For each list that may contain this object, see if the
 		// appropriate column is non-null.
 		
-		PropertySet<? extends ExtendableObject> parentPropertySet = null;
+		ExtendablePropertySet<? extends ExtendableObject> parentPropertySet = null;
 		int parentId = -1;
 		boolean nonNullValueFound = false;
 		
-		PropertySet propertySet2 = propertySet;
+		ExtendablePropertySet propertySet2 = propertySet;
 		do {
 			Vector<ParentList> list = tablesMap.get(propertySet);
 
@@ -902,8 +887,8 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		
 		// Determine if the parent object is cached or uncached.
 		IObjectKey parentKey;
-		if (parentPropertySet.getId().equals("net.sf.jmoney.transaction") 
-				|| parentPropertySet.getId().equals("net.sf.jmoney.entry")) {
+		if (parentPropertySet == TransactionInfo.getPropertySet() 
+				|| parentPropertySet == EntryInfo.getPropertySet()) {
 			// Not cached
 			parentKey = new ObjectKeyUncached(parentId, parentPropertySet, sessionManager);
 		} else if (parentPropertySet.getId().equals("net.sf.jmoney.session")) { 
@@ -936,7 +921,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * 			to submit the 'CREATE TABLE' command.
 	 * @throws SQLException
 	 */
-	void createTable(PropertySet propertySet, Statement stmt) throws SQLException {
+	void createTable(ExtendablePropertySet propertySet, Statement stmt) throws SQLException {
 		String sql = "CREATE TABLE "
 			+ propertySet.getId().replace('.', '_') 
 			+ " (_id INT IDENTITY";
@@ -966,7 +951,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * 
 	 * @return The id of the inserted row
 	 */
-	public static int insertIntoDatabase(PropertySet propertySet, ExtendableObject newObject, ListPropertyAccessor listProperty, ExtendableObject parent, SessionManager sessionManager) {
+	public static int insertIntoDatabase(ExtendablePropertySet propertySet, ExtendableObject newObject, ListPropertyAccessor listProperty, ExtendableObject parent, SessionManager sessionManager) {
 		int rowId = -1;
 
 		// We must insert into the base table first, then the table for the objects
@@ -979,13 +964,13 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		
 		Statement stmt = sessionManager.getReusableStatement();
 
-		Vector<PropertySet> propertySets = new Vector<PropertySet>();
-		for (PropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
+		Vector<ExtendablePropertySet> propertySets = new Vector<ExtendablePropertySet>();
+		for (ExtendablePropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
 			propertySets.add(propertySet2);
 		}
 		
 		for (int index = propertySets.size()-1; index >= 0; index--) {
-			PropertySet<?> propertySet2 = propertySets.get(index);
+			ExtendablePropertySet<?> propertySet2 = propertySets.get(index);
 			
 			String sql = "INSERT INTO " 
 				+ propertySet2.getId().replace('.', '_')
@@ -1019,7 +1004,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			}
 
 			// Set the parent id in the appropriate column
-			if (listProperty.getValueClass() == propertySet2.getImplementationClass()) {
+			if (listProperty.getElementPropertySet() == propertySet2) {
 				IDatabaseRowKey parentKey = (IDatabaseRowKey)parent.getObjectKey();
 				String valueString = Integer.toString(parentKey.getRowId());
 				String parentColumnName = listProperty.getName().replace('.', '_');
@@ -1077,7 +1062,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @param newValues
 	 * @param sessionManager
 	 */
-	public static void updateProperties(PropertySet propertySet, int rowId, Object[] oldValues, Object[] newValues, SessionManager sessionManager) {
+	public static void updateProperties(ExtendablePropertySet propertySet, int rowId, Object[] oldValues, Object[] newValues, SessionManager sessionManager) {
 		Statement stmt = sessionManager.getReusableStatement();
 
 		// The array of property values contains the properties from the
@@ -1085,15 +1070,15 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// We therefore process the tables starting with the base table
 		// first.  This requires first copying the property sets into
 		// an array so that we can iterate them in reverse order.
-		Vector<PropertySet> propertySets = new Vector<PropertySet>();
-		for (PropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
+		Vector<ExtendablePropertySet> propertySets = new Vector<ExtendablePropertySet>();
+		for (ExtendablePropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
 			propertySets.add(propertySet2);
 		}
 		
 		int propertyIndex = 0;
 
 		for (int index = propertySets.size()-1; index >= 0; index--) {
-			PropertySet<?> propertySet2 = propertySets.get(index);
+			ExtendablePropertySet<?> propertySet2 = propertySets.get(index);
 			
 			String sql = "UPDATE " 
 				+ propertySet2.getId().replace('.', '_')
@@ -1192,7 +1177,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 */
 // TODO: throw error if object is referenced.	
 	public static boolean deleteFromDatabase(int rowId, ExtendableObject extendableObject, SessionManager sessionManager) {
-		PropertySet propertySet = PropertySet.getPropertySet(extendableObject.getClass()); 
+		ExtendablePropertySet propertySet = PropertySet.getPropertySet(extendableObject.getClass()); 
 		
 		Statement stmt = sessionManager.getReusableStatement();
 
@@ -1205,7 +1190,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// in the database and just delete the row in the base-most table.
 		// However, it is perhaps safer not to use 'CASCADE'.
 		
-		for (PropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
+		for (ExtendablePropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
 			
 			String sql = "DELETE FROM " 
 				+ propertySet2.getId().replace('.', '_')
@@ -1254,8 +1239,6 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		}
 		Object[] constructorParameters = new Object[numberOfParameters];
 		
-		Object [] defaultValues = propertySet.getDefaultPropertyValues2();
-		
 		constructorParameters[0] = objectKey;
 		constructorParameters[1] = null;
 		constructorParameters[2] = parent.getObjectKey();
@@ -1266,15 +1249,14 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// the passed object and then get the object key from that.
 		// This works because all objects must be in a list and that
 		// list owns the object, not us.
-		int indexIntoDefaultValues = 0;
 		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
 			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
 			int index = propertyAccessor.getIndexIntoConstructorParameters();
 			if (propertyAccessor.isScalar()) {
-//				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor; 
+				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor; 
 				
-				// Get the value from the array of values.
-				Object value = defaultValues[indexIntoDefaultValues++];
+				// Use the default value
+				Object value = scalarAccessor.getDefaultValue();
 				
 				if (value instanceof ExtendableObject) {
 					constructorParameters[index] = ((ExtendableObject)value).getObjectKey();
@@ -1319,7 +1301,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * 			with ExtendableObject properties having the object key in this array 
 	 * @return
 	 */
-	public static <E extends ExtendableObject> E constructExtendableObject(PropertySet<E> propertySet, SessionManager sessionManager, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists, Object[] values) {
+	public static <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, SessionManager sessionManager, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists, Object[] values) {
 		Collection constructorProperties = propertySet.getConstructorProperties();
 		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {

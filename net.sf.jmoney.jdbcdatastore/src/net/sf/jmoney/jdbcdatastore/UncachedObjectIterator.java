@@ -27,8 +27,8 @@ import java.sql.SQLException;
 import java.util.Iterator;
 
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.PropertySet;
 
 /**
  * Class that iterates over a set of objects when the objects
@@ -43,7 +43,7 @@ import net.sf.jmoney.model2.PropertySet;
  */
 class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> {
 	private ResultSet resultSet;
-	private PropertySet<E> propertySet;
+	private ExtendablePropertySet<E> propertySet;
 	private IObjectKey parentKey;
 	private SessionManager sessionManager;
 	private boolean isAnother;
@@ -60,7 +60,7 @@ class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> 
 	 * 			parents then pass null.
 	 * @param sessionManager
 	 */
-	UncachedObjectIterator(ResultSet resultSet, PropertySet<E> propertySet, IObjectKey parentKey, SessionManager sessionManager) {
+	UncachedObjectIterator(ResultSet resultSet, ExtendablePropertySet<E> propertySet, IObjectKey parentKey, SessionManager sessionManager) {
 		this.resultSet = resultSet;
 		this.propertySet = propertySet;
 		this.parentKey = parentKey;

@@ -55,7 +55,7 @@ public interface IPropertySetInfo {
 	 * @return The class that contains a storage implementation
 	 * 		for the properties listed.
 	 */
-	Class getImplementationClass();
+//	Class getImplementationClass();
     
     /**
      * This method is the first method called by the framework.
@@ -125,5 +125,5 @@ public interface IPropertySetInfo {
      * @param propertyRegistrar The interface to be used by this method
      * 		to register the properties.
      */
-    void registerProperties(IPropertyRegistrar propertyRegistrar);
+    PropertySet registerProperties(/*IPropertyRegistrar propertyRegistrar*/);
 }

@@ -43,7 +43,7 @@ public interface IListManager<E extends ExtendableObject> extends Collection<E> 
 	 * 			the exact type of the object to create must be given).
 	 * @return the newly created object.
 	 */
-	<F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet);
+	<F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet);
 
 	/**
 	 * This method creates a new object in this collection
@@ -53,5 +53,5 @@ public interface IListManager<E extends ExtendableObject> extends Collection<E> 
 	 * @param values values to be set in the properties of the new object 
 	 * @return the newly created object.
 	 */
-	<F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet, Object values[]);
+	<F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, Object values[]);
 }

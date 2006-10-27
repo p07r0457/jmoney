@@ -60,8 +60,10 @@ import net.sf.jmoney.fields.DateControl;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ExtensionPropertySet;
 import net.sf.jmoney.model2.PropertyNotFoundException;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.views.NodeEditor;
@@ -108,11 +110,23 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 	
 	static {
 		try {
-			reconciliationStatusAccessor = (ScalarPropertyAccessor)PropertySet.getPropertyAccessor("net.sf.jmoney.reconciliation.entryProperties.status");
+			ExtensionPropertySet propertySet = PropertySet.getExtensionPropertySet("net.sf.jmoney.reconciliation.entryProperties");
+			reconciliationStatusAccessor = (ScalarPropertyAccessor)propertySet.getProperty("status");
+		} catch (PropertySetNotFoundException e) {
+			/*
+			 * The reconciliation plug-in is not installed. This does not stop
+			 * operation of this plug-in. We just have to remove any operations
+			 * that require the property from the plug-in.
+			 */
+			reconciliationStatusAccessor = null;
 		} catch (PropertyNotFoundException e) {
-			// The reconciliation plug-in is not installed.
-			// This does not stop operation of this plug-in.  We just have
-			// to remove any operations that require the property from the plug-in.
+			/*
+			 * Something is wrong here. The property set was found so the
+			 * plug-in must be installed, but the property itself was not found.
+			 * The plug-in must have changed. However, this does not stop
+			 * operation of this plug-in. We just have to remove any operations
+			 * that require the property from the plug-in.
+			 */
 			reconciliationStatusAccessor = null;
 		}
 		

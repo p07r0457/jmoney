@@ -24,7 +24,7 @@ package net.sf.jmoney.model2;
 
 /**
  *
- * @author  Nigel
+ * @author  Nigel Westbury
  */
 public class EnumerationAccessor implements IPropertyDependency {
     

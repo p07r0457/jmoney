@@ -80,31 +80,6 @@
                toolbarPath="fileGroup"
                id="net.sf.jmoney.actions.CloseSessionAction">
          </action>
-         <menu
-               label="&amp;Edit"
-               id="edit">
-            <separator
-                  name="undoGroup">
-            </separator>
-         </menu>
-         <action
-               label="%MainFrame.undo"
-               icon="icons/jlfgr/Undo16.gif"
-               tooltip="Undo last change"
-               class="net.sf.jmoney.actions.UndoAction"               
-               menubarPath="edit/undoGroup"
-               toolbarPath="undoGroup"
-               id="net.sf.jmoney.actions.Undo">
-         </action>
-         <action
-               label="%MainFrame.redo"
-               icon="icons/jlfgr/Redo16.gif"
-               tooltip="Redo last undone change"
-               class="net.sf.jmoney.actions.RedoAction"
-               menubarPath="edit/undoGroup"
-               toolbarPath="undoGroup"
-               id="net.sf.jmoney.actions.Redo">
-         </action>
       </actionSet>
    </extension>
    <extension

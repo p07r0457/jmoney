@@ -48,7 +48,7 @@ public class TextControlWithMruCombo extends TextComposite {
     			int index = recentlyUsedList.indexOf(text);
     			if (index == -1) {
     				// Drop off head if list is already full
-    	    		if (recentlyUsedList.size() >= 5) {
+    	    		if (recentlyUsedList.size() >= 10) {
     	    			recentlyUsedList.removeFirst();
     	    			combo.remove(0);
     	    		}

@@ -28,8 +28,8 @@ import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
-import net.sf.jmoney.model2.PropertySet;
 
 /**
  * This is a special implementation of the IListManager interface.
@@ -58,7 +58,7 @@ public class UncommittedListManager<E extends ExtendableObject> extends Vector<E
 	 * 'added' list are appended to the items returned by the underlying
 	 * committed list.
 	 */
-	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet) {
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());
@@ -102,7 +102,7 @@ public class UncommittedListManager<E extends ExtendableObject> extends Vector<E
 	// This method is never used, because new objects are only created
 	// with non-default values when objects are being committed.
 	// If we support nested transactions then this method will be required.
-	public <F extends E> F createNewElement(ExtendableObject parent, PropertySet<F> propertySet, Object[] values/*, ExtensionProperties[] extensionProperties */) {
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, Object[] values/*, ExtensionProperties[] extensionProperties */) {
 		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		JMoneyPlugin.myAssert (!propertySet.isExtension());

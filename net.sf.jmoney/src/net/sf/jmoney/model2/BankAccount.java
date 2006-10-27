@@ -90,6 +90,10 @@ public class BankAccount extends CurrencyAccount {
         this.minBalance = null;
 	}
 
+	// TODO: remove this.  If we could get the property set, typed
+	// with the correct type as the generic parameter, then that would
+	// be great.  Otherwise this method is no use because we can get
+	// the property set from the map.
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.bankAccount";
 	}
@@ -147,14 +151,5 @@ public class BankAccount extends CurrencyAccount {
 
 		// Notify the change manager.
 		processPropertyChange(BankAccountInfo.getMinBalanceAccessor(), oldMinBalance, m);
-	}
-
-	/**
-	 * Required by JMoney.
-	 */
-	// TODO: remove all of these and instead specify any 'unusual'
-	// default values (if required at all) in the property registration.
-	static public Object [] getDefaultProperties() {
-		return new Object [] { "new account", null, null, null, new Long(0), null, null, null };
 	}
 }

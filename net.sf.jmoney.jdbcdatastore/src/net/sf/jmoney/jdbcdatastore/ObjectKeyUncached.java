@@ -27,6 +27,7 @@ import java.sql.SQLException;
 
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;
@@ -51,7 +52,7 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 	 * until the object is read from the database and therefore
 	 * is not passed to the constructor.
 	 */
-	private PropertySet<? extends ExtendableObject> typedPropertySet;
+	private ExtendablePropertySet<? extends ExtendableObject> typedPropertySet;
 	private SessionManager sessionManager;
 	
 	/**
@@ -64,7 +65,7 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 	 * 		until the object is read from the database and therefore
 	 * 		is not passed to the constructor.
 	 */
-	ObjectKeyUncached(int rowId, PropertySet<? extends ExtendableObject> typedPropertySet, SessionManager sessionManager) {
+	ObjectKeyUncached(int rowId, ExtendablePropertySet<? extends ExtendableObject> typedPropertySet, SessionManager sessionManager) {
 		this.rowId = rowId;
 		this.typedPropertySet = typedPropertySet;
 		this.sessionManager = sessionManager;
@@ -94,7 +95,7 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 				String id = rs.getString("_PROPERTY_SET_ID");
 				
 				try {
-					PropertySet.getPropertySet(id);
+					PropertySet.getExtendablePropertySet(id);
 				} catch (PropertySetNotFoundException e1) {
 					// TODO: The most probable cause is that an object
 					// is stored in the database, but the plug-in that supports
@@ -112,7 +113,7 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 				
 				String tableList = "";
 				String whereClause = "";
-				for (PropertySet propertySet2 = typedPropertySet; propertySet2 != typedPropertySet; propertySet2 = propertySet2.getBasePropertySet()) {
+				for (ExtendablePropertySet propertySet2 = typedPropertySet; propertySet2 != typedPropertySet; propertySet2 = propertySet2.getBasePropertySet()) {
 					String tableName = typedPropertySet.getId().replace('.', '_'); 
 					tableList = tableName
 					+ ", " + tableList;
@@ -154,7 +155,7 @@ public class ObjectKeyUncached implements IDatabaseRowKey {
 		return rowId;
 	}
 	
-	public void updateProperties(PropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
+	public void updateProperties(ExtendablePropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
 		JDBCDatastorePlugin.updateProperties(actualPropertySet, rowId, oldValues, newValues, sessionManager);
 	}
 

@@ -83,8 +83,8 @@ public abstract class ExtensionObject {
     	baseObject.setPropertyValue(propertyAccessor, value);
     }
 
-	protected void processPropertyChange(ScalarPropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-		((ExtendableObject)baseObject).processPropertyChange(propertyAccessor, oldValue, newValue);
+	protected <V> void processPropertyChange(ScalarPropertyAccessor<V> propertyAccessor, V oldValue, V newValue) {
+		baseObject.processPropertyChange(propertyAccessor, oldValue, newValue);
 	}
 
 	/**
