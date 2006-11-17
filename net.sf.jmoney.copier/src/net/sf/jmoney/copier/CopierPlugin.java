@@ -175,7 +175,7 @@ public class CopierPlugin extends AbstractUIPlugin {
     private <E extends ExtendableObject> void copyList(ExtendableObject newParent, ExtendableObject oldParent, ListPropertyAccessor<E> listAccessor, Map objectMap) {
 		ObjectCollection<E> newList = newParent.getListPropertyValue(listAccessor);
 		for (E oldSubObject: oldParent.getListPropertyValue(listAccessor)) {
-			ExtendablePropertySet<? extends E> listElementPropertySet = listAccessor.getElementPropertySet().getActualPropertySet(oldSubObject.getClass());
+			ExtendablePropertySet<? extends E> listElementPropertySet = listAccessor.getElementPropertySet().getActualPropertySet((Class<? extends E>)oldSubObject.getClass());
 			ExtendableObject newSubObject = newList.createNewElement(listElementPropertySet);
 			populateObject(listElementPropertySet, oldSubObject, newSubObject, objectMap);
 		}
