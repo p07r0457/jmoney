@@ -240,6 +240,7 @@ public class QIFFileFormat implements FileFormat {
 					}
 					lastDateIfEU = dateIfEU;
 				}
+				line = r.readLine();
 			}
 		} finally {
 			r.close();
