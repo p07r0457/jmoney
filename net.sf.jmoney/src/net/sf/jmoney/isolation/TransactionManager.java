@@ -645,7 +645,7 @@ public class TransactionManager extends DataManager {
 	 * @return the committed version of the object
 	 */
 	private <E extends ExtendableObject> E commitNewObject(E newObject, ExtendableObject parent, ListPropertyAccessor<E> listAccessor, boolean isDescendentInsert) {
-		ExtendablePropertySet<? extends E> actualPropertySet = listAccessor.getElementPropertySet().getActualPropertySet(newObject.getClass());
+		ExtendablePropertySet<? extends E> actualPropertySet = listAccessor.getElementPropertySet().getActualPropertySet((Class<? extends E>)newObject.getClass());
 		
 		/**
 		 * Maps PropertyAccessor to property value
