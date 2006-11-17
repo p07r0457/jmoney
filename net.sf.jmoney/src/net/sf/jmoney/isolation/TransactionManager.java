@@ -218,7 +218,7 @@ public class TransactionManager extends DataManager {
 //			if (objectInTransaction.isDeleted()) {
 //				throw new RuntimeException("Attempt to get copy of object, but that object has been deleted in the transaction");
 //			}
-			return committedObject.getClass().cast(objectInTransaction);
+			return (E)committedObject.getClass().cast(objectInTransaction);
 		}
 			
     	
@@ -365,7 +365,7 @@ public class TransactionManager extends DataManager {
 		}
 */        	
 		// We can now create the object.
-    	E copyInTransaction = committedObject.getClass().cast(propertySet.constructImplementationObject(constructorParameters));
+    	E copyInTransaction = (E)committedObject.getClass().cast(propertySet.constructImplementationObject(constructorParameters));
 
     	/*
     	 * Now we have created a version of this object that is valid in this datastore,

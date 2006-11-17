@@ -312,7 +312,7 @@ public class ChangeManager {
 		newChangeEntry.objectKeyProxy = getKeyProxy(oldObject.getObjectKey());
 		newChangeEntry.parent = parent;
 		newChangeEntry.owningListProperty = owningListProperty;
-		newChangeEntry.actualPropertySet = owningListProperty.getElementPropertySet().getActualPropertySet(oldObject.getClass());
+		newChangeEntry.actualPropertySet = owningListProperty.getElementPropertySet().getActualPropertySet((Class<? extends E>)oldObject.getClass());
 		
 		// The actual key is no longer valid, so we remove the proxy
 		// from the map that maps object keys to proxies.
