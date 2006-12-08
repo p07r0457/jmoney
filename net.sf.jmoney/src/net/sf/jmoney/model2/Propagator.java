@@ -24,7 +24,6 @@ package net.sf.jmoney.model2;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -159,11 +158,8 @@ public class Propagator {
 	/**
 	 * @param method
 	 */    
-	private static void CheckExtensions(ExtendablePropertySet extendablePropertySet1, ExtendablePropertySet extendablePropertySet2, Method method) {
-		// Why does this not compile????
-		Collection<ExtensionPropertySet> x = extendablePropertySet1.getExtensionPropertySets();
-		for (ExtensionPropertySet sourcePropertySet: x) {
-//		for (ExtensionPropertySet sourcePropertySet: extendablePropertySet1.getExtensionPropertySets()) {
+	private static void CheckExtensions(ExtendablePropertySet<?> extendablePropertySet1, ExtendablePropertySet extendablePropertySet2, Method method) {
+		for (ExtensionPropertySet sourcePropertySet: extendablePropertySet1.getExtensionPropertySets()) {
 			CheckPropertySetAgainstExtensions(sourcePropertySet, extendablePropertySet2, method);
 		}
 	}
@@ -171,16 +167,13 @@ public class Propagator {
 	/**
 	 * Check propertySet1 itself against all of the extensions for propertySet2.
 	 */
-	private static void CheckPropertySetAgainstExtensions(PropertySet propertySet1, ExtendablePropertySet extendablePropertySet2, Method method) {
+	private static void CheckPropertySetAgainstExtensions(PropertySet propertySet1, ExtendablePropertySet<?> extendablePropertySet2, Method method) {
 		Class [] parameters = method.getParameterTypes();
 		
 		PropertySet sourcePropertySet = propertySet1;
 		if (sourcePropertySet.getImplementationClass().equals(parameters[1])) {
 
-			// Why does this not compile????
-			Collection<ExtensionPropertySet> x = extendablePropertySet2.getExtensionPropertySets();
-			for (ExtensionPropertySet destinationPropertySet: x) {
-//			for (ExtensionPropertySet destinationPropertySet: extendablePropertySet2.getExtensionPropertySets()) {
+			for (ExtensionPropertySet destinationPropertySet: extendablePropertySet2.getExtensionPropertySets()) {
 				if (destinationPropertySet.getImplementationClass().equals(parameters[2])) {
 					
 					// Method looks ok so add to map.
