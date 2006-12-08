@@ -267,7 +267,7 @@ public class EntriesTree extends Composite {
 				if (!checkAndCommitTransaction(null)) {
 					return;
 				}
-//TODO: NRWNRW Problem: we get here while not in a transaction.  Not allowed.           		
+           		
            		Transaction transaction = session.createTransaction();
            		Entry entry1 = transaction.createEntry();
            		Entry entry2 = transaction.createEntry();
@@ -907,11 +907,9 @@ public class EntriesTree extends Composite {
 						previouslySelectedItem = null;
 					}
 					
-					for (Iterator iter = deletedTransaction
-							.getEntryCollection().iterator(); iter.hasNext();) {
-						Entry entry = (Entry) iter.next();
-						if (entriesContent.isEntryInTable(entry)) {
-							removeEntryInAccount(entry);
+					for (Entry deletedEntry: deletedTransaction.getEntryCollection()) {
+						if (entriesContent.isEntryInTable(deletedEntry)) {
+							removeEntryInAccount(deletedEntry);
 						}
 					}
 				}

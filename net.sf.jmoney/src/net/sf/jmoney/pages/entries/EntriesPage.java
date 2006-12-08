@@ -119,7 +119,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
     	// Set the account that this page is viewing and editing.
     	// We set an account object that is managed by our own
     	// transaction manager.
-        account = (CurrencyAccount)transactionManager.getCopyInTransaction(originalAccount);
+        account = transactionManager.getCopyInTransaction(originalAccount);
         
     	// Build an array of all possible properties that may be
     	// displayed in the table.
