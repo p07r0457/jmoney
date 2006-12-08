@@ -112,7 +112,11 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 	// more locally than as currently done.
 	TransactionManager transactionManager = null;
 
-	protected ReconciliationAccount originalAccount = null;
+	/**
+	 * The account being shown in this page.  This account
+	 * object exists in the context of transactionManager.
+	 */
+	protected ReconciliationAccount account = null;
 	
 	protected Vector<IEntriesTableProperty> allEntryDataObjects = new Vector<IEntriesTableProperty>();
 
@@ -142,7 +146,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 	 * so the entry is set here by the drag source and fetched from here by the drag
 	 * target.
 	 */
-//	protected Entry entryBeingDragged = null;
+	protected Entry entryBeingDragged = null;
 
     /**
      * Create a new page to edit entries.
@@ -158,7 +162,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
      * @see org.eclipse.ui.forms.editor.FormPage#createFormContent(org.eclipse.ui.forms.IManagedForm)
      */
     protected void createFormContent(IManagedForm managedForm) {
-        originalAccount = (ReconciliationAccount)((CurrencyAccount) fEditor.getSelectedObject()).getExtension(ReconciliationAccountInfo.getPropertySet(), true);
+        CurrencyAccount originalAccount = (CurrencyAccount) fEditor.getSelectedObject();
 
         // Create our own transaction manager.
         // This ensures that uncommitted changes
@@ -166,6 +170,11 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
     	// of this page.
         transactionManager = new TransactionManager(originalAccount.getObjectKey().getSessionManager());
     	
+    	// Set the account that this page is viewing and editing.
+    	// We set an account object that is managed by our own
+    	// transaction manager.
+        account = transactionManager.getCopyInTransaction(originalAccount).getExtension(ReconciliationAccountInfo.getPropertySet(), true);
+        
         /*
 		 * Set the statement to show initially. If there are any entries in
 		 * statements after the last reconciled statement, set the first such
@@ -232,7 +241,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         layout.numColumns = 2;
         form.getBody().setLayout(layout);
         
-        fStatementsSection = new StatementsSection(form.getBody(), managedForm.getToolkit(), originalAccount.getBaseObject());
+        fStatementsSection = new StatementsSection(form.getBody(), managedForm.getToolkit(), account.getBaseObject());
         GridData data = new GridData(GridData.FILL_VERTICAL);
         data.verticalSpan = 2;
         fStatementsSection.getSection().setLayoutData(data);
@@ -300,7 +309,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 					statement = messageBox.getValue();
 					long openingBalanceOfNewStatement = 
 						lastStatement == null 
-						? originalAccount.getStartBalance()
+						? account.getStartBalance()
 						: lastStatement.getClosingBalance();
 					fStatementSection.setStatement(statement, openingBalanceOfNewStatement);
 				}				
@@ -344,14 +353,14 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 							    	/*
 							    	 * Use a transaction to import all the entries.
 							    	 */
-							    	TransactionManager transactionManager = new TransactionManager(originalAccount.getObjectKey().getSessionManager());
+							    	TransactionManager transactionManager = new TransactionManager(account.getObjectKey().getSessionManager());
 							    	
 							    	/**
 							    	 * The account being shown in this page.  This account
 							    	 * object exists in the context of transactionManager.
 							    	 */
-							    	CurrencyAccount accountInTransaction = (CurrencyAccount)transactionManager.getCopyInTransaction(originalAccount.getBaseObject());
-							    	IncomeExpenseAccount defaultCategoryInTransaction = (IncomeExpenseAccount)transactionManager.getCopyInTransaction(originalAccount.getDefaultCategory());
+							    	CurrencyAccount accountInTransaction = (CurrencyAccount)transactionManager.getCopyInTransaction(account.getBaseObject());
+							    	IncomeExpenseAccount defaultCategoryInTransaction = (IncomeExpenseAccount)transactionManager.getCopyInTransaction(account.getDefaultCategory());
 					           		Session sessionInTransaction = accountInTransaction.getSession();
 							  
 									for (Iterator iter = importedEntries.iterator(); iter.hasNext(); ) {
@@ -386,7 +395,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 
 		importButton.addListener(SWT.Selection, new Listener() {
 			public void handleEvent(Event event) {
-				if (!originalAccount.isReconcilable()) {
+				if (!account.isReconcilable()) {
 			        MessageBox diag = new MessageBox(getSite().getShell());
 			        diag.setText("Feature not Available");
 			        diag.setMessage("Before you can import entries from your bank's servers, you must first set the rules for the initial categories for the imported entries.  Press the 'Options...' button to set this up.");
@@ -416,7 +425,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		optionsButton.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
 				ImportOptionsDialog messageBox = 
-					new ImportOptionsDialog(getSite().getShell(), originalAccount);
+					new ImportOptionsDialog(getSite().getShell(), account);
 				if (messageBox.open() == Dialog.OK) {
 					// TODO: update the list in the 'import...' dropdown
 				}				
@@ -489,7 +498,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         formData.right = new FormAttachment(100, 0);
         fUnreconciledSection.getSection().setLayoutData(formData);
 
-        fEntrySection = new EntrySection(form.getBody(), managedForm.getToolkit(), originalAccount.getSession(), originalAccount.getCurrency());
+        fEntrySection = new EntrySection(form.getBody(), managedForm.getToolkit(), account.getSession(), account.getCurrency());
         data = new GridData(GridData.FILL_HORIZONTAL);
         data.horizontalSpan = 2;
         fEntrySection.getSection().setLayoutData(data);
@@ -520,7 +529,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
     }
     
     public CurrencyAccount getAccount() {
-    	return originalAccount.getBaseObject();
+    	return account.getBaseObject();
     }
 
     public BankStatement getStatement() {

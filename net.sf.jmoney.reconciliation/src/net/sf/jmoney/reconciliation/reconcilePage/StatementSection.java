@@ -26,12 +26,16 @@ import java.util.Collection;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.BankAccountInfo;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
+import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.pages.entries.EntriesTree;
 import net.sf.jmoney.pages.entries.EntryRowSelectionAdapter;
 import net.sf.jmoney.pages.entries.EntryRowSelectionListener;
@@ -41,12 +45,14 @@ import net.sf.jmoney.pages.entries.IEntriesTableProperty;
 import net.sf.jmoney.pages.entries.EntriesTree.DisplayableEntry;
 import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
 import net.sf.jmoney.reconciliation.BankStatement;
+import net.sf.jmoney.reconciliation.ReconciliationEntry;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTarget;
+import org.eclipse.swt.dnd.DropTargetAdapter;
 import org.eclipse.swt.dnd.DropTargetEvent;
 import org.eclipse.swt.dnd.DropTargetListener;
 import org.eclipse.swt.dnd.TextTransfer;
@@ -59,8 +65,11 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
@@ -171,13 +180,21 @@ public class StatementSection extends SectionPart {
 		        	return requiredEntries;
 		        }
 		        
-		        CurrencyAccount account = fPage.getAccount();
+				/* The caller always sorts, so there is no point in us returning
+				 * sorted results.  It may be at some point we decide it is more
+				 * efficient to get the database to sort for us, but that would
+				 * only help the first time the results are fetched, it would not
+				 * help on a re-sort.  It also only helps if the database indexes
+				 * on the date.		
+				CurrencyAccount account = fPage.getAccount();
 		        Collection<Entry> accountEntries = 
 		        	account
 						.getSortedEntries(TransactionInfo.getDateAccessor(), false);
+				*/
+				Collection<Entry> accountEntries = fPage.getAccount().getEntries();
 
 		        for (Entry entry: accountEntries) {
-		        	BankStatement statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
+		        	BankStatement statement = entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 		        	if (fPage.getStatement().equals(statement)) {
 		        		requiredEntries.add(entry);
 		        	}
@@ -304,7 +321,7 @@ public class StatementSection extends SectionPart {
 				// statement and immediately commit the change.
 				if (entry != null) {
 					entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), null);
-					fPage.transactionManager.commit();
+					fPage.transactionManager.commit("Unreconcile Entry");
 				}
 			}
         });
@@ -316,7 +333,7 @@ public class StatementSection extends SectionPart {
         Transfer[] types = new Transfer[] {TextTransfer.getInstance()};
         dropTarget.setTransfer(types);
          	 
-        dropTarget.addDropListener(new DropTargetListener() {
+        dropTarget.addDropListener(new DropTargetAdapter() {
 
 			public void dragEnter(DropTargetEvent event) {
 				if (/* we don't want to accept drop*/false) {
@@ -342,25 +359,17 @@ public class StatementSection extends SectionPart {
 			public void drop(DropTargetEvent event) {
 				if (TextTransfer.getInstance().isSupportedType(event.currentDataType)) {
 					//String text = (String) event.data;
-					Entry unrecEntryInAccount = (Entry)event.data;
-					// TODO Do this properly.
-	    			Point pt = new Point (event.x, event.y);
-	    			// TODO: following line fails if a tree control
-					final TableItem item = ((Table)fReconciledEntriesControl.getControl()).getItem(pt);
-					Entry recEntryInAccount = ((IDisplayableItem)item).getEntryInAccount();
+					//Entry unrecEntryInAccount = (Entry)event.data;
+					Entry unrecEntryInAccount = fPage.entryBeingDragged;
+	    			Point pt = fReconciledEntriesControl.getControl().toControl(event.x, event.y);
+					final TreeItem item = ((Tree)fReconciledEntriesControl.getControl()).getItem(pt);
+					Entry recEntryInAccount = ((IDisplayableItem)item.getData()).getEntryInAccount();
 
-					// TODO Merge data from other transaction.
-					Entry recOther = recEntryInAccount.getTransaction().getOther(recEntryInAccount);
-					Entry unrecOther = unrecEntryInAccount.getTransaction().getOther(unrecEntryInAccount);
-					if (unrecOther.getAccount() != null) {
-						recOther.setAccount(unrecOther.getAccount());
-					}
-					if (unrecOther.getMemo() != null) {
-						recOther.setMemo(unrecOther.getMemo());
-					}
-					if (unrecOther.getDescription() != null) {
-						recOther.setDescription(unrecOther.getDescription());
-					}
+					/*
+					 * Merge data from dragged transaction into the target transaction
+					 * and delete the dragged transaction.
+					 */
+					mergeTransaction(unrecEntryInAccount, recEntryInAccount);
 				}
 				
 			}
@@ -380,6 +389,106 @@ public class StatementSection extends SectionPart {
         toolkit.paintBordersFor(container);
         refresh();
     }
+
+	/**
+	 * Merge data from other transaction.
+	 * 
+	 * The normal case is that the reconciled transaction was imported from the bank
+	 * and the statement being merged into this transaction has been manually edited.
+	 * We therefore take the following properties from the reconciled transaction:
+	 * - the valuta date
+	 * - the amount
+	 * - the check number
+	 * 
+	 * And we take all other properties and all the other entries from the source transaction.
+	 * 
+	 * However, if any property is null in one transaction and non-null in the
+	 * other then we use the non-null property.
+	 * 
+	 * If any of the following conditions apply in the target transaction then
+	 * we give a warning to the user.  These conditions indicate that there is data
+	 * in the target transaction that will be lost and that information was probably
+	 * manually entered.
+	 * 
+	 * - the transaction has split entries
+	 * - there are properties set in the other entry other that the required account,
+	 *     or the account in the other entry is not the default account
+	 *
+	 * We actually merge the target into the source transaction and then set the source
+	 * entry as reconciled.  This is a little easier.
+	 * 
+	 * The merge constitutes a single undoable action.  
+	 */
+	private void mergeTransaction(Entry unrecEntryInAccount, Entry recEntryInAccount) {
+		Entry recOther = recEntryInAccount.getTransaction().getOther(recEntryInAccount);
+		Entry unrecOther = unrecEntryInAccount.getTransaction().getOther(unrecEntryInAccount);
+		
+		if (recOther == null) {
+	        MessageBox diag = new MessageBox(this.getSection().getShell(), SWT.YES | SWT.NO);
+	        diag.setText("Warning");
+	        diag.setMessage("The target entry has split entries.  These entries will be replaced by the data from the transaction for the dragged entry.  The split entries will be lost.  Are you sure you want to do this?");
+	        if (diag.open() != SWT.YES) {
+	        	return;
+	        }
+		}
+		
+		if (recEntryInAccount.getCheck() != null) {
+			unrecEntryInAccount.setCheck(recEntryInAccount.getCheck());
+		}
+		
+		if (recEntryInAccount.getValuta() != null) {
+			unrecEntryInAccount.setValuta(recEntryInAccount.getValuta());
+		}
+		
+		if (recEntryInAccount.getAmount() != unrecEntryInAccount.getAmount()) {
+	        MessageBox diag = new MessageBox(this.getSection().getShell(), SWT.YES | SWT.NO);
+	        diag.setText("Warning");
+	        diag.setMessage(
+	        		"The target entry has an amount of " 
+	        		+ EntryInfo.getAmountAccessor().formatValueForMessage(recEntryInAccount) 
+	        		+ " and the dragged entry has an amount of " 
+	        		+ EntryInfo.getAmountAccessor().formatValueForMessage(unrecEntryInAccount) 
+	        		+ "."
+	        		+ "These amounts should normally be equal.  It may be that the incorrect amount was originally entered for the dragged entry and you want the amount corrected to the amount given by the import.  If so, continue and the amount will be corrected.  Do you want to continue?");
+	        if (diag.open() != SWT.YES) {
+	        	return;
+	        }
+
+	        unrecEntryInAccount.setAmount(recEntryInAccount.getAmount());
+		}
+
+		/*
+		 * All other properties are taken from the target transaction only if
+		 * the property is null in the source transaction.
+		 */
+		for (ScalarPropertyAccessor<?> propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
+			copyProperty(propertyAccessor, unrecEntryInAccount, recEntryInAccount);
+		}
+
+		/*
+		 * Now we delete the reconciled entry and set the previously unreconciled
+		 * entry to be reconciled.
+		 */
+		Session session = fPage.transactionManager.getSession();
+		session.getTransactionCollection().remove(recEntryInAccount.getTransaction());
+
+		ReconciliationEntry unrecEntry2 = unrecEntryInAccount.getExtension(ReconciliationEntryInfo.getPropertySet());
+		unrecEntry2.setStatement(fPage.getStatement());
+		
+		fPage.transactionManager.commit("Match Entry to Bank's Entry");
+	}
+
+	/**
+	 * Helper method to copy a property from the target entry to the source entry if the
+	 * property is null in the source entry but not null in the target entry.
+	 */
+	private <V> void copyProperty(ScalarPropertyAccessor<V> propertyAccessor, Entry unrecEntryInAccount, Entry recEntryInAccount) {
+		V sourceValue = unrecEntryInAccount.getPropertyValue(propertyAccessor);
+		V targetValue = recEntryInAccount.getPropertyValue(propertyAccessor);
+		if (sourceValue == null && targetValue != null) {
+			unrecEntryInAccount.setPropertyValue(propertyAccessor, targetValue);
+		}
+	}
 
 	/**
 	 * @param statement

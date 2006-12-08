@@ -267,13 +267,12 @@ public class StatementsSection extends SectionPart {
 					if (deletedObject instanceof Entry) {
 						Entry deletedEntry = (Entry)deletedObject;
 						if (account.equals(deletedEntry.getAccount())) {
-							BankStatement statement = (BankStatement)deletedEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
+							BankStatement statement = deletedEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 							adjustStatement(statement, -deletedEntry.getAmount());
 						}
 					} else if (deletedObject instanceof Transaction) {
 						Transaction deletedTransaction = (Transaction)deletedObject;
-						for (Iterator iter = deletedTransaction.getEntryCollection().iterator(); iter.hasNext(); ) {
-							Entry deletedEntry = (Entry)iter.next();
+						for (Entry deletedEntry: deletedTransaction.getEntryCollection()) {
 							if (account.equals(deletedEntry.getAccount())) {
 								BankStatement statement = (BankStatement)deletedEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 								adjustStatement(statement, -deletedEntry.getAmount());

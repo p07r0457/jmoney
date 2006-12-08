@@ -100,10 +100,18 @@ public class UnreconciledSection extends SectionPart {
 			}
 
 			public Collection<Entry> getEntries() {
-		        CurrencyAccount account = fPage.getAccount();
+				/* The caller always sorts, so there is no point in us returning
+				 * sorted results.  It may be at some point we decide it is more
+				 * efficient to get the database to sort for us, but that would
+				 * only help the first time the results are fetched, it would not
+				 * help on a re-sort.  It also only helps if the database indexes
+				 * on the date.		
+				CurrencyAccount account = fPage.getAccount();
 		        Collection<Entry> accountEntries = 
 		        	account
 						.getSortedEntries(TransactionInfo.getDateAccessor(), false);
+				*/
+				Collection<Entry> accountEntries = fPage.getAccount().getEntries();
 		        
 		        Vector<Entry> requiredEntries = new Vector<Entry>();
 		        for (Entry entry: accountEntries) {
@@ -171,9 +179,11 @@ public class UnreconciledSection extends SectionPart {
          	 
         dragSource.addDragListener(new DragSourceListener() {
         	public void dragStart(DragSourceEvent event) {
-        		// TODO: Is it correct to use the current selection?
-        		// See if a drag also sets the selection.
-
+        		/*
+        		 * It is not possible to start a drag without the current selection
+        		 * first being set to the dragged item.  We can therefore use the
+        		 * current selection as the dragged item.
+        		 */
         		Entry entry = fUnreconciledEntriesControl.getSelectedEntry();
         		
         		// Do not start the drag if the empty 'new entry' row is being dragged.
@@ -185,22 +195,18 @@ public class UnreconciledSection extends SectionPart {
         		// Provide the data of the requested type.
         		if (TextTransfer.getInstance().isSupportedType(event.dataType)) {
             		Entry entry = fUnreconciledEntriesControl.getSelectedEntry();
-        			//fPage.entryBeingDragged = entry;
-        			//event.data = "get entry from fPage";
-            		event.data = entry;
+        			fPage.entryBeingDragged = entry;
+        			event.data = "get entry from fPage";
+            		//event.data = entry;
         		}
         	}
         	public void dragFinished(DragSourceEvent event) {
-        		// If a move operation has been performed, remove the data
-        		// from the source.  In a drag and drop, the transation entries
-        		// and properties are merged with the target transaction, so we
-        		// should now delete this transaction.
-        		// TODO: might it be better to merge the target into the source????
-        		// This would reduce the database updates.
         		if (event.detail == DND.DROP_MOVE) {
-        			Entry entry = (Entry)event.data;
-        			Transaction transaction = entry.getTransaction();
-        			transaction.getSession().deleteTransaction(transaction);
+        			/*
+        			 * Normally the dragged item would be removed at this point.
+        			 * However, the move is handled by the destination onto which
+        			 * the item is dropped.
+        			 */
         		}
         	}
         });
@@ -259,7 +265,7 @@ public class UnreconciledSection extends SectionPart {
 					// statement and immediately commit the change.
 					if (entry != null) {
 						entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), fPage.getStatement());
-						fPage.transactionManager.commit();
+						fPage.transactionManager.commit("Reconcile Entry");
 					}
 				}
 			}
