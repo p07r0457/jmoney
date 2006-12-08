@@ -38,7 +38,6 @@ import net.sf.jmoney.isolation.TransactionManager;
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.UndoContext;
 import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.ui.internal.Workbench;
 
 /**
  * Holds the fields that will be saved in a file.

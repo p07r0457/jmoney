@@ -67,7 +67,7 @@ public abstract class ExtensionObject {
     	return baseObject.equals(object);
 	}
 	
-	public ExtensionObject getExtension(PropertySet propertySet) {
+	public <E extends ExtensionObject> E getExtension(ExtensionPropertySet<E> propertySet) {
     	return baseObject.getExtension(propertySet);
     }
     

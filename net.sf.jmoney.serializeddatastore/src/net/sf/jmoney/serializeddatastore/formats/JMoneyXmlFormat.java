@@ -1313,7 +1313,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		for (ListPropertyAccessor<?> listAccessor: propertySet.getListProperties3()) {
 			PropertySet propertySet2 = listAccessor.getPropertySet(); 
 			if (!propertySet2.isExtension()
-					|| object.getExtension(propertySet2) != null) {
+					|| object.getExtension((ExtensionPropertySet<?>)propertySet2) != null) {
 				for (Iterator<? extends ExtendableObject> elementIter = object.getListPropertyValue(listAccessor).iterator(); elementIter.hasNext(); ) {
 					ExtendableObject listElement = elementIter.next();
 					writeObject(hd, listElement, listAccessor.getLocalName(), listAccessor.getElementPropertySet().getImplementationClass());
@@ -1324,7 +1324,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		for (ScalarPropertyAccessor<?> propertyAccessor: propertySet.getScalarProperties3()) {
 			PropertySet propertySet2 = propertyAccessor.getPropertySet(); 
 			if (!propertySet2.isExtension()
-					|| object.getExtension(propertySet2) != null) {
+					|| object.getExtension((ExtensionPropertySet<?>)propertySet2) != null) {
 				String name = propertyAccessor.getLocalName();
 				Object value = object.getPropertyValue(propertyAccessor);
 

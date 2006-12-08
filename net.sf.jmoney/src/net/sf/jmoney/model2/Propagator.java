@@ -60,7 +60,7 @@ public class Propagator {
 	 * Map of maps.  First key is the PropertySet object for the source,
 	 * and second key is the PropertySet object for the destination.
 	 */
-	private static Map<PropertySet, Map<PropertySet, Method>> propagatorMap = new Hashtable<PropertySet, Map<PropertySet, Method>>();
+	private static Map<PropertySet, Map<ExtensionPropertySet, Method>> propagatorMap = new Hashtable<PropertySet, Map<ExtensionPropertySet, Method>>();
 	
 	/**
 	 * The set of all properties that have been updated as a result of a single
@@ -185,9 +185,9 @@ public class Propagator {
 					
 					// Method looks ok so add to map.
 					
-					Map<PropertySet, Method> secondaryMap = propagatorMap.get(sourcePropertySet);
+					Map<ExtensionPropertySet, Method> secondaryMap = propagatorMap.get(sourcePropertySet);
 					if (secondaryMap == null) {
-						secondaryMap = new Hashtable<PropertySet, Method>();
+						secondaryMap = new Hashtable<ExtensionPropertySet, Method>();
 						propagatorMap.put(sourcePropertySet, secondaryMap);
 					}
 					
@@ -251,59 +251,63 @@ public class Propagator {
 		// an exception is throw.  We therefore wrap all the following in a
 		// 'try' - 'finally' block.
 		try {
-		
-		PropertySet sourcePropertySetKey = propertyAccessor.getPropertySet();
-		
-		if (updatedProperties.contains(propertyAccessor)) {
-			// Actually should not be a runtime exception
-			throw new InconsistentCircularPropagatorsException(propertyAccessor.getName(), source.getPropertyValue(propertyAccessor));
-		}
-		
-		// Add this property to the map of properties that have been changed.
-		updatedProperties.add(propertyAccessor);
-		
-		Map<PropertySet, Method> secondaryMap = propagatorMap.get(sourcePropertySetKey);
-		if (secondaryMap != null) {
-			for (Map.Entry<PropertySet, Method> mapEntry: secondaryMap.entrySet()) {
-				PropertySet destinationPropertySetKey = mapEntry.getKey();
-				Method method = mapEntry.getValue();
-				
-				Object[] parameters = new Object[3];
-				parameters[0] = propertyAccessor.getLocalName();
-				parameters[1] = source.getExtension(sourcePropertySetKey);
-				parameters[2] = source.getExtension(destinationPropertySetKey);
-				try {
-					// Kludge.  When properties are being loaded from file, the objects
-					// are not the mutable versions.  Therefore when we obtain the
-					// destination extension, it may be null.  We do nothing in this
-					// case, as the datastore should have consistent values already.
-					// TODO tidy this up when datastore are properly implemented.
-					if (parameters[2] != null) {
-						method.invoke(null, parameters);
-					}
-				} catch (IllegalAccessException e) {
-					// Should not happen because only public methods are added to our list.
-					e.printStackTrace();
-				} catch (InvocationTargetException e) {
-					if (e.getCause() == null) {
-						// TODO: Figure out what to do here
+
+			// We assume that only properties in extension are
+			// propagated.  If the add the containing property set
+			// type as a type parameter to the property accessor class
+			// then we could probably enforce this at compile time.
+			// For the time being, use a runtime cast.
+			ExtensionPropertySet<?> sourcePropertySet = (ExtensionPropertySet)propertyAccessor.getPropertySet();
+
+			if (updatedProperties.contains(propertyAccessor)) {
+				// Actually should not be a runtime exception
+				throw new InconsistentCircularPropagatorsException(propertyAccessor.getName(), source.getPropertyValue(propertyAccessor));
+			}
+
+			// Add this property to the map of properties that have been changed.
+			updatedProperties.add(propertyAccessor);
+
+			Map<ExtensionPropertySet, Method> secondaryMap = propagatorMap.get(sourcePropertySet);
+			if (secondaryMap != null) {
+				for (Map.Entry<ExtensionPropertySet, Method> mapEntry: secondaryMap.entrySet()) {
+					ExtensionPropertySet<?> destinationPropertySet = mapEntry.getKey();
+					Method method = mapEntry.getValue();
+
+					Object[] parameters = new Object[3];
+					parameters[0] = propertyAccessor.getLocalName();
+					parameters[1] = source.getExtension(sourcePropertySet);
+					parameters[2] = source.getExtension(destinationPropertySet);
+					try {
+						// Kludge.  When properties are being loaded from file, the objects
+						// are not the mutable versions.  Therefore when we obtain the
+						// destination extension, it may be null.  We do nothing in this
+						// case, as the datastore should have consistent values already.
+						// TODO tidy this up when datastore are properly implemented.
+						if (parameters[2] != null) {
+							method.invoke(null, parameters);
+						}
+					} catch (IllegalAccessException e) {
+						// Should not happen because only public methods are added to our list.
 						e.printStackTrace();
-					}
-					if (e.getCause() instanceof InconsistentCircularPropagatorsException) {
-						InconsistentCircularPropagatorsException exception = (InconsistentCircularPropagatorsException)e.getCause();
-						throw new InconsistentCircularPropagatorsException(propertyAccessor.getName(), source.getPropertyValue(propertyAccessor), exception);  
-					} else {
-						// TODO: Figure out what to do here
-						e.printStackTrace();
+					} catch (InvocationTargetException e) {
+						if (e.getCause() == null) {
+							// TODO: Figure out what to do here
+							e.printStackTrace();
+						}
+						if (e.getCause() instanceof InconsistentCircularPropagatorsException) {
+							InconsistentCircularPropagatorsException exception = (InconsistentCircularPropagatorsException)e.getCause();
+							throw new InconsistentCircularPropagatorsException(propertyAccessor.getName(), source.getPropertyValue(propertyAccessor), exception);  
+						} else {
+							// TODO: Figure out what to do here
+							e.printStackTrace();
+						}
 					}
 				}
 			}
-		}
-		
 		} finally {
-		if (topLevelPropagatorFirer) {
-			updatedProperties = null;
-		}
+			if (topLevelPropagatorFirer) {
+				updatedProperties = null;
+			}
 		}
 	}
 }

@@ -230,10 +230,10 @@ public abstract class ExtendableObject {
 	 * @return
 	 */
 	// TODO: clean this up.
-	public ExtensionObject getExtension(PropertySet propertySet, boolean alwaysReturnNonNullExtensions) {
+	public <E extends ExtensionObject> E getExtension(ExtensionPropertySet<E> propertySet, boolean alwaysReturnNonNullExtensions) {
 		boolean saveFlag = this.alwaysReturnNonNullExtensions;
 		this.alwaysReturnNonNullExtensions = alwaysReturnNonNullExtensions;
-		ExtensionObject result = getExtension(propertySet);
+		E result = getExtension(propertySet);
 		this.alwaysReturnNonNullExtensions = saveFlag;
 		return result;
 	}
@@ -242,8 +242,8 @@ public abstract class ExtendableObject {
 	 * Get the extension that implements the properties needed by
 	 * a given plug-in.
 	 */
-	public ExtensionObject getExtension(PropertySet propertySet) {
-		ExtensionObject extension = extensions.get(propertySet);
+	public <E extends ExtensionObject> E getExtension(ExtensionPropertySet<E> propertySet) {
+		E extension = propertySet.classOfObject.cast(extensions.get(propertySet));
 		
 		if (extension == null) {
 			// Extension does not exist.
@@ -253,8 +253,7 @@ public abstract class ExtendableObject {
 				// for default values.
 				
 				try {
-					extension = (ExtensionObject)
-					propertySet.getImplementationClass().newInstance();
+					extension = propertySet.getImplementationClass().newInstance();
 					// TODO: plugin error if null is returned
 				} catch (Exception e) {
 					// TODO: ensure that we check for a default constructor
@@ -341,18 +340,35 @@ public abstract class ExtendableObject {
      * property is returned.
      */
 	public <T> T getPropertyValue(ScalarPropertyAccessor<T> propertyAccessor) {
-		Object objectWithProperties = getPropertySetInterface(propertyAccessor.getPropertySet());
+		PropertySet propertySet = propertyAccessor.getPropertySet();
+		Object objectWithProperties;
+		Class<?> implementationClass;
+		if (!propertySet.isExtension()) {
+			objectWithProperties =  this;
+			implementationClass = propertySet.getImplementationClass();
+		} else {
+			ExtensionObject extension = getExtension((ExtensionPropertySet<?>)propertySet);
+
+			implementationClass = ((ExtensionPropertySet)propertySet).getExtendablePropertySet().getImplementationClass();
+
+			/*
+			 * If there is no extension then we return the default value.
+			 */
+			if (extension == null) {
+				return propertyAccessor.getDefaultValue();
+			}
+			
+			objectWithProperties =  extension;
+		}
 		
-		// If there is no extension then we use a default extension
-		// obtained from the propertySet object.  This extension object
-		// was constructed using the default constructor.
-		// This default extension is never passed outside this package
-		// because plugins have no need for it and can cause chaos if
-		// they alter it.  However it is useful for use inside the
-		// package such as here.
-		if (objectWithProperties == null) {
-			return propertyAccessor.getDefaultValue();
-//			objectWithProperties = propertyAccessor.getPropertySet().getDefaultPropertyValues();
+		if (!implementationClass.isAssignableFrom(getClass())) {
+			// TODO: We should be able to validate this at compile time using generics.
+			// This would involve adding the implementation class of the containing
+			// property set as a type parameter to all property accessors.
+			throw new RuntimeException("Property " + propertyAccessor.getName()
+					+ " is implemented by " + implementationClass.getName()
+					+ " but is being called on an object of type "
+					+ getClass().getName());
 		}
 		
 		return propertyAccessor.invokeGetMethod(objectWithProperties);
@@ -393,39 +409,13 @@ public abstract class ExtendableObject {
 		propertyAccessor.invokeSetMethod(objectWithProperties, value);
 	}
 
-	/**
-	 * Given a property set, return the actual object against
-	 * which the various methods to get and set properties may
-	 * be invoked.
-	 * <P>
-	 * If the property set is an extendable property set then
-	 * the methods must be invoked against the extendable object
-	 * itself.  If the property set is an extension property set
-	 * then we must find the appropriate extension object.
-	 * 
-	 * @param propertySet
-	 * @return The object (extendable or extension object)
-	 * 			against which the methods for the given property
-	 * 			must be invoked, or null if an extension property
-	 * 			and no extension exists.
-	 */
-	private Object getPropertySetInterface(PropertySet propertySet) {
-		if (!propertySet.isExtension()) {
-			return this;
-		} else {
-			ExtensionObject extension = getExtension(propertySet);
-			
-			return extension;
-		}
-	}
-	
 	private Object getMutablePropertySetInterface(PropertySet propertySet) {
 		if (!propertySet.isExtension()) {
 			return this;
 		} else {
 			// Because this is a mutable object, the following call will always
 			// return a non-null extension.
-			return getExtension(propertySet);
+			return getExtension((ExtensionPropertySet<?>)propertySet);
 		}
 	}
 	

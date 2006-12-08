@@ -73,4 +73,8 @@ public class ExtensionPropertySet<E extends ExtensionObject> extends PropertySet
 
 		findConstructors(true);
 	}
+
+	public ExtendablePropertySet getExtendablePropertySet() {
+		return extendablePropertySet;
+	}
 }
