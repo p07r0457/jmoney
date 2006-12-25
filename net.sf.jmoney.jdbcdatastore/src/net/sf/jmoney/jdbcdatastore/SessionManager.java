@@ -29,7 +29,6 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import net.sf.jmoney.model2.Account;
@@ -324,8 +323,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	}
 	
 	private void addEntriesFromSubAccounts(CapitalAccount a, String accounts) {
-		for (Iterator it = a.getSubAccountCollection().iterator(); it.hasNext(); ) {
-			CapitalAccount subAccount = (CapitalAccount)it.next();
+		for (CapitalAccount subAccount: a.getSubAccountCollection()) {
 			IDatabaseRowKey proxy = (IDatabaseRowKey)subAccount.getObjectKey();
 			accounts += "," + proxy.getRowId();
 			addEntriesFromSubAccounts(subAccount, accounts);

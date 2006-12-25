@@ -49,7 +49,7 @@ import org.eclipse.swt.widgets.Shell;
  * @author Nigel Westbury
  */
 public class OfxImport implements IBankStatementSource {
-	public Collection importEntries(Shell shell, CurrencyAccount account) {
+	public Collection<EntryData> importEntries(Shell shell, CurrencyAccount account) {
 
 		// Prompt the user for the file.
 		FileDialog dialog = new FileDialog(shell);
@@ -83,7 +83,7 @@ public class OfxImport implements IBankStatementSource {
 		}
 	}
 
-	Collection getEntries(BufferedReader buffer) throws ParseException {
+	Collection<EntryData> getEntries(BufferedReader buffer) throws ParseException {
 		SimpleDOMParser parser = new SimpleDOMParser();
 		SimpleElement rootElement = null;
 		try {

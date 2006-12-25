@@ -74,7 +74,7 @@ public class QifImport implements IBankStatementSource {
 	 */
 	private boolean usesUSDates;
 	
-	public Collection importEntries(Shell shell, CurrencyAccount account) {
+	public Collection<EntryData> importEntries(Shell shell, CurrencyAccount account) {
 		FileDialog dialog = new FileDialog(shell);
 		dialog.setFilterExtensions(new String [] { "*.qif" } );
 		dialog.setFilterNames(new String [] { "Quicken Import Files (*.qif)" } );

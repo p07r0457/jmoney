@@ -22,7 +22,6 @@
 package net.sf.jmoney.reconciliation.reconcilePage;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.IBookkeepingPage;
@@ -103,7 +102,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 
 	/**
 	 * The transaction manager used for all changes made by
-	 * this page.  It is created by the page is created and
+	 * this page.  It is created when this page is created and
 	 * remains usable for the rest of the time that this page
 	 * exists.
 	 */
@@ -348,24 +347,17 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 							try {
 								// Load the extension point listener for the selected source
 								IBankStatementSource statementSource = (IBankStatementSource)thisElement.createExecutableExtension("class");
-								Collection importedEntries = statementSource.importEntries(getSite().getShell(), getAccount());
+								Collection<IBankStatementSource.EntryData> importedEntries = statementSource.importEntries(getSite().getShell(), getAccount());
 								if (importedEntries != null) {
-							    	/*
-							    	 * Use a transaction to import all the entries.
-							    	 */
-							    	TransactionManager transactionManager = new TransactionManager(account.getObjectKey().getSessionManager());
-							    	
 							    	/**
 							    	 * The account being shown in this page.  This account
 							    	 * object exists in the context of transactionManager.
 							    	 */
-							    	CurrencyAccount accountInTransaction = (CurrencyAccount)transactionManager.getCopyInTransaction(account.getBaseObject());
-							    	IncomeExpenseAccount defaultCategoryInTransaction = (IncomeExpenseAccount)transactionManager.getCopyInTransaction(account.getDefaultCategory());
+							    	CurrencyAccount accountInTransaction = (CurrencyAccount)account.getBaseObject();
+							    	IncomeExpenseAccount defaultCategoryInTransaction = account.getDefaultCategory();
 					           		Session sessionInTransaction = accountInTransaction.getSession();
 							  
-									for (Iterator iter = importedEntries.iterator(); iter.hasNext(); ) {
-										IBankStatementSource.EntryData entryData = (IBankStatementSource.EntryData)iter.next();
-						           		
+									for (IBankStatementSource.EntryData entryData: importedEntries) {
 						           		Transaction transaction = sessionInTransaction.createTransaction();
 						           		Entry entry1 = transaction.createEntry();
 						           		Entry entry2 = transaction.createEntry();
@@ -601,9 +593,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		 * @return
 		 */
 		public IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data) {
-			Session session = data.getTransaction().getSession();
-			
-			IPropertyControl propertyControl = accessor.createPropertyControl(parent, session); 
+			IPropertyControl propertyControl = accessor.createPropertyControl(parent, account.getSession()); 
 				
 			ExtendableObject extendableObject = getObjectContainingProperty(data);
 

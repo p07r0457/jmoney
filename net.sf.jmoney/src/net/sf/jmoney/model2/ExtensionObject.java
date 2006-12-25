@@ -25,10 +25,10 @@ import java.lang.reflect.Field;
 
 
 /**
- * @author Nigel
- *
  * This class is the base class from which all classes that implement
  * extension property sets should be derived.
+
+ * @author Nigel Westbury
  */
 public abstract class ExtensionObject {
 	protected ExtendableObject baseObject;

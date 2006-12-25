@@ -168,7 +168,7 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 	
 	private Date date;
 	
-	protected Map expressionMap;
+	protected Map<Integer, Integer> expressionMap;
 	
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
@@ -361,7 +361,7 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 			} else {
 				JRDataSource ds = new JRBeanCollectionDataSource(items);
 				
-				expressionMap = new HashMap();
+				expressionMap = new HashMap<Integer, Integer>();
 				
 				JasperDesign jasperDesign = buildDesign();
 				JRCalculator jasperCalculator = new AccountBalancesCalculator(expressionMap); 
@@ -712,7 +712,7 @@ public class AccountBalancesPage implements IBookkeepingPageFactory {
 	}
 	
 	private Collection getItems() {
-		Vector items = new Vector();
+		Vector<Item> items = new Vector<Item>();
 		
 		Session session = JMoneyPlugin.getDefault().getSession();
 		Iterator aIt = session.getCapitalAccountIterator();

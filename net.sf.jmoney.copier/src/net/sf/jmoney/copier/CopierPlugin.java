@@ -1,7 +1,6 @@
 package net.sf.jmoney.copier;
 
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -11,6 +10,7 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.ExtensionPropertySet;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -106,13 +106,13 @@ public class CopierPlugin extends AbstractUIPlugin {
      * This is therefore more than just a deep copy.  It is a conversion.
      */
     public void populateSession(Session newSession, Session oldSession) {
-        Map objectMap = new Hashtable();
+        Map<Object, Object> objectMap = new Hashtable<Object, Object>();
         
         ExtendablePropertySet propertySet = PropertySet.getPropertySet(oldSession.getClass());
     	populateObject(propertySet, oldSession, newSession, objectMap);
     }
 
-    private void populateObject(ExtendablePropertySet<?> propertySet, ExtendableObject oldObject, ExtendableObject newObject, Map objectMap) {
+    private void populateObject(ExtendablePropertySet<?> propertySet, ExtendableObject oldObject, ExtendableObject newObject, Map<Object, Object> objectMap) {
     	// For all non-extension properties (including properties
     	// in base classes), read the property value from the
     	// old object and write it to the new object.
@@ -134,9 +134,7 @@ public class CopierPlugin extends AbstractUIPlugin {
     	// Now copy the extensions.  This is done by looping through the extensions
     	// in the old object and, for every extension that exists in the old object,
     	// copy the properties to the new object.
-    	for (Iterator extensionIter = oldObject.getExtensionIterator(); extensionIter.hasNext(); ) {
-    		Map.Entry mapEntry = (Map.Entry)extensionIter.next();
-    		PropertySet<?> extensionPropertySet = (PropertySet)mapEntry.getKey();
+    	for (ExtensionPropertySet<?> extensionPropertySet: oldObject.getExtensions()) {
     		for (PropertyAccessor propertyAccessor: extensionPropertySet.getProperties1()) {
     			if (propertyAccessor.isScalar()) {
 					ScalarPropertyAccessor<?> scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
@@ -163,7 +161,7 @@ public class CopierPlugin extends AbstractUIPlugin {
     		V oldValue = oldObject.getPropertyValue(propertyAccessor);
     		V newValue;
     		if (oldValue instanceof ExtendableObject) {
-    			newValue = (V)objectMap.get(oldValue);
+    			newValue = (V)propertyAccessor.getClassOfValueObject().cast(objectMap.get(oldValue));
     		} else {
     			newValue = oldValue;
     		}
@@ -172,7 +170,7 @@ public class CopierPlugin extends AbstractUIPlugin {
 					newValue);
     }
     
-    private <E extends ExtendableObject> void copyList(ExtendableObject newParent, ExtendableObject oldParent, ListPropertyAccessor<E> listAccessor, Map objectMap) {
+    private <E extends ExtendableObject> void copyList(ExtendableObject newParent, ExtendableObject oldParent, ListPropertyAccessor<E> listAccessor, Map<Object, Object> objectMap) {
 		ObjectCollection<E> newList = newParent.getListPropertyValue(listAccessor);
 		for (E oldSubObject: oldParent.getListPropertyValue(listAccessor)) {
 			ExtendablePropertySet<? extends E> listElementPropertySet = listAccessor.getElementPropertySet().getActualPropertySet((Class<? extends E>)oldSubObject.getClass());

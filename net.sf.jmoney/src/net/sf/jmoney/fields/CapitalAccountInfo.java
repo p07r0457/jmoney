@@ -25,9 +25,11 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IListGetter;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
@@ -59,7 +61,13 @@ public class CapitalAccountInfo implements IPropertySetInfo {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		IPropertyControlFactory<String> commentControlFactory = new MultiTextControlFactory();
 		
-		subAccountAccessor = propertySet.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), CapitalAccountInfo.getPropertySet(), null);
+		IListGetter<CapitalAccount, CapitalAccount> accountGetter = new IListGetter<CapitalAccount, CapitalAccount>() {
+			public ObjectCollection<CapitalAccount> getList(CapitalAccount parentObject) {
+				return parentObject.getSubAccountCollection();
+			}
+		};
+		
+		subAccountAccessor = propertySet.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), CapitalAccountInfo.getPropertySet(), accountGetter, null);
 		abbreviationAccessor = propertySet.addProperty("abbreviation", JMoneyPlugin.getResourceString("AccountPropertiesPanel.abbrevation"), String.class, 5, 70, textControlFactory, null);
 		commentAccessor      = propertySet.addProperty("comment", JMoneyPlugin.getResourceString("AccountPropertiesPanel.comment"), String.class, 5, 150, commentControlFactory, null);
 		

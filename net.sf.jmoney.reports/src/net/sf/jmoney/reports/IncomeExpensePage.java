@@ -129,7 +129,7 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 	 */
 	Shell shell;
 	
-	protected Map expressionMap;
+	protected Map<Integer, Integer> expressionMap;
 	
 	private VerySimpleDateFormat dateFormat =	
 		new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());	
@@ -394,7 +394,7 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 			} else {
 				JRDataSource ds = new JRBeanCollectionDataSource(items);
 				
-				expressionMap = new HashMap();
+				expressionMap = new HashMap<Integer, Integer>();
 				
 				JasperDesign jasperDesign = buildDesign(subtotalsCheckBox.getSelection());
 				JRCalculator jasperCalculator = new IncomeExpenseCalculator(expressionMap); 
@@ -907,13 +907,13 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 	}
 	
 	private Collection getItems() {
-		Vector allItems = new Vector();
+		Vector<Item> allItems = new Vector<Item>();
 		
 		/**
 		 * Map Commodity to HashMap,
 		 * where each HashMap maps IncomeExpenseAccount to Item 
 		 */
-		HashMap byCurrency = new HashMap();
+		HashMap<Commodity, Map<Account, Item>> byCurrency = new HashMap<Commodity, Map<Account, Item>>();
 		
 		Session session = JMoneyPlugin.getDefault().getSession();
 		Iterator aIt = session.getIncomeExpenseAccountIterator();
@@ -922,9 +922,9 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 			for (Iterator eIt = a.getEntries().iterator(); eIt.hasNext(); ) {
 				Entry e = (Entry) eIt.next();
 				if (accept(e)) {
-					HashMap items = (HashMap) byCurrency.get(e.getCommodity());
+					Map<Account, Item> items = byCurrency.get(e.getCommodity());
 					if (items == null) {
-						items = new HashMap();
+						items = new HashMap<Account, Item>();
 						byCurrency.put(e.getCommodity(), items);
 					}
 					

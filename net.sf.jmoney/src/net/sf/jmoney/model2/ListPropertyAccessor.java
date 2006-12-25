@@ -1,8 +1,7 @@
 package net.sf.jmoney.model2;
 
-import java.lang.reflect.InvocationTargetException;
 
-public class ListPropertyAccessor<E extends ExtendableObject> extends PropertyAccessor {
+public abstract class ListPropertyAccessor<E extends ExtendableObject> extends PropertyAccessor {
 
 	/**
 	 * 
@@ -16,13 +15,6 @@ public class ListPropertyAccessor<E extends ExtendableObject> extends PropertyAc
 		super(parentPropertySet, localName, displayName, elementPropertySet.classOfObject, propertyDependency);
 
 		this.elementPropertySet = elementPropertySet;
-
-		// Use introspection on the interface to find the getXxxCollection method.
-		theGetMethod = findMethod("get", localName + "Collection", null);
-
-		if (!ObjectCollection.class.isAssignableFrom(theGetMethod.getReturnType())) { 		
-			throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + parentPropertySet.getImplementationClass().getName() + "' must return an ObjectSet type.");
-		}
 	}
 
 	/**
@@ -44,21 +36,5 @@ public class ListPropertyAccessor<E extends ExtendableObject> extends PropertyAc
 
 	/**
 	 */
-	public ObjectCollection<E> invokeGetMethod(Object invocationTarget) {
-		try {
-			return (ObjectCollection<E>)theGetMethod.invoke(invocationTarget, (Object [])null);
-		} catch (InvocationTargetException e) {
-			// TODO Process this properly
-			e.printStackTrace();
-			throw new RuntimeException("Plugin error");
-		} catch (Exception e) {
-			// IllegalAccessException and IllegalArgumentException exceptions should
-			// not be possible here because the method was checked
-			// for correct access rights and parameters during initialization.
-			// Therefore throw a runtime exception.
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		}
-	}
-
+	public abstract ObjectCollection<E> getElements(Object invocationTarget);
 }

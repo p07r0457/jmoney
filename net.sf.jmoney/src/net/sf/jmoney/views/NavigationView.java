@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.views;
 
-import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -375,8 +374,7 @@ public class NavigationView extends ViewPart {
 			   		// I don't see how this can happen.
 			   	} else if (event.getSelection() instanceof IStructuredSelection) {
 			   		IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-			   		for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-			   			Object selectedObject = iterator.next();
+			   		for (Object selectedObject: selection.toList()) {
 			   			
 			   			// Find and activate the editor for this node (if any)
 			   			Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
@@ -404,8 +402,7 @@ public class NavigationView extends ViewPart {
 				   		// I don't see how this can happen.
 				   	} else if (event.getSelection() instanceof IStructuredSelection) {
 				   		IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-				   		for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-				   			Object selectedObject = iterator.next();
+				   		for (Object selectedObject: selection.toList()) {
 				   			
 				   			Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
 				   			
@@ -521,8 +518,8 @@ public class NavigationView extends ViewPart {
 		// Get the current node
 		Object selectedObject = null;
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-			selectedObject = iterator.next();
+   		for (Object selectedObject2: selection.toList()) {
+			selectedObject = selectedObject2;
 			break;
 		}
 		
@@ -566,8 +563,8 @@ public class NavigationView extends ViewPart {
 			public void run() {
 				Object selectedObject = null;
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-					selectedObject = iterator.next();
+		   		for (Object selectedObject2: selection.toList()) {
+					selectedObject = selectedObject2;
 					break;
 				}
 				
@@ -603,8 +600,7 @@ public class NavigationView extends ViewPart {
 				public void run() {
 					CapitalAccount account = null;
 					IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-					for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-						Object selectedObject = iterator.next();
+			   		for (Object selectedObject: selection.toList()) {
 						if (selectedObject instanceof CapitalAccount) {
 							account = (CapitalAccount)selectedObject;
 							break;
@@ -670,8 +666,7 @@ public class NavigationView extends ViewPart {
 				final Session session = JMoneyPlugin.getDefault().getSession();
 				CapitalAccount account = null;
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-				for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-					Object selectedObject = iterator.next();
+		   		for (Object selectedObject: selection.toList()) {
 					account = (CapitalAccount)selectedObject;
 					break;
 				}

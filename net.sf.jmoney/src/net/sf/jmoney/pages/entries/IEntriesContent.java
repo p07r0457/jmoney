@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.PropertyAccessor;
 
 /**
  * Provides content to the entries table control.
@@ -15,7 +14,7 @@ public interface IEntriesContent {
 	/**
 	 * @return
 	 */
-	Vector getAllEntryDataObjects();
+	Vector<IEntriesTableProperty> getAllEntryDataObjects();
 
 	/**
 	 * @return
@@ -56,21 +55,6 @@ public interface IEntriesContent {
 	 * returned by getEntries() then this method must return false. 
 	 */
 	boolean isEntryInTable(Entry entry);
-
-	/**
-	 * Determine if a given entry is included in the list.
-	 * <P>
-	 * This method is similar to the above method.  However, the
-	 * given property in the Entry is assumed to have the value given
-	 * by the <code>value</code> parameter, not the value contained
-	 * in the Entry object.   determination
-	 * is made gimust use the same rules as the getEntries()
-	 * method.  If an entry would be in the collection returned
-	 * by getEntries() then this method must return true for that
-	 * entry, and if the entry would not be included in the collection
-	 * returned by getEntries() then this method must return false. 
-	 */
-	boolean isEntryInTable(Entry entry, PropertyAccessor propertyAccessor, Object value);
 
 	/**
 	 * @param transData

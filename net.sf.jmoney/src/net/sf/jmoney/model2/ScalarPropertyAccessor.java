@@ -23,6 +23,11 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	/**
 	 * never null
 	 */
+	private Method theGetMethod;
+	   
+	/**
+	 * never null
+	 */
 	private Method theSetMethod;
 
 	// Applies only if this property is of type ExtendableObject
@@ -253,6 +258,56 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 		return parentComparator;
 	}
 
+	public Method findMethod(String prefix, String propertyName, Class [] parameters) {
+		String methodName = prefix
+			+ propertyName.toUpperCase().charAt(0)
+			+ propertyName.substring(1, propertyName.length());
+		
+		try {
+			return getDeclaredMethodRecursively(propertySet.getImplementationClass(), methodName, parameters);
+		} catch (NoSuchMethodException e) {
+			String parameterText = "";
+			if (parameters != null) {
+				for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
+					if (paramIndex > 0) {
+						parameterText = parameterText + ", ";
+					}
+					String className = parameters[paramIndex].getName();
+					if (parameters[paramIndex].isArray()) {
+						// The returned class name seems to be a mess when the class is an array,
+						// so we tidy it up.
+						parameterText = parameterText + className.substring(2, className.length()-1) + "[]";
+					} else {
+						parameterText = parameterText + className;
+					}
+				}
+			}
+			throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a method with a signature of " + methodName + "(" + parameterText + ").");
+		}
+	}
+
+	/**
+	 * Gets a method from an interface.  
+	 * Whereas Class.getDeclaredMethod finds a method from an
+	 * interface, it will not find the method if the method is
+	 * defined in an interface which the given interface extends.
+	 * This method will find the method if any of the interfaces
+	 * extended by this interface define the method. 
+	 */
+	private Method getDeclaredMethodRecursively(Class implementationClass, String methodName, Class[] arguments)
+		throws NoSuchMethodException {
+		Class classToTry = implementationClass;
+		do {
+			try {
+				return classToTry.getDeclaredMethod(methodName, arguments);
+			} catch (NoSuchMethodException e) {
+				classToTry = classToTry.getSuperclass();
+			}
+		} while (classToTry != null);
+		
+		throw new NoSuchMethodException();
+	}
+	
 	/**
 	 */
 	public V invokeGetMethod(Object invocationTarget) {

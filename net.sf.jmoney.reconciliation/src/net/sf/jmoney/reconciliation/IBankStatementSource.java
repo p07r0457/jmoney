@@ -58,7 +58,7 @@ public interface IBankStatementSource {
 	 *         importing, or null if the user cancelled the operation or if an
 	 *         error occured.
 	 */
-	Collection importEntries(Shell shell, CurrencyAccount account);
+	Collection<EntryData> importEntries(Shell shell, CurrencyAccount account);
 	
 	class EntryData {
 		private Date clearedDate = null;

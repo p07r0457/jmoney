@@ -79,7 +79,7 @@ public final class Entry extends ExtendableObject {
      */
 	public Entry(
 			IObjectKey objectKey,
-    		Map        extensions,
+    		Map<ExtensionPropertySet, Object[]> extensions,
 			IObjectKey parentKey,
     		String     check,
     		String     description,
@@ -124,7 +124,7 @@ public final class Entry extends ExtendableObject {
      */
 	public Entry(
 			IObjectKey objectKey,
-    		Map        extensions,
+    		Map<ExtensionPropertySet, Object[]> extensions,
 			IObjectKey parentKey) {
 		super(objectKey, extensions, parentKey);
 		

@@ -25,7 +25,6 @@ package net.sf.jmoney.shoebox;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Vector;
 
@@ -44,7 +43,6 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.pages.entries.EntriesTree;
@@ -206,7 +204,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			
 	        recentEntriesTableContents = new IEntriesContent() {
 
-				public Vector getAllEntryDataObjects() {
+				public Vector<IEntriesTableProperty> getAllEntryDataObjects() {
 					return allEntryDataObjects;
 				}
 
@@ -245,14 +243,6 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 						}
 					}
 					return false;
-				}
-
-				public boolean isEntryInTable(Entry entry, PropertyAccessor propertyAccessor, Object value) {
-					/*
-					 * Property changes don't affect whether the entry should
-					 * be in the table, so just see if in our list.
-					 */
-					return isEntryInTable(entry);
 				}
 
 				public boolean filterEntry(IDisplayableItem data) {
@@ -358,8 +348,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 		}
 		
 		public void saveState(IMemento memento) {
-			for (Iterator iter = transactionTypes.keySet().iterator(); iter.hasNext(); ) {
-				String id = (String)iter.next();
+			for (String id: transactionTypes.keySet()) {
 				ITransactionTemplate transactionType = (ITransactionTemplate)transactionTypes.get(id);
 				transactionType.saveState(memento.createChild("template", id));
 			}

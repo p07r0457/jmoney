@@ -22,9 +22,12 @@
 
 package net.sf.jmoney.pages.entries;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -55,7 +58,6 @@ import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Color;
@@ -178,7 +180,7 @@ public class EntriesTree extends Composite {
 	 * included, the other entries in the transactions, which are shown as child
 	 * items, are not in this list. The elements are not sorted.
 	 */
-	Vector<DisplayableTransaction> entries;
+	Map<Entry, DisplayableTransaction> entries;
 
 	/**
 	 * The column on which the items are currently sorted
@@ -196,20 +198,36 @@ public class EntriesTree extends Composite {
 	private Entry newEntryRowEntry;
 
 	/**
-	 * The item that was selected before an mouse down or selection
+	 * The item that was selected before a mouse down or selection
 	 * change event occurs.  We need to know the previously selected
 	 * item for two purposes:
 	 * <OL>
 	 * <LI>Clicking on a cell will create a cell editor only if
 	 *     the user clicked in a row that was already the selected
 	 *     row</LI>
-	 * <LI>When moving the row selection to a row for a different
+	 * <LI>When moving the row sto a row for a different
 	 *     transaction, the transaction for the previously selected
 	 *     row must be validated and committed.</LI>
 	 * </OL>    
 	 */
 	private TreeItem previouslySelectedItem = null;
 
+	/**
+	 * Indicates if the selected row is 'pinned'.
+	 * 
+	 * Generally the view will be updated to reflect changes as changes
+	 * occur.  A change to a property may affect whether an entry is to
+	 * be shown in this view at all.  For example, a filter may be in effect.
+	 * We want to avoid the situation where a user is editing an entry and
+	 * the entry suddenly disappears, perhaps because the user edited a property
+	 * value and as a result the entry no longer passed the filter.
+	 * 
+	 * To avoid this situation, we pin an entry.  The entry remains in the
+	 * table control for as long as it is pinned.  When the pin is removed,
+	 * a check is made to see if the entry needs to be removed from the list.
+	 */
+	Entry pinnedEntry = null;
+	
 	/**
 	 * Set of listeners for selection changes
 	 */
@@ -320,9 +338,7 @@ public class EntriesTree extends Composite {
         			Transaction sourceTransaction = selectedEntry.getTransaction();
         			Transaction newTransaction = sessionInTrans.createTransaction();
         			
-        			for (Iterator iter = sourceTransaction.getEntryCollection().iterator(); iter.hasNext(); ) {
-        				Entry sourceEntry = (Entry)iter.next();
-        				
+        			for (Entry sourceEntry: sourceTransaction.getEntryCollection()) {
         				Entry newEntry = newTransaction.createEntry();
         				newEntry.setAccount((Account)transactionManager.getCopyInTransaction(sourceEntry.getAccount()));
         				newEntry.setDescription(sourceEntry.getDescription());
@@ -380,9 +396,7 @@ public class EntriesTree extends Composite {
         			
         			long total = 0;
         			Commodity commodity = null;
-        			for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
-        				Entry entry = (Entry)iter.next();
-        				
+        			for (Entry entry: transaction.getEntryCollection()) {
         				if (entry.getCommodity() != null) {
             				if (commodity == null) {
             					commodity = entry.getCommodity();
@@ -495,10 +509,8 @@ public class EntriesTree extends Composite {
 		TableLayout tlayout = new TableLayout();
 
 		int index = 0;
-		for (Iterator iter = entriesContent.getAllEntryDataObjects().iterator(); iter
-				.hasNext();) {
-			IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty) iter
-					.next();
+		for (IEntriesTableProperty entriesSectionProperty: entriesContent.getAllEntryDataObjects()) {
+
 			// By default, do not include the column for the currency
 			// of the entry in the category (which applies only when
 			// the category is a multi-currency income/expense category)
@@ -643,7 +655,7 @@ public class EntriesTree extends Composite {
 			           		updateItem(item);
 			           		
 			           		// Add to our cached list of all transactions in the table
-			           		entries.add(dTrans);
+			           		entries.put(entry1, dTrans);
 			           		
 			           		// Add another blank new entry row to replace the one we
 			           		// have just converted to a new transaction.
@@ -656,6 +668,9 @@ public class EntriesTree extends Composite {
 						}
 					}
 
+					// This is not right.  Should data not have been replaced by the
+					// new dTrans object created above?
+					
 					IEntriesTableProperty entryData = (IEntriesTableProperty) fTable.getColumn(column).getData();
 					currentCellPropertyControl = entryData.createAndLoadPropertyControl(fTable, data);
 					if (currentCellPropertyControl != null) {
@@ -754,11 +769,7 @@ public class EntriesTree extends Composite {
 
 					new MenuItem(popupMenu, SWT.SEPARATOR);
 					
-					for (Iterator iter = entriesContent
-							.getAllEntryDataObjects().iterator(); iter
-							.hasNext();) {
-						final IEntriesTableProperty entriesSectionProperty = (IEntriesTableProperty) iter
-								.next();
+					for (final IEntriesTableProperty entriesSectionProperty: entriesContent.getAllEntryDataObjects()) {
 						boolean found = false;
 						for (int index = 0; index < fTable.getColumnCount(); index++) {
 							IEntriesTableProperty entryData2 = (IEntriesTableProperty) (fTable
@@ -794,7 +805,10 @@ public class EntriesTree extends Composite {
 				}
 			}
 		});
-
+/* We should not have both this listener and the mouse down listener.  It is too
+ * complex.  Both can get fired, and this one might be called while the other is
+ * waiting on a dialog.  Do all processing in the mouse down event.
+ 
 		fTable.addSelectionListener(new SelectionListener() {
 			public void widgetSelected(SelectionEvent event) {
     			if (ignoreSelectionEvent) {
@@ -802,6 +816,7 @@ public class EntriesTree extends Composite {
     			} else {
     				IDisplayableItem data = (IDisplayableItem)event.item.getData();
     				if (!checkAndCommitTransaction(data)) {
+    					
     					return;
     				}
                		
@@ -834,7 +849,7 @@ public class EntriesTree extends Composite {
 				fireRowDefaultSelection(data);
 			}
 		});
-		
+*/		
 		session.getObjectKey().getSessionManager().addChangeListener(new SessionChangeAdapter() {
 			public void objectInserted(ExtendableObject newObject) {
 				if (newObject instanceof Entry) {
@@ -848,9 +863,7 @@ public class EntriesTree extends Composite {
 					// the other entries in the transaction is in this table
 					// then the table view will need updating because the split
 					// entry rows will need updating.
-					for (Iterator iter = newEntry.getTransaction()
-							.getEntryCollection().iterator(); iter.hasNext();) {
-						Entry entry = (Entry) iter.next();
+					for (Entry entry: newEntry.getTransaction().getEntryCollection()) {
 						if (!entry.equals(newEntry)
 								&& entriesContent.isEntryInTable(entry)) {
 							addEntry(entry, newEntry);
@@ -860,8 +873,7 @@ public class EntriesTree extends Composite {
 					Transaction newTransaction = (Transaction) newObject;
 					// Add all entries in the transaction that are to be listed at
 					// the top level in this list.
-					for (Iterator iter = newTransaction.getEntryCollection().iterator(); iter.hasNext();) {
-						Entry entry = (Entry) iter.next();
+					for (Entry entry: newTransaction.getEntryCollection()) {
 						if (entriesContent.isEntryInTable(entry)) {
 							addEntryInAccount(entry);
 						}
@@ -881,9 +893,7 @@ public class EntriesTree extends Composite {
 					// the other entries in the transaction is in this table
 					// then the table view will need updating because the split
 					// entry rows will need updating.
-					for (Iterator iter = deletedEntry.getTransaction()
-							.getEntryCollection().iterator(); iter.hasNext();) {
-						Entry entry = (Entry) iter.next();
+					for (Entry entry: deletedEntry.getTransaction().getEntryCollection()) {
 						if (!entry.equals(deletedEntry)
 								&& entriesContent.isEntryInTable(entry)) {
 							removeEntry(entry, deletedEntry);
@@ -902,6 +912,14 @@ public class EntriesTree extends Composite {
 					 * transaction is being deleted so no validation of the
 					 * transaction is necessary.
 					 */
+					// TODO: understand what circumstances leave a disposed
+					// item in this field.  For time being, just set to null
+					// if it is disposed.
+					if (previouslySelectedItem != null
+							&& previouslySelectedItem.isDisposed()) {
+						previouslySelectedItem = null;
+					}
+					
 					if (previouslySelectedItem != null
 							&& deletedTransaction.equals(((IDisplayableItem) previouslySelectedItem.getData()).getTransaction())) {
 						previouslySelectedItem = null;
@@ -955,16 +973,13 @@ public class EntriesTree extends Composite {
 					 * entry or properties from the transaction affect whether
 					 * an entry is listed then this code will need re-visiting.
 					 */
-					if (!entry.equals(getSelectedEntryInAccount())) {
-						boolean wasInTable = entriesContent.isEntryInTable(
-								entry, propertyAccessor, oldValue);
-						boolean isNowInTable = entriesContent.isEntryInTable(
-								entry, propertyAccessor, newValue);
-						if (wasInTable && !isNowInTable) {
-							removeEntryInAccount(entry);
-						} else if (!wasInTable && isNowInTable) {
-							addEntryInAccount(entry);
-						}
+					boolean wasInTable = entries.containsKey(entry);
+					boolean isNowInTable = entriesContent.isEntryInTable(entry)
+					|| entry == pinnedEntry;
+					if (wasInTable && !isNowInTable) {
+						removeEntryInAccount(entry);
+					} else if (!wasInTable && isNowInTable) {
+						addEntryInAccount(entry);
 					}
 
 					/*
@@ -978,9 +993,7 @@ public class EntriesTree extends Composite {
 					 * probably works.
 					 */
 					Transaction transaction = entry.getTransaction();
-					for (Iterator iter = transaction.getEntryCollection()
-							.iterator(); iter.hasNext();) {
-						Entry entry2 = (Entry) iter.next();
+					for (Entry entry2: transaction.getEntryCollection()) {
 						if (entriesContent.isEntryInTable(entry2)) {
 							updateEntry(entry2, entry, propertyAccessor,
 									oldValue, newValue);
@@ -995,9 +1008,7 @@ public class EntriesTree extends Composite {
 				if (extendableObject instanceof Transaction) {
 					Transaction transaction = (Transaction) extendableObject;
 					
-					for (Iterator iter = transaction.getEntryCollection()
-							.iterator(); iter.hasNext();) {
-						Entry entry = (Entry) iter.next();
+					for (Entry entry: transaction.getEntryCollection()) {
 						if (entriesContent.isEntryInTable(entry)) {
 							updateTransaction(entry, propertyAccessor,
 									oldValue, newValue);
@@ -1048,6 +1059,12 @@ public class EntriesTree extends Composite {
 	 */
 	protected boolean checkAndCommitTransaction(IDisplayableItem newData) {
 		if (previouslySelectedItem == null) {
+			return true;
+		}
+		
+		// TODO: Item is sometimes disposed.  Not sure why.
+		// We need to check this out.
+		if (previouslySelectedItem.isDisposed()) {
 			return true;
 		}
 		
@@ -1116,8 +1133,7 @@ public class EntriesTree extends Composite {
 								"The date cannot be blank.",
 								parentItem);
 					} else {
-						for (Iterator iter = previousTransaction.getEntryCollection().iterator(); iter.hasNext(); ) {
-							Entry entry = (Entry)iter.next();
+						for (Entry entry: previousTransaction.getEntryCollection()) {
 							if (entry.getAccount() == null) {
 								throw new InvalidUserEntryException(
 										"A category must be selected.",
@@ -1193,8 +1209,7 @@ public class EntriesTree extends Composite {
 								previousTransData);
 						dialog.open();
 					} else {
-						for (Iterator iter = previousTransaction.getEntryCollection().iterator(); iter.hasNext(); ) {
-							Entry entry = (Entry)iter.next();
+						for (Entry entry: previousTransaction.getEntryCollection()) {
 							if (entry.getAmount() == 0) {
 								throw new InvalidUserEntryException(
 										"A non-zero credit or debit amount must be entered.",
@@ -1331,9 +1346,8 @@ public class EntriesTree extends Composite {
 	private void setTableItems() {
 		// Sort the entries.
 		Comparator<DisplayableTransaction> rowComparator = new RowComparator(sortColumn, sortAscending);
-		DisplayableTransaction [] sortedEntries = new DisplayableTransaction [entries.size()];
-		sortedEntries = (DisplayableTransaction [])entries.toArray(sortedEntries);
-		Arrays.sort(sortedEntries, rowComparator); 
+		SortedSet<DisplayableTransaction> sortedEntries = new TreeSet<DisplayableTransaction>(rowComparator);  
+		sortedEntries.addAll(entries.values());
 
 		/*
 		 * Alternate the color of the entries to improve the readibility 
@@ -1343,8 +1357,7 @@ public class EntriesTree extends Composite {
 
 		int itemIndex = 0;
 
-		for (int i = 0; i < sortedEntries.length; i++) {
-			DisplayableTransaction data = sortedEntries[i];
+		for (DisplayableTransaction data: sortedEntries) {
 			
 			isAlternated = !isAlternated;
 
@@ -1382,9 +1395,7 @@ public class EntriesTree extends Composite {
 				// Case of an splitted entry. We display the transaction and
 				// account entry on the first line and the other entries of the
 				// transaction on the following ones.
-				Iterator itSubEntries = data.getSplitEntryIterator();
-				while (itSubEntries.hasNext()) {
-					Entry entry2 = (Entry) itSubEntries.next();
+				for (Entry entry2: data.getSplitEntries()) {
 					DisplayableEntry entryData = new DisplayableEntry(entry2,
 							data);
 					TreeItem childItem = new TreeItem(item, 0);
@@ -1559,12 +1570,12 @@ public class EntriesTree extends Composite {
         // when the data is set into the table. It is just as easy
         // and efficient to do it then and that reduces the effort
         // to keep the balances updated.
-        entries = new Vector<DisplayableTransaction>();
+        entries = new HashMap<Entry, DisplayableTransaction>();
         for (Entry accountEntry: entriesContent.getEntries()) {
             DisplayableTransaction data = new DisplayableTransaction(
                     accountEntry, 0);
             if (matchesFilter(data)) {
-                entries.add(data);
+                entries.put(accountEntry, data);
             }
         }
     }
@@ -1585,9 +1596,7 @@ public class EntriesTree extends Composite {
 		}
 
 		if (!transData.isSimpleEntry()) {
-			Iterator itSubEntries = transData.getSplitEntryIterator();
-			while (itSubEntries.hasNext()) {
-				Entry entry2 = (Entry) itSubEntries.next();
+			for (Entry entry2: transData.getSplitEntries()) {
 				DisplayableEntry entryData = new DisplayableEntry(entry2,
 						transData);
 				if (entriesContent.filterEntry(entryData)) {
@@ -1730,8 +1739,8 @@ public class EntriesTree extends Composite {
 		/**
 		 * @return
 		 */
-		public Iterator getSplitEntryIterator() {
-			return otherEntries.iterator();
+		public Collection<Entry> getSplitEntries() {
+			return otherEntries;
 		}
 
 		public Transaction getTransactionForTransactionFields() {
@@ -2056,7 +2065,7 @@ public class EntriesTree extends Composite {
 			return;
 		}
 
-		entries.add(dTrans);
+		entries.put(entry, dTrans);
 
 		// Scan the table to find the correct index to insert this row.
 		// Because rows are likely to be inserted near the bottom of
@@ -2099,9 +2108,7 @@ public class EntriesTree extends Composite {
 			 * properties for the entry in this account, so display just the
 			 * other entries underneath.
 			 */
-			Iterator itSubEntries = dTrans.getSplitEntryIterator();
-			while (itSubEntries.hasNext()) {
-				Entry entry2 = (Entry) itSubEntries.next();
+			for (Entry entry2: dTrans.getSplitEntries()) {
 				DisplayableEntry entryData = new DisplayableEntry(entry2, dTrans);
 				TreeItem childItem = new TreeItem(parentItem, SWT.NULL);
 				childItem.setData(entryData);
@@ -2136,7 +2143,7 @@ public class EntriesTree extends Composite {
 		DisplayableTransaction dTrans = (DisplayableTransaction)parentItem.getData();
 
 		// Remove from our cached set of entries
-		entries.remove(dTrans);
+		entries.remove(dTrans.entry);
 		
 		// Determine the color of this row.  It is used to switch the color of
 		// all the following rows.

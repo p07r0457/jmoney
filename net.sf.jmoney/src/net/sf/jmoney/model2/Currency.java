@@ -57,7 +57,7 @@ public class Currency extends Commodity {
      */
 	public Currency(
 				IObjectKey objectKey,
-	    		Map extensions,
+	    		Map<ExtensionPropertySet, Object[]> extensions,
 				IObjectKey parentKey,
 				String name,
 				String code,
@@ -77,7 +77,7 @@ public class Currency extends Commodity {
      */
 	public Currency(
 				IObjectKey objectKey,
-	    		Map extensions,
+	    		Map<ExtensionPropertySet, Object[]> extensions,
 				IObjectKey parentKey) {
 		super(objectKey, extensions, parentKey, "New Currency");
 		

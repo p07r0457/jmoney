@@ -35,7 +35,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -605,11 +604,8 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			ResultSet tableResultSet = dmd.getTables(null, null, tableName.toUpperCase(), tableOnlyType);
 
 			if (tableResultSet.next()) {
-				Vector columnInfos = buildColumnList(propertySet);
-
-				for (Iterator iter2 = columnInfos.iterator(); iter2.hasNext(); ) {
-					ColumnInfo columnInfo = (ColumnInfo)iter2.next();
-
+				Vector<ColumnInfo> columnInfos = buildColumnList(propertySet);
+				for (ColumnInfo columnInfo: columnInfos) {
 					ResultSet columnResultSet = dmd.getColumns(null, null, tableName.toUpperCase(), columnInfo.columnName);
 					if (columnResultSet.next()) {
 						// int dataType = columnResultSet.getInt("DATA_TYPE");
@@ -651,11 +647,8 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 			}
 
 			// Check all the other foreign keys.
-			Vector columnInfos = buildColumnList(propertySet);
-
-			for (Iterator iter2 = columnInfos.iterator(); iter2.hasNext(); ) {
-				ColumnInfo columnInfo = (ColumnInfo)iter2.next();
-
+			Vector<ColumnInfo> columnInfos = buildColumnList(propertySet);
+			for (ColumnInfo columnInfo: columnInfos) {
 				if (columnInfo.foreignKeyPropertySet != null) {
 					String primaryTableName = columnInfo.foreignKeyPropertySet.getId().replace('.', '_');
 					checkForeignKey(dmd, stmt, tableName, columnInfo.columnName, primaryTableName);
@@ -735,7 +728,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		 */
 		Object[] constructorParameters;
 		
-		Collection constructorProperties = propertySet.getConstructorProperties();
+		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
 		constructorParameters = new Object[3 + constructorProperties.size()];
 		Map extensionMap = new HashMap();
 		constructorParameters[0] = key;
@@ -743,8 +736,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		constructorParameters[2] = parentKey;
 		
 		// Set the remaining parameters to the constructor.
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+		for (PropertyAccessor propertyAccessor: constructorProperties) {
 			String columnName = propertyAccessor.getLocalName();
 			Object value;
 			if (propertyAccessor.isList()) {
@@ -928,11 +920,8 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		
 		String foreignKeys = "";
 		
-		Vector columnInfos = buildColumnList(propertySet);
-		
-		for (Iterator iter2 = columnInfos.iterator(); iter2.hasNext(); ) {
-			ColumnInfo columnInfo = (ColumnInfo)iter2.next();
-			
+		Vector<ColumnInfo> columnInfos = buildColumnList(propertySet);
+		for (ColumnInfo columnInfo: columnInfos) {
 			sql += ", \"" + columnInfo.columnName + "\" " + columnInfo.columnDefinition;
 		}
 		sql += foreignKeys;
@@ -1232,7 +1221,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @return
 	 */
 	public static <E extends ExtendableObject> E constructExtendableObject(PropertySet<E> propertySet, SessionManager sessionManager, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists) {
-		Collection constructorProperties = propertySet.getConstructorProperties();
+		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
 		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {
 			numberOfParameters += 3;
@@ -1249,8 +1238,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// the passed object and then get the object key from that.
 		// This works because all objects must be in a list and that
 		// list owns the object, not us.
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+		for (PropertyAccessor propertyAccessor: constructorProperties) {
 			int index = propertyAccessor.getIndexIntoConstructorParameters();
 			if (propertyAccessor.isScalar()) {
 				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor; 
@@ -1302,7 +1290,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 	 * @return
 	 */
 	public static <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, SessionManager sessionManager, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists, Object[] values) {
-		Collection constructorProperties = propertySet.getConstructorProperties();
+		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
 		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {
 			numberOfParameters += 3;
@@ -1327,8 +1315,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		// the passed object and then get the object key from that.
 		// This works because all objects must be in a list and that
 		// list owns the object, not us.
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-			PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+		for (PropertyAccessor propertyAccessor: constructorProperties) {
 			int index = propertyAccessor.getIndexIntoConstructorParameters();
 			if (propertyAccessor.isList()) {
 				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;

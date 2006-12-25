@@ -21,7 +21,6 @@
 
 package net.sf.jmoney.pages.entries;
 
-import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -182,8 +181,7 @@ public class EntrySection extends SectionPart {
 				
 				// Update transaction property controls.
 				transactionArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-				for (Iterator iter = transactionControls.iterator(); iter.hasNext();) {
-					IPropertyControl control = (IPropertyControl)iter.next();
+				for (IPropertyControl control: transactionControls) {
 					control.load(entry1.getTransaction());
 				}
 			} else {

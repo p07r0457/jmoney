@@ -27,9 +27,11 @@ import java.util.Date;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IListGetter;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Transaction;
@@ -58,9 +60,15 @@ public class TransactionInfo implements IPropertySetInfo {
 	private static ListPropertyAccessor<Entry> entriesAccessor = null;
 
 	public PropertySet registerProperties() {
+		IListGetter<Transaction, Entry> entryGetter = new IListGetter<Transaction, Entry>() {
+			public ObjectCollection<Entry> getList(Transaction parentObject) {
+				return parentObject.getEntryCollection();
+			}
+		};
+		
         IPropertyControlFactory<Date> dateControlFactory = new DateControlFactory();
 		
-		entriesAccessor = propertySet.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), EntryInfo.getPropertySet(), null);
+		entriesAccessor = propertySet.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), EntryInfo.getPropertySet(), entryGetter, null);
 		dateAccessor = propertySet.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), Date.class, 0, 76, dateControlFactory, null);
 		
 		propertySet.setDescription("Financial Transaction");

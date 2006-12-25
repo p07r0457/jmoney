@@ -40,7 +40,7 @@ public abstract class Account extends ExtendableObject implements Comparable<Acc
 
 	protected Account(
 			IObjectKey objectKey, 
-			Map extensions, 
+			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parentKey,
 			String name) {
 		super(objectKey, extensions, parentKey);

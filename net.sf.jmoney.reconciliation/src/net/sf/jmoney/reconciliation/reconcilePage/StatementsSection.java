@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.reconciliation.reconcilePage;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -221,10 +220,8 @@ public class StatementsSection extends SectionPart {
 				// hash map because we can then fetch the results in order.
 				SortedMap<BankStatement, Long> statementTotals = new TreeMap<BankStatement, Long>();
 				
-				Iterator it = account.getEntries().iterator();
-				while (it.hasNext()) {
-					Entry entry = (Entry)it.next();
-					BankStatement statement = (BankStatement)entry .getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
+				for (Entry entry: account.getEntries()) {
+					BankStatement statement = entry .getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 					
 					if (statement != null) {
 						Long statementTotal = statementTotals.get(statement);

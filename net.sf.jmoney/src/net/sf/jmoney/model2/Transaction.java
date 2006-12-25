@@ -24,7 +24,6 @@
 package net.sf.jmoney.model2;
 
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Map;
 
 import net.sf.jmoney.fields.EntryInfo;
@@ -42,7 +41,7 @@ public class Transaction extends ExtendableObject {
     
 	public Transaction(
 			IObjectKey objectKey,
-    		Map extensions,
+    		Map<ExtensionPropertySet, Object[]> extensions,
 			IObjectKey parentKey,
     		IListManager<Entry> entries,
     		Date date) {
@@ -54,7 +53,7 @@ public class Transaction extends ExtendableObject {
 	
 	public Transaction(
 			IObjectKey objectKey,
-    		Map extensions,
+    		Map<ExtensionPropertySet, Object[]> extensions,
 			IObjectKey parentKey,
     		IListManager<Entry> entries) {
 		super(objectKey, extensions, parentKey);
@@ -120,8 +119,7 @@ public class Transaction extends ExtendableObject {
     public Entry getOther(Entry thisEntry) {
     	boolean thisEntryFound = false;
     	Entry anotherEntry = null;
-        for (Iterator iter = entries.iterator(); iter.hasNext(); ) {
-        	Entry entry = (Entry)iter.next();
+        for (Entry entry: entries) {
         	if (!entry.equals(thisEntry)) {
                 if (anotherEntry != null) {
                 	// There is more than one entry other than the given entry

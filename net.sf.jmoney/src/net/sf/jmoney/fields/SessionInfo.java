@@ -27,9 +27,11 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IListGetter;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
@@ -61,11 +63,29 @@ public class SessionInfo implements IPropertySetInfo {
 	private static ScalarPropertyAccessor<Currency> defaultCurrencyAccessor = null;
 
 	public PropertySet registerProperties() {
+		IListGetter<Session, Commodity> commodityGetter = new IListGetter<Session, Commodity>() {
+			public ObjectCollection<Commodity> getList(Session parentObject) {
+				return parentObject.getCommodityCollection();
+			}
+		};
+		
+		IListGetter<Session, Account> accountGetter = new IListGetter<Session, Account>() {
+			public ObjectCollection<Account> getList(Session parentObject) {
+				return parentObject.getAccountCollection();
+			}
+		};
+		
+		IListGetter<Session, Transaction> transactionGetter = new IListGetter<Session, Transaction>() {
+			public ObjectCollection<Transaction> getList(Session parentObject) {
+				return parentObject.getTransactionCollection();
+			}
+		};
+		
 		IPropertyControlFactory<Currency> currencyControlFactory = new CurrencyControlFactory();
 
-		commoditiesAccessor = propertySet.addPropertyList("commodity", JMoneyPlugin.getResourceString("<not used???>"), CommodityInfo.getPropertySet(), null);
-		accountsAccessor = propertySet.addPropertyList("account", JMoneyPlugin.getResourceString("<not used???>"), AccountInfo.getPropertySet(), null);
-		transactionsAccessor = propertySet.addPropertyList("transaction", JMoneyPlugin.getResourceString("<not used???>"), TransactionInfo.getPropertySet(), null);
+		commoditiesAccessor = propertySet.addPropertyList("commodity", JMoneyPlugin.getResourceString("<not used???>"), CommodityInfo.getPropertySet(), commodityGetter, null);
+		accountsAccessor = propertySet.addPropertyList("account", JMoneyPlugin.getResourceString("<not used???>"), AccountInfo.getPropertySet(), accountGetter, null);
+		transactionsAccessor = propertySet.addPropertyList("transaction", JMoneyPlugin.getResourceString("<not used???>"), TransactionInfo.getPropertySet(), transactionGetter, null);
 		
 		defaultCurrencyAccessor = propertySet.addProperty("defaultCurrency", JMoneyPlugin.getResourceString("Session.defaultCurrency"), Currency.class, 2, 20, currencyControlFactory, null);
 		

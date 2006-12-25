@@ -238,8 +238,7 @@ public class TransactionDialog {
         });
 
     	// Update transaction property controls.
-        for (Iterator iter = transactionControls.iterator(); iter.hasNext();) {
-            IPropertyControl control = (IPropertyControl)iter.next();
+        for (IPropertyControl control: transactionControls) {
            	control.load(transaction);
         }
         
@@ -248,8 +247,7 @@ public class TransactionDialog {
 		
         // Create and set the controls for the other entries in
         // the transaction.
-        for (Iterator iter = transaction.getEntryCollection().iterator(); iter.hasNext(); ) {
-        	Entry entry = (Entry)iter.next();
+        for (Entry entry: transaction.getEntryCollection()) {
         	if (!entry.equals(accountEntry)) {
 
         		Color entryColor = (entryControlsList.size() % 2) == 0

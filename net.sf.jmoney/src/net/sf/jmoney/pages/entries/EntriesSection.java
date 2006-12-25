@@ -22,10 +22,7 @@ import java.util.Collection;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.pages.entries.EntriesTree.DisplayableEntry;
 import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
 
@@ -105,7 +102,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.pages.entries.IEntriesContent#getAllEntryDataObjects()
 	 */
-	public Vector getAllEntryDataObjects() {
+	public Vector<IEntriesTableProperty> getAllEntryDataObjects() {
 		return fPage.allEntryDataObjects;
 	}
 
@@ -150,33 +147,6 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		return fPage.getAccount().equals(entry.getAccount());
 	}
 
-	public boolean isEntryInTable(Entry entry, PropertyAccessor propertyAccessor, Object value) {
-		Account account;
-		if (propertyAccessor == EntryInfo.getAccountAccessor()) {
-			account = (Account)value;
-		} else {
-			account = entry.getAccount();
-		}
-		return fPage.getAccount().equals(account);
-	}
-
-	// TODO: Do we need this????
-	public int isEntryInTable(Entry entry, PropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-		if (propertyAccessor == EntryInfo.getAccountAccessor()) {
-			boolean wasInTable   = fPage.getAccount().equals(oldValue); 
-			boolean isNowInTable = fPage.getAccount().equals(newValue); 
-			if (wasInTable && !isNowInTable) {
-				return -1; 
-			} else if (!wasInTable && isNowInTable) {
-				return 1;
-			} else {
-				return 0;
-			}
- 		} else {
-			return 0;
-		}
-	}
-	
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.pages.entries.IEntriesContent#filterEntry(net.sf.jmoney.pages.entries.EntriesTable.DisplayableTransaction)
 	 */

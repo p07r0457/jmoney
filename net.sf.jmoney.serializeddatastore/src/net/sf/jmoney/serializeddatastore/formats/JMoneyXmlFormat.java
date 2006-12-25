@@ -629,7 +629,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				throw new RuntimeException("internal error");
 			}
 			
-			Collection constructorProperties = propertySet.getConstructorProperties();
+			Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
 			int numberOfParameters = constructorProperties.size();
 			if (!propertySet.isExtension()) {
 				numberOfParameters += 3;
@@ -648,8 +648,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			// For all other parameters, the value is set when the property
 			// value is found.  We initialize to null here so a null value
 			// will be passed to the constructor if no value is found.
-			for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); ) {
-				PropertyAccessor propertyAccessor = (PropertyAccessor)iter.next();
+			for (PropertyAccessor propertyAccessor: constructorProperties) {
 				if (propertyAccessor.isList()) {
 					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = new SimpleListManager(sessionManager);
 				} else {

@@ -25,9 +25,11 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IListGetter;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
@@ -55,7 +57,13 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 	private static ScalarPropertyAccessor<Currency> currencyAccessor = null;
 	
     public PropertySet registerProperties() {
-		subAccountAccessor = propertySet.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccountInfo.getPropertySet(), null);
+		IListGetter<IncomeExpenseAccount, IncomeExpenseAccount> accountGetter = new IListGetter<IncomeExpenseAccount, IncomeExpenseAccount>() {
+			public ObjectCollection<IncomeExpenseAccount> getList(IncomeExpenseAccount parentObject) {
+				return parentObject.getSubAccountCollection();
+			}
+		};
+		
+		subAccountAccessor = propertySet.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccountInfo.getPropertySet(), accountGetter, null);
 
 		multiCurrencyAccessor = propertySet.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.multiCurrency"), Boolean.class, 0, 10, new CheckBoxControlFactory(), null); 
 		currencyAccessor = propertySet.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), Currency.class, 2, 20, new CurrencyControlFactory(), multiCurrencyAccessor.getFalseValueDependency());

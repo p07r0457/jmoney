@@ -64,7 +64,7 @@ public class Session extends ExtendableObject implements IAdaptable {
      */
     public Session(
     		IObjectKey objectKey,
-    		Map extensions,
+    		Map<ExtensionPropertySet, Object[]> extensions,
 			IObjectKey parentKey,
     		IListManager<Commodity> commodities,
 			IListManager<Account> accounts,
@@ -97,7 +97,7 @@ public class Session extends ExtendableObject implements IAdaptable {
      */
     public Session(
     		IObjectKey objectKey,
-    		Map extensions,
+    		Map<ExtensionPropertySet, Object[]> extensions,
 			IObjectKey parentKey,
     		IListManager<Commodity> commodities,
 			IListManager<Account> accounts,
@@ -165,21 +165,22 @@ public class Session extends ExtendableObject implements IAdaptable {
         return all;
     }
    
-    public Iterator getCapitalAccountIterator() {
-        return new Iterator() {
-        	Iterator iter = accounts.iterator();
-        	Object element;
+    public Iterator<CapitalAccount> getCapitalAccountIterator() {
+        return new Iterator<CapitalAccount>() {
+        	Iterator<Account> iter = accounts.iterator();
+        	CapitalAccount element;
         	
 			public boolean hasNext() {
 				while (iter.hasNext()) {
-					element = iter.next();
-					if (element instanceof CapitalAccount) {
+					Account account = iter.next();
+					if (account instanceof CapitalAccount) {
+						element = (CapitalAccount)account;
 						return true; 
 					}
 				}
 				return false;
 			}
-			public Object next() {
+			public CapitalAccount next() {
 				return element;
 			}
 			public void remove() {
@@ -188,34 +189,22 @@ public class Session extends ExtendableObject implements IAdaptable {
         };
     }
    
-    public Account[] getAccountList () {
-        Collection allAccounts = getAllAccounts();
-        
-        Account list[]  = new Account [allAccounts.size()];
-        Iterator it = allAccounts.iterator();
-
-        int i = 0;
-        while (it.hasNext()) 
-            list[i++] = (Account) it.next();
-        
-        return list;
-    }
-    
-       public Iterator getIncomeExpenseAccountIterator() {
-        return new Iterator() {
-        	Iterator iter = accounts.iterator();
-        	Object element;
+    public Iterator<IncomeExpenseAccount> getIncomeExpenseAccountIterator() {
+        return new Iterator<IncomeExpenseAccount>() {
+        	Iterator<Account> iter = accounts.iterator();
+        	IncomeExpenseAccount element;
         	
 			public boolean hasNext() {
 				while (iter.hasNext()) {
-					element = iter.next();
-					if (element instanceof IncomeExpenseAccount) {
+					Account account = iter.next();
+					if (account instanceof IncomeExpenseAccount) {
+						element = (IncomeExpenseAccount)account;
 						return true; 
 					}
 				}
 				return false;
 			}
-			public Object next() {
+			public IncomeExpenseAccount next() {
 				return element;
 			}
 			public void remove() {
@@ -288,7 +277,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 	 * @param commodity
 	 * @return
 	 */
-	public Commodity createCommodity(ExtendablePropertySet<? extends Commodity> propertySet) {
+	public <E extends Commodity> E createCommodity(ExtendablePropertySet<E> propertySet) {
 		return getCommodityCollection().createNewElement(propertySet);
 	}
 
@@ -337,10 +326,7 @@ public class Session extends ExtendableObject implements IAdaptable {
      * TODO: Faucheux - not the better algorythm!
      */
 	public Account getAccountByFullName(String name) {
-	    Account a = null;
-	    Iterator it = getAllAccounts().iterator();
-	    while (it.hasNext()) {
-	        a = (Account) it.next();
+		for (Account a: getAllAccounts()) {
 	        if (JMoneyPlugin.DEBUG) System.out.println("Compare " + name + " to " + a.getFullAccountName());
 	        if (a.getFullAccountName().equals(name))
 	            return a;

@@ -26,7 +26,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
@@ -97,8 +96,7 @@ public class Propagator {
 		
 		// Find all propagators for which both plugins are active.
 		
-		for (Iterator iter = propagators.iterator(); iter.hasNext(); ) {
-			Object propagatorObject = iter.next();
+		for (Object propagatorObject: propagators) {
 			
 			// Find all propertyChange methods.
 			
@@ -115,40 +113,28 @@ public class Propagator {
 					if (parameters[0] != String.class) {
 						throw new MalformedPluginException("The first parameter in propertyChange methods in propagators must be of type String");
 					}
-					// Check that parameter one implements Entry interface
-					/* Not needed - Entry extensions may not extend EntryExtension
-					 Class [] interfaces1 = parameters[1].getInterfaces();
-					 boolean interfaceOk = false;
-					 for (int j = 0; j < interfaces1.length; j++) {
-					 if (interfaces1[j].getName().equals("Entry")) {
-					 interfaceOk = true;
-					 break;
-					 }
-					 }
-					 if (!interfaceOk) {
-					 throw new MalformedPluginException("The first parameter in PropertyChange methods in propagators must be of type String");
-					 }
+
+					/*
+					 * If property set B is derived from property set A then one
+					 * may want to propagate values between extensions to A and
+					 * extensions to B, or between extensions to A and
+					 * properties in B itself.
+					 * 
+					 * We do not allow propagation between properties in
+					 * extensions and properties in the extendable class which
+					 * that extension is extending. The reason being that a
+					 * propagator is not necessary because the plug-in providing
+					 * the extension must know of the extendable class so can
+					 * more efficiently listen for property changes.
 					 */
-					// If property set B is derived from property set A
-					// then one may want to propagate values between extensions
-					// to A and extensions to B, or between extensions to A
-					// and properties in B itself.
-					
-					// We do not allow propagation between properties
-					// in extensions and properties in the extendable class
-					// which that extension is extending.  The reason being that
-					// a propagator is not necessary because the plug-in providing 
-					// the extension must know of the extendable class so can
-					// more efficiently listen for property changes.
-					
 					for (ExtendablePropertySet propertySet: PropertySet.getAllExtendablePropertySets()) {
-							CheckExtensions(propertySet, propertySet, methods[i]);
-							
-							for (ExtendablePropertySet basePropertySet = propertySet.getBasePropertySet(); basePropertySet != null; basePropertySet = basePropertySet.getBasePropertySet()) {
-								CheckExtensions(basePropertySet, propertySet, methods[i]);
-								CheckExtensions(propertySet, basePropertySet, methods[i]);
-								CheckPropertySetAgainstExtensions(propertySet, basePropertySet, methods[i]);
-							}
+						CheckExtensions(propertySet, propertySet, methods[i]);
+
+						for (ExtendablePropertySet basePropertySet = propertySet.getBasePropertySet(); basePropertySet != null; basePropertySet = basePropertySet.getBasePropertySet()) {
+							CheckExtensions(basePropertySet, propertySet, methods[i]);
+							CheckExtensions(propertySet, basePropertySet, methods[i]);
+							CheckPropertySetAgainstExtensions(propertySet, basePropertySet, methods[i]);
+						}
 					}
 				}
 			}

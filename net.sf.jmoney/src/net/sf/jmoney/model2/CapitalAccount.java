@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +61,7 @@ public abstract class CapitalAccount extends Account {
 	 */
 	public CapitalAccount(
 			IObjectKey objectKey, 
-			Map extensions, 
+			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parent,
 			String name,
 			IListManager<CapitalAccount> subAccounts,
@@ -84,7 +83,7 @@ public abstract class CapitalAccount extends Account {
 	 */
 	public CapitalAccount(
 			IObjectKey objectKey, 
-			Map extensions, 
+			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parent,
 			IListManager<CapitalAccount> subAccounts) {
 		super(objectKey, extensions, parent, JMoneyPlugin.getResourceString("Account.newAccount"));
@@ -294,8 +293,7 @@ public abstract class CapitalAccount extends Account {
             	// Date endOfMonth = new Date(year - 1900, month, 1);
             	
             	int total = 0;
-            	for (Iterator iter = entriesList.iterator(); iter.hasNext(); ) {
-            		Entry entry = (Entry)iter.next();
+            	for (Entry entry: entriesList) {
             		if (entry.getTransaction().getDate().compareTo(startOfMonth) >= 0 
             		 && entry.getTransaction().getDate().compareTo(endOfMonth) < 0) {
             			total += entry.getAmount();
@@ -309,8 +307,7 @@ public abstract class CapitalAccount extends Account {
 	}
 
 	public void addEntriesFromSubAccounts(CapitalAccount a, Collection<Entry> entriesList) {
-		for (Iterator it = a.getSubAccountCollection().iterator(); it.hasNext(); ) {
-			CapitalAccount subAccount = (CapitalAccount)it.next();
+		for (CapitalAccount subAccount: a.getSubAccountCollection()) {
 			entriesList.addAll(subAccount.getEntries());
 			addEntriesFromSubAccounts(subAccount, entriesList);
 		}

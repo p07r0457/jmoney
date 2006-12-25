@@ -51,8 +51,8 @@ class AccountsNode extends TreeNode {
 			children.clear();
 		}
 		if (session != null) {
-			for (Iterator iter = session.getCapitalAccountIterator(); iter.hasNext(); ) {
-				CapitalAccount account = (CapitalAccount)iter.next();
+			for (Iterator<CapitalAccount> iter = session.getCapitalAccountIterator(); iter.hasNext(); ) {
+				CapitalAccount account = iter.next();
 				children.add(account);
 			}
 		}

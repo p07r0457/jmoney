@@ -187,8 +187,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 	        public Object[] getElements(Object parent) {
 	            Vector<ISOCurrencyData> currencies = new Vector<ISOCurrencyData>();
 
-	            for (Iterator iter = allIsoCurrencies.iterator(); iter.hasNext(); ) {
-	            	ISOCurrencyData isoCurrency = (ISOCurrencyData)iter.next();
+	            for (ISOCurrencyData isoCurrency: allIsoCurrencies) {
 	            	if (isoCurrency.currency == null) {
 	            		currencies.add(isoCurrency);
 	            	}
@@ -371,9 +370,8 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 		 * @param accountIterator
 		 * @param usedCurrencies
 		 */
-		private void findUsedCurrencies(Collection accounts, Set<Currency> usedCurrencies) {
-			for (Iterator accountIterator = accounts.iterator(); accountIterator.hasNext(); ) {
-				Account account = (Account)accountIterator.next();
+		private void findUsedCurrencies(Collection<? extends Account> accounts, Set<Currency> usedCurrencies) {
+			for (Account account: accounts) {
 				if (account instanceof IncomeExpenseAccount) {
 					IncomeExpenseAccount a = (IncomeExpenseAccount)account;
 					if (a.isMultiCurrency()) {
@@ -634,9 +632,9 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			if (ssel.size() > 0) {
 				Table table = availableListViewer.getTable();
 				int index = table.getSelectionIndices()[0];
-				for (Iterator iter = ssel.iterator(); iter.hasNext(); ) {
-					ISOCurrencyData currencyData = (ISOCurrencyData) iter.next();
-					Currency newCurrency = (Currency)session.createCommodity(CurrencyInfo.getPropertySet());
+				for (Object selection: ssel.toList()) {
+					ISOCurrencyData currencyData = (ISOCurrencyData)selection;
+					Currency newCurrency = session.createCommodity(CurrencyInfo.getPropertySet());
 					newCurrency.setName(currencyData.name);
 					newCurrency.setCode(currencyData.code);
 					newCurrency.setDecimals(currencyData.decimals);

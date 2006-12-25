@@ -23,8 +23,8 @@
 package net.sf.jmoney.model2;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -61,7 +61,7 @@ public abstract class ExtendableObject {
 	 * property set and then adding that property set to the object class. This
 	 * map will map property sets to the appropriate extension object.
 	 */
-	protected Map<PropertySet, ExtensionObject> extensions = new HashMap<PropertySet, ExtensionObject>();
+	protected Map<ExtensionPropertySet, ExtensionObject> extensions = new HashMap<ExtensionPropertySet, ExtensionObject>();
 	
 	/**
 	 * The key from which this object's parent can be fetched from
@@ -79,15 +79,14 @@ public abstract class ExtendableObject {
 	 * 			which the extension property set objects can be
 	 * 			constructed.
 	 */
-	protected ExtendableObject(IObjectKey objectKey, Map extensionParameters, IObjectKey parentKey) {
+	protected ExtendableObject(IObjectKey objectKey, Map<ExtensionPropertySet, Object[]> extensionParameters, IObjectKey parentKey) {
 		this.objectKey = objectKey;
 		this.parentKey = parentKey;
 		
 		if (extensionParameters != null) {
-			for (Iterator iter = extensionParameters.entrySet().iterator(); iter.hasNext(); ) {
-				Map.Entry entry = (Map.Entry)iter.next();
-				PropertySet propertySet = (PropertySet)entry.getKey();
-				Object[] constructorParameters = (Object[])entry.getValue();
+			for (Map.Entry<ExtensionPropertySet, Object[]> entry: extensionParameters.entrySet()) {
+				ExtensionPropertySet propertySet = entry.getKey();
+				Object[] constructorParameters = entry.getValue();
 				
 				ExtensionObject extensionObject = (ExtensionObject)propertySet.constructImplementationObject(constructorParameters);
 				
@@ -173,6 +172,16 @@ public abstract class ExtendableObject {
 	// but not public access.  Unfortunately this cannot be done
 	// so for time being allow public access.
 	public <V> void processPropertyChange(final ScalarPropertyAccessor<V> propertyAccessor, final V oldValue, final V newValue) {
+		/*
+		 * If the value is an extendable object then we check that both this object and this object
+		 * and the value are from the same data manager.  Mixing objects from different data
+		 * managers is not allowed.
+		 */
+		if (newValue instanceof ExtendableObject
+				&& ((ExtendableObject)newValue).getObjectKey().getSessionManager() != objectKey.getSessionManager()) {
+			throw new RuntimeException("The object being set as the value of a property and the parent object are being managed by different data managers.  Objects cannot contain references to objects from other data managers.");
+		}
+		
 		if (oldValue == newValue ||
 				(oldValue != null && oldValue.equals(newValue)))
 					return;
@@ -230,10 +239,10 @@ public abstract class ExtendableObject {
 	 * @return
 	 */
 	// TODO: clean this up.
-	public <E extends ExtensionObject> E getExtension(ExtensionPropertySet<E> propertySet, boolean alwaysReturnNonNullExtensions) {
+	public <X extends ExtensionObject> X getExtension(ExtensionPropertySet<X> propertySet, boolean alwaysReturnNonNullExtensions) {
 		boolean saveFlag = this.alwaysReturnNonNullExtensions;
 		this.alwaysReturnNonNullExtensions = alwaysReturnNonNullExtensions;
-		E result = getExtension(propertySet);
+		X result = getExtension(propertySet);
 		this.alwaysReturnNonNullExtensions = saveFlag;
 		return result;
 	}
@@ -242,8 +251,8 @@ public abstract class ExtendableObject {
 	 * Get the extension that implements the properties needed by
 	 * a given plug-in.
 	 */
-	public <E extends ExtensionObject> E getExtension(ExtensionPropertySet<E> propertySet) {
-		E extension = propertySet.classOfObject.cast(extensions.get(propertySet));
+	public <X extends ExtensionObject> X getExtension(ExtensionPropertySet<X> propertySet) {
+		X extension = propertySet.classOfObject.cast(extensions.get(propertySet));
 		
 		if (extension == null) {
 			// Extension does not exist.
@@ -381,7 +390,8 @@ public abstract class ExtendableObject {
 	 * 			whose values are to be obtained.  The property
 	 * 			must be a list property (and not a scalar property).
 	 */
-	public <E extends ExtendableObject> ObjectCollection<E> getListPropertyValue(ListPropertyAccessor<E> owningListProperty) {
+	public <E2 extends ExtendableObject> ObjectCollection<E2> getListPropertyValue(ListPropertyAccessor<E2> owningListProperty) {
+/*		
 		Object objectWithProperties = getMutablePropertySetInterface(owningListProperty.getPropertySet());
 		
 		// If no extension exists then return the empty collection.
@@ -392,8 +402,8 @@ public abstract class ExtendableObject {
 			// TODO: implement this.
 			throw new RuntimeException("list properties in extension not yet fully implemented");
 		}
-		
-		return owningListProperty.invokeGetMethod(objectWithProperties);
+*/
+		return owningListProperty.getElements(this);
 	}
 	
 	public <V> void setPropertyValue(ScalarPropertyAccessor<V> propertyAccessor, V value) {
@@ -402,23 +412,21 @@ public abstract class ExtendableObject {
 		// We cannot therefore rely on this object being mutable, so temporarily
 		// set this flag.
 		// TODO: review this method.
-		alwaysReturnNonNullExtensions = true;
-		Object objectWithProperties = getMutablePropertySetInterface(propertyAccessor.getPropertySet());
-		alwaysReturnNonNullExtensions = false;
+		Object objectWithProperties;
+		PropertySet propertySet = propertyAccessor.getPropertySet();
+		if (!propertySet.isExtension()) {
+			objectWithProperties = this;
+		} else {
+			// Because this is a mutable object, the following call will always
+			// return a non-null extension.
+			alwaysReturnNonNullExtensions = true;
+			objectWithProperties = getExtension((ExtensionPropertySet<?>)propertySet);
+			alwaysReturnNonNullExtensions = false;
+		}
 		
 		propertyAccessor.invokeSetMethod(objectWithProperties, value);
 	}
 
-	private Object getMutablePropertySetInterface(PropertySet propertySet) {
-		if (!propertySet.isExtension()) {
-			return this;
-		} else {
-			// Because this is a mutable object, the following call will always
-			// return a non-null extension.
-			return getExtension((ExtensionPropertySet<?>)propertySet);
-		}
-	}
-	
 	/**
 	 * Return a list of extension that exist for this object.
 	 * This is the list of extensions that have actually been
@@ -436,8 +444,8 @@ public abstract class ExtendableObject {
 	 * 		key of type PropertySet and a value of
 	 * 		ExtensionObject.
 	 */
-	public Iterator getExtensionIterator() {
-		return extensions.entrySet().iterator();
+	public Collection<ExtensionPropertySet> getExtensions() {
+		return extensions.keySet();
 	}
 	
 	/**

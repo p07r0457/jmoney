@@ -51,7 +51,7 @@ public class IncomeExpenseAccount extends Account {
 
 	public IncomeExpenseAccount(
 			IObjectKey objectKey, 
-			Map extensions, 
+			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parent,
 			String name,
 			IListManager<IncomeExpenseAccount> subAccounts,
@@ -66,7 +66,7 @@ public class IncomeExpenseAccount extends Account {
 
 	public IncomeExpenseAccount(
 			IObjectKey objectKey, 
-			Map extensions, 
+			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parent,
 			IListManager<IncomeExpenseAccount> subAccounts) {
 		super(objectKey, extensions, parent, null);

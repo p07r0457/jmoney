@@ -26,14 +26,8 @@ import java.util.Collection;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.BankAccountInfo;
 import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.TransactionInfo;
-import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.pages.entries.EntriesTree;
@@ -54,7 +48,6 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetAdapter;
 import org.eclipse.swt.dnd.DropTargetEvent;
-import org.eclipse.swt.dnd.DropTargetListener;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ControlAdapter;
@@ -66,8 +59,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.forms.SectionPart;
@@ -216,33 +207,6 @@ public class StatementSection extends SectionPart {
 				// the statement match.
 	        	BankStatement statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 				return fPage.getAccount().equals(entry.getAccount())
-	        	 && fPage.getStatement().equals(statement);
-			}
-
-			public boolean isEntryInTable(Entry entry, PropertyAccessor propertyAccessor, Object value) {
-		        // If no statement is set, nothing is in the table.
-		        // The table will not be visible in this situation, but
-		        // this method will be called and so we must allow for
-		        // this situation.
-		        if (fPage.getStatement() == null) {
-		        	return false;
-		        }
-		        
-				Account account;
-				if (propertyAccessor == EntryInfo.getAccountAccessor()) {
-					account = (Account)value;
-				} else {
-					account = entry.getAccount();
-				}
-
-				BankStatement statement;
-				if (propertyAccessor == ReconciliationEntryInfo.getStatementAccessor()) {
-					statement = (BankStatement)value;
-				} else {
-					statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
-				}
-				
-				return fPage.getAccount().equals(account)
 	        	 && fPage.getStatement().equals(statement);
 			}
 
@@ -432,12 +396,24 @@ public class StatementSection extends SectionPart {
 	        }
 		}
 		
+		// There should not be any uncommitted changes.
+		if (fPage.transactionManager.hasChanges()) {
+			System.out.println("something is wrong");
+		}
+		
 		if (recEntryInAccount.getCheck() != null) {
 			unrecEntryInAccount.setCheck(recEntryInAccount.getCheck());
 		}
 		
 		if (recEntryInAccount.getValuta() != null) {
 			unrecEntryInAccount.setValuta(recEntryInAccount.getValuta());
+		} else {
+			/*
+			 * If no value date in the entry from the bank then use the transaction
+			 * date as the value date.  The transaction date will be taken from
+			 * the manually entered transaction.
+			 */
+			unrecEntryInAccount.setValuta(recEntryInAccount.getTransaction().getDate());
 		}
 		
 		if (recEntryInAccount.getAmount() != unrecEntryInAccount.getAmount()) {

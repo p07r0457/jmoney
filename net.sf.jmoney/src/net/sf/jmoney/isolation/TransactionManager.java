@@ -211,7 +211,10 @@ public class TransactionManager extends DataManager {
      * 			given object has been deleted in this transaction 
      */
     public <E extends ExtendableObject> E getCopyInTransaction(E committedObject) {
-
+    	if (committedObject.getObjectKey().getSessionManager() != baseDataManager) {
+    		throw new RuntimeException("Invalid call to getCopyInTransaction.  The object passed must belong to the data manager that is the base data manager of this transaction manager.");
+    	}
+    	
 		ExtendableObject objectInTransaction = allObjects.get(committedObject.getObjectKey());
 		if (objectInTransaction != null) {
 			// TODO: decide if and how we check for deleted objects.
@@ -278,9 +281,7 @@ public class TransactionManager extends DataManager {
 		// Now copy the extensions.  This is done by looping through the extensions
 		// in the old object and, for every extension that exists in the old object,
 		// copy the properties to the new object.
-		for (Iterator extensionIter = committedObject.getExtensionIterator(); extensionIter.hasNext(); ) {
-			Map.Entry mapEntry = (Map.Entry)extensionIter.next();
-			PropertySet<?> extensionPropertySet = (PropertySet)mapEntry.getKey();
+		for (PropertySet<?> extensionPropertySet: committedObject.getExtensions()) {
 			int count = extensionPropertySet.getProperties1().size();
 			Object[] extensionValues = new Object[count];
 			int i = 0;

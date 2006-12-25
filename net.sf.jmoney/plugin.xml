@@ -6,6 +6,7 @@
    <extension-point id="fields" name="Extension Fields in Datastore Objects" schema="schema/fields.exsd"/>
    <extension-point id="propagators" name="Property Propagators" schema="schema/propagators.exsd"/>
    <extension-point id="datastores" name="Datastore Implementations" schema="schema/datastores.exsd"/>
+   <extension-point id="validators" name="Change Validators" schema="schema/validators.exsd"/>
 
    <extension
       point="org.eclipse.core.runtime.products"

@@ -36,7 +36,7 @@ public abstract class Commodity extends ExtendableObject implements Comparable<C
 	
 	protected Commodity(
 			IObjectKey objectKey, 
-			Map extensions, 
+			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parentKey,
 			String name) {
 		super(objectKey, extensions, parentKey);

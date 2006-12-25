@@ -364,7 +364,7 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 			}
 			InputStream is = url.openStream();
 
-			Map params = new HashMap();
+			Map<String, String> params = new HashMap<String, String>();
 			params.put(
 				"Title",
 				ReportsPlugin.getResourceString("Report.IncomeExpense.Title"));
@@ -407,7 +407,7 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 	}
 
 	private Collection getItems() {
-        Vector allItems = new Vector();
+        Vector<Item> allItems = new Vector<Item>();
 
         for (Iterator eIt = account.getEntries().iterator(); eIt.hasNext();) {
             Entry e = (Entry) eIt.next();

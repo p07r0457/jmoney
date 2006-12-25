@@ -24,7 +24,6 @@
 package net.sf.jmoney.model2;
 
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Map;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -54,7 +53,7 @@ public class CurrencyAccount extends CapitalAccount {
 	 */
 	public CurrencyAccount(
 			IObjectKey objectKey, 
-			Map extensions, 
+			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parent,
 			String name,
 			IListManager<CapitalAccount> subAccounts,
@@ -94,7 +93,7 @@ public class CurrencyAccount extends CapitalAccount {
 	 */
 	public CurrencyAccount(
 			IObjectKey objectKey, 
-			Map extensions, 
+			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parent,
 			IListManager<CapitalAccount> subAccounts) {
 		super(objectKey, extensions, parent, subAccounts);
@@ -190,9 +189,7 @@ public class CurrencyAccount extends CapitalAccount {
     		// We must therefore provide our own implementation.
     		
     		// Sum each entry the entry between the two dates 
-    		Iterator eIt = getEntries().iterator();
-    		while (eIt.hasNext()) {
-    			Entry e = (Entry) eIt.next();
+    		for (Entry e: getEntries()) {
     			if ((e.getTransaction().getDate().compareTo(fromDate) >= 0)
     					&& e.getTransaction().getDate().compareTo(toDate) <= 0){
     				bal += e.getAmount();
@@ -215,10 +212,18 @@ public class CurrencyAccount extends CapitalAccount {
 		if (JMoneyPlugin.DEBUG) System.out.println("Calculing the Balance for >" + name + "< (with sub-accounts) between " + fromDate + " and " + toDate);
 		long bal = getBalance(session, fromDate, toDate);
 		
-		Iterator aIt = getSubAccountCollection().iterator();
-		
-		while (aIt.hasNext()) {
-			bal += ((CurrencyAccount) aIt.next()).getBalanceWithSubAccounts(session, fromDate, toDate);
+		// This logic may not be quite right.  If a stock account is a sub account of
+		// a currency account then the balance of the stock account cannot be added
+		// into the total (stock accounts don't hold currency).  However, what if the
+		// stock account has a sub account that is a currency account?  This code
+		// will not include that currency account.
+		// Also, even if the sub-accounts are currency accounts, they may be in a
+		// different currency.
+		// However, this logic is probably ok for most uses.
+		for (CapitalAccount account: getSubAccountCollection()) {
+			if (account instanceof CurrencyAccount) {
+				bal += ((CurrencyAccount)account).getBalanceWithSubAccounts(session, fromDate, toDate);
+			}
 		}
 		return bal;
 	}

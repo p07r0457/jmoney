@@ -50,7 +50,7 @@ public class BankAccount extends CurrencyAccount {
 	 */
 	public BankAccount(
 			IObjectKey objectKey, 
-			Map extensions, 
+			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parent,
 			String name,
 			IListManager<CapitalAccount> subAccounts,
@@ -77,7 +77,7 @@ public class BankAccount extends CurrencyAccount {
 	 */
 	public BankAccount(
 			IObjectKey objectKey, 
-			Map extensions, 
+			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parent,
 			IListManager<CapitalAccount> subAccounts) {
 		super(objectKey, extensions, parent, subAccounts);

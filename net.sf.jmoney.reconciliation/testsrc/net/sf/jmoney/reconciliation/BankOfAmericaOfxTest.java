@@ -7,7 +7,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.util.Collection;
-import java.util.Iterator;
 
 import junit.framework.TestCase;
 import net.sf.jmoney.reconciliation.IBankStatementSource.EntryData;
@@ -35,11 +34,10 @@ public class BankOfAmericaOfxTest extends TestCase {
 	 * @throws ParseException
 	 */
 	public void testGetEntriesBufferedReader() throws ParseException {
-		Collection entries = ofxImport.getEntries(bufferedReader);
+		Collection<EntryData> entries = ofxImport.getEntries(bufferedReader);
 		assertTrue(entries.size() > 0);
 		assertEquals(7, entries.size());
-		for (Iterator iter = entries.iterator(); iter.hasNext();) {
-			EntryData data = (EntryData) iter.next();
+		for (EntryData data: entries) {
 			System.out.println(data);
 		}
 	}

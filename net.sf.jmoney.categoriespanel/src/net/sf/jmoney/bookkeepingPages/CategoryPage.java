@@ -492,8 +492,9 @@ public class CategoryPage implements IBookkeepingPageFactory {
 				editorAction = new Action() {
 					public void run() {
 						IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-						for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-							Object selectedObject = iterator.next();
+						for (Object selectedObject: selection.toList()) {
+//						for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
+//							Object selectedObject = iterator.next();
 							JMoneyPlugin.myAssert(selectedObject instanceof ExtendableObject); 
 							NodeEditor.openEditor(
 									getSite().getWorkbenchWindow(),

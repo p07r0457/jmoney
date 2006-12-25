@@ -26,13 +26,7 @@ import java.util.Collection;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.TransactionInfo;
-import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.pages.entries.EntriesTree;
 import net.sf.jmoney.pages.entries.EntryRowSelectionAdapter;
 import net.sf.jmoney.pages.entries.EntryRowSelectionListener;
@@ -83,7 +77,7 @@ public class UnreconciledSection extends SectionPart {
     	
         unreconciledTableContents = new IEntriesContent() {
 
-			public Vector getAllEntryDataObjects() {
+			public Vector<IEntriesTableProperty> getAllEntryDataObjects() {
 				return fPage.allEntryDataObjects;
 			}
 
@@ -128,25 +122,6 @@ public class UnreconciledSection extends SectionPart {
 				// matches and no statement is set.
 	        	BankStatement statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 				return fPage.getAccount().equals(entry.getAccount())
-	        	 && statement == null;
-			}
-
-			public boolean isEntryInTable(Entry entry, PropertyAccessor propertyAccessor, Object value) {
-				Account account;
-				if (propertyAccessor == EntryInfo.getAccountAccessor()) {
-					account = (Account)value;
-				} else {
-					account = entry.getAccount();
-				}
-
-				BankStatement statement;
-				if (propertyAccessor == ReconciliationEntryInfo.getStatementAccessor()) {
-					statement = (BankStatement)value;
-				} else {
-					statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
-				}
-				
-				return fPage.getAccount().equals(account)
 	        	 && statement == null;
 			}
 

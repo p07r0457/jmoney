@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.pages.entries;
 
+import java.text.MessageFormat;
+
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertyControl;
@@ -98,7 +100,7 @@ public class ForeignCurrencyDialog {
 				entry1.getAccount().getName(),
 				entry2.getAccount().getName()
 		};
-        label1.setText(new java.text.MessageFormat(
+        label1.setText(new MessageFormat(
         		"The {0} of {1} in the {2} account has been entered in the {3} category.", 
         		java.util.Locale.US)
 				.format(messageArgs));
@@ -110,7 +112,7 @@ public class ForeignCurrencyDialog {
 		Object[] messageArgs2 = new Object[] { 
 				entry2.getCommodity().getName()
 		};
-		label2.setText(new java.text.MessageFormat(
+		label2.setText(new MessageFormat(
 				"What is the {0} amount?", 
 				java.util.Locale.US)
 				.format(messageArgs2));

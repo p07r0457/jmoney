@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.lang.reflect.Method;
-
 /**
 * This class contains information about a property.  The property may be in the base
 * bookkeeping class or in an extension bookkeeping class.
@@ -50,14 +48,11 @@ import java.lang.reflect.Method;
 */
 public abstract class PropertyAccessor {
    
-   private PropertySet propertySet;
+   protected PropertySet propertySet;
    
-   private String localName;    
+   protected String localName;    
    
-   private String displayName;
-   
-   // If a list property, this getter returns a collection
-   protected Method theGetMethod;
+   protected String displayName;
    
 	/**
 	 * Index into the list of parameters passed to the constructor.
@@ -65,9 +60,9 @@ public abstract class PropertyAccessor {
 	 * parameter to the constructor.
 	 * 
 	 */
-	private int indexIntoConstructorParameters = -1;
+   protected int indexIntoConstructorParameters = -1;
 	
-	private IPropertyDependency dependency;
+   protected IPropertyDependency dependency;
 	
    public PropertyAccessor(PropertySet propertySet, String localName, String displayName, IPropertyDependency propertyDependency) {
    	this.propertySet = propertySet;
@@ -91,72 +86,6 @@ public abstract class PropertyAccessor {
        this.displayName = displayName;
 	}
 
-	/**
-	 * Complete initialization of this object by finding the methods
-	 * required by the JMoney framework.  This cannot be done in the
-	 * constructor because finding the 'create' methods requires accessing
-	 * other PropertyAccessor objects, and so must be done in a second pass
-	 * after all PropertyAccessor objects and all PropertySet objects have
-	 * been constructed.
-	 * <P>
-	 * Note that the 'get' methods must be processed in pass 1 (in the constructor).
-	 * This is because the class of a property is determined by looking at the
-	 * return type of the 'get' method, and the class of other properties is
-	 * required by this method.
-	 */
-//	public void initMethods() {
-//	}
-
-	public Method findMethod(String prefix, String propertyName, Class [] parameters) {
-		String methodName = prefix
-			+ propertyName.toUpperCase().charAt(0)
-			+ propertyName.substring(1, propertyName.length());
-		
-		try {
-			return getDeclaredMethodRecursively(propertySet.getImplementationClass(), methodName, parameters);
-		} catch (NoSuchMethodException e) {
-			String parameterText = "";
-			if (parameters != null) {
-				for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
-					if (paramIndex > 0) {
-						parameterText = parameterText + ", ";
-					}
-					String className = parameters[paramIndex].getName();
-					if (parameters[paramIndex].isArray()) {
-						// The returned class name seems to be a mess when the class is an array,
-						// so we tidy it up.
-						parameterText = parameterText + className.substring(2, className.length()-1) + "[]";
-					} else {
-						parameterText = parameterText + className;
-					}
-				}
-			}
-			throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a method with a signature of " + methodName + "(" + parameterText + ").");
-		}
-	}
-
-	/**
-	 * Gets a method from an interface.  
-	 * Whereas Class.getDeclaredMethod finds a method from an
-	 * interface, it will not find the method if the method is
-	 * defined in an interface which the given interface extends.
-	 * This method will find the method if any of the interfaces
-	 * extended by this interface define the method. 
-	 */
-	private Method getDeclaredMethodRecursively(Class implementationClass, String methodName, Class[] arguments)
-		throws NoSuchMethodException {
-		Class classToTry = implementationClass;
-		do {
-			try {
-				return classToTry.getDeclaredMethod(methodName, arguments);
-			} catch (NoSuchMethodException e) {
-				classToTry = classToTry.getSuperclass();
-			}
-		} while (classToTry != null);
-		
-		throw new NoSuchMethodException();
-	}
-	
    /**
     * Returns the property set which contains this property.
     */
