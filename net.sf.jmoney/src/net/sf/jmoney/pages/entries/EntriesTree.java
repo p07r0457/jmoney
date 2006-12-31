@@ -22,9 +22,12 @@
 
 package net.sf.jmoney.pages.entries;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -1346,8 +1349,24 @@ public class EntriesTree extends Composite {
 	private void setTableItems() {
 		// Sort the entries.
 		Comparator<DisplayableTransaction> rowComparator = new RowComparator(sortColumn, sortAscending);
-		SortedSet<DisplayableTransaction> sortedEntries = new TreeSet<DisplayableTransaction>(rowComparator);  
+		
+		/*
+		 * It would be efficient if we could create a sorrted TreeSet and copy
+		 * the entries into that. However the TreeSet object unfortunately uses
+		 * the comparator not just as a comparator but also assumes that if two
+		 * objects compare the same then they are the same object. This is a
+		 * design flaw, as of course that is wrong. For example, if sorting by
+		 * date you cannot assume that two entries are the same simply because
+		 * they have the same date. The equals method should be used to
+		 * determine equality. Java's own documentation says that the equals
+		 * method is used to determine equality but Sun's documentation is
+		 * wrong.
+		 * 
+		 * We therefore copy the entries into a list and then sort that.
+		 */
+		List<DisplayableTransaction> sortedEntries = new ArrayList<DisplayableTransaction>();
 		sortedEntries.addAll(entries.values());
+		Collections.sort(sortedEntries, rowComparator);
 
 		/*
 		 * Alternate the color of the entries to improve the readibility 
