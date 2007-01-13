@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.datatools.connectivity.oda.dataSource">
+      <dataSource
+            odaVersion="3.0"
+            driverClass="net.sf.jmoney.oda.driver.Driver"
+            defaultDisplayName="%datasource.name"
+            id="net.sf.jmoney.oda"
+            setThreadContextClassLoader="false">
+      </dataSource>
+      <dataSet
+            defaultDisplayName="%dataset.name"
+            id="net.sf.jmoney.oda.dataSet">
+            <dataTypeMapping
+                  nativeDataType="String"
+                  nativeDataTypeCode="1"
+                  odaScalarDataType="String"/>
+            <dataTypeMapping
+                  nativeDataType="Integer"
+                  nativeDataTypeCode="2"
+                  odaScalarDataType="Integer"/>
+            <dataTypeMapping
+                  nativeDataType="Long"
+                  nativeDataTypeCode="3"
+                  odaScalarDataType="Integer"/>
+            <dataTypeMapping
+                  nativeDataType="Double"
+                  nativeDataTypeCode="4"
+                  odaScalarDataType="Double"/>
+            <dataTypeMapping
+                  nativeDataType="Boolean"
+                  nativeDataTypeCode="5"
+                  odaScalarDataType="String"/>
+            <dataTypeMapping
+                  nativeDataType="Date"
+                  nativeDataTypeCode="6"
+                  odaScalarDataType="Date"/>
+      </dataSet>
+   </extension>
+
+</plugin>
