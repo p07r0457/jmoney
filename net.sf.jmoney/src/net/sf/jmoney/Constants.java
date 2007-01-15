@@ -48,6 +48,11 @@ public interface Constants {
 		"Copyright (C) 2000 - 2004 " + AUTHOR + " <" + EMAIL + ">";
 
 	/**
+	 * Product version.
+	 */
+	public static final String PRODUCT_VERSION = "1.0";
+
+	/**
 	 * Corresponding int for CANCEL.
 	 */
 	public static final int CANCEL = 0;
