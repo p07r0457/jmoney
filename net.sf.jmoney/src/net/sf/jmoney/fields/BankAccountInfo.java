@@ -49,7 +49,8 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  */
 public class BankAccountInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<BankAccount> propertySet = PropertySet.addDerivedPropertySet(BankAccount.class, CurrencyAccountInfo.getPropertySet());
+	private static ExtendablePropertySet<BankAccount> propertySet = PropertySet.addDerivedPropertySet(BankAccount.class, JMoneyPlugin.getResourceString("AccountPropertiesPanel.ObjectDescription"), CurrencyAccountInfo.getPropertySet()); //$NON-NLS-1$
+	
 	private static ScalarPropertyAccessor<String> bankAccessor = null;
 	private static ScalarPropertyAccessor<String> accountNumberAccessor = null;
 	private static ScalarPropertyAccessor<Long> minBalanceAccessor = null;
@@ -61,8 +62,6 @@ public class BankAccountInfo implements IPropertySetInfo {
 		bankAccessor          = propertySet.addProperty("bank", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), String.class, 5, 100, textControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
 		accountNumberAccessor = propertySet.addProperty("accountNumber", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), String.class, 2, 70, textControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
 		minBalanceAccessor    = propertySet.addProperty("minBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.minBalance"), Long.class, 2, 40, amountControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		propertySet.setDescription(JMoneyPlugin.getResourceString("AccountPropertiesPanel.ObjectDescription")); //$NON-NLS-1$);
 		
 		return propertySet;
 	}

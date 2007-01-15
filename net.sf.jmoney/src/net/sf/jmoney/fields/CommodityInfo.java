@@ -49,7 +49,8 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  */
 public class CommodityInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<Commodity> propertySet = PropertySet.addBasePropertySet(Commodity.class);
+	private static ExtendablePropertySet<Commodity> propertySet = PropertySet.addBasePropertySet(Commodity.class, "Base Commodity (includes currencies)");
+
 	private static ScalarPropertyAccessor<String> nameAccessor = null;
 
 	public PropertySet registerProperties() {

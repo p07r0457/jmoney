@@ -56,7 +56,8 @@ import net.sf.jmoney.model2.Transaction;
  */
 public class SessionInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<Session> propertySet = PropertySet.addBasePropertySet(Session.class);
+	private static ExtendablePropertySet<Session> propertySet = PropertySet.addBasePropertySet(Session.class, "JMoney Session");
+	
 	private static ListPropertyAccessor<Commodity> commoditiesAccessor = null;
 	private static ListPropertyAccessor<Account> accountsAccessor = null;
 	private static ListPropertyAccessor<Transaction> transactionsAccessor = null;
@@ -88,8 +89,6 @@ public class SessionInfo implements IPropertySetInfo {
 		transactionsAccessor = propertySet.addPropertyList("transaction", JMoneyPlugin.getResourceString("<not used???>"), TransactionInfo.getPropertySet(), transactionGetter, null);
 		
 		defaultCurrencyAccessor = propertySet.addProperty("defaultCurrency", JMoneyPlugin.getResourceString("Session.defaultCurrency"), Currency.class, 2, 20, currencyControlFactory, null);
-		
-		propertySet.setDescription("JMoney Session");
 		
 		return propertySet;
 	}

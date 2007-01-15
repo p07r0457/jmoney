@@ -61,7 +61,8 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class EntryInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<Entry> propertySet = PropertySet.addBasePropertySet(Entry.class);
+	private static ExtendablePropertySet<Entry> propertySet = PropertySet.addBasePropertySet(Entry.class, "Accounting Entry");
+	
 	private static ScalarPropertyAccessor<String> checkAccessor = null;
 	private static ScalarPropertyAccessor<String> descriptionAccessor = null;
 	private static ScalarPropertyAccessor<Account> accountAccessor = null;
@@ -149,8 +150,6 @@ public class EntryInfo implements IPropertySetInfo {
 		amountAccessor      = propertySet.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      Long.class, 2, 70,  amountControlFactory, null);
 		creationAccessor    = propertySet.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    Long.class, 0, 70,  creationControlFactory, null);
 		incomeExpenseCurrencyAccessor = propertySet.addProperty("incomeExpenseCurrency",    JMoneyPlugin.getResourceString("Entry.currency"),    Currency.class, 2, 70, new CurrencyControlFactory(), null);
-		
-		propertySet.setDescription("Accounting Entry");
 		
 		return propertySet;
 	}

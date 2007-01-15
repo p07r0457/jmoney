@@ -54,7 +54,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class CurrencyInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<Currency> propertySet = PropertySet.addDerivedPropertySet(Currency.class, CommodityInfo.getPropertySet());
+	private static ExtendablePropertySet<Currency> propertySet = PropertySet.addDerivedPropertySet(Currency.class, "Currency", CommodityInfo.getPropertySet());
 	private static ScalarPropertyAccessor<String> codeAccessor = null;
 	private static ScalarPropertyAccessor<Integer> decimalsAccessor = null;
 
@@ -78,8 +78,6 @@ public class CurrencyInfo implements IPropertySetInfo {
 
 		codeAccessor = propertySet.addProperty("code", JMoneyPlugin.getResourceString("Currency.code"), String.class, 0, 8, textControlFactory, null);
 		decimalsAccessor = propertySet.addProperty("decimals", JMoneyPlugin.getResourceString("Currency.decimals"), Integer.class, 0, 8, numberControlFactory, null);
-		
-		propertySet.setDescription("Currency");
 		
 		return propertySet;
 	}

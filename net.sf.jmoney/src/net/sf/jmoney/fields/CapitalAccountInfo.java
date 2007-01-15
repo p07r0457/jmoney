@@ -52,7 +52,7 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  */
 public class CapitalAccountInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<CapitalAccount> propertySet = PropertySet.addDerivedPropertySet(CapitalAccount.class, AccountInfo.getPropertySet());
+	private static ExtendablePropertySet<CapitalAccount> propertySet = PropertySet.addDerivedPropertySet(CapitalAccount.class, "Capital Account", AccountInfo.getPropertySet());
 	private static ListPropertyAccessor<CapitalAccount> subAccountAccessor = null;
 	private static ScalarPropertyAccessor<String> abbreviationAccessor = null;
 	private static ScalarPropertyAccessor<String> commentAccessor = null;

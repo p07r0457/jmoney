@@ -51,7 +51,8 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  */
 public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<IncomeExpenseAccount> propertySet = PropertySet.addDerivedPropertySet(IncomeExpenseAccount.class, AccountInfo.getPropertySet());
+	private static ExtendablePropertySet<IncomeExpenseAccount> propertySet = PropertySet.addDerivedPropertySet(IncomeExpenseAccount.class, "Income or Expense Category", AccountInfo.getPropertySet());
+
 	private static ListPropertyAccessor<IncomeExpenseAccount> subAccountAccessor = null;
 	private static ScalarPropertyAccessor<Boolean> multiCurrencyAccessor = null;
 	private static ScalarPropertyAccessor<Currency> currencyAccessor = null;
@@ -72,7 +73,6 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 		// that is controlled by the derived class type.  This has not
 		// been designed yet, so for time being we have nothing to do.
 		
-		propertySet.setDescription("Income or Expense Category");
 		propertySet.setIcon("icons/category.gif");
 		
 		return propertySet;

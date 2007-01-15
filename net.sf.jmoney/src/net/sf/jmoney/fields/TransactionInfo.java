@@ -55,7 +55,8 @@ import net.sf.jmoney.model2.Transaction;
  */
 public class TransactionInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<Transaction> propertySet = PropertySet.addBasePropertySet(Transaction.class);
+	private static ExtendablePropertySet<Transaction> propertySet = PropertySet.addBasePropertySet(Transaction.class, "Financial Transaction");
+
 	private static ScalarPropertyAccessor<Date> dateAccessor = null;
 	private static ListPropertyAccessor<Entry> entriesAccessor = null;
 
@@ -70,8 +71,6 @@ public class TransactionInfo implements IPropertySetInfo {
 		
 		entriesAccessor = propertySet.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), EntryInfo.getPropertySet(), entryGetter, null);
 		dateAccessor = propertySet.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), Date.class, 0, 76, dateControlFactory, null);
-		
-		propertySet.setDescription("Financial Transaction");
 		
 		return propertySet;
 	}
