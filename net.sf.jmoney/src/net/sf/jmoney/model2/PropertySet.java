@@ -703,12 +703,12 @@ public abstract class PropertySet<E> {
 
 
 
-	public static <E2 extends ExtendableObject> ExtendablePropertySet<E2> addBasePropertySet(Class<E2> classOfImplementationObject) {
-		return new ExtendablePropertySet<E2>(classOfImplementationObject);
+	public static <E2 extends ExtendableObject> ExtendablePropertySet<E2> addBasePropertySet(Class<E2> classOfImplementationObject, String description) {
+		return new ExtendablePropertySet<E2>(classOfImplementationObject, description);
 	}
 
-	public static <E extends ExtendableObject> ExtendablePropertySet<E> addDerivedPropertySet(Class<E> classOfImplementationObject, ExtendablePropertySet<? super E> basePropertySet) {
-		return new ExtendablePropertySet<E>(classOfImplementationObject, basePropertySet);
+	public static <E extends ExtendableObject> ExtendablePropertySet<E> addDerivedPropertySet(Class<E> classOfImplementationObject, String description, ExtendablePropertySet<? super E> basePropertySet) {
+		return new ExtendablePropertySet<E>(classOfImplementationObject, description, basePropertySet);
 	}
 
 	public static <E extends ExtensionObject> ExtensionPropertySet<E> addExtensionPropertySet(Class<E> classOfImplementationObject, ExtendablePropertySet<?> extendablePropertySet) {

@@ -48,15 +48,15 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	 */
 	private Map<Class<? extends E>, ExtendablePropertySet<? extends E>> derivedPropertySets = new HashMap<Class<? extends E>, ExtendablePropertySet<? extends E>>();
 
+	private Collection<ExtendablePropertySet<? extends E>> directlyDerivedPropertySets = new Vector<ExtendablePropertySet<? extends E>>(); 
+	
 	Map<String, ExtensionPropertySet> extensionPropertySets = null;  
 
 	/**
 	 * Localized text describing the type of object represented
-	 * by this property set.
-	 * <P>
-	 * This field is defined only if this property set is not derivable.
+	 * by this property set.  This property is never null.
 	 */
-	protected String objectDescription;  // defined only if not derivable
+	protected String objectDescription;
 
 	/**
 	 * This field is valid for extendable property sets only
@@ -86,14 +86,15 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	 * Constructs a base property set object.
 	 *  
 	 * @param classOfObject
+	 * @param objectDescription 
 	 */
-	protected ExtendablePropertySet(Class<E> classOfObject) {
+	protected ExtendablePropertySet(Class<E> classOfObject, String objectDescription) {
 		this.isExtension = false;
 		this.classOfObject = classOfObject;
 		this.basePropertySet = null;
 
 		this.derivable = false;
-		this.objectDescription = null;
+		this.objectDescription = objectDescription;
 		this.iconFileName = null;
 
 		extensionPropertySets = new HashMap<String, ExtensionPropertySet>();
@@ -104,13 +105,13 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	 *  
 	 * @param classOfObject
 	 */
-	protected ExtendablePropertySet(Class<E> classOfObject, ExtendablePropertySet<? super E> basePropertySet) {
+	protected ExtendablePropertySet(Class<E> classOfObject, String objectDescription, ExtendablePropertySet<? super E> basePropertySet) {
 		this.isExtension = false;
 		this.classOfObject = classOfObject;
 		this.basePropertySet = basePropertySet;
 
 		this.derivable = false;
-		this.objectDescription = null;
+		this.objectDescription = objectDescription;
 		this.iconFileName = null;
 
 		extensionPropertySets = new HashMap<String, ExtensionPropertySet>();
@@ -149,13 +150,7 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 			for (ExtendablePropertySet<? super E> base = this; base != null; base = base.getBasePropertySet()) {
 				base.derivedPropertySets.put(classOfObject, this);
 			}
-		} else {
-			if (objectDescription != null) {
-				throw new MalformedPluginException("IPropertyRegistrar.setObjectDescription is called from the IPropertyInfo implementation for " + propertySetId + ", but the property set is derivable.");
-			}
-		}
-		
-		if (!derivable) {
+
 			// Build the list of properties that are passed to
 			// the 'new object' constructor and another list that
 			// are passed to the 're-instantiating' constructor.
@@ -164,6 +159,10 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 			defaultConstructorProperties = new Vector<PropertyAccessor>();
 		}
 
+		if (basePropertySet != null) {
+			basePropertySet.directlyDerivedPropertySets.add(this);
+		}
+		
 		// We need to be able to iterate through property sets
 		// starting at the base property set and continuing through
 		// derived property sets until we get to this property set.
@@ -243,6 +242,25 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	}
 	
 	/**
+	 * Gets the set of all property sets that are directly derived from this
+	 * property set. This set does not include property sets that are derived
+	 * from property sets that are in turn derived from this property set. This
+	 * set includes both property sets that are derivable and property sets that
+	 * are final.
+	 * 
+	 * This method is useful when the caller needs to know the actual tree
+	 * structure of the derived property sets or needs to know about the
+	 * intermediate (non-final) property sets. Callers generally would call this
+	 * method in a recursive manner.
+	 * 
+	 * If a caller just needs a list of the final property sets,
+	 * getDerivedPropertySets() is simpler to use.
+	 */
+	public Collection<ExtendablePropertySet<? extends E>> getDirectlyDerivedPropertySets() {
+		return directlyDerivedPropertySets;
+	}
+
+	/**
 	 * 
 	 * @return the set of all property sets
 	 * 				that are derived from this property set and
@@ -289,9 +307,6 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	 * 			represented by this property set
 	 */
 	public String getObjectDescription() {
-		if (isDerivable()) {
-			throw new RuntimeException("internal error");
-		}
 		return objectDescription;
 	}
 
@@ -312,10 +327,6 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	 */
 	public void setDerivable() {
 		derivable = true;
-	}
-
-	public void setDescription(String description) {
-		this.objectDescription = description;
 	}
 
 	public void setIcon(String iconFileName) {
@@ -569,6 +580,37 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 		pageExtensions.add(addIndex, newPage);
 	}
 
+	/**
+	 * Utility method to find a property among all properties supported
+	 * by objects of this class.
+	 * 
+	 * @param scalarPropertyId
+	 * @return
+	 */
+	public ScalarPropertyAccessor getScalarProperty(String scalarPropertyId) {
+		for (ScalarPropertyAccessor property: getScalarProperties3()) {
+			if (property.getName().equals(scalarPropertyId)) {
+				return property;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Utility method to find a property among all properties supported
+	 * by objects of this class.
+	 * 
+	 * @param listPropertyId
+	 * @return
+	 */
+	public ListPropertyAccessor getListProperty(String listPropertyId) {
+		for (ListPropertyAccessor property: getListProperties3()) {
+			if (property.getName().equals(listPropertyId)) {
+				return property;
+			}
+		}
+		return null;
+	}
 
 
 }
