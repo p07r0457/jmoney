@@ -30,8 +30,6 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
-import org.eclipse.datatools.connectivity.oda.OdaException;
-
 /**
  * This class implements a fetcher that fetches the session
  * object.  There is only a single session object, and it is
@@ -44,9 +42,20 @@ import org.eclipse.datatools.connectivity.oda.OdaException;
  */
 public class SessionFetcher implements IFetcher {
 
-	private Vector<ScalarPropertyAccessor<?>> columnProperties = new Vector<ScalarPropertyAccessor<?>>();
+	private Vector<Column> columnProperties = new Vector<Column>();
 	
 	private boolean onSessionObject;
+
+	public SessionFetcher() {
+		for (final ScalarPropertyAccessor<?> property: SessionInfo.getPropertySet().getScalarProperties3()) {
+			columnProperties.add(new Column(property.getName(), property.getDisplayName(), property.getClassOfValueObject(), property.isNullAllowed()) {
+				@Override
+				Object getValue() {
+					return JMoneyPlugin.getDefault().getSession().getPropertyValue(property);
+				}
+			});
+		}
+	}
 	
 	public void reset() {
 		onSessionObject = false;
@@ -60,21 +69,13 @@ public class SessionFetcher implements IFetcher {
 			return false;
 		}
 	}
-	
-	public Object getValue(int columnIndex) throws OdaException {
-		if (columnIndex < columnProperties.size()) {
-			return JMoneyPlugin.getDefault().getSession().getPropertyValue(columnProperties.get(columnIndex));
-		} else {
-			throw new OdaException("Column index is too big");
-		}
-	}
 
 	public ExtendableObject getCurrentObject() {
 		return JMoneyPlugin.getDefault().getSession();
 	}
 
-	public void addSelectedProperties(Vector<ScalarPropertyAccessor> selectedProperties) {
-		for (ScalarPropertyAccessor property: this.columnProperties) {
+	public void buildColumnList(Vector<Column> selectedProperties) {
+		for (Column property: this.columnProperties) {
 			selectedProperties.add(property);
 		}
 	}
@@ -83,7 +84,7 @@ public class SessionFetcher implements IFetcher {
 		return SessionInfo.getPropertySet();
 	}
 
-	public void addParameters(Vector<ParameterData> parameters) {
+	public void buildParameterList(Vector<Parameter> parameters) {
 		// This object does not use any parameters
 	}
 }

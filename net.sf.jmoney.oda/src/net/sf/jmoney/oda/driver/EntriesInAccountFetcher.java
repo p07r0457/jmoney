@@ -26,7 +26,9 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
@@ -47,7 +49,7 @@ import org.eclipse.ui.IMemento;
  */
 public class EntriesInAccountFetcher implements IFetcher {
 
-	private Vector<ScalarPropertyAccessor<?>> columnProperties = new Vector<ScalarPropertyAccessor<?>>();
+	private Vector<Column> columns = new Vector<Column>();
 	
 	private Iterator<? extends ExtendableObject> iterator;
 	private ExtendableObject currentObject;
@@ -87,8 +89,46 @@ public class EntriesInAccountFetcher implements IFetcher {
 			columnProperties.add(property);
 		}
 */
-		for (ScalarPropertyAccessor property: EntryInfo.getPropertySet().getScalarProperties3()) {
-			columnProperties.add(property);
+		for (final ScalarPropertyAccessor<?> property: EntryInfo.getPropertySet().getScalarProperties3()) {
+			columns.add(new Column(property.getName(), property.getDisplayName(), property.getClassOfValueObject(), property.isNullAllowed()) {
+				@Override
+				Object getValue() {
+					return currentObject.getPropertyValue(property);
+				}
+			});
+		}
+		
+		/*
+		 * If this is a double entry then we include amounts from the
+		 * other entry.  These values will be null if the transaction has
+		 * more than two entries.
+		 */
+		for (final ScalarPropertyAccessor<?> property: EntryInfo.getPropertySet().getScalarProperties3()) {
+			columns.add(new Column("other." + property.getName(), property.getDisplayName() + "(2)", property.getClassOfValueObject(), true) {
+				@Override
+				Object getValue() {
+					Entry thisEntry = (Entry)currentObject;
+					Entry otherEntry = thisEntry.getTransaction().getOther(thisEntry);
+					if (otherEntry == null) {
+						return null;
+					} else {
+						return otherEntry.getPropertyValue(property);
+					}
+				}
+			});
+		}
+		
+		/*
+		 * We also include properties from the transaction.
+		 */
+		for (final ScalarPropertyAccessor<?> property: TransactionInfo.getPropertySet().getScalarProperties3()) {
+			columns.add(new Column(property.getName(), property.getDisplayName(), property.getClassOfValueObject(), property.isNullAllowed()) {
+				@Override
+				Object getValue() {
+					Entry thisEntry = (Entry)currentObject;
+					return thisEntry.getTransaction().getPropertyValue(property);
+				}
+			});
 		}
 	}
 	
@@ -135,34 +175,28 @@ public class EntriesInAccountFetcher implements IFetcher {
 		} while (true);
 		return false;
 	}
-	
-	public Object getValue(int columnIndex) throws OdaException {
-		if (columnIndex < columnProperties.size()) {
-			return currentObject.getPropertyValue(columnProperties.get(columnIndex));
-		} else {
-			return accountObjects.getValue(columnIndex - columnProperties.size());
-		}
-	}
 
 	public ExtendableObject getCurrentObject() {
 		return currentObject;
 	}
 
-	public void addSelectedProperties(Vector<ScalarPropertyAccessor> selectedProperties) {
-		for (ScalarPropertyAccessor property: this.columnProperties) {
+	public void buildColumnList(Vector<Column> selectedProperties) {
+		for (Column property: columns) {
 			selectedProperties.add(property);
 		}
-		
-		accountObjects.addSelectedProperties(selectedProperties);
+
+		accountObjects.buildColumnList(selectedProperties);
+	}
+
+	public void buildParameterList(Vector<Parameter> parameters) {
+		/*
+		 * This object does not directly use any parameters, but the account
+		 * fetcher used by this object might.
+		 */
+		accountObjects.buildParameterList(parameters);
 	}
 
 	public ExtendablePropertySet getPropertySet() {
 		return EntryInfo.getPropertySet();
-	}
-
-	public void addParameters(Vector<ParameterData> parameters) {
-		// This object does not directly use any parameters,
-		// but the fetcher used by this object might.
-		accountObjects.addParameters(parameters);
 	}
 }

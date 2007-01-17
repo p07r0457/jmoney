@@ -22,9 +22,13 @@
 
 package net.sf.jmoney.oda.driver;
 
+import net.sf.jmoney.model2.*;
+
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.ListPropertyAccessor;
@@ -51,7 +55,7 @@ import org.eclipse.ui.IMemento;
 public class ListFetcher implements IFetcher {
 
 	private ListPropertyAccessor<?> listProperty;
-	private Vector<ScalarPropertyAccessor<?>> columnProperties = new Vector<ScalarPropertyAccessor<?>>();
+	private Vector<Column> columnProperties = new Vector<Column>();
 	
 	/*
 	 * If the list is to be filtered to include only objects of
@@ -64,6 +68,12 @@ public class ListFetcher implements IFetcher {
 	private ExtendableObject currentObject;
 	
 	private IFetcher parentObjects;
+
+	/**
+	 * Set only if this is a list of income/expense accounts
+	 */
+	private Parameter_Date startDateParameter = null;
+	private Parameter_Date endDateParameter = null;
 	
 	/**
 	 * 
@@ -117,8 +127,61 @@ public class ListFetcher implements IFetcher {
 			columnProperties.add(property);
 		}
 */
-		for (ScalarPropertyAccessor property: filter.getScalarProperties3()) {
-			columnProperties.add(property);
+		for (final ScalarPropertyAccessor<?> property: filter.getScalarProperties3()) {
+			columnProperties.add(new Column(property.getName(), property.getDisplayName(), property.getClassOfValueObject(), property.isNullAllowed()) {
+				@Override
+				Object getValue() {
+					return currentObject.getPropertyValue(property);
+				}
+			});
+		}
+		
+		/*
+		 * If this is a list of capital accounts, add a column which gives
+		 * the balance for each account.  An optional parameter provides the date
+		 * on which the balance is required.  If the data parameter is null, the
+		 * latest balance, including future entries, is given. 
+		 */
+		if (CapitalAccount.class.isAssignableFrom(filter.getImplementationClass())) {
+			columnProperties.add(new Column("balance", "Balance", Long.class, false) {
+				@Override
+				Object getValue() {
+					CapitalAccount account = ((CapitalAccount)currentObject);
+					long total = 0;
+					for (Entry entry: account.getEntries()) {
+						total += entry.getAmount();
+					}
+					return new Long(total);
+				}
+			});
+		}
+		
+		/*
+		 * If this is a list of income/expense accounts, add a column which gives
+		 * the total for each account over a given date range.
+		 * Two required parameters give the start and end dates.
+		 */
+		if (IncomeExpenseAccount.class.isAssignableFrom(filter.getImplementationClass())) {
+			startDateParameter = new Parameter_Date("StartDate");
+			endDateParameter = new Parameter_Date("EndDate");
+			
+			columnProperties.add(new Column("amount", "Amount", Long.class, false) {
+				@Override
+				Object getValue() {
+					Date startDate = startDateParameter.getValue();
+					Date endDate = endDateParameter.getValue();
+					
+					IncomeExpenseAccount account = ((IncomeExpenseAccount)currentObject);
+					long total = 0;
+					for (Entry entry: account.getEntries()) {
+						if (!entry.getTransaction().getDate().before(startDate)
+							&& !entry.getTransaction().getDate().after(endDate)) {
+							total += entry.getAmount();
+						}
+					}
+					return new Long(total);
+				}
+			});
 		}
 	}
 	
@@ -167,34 +230,33 @@ public class ListFetcher implements IFetcher {
 		} while (true);
 		return false;
 	}
-	
-	public Object getValue(int columnIndex) throws OdaException {
-		if (columnIndex < columnProperties.size()) {
-			return currentObject.getPropertyValue(columnProperties.get(columnIndex));
-		} else {
-			return parentObjects.getValue(columnIndex - columnProperties.size());
-		}
-	}
 
 	public ExtendableObject getCurrentObject() {
 		return currentObject;
 	}
 
-	public void addSelectedProperties(Vector<ScalarPropertyAccessor> selectedProperties) {
-		for (ScalarPropertyAccessor property: this.columnProperties) {
+	public void buildColumnList(Vector<Column> selectedProperties) {
+		for (Column property: this.columnProperties) {
 			selectedProperties.add(property);
 		}
 		
-		parentObjects.addSelectedProperties(selectedProperties);
+		parentObjects.buildColumnList(selectedProperties);
 	}
 
 	public ExtendablePropertySet getPropertySet() {
 		return listProperty.getElementPropertySet();
 	}
 
-	public void addParameters(Vector<ParameterData> parameters) {
+	public void buildParameterList(Vector<Parameter> parameters) {
+		if (startDateParameter != null) {
+			parameters.add(startDateParameter);
+		}
+		if (endDateParameter != null) {
+			parameters.add(endDateParameter);
+		}
+
 		// This object does not directly use any parameters,
 		// but the fetcher used by this object might.
-		parentObjects.addParameters(parameters);
+		parentObjects.buildParameterList(parameters);
 	}
 }

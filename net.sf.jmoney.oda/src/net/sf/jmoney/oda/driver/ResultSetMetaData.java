@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.oda.Messages;
 
 import org.eclipse.datatools.connectivity.oda.IResultSetMetaData;
@@ -43,7 +42,7 @@ public class ResultSetMetaData implements IResultSetMetaData
 	 * Vector of all properties in the result set, in
 	 * the correct order
 	 */
-	private Vector<ScalarPropertyAccessor> selectedProperties = new Vector<ScalarPropertyAccessor>();
+	Vector<Column> selectedProperties = new Vector<Column>();
 
 	/*
 	 * Vector of all column types (cached so we don't have to determine the type
@@ -64,18 +63,18 @@ public class ResultSetMetaData implements IResultSetMetaData
 
     ResultSetMetaData(IFetcher fetcher) throws OdaException
     {
-		fetcher.addSelectedProperties(selectedProperties);
+		fetcher.buildColumnList(selectedProperties);
 		
 		/*
 		 * Build the map so we can get a column index quickly
 		 * given a column name.
 		 */
 		for (int i = 0; i < selectedProperties.size(); i++) {
-			ScalarPropertyAccessor property = selectedProperties.get(i);
+			Column property = selectedProperties.get(i);
 			columnNameToIndexMap.put(property.getName(), i);
 		}
 		
-		for (ScalarPropertyAccessor property: selectedProperties) {
+		for (Column property: selectedProperties) {
 			queryColumnTypes.add(getColumnType(property.getClassOfValueObject()));
 		}
     }

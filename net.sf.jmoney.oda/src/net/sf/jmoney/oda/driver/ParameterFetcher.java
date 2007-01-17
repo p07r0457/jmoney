@@ -50,9 +50,9 @@ import org.eclipse.ui.IMemento;
  */
 public class ParameterFetcher implements IFetcher {
 
-	private ParameterData parameterData;
+	private Parameter_Object parameterData;
 	
-	private Vector<ScalarPropertyAccessor<?>> columnProperties = new Vector<ScalarPropertyAccessor<?>>();
+	private Vector<Column> columnProperties = new Vector<Column>();
 	
 	private Iterator<? extends ExtendableObject> iterator = null;
 
@@ -66,7 +66,7 @@ public class ParameterFetcher implements IFetcher {
 
 		try {
 			ExtendablePropertySet<?> propertySet = PropertySet.getExtendablePropertySet(propertySetId);
-			parameterData = new ParameterData(propertySet, ColumnType.stringType);
+			parameterData = new Parameter_Object(propertySet, ColumnType.stringType);
 		} catch (PropertySetNotFoundException e) {
 			throw new OdaException("Parameter specified but property set " + propertySetId + " not found.");
 		}
@@ -78,8 +78,13 @@ public class ParameterFetcher implements IFetcher {
 			columnProperties.add(property);
 		}
 */
-		for (ScalarPropertyAccessor property: parameterData.getPropertySet().getScalarProperties3()) {
-			columnProperties.add(property);
+		for (final ScalarPropertyAccessor<?> property: parameterData.getPropertySet().getScalarProperties3()) {
+			columnProperties.add(new Column(property.getName(), property.getDisplayName(), property.getClassOfValueObject(), property.isNullAllowed()) {
+				@Override
+				Object getValue() {
+					return parameterObject.getPropertyValue(property);
+				}
+			});
 		}
 	}
 	
@@ -95,21 +100,13 @@ public class ParameterFetcher implements IFetcher {
 			return false;
 		}
 	}
-	
-	public Object getValue(int columnIndex) throws OdaException {
-		if (columnIndex < columnProperties.size()) {
-			return parameterObject.getPropertyValue(columnProperties.get(columnIndex));
-		} else {
-			throw new OdaException("Column index is too big");
-		}
-	}
 
 	public ExtendableObject getCurrentObject() {
 		return parameterObject;
 	}
 
-	public void addSelectedProperties(Vector<ScalarPropertyAccessor> selectedProperties) {
-		for (ScalarPropertyAccessor property: this.columnProperties) {
+	public void buildColumnList(Vector<Column> selectedProperties) {
+		for (Column property: this.columnProperties) {
 			selectedProperties.add(property);
 		}
 	}
@@ -118,7 +115,7 @@ public class ParameterFetcher implements IFetcher {
 		return parameterData.getPropertySet();
 	}
 
-	public void addParameters(Vector<ParameterData> parameters) {
+	public void buildParameterList(Vector<Parameter> parameters) {
 		parameters.add(parameterData);
 	}
 }

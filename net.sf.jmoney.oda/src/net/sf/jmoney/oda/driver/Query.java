@@ -310,7 +310,7 @@ public class Query implements IQuery
 	 */
 	public void setString(int parameterId, String value) throws OdaException
 	{
-		ParameterData paramData = parameterMetaData.parameters.get(parameterId - 1);
+		Parameter paramData = parameterMetaData.parameters.get(parameterId - 1);
 		paramData.setString(value);
 	}
 
@@ -330,7 +330,8 @@ public class Query implements IQuery
 	 */
 	public void setDate(int parameterId, Date value) throws OdaException
 	{
-		throw new UnsupportedOperationException( );
+		Parameter paramData = parameterMetaData.parameters.get(parameterId - 1);
+		paramData.setDate(value);
 	}
 
 	/*

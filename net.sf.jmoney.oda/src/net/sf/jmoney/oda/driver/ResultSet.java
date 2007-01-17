@@ -133,7 +133,7 @@ public class ResultSet implements IResultSet
     public String getString(int columnNumber) throws OdaException
     {
     	validateCursorState();
-    	Object result = fetcher.getValue(columnNumber-1);
+    	Object result = resultSetMetaData.selectedProperties.get(columnNumber-1).getValue();
     	if (result == null) {
     		wasNull = true;
     		return null;
@@ -159,7 +159,7 @@ public class ResultSet implements IResultSet
     public int getInt(int columnNumber) throws OdaException
     {
     	validateCursorState();
-    	Object result = fetcher.getValue(columnNumber-1);
+    	Object result = resultSetMetaData.selectedProperties.get(columnNumber-1).getValue();
     	if (result == null) {
     		wasNull = true;
     		return 0;
@@ -189,7 +189,7 @@ public class ResultSet implements IResultSet
     public double getDouble(int columnNumber) throws OdaException
     {
     	validateCursorState();
-    	Object result = fetcher.getValue(columnNumber-1);
+    	Object result = resultSetMetaData.selectedProperties.get(columnNumber-1).getValue();
     	if (result == null) {
     		wasNull = true;
     		return 0;
@@ -219,7 +219,7 @@ public class ResultSet implements IResultSet
     public BigDecimal getBigDecimal(int columnNumber) throws OdaException
     {
     	validateCursorState();
-    	Object result = fetcher.getValue(columnNumber-1);
+    	Object result = resultSetMetaData.selectedProperties.get(columnNumber-1).getValue();
     	if (result == null) {
     		wasNull = true;
     		return null;
@@ -250,7 +250,7 @@ public class ResultSet implements IResultSet
     public Date getDate(int columnNumber) throws OdaException
     {
     	validateCursorState();
-    	Object result = fetcher.getValue(columnNumber-1);
+    	Object result = resultSetMetaData.selectedProperties.get(columnNumber-1).getValue();
     	if (result == null) {
     		wasNull = true;
     		return null;

@@ -7,10 +7,10 @@ import org.eclipse.datatools.connectivity.oda.OdaException;
 
 public class ParameterMetaData implements IParameterMetaData {
 
-	Vector<ParameterData> parameters = new Vector<ParameterData>();
+	Vector<Parameter> parameters = new Vector<Parameter>();
 	
 	public ParameterMetaData(IFetcher fetcher) {
-		fetcher.addParameters(parameters);
+		fetcher.buildParameterList(parameters);
 	}
 
 	public int getParameterCount() throws OdaException {

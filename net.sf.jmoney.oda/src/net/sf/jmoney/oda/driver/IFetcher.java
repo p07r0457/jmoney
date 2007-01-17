@@ -26,9 +26,6 @@ import java.util.Vector;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
-
-import org.eclipse.datatools.connectivity.oda.OdaException;
 
 public interface IFetcher {
 
@@ -41,9 +38,22 @@ public interface IFetcher {
 	 */
 	void reset();
 	
+	/**
+	 * Move to the next row.
+	 * 
+	 * @return true if there was another row, false if the cursor is
+	 * 			now positioned after the last row
+	 */
 	boolean next();
+
+	/**
+	 * The results of this method are undefined if the
+	 * cursor is positioned either before the first row
+	 * or after the last row.
+	 * 
+	 * @return the object for the current row
+	 */
 	ExtendableObject getCurrentObject();
-	Object getValue(int columnIndex) throws OdaException;
 	
 	/**
 	 * Adds all properties in the rowset to the end
@@ -51,7 +61,7 @@ public interface IFetcher {
 	 * 
 	 * @param selectedProperties
 	 */
-	void addSelectedProperties(Vector<ScalarPropertyAccessor> selectedProperties);
+	void buildColumnList(Vector<Column> selectedProperties);
 
 	/**
 	 * Adds all parameters used by the fetcher to the end
@@ -59,7 +69,7 @@ public interface IFetcher {
 	 * 
 	 * @param parameters
 	 */
-	void addParameters(Vector<ParameterData> parameters);
+	void buildParameterList(Vector<Parameter> parameters);
 	
 	/**
 	 * Gets the property set for the type of objects that are returned in this
