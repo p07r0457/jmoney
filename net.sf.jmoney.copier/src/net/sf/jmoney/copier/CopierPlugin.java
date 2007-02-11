@@ -5,8 +5,12 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.SessionInfo;
+import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
@@ -14,7 +18,6 @@ import net.sf.jmoney.model2.ExtensionPropertySet;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
@@ -100,22 +103,61 @@ public class CopierPlugin extends AbstractUIPlugin {
 	}
 	
     /**
-     * Copy the contents of one session to another.
-     *
-     * The two sessions may be interfaces into different implementations.
-     * This is therefore more than just a deep copy.  It is a conversion.
-     */
+	 * Copy the contents of one session to another.
+	 * 
+	 * The two sessions may be interfaces into different implementations. This
+	 * is therefore more than just a deep copy. It is a conversion.
+	 * 
+	 * The entire copy is done in a single transaction because there may be
+	 * constraints that will be violated at intermediate points otherwise. This
+	 * does take a lot of memory but this does not appear to be a problem even
+	 * with quite large datastores.
+	 */
     public void populateSession(Session newSession, Session oldSession) {
+    	/*
+		 * We want to clear the old default currency. However, we cannot delete
+		 * the currency until the default currency in the session has been set
+		 * to something else (and we cannot set the default currency to null
+		 * because the default currency is required to be non-null). We
+		 * therefore save the default currency and delete it after the new data
+		 * has been copied in.
+		 */
+    	TransactionManager transaction = new TransactionManager(newSession.getObjectKey().getSessionManager());
+    	Session newSessionInTrans = transaction.getSession();
+    	
+    	Currency previousDefaultCurrency = newSessionInTrans.getDefaultCurrency(); 
+    	
         Map<Object, Object> objectMap = new Hashtable<Object, Object>();
         
-        ExtendablePropertySet propertySet = PropertySet.getPropertySet(oldSession.getClass());
-    	populateObject(propertySet, oldSession, newSession, objectMap);
+    	populateObject(SessionInfo.getPropertySet(), oldSession, newSessionInTrans, objectMap);
+
+    	/*
+    	 * Now we can delete the previous default currency.
+    	 */
+    	newSessionInTrans.deleteCommodity(previousDefaultCurrency);
+    	
+    	transaction.commit();
     }
 
     private void populateObject(ExtendablePropertySet<?> propertySet, ExtendableObject oldObject, ExtendableObject newObject, Map<Object, Object> objectMap) {
-    	// For all non-extension properties (including properties
-    	// in base classes), read the property value from the
-    	// old object and write it to the new object.
+    	/*
+		 * For all non-extension properties (including properties in base
+		 * classes), read the property value from the old object and write it to
+		 * the new object.
+		 * 
+		 * The list properties are copied before the scalar properties. This
+		 * helps to solve the problem where a scalar property that references an
+		 * extendable object is copied, but the referenced object has not yet
+		 * been copied. The copy of the object will thus not yet exist and will
+		 * not be in the object map.
+		 */
+
+    	// The list properties
+    	for (ListPropertyAccessor<?> listAccessor: propertySet.getListProperties3()) {
+    		if (!listAccessor.getPropertySet().isExtension()) {
+				copyList(newObject, oldObject, listAccessor, objectMap);
+    		}
+    	}
     	
     	// The scalar properties
     	for (ScalarPropertyAccessor<?> scalarAccessor: propertySet.getScalarProperties3()) {
@@ -124,16 +166,11 @@ public class CopierPlugin extends AbstractUIPlugin {
     		}
     	}
     	
-    	// The list properties
-    	for (ListPropertyAccessor<?> listAccessor: propertySet.getListProperties3()) {
-    		if (!listAccessor.getPropertySet().isExtension()) {
-				copyList(newObject, oldObject, listAccessor, objectMap);
-    		}
-    	}
-    	
-    	// Now copy the extensions.  This is done by looping through the extensions
-    	// in the old object and, for every extension that exists in the old object,
-    	// copy the properties to the new object.
+    	/*
+		 * Now copy the extensions. This is done by looping through the
+		 * extensions in the old object and, for every extension that exists in
+		 * the old object, copy the properties to the new object.
+		 */
     	for (ExtensionPropertySet<?> extensionPropertySet: oldObject.getExtensions()) {
     		for (PropertyAccessor propertyAccessor: extensionPropertySet.getProperties1()) {
     			if (propertyAccessor.isScalar()) {
@@ -162,6 +199,7 @@ public class CopierPlugin extends AbstractUIPlugin {
     		V newValue;
     		if (oldValue instanceof ExtendableObject) {
     			newValue = (V)propertyAccessor.getClassOfValueObject().cast(objectMap.get(oldValue));
+    			JMoneyPlugin.myAssert(newValue != null);
     		} else {
     			newValue = oldValue;
     		}
