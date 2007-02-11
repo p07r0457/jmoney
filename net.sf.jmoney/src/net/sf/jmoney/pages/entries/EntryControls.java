@@ -428,7 +428,6 @@ class EntryControls {
 
    		for (ScalarPropertyAccessor propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
 			if (propertyAccessor.isEditable()
-					&& propertyAccessor.isScalar()
 					&& propertyAccessor != EntryInfo.getAccountAccessor() 
 					&& propertyAccessor != EntryInfo.getAmountAccessor()
 					&& propertyAccessor != EntryInfo.getDescriptionAccessor()
@@ -438,7 +437,8 @@ class EntryControls {
 							boolean isApplicable(Account account) {
 								return account instanceof CapitalAccount;
 							}
-						});
+						}
+					);
 			}
 		}
 		
