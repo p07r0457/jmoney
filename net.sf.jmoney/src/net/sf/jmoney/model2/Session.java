@@ -77,9 +77,9 @@ public class Session extends ExtendableObject implements IAdaptable {
     	this.transactions = transactions;
     	this.defaultCurrencyKey = defaultCurrencyKey;
     	
-        // Set up a hash table that maps currency codes to
-        // the currency object.
-    	// It may be that no 
+        /*
+		 * Set up a hash table that maps currency codes to the currency object.
+		 */
     	this.currencies = new Hashtable<String, Currency>();
     	for (Commodity commodity: commodities) {
     		if (commodity instanceof Currency) {

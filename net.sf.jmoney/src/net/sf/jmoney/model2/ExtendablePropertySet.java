@@ -125,26 +125,21 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 
 		/*
 		 * Add to the map that maps the extendable classes to the extendable
-		 * property sets. Only final property sets (ones which do not define an
-		 * enumerated type to control derived classes) are put in the map. This
-		 * is important because when we are looking for the property set for an
-		 * instance of an object, we want to be sure we find only the final
-		 * property set for that object.
+		 * property sets. Both final and derived property sets are put in this
+		 * map.
 		 */
-		if (!derivable) {
-			if (classToPropertySetMap.containsKey(classOfObject)) {
-				throw new MalformedPluginException("More than one property set uses " + classOfObject + " as the Java implementation class.");
-			}
-			classToPropertySetMap.put(classOfObject, this);
-
-			pageExtensions = new Vector<PageEntry>();
+		if (classToPropertySetMap.containsKey(classOfObject)) {
+			throw new MalformedPluginException("More than one property set uses " + classOfObject + " as the Java implementation class.");
 		}
+		classToPropertySetMap.put(classOfObject, this);
 
 		if (basePropertySet != null && !basePropertySet.isDerivable()) {
 			throw new MalformedPluginException(basePropertySet.getImplementationClass().getName() + " is a base property for " + propertySetId + ".  However, " + basePropertySet.getImplementationClass().getName() + " is not derivable (setDerivable() has not been called from the IPropertySetInfo implementation).");
 		}
 
 		if (!derivable) {
+			pageExtensions = new Vector<PageEntry>();
+
 			// Add this property set to the list of derived property sets
 			// for this and all the base classes.
 			for (ExtendablePropertySet<? super E> base = this; base != null; base = base.getBasePropertySet()) {
@@ -414,6 +409,16 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 		return properties2;
 	}
 
+	/**
+	 * Returns the set of all scalar properties (i.e. list properties are
+	 * excluded) of the given set of property sets, including both properties in
+	 * the extendable object and properties in extension property sets.
+	 * <P>
+	 * Properties from base property sets and properties from derived property
+	 * sets are not returned.
+	 * 
+	 * @return a collection of <code>PropertyAccessor</code> objects
+	 */
 	public Collection<ScalarPropertyAccessor> getScalarProperties2() {
 		if (scalarProperties2 == null) {
 			scalarProperties2 = new Vector<ScalarPropertyAccessor>();
@@ -434,6 +439,16 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 		return scalarProperties2;
 	}
 
+	/**
+	 * Returns the set of all list properties (i.e. scalar properties are
+	 * excluded) of the given set of property sets, including both properties in
+	 * the extendable object and properties in extension property sets.
+	 * <P>
+	 * Properties from base property sets and properties from derived property
+	 * sets are not returned.
+	 * 
+	 * @return a collection of <code>PropertyAccessor</code> objects
+	 */
 	public Collection<ListPropertyAccessor> getListProperties2() {
 		if (listProperties2 == null) {
 			listProperties2 = new Vector<ListPropertyAccessor>();
@@ -455,81 +470,81 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	}
 
 	/**
-	 * Returns an iterator which iterates over all properties
-	 * of the given set of property sets, including all
-	 * extension properties, and all base properties including
-	 * all extension properties to the base property sets.
+	 * Returns the set of all properties of the given set of property sets,
+	 * including properties in the extendable object, properties in extension
+	 * property sets, and all properties in the base property sets including all
+	 * extension properties to the base property sets.
 	 * <P>
-	 * This is the set of properties that can be set against
-	 * an object that implements this property set.
+	 * This is the set of properties that can be set against an object that
+	 * implements this property set.
 	 * <P>
-	 * Properties are returned with the properties from the
-	 * base-most class first, then properties from the class
-	 * immediately derived from the base-most class, and so
-	 * on with the properties from this property set being
-	 * last.  This order gives the most intuitive order from
-	 * the user's perspective.  This order also ensures that
-	 * a property in a base class has the same index in the returned order,
-	 * regardless of the actual derived property set.
-	 * 
-	 * @ return An iterator which iterates over a set of
-	 * 		<code>PropertyAccessor</code> objects.
+	 * Properties are returned with the properties from the base-most class
+	 * first, then properties from the class immediately derived from the
+	 * base-most class, and so on with the properties from this property set
+	 * being last. This order gives the most intuitive order from the user's
+	 * perspective. This order also ensures that a property in a base class has
+	 * the same index in the returned order, regardless of the actual derived
+	 * property set.
 	 */
 	public Collection<PropertyAccessor> getProperties3() {
 		if (properties3 == null) {
-			Vector<PropertyAccessor> v = new Vector<PropertyAccessor>();
+			properties3 = new Vector<PropertyAccessor>();
 
 			// Properties in this and all the base property sets
 			ExtendablePropertySet<?> extendablePropertySet = this;
 			do {
 				int index= 0;
 				for (PropertyAccessor propertyAccessor: extendablePropertySet.getProperties2()) {
-					v.insertElementAt(propertyAccessor, index++);
+					properties3.insertElementAt(propertyAccessor, index++);
 				}
 				extendablePropertySet = extendablePropertySet.getBasePropertySet();
 			} while (extendablePropertySet != null);
-
-			properties3 = v;
 		}
 
 		return properties3;
 	}
 
+	/**
+	 * Returns the same set of properties as the <code>getProperties3</code>
+	 * method but the returned collection includes only the scalar properties
+	 * (i.e. list properties are excluded).
+	 */
 	public Collection<ScalarPropertyAccessor> getScalarProperties3() {
 		if (scalarProperties3 == null) {
-			Vector<ScalarPropertyAccessor> v = new Vector<ScalarPropertyAccessor>();
+			scalarProperties3 = new Vector<ScalarPropertyAccessor>();
 
 			// Properties in this and all the base property sets
 			ExtendablePropertySet<?> extendablePropertySet = this;
 			do {
 				int index= 0;
 				for (ScalarPropertyAccessor propertyAccessor: extendablePropertySet.getScalarProperties2()) {
-					v.insertElementAt(propertyAccessor, index++);
+					scalarProperties3.insertElementAt(propertyAccessor, index++);
 				}
 				extendablePropertySet = extendablePropertySet.getBasePropertySet();
 			} while (extendablePropertySet != null);
-
-			scalarProperties3 = v;
 		}
 
 		return scalarProperties3;
 	}
 
+	/**
+	 * Returns the same set of properties as the <code>getProperties3</code>
+	 * method but the returned collection includes only the list properties
+	 * (i.e. scalar properties are excluded).
+	 */
 	public Collection<ListPropertyAccessor> getListProperties3() {
 		if (listProperties3 == null) {
-			Vector<ListPropertyAccessor> v = new Vector<ListPropertyAccessor>();
+			listProperties3 = new Vector<ListPropertyAccessor>();
 
 			// Properties in this and all the base property sets
 			ExtendablePropertySet<?> extendablePropertySet = this;
 			do {
 				int index= 0;
 				for (ListPropertyAccessor propertyAccessor: extendablePropertySet.getListProperties2()) {
-					v.insertElementAt(propertyAccessor, index++);
+					listProperties3.insertElementAt(propertyAccessor, index++);
 				}
 				extendablePropertySet = extendablePropertySet.getBasePropertySet();
 			} while (extendablePropertySet != null);
-
-			listProperties3 = v;
 		}
 
 		return listProperties3;

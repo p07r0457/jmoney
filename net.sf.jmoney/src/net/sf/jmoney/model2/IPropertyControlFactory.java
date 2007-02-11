@@ -89,6 +89,9 @@ public interface IPropertyControlFactory<V> {
 	 * 			edit the property, false if the user cannot edit
 	 * 			the property
 	 */
+	// TODO: Determine if this method should be removed.  If a property
+	// is not to be edited then a non-editable control, such as a Label,
+	// can be created as the editing control.
 	boolean isEditable();
 
 	/**

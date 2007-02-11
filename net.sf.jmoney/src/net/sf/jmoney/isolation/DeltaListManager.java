@@ -186,8 +186,9 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		// Construct the extendable object using the 'full' constructor.
 		// This constructor takes a parameter for every property in the object.
 		
-		// TODO: This code could be simplified by making better use
-		// of getIndexIntoScalarProperties().  We only need one loop.
+		// TODO: This code is not very efficient because it creates extension objects
+		// in the new object even if none existed in the original object (all properties
+		// in the extension having default values).
 		
 		int valuesIndex = 0;
 		for (PropertyAccessor propertyAccessor: propertySet.getProperties3()) {

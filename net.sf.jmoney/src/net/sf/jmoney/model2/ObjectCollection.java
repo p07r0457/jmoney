@@ -147,31 +147,40 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	 * 			false if the object was not in the collection
 	 */
 	public boolean remove(Object object) {
-		for (E extendableObject: this) {
-			if (extendableObject == object) {
-				final E objectToRemove = extendableObject;
-				
-				/*
-				 * Deletion events are fired before the object is removed from the
-				 * datastore. This is necessary because listeners processing the
-				 * object deletion may need to fetch information about the object
-				 * from the datastore.
-				 */
-				parent.getObjectKey().getSessionManager().fireEvent(
-						new ISessionChangeFirer() {
-							public void fire(SessionChangeListener listener) {
-								listener.objectRemoved(objectToRemove);
-							}
-						});
-				
-				// Notify the change manager.
-				parent.getSession().getChangeManager().processObjectDeletion(parent, listPropertyAccessor, objectToRemove);
-				
-				boolean found = listManager.remove(object);
-				JMoneyPlugin.myAssert(found);
-				
-				return true;
-			}
+		if (!(object instanceof ExtendableObject)) {
+			return false;
+		}
+		
+		ExtendableObject extendableObject = (ExtendableObject)object;
+		
+		// TODO: We should check the containing list property too, as it
+		// is possible that there is more than one list in a given parent
+		// that is able to contain the object (though this is not possible
+		// in the core JMoney schema).
+		
+		if (extendableObject.parentKey.equals(parent.objectKey)) {
+			final E objectToRemove = (E)this.listPropertyAccessor.getElementPropertySet().getImplementationClass().cast(extendableObject);
+
+			/*
+			 * Deletion events are fired before the object is removed from the
+			 * datastore. This is necessary because listeners processing the
+			 * object deletion may need to fetch information about the object
+			 * from the datastore.
+			 */
+			parent.getObjectKey().getSessionManager().fireEvent(
+					new ISessionChangeFirer() {
+						public void fire(SessionChangeListener listener) {
+							listener.objectRemoved(objectToRemove);
+						}
+					});
+			
+			// Notify the change manager.
+			parent.getSession().getChangeManager().processObjectDeletion(parent, listPropertyAccessor, objectToRemove);
+			
+			boolean found = listManager.remove(object);
+			JMoneyPlugin.myAssert(found);
+			
+			return true;
 		}
 
 		// Object was not in the collection
