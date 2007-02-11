@@ -33,7 +33,10 @@ import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Text;
 
 /**
  * Provides the metadata for the extra properties added to each
@@ -75,9 +78,39 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 		};
 
 		IPropertyControlFactory<BankStatement> statementControlFactory = new PropertyControlFactory<BankStatement>() {
-			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<BankStatement> propertyAccessor, Session session) {
-				// Property is not editable
-				return null;
+			public IPropertyControl createPropertyControl(Composite parent, final ScalarPropertyAccessor<BankStatement> propertyAccessor, Session session) {
+		        final Text control = new Text(parent, SWT.NONE);
+		        return new IPropertyControl() {
+
+		        	private ExtendableObject object;
+		        	
+					public Control getControl() {
+						return control;
+					}
+
+					public void load(ExtendableObject object) {
+						this.object = object;
+						BankStatement statement = object.getPropertyValue(propertyAccessor);
+						if (statement == null) {
+							control.setText("");
+						} else {
+							control.setText(statement.toString());
+						}
+					}
+
+					public void save() {
+						// TODO: make this more robust.
+						// And the control is better if a Combo.
+						String text = control.getText();
+						BankStatement value;
+						if (text.length() == 0) {
+							value = null;
+						} else {
+							value = new BankStatement(control.getText());
+						}
+						object.setPropertyValue(propertyAccessor, value);
+					}
+		        };
 			}
 
 			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends BankStatement> propertyAccessor) {
@@ -104,7 +137,7 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 			}
 
 			public boolean isEditable() {
-				return false;
+				return true;
 			}
 		};
 		
