@@ -20,9 +20,18 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		
     	store.setDefault("promptEachTime", true);
 		store.setDefault("driverOption", "Other");
+/*
+		// Values for HSQL
 		store.setDefault("driver", "org.hsqldb.jdbcDriver");
 		store.setDefault("subProtocol", "hsqldb");
 		store.setDefault("subProtocolData", "hsql://localhost/accounts");
+		store.setDefault("user", "sa");
+		store.setDefault("password", "");
+*/		
+		// Values for MS SQL Express
+		store.setDefault("driver", "net.sourceforge.jtds.jdbc.Driver");
+		store.setDefault("subProtocol", "jtds");
+		store.setDefault("subProtocolData", "sqlserver://localhost/jmoneyaccounts;instance=SQLEXPRESS");
 		store.setDefault("user", "sa");
 		store.setDefault("password", "");
 	}

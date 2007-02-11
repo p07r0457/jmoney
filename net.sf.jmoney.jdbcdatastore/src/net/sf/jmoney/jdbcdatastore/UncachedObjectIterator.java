@@ -24,11 +24,11 @@ package net.sf.jmoney.jdbcdatastore;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Iterator;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.IObjectKey;
 
 /**
  * Class that iterates over a set of objects when the objects
@@ -38,29 +38,44 @@ import net.sf.jmoney.model2.IObjectKey;
  * that contains the properties for a set of objects to be iterated.
  * This class implements the Iterator interface and will return
  * the set of ExtendableObject objects.
- *
+ * <P>
+ * Derivable property sets are not supported by this class; the
+ * property set must be a final property set.  At the time of
+ * writing, this class is used for the Transaction property
+ * set only.
+ * 
  * @author Nigel Westbury
  */
 class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> {
 	private ResultSet resultSet;
 	private ExtendablePropertySet<E> propertySet;
-	private IObjectKey parentKey;
+	private IDatabaseRowKey parentKey;
 	private SessionManager sessionManager;
 	private boolean isAnother;
 
 	/**
+	 * It is the responsibility of this iterator to close both the result set
+	 * and the statement when the iterator is done.
+	 * 
+	 * There is a problem in that if the user of this iterator does not do a
+	 * complete iteration of all elements then the result set and statement are
+	 * never closed. We could guard against this by closing these when this
+	 * iterator is garbage collected. However, for time being we just make it a
+	 * requirement that the iteration is always completed.
 	 * 
 	 * @param resultSet
 	 * @param propertySet
-	 * @param parentKey The caller may pass a null parent key.
-	 * 			In that case, a new parent key will be generated
-	 * 			for each object in the list.  If all the objects
-	 * 			in the list have the same parent then pass this
-	 * 			parent.  If the objects in the list have different
-	 * 			parents then pass null.
+	 *            The property set for the objects in this list, which must be
+	 *            final (cannot be a derivable property set)
+	 * @param parentKey
+	 *            The caller may pass a null parent key. In that case, a new
+	 *            parent key will be generated for each object in the list. If
+	 *            all the objects in the list have the same parent then pass
+	 *            this parent. If the objects in the list have different parents
+	 *            then pass null.
 	 * @param sessionManager
 	 */
-	UncachedObjectIterator(ResultSet resultSet, ExtendablePropertySet<E> propertySet, IObjectKey parentKey, SessionManager sessionManager) {
+	UncachedObjectIterator(ResultSet resultSet, ExtendablePropertySet<E> propertySet, IDatabaseRowKey parentKey, SessionManager sessionManager) {
 		this.resultSet = resultSet;
 		this.propertySet = propertySet;
 		this.parentKey = parentKey;
@@ -79,28 +94,38 @@ class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> 
 		return isAnother;
 	}
 	
-	// TODO: This method is not complete.
-	// It will not work if the list contains a list of objects
-	// of a particular property set, but that property set is
-	// a derivable property set.  To materialize the actual
-	// objects, we need to query the rows from the tables for
-	// the derived property sets appropriate for each object.
 	public E next() {
 		try {
-			int id = resultSet.getInt("_ID");
-			ObjectKeyCached key = new ObjectKeyCached(id, sessionManager);
-			
-			E extendableObject;
+			/*
+			 * If parentKey is null then objects in this collection have
+			 * different parents. In that case we must build a parent key for
+			 * each object. No additional database access is necessary to do
+			 * this because the foreign keys to the parent rows will be in the
+			 * result set.
+			 */
+			IDatabaseRowKey parentKey2;
 			if (parentKey == null) {
-				extendableObject = JDBCDatastorePlugin.materializeObject(resultSet, propertySet, key, sessionManager);
+				parentKey2 = sessionManager.buildParentKey(resultSet, propertySet);
 			} else {
-				extendableObject = JDBCDatastorePlugin.materializeObject(resultSet, propertySet, key, parentKey, sessionManager);
+				parentKey2 = parentKey;
 			}
-
-			key.setObject(extendableObject);
+			
+			ObjectKey key = new ObjectKey(resultSet, propertySet, parentKey2, sessionManager);
+			E extendableObject = propertySet.getImplementationClass().cast(key.getObject());
 			
 			// Rowset must be left positioned on the following row.
 			isAnother = resultSet.next();
+			
+			/*
+			 * We have reached the end, so close the statement and result
+			 * set now.  (It is the responsibility of this iterator to do
+			 * so).
+			 */
+			if (!isAnother) {
+				Statement statement = resultSet.getStatement();
+				resultSet.close();
+				statement.close();
+			}
 			
 			return extendableObject;
 		} catch (SQLException e3) {

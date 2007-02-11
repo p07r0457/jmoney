@@ -24,7 +24,6 @@ package net.sf.jmoney.jdbcdatastore;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -46,53 +45,57 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 	private SessionManager sessionManager;
 	private ListPropertyAccessor<E> listProperty;
 	
-	public ListManagerUncached(IDatabaseRowKey parentKey, SessionManager sessionManager, ListPropertyAccessor<E> listProperty) {
+	public ListManagerUncached(SessionManager sessionManager, IDatabaseRowKey parentKey, ListPropertyAccessor<E> listProperty) {
 		this.parentKey = parentKey;
 		this.sessionManager = sessionManager;
 		this.listProperty = listProperty;
 	}
 	
 	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
- 		// First build the in-memory object.  Even though the object is not
-		// cached in the object key, the object must be constructed to get
-		// the default values to be written to the database and the
-		// object must be constructed so it can be returned to the caller.
+ 		/*
+		 * First build the in-memory object. Even though the object is not
+		 * cached in the parent list property, the object must be constructed to
+		 * get the default values to be written to the database and the object
+		 * must be constructed so it can be returned to the caller.
+		 */
+		ObjectKey objectKey = new ObjectKey(sessionManager);
 		
-		ObjectKeyUncached objectKey = new ObjectKeyUncached(-1, listProperty.getElementPropertySet(), sessionManager);
-		
-		// If an object is not cached, then neither are
-		// any lists in the object.  i.e. do not materialized
-		// the objects in a list just because the owning object
-		// is materialized.
+		/*
+		 * Constructing the object means constructing the object key. Both
+		 * contain a reference to the other, so they have the same lifetime.
+		 */
 
-		F extendableObject = JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, false);
+		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent, false);
+		objectKey.setObject(extendableObject);
 		
 		// Insert the new object into the tables.
 		
-		int rowId = JDBCDatastorePlugin.insertIntoDatabase(propertySet, extendableObject, listProperty, parent, sessionManager);
+		int rowId = sessionManager.insertIntoDatabase(propertySet, extendableObject, listProperty, parent);
 		objectKey.setRowId(rowId);
 		
 		return extendableObject;
 	}
 	
 	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, Object[] values) {
- 		// First build the in-memory object.  Even though the object is not
-		// cached in the object key, the object must be constructed to get
-		// the default values to be written to the database and the
-		// object must be constructed so it can be returned to the caller.
+ 		/*
+		 * First build the in-memory object. Even though the object is not
+		 * cached in the parent list property, the object must be constructed to
+		 * get the default values to be written to the database and the object
+		 * must be constructed so it can be returned to the caller.
+		 */
+		ObjectKey objectKey = new ObjectKey(sessionManager);
 		
-		ObjectKeyUncached objectKey = new ObjectKeyUncached(-1, listProperty.getElementPropertySet(), sessionManager);
-		
-		// If an object is not cached, then neither are
-		// any lists in the object.  i.e. do not materialized
-		// the objects in a list just because the owning object
-		// is materialized.
+		/*
+		 * Constructing the object means constructing the object key. Both
+		 * contain a reference to the other, so they have the same lifetime.
+		 */
 
-		F extendableObject = JDBCDatastorePlugin.constructExtendableObject(propertySet, sessionManager, objectKey, parent, false, values);
+		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent, false, values);
+		objectKey.setObject(extendableObject);
 		
 		// Insert the new object into the tables.
 		
-		int rowId = JDBCDatastorePlugin.insertIntoDatabase(propertySet, extendableObject, listProperty, parent, sessionManager);
+		int rowId = sessionManager.insertIntoDatabase(propertySet, extendableObject, listProperty, parent);
 		objectKey.setRowId(rowId);
 		
 		return extendableObject;
@@ -124,50 +127,23 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 	}
 
 	public Iterator<E> iterator() {
-		// We execute a SQL statement and pass to result set
-		// to an UncachedObjectIterator object which will return
-		// the entries in the result set.  However, we must
-		// create a new statement as the iterator is being
-		// returned from this method call.
-
-		// If the type of object held by the list is a type
-		// from which property sets must be derived then it takes
-		// two steps to fetch the results.  We first submit a query
-		// fetching the result set that includes columns from this
-		// and any base tables.  The iterator must then join the results
-		// with data from the appropriate derived tables as it
-		// reads each row.
-		
-		// Some databases (e.g. HDBSQL) execute queries faster
-		// if JOIN ON is used rather than a WHERE clause, and
-		// will also execute faster if the smallest table is
-		// put first.  The smallest table in this case is the
-		// table represented by typedPropertySet and the larger
-		// tables are the base tables.
-		
-		String tableName = listProperty.getElementPropertySet().getId().replace('.', '_');
-		String sql = "SELECT * FROM " + tableName;
-		for (ExtendablePropertySet propertySet2 = listProperty.getElementPropertySet().getBasePropertySet(); propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
-			String tableName2 = propertySet2.getId().replace('.', '_');
-			sql += " JOIN " + tableName2
-					+ " ON " + tableName + "._ID = " + tableName2 + "._ID";
-		}
-		
-		// Add the WHERE clause.
-		// There is a parent column with the same name as the name of
-		// the list property.  Only if the number in this column is the
-		// same as the id of the owner of this list is the object in this
-		// list.
-		
-		// We do not want rows where the value of the parent column is
-		// null to be returned, so use IFNULL.
-		
-		sql += " WHERE IFNULL(\"" + listProperty.getName().replace('.', '_')
-				+ "\", -1) = " +  + parentKey.getRowId();
-		
+		/*
+		 * We execute a SQL statement and pass the result set to an
+		 * UncachedObjectIterator object which will return the entries in the
+		 * result set. However, we must create a new statement because the
+		 * iterator is being returned from this method call.
+		 * 
+		 * This class only supports lists where the element type is a final
+		 * property set. Therefore we know the exact type of every element in
+		 * the list before we execute any query. This saves us from having to
+		 * iterate over the final property sets (like the ListManagerCached
+		 * object has to).
+		 * 
+		 * The UnchachedObjectIterator is reponsible for closing the result set
+		 * and the associated statement.
+		 */		
 		try {
-			Statement stmt = sessionManager.getConnection().createStatement();
-			ResultSet resultSet = stmt.executeQuery(sql);
+			ResultSet resultSet = sessionManager.executeListQuery(parentKey, listProperty, listProperty.getElementPropertySet());
 			return new UncachedObjectIterator<E>(resultSet, listProperty.getElementPropertySet(), parentKey, sessionManager);
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -191,7 +167,7 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		// Delete this object from the database.
 		ExtendableObject extendableObject = (ExtendableObject)o;
 		IDatabaseRowKey key = (IDatabaseRowKey)extendableObject.getObjectKey();
-		return JDBCDatastorePlugin.deleteFromDatabase(key.getRowId(), extendableObject, sessionManager);
+		return sessionManager.deleteFromDatabase(key.getRowId(), extendableObject);
 	}
 
 	public boolean containsAll(Collection<?> arg0) {

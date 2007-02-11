@@ -22,15 +22,25 @@
 
 package net.sf.jmoney.jdbcdatastore;
 
+import java.lang.ref.WeakReference;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
+import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrencyAccount;
@@ -39,9 +49,12 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IEntryQueries;
+import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.ui.IMemento;
@@ -55,11 +68,22 @@ import org.eclipse.ui.IWorkbenchWindow;
  */
 public class SessionManager extends DatastoreManager implements IEntryQueries {
 	
+	/**
+	 * Date format used for embedding dates in SQL statements:
+	 * yyyy-MM-dd
+	 */
+	private static SimpleDateFormat dateFormat = (SimpleDateFormat) DateFormat.getDateInstance();
+	static {
+		dateFormat.applyPattern("yyyy-MM-dd");
+	}
+
+	static boolean isHsql = false;
+	
 	private Connection connection;
 	
 	private Statement reusableStatement;
 	
-	private IObjectKey sessionKey;
+	private IDatabaseRowKey sessionKey;
 	
 	/**
 	 * For each <code>PropertySet</code> for which objects are required
@@ -72,18 +96,147 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * derived property set are put in the map for the base property
 	 * set.
 	 */
-	private Map<PropertySet, Map<Integer, ? extends ExtendableObject>> mapOfCachedObjectMaps = new HashMap<PropertySet, Map<Integer, ? extends ExtendableObject>>();
+	private Map<ExtendablePropertySet, Map<Integer, WeakReference<ExtendableObject>>> objectMaps = new HashMap<ExtendablePropertySet, Map<Integer, WeakReference<ExtendableObject>>>();
 	
-	public SessionManager(Connection connection, IObjectKey sessionKey) {
+	private class ParentList {
+		ParentList(ExtendablePropertySet<?> parentPropertySet, PropertyAccessor listProperty) {
+			this.parentPropertySet = parentPropertySet;
+			this.columnName = listProperty.getName().replace('.', '_');
+		}
+		
+		ExtendablePropertySet<?> parentPropertySet;
+		String columnName;
+	}
+	
+	/**
+	 * A map of PropertySet objects to non-null Vector objects.
+	 * Each Vector object is a list of ParentList objects.
+	 * An entry exists in this map for all property sets that are
+	 * not extension property sets.  For each property set, the
+	 * vector contains a list of the list properties in all property
+	 * sets that contain a list of objects of the property set.
+	 */
+	private Map<ExtendablePropertySet, Vector<ParentList>> tablesMap = null;
+	
+	public SessionManager(Connection connection) throws SQLException {
 		this.connection = connection;
-		this.sessionKey = sessionKey;
 
+		// Create a weak reference map for every base property set.
+		for (ExtendablePropertySet<?> propertySet: PropertySet.getAllExtendablePropertySets()) { 
+			if (propertySet.getBasePropertySet() == null) {
+				objectMaps.put(propertySet, new HashMap<Integer, WeakReference<ExtendableObject>>());
+			}
+		}
+		
 		try {
 			this.reusableStatement = connection.createStatement();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException("SQL Exception: " + e.getMessage());
 		}
+	
+		// Create a statement for our use.
+		Statement stmt = connection.createStatement();
+
+		/*
+		 * Find all properties in any property set that are a list of objects
+		 * with the type as this property set. A column must exist in this table
+		 * for each such property that exists in another property set.
+		 * 
+		 * The exception is that no such column exists if the list property is
+		 * in the session object (not including extentions of the session
+		 * object). This is an optimization that saves columns and works because
+		 * we know there is only ever a single session object.
+		 * 
+		 * The reason why extensions are not included is because we do not know
+		 * what lists may be added in extensions. A list may be added that
+		 * contains the same object type as one of the session lists. For
+		 * example, an extension to the session object may contain a list of
+		 * currencies. A parent column must exist in the currency table to
+		 * indicate if a currency is in such a list. Otherwise we would know the
+		 * currency is in a list property of the session object but we would not
+		 * know which list.
+		 */
+		tablesMap = new Hashtable<ExtendablePropertySet, Vector<ParentList>>();
+		for (ExtendablePropertySet propertySet: PropertySet.getAllExtendablePropertySets()) {
+			Vector<ParentList> list = new Vector<ParentList>();  // List of PropertyAccessors
+			for (ExtendablePropertySet<?> propertySet2: PropertySet.getAllExtendablePropertySets()) {
+				for (ListPropertyAccessor listAccessor: propertySet2.getListProperties2()) {
+					if (listAccessor.getPropertySet() != SessionInfo.getPropertySet()) {
+						if (propertySet.getImplementationClass() == listAccessor.getElementPropertySet().getImplementationClass()) {
+							// Add to the list of possible parents.
+							list.add(new ParentList(propertySet2, listAccessor));
+						}
+					}
+				}
+			}
+			tablesMap.put(propertySet, list);
+		}
+		
+		// Check that all the required tables and columns exist.
+		// Any missing tables or columns are created at this time.
+		checkDatabase(connection, stmt);
+		
+		/*
+		 * Create the single row in the session table, if it does not
+		 * already exist.  Create this row with default values for
+		 * the session properties. 
+		 */
+		String sql3 = "SELECT * FROM " 
+			+ SessionInfo.getPropertySet().getId().replace('.', '_');
+		ResultSet rs3 = stmt.executeQuery(sql3);
+		if (!rs3.next()) {
+
+			String sql = "INSERT INTO " 
+				+ SessionInfo.getPropertySet().getId().replace('.', '_')
+				+ " (";
+
+			String columnNames = "";
+			String columnValues = "";
+			String separator = "";
+
+			// HSQL requires the identity to be explicitly specified, I think.
+			// MS SQL does provide any method of explicitly specifying that
+			// a generated value should be inserted (that I know of), so it
+			// is left out.
+
+			if (false) {
+				columnNames = "_ID";
+				columnValues = "IDENTITY()";
+				separator = ", ";
+			}
+			
+			for (ScalarPropertyAccessor<?> propertyAccessor: SessionInfo.getPropertySet().getScalarProperties2()) {
+				String columnName = getColumnName(propertyAccessor);
+				Object value = propertyAccessor.getDefaultValue();
+				
+				columnNames += separator + "\"" + columnName + "\"";
+				columnValues += separator + valueToSQLText(value);
+
+				separator = ", ";
+			}
+
+			sql += columnNames + ") VALUES(" + columnValues + ")";
+
+			try {
+				System.out.println(sql);
+				stmt.execute(sql);
+			} catch (SQLException e) {
+				// TODO Handle this properly
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
+			}
+
+			// Now try again to get the session row.
+			rs3 = stmt.executeQuery(sql3);
+			rs3.next();
+		}
+		
+		// Now create the session object from the session database row
+		this.sessionKey = new ObjectKey(rs3, SessionInfo.getPropertySet(), null, this);
+		
+		rs3.close();
+		stmt.close();
 	}
 
 	public Session getSession() {
@@ -93,7 +246,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	/**
 	 * @return
 	 */
-	public IObjectKey getSessionKey() {
+	public IDatabaseRowKey getSessionKey() {
 		return sessionKey;
 	}
 
@@ -174,58 +327,1221 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		return null;
 	}
 	
+	public <E extends ExtendableObject> E getObjectIfMaterialized(ExtendablePropertySet<E> basemostPropertySet, int id) {
+		Map<Integer, WeakReference<ExtendableObject>> result = objectMaps.get(basemostPropertySet);
+		WeakReference<ExtendableObject> object = result.get(id);
+		if (object == null) {
+			// Indicate that the object is not cached.
+			return null;
+		} else {
+			return basemostPropertySet.getImplementationClass().cast(object.get());
+		}
+	}
+
+	public <E extends ExtendableObject> void setMaterializedObject(ExtendablePropertySet<E> propertySet, int id, E extendableObject) {
+		// TODO: it may be more efficient for the caller to do this????
+		ExtendablePropertySet<?> basePropertySet = propertySet; 
+		while (basePropertySet.getBasePropertySet() != null) {
+			basePropertySet = basePropertySet.getBasePropertySet();
+		}
+		
+		Map<Integer, WeakReference<ExtendableObject>> result = objectMaps.get(basePropertySet);
+		result.put(id, new WeakReference<ExtendableObject>(extendableObject));
+	}
+
 	/**
-	 * This method must not be called if the property set
-	 * or any base property set is already cached.
-	 * The results are unpredictable if the property set
-	 * is already cached (this method does not check).
+	 * This method builds a select statement that joins the table for a given
+	 * property set with all the ancestor tables.  This results in a result set
+	 * that contains all the columns necessary to construct the objects.
+	 * 
+	 * The caller would normally append a WHERE clause to the returned statement
+	 * before executing it.
 	 * 
 	 * @param propertySet
+	 * @return
+	 * @throws SQLException
 	 */
-	public <E extends ExtendableObject> void addCachedPropertySet(PropertySet<E> propertySet, Map<Integer, E> objectMap) {
-		mapOfCachedObjectMaps.put(propertySet, objectMap);
+	String buildJoins(ExtendablePropertySet finalPropertySet) {
+		/*
+		 * Some databases (e.g. HDBSQL) execute queries faster if JOIN ON is
+		 * used rather than a WHERE clause, and will also execute faster if the
+		 * smallest table is put first. The smallest table in this case is the
+		 * table represented by typedPropertySet and the larger tables are the
+		 * base tables.
+		 */
+		String tableName = finalPropertySet.getId().replace('.', '_');
+		String sql = "SELECT * FROM " + tableName;
+		for (ExtendablePropertySet propertySet2 = finalPropertySet.getBasePropertySet(); propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
+			String tableName2 = propertySet2.getId().replace('.', '_');
+			sql += " JOIN " + tableName2
+					+ " ON " + tableName + "._ID = " + tableName2 + "._ID";
+		}
+
+		return sql;
 	}
 	
 	/**
+	 * This method creates a new statement on each call.  This allows callers
+	 * to have multiple result sets active at the same time.
 	 * 
-	 * @param propertySet
-	 * @return If objects of the given property set are
-	 * 			cached, a map of integer id values to cached
-	 * 			objects; otherwise null.
+	 * listProperty may be a list of a derivable property set.  We thus will not
+	 * know the exact property set of each element in advance.  The caller must
+	 * pass an the actual property set (a final property set) and this method will
+	 * return a result set containing only elements of that property set and containing
+	 * columns for all properties of that result set.
+	 * 
+	 * @param parentKey
+	 * @param listProperty
+	 * @param finalPropertySet
+	 * @return
+	 * @throws SQLException
 	 */
-	public <E extends ExtendableObject> Map<Integer, E> getMapOfCachedObjects(ExtendablePropertySet<E> propertySet) {
+	ResultSet executeListQuery(IDatabaseRowKey parentKey, ListPropertyAccessor listProperty, ExtendablePropertySet finalPropertySet) throws SQLException {
+		String sql = buildJoins(finalPropertySet);
+		
+		/*
+		 * Add the WHERE clause. There is a parent column with the same name as
+		 * the name of the list property. Only if the number in this column is
+		 * the same as the id of the owner of this list is the object in this
+		 * list.
+		 * 
+		 * We do not want rows where the value of the parent column is null to
+		 * be returned, so use IFNULL.
+		 * 
+		 * However, note that there is an optimization.  If the parent object is
+		 * the session object then no such column will exist.  We instead check that all
+		 * the other parent columns (if any) are null. 
+		 */
+		if (listProperty.getPropertySet() == SessionInfo.getPropertySet()) {
+			String whereClause = "";
+			String separator = "";
+			for (ExtendablePropertySet propertySet = finalPropertySet; propertySet != null; propertySet = propertySet.getBasePropertySet()) {
+				Vector<ParentList> x = tablesMap.get(propertySet);
+				for (ParentList parentList: x) {
+					whereClause += separator + "ISNULL(\"" + parentList.columnName + "\",-1)=-1";
+					separator = " AND";
+				}
+			}
+			if (whereClause.length() != 0) {
+				sql += " WHERE " + whereClause;
+			}
+
+			Statement stmt = connection.createStatement();
+			System.out.println(sql);
+			return stmt.executeQuery(sql);
+		} else {
+//			HSQL used IFNULL.....  Perhaps it also supports ISNULL		
+			sql += " WHERE ISNULL(\"" + listProperty.getName().replace('.', '_')
+			+ "\", -1) = ?";
+
+			System.out.println(sql + " : " + parentKey.getRowId());
+
+			PreparedStatement stmt = connection.prepareStatement(sql);
+			stmt.setInt(1, parentKey.getRowId());
+			return stmt.executeQuery();
+		}
+	}
+	
+	/**
+	 * @param propertySet
+	 * @param values
+	 * @param listProperty
+	 * @param parent
+	 * @param sessionManager
+	 * 
+	 * @return The id of the inserted row
+	 */
+	public int insertIntoDatabase(ExtendablePropertySet propertySet, ExtendableObject newObject, ListPropertyAccessor listProperty, ExtendableObject parent) {
+		int rowId = -1;
+
+		// We must insert into the base table first, then the table for the objects
+		// derived from the base and so on.  The reason is that each derived table
+		// has a primary key field that is a foreign key into its base table.
+		// We can get the chain of property sets only by starting at the given 
+		// property set and repeatedly getting the base property set.  We must
+		// therefore store these so that we can loop through the property sets in
+		// the reverse order.
+		
+		Vector<ExtendablePropertySet> propertySets = new Vector<ExtendablePropertySet>();
 		for (ExtendablePropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
-			Map<Integer, E> result = (Map<Integer, E>)mapOfCachedObjectMaps.get(propertySet2);
-			if (result != null) {
-				return result;
+			propertySets.add(propertySet2);
+		}
+		
+		for (int index = propertySets.size()-1; index >= 0; index--) {
+			ExtendablePropertySet<?> propertySet2 = propertySets.get(index);
+			
+			String sql = "INSERT INTO " 
+				+ propertySet2.getId().replace('.', '_')
+				+ " (";
+			
+			String columnNames = "";
+			String columnValues = "";
+			String separator = "";
+			
+			// HSQL requires IDENTITY() I think, MS SQL does not allow it.
+			if (isHsql
+					&& index == propertySets.size()-1) {
+				columnNames = "_ID";
+				columnValues = "IDENTITY()";
+				separator = ", ";
+			}
+			
+			if (index != propertySets.size()-1) {
+				columnNames += separator + "_ID";
+				columnValues += separator + Integer.toString(rowId);
+				separator = ", ";
+			}
+			
+			for (ScalarPropertyAccessor<?> propertyAccessor: propertySet2.getScalarProperties2()) {
+				String columnName = getColumnName(propertyAccessor);
+
+				// Get the value from the passed property value array.
+				Object value = newObject.getPropertyValue(propertyAccessor);
+
+				columnNames += separator + "\"" + columnName + "\"";
+				columnValues += separator + valueToSQLText(value);
+
+				separator = ", ";
+			}
+
+			/* Set the parent id in the appropriate column.
+			 * 
+			 * If the containing list property is a property in one of the three
+			 * lists in the session object
+			 * then, as an optimization, there is no parent column.
+			 */
+			if (listProperty.getElementPropertySet() == propertySet2
+					&& listProperty.getPropertySet() != SessionInfo.getPropertySet()) {
+				IDatabaseRowKey parentKey = (IDatabaseRowKey)parent.getObjectKey();
+				String valueString = Integer.toString(parentKey.getRowId());
+				String parentColumnName = listProperty.getName().replace('.', '_');
+				columnNames += separator + "\"" + parentColumnName + "\"";
+				columnValues += separator + valueString;
+				separator = ", ";
+			}
+
+			// If the base-most property set and it is derivable, 
+			// the _PROPERTY_SET column must be set.
+			if (propertySet2.getBasePropertySet() == null
+			 && propertySet2.isDerivable()) {
+				columnNames += separator + "_PROPERTY_SET";
+				// Set to the id of the final
+				// (non-derivable) property set for this object.
+				PropertySet finalPropertySet = (PropertySet)propertySets.get(0); 
+				columnValues += separator + "\'" + finalPropertySet.getId() + "\'";
+				separator = ", ";
+			}
+			
+			sql += columnNames + ") VALUES(" + columnValues + ")";
+			
+			try {
+				System.out.println(sql);
+				// TODO: check if this works for HSQL.  HSQL does not require
+				// the second parameter but I do not know if it objects to
+				// it.
+				reusableStatement.execute(sql, Statement.RETURN_GENERATED_KEYS);
+
+				// Get the row id of the object.
+				// This is obtained after the row has been added
+				// to the base table.
+				if (index == propertySets.size()-1) {
+					ResultSet rs;
+					if (!isHsql) {
+						// The MS SQL server way
+						rs = reusableStatement.getGeneratedKeys();
+					} else {
+						// The HSQL way
+						rs = reusableStatement.executeQuery("CALL IDENTITY()");
+					}
+					rs.next();
+					rowId = rs.getInt(1);
+					rs.close();
+				}
+			} catch (SQLException e) {
+				// TODO Handle this properly
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
 			}
 		}
-		return null;
+
+		return rowId;
+	}
+
+	/**
+	 * Execute SQL UPDATE statements to update the database with
+	 * the new values of the properties of an object.
+	 * <P>
+	 * The SQL statements will verify the old values of the properties
+	 * in the WHERE clause.  If the database does not contain an object
+	 * with the expected old property values that an exception is raised,
+	 * causing the transaction to be rolled back.
+	 * 
+	 * @param rowId
+	 * @param oldValues
+	 * @param newValues
+	 * @param sessionManager
+	 */
+	public void updateProperties(ExtendablePropertySet propertySet, int rowId, Object[] oldValues, Object[] newValues) {
+		Statement stmt = getReusableStatement();
+
+		// The array of property values contains the properties from the
+		// base table first, then the table derived from that and so on.
+		// We therefore process the tables starting with the base table
+		// first.  This requires first copying the property sets into
+		// an array so that we can iterate them in reverse order.
+		Vector<ExtendablePropertySet> propertySets = new Vector<ExtendablePropertySet>();
+		for (ExtendablePropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
+			propertySets.add(propertySet2);
+		}
+		
+		int propertyIndex = 0;
+
+		for (int index = propertySets.size()-1; index >= 0; index--) {
+			ExtendablePropertySet<?> propertySet2 = propertySets.get(index);
+			
+			String sql = "UPDATE " 
+				+ propertySet2.getId().replace('.', '_')
+				+ " SET ";
+			
+			String updateClauses = "";
+			String whereTerms = "";
+			String separator = "";
+			
+			for (ScalarPropertyAccessor<?> propertyAccessor: propertySet2.getScalarProperties2()) {
+
+				if (propertyAccessor.getIndexIntoScalarProperties() != propertyIndex) {
+					throw new RuntimeException("index mismatch");
+				}
+				// See if the value of the property has changed.
+				Object oldValue = oldValues[propertyIndex];
+				Object newValue = newValues[propertyIndex];
+				propertyIndex++;
+
+				if (!JMoneyPlugin.areEqual(oldValue, newValue)) {
+					String columnName = getColumnName(propertyAccessor);
+
+					updateClauses += separator + "\"" + columnName + "\"=" + valueToSQLText(newValue);
+					
+					// These are random values that we just hope are not in the database.
+					// TODO: figure out a more reliable way to test for a null value.
+					Class valueClass = propertyAccessor.getClassOfValueObject();
+					String valueToUseIfNull;
+					if (valueClass == String.class
+							|| valueClass == char.class
+							|| valueClass == Character.class) {
+						valueToUseIfNull = "'eaon88euo.wxtnn'";
+					} else if (valueClass == Date.class) {
+						valueToUseIfNull = "'11/11/2989'";
+					} else if (valueClass == Boolean.class) {
+						valueToUseIfNull = "-4903480441";
+					} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
+						valueToUseIfNull = "-1";
+					} else if (Number.class.isAssignableFrom(valueClass)) {
+						valueToUseIfNull = "-4903480441";
+					} else {
+						/*
+						 * All other objects are serialized to a string.
+						 */
+						valueToUseIfNull = "'eaon88euo.wxtnn'";
+					}
+					
+					whereTerms += " AND ISNULL(\"" + columnName + "\", " + valueToUseIfNull + ")=" + (oldValue == null ? valueToUseIfNull : valueToSQLText(oldValue));
+
+					separator = ", ";
+				}
+			}
+			
+			// If no properties have been updated in a table then no update
+			// statement should be executed.
+			
+			if (!separator.equals("")) {
+				sql += updateClauses + " WHERE _ID=" + rowId + whereTerms;
+				
+				try {
+					System.out.println(sql);
+					stmt.executeUpdate(sql);
+				} catch (SQLException e) {
+					// TODO Handle this properly
+					e.printStackTrace();
+					throw new RuntimeException("internal error");
+				}
+			}
+		}
+	}
+
+	/**
+	 * Given a value of a property as an Object, return the text that 
+	 * represents the value in an SQL statement.
+	 * 
+	 * @param newValue
+	 * @return
+	 */
+	// TODO: If we always used prepared statements with parameters
+	// then we may not need this method at all.
+	private static String valueToSQLText(Object value) {
+		String valueString;
+		
+		if (value != null) {
+			Class valueClass = value.getClass();
+			if (valueClass == String.class
+					|| valueClass == char.class
+					|| valueClass == Character.class) {
+				valueString = '\'' + value.toString().replaceAll("'", "''") + '\'';
+			} else if (value instanceof Date) {
+				Date date = (Date)value;
+				valueString = '\'' + dateFormat.format(date) + '\'';
+			} else if (value instanceof Boolean) {
+				// MS SQL does not allow true and false,
+				// even though HSQL does.  So we cannot use toString.
+				Boolean bValue = (Boolean)value;
+				valueString = bValue.booleanValue() ? "1" : "0";
+			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
+				ExtendableObject extendableObject = (ExtendableObject)value;
+				IDatabaseRowKey key = (IDatabaseRowKey)extendableObject.getObjectKey();
+				valueString = Integer.toString(key.getRowId());
+			} else if (Number.class.isAssignableFrom(valueClass)) {
+				valueString = value.toString();
+			} else {
+				/*
+				 * All other objects are serialized to a string.
+				 */
+				valueString = '\'' + value.toString().replaceAll("'", "''") + '\'';
+			}
+		} else {
+			valueString = "NULL";
+		}
+
+		return valueString;
+	}
+
+	/**
+	 * Execute SQL DELETE statements to remove the given object, if present,
+	 * from the database.
+	 * 
+	 * @param rowId
+	 * @param extendableObject
+	 * @param sessionManager
+     * @return true if the object was present, false if the object
+     * 				was not present in the database.
+	 */
+// TODO: throw error if object is referenced.	
+	public boolean deleteFromDatabase(int rowId, ExtendableObject extendableObject) {
+		ExtendablePropertySet propertySet = PropertySet.getPropertySet(extendableObject.getClass()); 
+		
+		Statement stmt = getReusableStatement();
+
+		// Because each table for a derived class contains a foreign key
+		// constraint to the table for the base class, we must delete the rows
+		// starting with the most derived table and ending with the base-most
+		// table.
+		
+		// Alternatively, we could have set the 'CASCADE' option for delete
+		// in the database and just delete the row in the base-most table.
+		// However, it is perhaps safer not to use 'CASCADE'.
+		
+		for (ExtendablePropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
+			
+			String sql = "DELETE FROM " 
+				+ propertySet2.getId().replace('.', '_')
+				+ " WHERE _ID=" + rowId;
+			
+				try {
+					System.out.println(sql);
+					int rowCount = stmt.executeUpdate(sql);
+					if (rowCount != 1) {
+						if (rowCount == 0
+						 && propertySet2 == propertySet) {
+							// The object does not exist in the database.
+							// This is not an error, but we do return 'false'.
+							return false;
+						}
+						throw new RuntimeException("database is inconsistent");
+					}
+				} catch (SQLException e) {
+					// TODO Handle this properly
+					e.printStackTrace();
+					throw new RuntimeException("internal error");
+			}
+		}
+		
+		return true;
+	}
+
+	/**
+	 * Construct an object with default property values.
+	 * 
+	 * @param propertySet
+	 * @param sessionManager
+	 * @param objectKeyProxy The key to this object.  This is required by this
+	 * 			method because it must be passed to the constructor.
+	 * 			This method does not call the setObject or setRowId
+	 * 			methods on this key.  It is the caller's responsibility
+	 * 			to call these methods.
+	 * @param parent
+	 * @param constructWithCachedLists
+	 * @return
+	 */
+	public <E extends ExtendableObject> E constructExtendableObject(PropertySet<E> propertySet, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists) {
+		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
+		int numberOfParameters = constructorProperties.size();
+		if (!propertySet.isExtension()) {
+			numberOfParameters += 3;
+		}
+		Object[] constructorParameters = new Object[numberOfParameters];
+		
+		constructorParameters[0] = objectKey;
+		constructorParameters[1] = null;
+		constructorParameters[2] = parent.getObjectKey();
+	
+		// For all lists, set the Collection object to be a Vector.
+		// For all primative properties, get the value from the passed object.
+		// For all extendable objects, we get the property value from
+		// the passed object and then get the object key from that.
+		// This works because all objects must be in a list and that
+		// list owns the object, not us.
+		for (PropertyAccessor propertyAccessor: constructorProperties) {
+			int index = propertyAccessor.getIndexIntoConstructorParameters();
+			if (propertyAccessor.isScalar()) {
+				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor; 
+				
+				// Use the default value
+				Object value = scalarAccessor.getDefaultValue();
+				
+				if (value instanceof ExtendableObject) {
+					constructorParameters[index] = ((ExtendableObject)value).getObjectKey();
+				} else { 
+					constructorParameters[index] = value;
+				}
+			} else {
+				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor; 
+
+				// Must be an element in an array.
+				constructorParameters[index] = createListManager(objectKey, listAccessor, constructWithCachedLists);
+			}
+		}
+		
+		// We can now create the object.
+		E extendableObject = propertySet.constructImplementationObject(constructorParameters);
+		
+		return extendableObject;
+	}
+
+	private <E2 extends ExtendableObject> IListManager<E2> createListManager(IDatabaseRowKey objectKey, ListPropertyAccessor<E2> listAccessor, boolean constructWithCachedLists) {
+		if (constructWithCachedLists) {
+			return new ListManagerCached<E2>(this, objectKey, listAccessor);
+		} else {
+			return new ListManagerUncached<E2>(this, objectKey, listAccessor);
+		}
+	}
+
+	/**
+	 * Construct an object with the given property values.
+	 * 
+	 * @param propertySet
+	 * @param sessionManager
+	 * @param objectKeyProxy The key to this object.  This is required by this
+	 * 			method because it must be passed to the constructor.
+	 * 			This method does not call the setObject or setRowId
+	 * 			methods on this key.  It is the caller's responsibility
+	 * 			to call these methods.
+	 * @param parent
+	 * @param constructWithCachedLists
+	 * @param values the values of the scalar properties to be set into this object,
+	 * 			with ExtendableObject properties having the object key in this array 
+	 * @return
+	 */
+	public <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists, Object[] values) {
+		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
+		int numberOfParameters = constructorProperties.size();
+		if (!propertySet.isExtension()) {
+			numberOfParameters += 3;
+		}
+		Object[] constructorParameters = new Object[numberOfParameters];
+		
+		Map<PropertySet, Object[]> extensionMap = new HashMap<PropertySet, Object[]>();
+		
+		constructorParameters[0] = objectKey;
+		constructorParameters[1] = extensionMap;
+		constructorParameters[2] = parent.getObjectKey();
+		
+		// Construct the extendable object using the 'full' constructor.
+		// This constructor takes a parameter for every property in the object.
+		
+		// TODO: This code is not very efficient because it creates extension objects
+		// in the new object even if none existed in the original object (all properties
+		// in the extension having default values).
+		
+		int valuesIndex = 0;
+		for (PropertyAccessor propertyAccessor: propertySet.getProperties3()) {
+			
+			Object value;
+			if (propertyAccessor.isScalar()) {
+				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
+				if (valuesIndex != scalarAccessor.getIndexIntoScalarProperties()) {
+					throw new RuntimeException("index mismatch");
+				}
+				value = values[valuesIndex++];
+			} else {
+				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
+				value = createListManager(objectKey, listAccessor, constructWithCachedLists);
+			}
+			
+			// Determine how this value is passed to the constructor.
+			// If the property comes from an extension then we must set
+			// the property into an extension, otherwise we simply set
+			// the property into the constructor parameters.
+			if (!propertyAccessor.getPropertySet().isExtension()) {
+				constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
+			} else {
+				Object [] extensionConstructorParameters = extensionMap.get(propertyAccessor.getPropertySet());
+				if (extensionConstructorParameters == null) {
+					extensionConstructorParameters = new Object [propertyAccessor.getPropertySet().getConstructorProperties().size()];
+					extensionMap.put(propertyAccessor.getPropertySet(), extensionConstructorParameters);
+				}
+				extensionConstructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
+			}
+		}
+
+		// We can now create the object.
+		E extendableObject = propertySet.constructImplementationObject(constructorParameters);
+		
+		return extendableObject;
+	}
+
+	/**
+	 * Materialize an object from a row of data.
+	 * <P>
+	 * This version of this method should be called when
+	 * the caller knows the parent of the object to
+	 * be materialized (or at least, the key to the parent).
+	 * The parent key is passed to this method by the caller
+	 * and that saves this method from needing to build a
+	 * new parent key from the object's data in the database.
+	 *
+	 * @param rs
+	 * @param propertySet
+	 * @param key
+	 * @param parentKey
+	 * @param sessionManager
+	 * @return
+	 * @throws SQLException
+	 */ 
+	<E extends ExtendableObject> E materializeObject(ResultSet rs, ExtendablePropertySet<E> propertySet, IDatabaseRowKey key, IObjectKey parentKey) throws SQLException {
+		/**
+		 * The list of parameters to be passed to the constructor
+		 * of this object.
+		 */
+		Object[] constructorParameters;
+		
+		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
+		constructorParameters = new Object[3 + constructorProperties.size()];
+
+		Map<PropertySet, Object[]> extensionMap = new HashMap<PropertySet, Object[]>();
+		
+		constructorParameters[0] = key;
+		constructorParameters[1] = extensionMap;
+		constructorParameters[2] = parentKey;
+
+
+		int valuesIndex = 0;
+		for (PropertyAccessor propertyAccessor: propertySet.getProperties3()) {
+			
+			Object value;
+			if (propertyAccessor.isScalar()) {
+				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
+				if (valuesIndex != scalarAccessor.getIndexIntoScalarProperties()) {
+					throw new RuntimeException("index mismatch");
+				}
+				valuesIndex++;
+				
+				String columnName = getColumnName(scalarAccessor);
+
+				Class<?> valueClass = scalarAccessor.getClassOfValueObject(); 
+				if (valueClass == Character.class) {
+					value = rs.getString(columnName).charAt(0);
+				} else if (valueClass == Long.class) {
+					value = rs.getLong(columnName);
+				} else if (valueClass == Integer.class) {
+					value = rs.getInt(columnName);
+				} else if (valueClass == String.class) {
+					value = rs.getString(columnName);
+				} else if (valueClass == Boolean.class) {
+					value = rs.getBoolean(columnName);
+				} else if (valueClass == Date.class) {
+					value = rs.getDate(columnName);
+				} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
+					Class<? extends ExtendableObject> objectClass = valueClass.asSubclass(ExtendableObject.class);
+					int rowIdOfProperty = rs.getInt(columnName);
+					if (rs.wasNull()) {
+						value = null;
+					} else {
+						ExtendablePropertySet<? extends ExtendableObject> propertySetOfProperty = PropertySet.getPropertySet(objectClass);
+
+						/*
+						 * We must obtain an object key.  However, we do not have to create
+						 * the object or obtain a reference to the object itself at this time.
+						 * Nor do we want to for performance reasons.
+						 */
+						value = new ObjectKey(rowIdOfProperty, propertySetOfProperty, this);
+					}
+				} else {
+					/*
+					 * Must be a user defined object.  Construct it using
+					 * the string constructor.
+					 */
+					String text = rs.getString(columnName);
+					if (rs.wasNull() || text.length() == 0) {
+						value = null;
+					} else {
+						/*
+						 * The property value is an class that is in none of the
+						 * above categories. We therefore use the string
+						 * constructor to construct the object.
+						 */
+						try {
+							value = valueClass
+							.getConstructor( new Class [] { String.class } )
+							.newInstance(new Object [] { text });
+						} catch (Exception e) {
+							/*
+							 * The classes used in the data model should be
+							 * checked when the PropertySet and PropertyAccessor
+							 * static fields are initialized. Therefore other
+							 * plug-ins should not be able to cause an error
+							 * here. 
+							 */
+							 // TODO: put the above mentioned check into
+							 // the initialization code.
+							e.printStackTrace();
+							throw new RuntimeException("internal error");
+						}
+					}
+				}
+			} else {
+				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
+				value = constructListManager(key, listAccessor);
+			}
+			
+			// Determine how this value is passed to the constructor.
+			// If the property comes from an extension then we must set
+			// the property into an extension, otherwise we simply set
+			// the property into the constructor parameters.
+			if (!propertyAccessor.getPropertySet().isExtension()) {
+				constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
+			} else {
+				Object [] extensionConstructorParameters = extensionMap.get(propertyAccessor.getPropertySet());
+				if (extensionConstructorParameters == null) {
+					extensionConstructorParameters = new Object [propertyAccessor.getPropertySet().getConstructorProperties().size()];
+					extensionMap.put(propertyAccessor.getPropertySet(), extensionConstructorParameters);
+				}
+				extensionConstructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
+			}
+		}
+
+		// We can now create the object.
+		E extendableObject = propertySet.constructImplementationObject(constructorParameters);
+		
+		return extendableObject;
+	}
+
+	/**
+	 * Given a property, return the name of the database column that holds the
+	 * values of the property.
+	 * 
+	 * Unless the property is an extension property, we simply use the
+	 * unqualified name. That must be unique within the property set and so the
+	 * column name will be unique within the table. If the property is an
+	 * extension property, however, then the name must be fully qualified
+	 * because two plug-ins may use the same name for an extension property and
+	 * these two properties cannot have the same column name as they are in the
+	 * same table. The the dots are replaced by underscores to keep the names
+	 * SQL compliant.
+	 * 
+	 * @param propertyAccessor
+	 * @return an SQL compliant column name, guaranteed to be unique within the
+	 *         table
+	 */
+	private String getColumnName(ScalarPropertyAccessor propertyAccessor) {
+		if (propertyAccessor.getPropertySet().isExtension()) {
+			return propertyAccessor.getName().replace('.', '_');
+		} else {
+			return propertyAccessor.getLocalName();
+		}
+	}
+
+	private <E extends ExtendableObject> IListManager<E> constructListManager(IDatabaseRowKey parentKey, ListPropertyAccessor<E> listAccessor) {
+		if (listAccessor == SessionInfo.getTransactionsAccessor()) {
+			return new ListManagerUncached<E>(this, parentKey, listAccessor);
+		} else {
+			return new ListManagerCached<E>(this, parentKey, listAccessor);
+		}
+	}
+
+	/**
+	 * Materialize an object from a row of data.
+	 * <P>
+	 * This version of this method should be called when the caller does not
+	 * know the parent of the object to be materialized. This is the situation
+	 * if one object has a reference to another object (ie. the referenced
+	 * object is not in a list property) and we need to materialize the
+	 * referenced object.
+	 * <P>
+	 * The parent key is built from data in the row.
+	 * 
+	 * @param rs
+	 * @param propertySet
+	 * @param key
+	 * @return
+	 * @throws SQLException
+	 */
+	<E extends ExtendableObject> E materializeObject(ResultSet rs, ExtendablePropertySet<E> propertySet, IDatabaseRowKey key) throws SQLException {
+		/*
+		 * We need to obtain the key for the parent object.  We do this by
+		 * creating one from the data in the result set.
+		 */ 
+		IObjectKey parentKey = buildParentKey(rs, propertySet);
+		
+		E extendableObject = materializeObject(rs, propertySet, key, parentKey);
+		
+		return extendableObject;
+	}
+
+	/*
+	 * We need to obtain the key for the parent object.  We do this by
+	 * creating one from the data in the result set.
+	 * 
+	 * The property set of the parent object may not be known without
+	 * looking at the row data. For example, the parent of an account may be
+	 * another account (if the account is a sub-account) or may be the
+	 * session.
+	 */
+	IDatabaseRowKey buildParentKey(ResultSet rs, ExtendablePropertySet<?> propertySet) throws SQLException {
+		/* 
+		 * A column exists in this table for each list which can contain objects
+		 * of this type. Only one of these columns can be non-null so we must
+		 * find that column. The value of that column will be the integer id of
+		 * the parent.
+		 * 
+		 * An optimization would allow the column to be absent when the parent
+		 * object is the session object (as only one session object may exist).
+		 * 
+		 * For each list that may contain this object, see if the appropriate
+		 * column is non-null.
+		 */
+		ExtendablePropertySet<? extends ExtendableObject> parentPropertySet = null;
+		int parentId = -1;
+		boolean nonNullValueFound = false;
+		
+		ExtendablePropertySet propertySet2 = propertySet;
+		do {
+			Vector<ParentList> list = tablesMap.get(propertySet);
+
+			/*
+			 * Find all properties in any property set that are a list of objects
+			 * with the type as this property set. A column must exist in this table
+			 * for each such property that exists in another property set.
+			 */
+			for (ParentList parentList: list) {
+				parentId = rs.getInt(parentList.columnName);
+				if (!rs.wasNull()) {		
+					parentPropertySet = parentList.parentPropertySet;
+					nonNullValueFound = true;
+					break;
+				}
+			}	
+			propertySet2 = propertySet2.getBasePropertySet();
+		} while (propertySet2 != null);	
+			
+		IDatabaseRowKey parentKey;
+
+		if (!nonNullValueFound) {
+			/*
+			 * A database optimization causes no parent column to exist for the
+			 * case where the parent object is the session.
+			 */
+			parentKey = sessionKey;
+		} else {
+			parentKey = new ObjectKey(parentId, parentPropertySet, this);
+		}
+		
+		return parentKey;
+	}
+
+	private class ColumnInfo {
+		String columnName;
+		String columnDefinition;
+		PropertySet foreignKeyPropertySet = null;
+		ColumnNature nature;
+	}
+	
+	private enum ColumnNature {
+		PARENT,
+		SCALAR_PROPERTY
 	}
 	
 	/**
-	 * Some property sets are cached and some are not.
-	 * For those that are cached, a map is maintained
-	 * that maps the integer id to the cached object.
+	 * Build a list of columns that we must have in the table that
+	 * holds the data for a particular property set.
 	 * <P>
-	 * There can be multiple such maps, one map for each
-	 * property set that is cached.  If a property set
-	 * is cached then all property sets derived from that
-	 * property set are also cached.  It is possible,
-	 * though, that a property set is not cached but one
-	 * or more property sets derived from that property
-	 * set is cached.  If a property set is cached then
-	 * all objects derived from that property set are
-	 * put in the same map.
+	 * The list will depend on the set of installed plug-ins.
+	 * <P>
+	 * The "_ID" column is required in all tables as a primary
+	 * key and is not returned by this method.
+	 * <P>
+	 * This method may not be called with an extension property set.
 	 * 
-	 * @param parentPropertySetId
-	 * @param parentId
-	 * @return
+	 * @return A Vector containing objects of class 
+	 * 		<code>ColumnInfo</code>.
 	 */
-	// TODO: We may not need this method.
-	public ExtendableObject lookupObject(ExtendablePropertySet<? extends ExtendableObject> propertySet, int id) {
-		Map<Integer, ? extends ExtendableObject> mapOfObjects = getMapOfCachedObjects(propertySet);
-		return mapOfObjects.get(new Integer(id));
+	private Vector<ColumnInfo> buildColumnList(ExtendablePropertySet<?> propertySet) {
+		Vector<ColumnInfo> result = new Vector<ColumnInfo>();
+		
+		/*
+		 * The parent column requirements depend on which other property sets
+		 * have lists. A parent column exists in the table for property set A
+		 * for each list property (in any property set) that contains elements
+		 * of type A.
+		 * 
+		 * If there is a single place where the property set is listed and that
+		 * place is in the session object (or an extension thereof) then no
+		 * parent column is necessary because there is only one session object.
+		 * 
+		 * If there is a single place where the property set is listed and that
+		 * place is not in the session object (or an extension thereof) then a
+		 * parent column is created with the name being the same as the fully
+		 * qualified name of the property that lists these objects. The column
+		 * will not allow null values.
+		 * 
+		 * If there are multiple places where a property set is listed then a
+		 * column is created for each place (but if one of the places is the
+		 * session object that no column is created for that place). The columns
+		 * will allow null values. At most one of the columns may be non-null.
+		 * If all the columns are null then the parent is the session object.
+		 * The names of the columns are the fully qualified names of the
+		 * properties that list these objects.
+		 */
+		Vector<ParentList> list = tablesMap.get(propertySet);
+		
+		/*
+		 * Find all properties in any property set that are a list of objects
+		 * with the element type as this property set. A column must exist in
+		 * this table for each such property that exists in another property
+		 * set.
+		 * 
+		 * These columns default to NULL so that, when objects are inserted,
+		 * we need only to set the parent id into the appropriate column and
+		 * not worry about the other parent columns.
+		 * 
+		 * If there is only one list property of a type in which an object could
+		 * be placed, then we could make the column NOT NULL.  However, we would
+		 * need more code to adjust the database schema (altering columns to be
+		 * NULL or NOT NULL) if plug-ins are added to create other lists in which
+		 * the object could be placed. 
+		 */
+		for (ParentList parentList: list) {
+			ColumnInfo info = new ColumnInfo();
+			info.nature = ColumnNature.PARENT;
+			info.columnName = parentList.columnName;
+			info.columnDefinition = "INT DEFAULT NULL NULL";
+			info.foreignKeyPropertySet = parentList.parentPropertySet;
+			result.add(info);
+		}
+		
+		// The columns for each property in this property set
+		// (including the extension property sets).
+		for (ScalarPropertyAccessor propertyAccessor: propertySet.getScalarProperties2()) {
+			ColumnInfo info = new ColumnInfo();
+
+			info.nature = ColumnNature.SCALAR_PROPERTY;
+			info.columnName = getColumnName(propertyAccessor);
+
+			Class valueClass = propertyAccessor.getClassOfValueObject();
+			if (valueClass == Integer.class) {
+				info.columnDefinition = "INT";
+			} if (valueClass == Long.class) {
+				info.columnDefinition = "BIGINT";
+			} else if (valueClass == Character.class) {
+				info.columnDefinition = "CHAR";
+			} else if (valueClass == Boolean.class) {
+				info.columnDefinition = "BIT";
+			} else if (valueClass == String.class) {
+				// HSQL is fine with just VARCHAR, but MS SQL will default
+				// the maximum length to 1 which is obviously no good.
+				info.columnDefinition = "VARCHAR(255)";
+			} else if (valueClass == Date.class) {
+				info.columnDefinition = "SMALLDATETIME";  // MS SQL does not support "DATE" like HSQL
+			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
+				info.columnDefinition = "INT";
+
+				// This call does not work.  The method works only when the class
+				// is a class of an actual object and only non-derivable property
+				// sets are returned.
+				// info.foreignKeyPropertySet = PropertySet.getPropertySet(valueClass);
+
+				// This works.
+				// The return type from a getter for a property that is a reference
+				// to an extendable object must be the getter interface.
+				info.foreignKeyPropertySet = null;
+				for (ExtendablePropertySet propertySet2: PropertySet.getAllExtendablePropertySets()) {
+					if (propertySet2.getImplementationClass() == valueClass) {
+						info.foreignKeyPropertySet = propertySet2;
+						break;
+					}
+				}
+			} else { 
+				// All other types are stored as a string by 
+				// using the String constructor and
+				// the toString method for conversion.
+				
+				// HSQL is fine with just VARCHAR, but MS SQL will default
+				// the maximum length to 1 which is obviously no good.
+				info.columnDefinition = "VARCHAR(255)";
+			}
+
+			// If the property is an extension property then we set
+			// a default value.  This saves us from having to set default
+			// value in every insert statement and is a better solution
+			// if other applications (outside JMoney) access the database.
+
+			if (propertyAccessor.getPropertySet().isExtension()) {
+				Object defaultValue = propertyAccessor.getDefaultValue();
+				info.columnDefinition +=
+					" DEFAULT " + valueToSQLText(defaultValue);
+			}
+
+			if (propertyAccessor.isNullAllowed()) {
+				info.columnDefinition += " NULL";
+			} else {
+				info.columnDefinition += " NOT NULL";
+			}
+			result.add(info);
+		}
+		
+		/*
+		 * If the property set is a derivable property set and is the base-most
+		 * property set then we must have a column called _PROPERTY_SET. This
+		 * column contains the id of the actual (non-derivable) property set of
+		 * this object. This column is required because otherwise we would not
+		 * know which further tables need to be joined to get the complete set
+		 * of properties with which we can construct the object.
+		 */
+		if (propertySet.getBasePropertySet() == null
+		 && propertySet.isDerivable()) {
+			ColumnInfo info = new ColumnInfo();
+			info.columnName = "_PROPERTY_SET";
+			// 200 should be enough for property set ids.
+			info.columnDefinition = "VARCHAR(200) NOT NULL";
+			result.add(info);
+		}
+		
+		return result;
+	}
+	
+	private static String[] tableOnlyType = new String[] { "TABLE" };
+
+	private void traceResultSet(ResultSet rs) {
+		if (JDBCDatastorePlugin.DEBUG) {
+			try {
+				String x = "";		
+				ResultSetMetaData rsmd = rs.getMetaData();
+				int cols = rsmd.getColumnCount();
+				for (int i = 1; i <= cols; i++) {
+					x += rsmd.getColumnLabel(i) + ", ";
+				}
+				System.out.println(x);
+
+				while (rs.next()) {
+					x = "";
+					for (int i = 1; i <= cols; i++) {
+						x += rs.getString(i) + ", ";
+					}
+					System.out.println(x);
+				}
+			} catch (Exception SQLException) {
+				throw new RuntimeException("database error");
+			}
+			System.out.println("");
+		}
+	}
+
+	/**
+	 * Check the tables and columns in the database.
+	 * If a required table does not exist it will be created.
+	 * If a table exists but it does not contain all the required
+	 * columns, then the required columns will be added to the table.
+	 * <P>
+	 * There may be additional tables and there may be
+	 * additional columns in the required tables.  These are
+	 * ignored and the data in them are left alone.
+	 */
+	private void checkDatabase(Connection con, Statement stmt) throws SQLException {
+		
+		DatabaseMetaData dmd = con.getMetaData();
+		
+		for (ExtendablePropertySet propertySet: PropertySet.getAllExtendablePropertySets()) {
+			String tableName = propertySet.getId().replace('.', '_');
+
+			// Check that the table exists.
+			ResultSet tableResultSet = dmd.getTables(null, null, tableName.toUpperCase(), tableOnlyType);
+
+			if (tableResultSet.next()) {
+				Vector<ColumnInfo> columnInfos = buildColumnList(propertySet);
+				for (ColumnInfo columnInfo: columnInfos) {
+					ResultSet columnResultSet = dmd.getColumns(null, null, tableName.toUpperCase(), columnInfo.columnName);
+					if (columnResultSet.next()) {
+						// int dataType = columnResultSet.getInt("DATA_TYPE");
+						// String typeName = columnResultSet.getString("TYPE_NAME");
+						// TODO: Check that the column information is
+						// correct.  Display a fatal error if it is not.
+					} else {
+						// The column does not exist so we add it.
+						String sql = 
+							"ALTER TABLE " + tableName
+							+ " ADD \"" + columnInfo.columnName
+							+ "\" " + columnInfo.columnDefinition;
+						System.out.println(sql);
+						stmt.execute(sql);	
+					}
+					columnResultSet.close();
+				}
+			} else {
+				// Table does not exist, so create it.
+				createTable(propertySet, stmt);
+			}
+
+			tableResultSet.close();
+		}
+		
+		/*
+		 * Having ensured that all the tables exist, now create the foreign key
+		 * constraints. This must be done in a second pass because otherwise we
+		 * might try to create a foreign key constraint before the foreign key
+		 * has been created.
+		 */
+		for (ExtendablePropertySet propertySet: PropertySet.getAllExtendablePropertySets()) {
+			String tableName = propertySet.getId().replace('.', '_');
+
+			/*
+			 * Check the foreign keys in derived tables that point to the base
+			 * table row.
+			 */
+			if (propertySet.getBasePropertySet() != null) {
+				String primaryTableName = propertySet.getBasePropertySet().getId().replace('.', '_');
+				checkForeignKey(dmd, stmt, tableName, "_ID", primaryTableName, true);
+			}
+
+			/*
+			 * Check the foreign keys for columns that reference other objects.
+			 * 
+			 * These may be:
+			 *  - objects that contain references (as scalar properties) to
+			 * other objects.
+			 *  - the columns that contain the id of the parent object
+			 */
+			Vector<ColumnInfo> columnInfos = buildColumnList(propertySet);
+			for (ColumnInfo columnInfo: columnInfos) {
+				if (columnInfo.foreignKeyPropertySet != null) {
+					String primaryTableName = columnInfo.foreignKeyPropertySet.getId().replace('.', '_');
+					checkForeignKey(dmd, stmt, tableName, columnInfo.columnName, primaryTableName, columnInfo.nature == ColumnNature.PARENT);
+				}
+			}
+		}		
+	}
+
+	/**
+	 * @param stmt
+	 * @param dmd
+	 * @param tableName
+	 * @param columnName
+	 * @param primaryTableName
+	 */
+	private void checkForeignKey(DatabaseMetaData dmd, Statement stmt, String tableName, String columnName, String primaryTableName, boolean onDeleteCascade) throws SQLException {
+		ResultSet columnResultSet2 = dmd.getCrossReference(null, null, primaryTableName.toUpperCase(), null, null, tableName.toUpperCase());
+		traceResultSet(columnResultSet2);
+		
+		ResultSet columnResultSet = dmd.getCrossReference(null, null, primaryTableName.toUpperCase(), null, null, tableName.toUpperCase());
+		if (columnResultSet.next()) {
+			// A foreign key constraint already exists.
+			// Check that it is the correct constraint.
+			System.out.println(primaryTableName + " to " + tableName);
+			System.out.println("-------------");
+			for (int i = 0; i < columnResultSet.getMetaData().getColumnCount(); i++) {
+				System.out.println(i + ": " + columnResultSet.getMetaData().getColumnName(i+1) + ", " + columnResultSet.getString(i+1));
+			}
+			System.out.println();
+			
+			// TODO: There seems to be a mixture of _id and _ID.  SQL is not case sensitive
+			// so do a case insensive comparison.
+			if (!columnResultSet.getString("PKCOLUMN_NAME").equalsIgnoreCase("_ID")
+			 || !columnResultSet.getString("FKCOLUMN_NAME").equalsIgnoreCase(columnName)
+			 || columnResultSet.next()) {
+				throw new RuntimeException("The database schema is invalid.  "
+						+ "Table " + tableName.toUpperCase() + " must contain a foreign key column called " + columnName
+						+ " constrained to primary key _ID in table " + primaryTableName.toUpperCase() 
+						+ ".  No other foreign key/primary key mappings may exist between these two tables.");
+			}
+		} else {
+			// The foreign key constraint does not exist so we add it.
+			String sql = 
+				"ALTER TABLE " + tableName
+				+ " ADD FOREIGN KEY (\"" + columnName
+				+ "\") REFERENCES " + primaryTableName + "(_ID)";
+			
+			if (onDeleteCascade) {
+				sql += " ON DELETE CASCADE";
+			}
+			
+			System.out.println(sql);
+			stmt.execute(sql);	
+		}
+		columnResultSet.close();
+	}
+
+	/**
+	 * Create a table.  This method should be called when
+	 * a new database is being initialized or when a new
+	 * table is needed because a new extendable property 
+	 * set has been added.
+	 *
+	 * This method does not create any foreign keys.  This is because
+	 * the referenced table may be yet exist.  The caller must create
+	 * the foreign keys in a second pass.
+	 * 
+	 * @param propertySet The property set whose table is to
+	 * 			be created.  This property set must not be an
+	 * 			extension property set.  (No tables exist for extension
+	 * 			property sets.  Extension property sets are supported
+	 * 			by adding columns to the tables for the property sets
+	 * 			which they extend).
+	 * @param stmt A <code>Statement</code> object 
+	 * 			that is to be used by this method
+	 * 			to submit the 'CREATE TABLE' command.
+	 * @throws SQLException
+	 */
+	void createTable(ExtendablePropertySet propertySet, Statement stmt) throws SQLException {
+		// HSQL requires only IDENTITY in following and it is a primary key.
+		// MS SQL requires that PRIMARY KEY be specifically specified.
+		/*
+		 * The _ID column is always a primary key.  However, it has
+		 * automatically generated values only for the base tables.
+		 * Derived tables contain ids that match the base table.
+		 */
+		String sql = "CREATE TABLE "
+			+ propertySet.getId().replace('.', '_') 
+			+ " (_id INT PRIMARY KEY";
+		
+		if (propertySet.getBasePropertySet() == null) {
+			sql += " IDENTITY";
+		}
+		
+		Vector<ColumnInfo> columnInfos = buildColumnList(propertySet);
+		for (ColumnInfo columnInfo: columnInfos) {
+			sql += ", \"" + columnInfo.columnName + "\" " + columnInfo.columnDefinition;
+		}
+		sql += ")";
+		
+		System.out.println(sql);
+		stmt.execute(sql);
 	}
 
 	/* (non-Javadoc)
