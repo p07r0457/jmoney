@@ -195,8 +195,18 @@ public class ResultSet implements IResultSet
     		return 0;
     	} else {
     		wasNull = false;
+    		
     		if (result instanceof Number) {
-    			return ((Number)result).doubleValue();
+    			/*
+    			 * This is not quite right, but as a first approximation,
+    			 * if the native type is a currency then we divide by 100.
+    			 */
+    			Double dValue = ((Number)result).doubleValue();
+        		if (resultSetMetaData.getColumnType(columnNumber-1) == 3) {
+        			return dValue / 100; 
+        		} else {
+        			return dValue;
+        		}
     		} else {
     			return 0;
     		}
