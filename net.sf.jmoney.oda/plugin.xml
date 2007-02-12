@@ -23,9 +23,9 @@
                   nativeDataTypeCode="2"
                   odaScalarDataType="Integer"/>
             <dataTypeMapping
-                  nativeDataType="Long"
+                  nativeDataType="Currency"
                   nativeDataTypeCode="3"
-                  odaScalarDataType="Integer"/>
+                  odaScalarDataType="Double"/>
             <dataTypeMapping
                   nativeDataType="Double"
                   nativeDataTypeCode="4"
