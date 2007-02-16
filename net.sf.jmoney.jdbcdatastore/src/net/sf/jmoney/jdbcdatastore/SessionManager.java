@@ -724,26 +724,34 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
      * @return true if the object was present, false if the object
      * 				was not present in the database.
 	 */
-// TODO: throw error if object is referenced.	
-	public boolean deleteFromDatabase(int rowId, ExtendableObject extendableObject) {
-		ExtendablePropertySet propertySet = PropertySet.getPropertySet(extendableObject.getClass()); 
+// TODO: throw error if object is referenced.
+	public boolean deleteFromDatabase(IDatabaseRowKey objectKey) {
+		ExtendablePropertySet propertySet = PropertySet.getPropertySet(objectKey.getObject().getClass()); 
 		
 		Statement stmt = getReusableStatement();
 
-		// Because each table for a derived class contains a foreign key
-		// constraint to the table for the base class, we must delete the rows
-		// starting with the most derived table and ending with the base-most
-		// table.
+		/*
+		 * Because we cannot always use CASCADE, we must first delete objects
+		 * in list properties contained in this object.  This is a recursive
+		 * process.
+		 */
+		deleteListElements(objectKey);
 		
-		// Alternatively, we could have set the 'CASCADE' option for delete
-		// in the database and just delete the row in the base-most table.
-		// However, it is perhaps safer not to use 'CASCADE'.
-		
+		/*
+		 * Because each table for a derived class contains a foreign key
+		 * constraint to the table for the base class, we must delete the rows
+		 * starting with the most derived table and ending with the base-most
+		 * table.
+		 * 
+		 * Alternatively, we could have set the 'CASCADE' option for delete in
+		 * the database and just delete the row in the base-most table. However,
+		 * it is perhaps safer not to use 'CASCADE'.
+		 */
 		for (ExtendablePropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
 			
 			String sql = "DELETE FROM " 
 				+ propertySet2.getId().replace('.', '_')
-				+ " WHERE _ID=" + rowId;
+				+ " WHERE _ID=" + objectKey.getRowId();
 			
 				try {
 					System.out.println(sql);
@@ -765,6 +773,67 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		}
 		
 		return true;
+	}
+
+	/**
+	 * This method deletes the child elements of a given object (objects
+	 * contained in list properties of the given object). This method is
+	 * recursive, so all descendent objects are deleted.
+	 * 
+	 * We could have used ON DELETE CASCADE to delete these objects. However,
+	 * not all databases fully support this. For example, Microsoft SQL Server
+	 * does not support ON DELETE CASCADE when a column in a table is
+	 * referencing another row in the same table. This makes it unusable for us
+	 * because columns can reference other rows in the same table (for example,
+	 * an account can have sub-accounts which are rows in the same table).
+	 * 
+	 * @param rowId
+	 * @param extendableObject
+	 * @param propertySet
+	 */
+	private void deleteListElements(IDatabaseRowKey objectKey/*int rowId, ExtendableObject extendableObject, ExtendablePropertySet<?> propertySet*/) {
+		ExtendableObject extendableObject = objectKey.getObject();
+		ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(extendableObject.getClass());
+		
+		
+		for (ListPropertyAccessor<?> listProperty: propertySet.getListProperties3()) {
+			/*
+			 * Find all elements in the list. The child elements will almost
+			 * certainly already be cached in memory so this is unlikely to
+			 * result in any queries being sent to the database.
+			 */
+			for (ExtendableObject child: extendableObject.getListPropertyValue(listProperty)) {
+				deleteListElements((IDatabaseRowKey)child.getObjectKey());
+			}
+			
+			/*
+			 * Delete the list elements.  We can delete all the elements
+			 * in the list property with one statement.
+			 * 
+			 * If the parent is the session object then there will not be
+			 * a parent column.  However the parent will never be the session
+			 * object here because this method is called only when an object
+			 * is being removed from a list and the session object can never
+			 * be removed from a list. 
+			 */
+			Statement stmt = this.reusableStatement;
+			
+			PropertySet propertySet2 = listProperty.getElementPropertySet();
+			String sql = "DELETE FROM " 
+				+ propertySet2.getId().replace('.', '_')
+				+ " WHERE " 
+				+ propertySet2.getId().replace('.', '_') + "_" + listProperty.getLocalName()
+				+ "=" + objectKey.getRowId();
+			
+				try {
+					System.out.println(sql);
+					int rowCount = stmt.executeUpdate(sql);
+				} catch (SQLException e) {
+					// TODO Handle this properly
+					e.printStackTrace();
+					throw new RuntimeException("internal error");
+			}
+		}
 	}
 
 	/**
@@ -1442,7 +1511,8 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			for (ColumnInfo columnInfo: columnInfos) {
 				if (columnInfo.foreignKeyPropertySet != null) {
 					String primaryTableName = columnInfo.foreignKeyPropertySet.getId().replace('.', '_');
-					checkForeignKey(dmd, stmt, tableName, columnInfo.columnName, primaryTableName, columnInfo.nature == ColumnNature.PARENT);
+					// TODO: check if HSQL allows ON CASCADE DELETE with a self-referencing table
+					checkForeignKey(dmd, stmt, tableName, columnInfo.columnName, primaryTableName, false/*columnInfo.nature == ColumnNature.PARENT*/);
 				}
 			}
 		}		
