@@ -167,7 +167,7 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		// Delete this object from the database.
 		ExtendableObject extendableObject = (ExtendableObject)o;
 		IDatabaseRowKey key = (IDatabaseRowKey)extendableObject.getObjectKey();
-		return sessionManager.deleteFromDatabase(key.getRowId(), extendableObject);
+		return sessionManager.deleteFromDatabase(key);
 	}
 
 	public boolean containsAll(Collection<?> arg0) {

@@ -93,9 +93,11 @@ public class AccountEntriesList implements Collection<Entry> {
 			// objects of a derivible property set.  Table joins would
 			// be required in such a situation.
 			Statement stmt = sessionManager.getConnection().createStatement();
-			ResultSet resultSet = stmt.executeQuery(
-					"SELECT * FROM " + tableName 
-					+ " WHERE \"" + columnName + "\" = " + keyOfRequiredPropertyValue.getRowId());
+			String sql = 
+				"SELECT * FROM " + tableName 
+				+ " WHERE \"" + columnName + "\" = " + keyOfRequiredPropertyValue.getRowId();
+			System.out.println(sql);
+			ResultSet resultSet = stmt.executeQuery(sql);
 			return new UncachedObjectIterator<Entry>(resultSet, EntryInfo.getPropertySet(), null, sessionManager);
 		} catch (SQLException e) {
 			e.printStackTrace();

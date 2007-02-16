@@ -149,7 +149,7 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 		if (found) {
 			ExtendableObject extendableObject = (ExtendableObject)o;
 			IDatabaseRowKey key = (IDatabaseRowKey)extendableObject.getObjectKey();
-			boolean foundInDatabase = sessionManager.deleteFromDatabase(key.getRowId(), extendableObject);
+			boolean foundInDatabase = sessionManager.deleteFromDatabase(key);
 			if (!foundInDatabase) {
 				throw new RuntimeException("database inconsistent");
 			}
