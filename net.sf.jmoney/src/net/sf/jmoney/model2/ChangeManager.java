@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Vector;
 
 /**
@@ -48,153 +46,7 @@ import java.util.Vector;
  * @author Nigel Westbury
  */
 public class ChangeManager {
-	
-	public class UndoableChange {
-		private String description;
-		
-		/**
-		 * Vector of ChangeEntry objects.  Changes are added to
-		 * this vector in order.  If changes are undone, they must
-		 * be undone in reverse order, starting at the end of this
-		 * vector.
-		 */
-		private Vector<ChangeEntry> changes = new Vector<ChangeEntry>();	
-		
-		/**
-		 * Set the description of this change.
-		 */
-		public void setDescription(String description) {
-			this.description = description;
-		}
-		
-		/**
-		 * @return
-		 */
-		public String getDescription() {
-			return description;
-		}
-		
-		/**
-		 * Submit a series of updates, which have been stored,
-		 * to the datastore.  These updates carry out the reverse
-		 * of the updates stored.
-		 */
-		public void undoChanges() {
-			// Undo the changes in reverse order.
-			for (int i = changes.size()-1; i >= 0; i--) {
-				ChangeEntry changeEntry = changes.get(i);
-				changeEntry.undo();
-			}
-		}
-		
-		/**
-		 * @param newChangeEntry
-		 */
-		void addChange(ChangeEntry newChangeEntry) {
-			changes.add(newChangeEntry);
-		}
-		
-		/**
-		 * Called to decrement reference counts for proxy objects.
-		 */
-		void destroy() {
-			for (int i = 0; i < changes.size(); i--) {
-				ChangeEntry changeEntry = (ChangeEntry)changes.get(i);
-				changeEntry.destroy();
-			}
-		}
-	}
-	
-	abstract class ChangeEntry {
-		KeyProxy objectKeyProxy;
-		abstract void undo();
-		/**
-		 * This must be called and this must be overridden by any
-		 * object that holds proxies, otherwise proxies will never
-		 * be removed from the map.
-		 */
-		void destroy() {
-			ChangeManager.this.release(objectKeyProxy);
-		}
-	}
-	
-	class ChangeEntry_Update<V> extends ChangeEntry {
-		ScalarPropertyAccessor<V> propertyAccessor;
-		V oldValue = null;  // if not an extendable object
-		KeyProxy oldValueProxy = null; // If an extendable object
-		
-		void undo() {
-			ExtendableObject object = objectKeyProxy.key.getObject();  // efficient???
-			if (propertyAccessor.getClassOfValueObject().isAssignableFrom(ExtendableObject.class)) {
-				// If IObjectKey had a type parameter, we would not need
-				// this cast.
-				object.setPropertyValue(propertyAccessor, propertyAccessor.getClassOfValueObject().cast(oldValueProxy.key.getObject()));
-			} else {
-				object.setPropertyValue(propertyAccessor, oldValue);
-			}
-		}
-		
-		void destroy() {
-			super.destroy();
-			if (oldValueProxy != null) {
-				ChangeManager.this.release(oldValueProxy);
-			}
-			
-		}
-	}
 
-	class ChangeEntry_Insert extends ChangeEntry {
-		ExtendableObject parent;
-		ListPropertyAccessor<?> owningListProperty;
-		
-		void undo() {
-			// Delete the object.
-			ExtendableObject object = objectKeyProxy.key.getObject();  // efficient???
-			
-			// Delete the object from the datastore.
-			parent.getListPropertyValue(owningListProperty).remove(object);
-		}
-	}
-	
-	/**
-	 * 
-	 * @author Nigel
-	 *
-	 * @param <E> the type of the object being deleted
-	 */
-	class ChangeEntry_Delete<E extends ExtendableObject> extends ChangeEntry {
-		Object [] oldValues;
-		ExtendableObject parent;
-		ListPropertyAccessor<? super E> owningListProperty;
-		ExtendablePropertySet<? extends E> actualPropertySet;
-		
-		void undo() {
-			// Create the object in the datastore.
-			ExtendableObject object = parent.getListPropertyValue(owningListProperty).createNewElement(actualPropertySet, oldValues, false);
-
-			// Set the new object key back into the proxy.
-			// This ensures earlier changes to this object will
-			// be undone in this object.
-			if (objectKeyProxy.key != null) {
-				throw new RuntimeException("key proxy error");
-			}
-			objectKeyProxy.key = object.getObjectKey();
-			
-		}
-		
-		void destroy() {
-			super.destroy();
-			
-			for (int index = 0; index < oldValues.length; index++) {
-				if (oldValues[index] != null && oldValues[index] instanceof KeyProxy) {
-					ChangeManager.this.release((KeyProxy)oldValues[index]);
-				}
-				
-			}
-		}
-	}
-	
-	
 	/**
 	 * When we delete an object, we know that nothing in the
 	 * datastore references it.  However, there may be old
@@ -205,20 +57,230 @@ public class ChangeManager {
 	 */
 	private class KeyProxy {
 		IObjectKey key;
-		int refCount = 0;
-		
+
 		KeyProxy(IObjectKey key) {
 			this.key = key;
 		}
 	}
-	
-	private Map<IObjectKey, KeyProxy> keyProxyMap = new HashMap<IObjectKey, KeyProxy>();
-	
+
+	/*
+	 * If there are no references to the KeyProxy then this means there are no changes that
+	 * need the key proxy to undo the change.  The entry can be removed from the map.
+	 * Thus we use a map with weak value references.
+	 */
+	private WeakValuedMap<IObjectKey, KeyProxy> keyProxyMap = new WeakValuedMap<IObjectKey, KeyProxy>();
+
 	private UndoableChange currentUndoableChange = null;
-	
+
+	public class UndoableChange {
+		/**
+		 * Vector of ChangeEntry objects.  Changes are added to
+		 * this vector in order.  If changes are undone, they must
+		 * be undone in reverse order, starting at the end of this
+		 * vector.
+		 */
+		private Vector<ChangeEntry> changes = new Vector<ChangeEntry>();
+
+		/**
+		 * Submit a series of updates, which have been stored,
+		 * to the datastore.  These updates carry out the reverse
+		 * of the updates stored.
+		 */
+		public void undoChanges() {
+			// Undo the changes in reverse order.
+			for (int i = changes.size() - 1; i >= 0; i--) {
+				ChangeEntry changeEntry = changes.get(i);
+				changeEntry.undo();
+			}
+		}
+
+		/**
+		 * @param newChangeEntry
+		 */
+		void addChange(ChangeEntry newChangeEntry) {
+			changes.add(newChangeEntry);
+		}
+	}
+
+	/**
+	 * Base class for all objects that represent a component of
+	 * a change.  Derived classes represent property changes,
+	 * insertion of new objects, and deletion of objects.
+	 * 
+	 * These objects have only a constructor and the <code>undo</code> method.
+	 * Once the <code>undo</code> is called the object is dead.
+	 */
+	abstract class ChangeEntry {
+		abstract void undo();
+	}
+
+	/**
+	 * A ChangeEntry object for an update to a scalar property (excluding
+	 * scalar properties that are references to extendable objects).
+	 *
+	 * @param <V>
+	 */
+	class ChangeEntry_UpdateScalar<V> extends ChangeEntry {
+		private KeyProxy objectKeyProxy;
+		private ScalarPropertyAccessor<V> propertyAccessor;
+		private V oldValue = null;
+
+		ChangeEntry_UpdateScalar(KeyProxy objectKeyProxy,
+				ScalarPropertyAccessor<V> propertyAccessor, V oldValue) {
+			this.objectKeyProxy = objectKeyProxy;
+			this.propertyAccessor = propertyAccessor;
+			this.oldValue = oldValue;
+		}
+
+		void undo() {
+			ExtendableObject object = objectKeyProxy.key.getObject(); // efficient???
+			object.setPropertyValue(propertyAccessor, oldValue);
+		}
+	}
+
+	/**
+	 * A ChangeEntry object for an update to a scalar property that is a
+	 * reference to an extendable object.
+	 *
+	 * @param <E>
+	 */
+	// TODO: E should be bounded to classes that extend ExtendableObject.
+	// However, this method does not currently make use of such bounding,
+	// and to do that we would have to push back seperate methods for
+	// reference properties and other scalar properties.
+	class ChangeEntry_UpdateReference<E> extends ChangeEntry {
+		private KeyProxy objectKeyProxy;
+		private ScalarPropertyAccessor<E> propertyAccessor;
+		private KeyProxy oldValueProxy = null;
+
+		ChangeEntry_UpdateReference(KeyProxy objectKeyProxy,
+				ScalarPropertyAccessor<E> propertyAccessor,
+				KeyProxy oldValueProxy) {
+			this.objectKeyProxy = objectKeyProxy;
+			this.propertyAccessor = propertyAccessor;
+			this.oldValueProxy = oldValueProxy;
+		}
+
+		void undo() {
+			ExtendableObject object = objectKeyProxy.key.getObject(); // efficient???
+			// If IObjectKey had a type parameter, we would not need
+			// this cast.
+			object.setPropertyValue(propertyAccessor, propertyAccessor
+					.getClassOfValueObject()
+					.cast(oldValueProxy.key.getObject()));
+		}
+	}
+
+	class ChangeEntry_Insert extends ChangeEntry {
+		private KeyProxy parentKeyProxy;
+		private ListPropertyAccessor<?> owningListProperty;
+		private KeyProxy objectKeyProxy;
+
+		ChangeEntry_Insert(KeyProxy parentKeyProxy,
+				ListPropertyAccessor<?> owningListProperty,
+				KeyProxy objectKeyProxy) {
+			this.parentKeyProxy = parentKeyProxy;
+			this.owningListProperty = owningListProperty;
+			this.objectKeyProxy = objectKeyProxy;
+		}
+
+		void undo() {
+			// Delete the object.
+			ExtendableObject object = objectKeyProxy.key.getObject(); // efficient???
+			ExtendableObject parent = parentKeyProxy.key.getObject();
+
+			// Delete the object from the datastore.
+			parent.getListPropertyValue(owningListProperty).remove(object);
+		}
+	}
+
+	/**
+	 * @param <E> the type of the object being deleted
+	 */
+	class ChangeEntry_Delete<E extends ExtendableObject> extends ChangeEntry {
+		private Object[] oldValues;
+		private KeyProxy parentKeyProxy;
+		private ListPropertyAccessor<E> owningListProperty;
+		private KeyProxy objectKeyProxy;
+		private ExtendablePropertySet<? extends E> actualPropertySet;
+
+		ChangeEntry_Delete(KeyProxy parentKeyProxy,
+				ListPropertyAccessor<E> owningListProperty, E oldObject) {
+			this.parentKeyProxy = parentKeyProxy;
+			this.owningListProperty = owningListProperty;
+
+			this.objectKeyProxy = getKeyProxy(oldObject.getObjectKey());
+			this.actualPropertySet = owningListProperty.getElementPropertySet()
+					.getActualPropertySet(
+							(Class<? extends E>) oldObject.getClass());
+
+			// Save all the property values from the deleted object.
+			// We need these to re-create the object if this change
+			// is undone.
+			int count = actualPropertySet.getScalarProperties3().size();
+			oldValues = new Object[count];
+			int index = 0;
+			for (ScalarPropertyAccessor<?> propertyAccessor : actualPropertySet
+					.getScalarProperties3()) {
+				if (index != propertyAccessor.getIndexIntoScalarProperties()) {
+					throw new RuntimeException("index mismatch");
+				}
+
+				Object value = oldObject.getPropertyValue(propertyAccessor);
+				if (value instanceof ExtendableObject) {
+					/*
+					 * We can't store extendable objects or even the object keys
+					 * because those may not remain valid (the referenced object may
+					 * be deleted). We store instead a KeyProxy. If the referenced
+					 * object is later deleted, then un-deleted using an undo
+					 * operation, then this change is also undone, the key proxy
+					 * will give us the new object key for the referenced object.
+					 */
+					IObjectKey objectKey = ((ExtendableObject) value)
+							.getObjectKey();
+					oldValues[index++] = getKeyProxy(objectKey);
+				} else {
+					oldValues[index++] = value;
+				}
+			}
+		}
+
+		void undo() {
+			/* Create the object in the datastore.
+			 * However, we must first convert the key proxies back to keys before passing
+			 * on to the constructor.
+			 */
+			Object oldValues2[] = new Object[oldValues.length];
+			for (int i = 0; i < oldValues.length; i++) {
+				if (oldValues[i] instanceof KeyProxy) {
+					oldValues2[i] = ((KeyProxy) oldValues[i]).key;
+				} else {
+					oldValues2[i] = oldValues[i];
+				}
+			}
+
+			ExtendableObject parent = parentKeyProxy.key.getObject();
+			ExtendableObject object = parent.getListPropertyValue(
+					owningListProperty).createNewElement(actualPropertySet,
+					oldValues2, false);
+
+			/*
+			 * Set the new object key back into the proxy. This ensures that
+			 * earlier changes to this object will be undone in this object. We
+			 * must also add to our map so that if further changes are made that
+			 * reference this object key, they will be using the same proxy.
+			 */
+			if (objectKeyProxy.key != null) {
+				throw new RuntimeException("internal error - key proxy error");
+			}
+			objectKeyProxy.key = object.getObjectKey();
+			keyProxyMap.put(objectKeyProxy.key, objectKeyProxy);
+		}
+	}
+
 	private KeyProxy getKeyProxy(IObjectKey objectKey) {
 		if (objectKey != null) {
-			KeyProxy keyProxy = (KeyProxy)keyProxyMap.get(objectKey);
+			KeyProxy keyProxy = keyProxyMap.get(objectKey);
 			if (keyProxy == null) {
 				keyProxy = new KeyProxy(objectKey);
 				keyProxyMap.put(objectKey, keyProxy);
@@ -228,32 +290,14 @@ public class ChangeManager {
 			return null;
 		}
 	}
-	
-	/**
-	 * A significant percentage of the code in this class is
-	 * there to implement reference counting in the map so that
-	 * we do not end up with an enormous map of accumulated
-	 * unused stuff.  This method must be called whenever
-	 * an object containing references to KeyProxy objects
-	 * is discarded.
-	 * 
-	 * @param proxy A KeyProxy object to which a reference
-	 * 		is being discarded.
-	 */
-	private void release(KeyProxy proxy) {
-		if (--proxy.refCount == 0) {
-			if (proxy.key != null) {
-				keyProxyMap.remove(proxy.key);
-			}
-		}
-	}
-	
+
 	private UndoableChange getCurrentUndoableChange() {
 		if (currentUndoableChange == null) {
 			currentUndoableChange = new UndoableChange();
 		}
 		return currentUndoableChange;
 	}
+
 	/**
 	 * The property may be any property in the passed object.
 	 * The property may be defined in the actual class or
@@ -262,78 +306,101 @@ public class ChangeManager {
 	 * the class of this object or which extends any super class
 	 * of the class of this object.
 	 */
-	public <V> void processPropertyUpdate(
-			ExtendableObject object,
-			ScalarPropertyAccessor<V> propertyAccessor,
-			V oldValue,
-			V newValue) {
+	public <V> void processPropertyUpdate(ExtendableObject object,
+			ScalarPropertyAccessor<V> propertyAccessor, V oldValue, V newValue) {
 
-		ChangeEntry_Update<V> newChangeEntry = new ChangeEntry_Update<V>();
-		
-		newChangeEntry.objectKeyProxy = getKeyProxy(object.getObjectKey());
-		
 		// Replace any keys with proxy keys
 		if (propertyAccessor.getClassOfValueObject().isAssignableFrom(ExtendableObject.class)) {
-			newChangeEntry.oldValueProxy = getKeyProxy((IObjectKey)oldValue);
+			ChangeEntry newChangeEntry = new ChangeEntry_UpdateReference<V>(
+					getKeyProxy(object.getObjectKey()), propertyAccessor, getKeyProxy((IObjectKey) oldValue));
+
+			getCurrentUndoableChange().addChange(newChangeEntry);
 		} else {
-			newChangeEntry.oldValue = oldValue;
+			ChangeEntry newChangeEntry = new ChangeEntry_UpdateScalar<V>(
+					getKeyProxy(object.getObjectKey()), propertyAccessor,
+					oldValue);
+
+			getCurrentUndoableChange().addChange(newChangeEntry);
 		}
-		
-		newChangeEntry.propertyAccessor = propertyAccessor;
-		
+	}
+
+	public void processObjectCreation(ExtendableObject parent,
+			ListPropertyAccessor owningListProperty, ExtendableObject newObject) {
+
+		ChangeEntry newChangeEntry = new ChangeEntry_Insert(getKeyProxy(parent
+				.getObjectKey()), owningListProperty, getKeyProxy(newObject
+				.getObjectKey()));
+
 		getCurrentUndoableChange().addChange(newChangeEntry);
 	}
 
-	public void processObjectCreation(
-			ExtendableObject parent,
-			ListPropertyAccessor owningListProperty,
-			ExtendableObject newObject) {
-		
-		ChangeEntry_Insert newChangeEntry = new ChangeEntry_Insert();
-		
-		newChangeEntry.objectKeyProxy = getKeyProxy(newObject.getObjectKey());
-		newChangeEntry.parent = parent;
-		newChangeEntry.owningListProperty = owningListProperty;
-		
-		getCurrentUndoableChange().addChange(newChangeEntry);
-	}
-	
+	/**
+	 * Processes the deletion of an object. This involves adding the property
+	 * values to the change list so that the deletion can be undone.
+	 * <P>
+	 * Also we must call this method recursively on any objects contained in any
+	 * list properties in the object. This is because this object 'owns' such
+	 * objects, and so those objects will also be deleted and must be restored
+	 * if this operation is undone.
+	 * 
+	 * @param <E>
+	 * @param parent
+	 * @param owningListProperty
+	 * @param oldObject
+	 */
 	public <E extends ExtendableObject> void processObjectDeletion(
 			ExtendableObject parent,
-			ListPropertyAccessor<E> owningListProperty,
-			E oldObject) {
-		
-		// TODO: We must also process objects owned by this object in a recursive
-		// manner.  Otherwise, undoing the deletion of an object will not restore
-		// any objects owned by that object.
-		
-		ChangeEntry_Delete<E> newChangeEntry = new ChangeEntry_Delete<E>();
-		
-		newChangeEntry.objectKeyProxy = getKeyProxy(oldObject.getObjectKey());
-		newChangeEntry.parent = parent;
-		newChangeEntry.owningListProperty = owningListProperty;
-		newChangeEntry.actualPropertySet = owningListProperty.getElementPropertySet().getActualPropertySet((Class<? extends E>)oldObject.getClass());
-		
-		// The actual key is no longer valid, so we remove the proxy
-		// from the map that maps object keys to proxies.
-		// For safety we also set this to null.
-		keyProxyMap.remove(newChangeEntry.objectKeyProxy.key);
-		newChangeEntry.objectKeyProxy.key = null;
-		
-		// Save all the property values from the deleted object.
-		// We need these to re-create the object if this change
-		// is undone.
-		int count = newChangeEntry.actualPropertySet.getScalarProperties3().size();
-		newChangeEntry.oldValues = new Object[count];
-		int index = 0;
-		for (ScalarPropertyAccessor<?> propertyAccessor: newChangeEntry.actualPropertySet.getScalarProperties3()) {
-			if (index != propertyAccessor.getIndexIntoScalarProperties()) {
-				throw new RuntimeException("index mismatch");
-			}
-			newChangeEntry.oldValues[index++] = oldObject.getPropertyValue(propertyAccessor);
+			ListPropertyAccessor<E> owningListProperty, E oldObject) {
+
+		/*
+		 * We must also process objects owned by this object in a recursive
+		 * manner. Otherwise, undoing the deletion of an object will not restore
+		 * any objects owned by that object.
+		 */
+		for (ListPropertyAccessor<?> subList : PropertySet.getPropertySet(oldObject.getClass()).getListProperties3()) {
+			processObjectListDeletion(oldObject, subList);
 		}
-		
+
+		ChangeEntry_Delete<E> newChangeEntry = new ChangeEntry_Delete<E>(
+				getKeyProxy(parent.getObjectKey()), owningListProperty,
+				oldObject);
+
+		/*
+		 * The actual key is no longer valid, so we remove the proxy from the
+		 * map that maps object keys to proxies. For safety we also set this to
+		 * null.
+		 * 
+		 * Note that the proxy itself still exists.  If this deletion is later
+		 * undone then the object is re-inserted and will be given a new object
+		 * key by the underlying datastore.  That new object key will then be set in
+		 * the proxy and the proxy will be added back to the map with the new
+		 * object key.   
+		 */
+
+		// Remove from the map.
+		keyProxyMap.remove(newChangeEntry.objectKeyProxy.key);
+
+		// This line may not be needed, as the key should never
+		// be accessed if the proxy represents a key that currently
+		// does not exist in the datastore.  This line is here for
+		// safety only.
+		newChangeEntry.objectKeyProxy.key = null;
+
 		getCurrentUndoableChange().addChange(newChangeEntry);
+	}
+
+	/**
+	 * Helper function to process the deletion of all objects in a list
+	 * property.
+	 * 
+	 * @param <E>
+	 * @param parent the object containing the list
+	 * @param listProperty the property accessor for the list
+	 */
+	private <E extends ExtendableObject> void processObjectListDeletion(ExtendableObject parent, ListPropertyAccessor<E> listProperty) {
+		for (E childObject : parent.getListPropertyValue(listProperty)) {
+			processObjectDeletion(parent, listProperty, childObject);
+		}
 	}
 
 	public void setUndoableChange() {
