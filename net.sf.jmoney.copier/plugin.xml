@@ -18,7 +18,6 @@
          </menu>
          <action
                label="%cutSession"
-               icon="icons/Open16.gif"
                tooltip="Cut session"
                class="net.sf.jmoney.copier.actions.CutSessionAction"
                menubarPath="edit/clipboardGroup"
@@ -27,7 +26,6 @@
          </action>
          <action
                label="%pasteContents"
-               icon="icons/Open16.gif"
                tooltip="Paste session contents"
                class="net.sf.jmoney.copier.actions.PasteContentsAction"
                menubarPath="edit/clipboardGroup"
