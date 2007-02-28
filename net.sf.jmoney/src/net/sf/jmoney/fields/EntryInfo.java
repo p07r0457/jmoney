@@ -25,6 +25,7 @@ package net.sf.jmoney.fields;
 import java.util.Date;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.VerySimpleDateFormat;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
@@ -61,6 +62,29 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class EntryInfo implements IPropertySetInfo {
 
+	/**
+	 * Date format used for the creation timestamp.
+	 */
+    private VerySimpleDateFormat dateFormat = new VerySimpleDateFormat(
+            JMoneyPlugin.getDefault().getDateFormat());
+
+    // Listen to date format changes so we keep up to date
+    // Johann, 2005-07-02: Shouldn't this be done in the control?
+    /*
+    static {
+        JMoneyPlugin.getDefault().getPreferenceStore()
+                .addPropertyChangeListener(new IPropertyChangeListener() {
+                    public void propertyChange(PropertyChangeEvent event) {
+                        if (event.getProperty().equals("dateFormat")) {
+                            fDateFormat = new VerySimpleDateFormat(JMoneyPlugin
+                                    .getDefault().getDateFormat());
+                        }
+                    }
+                });
+    }
+    */
+
+	
 	private static ExtendablePropertySet<Entry> propertySet = PropertySet.addBasePropertySet(Entry.class, "Accounting Entry");
 	
 	private static ScalarPropertyAccessor<String> checkAccessor = null;
@@ -127,6 +151,22 @@ public class EntryInfo implements IPropertySetInfo {
 			}};
 
 		IPropertyControlFactory<Long> creationControlFactory = new PropertyControlFactory<Long>() {
+
+			@Override
+			public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
+				Long value = extendableObject.getPropertyValue(propertyAccessor);
+				Date date = new Date(value);
+				date.setTime(value);
+		        return dateFormat.format(date);
+			}
+
+			@Override
+			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
+				Long value = extendableObject.getPropertyValue(propertyAccessor);
+				Date date = new Date(value);
+				date.setTime(value);
+		        return dateFormat.format(date);
+			}
 
 			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor, Session session) {
 				// This property is not editable
