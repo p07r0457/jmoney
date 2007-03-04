@@ -290,26 +290,23 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		// details of the database.
 		return "JDBC database";
 	}
-	
-	public String getFactoryId() {
-		return "net.sf.jmoney.jdbcdatastore.factoryid";
-	}
-	
+
 	private IPersistableElement persistableElement 
 	= new IPersistableElement() {
 		public String getFactoryId() {
-			return "net.sf.jmoney.jdbcdatastore.factoryid";
+			return "net.sf.jmoney.jdbcdatastore.SessionFactory";
 		}
 		public void saveState(IMemento memento) {
-			// The session must have been saved by now, because
-			// JMoney will not closed until the Session object says
-			// it is ok to close, and the Session object will not
-			// say it is ok to close unless it has available a file
-			// name to which the session can be saved.  (It will ask
-			// the user if the session was created using the New menu).
-			
-			// TODO: get this working.
-			//			memento.putString("fileName", sessionFile.getPath());
+			/*
+			 * The open session must be using the database as
+			 * specified in the preference pages.  Therefore there
+			 * is no need to save anything further here.
+			 * 
+			 * If we were to give the user the option at 'open' time
+			 * to open a database other than the database specified in
+			 * the prefence page then we would have to save that information
+			 * here.
+			 */
 		}
 	};
 	

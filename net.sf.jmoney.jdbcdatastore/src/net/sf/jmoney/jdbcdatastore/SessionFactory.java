@@ -22,16 +22,20 @@
 
 package net.sf.jmoney.jdbcdatastore;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.ISessionFactory;
 
 import org.eclipse.ui.IMemento;
+import org.eclipse.ui.IWorkbenchWindow;
 
 /**
- * Our sample action implements workbench action delegate.
- * The action proxy will be created by the workbench and
- * shown in the UI. When the user tries to use the action,
- * this delegate will be created and execution will be 
- * delegated to it.
+ * This factory restores an open session by opening a
+ * JDBC database.
+ * 
+ * Although an IMemento is passed, the session is always
+ * based on the JDBC options set in the preference page
+ * (the user cannot select another database without changing
+ * the preferences), so the memento is not used.
  */
 public class SessionFactory implements ISessionFactory {
 //	private IWorkbenchWindow window;
@@ -45,20 +49,8 @@ public class SessionFactory implements ISessionFactory {
 	 * @see org.eclipse.ui.IElementFactory#createElement(org.eclipse.ui.IMemento)
 	 */
 	public void openSession(IMemento memento) {
-		// TODO: Write this for JDBC databases and get it working.
-/*		
-		String fileName = memento.getString("fileName");
-        if (fileName != null) {
-            File sessionFile = new File(fileName);
-            SerializedDatastorePlugin.getDefault().readSession(sessionFile, window);
-        } else {
-        	// No file name is set.  This can happen if the workbench was last closed
-        	// with a session that had never been saved.  Although the user was prompted
-        	// to save the session when the workbench closed, the user may have pressed
-        	// the 'no' button.  We create an new empty session.
-            JMoneyPlugin.getDefault().setSessionManager(
-            		SerializedDatastorePlugin.getDefault().newSession());
-        }
-*/        
+		IWorkbenchWindow window = JMoneyPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow();
+		JMoneyPlugin.getDefault().setSessionManager(
+				JDBCDatastorePlugin.getDefault().readSession(window));
 	}
 }
