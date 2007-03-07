@@ -291,11 +291,20 @@ public class ChangeManager {
 		}
 	}
 
-	private UndoableChange getCurrentUndoableChange() {
-		if (currentUndoableChange == null) {
-			currentUndoableChange = new UndoableChange();
+	private void addUndoableChangeEntry(ChangeEntry changeEntry) {
+		if (currentUndoableChange != null) {
+			currentUndoableChange.addChange(changeEntry);
 		}
-		return currentUndoableChange;
+		
+		/*
+		 * If changes are made while currentUndoableChange is set to null then
+		 * the changes are not undoable. This is supported but is not common. It
+		 * is typically used for very large transactions such as imports of
+		 * entire databases by the copier plug-in.
+		 */
+		// TODO: We should really clear out the change history as
+		// prior changes are not likely to be undoable after this
+		// change has been applied. 
 	}
 
 	/**
@@ -314,13 +323,13 @@ public class ChangeManager {
 			ChangeEntry newChangeEntry = new ChangeEntry_UpdateReference<V>(
 					getKeyProxy(object.getObjectKey()), propertyAccessor, getKeyProxy((IObjectKey) oldValue));
 
-			getCurrentUndoableChange().addChange(newChangeEntry);
+			addUndoableChangeEntry(newChangeEntry);
 		} else {
 			ChangeEntry newChangeEntry = new ChangeEntry_UpdateScalar<V>(
 					getKeyProxy(object.getObjectKey()), propertyAccessor,
 					oldValue);
 
-			getCurrentUndoableChange().addChange(newChangeEntry);
+			addUndoableChangeEntry(newChangeEntry);
 		}
 	}
 
@@ -331,7 +340,7 @@ public class ChangeManager {
 				.getObjectKey()), owningListProperty, getKeyProxy(newObject
 				.getObjectKey()));
 
-		getCurrentUndoableChange().addChange(newChangeEntry);
+		addUndoableChangeEntry(newChangeEntry);
 	}
 
 	/**
@@ -386,7 +395,7 @@ public class ChangeManager {
 		// safety only.
 		newChangeEntry.objectKeyProxy.key = null;
 
-		getCurrentUndoableChange().addChange(newChangeEntry);
+		addUndoableChangeEntry(newChangeEntry);
 	}
 
 	/**
