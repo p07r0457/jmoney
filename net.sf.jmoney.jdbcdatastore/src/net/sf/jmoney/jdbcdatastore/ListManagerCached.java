@@ -50,10 +50,25 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 	
 	private Vector<E> elements = null;
 	
-	public ListManagerCached(SessionManager sessionManager, IDatabaseRowKey parentKey, ListPropertyAccessor<E> listProperty) {
+	/**
+	 * 
+	 * @param sessionManager
+	 * @param parentKey
+	 * @param listProperty
+	 * @param isEmpty
+	 *            true if the list is known to be empty (this is the case if the
+	 *            parent object has been newly created), false if the list is
+	 *            unknown (may or may not be empty, this is the case if the
+	 *            parent object is being materialized from the database)
+	 */
+	public ListManagerCached(SessionManager sessionManager, IDatabaseRowKey parentKey, ListPropertyAccessor<E> listProperty, boolean isEmpty) {
 		this.sessionManager = sessionManager;
 		this.parentKey = parentKey;
 		this.listProperty = listProperty;
+		
+		if (isEmpty) {
+			this.elements = new Vector<E>();
+		}
 	}
 
 	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
@@ -70,7 +85,7 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 		
 		ObjectKey objectKey = new ObjectKey(sessionManager);
 		
-		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent, true);
+		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent);
 
 		objectKey.setObject(extendableObject);
 
@@ -87,12 +102,6 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 
 		int rowId = sessionManager.insertIntoDatabase(propertySet, extendableObject, listProperty, parent);
 		objectKey.setRowId(rowId);
-
-		/*
-		 * Having created an object, set a weak reference to it in our weak refence map.
-		 */
-		// TODO: should this be done inside constructExtendableObject?
-		sessionManager.setMaterializedObject(propertySet, rowId, extendableObject);
 
 		return extendableObject;
 	}
@@ -111,7 +120,7 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 		
 		ObjectKey objectKey = new ObjectKey(sessionManager);
 		
-		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent, true, values);
+		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent, values);
 
 		objectKey.setObject(extendableObject);
 		
@@ -128,12 +137,6 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 
 		int rowId = sessionManager.insertIntoDatabase(propertySet, extendableObject, listProperty, parent);
 		objectKey.setRowId(rowId);
-
-		/*
-		 * Having created an object, set a weak reference to it in our weak refence map.
-		 */
-		// TODO: should this be done inside constructExtendableObject?
-		sessionManager.setMaterializedObject(propertySet, rowId, extendableObject);
 
 		return extendableObject;
 	}

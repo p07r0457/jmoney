@@ -64,8 +64,8 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		 * Constructing the object means constructing the object key. Both
 		 * contain a reference to the other, so they have the same lifetime.
 		 */
-
-		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent, false);
+		// TODO: remove constructWithCachedList parameter
+		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent);
 		objectKey.setObject(extendableObject);
 		
 		// Insert the new object into the tables.
@@ -89,8 +89,7 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		 * Constructing the object means constructing the object key. Both
 		 * contain a reference to the other, so they have the same lifetime.
 		 */
-
-		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent, false, values);
+		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent, values);
 		objectKey.setObject(extendableObject);
 		
 		// Insert the new object into the tables.
@@ -105,9 +104,10 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		try {
 			String tableName = listProperty.getElementPropertySet().getId().replace('.', '_');
 			String columnName = listProperty.getName().replace('.', '_');
-			ResultSet resultSet = sessionManager.getReusableStatement().executeQuery(
-					"SELECT COUNT(*) FROM " + tableName
-					+ " WHERE \"" + columnName + "\" = " + parentKey.getRowId());
+			String sql = "SELECT COUNT(*) FROM " + tableName
+			+ " WHERE \"" + columnName + "\" = " + parentKey.getRowId();
+			System.out.println(sql);
+			ResultSet resultSet = sessionManager.getReusableStatement().executeQuery(sql);
 			resultSet.next();
 			int size = resultSet.getInt(1);
 			resultSet.close();

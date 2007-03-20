@@ -65,6 +65,14 @@ import net.sf.jmoney.model2.Session;
  */
 public class ObjectKey implements IDatabaseRowKey {
 	private ExtendablePropertySet<? extends ExtendableObject> basemostPropertySet;
+
+	/**
+	 * The key for the row in the database, or -1 if this object
+	 * has been constructed but not yet written to the database.
+	 * This value will be -1 only while a new object is being written
+	 * to the database and, as this application is single threaded,
+	 * users can assume that this value is never -1.
+	 */
 	private int rowId;
 	
 	/**
@@ -104,11 +112,7 @@ public class ObjectKey implements IDatabaseRowKey {
 		this.sessionManager = sessionManager;
 
 		// TODO: it may be more efficient for the caller to do this????
-		ExtendablePropertySet<?> basePropertySet = typedPropertySet; 
-		while (basePropertySet.getBasePropertySet() != null) {
-			basePropertySet = basePropertySet.getBasePropertySet();
-		}
-		basemostPropertySet = basePropertySet;
+		basemostPropertySet = SessionManager.getBasemostPropertySet(typedPropertySet);
 	}
 
 	/**
@@ -203,7 +207,7 @@ public class ObjectKey implements IDatabaseRowKey {
 					String sql = "SELECT _PROPERTY_SET FROM "
 						+ basemostPropertySet.getId().replace('.', '_')
 						+ " WHERE _ID = " + rowId;
-
+					System.out.println(sql);
 					ResultSet rs = sessionManager.getReusableStatement().executeQuery(sql);
 
 					// Get the final property set.

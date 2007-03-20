@@ -57,9 +57,10 @@ public class AccountEntriesList implements Collection<Entry> {
 	
 	public int size() {
 		try {
-			ResultSet resultSet = sessionManager.getReusableStatement().executeQuery(
-					"SELECT COUNT(*) FROM " + tableName
-					+ " WHERE \"" + columnName + "\" = " + keyOfRequiredPropertyValue.getRowId());
+			String sql = "SELECT COUNT(*) FROM " + tableName
+			+ " WHERE \"" + columnName + "\" = " + keyOfRequiredPropertyValue.getRowId();
+			System.out.println(sql);
+			ResultSet resultSet = sessionManager.getReusableStatement().executeQuery(sql);
 			resultSet.next();
 			int size = resultSet.getInt(1);
 			resultSet.close();
@@ -72,9 +73,11 @@ public class AccountEntriesList implements Collection<Entry> {
 	
 	public boolean isEmpty() {
 		try {
-			ResultSet resultSet = sessionManager.getReusableStatement().executeQuery(
-					"SELECT * FROM " + tableName
-					+ " WHERE \"" + columnName + "\" = " + keyOfRequiredPropertyValue.getRowId());
+			String sql =
+				"SELECT * FROM " + tableName
+				+ " WHERE \"" + columnName + "\" = " + keyOfRequiredPropertyValue.getRowId();
+			System.out.println(sql);
+			ResultSet resultSet = sessionManager.getReusableStatement().executeQuery(sql);
 			boolean hasNext = resultSet.next();
 			return !hasNext;
 		} catch (SQLException e) {

@@ -193,6 +193,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		 */
 		String sql3 = "SELECT * FROM " 
 			+ SessionInfo.getPropertySet().getId().replace('.', '_');
+		System.out.println(sql3);
 		ResultSet rs3 = stmt.executeQuery(sql3);
 		if (!rs3.next()) {
 
@@ -333,14 +334,8 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		}
 	}
 
-	public <E extends ExtendableObject> void setMaterializedObject(ExtendablePropertySet<E> propertySet, int id, E extendableObject) {
-		// TODO: it may be more efficient for the caller to do this????
-		ExtendablePropertySet<?> basePropertySet = propertySet; 
-		while (basePropertySet.getBasePropertySet() != null) {
-			basePropertySet = basePropertySet.getBasePropertySet();
-		}
-		
-		Map<Integer, WeakReference<ExtendableObject>> result = objectMaps.get(basePropertySet);
+	public <E extends ExtendableObject> void setMaterializedObject(ExtendablePropertySet<E> basemostPropertySet, int id, E extendableObject) {
+		Map<Integer, WeakReference<ExtendableObject>> result = objectMaps.get(basemostPropertySet);
 		result.put(id, new WeakReference<ExtendableObject>(extendableObject));
 	}
 
@@ -732,22 +727,22 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				+ propertySet2.getId().replace('.', '_')
 				+ " WHERE _ID=" + objectKey.getRowId();
 			
-				try {
-					System.out.println(sql);
-					int rowCount = stmt.executeUpdate(sql);
-					if (rowCount != 1) {
-						if (rowCount == 0
-						 && propertySet2 == propertySet) {
-							// The object does not exist in the database.
-							// This is not an error, but we do return 'false'.
-							return false;
-						}
-						throw new RuntimeException("database is inconsistent");
+			try {
+				System.out.println(sql);
+				int rowCount = stmt.executeUpdate(sql);
+				if (rowCount != 1) {
+					if (rowCount == 0
+							&& propertySet2 == propertySet) {
+						// The object does not exist in the database.
+						// This is not an error, but we do return 'false'.
+						return false;
 					}
-				} catch (SQLException e) {
-					// TODO Handle this properly
-					e.printStackTrace();
-					throw new RuntimeException("internal error");
+					throw new RuntimeException("database is inconsistent");
+				}
+			} catch (SQLException e) {
+				// TODO Handle this properly
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
 			}
 		}
 		
@@ -803,14 +798,14 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				+ " WHERE " 
 				+ "\"" + listProperty.getName().replace('.', '_') + "\""
 				+ "=" + objectKey.getRowId();
-			
-				try {
-					System.out.println(sql);
-					stmt.executeUpdate(sql);
-				} catch (SQLException e) {
-					// TODO Handle this properly
-					e.printStackTrace();
-					throw new RuntimeException("internal error");
+
+			try {
+				System.out.println(sql);
+				stmt.executeUpdate(sql);
+			} catch (SQLException e) {
+				// TODO Handle this properly
+				e.printStackTrace();
+				throw new RuntimeException("internal error");
 			}
 		}
 	}
@@ -819,17 +814,15 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * Construct an object with default property values.
 	 * 
 	 * @param propertySet
-	 * @param sessionManager
-	 * @param objectKeyProxy The key to this object.  This is required by this
+	 * @param objectKey The key to this object.  This is required by this
 	 * 			method because it must be passed to the constructor.
 	 * 			This method does not call the setObject or setRowId
 	 * 			methods on this key.  It is the caller's responsibility
 	 * 			to call these methods.
 	 * @param parent
-	 * @param constructWithCachedLists
 	 * @return
 	 */
-	public <E extends ExtendableObject> E constructExtendableObject(PropertySet<E> propertySet, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists) {
+	public <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, ExtendableObject parent) {
 		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
 		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {
@@ -864,41 +857,37 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor; 
 
 				// Must be an element in an array.
-				constructorParameters[index] = createListManager(objectKey, listAccessor, constructWithCachedLists);
+				constructorParameters[index] = createListManager(objectKey, listAccessor);
 			}
 		}
 		
 		// We can now create the object.
 		E extendableObject = propertySet.constructImplementationObject(constructorParameters);
 		
+		setMaterializedObject(getBasemostPropertySet(propertySet), objectKey.getRowId(), extendableObject);
+		
 		return extendableObject;
 	}
 
-	private <E2 extends ExtendableObject> IListManager<E2> createListManager(IDatabaseRowKey objectKey, ListPropertyAccessor<E2> listAccessor, boolean constructWithCachedLists) {
-		if (constructWithCachedLists) {
-			return new ListManagerCached<E2>(this, objectKey, listAccessor);
-		} else {
-			return new ListManagerUncached<E2>(this, objectKey, listAccessor);
-		}
+	private <E2 extends ExtendableObject> IListManager<E2> createListManager(IDatabaseRowKey objectKey, ListPropertyAccessor<E2> listAccessor) {
+		return new ListManagerCached<E2>(this, objectKey, listAccessor, true);
 	}
 
 	/**
 	 * Construct an object with the given property values.
 	 * 
 	 * @param propertySet
-	 * @param sessionManager
-	 * @param objectKeyProxy The key to this object.  This is required by this
+	 * @param objectKey The key to this object.  This is required by this
 	 * 			method because it must be passed to the constructor.
 	 * 			This method does not call the setObject or setRowId
 	 * 			methods on this key.  It is the caller's responsibility
 	 * 			to call these methods.
 	 * @param parent
-	 * @param constructWithCachedLists
 	 * @param values the values of the scalar properties to be set into this object,
 	 * 			with ExtendableObject properties having the object key in this array 
 	 * @return
 	 */
-	public <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, ExtendableObject parent, boolean constructWithCachedLists, Object[] values) {
+	public <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, ExtendableObject parent, Object[] values) {
 		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
 		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {
@@ -931,7 +920,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				value = values[valuesIndex++];
 			} else {
 				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
-				value = createListManager(objectKey, listAccessor, constructWithCachedLists);
+				value = createListManager(objectKey, listAccessor);
 			}
 			
 			// Determine how this value is passed to the constructor.
@@ -952,6 +941,8 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 
 		// We can now create the object.
 		E extendableObject = propertySet.constructImplementationObject(constructorParameters);
+
+		setMaterializedObject(getBasemostPropertySet(propertySet), objectKey.getRowId(), extendableObject);
 		
 		return extendableObject;
 	}
@@ -968,13 +959,12 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 *
 	 * @param rs
 	 * @param propertySet
-	 * @param key
+	 * @param objectKey
 	 * @param parentKey
-	 * @param sessionManager
 	 * @return
 	 * @throws SQLException
 	 */ 
-	<E extends ExtendableObject> E materializeObject(ResultSet rs, ExtendablePropertySet<E> propertySet, IDatabaseRowKey key, IObjectKey parentKey) throws SQLException {
+	<E extends ExtendableObject> E materializeObject(ResultSet rs, ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, IObjectKey parentKey) throws SQLException {
 		/**
 		 * The list of parameters to be passed to the constructor
 		 * of this object.
@@ -986,7 +976,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 
 		Map<PropertySet, Object[]> extensionMap = new HashMap<PropertySet, Object[]>();
 		
-		constructorParameters[0] = key;
+		constructorParameters[0] = objectKey;
 		constructorParameters[1] = extensionMap;
 		constructorParameters[2] = parentKey;
 
@@ -1067,7 +1057,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				}
 			} else {
 				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
-				value = constructListManager(key, listAccessor);
+				value = constructListManager(objectKey, listAccessor);
 			}
 			
 			// Determine how this value is passed to the constructor.
@@ -1088,6 +1078,8 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 
 		// We can now create the object.
 		E extendableObject = propertySet.constructImplementationObject(constructorParameters);
+		
+		setMaterializedObject(getBasemostPropertySet(propertySet), objectKey.getRowId(), extendableObject);
 		
 		return extendableObject;
 	}
@@ -1121,7 +1113,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		if (listAccessor == SessionInfo.getTransactionsAccessor()) {
 			return new ListManagerUncached<E>(this, parentKey, listAccessor);
 		} else {
-			return new ListManagerCached<E>(this, parentKey, listAccessor);
+			return new ListManagerCached<E>(this, parentKey, listAccessor, false);
 		}
 	}
 
@@ -1635,7 +1627,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				+ " WHERE account = " + proxy.getRowId()
 				+ " AND date >= " + fromDate
 				+ " AND date <= " + toDate;
-			
+			System.out.println(sql);
 			ResultSet rs = getReusableStatement().executeQuery(sql);
 			rs.next();
 			return rs.getLong(0);
@@ -1688,7 +1680,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				+ " AND date >= " + startDateString
 				+ " AND date < " + endDateString
 				+ " ORDER BY DateSerial(Year(date),Month(date),1)";
-			
+			System.out.println(sql);
 			ResultSet rs = getReusableStatement().executeQuery(sql);
 			
 			long [] totals = new long[numberOfMonths];
@@ -1727,5 +1719,20 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * This is a helper method to get the basemost property set for
+	 * a given property set.
+	 * 
+	 * @param propertySet
+	 * @return
+	 */
+	public static <E extends ExtendableObject> ExtendablePropertySet<? super E> getBasemostPropertySet(ExtendablePropertySet<E> propertySet) {
+		ExtendablePropertySet<? super E> basePropertySet = propertySet; 
+		while (basePropertySet.getBasePropertySet() != null) {
+			basePropertySet = basePropertySet.getBasePropertySet();
+		}
+		return basePropertySet;
 	}
 }
