@@ -32,6 +32,7 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.ExtensionPropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -54,7 +55,7 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 	 }
 
 	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
-		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
+		Collection<?> constructorProperties = propertySet.getDefaultConstructorProperties();
 		
 		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {
@@ -116,7 +117,7 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 	}
 
 	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, Object[] values) {
-		Collection constructorProperties = propertySet.getConstructorProperties();
+		Collection<?> constructorProperties = propertySet.getConstructorProperties();
 		
 		int numberOfParameters = constructorProperties.size();
 		if (!propertySet.isExtension()) {
@@ -126,7 +127,7 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 		
 		SimpleObjectKey objectKey = new SimpleObjectKey(sessionManager);
 		
-		Map<PropertySet, Object[]> extensionMap = new HashMap<PropertySet, Object[]>();
+		Map<ExtensionPropertySet<?>, Object[]> extensionMap = new HashMap<ExtensionPropertySet<?>, Object[]>();
 		
 		if (!propertySet.isExtension()) {
 			constructorParameters[0] = objectKey;
@@ -156,7 +157,7 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 				Object [] extensionConstructorParameters = (Object[])extensionMap.get(propertyAccessor.getPropertySet());
 				if (extensionConstructorParameters == null) {
 					extensionConstructorParameters = new Object [propertyAccessor.getPropertySet().getConstructorProperties().size()];
-					extensionMap.put(propertyAccessor.getPropertySet(), extensionConstructorParameters);
+					extensionMap.put((ExtensionPropertySet<?>)propertyAccessor.getPropertySet(), extensionConstructorParameters);
 				}
 				extensionConstructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
 			}
