@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Schema file written by PDE -->
-<schema targetNamespace="net.sf.jmoney">
+<schema targetNamespace="net.sf.jmoney.serializeddatastore">
 <annotation>
       <appInfo>
          <meta.schema plugin="net.sf.jmoney.serializeddatastore" id="filestores" name="File Storage Formats"/>
@@ -27,7 +27,7 @@ file open dialog can open any of the supported file types.
    <element name="extension">
       <complexType>
          <sequence>
-            <element ref="file-format"/>
+            <element ref="file-format" minOccurs="1" maxOccurs="unbounded"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
