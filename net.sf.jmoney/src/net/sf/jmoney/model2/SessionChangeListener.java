@@ -40,10 +40,25 @@ public interface SessionChangeListener extends EventListener {
 	 * Transaction object, but if another Entry object is added in a later
 	 * transaction then this method will be called for that Entry object.
 	 * 
+	 * All the descendents of the inserted object will already be created when
+	 * this method is called.
+	 * 
+	 * If the newly inserted object contains a reference to another object that
+	 * is also created in this transaction, and if that object has not already been
+	 * created (i.e. objectInserted has not yet been fired for the referenced object)
+	 * then the value of the reference when this method is called will be null.
+	 * A later objectChanged event will be fired after the referenced object has been
+	 * created and the correct reference being set in this object.  This makes things
+	 * a little easier for some listeners because the listener does not have to worry about seeing
+	 * a reference to an object that has not been processed in the objectInserted or
+	 * objectCreated methods.  It does mean the listener must be able to deal with the case
+	 * where a reference is null even though a null reference is not valid, but that is
+	 * an easier case with which to deal.
+	 * 
 	 * Listeners should put code in this method to avoid complications that can
 	 * arise if objects and there children are added piecemeal.
 	 * 
-	 * @param extendableObject
+	 * @param newObject
 	 */
 	void objectInserted(ExtendableObject newObject);
 
