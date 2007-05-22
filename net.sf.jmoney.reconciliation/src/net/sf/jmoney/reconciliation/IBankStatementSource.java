@@ -137,5 +137,9 @@ public interface IBankStatementSource {
 		public String toString() {
 			return "[a:"+amount+";n:"+name+"]";
 		}
+		
+		public String getMemo() {
+			return memo;
+		}
 	}
 }

@@ -27,6 +27,11 @@
           info-class="net.sf.jmoney.reconciliation.ReconciliationEntryInfo"
 	      extendable-property-set="net.sf.jmoney.entry">
       </extension-property-set>
+      
+      <extendable-property-set
+      	id="pattern"
+          info-class="net.sf.jmoney.reconciliation.MemoPatternInfo">
+      </extendable-property-set>
    </extension>
 
    <extension

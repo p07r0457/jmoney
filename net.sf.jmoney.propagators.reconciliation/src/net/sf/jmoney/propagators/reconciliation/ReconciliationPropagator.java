@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.propagators.reconciliation;
 
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.qif.QIFEntry;
 import net.sf.jmoney.reconciliation.ReconciliationEntry;
 
@@ -43,17 +44,36 @@ import net.sf.jmoney.reconciliation.ReconciliationEntry;
  */
 public class ReconciliationPropagator {
     
-        public static void propertyChange(String propertyName, ReconciliationEntry sourceReconciliationEntry, QIFEntry destinationQifEntry) {
-            if (propertyName.equals("status")) {
-                switch (sourceReconciliationEntry.getStatus()) {
-                    case ReconciliationEntry.UNCLEARED:
-                        destinationQifEntry.setReconcilingState(' ');
+        public static void propertyChange(ScalarPropertyAccessor property, ReconciliationEntry sourceReconciliationEntry, QIFEntry destinationQifEntry) {
+            if (property.getLocalName().equals("status")) {
+            	if (sourceReconciliationEntry.getStatement() == null) {
+            		if (destinationQifEntry.getReconcilingState() == 'C') {
+            			destinationQifEntry.setReconcilingState(' ');
+            		}
+            	} else {
+            		destinationQifEntry.setReconcilingState('C');
+            	}
+            }
+        }
+
+        public static void propertyChange(ScalarPropertyAccessor property, QIFEntry sourceQifEntry, ReconciliationEntry destinationReconciliationEntry) {
+            if (property.getLocalName().equals("reconcilingState")) {
+                switch (sourceQifEntry.getReconcilingState()) {
+                    case ' ':
+                        destinationReconciliationEntry.setStatus(ReconciliationEntry.UNCLEARED);
+                        destinationReconciliationEntry.setStatement(null);
                         break;
-                    case ReconciliationEntry.RECONCILING:
-                        destinationQifEntry.setReconcilingState('*');
+                    case '*':
+                        destinationReconciliationEntry.setStatus(ReconciliationEntry.RECONCILING);
+                    	// Don't change the statement.
                         break;
-                    case ReconciliationEntry.CLEARED:
-                        destinationQifEntry.setReconcilingState('C');
+                    case 'C':
+                        destinationReconciliationEntry.setStatus(ReconciliationEntry.CLEARED);
+                    	/*
+                    	 * We have no way of knowing what statement this entry should
+                    	 * be reconciled to, so we leave it as not yet reconciled to
+                    	 * any statement.
+                    	 */
                         break;
                 }
             }
@@ -80,20 +100,4 @@ public class ReconciliationPropagator {
                 }
         }
  */
-        public static void propertyChange(String propertyName, QIFEntry sourceQifEntry, ReconciliationEntry destinationReconciliationEntry) {
-            if (propertyName.equals("reconcilingState")) {
-                switch (sourceQifEntry.getReconcilingState()) {
-                    case ' ':
-                        destinationReconciliationEntry.setStatus(ReconciliationEntry.UNCLEARED);
-                        break;
-                    case '*':
-                        destinationReconciliationEntry.setStatus(ReconciliationEntry.RECONCILING);
-                        break;
-                    case 'C':
-                        destinationReconciliationEntry.setStatus(ReconciliationEntry.CLEARED);
-                        break;
-                }
-            }
-        }
-
 }

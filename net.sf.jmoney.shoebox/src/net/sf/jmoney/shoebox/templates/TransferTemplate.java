@@ -346,7 +346,7 @@ public class TransferTemplate implements ITransactionTemplate {
    			 */
    	   		ourEntryList.add(entry1.getObjectKey());
    	   		
-		    transactionManager.commit();
+		    transactionManager.commit("Transfer");
 
 		    // Clear the controls.
 		    dateControl.setDate(null);

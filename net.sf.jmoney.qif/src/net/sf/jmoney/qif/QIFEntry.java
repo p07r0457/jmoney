@@ -23,6 +23,7 @@
 package net.sf.jmoney.qif;
 
 import net.sf.jmoney.model2.EntryExtension;
+import net.sf.jmoney.model2.ExtendableObject;
 
 /**
  * Property set implementation class for the properties added
@@ -40,7 +41,8 @@ public class QIFEntry extends EntryExtension {
 	 * The default constructor sets the extension properties to
 	 * appropriate default values.
 	 */
-	public QIFEntry() {
+	public QIFEntry(ExtendableObject extendedObject) {
+		super(extendedObject);
 	}
 	
 	/**
@@ -51,8 +53,10 @@ public class QIFEntry extends EntryExtension {
 	 * @param reconcilingState
 	 */
 	public QIFEntry(
+			ExtendableObject extendedObject,
 			char reconcilingState,
 			String address) {
+		super(extendedObject);
 		this.reconcilingState = reconcilingState;
 		this.address = address;
 	}

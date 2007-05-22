@@ -28,11 +28,8 @@ import java.util.ResourceBundle;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.Transaction;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -305,19 +302,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
     	SessionManager sessionManager = new SessionManager(null, null, null);
     	
     	SimpleObjectKey sessionKey = new SimpleObjectKey(sessionManager);
-    	
-    	// TODO: rather than hard code this constructor, use
-    	// more generalized code.  Plug-ins may have added
-    	// additional properties to the session.
-    	Session newSession = new Session(
-    			sessionKey,
-    			null,
-				null,
-				new SimpleListManager<Commodity>(sessionManager),
-				new SimpleListManager<Account>(sessionManager),
-				new SimpleListManager<Transaction>(sessionManager),
-				null
-			);
+
+    	Session newSession = new Session(sessionKey, null);
     	
     	sessionKey.setObject(newSession);
     	

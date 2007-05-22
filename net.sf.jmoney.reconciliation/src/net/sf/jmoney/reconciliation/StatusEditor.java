@@ -27,9 +27,9 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
+import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
@@ -47,7 +47,7 @@ import org.eclipse.swt.widgets.Control;
  */
 public class StatusEditor implements IPropertyControl {
 
-    private Combo propertyControl;
+    private CCombo propertyControl;
 
     private Entry entry = null;
 
@@ -57,7 +57,7 @@ public class StatusEditor implements IPropertyControl {
      * 			'status' property in the ReconciliationEntry propery set.
      */
     public StatusEditor(Composite parent, ScalarPropertyAccessor propertyAccessor, String [] items) {
-        propertyControl = new Combo(parent, 0);
+        propertyControl = new CCombo(parent, 0);
 
         propertyControl.setItems(items);
         		

@@ -32,24 +32,26 @@ import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.ITransactionTemplate;
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.entrytable.BalanceColumn;
+import net.sf.jmoney.entrytable.Block;
+import net.sf.jmoney.entrytable.CellBlock;
+import net.sf.jmoney.entrytable.DebitAndCreditColumns;
+import net.sf.jmoney.entrytable.EntriesSectionProperty;
+import net.sf.jmoney.entrytable.EntriesTable;
+import net.sf.jmoney.entrytable.EntryData;
+import net.sf.jmoney.entrytable.HorizontalBlock;
+import net.sf.jmoney.entrytable.IEntriesContent;
+import net.sf.jmoney.entrytable.IEntriesTableProperty;
+import net.sf.jmoney.entrytable.VerticalBlock;
+import net.sf.jmoney.entrytable.EntriesTable.IMenuItem;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
-import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.pages.entries.EntriesTree;
-import net.sf.jmoney.pages.entries.IDisplayableItem;
-import net.sf.jmoney.pages.entries.IEntriesContent;
-import net.sf.jmoney.pages.entries.IEntriesTableProperty;
-import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
 import net.sf.jmoney.views.NodeEditor;
 import net.sf.jmoney.views.SectionlessPage;
 
@@ -66,7 +68,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.PartInitException;
@@ -79,11 +80,8 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 	
 	private static final String PAGE_ID = "net.sf.jmoney.shoebox.editor";
 	
-	protected Vector<IEntriesTableProperty> allEntryDataObjects = new Vector<IEntriesTableProperty>();
+//	protected Vector<IEntriesTableProperty> allEntryDataObjects = new Vector<IEntriesTableProperty>();
 
-	IEntriesTableProperty debitColumnManager;
-	IEntriesTableProperty creditColumnManager;
-	
 	ShoeboxFormPage formPage;
 	
 	/**
@@ -94,6 +92,8 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 	 */
 	TransactionManager transactionManager = null;
 
+    private Block rootBlock;
+    
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
@@ -105,7 +105,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 		DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 
         transactionManager = new TransactionManager(sessionManager);
-    	
+/*    	
     	// Build an array of all possible properties that may be
     	// displayed in the table.
        
@@ -127,7 +127,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 		 * Add properties from this entry. For time being, this is all the
 		 * properties except the description which come from the other entry,
 		 * and the amount which is shown in the debit and credit columns.
-		 */
+		 * /
    		for (ScalarPropertyAccessor propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
             if (propertyAccessor != EntryInfo.getDescriptionAccessor()
             		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
@@ -143,7 +143,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 		 * Add properties from the other entry where the property also is
 		 * applicable for capital accounts. For time being, this is just the
 		 * account.
-		 */
+		 * /
    		for (ScalarPropertyAccessor propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
             if (propertyAccessor == EntryInfo.getAccountAccessor()) {
             	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "common2") {
@@ -162,7 +162,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
         
 		debitColumnManager = new DebitAndCreditColumns("Debit", "debit", true);     //$NON-NLS-2$
 		creditColumnManager = new DebitAndCreditColumns("Credit", "credit", false); //$NON-NLS-2$
-
+*/
     	
 		formPage = new ShoeboxFormPage(
 				editor,
@@ -182,7 +182,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 		
 		private Session session;
 		
-	    private EntriesTree recentlyAddedEntriesControl;
+	    private EntriesTable recentlyAddedEntriesControl;
 	    private IEntriesContent recentEntriesTableContents = null;
 	    
 		Collection<IObjectKey> ourEntryList = new Vector<IObjectKey>();
@@ -203,23 +203,6 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 		public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
 			
 	        recentEntriesTableContents = new IEntriesContent() {
-
-				public Vector<IEntriesTableProperty> getAllEntryDataObjects() {
-					return allEntryDataObjects;
-				}
-
-				public IEntriesTableProperty getDebitColumnManager() {
-					return debitColumnManager;
-				}
-
-				public IEntriesTableProperty getCreditColumnManager() {
-					return creditColumnManager;
-				}
-
-				public IEntriesTableProperty getBalanceColumnManager() {
-					// But there is no balance column?????
-					return null;
-				}
 
 				public Collection<Entry> getEntries() {
 					Collection<Entry> committedEntries = new Vector<Entry>();
@@ -245,7 +228,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 					return false;
 				}
 
-				public boolean filterEntry(IDisplayableItem data) {
+				public boolean filterEntry(EntryData data) {
 					// No filter here, so entries always match
 					return true;
 				}
@@ -272,8 +255,33 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			parent.setBackground(this.getSite().getShell().getDisplay().getSystemColor(SWT.COLOR_RED));
 			topLevelControl.setBackground(getSite().getShell().getDisplay().getSystemColor(SWT.COLOR_CYAN));
 			
+			/*
+			 * Setup the layout structure of the header and rows.
+			 */
+			IEntriesTableProperty debitColumnManager = new DebitAndCreditColumns("debit", "Debit", session.getDefaultCurrency(), true);     //$NON-NLS-2$
+			IEntriesTableProperty creditColumnManager = new DebitAndCreditColumns("credit", "Credit", session.getDefaultCurrency(), false); //$NON-NLS-2$
+			
+			rootBlock = new HorizontalBlock(new Block [] {
+					new CellBlock(EntriesSectionProperty.createTransactionColumn(TransactionInfo.getDateAccessor())),
+					new VerticalBlock(new Block [] {
+							new HorizontalBlock(new Block [] {
+									new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getAccountAccessor())),
+									new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getMemoAccessor())),
+							}),
+							new HorizontalBlock(new Block [] {
+									new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getCheckAccessor())),
+									new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getValutaAccessor())),
+							}),
+					}),
+					new CellBlock(EntriesSectionProperty.createOtherEntryColumn(EntryInfo.getAccountAccessor())),
+					new CellBlock(EntriesSectionProperty.createOtherEntryColumn(EntryInfo.getDescriptionAccessor())),
+					new CellBlock(EntriesSectionProperty.createOtherEntryColumn(EntryInfo.getAmountAccessor())),
+					new CellBlock(debitColumnManager),
+					new CellBlock(creditColumnManager),
+			});
+			
 	        // Create the table control.
-	        recentlyAddedEntriesControl = new EntriesTree(topLevelControl, toolkit, transactionManager, recentEntriesTableContents, this.session); 
+	        recentlyAddedEntriesControl = new EntriesTable(topLevelControl, toolkit, rootBlock, recentEntriesTableContents, this.session, new IMenuItem [] {}); 
 			
 			recentlyAddedEntriesControl.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
 
@@ -361,285 +369,4 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 		}
 		
 	};
-	
-	/**
-	 * Represents a property that can be displayed in the entries table,
-	 * edited by the user, or used in the filter.
-	 * <P>
-	 * The credit, debit, and balance columns are hard coded at the end
-	 * of the table and are not represented by objects of this class.
-	 * 
-	 * @author Nigel Westbury
-	 */
-	abstract class EntriesSectionProperty implements IEntriesTableProperty {
-		private ScalarPropertyAccessor<?> accessor;
-		private String id;
-		
-		EntriesSectionProperty(ScalarPropertyAccessor accessor, String source) {
-			this.accessor = accessor;
-			this.id = source + '.' + accessor.getName();
-		}
-
-		public String getText() {
-			return accessor.getDisplayName();
-		}
-
-		public String getId() {
-			return id;
-		}
-
-		public int getWeight() {
-			return accessor.getWeight();
-		}
-
-		public int getMinimumWidth() {
-			return accessor.getMinimumWidth();
-		}
-
-		/**
-		 * @param entry
-		 * @return
-		 */
-		public String getValueFormattedForTable(IDisplayableItem data) {
-			ExtendableObject extendableObject = getObjectContainingProperty(data);
-			if (extendableObject == null) {
-				return "";
-			} else {
-				return accessor.formatValueForTable(extendableObject);
-			}
-		}
-
-		public abstract ExtendableObject getObjectContainingProperty(IDisplayableItem data);
-
-		/**
-		 * @param table
-		 * @return
-		 */
-		public IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data) {
-			Session session = data.getTransaction().getSession();
-			
-			IPropertyControl propertyControl = accessor.createPropertyControl(parent, session); 
-			if (propertyControl == null) {
-				// Property is not editable
-				return null;
-			}
-			
-			ExtendableObject extendableObject = getObjectContainingProperty(data);
-
-			/*
-			 * If the returned object is null, that means this column contains a
-			 * property that does not apply to this row. Perhaps the property is
-			 * the transaction date and this is a split entry, or perhaps the
-			 * property is a property for an income and expense category but
-			 * this row is a transfer transaction. We return null to indicate
-			 * that the cell is not editable.
-			 */
-			if (extendableObject == null) {
-					return null;
-			}
-				
-			propertyControl.load(extendableObject);
-			
-			return propertyControl;
-		}
-
-		public int compare(DisplayableTransaction trans1, DisplayableTransaction trans2) {
-			ExtendableObject extendableObject1 = getObjectContainingProperty(trans1);
-			ExtendableObject extendableObject2 = getObjectContainingProperty(trans2);
-			if (extendableObject1 == null && extendableObject2 == null) return 0;
-			if (extendableObject1 == null) return 1;
-			if (extendableObject2 == null) return -1;
-			return accessor.getComparator().compare(extendableObject1, extendableObject2);
-		}
-	}
-	
-	/**
-	 * Represents a table column that is either the debit or the credit column.
-	 * Use two instances of this class instead of a single instance of the
-	 * above <code>EntriesSectionProperty</code> class if you want the amount to be
-	 * displayed in seperate debit and credit columns.
-	 */
-	class DebitAndCreditColumns implements IEntriesTableProperty {
-		private String id;
-		private String name;
-		private boolean isDebit;
-		
-		DebitAndCreditColumns(String id, String name, boolean isDebit) {
-			this.id = id;
-			this.name = name;
-			this.isDebit = isDebit;
-		}
-		
-		public String getText() {
-			return name;
-		}
-
-		public String getId() {
-			return id;
-		}
-
-		public int getWeight() {
-			return 2;
-		}
-
-		public int getMinimumWidth() {
-			return 70;
-		}
-
-		public String getValueFormattedForTable(IDisplayableItem data) {
-			Entry entry = data.getEntryForThisRow();
-			if (entry == null) {
-				return "";
-			}
-			
-			long amount = entry.getAmount();
-
-			Commodity commodity = entry.getCommodity();
-			if (commodity == null) {
-				/*
-				 * The commodity should never be null after all the data for the
-				 * entry has been entered. However, the user may enter an amount
-				 * before entering the currency, and the best we can do in such
-				 * a situation is to format the amount assuming the default
-				 * currency the account.
-				 */
-				commodity = entry.getSession().getDefaultCurrency();
-			}
-
-			if (isDebit) {
-				return amount < 0 ? commodity.format(-amount) : "";
-			} else {
-				return amount > 0 ? commodity.format(amount) : "";
-			}
-		}
-
-		public IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data) {
-			// This is the entry whose amount is being edited by
-			// this control.
-			final Entry entry = data.getEntryForThisRow();
-			if (entry == null) {
-				return null;
-			}
-			
-			long amount = entry.getAmount();
-
-			final Text textControl = new Text(parent, SWT.NONE);
-
-			Commodity commodity = entry.getSession().getDefaultCurrency();
-			if (isDebit) {
-				// Debit column
-				textControl.setText(amount < 0 
-						? commodity.format(-amount) 
-								: ""
-				);
-			} else {
-				// Credit column
-				textControl.setText(amount > 0 
-						? commodity.format(amount) 
-								: ""
-				);
-			}
-
-			IPropertyControl propertyControl = new IPropertyControl() {
-				public Control getControl() {
-					return textControl;
-				}
-				public void load(ExtendableObject object) {
-					throw new RuntimeException();
-				}
-				public void save() {
-					// We need a currency so that we can format the amount.
-					// Get the currency from this entry if possible.
-					// However, the user may not have yet entered enough information
-					// to determine the currency for this entry, in which case
-					// use the currency for the account being listed in this editor.
-					// FIXME change this when we can get the currency for income/expense
-					// accounts.
-					Commodity commodityForFormatting = null;
-					if (entry.getAccount() != null
-							&& entry.getAccount() instanceof CapitalAccount) {
-						commodityForFormatting = entry.getCommodity();
-					}
-					if (commodityForFormatting == null) {
-						commodityForFormatting = entry.getSession().getDefaultCurrency();
-					}
-					
-					String amountString = textControl.getText();
-					long amount = commodityForFormatting.parse(amountString);
-					
-					long previousEntryAmount = entry.getAmount();
-					long newEntryAmount;
-					
-					if (isDebit) {
-						if (amount != 0) {
-							newEntryAmount = -amount;
-						} else {
-							if (previousEntryAmount < 0) { 
-								newEntryAmount  = 0;
-							} else {
-								newEntryAmount = previousEntryAmount;
-							}
-						}
-					} else {
-						if (amount != 0) {
-							newEntryAmount = amount;
-						} else {
-							if (previousEntryAmount > 0) { 
-								newEntryAmount  = 0;
-							} else {
-								newEntryAmount = previousEntryAmount;
-							}
-						}
-					}
-
-					entry.setAmount(newEntryAmount);
-
-					/*
-					 * If there are two entries in the transaction and if both
-					 * entries have accounts in the same currency or one or
-					 * other account is not known or one or other account is a
-					 * multi-currency account then we set the amount in the
-					 * other entry to be the same but opposite signed amount.
-					 */
-					if (entry.getTransaction().hasTwoEntries()) {
-						Entry otherEntry = entry.getTransaction().getOther(entry);
-						Commodity commodity1 = entry.getCommodity();
-						Commodity commodity2 = otherEntry.getCommodity();
-						if (commodity1 == null || commodity2 == null || commodity1.equals(commodity2)) {
-							otherEntry.setAmount(-newEntryAmount);
-						}
-					}
-				}
-			};
-			
-			return propertyControl;
-		}
-
-		public boolean isTransactionProperty() {
-			return false;
-		}
-
-		public int compare(DisplayableTransaction trans1, DisplayableTransaction trans2) {
-			long amount1 = trans1.getEntryForThisRow().getAmount();
-			long amount2 = trans2.getEntryForThisRow().getAmount();
-			
-			int result;
-			if (amount1 < amount2) {
-				result = -1;
-			} else if (amount1 > amount2) {
-				result = 1;
-			} else {
-				result = 0;
-			}
-
-			// If debit column then reverse.  Ascending sort should
-			// result in the user seeing ascending numbers in the
-			// sorted column.
-			if (isDebit) {
-				result = -result;
-			}
-			
-			return result;
-		}
-    }
 }

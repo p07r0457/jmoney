@@ -367,7 +367,7 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
 		 */
    		ourEntryList.add(entry1.getObjectKey());
    		
-	    transactionManager.commit();
+	    transactionManager.commit(isIncome ? "Income Transaction" : "Expense Transaction");
 
 	    // Clear the controls.
 	    dateControl.setDate(null);

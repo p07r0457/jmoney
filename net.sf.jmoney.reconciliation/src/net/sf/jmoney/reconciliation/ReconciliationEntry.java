@@ -23,6 +23,7 @@
 package net.sf.jmoney.reconciliation;
 
 import net.sf.jmoney.model2.EntryExtension;
+import net.sf.jmoney.model2.ExtendableObject;
 
 /**
  * An extension object that extends Entry objects.
@@ -56,8 +57,10 @@ public class ReconciliationEntry extends EntryExtension {
 	 * A default constructor is mandatory for all extension objects.
 	 * The default constructor sets the extension properties to
 	 * appropriate default values.
+	 * @param extendedObject 
 	 */
-	public ReconciliationEntry() {
+	public ReconciliationEntry(ExtendableObject extendedObject) {
+		super(extendedObject);
 	}
 	
 	/**
@@ -66,7 +69,8 @@ public class ReconciliationEntry extends EntryExtension {
 	 * the extension objects when loading data.
 	 * 
 	 */
-	public ReconciliationEntry(int status, BankStatement statement, String uniqueId) {
+	public ReconciliationEntry(ExtendableObject extendedObject, int status, BankStatement statement, String uniqueId) {
+		super(extendedObject);
 		this.status = status;
 		this.statement = statement;
 		this.uniqueId = uniqueId;

@@ -23,8 +23,11 @@
 package net.sf.jmoney.reconciliation;
 
 import net.sf.jmoney.model2.CurrencyAccountExtension;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.ObjectCollection;
 
 /**
  * An extension object that extends BankAccount objects.
@@ -37,6 +40,8 @@ public class ReconciliationAccount extends CurrencyAccountExtension {
 	
 	protected boolean reconcilable = false;
 	
+	protected IListManager<MemoPattern> patterns;
+	
 	// This is public so the transaction manager can key the object key.
 	// TODO: try to think of a way we can make this something other
 	// than public, or some better way of doing this.
@@ -47,7 +52,9 @@ public class ReconciliationAccount extends CurrencyAccountExtension {
 	 * The default constructor sets the extension properties to
 	 * appropriate default values.
 	 */
-	public ReconciliationAccount() {
+	public ReconciliationAccount(ExtendableObject extendedObject) {
+		super(extendedObject);
+		this.patterns = extendedObject.getObjectKey().constructListManager(ReconciliationAccountInfo.getPatternsAccessor());
 	}
 	
 	/**
@@ -56,8 +63,14 @@ public class ReconciliationAccount extends CurrencyAccountExtension {
 	 * the extension objects when loading data.
 	 * 
 	 */
-	public ReconciliationAccount(boolean reconcilable, IObjectKey defaultCategoryKey) {
+	public ReconciliationAccount(
+			ExtendableObject extendedObject,
+			boolean reconcilable, 
+			IListManager<MemoPattern> patterns,
+			IObjectKey defaultCategoryKey) {
+		super(extendedObject);
 		this.reconcilable = reconcilable;
+		this.patterns = patterns;
 		this.defaultCategoryKey = defaultCategoryKey;
 	}
 	
@@ -102,5 +115,9 @@ public class ReconciliationAccount extends CurrencyAccountExtension {
 
 		// Notify the change manager.
 		processPropertyChange(ReconciliationAccountInfo.getDefaultCategoryAccessor(), oldDefaultCategory, defaultCategory);
+	}
+
+	public ObjectCollection<MemoPattern> getPatternCollection() {
+		return new ObjectCollection<MemoPattern>(patterns, getBaseObject(), ReconciliationAccountInfo.getPatternsAccessor());
 	}
 }

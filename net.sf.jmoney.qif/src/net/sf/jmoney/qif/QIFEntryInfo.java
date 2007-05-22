@@ -26,15 +26,20 @@ import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TextControlFactory;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionPropertySet;
+import net.sf.jmoney.model2.IExtensionObjectConstructors;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 
 /**
  * Add extra properties to the Entry objects to support QIF import
@@ -64,7 +69,21 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class QIFEntryInfo implements IPropertySetInfo {
 
-	private static ExtensionPropertySet<QIFEntry> propertySet = PropertySet.addExtensionPropertySet(QIFEntry.class, EntryInfo.getPropertySet());
+	private static ExtensionPropertySet<QIFEntry> propertySet = PropertySet.addExtensionPropertySet(QIFEntry.class, EntryInfo.getPropertySet(), new IExtensionObjectConstructors<QIFEntry>() {
+
+		public QIFEntry construct(ExtendableObject extendedObject) {
+			return new QIFEntry(extendedObject);
+		}
+
+		public QIFEntry construct(ExtendableObject extendedObject, IValues values) {
+			return new QIFEntry(
+					extendedObject, 
+					values.getScalarValue(reconcilingStateAccessor),
+					values.getScalarValue(addressAccessor) 
+			);
+		}
+	});
+	
 	private static ScalarPropertyAccessor<Character> reconcilingStateAccessor;
 	private static ScalarPropertyAccessor<String> addressAccessor;
 	
@@ -72,9 +91,21 @@ public class QIFEntryInfo implements IPropertySetInfo {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		IPropertyControlFactory<Character> stateControlFactory = new PropertyControlFactory<Character>() {
 
-			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Character> propertyAccessor, Session session) {
+			public IPropertyControl createPropertyControl(Composite parent, final ScalarPropertyAccessor<Character> propertyAccessor, Session session) {
 				// This property is not editable???
-				return null;
+				final Label control = new Label(parent, SWT.NONE);
+				
+		    	return new IPropertyControl() {
+					public Control getControl() {
+						return control;
+					}
+					public void load(ExtendableObject object) {
+						control.setText(formatValueForTable(object, propertyAccessor));
+					}
+					public void save() {
+						// Not editable so nothing to do
+					}
+				};
 			}
 
 			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Character> propertyAccessor) {
@@ -90,8 +121,8 @@ public class QIFEntryInfo implements IPropertySetInfo {
 			}
 		};
 		
-		reconcilingStateAccessor = propertySet.addProperty("reconcilingState", "Reconciled", Character.class, 1, 20, stateControlFactory, null);
-		addressAccessor = propertySet.addProperty("address", "Address", String.class, 3, 30, textControlFactory, null);
+		reconcilingStateAccessor = propertySet.addProperty("reconcilingState", "Reconciled", Character.class, 1, 30, stateControlFactory, null);
+		addressAccessor = propertySet.addProperty("address", "Address", String.class, 3, 100, textControlFactory, null);
 		
 		return propertySet;
 	}

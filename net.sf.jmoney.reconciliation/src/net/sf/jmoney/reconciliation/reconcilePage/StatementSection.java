@@ -22,45 +22,43 @@
 
 package net.sf.jmoney.reconciliation.reconcilePage;
 
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.entrytable.Block;
+import net.sf.jmoney.entrytable.ButtonCellControl;
+import net.sf.jmoney.entrytable.CellBlock;
+import net.sf.jmoney.entrytable.EntriesSectionProperty;
+import net.sf.jmoney.entrytable.EntriesTable;
+import net.sf.jmoney.entrytable.EntryData;
+import net.sf.jmoney.entrytable.HorizontalBlock;
+import net.sf.jmoney.entrytable.ICellControl;
+import net.sf.jmoney.entrytable.IEntriesContent;
+import net.sf.jmoney.entrytable.IEntriesTableProperty;
+import net.sf.jmoney.entrytable.EntriesTable.IMenuItem;
 import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.pages.entries.EntriesTree;
-import net.sf.jmoney.pages.entries.EntryRowSelectionAdapter;
-import net.sf.jmoney.pages.entries.EntryRowSelectionListener;
-import net.sf.jmoney.pages.entries.IDisplayableItem;
-import net.sf.jmoney.pages.entries.IEntriesContent;
-import net.sf.jmoney.pages.entries.IEntriesTableProperty;
-import net.sf.jmoney.pages.entries.EntriesTree.DisplayableEntry;
-import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.ReconciliationEntry;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
 
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.dnd.DND;
-import org.eclipse.swt.dnd.DropTarget;
-import org.eclipse.swt.dnd.DropTargetAdapter;
-import org.eclipse.swt.dnd.DropTargetEvent;
-import org.eclipse.swt.dnd.TextTransfer;
-import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Tree;
-import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
@@ -75,7 +73,7 @@ public class StatementSection extends SectionPart {
 
     private ReconcilePage fPage;
 
-    private EntriesTree fReconciledEntriesControl;
+    private EntriesTable fReconciledEntriesControl;
     
 	/**
 	 * Contains two controls:
@@ -93,11 +91,11 @@ public class StatementSection extends SectionPart {
     
     private FormToolkit toolkit;
     
-    private EntryRowSelectionListener tableSelectionListener = null;
-    
     private IEntriesContent reconciledTableContents = null;
 
-	private long openingBalance = 0;
+    private ArrayList<IEntriesTableProperty> cellList;
+    
+    private long openingBalance = 0;
     
     public StatementSection(ReconcilePage page, Composite parent) {
         super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
@@ -107,59 +105,7 @@ public class StatementSection extends SectionPart {
     	
         container = toolkit.createComposite(getSection());
 
-        tableSelectionListener = new EntryRowSelectionAdapter() {
-            public void widgetSelected(IDisplayableItem selectedObject) {
-                JMoneyPlugin.myAssert(selectedObject != null);
-
-                // We should never get here with the item data set to the
-                // DisplayableNewEmptyEntry object as a result of the user
-                // selecting the row. The reason being that the EntryTree
-                // object intercepts mouse down events first and replaces the
-                // data with a new entry. However, SWT seems to set the
-                // selection
-                // to the last row in certain circumstances such as when
-                // applying a filter. In such a situation, both the top-level
-                // entry and the selected entry will be given as null.
-                // Two null values passed to the entry section will cause
-                // the section to be blanked.
-
-                IDisplayableItem data = (IDisplayableItem) selectedObject;
-
-                if (selectedObject instanceof DisplayableTransaction) {
-                    DisplayableTransaction transData = (DisplayableTransaction) selectedObject;
-                    if (transData.isSimpleEntry()) {
-                        fPage.fEntrySection.update(data.getEntryInAccount(), data.getEntryForOtherFields(), true);
-                    } else {
-                        fPage.fEntrySection.update(data.getEntryInAccount(), null, true);
-                    }
-                } else if (selectedObject instanceof DisplayableEntry) {
-                    fPage.fEntrySection.update(data.getEntryForThisRow(), null, false);
-                } else {
-                    // We were not on a transaction (we were probably on the
-                    // blank 'new transaction' line.
-                    fPage.fEntrySection.update(null, null, false);
-                }
-            }
-        };
-
         reconciledTableContents = new IEntriesContent() {
-
-			public Vector<IEntriesTableProperty> getAllEntryDataObjects() {
-				return fPage.allEntryDataObjects;
-			}
-
-			public IEntriesTableProperty getDebitColumnManager() {
-				return fPage.debitColumnManager;
-			}
-
-			public IEntriesTableProperty getCreditColumnManager() {
-				return fPage.creditColumnManager;
-			}
-
-			public IEntriesTableProperty getBalanceColumnManager() {
-				return fPage.balanceColumnManager;
-			}
-
 			public Collection<Entry> getEntries() {
 		        Vector<Entry> requiredEntries = new Vector<Entry>();
 
@@ -210,7 +156,7 @@ public class StatementSection extends SectionPart {
 	        	 && fPage.getStatement().equals(statement);
 			}
 
-			public boolean filterEntry(IDisplayableItem data) {
+			public boolean filterEntry(EntryData data) {
 				// No filter here, so entries always match
 				return true;
 			}
@@ -236,9 +182,90 @@ public class StatementSection extends SectionPart {
 		noStatementMessage.setText(ReconciliationPlugin.getResourceString("EntriesSection.noStatementMessage"));
 		noStatementMessage.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED));
 
-        // Create the table control.
-        fReconciledEntriesControl = new EntriesTree(container, toolkit, fPage.transactionManager, reconciledTableContents, fPage.getAccount().getSession()); 
-		fReconciledEntriesControl.addSelectionListener(tableSelectionListener);
+		IMenuItem unreconcileAction = new IMenuItem() {
+
+			public String getText() {
+				return "Unreconcile";
+			}
+
+			public void run(Entry selectedEntry) {
+				// If the blank new entry row, entry will be null.
+				// We must guard against that.
+
+				// The EntriesTree control will always validate and commit
+				// any outstanding changes before firing a default selection
+				// event.  We set the property to take the entry out of the
+				// statement and immediately commit the change.
+				if (selectedEntry != null) {
+					selectedEntry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), null);
+					fPage.transactionManager.commit("Unreconcile Entry");
+				}
+			}
+		};
+
+		// Load the 'unreconcile' indicator
+		URL installURL = ReconciliationPlugin.getDefault().getBundle().getEntry("/icons/unreconcile.gif");
+		final Image unreconcileImage = ImageDescriptor.createFromURL(installURL).createImage();
+		parent.addDisposeListener(new DisposeListener(){
+			public void widgetDisposed(DisposeEvent e) {
+				unreconcileImage.dispose();
+			}
+		});
+		
+		IEntriesTableProperty unreconcileButton = new IEntriesTableProperty() {
+
+			public int compare(EntryData trans1, EntryData trans2) {
+				// TODO Sort this out.  We cannot sort on this.
+				return 0;
+			}
+
+			public ICellControl createCellControl(Composite parent,
+					Session session) {
+				return new ButtonCellControl(parent, unreconcileImage, "Remove Entry from this Statement") {
+
+					@Override
+					protected void run(EntryData data) {
+						unreconcileEntry(data);
+					}
+				};
+			}
+
+			public String getId() {
+				return "unreconcile";
+			}
+
+			public int getMinimumWidth() {
+				return 20;
+			}
+
+			public String getText() {
+				return "";
+			}
+
+			public int getWeight() {
+				return 0;
+			}
+		};
+		
+		/*
+		 * Setup the layout structure of the header and rows.
+		 */
+		Block rootBlock = new HorizontalBlock(new Block [] {
+				new CellBlock(unreconcileButton),
+				new CellBlock(EntriesSectionProperty.createTransactionColumn(TransactionInfo.getDateAccessor())),
+				new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getValutaAccessor())),
+				new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getCheckAccessor())),
+				new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getMemoAccessor())),
+				new CellBlock(fPage.debitColumnManager),
+				new CellBlock(fPage.creditColumnManager),
+				new CellBlock(fPage.balanceColumnManager),
+		});
+		
+		cellList = new ArrayList<IEntriesTableProperty>();
+		rootBlock.buildCellList(cellList);
+
+		// Create the table control.
+        fReconciledEntriesControl = new EntriesTable(container, toolkit, rootBlock, reconciledTableContents, fPage.getAccount().getSession(), new IMenuItem [] { unreconcileAction }); 
         
 		// TODO: do not duplicate this.
 		if (fPage.getStatement() == null) {
@@ -269,25 +296,9 @@ public class StatementSection extends SectionPart {
 				}
 			}
 		});
-		
-		// Listen for double clicks.
-		// Double clicking on an entry in the statement table remove that entry from
-		// the statement (the entry will then appear in the table of unreconciled entries).
-		fReconciledEntriesControl.addSelectionListener(new EntryRowSelectionAdapter() {
-			public void widgetDefaultSelected(IDisplayableItem selectedObject) {
-				Entry entry = selectedObject.getEntryInAccount();
-				// If the blank new entry row, entry will be null.
-				// We must guard against that.
 
-				// The EntriesTree control will always validate and commit
-				// any outstanding changes before firing a default selection
-				// event.  We set the property to take the entry out of the
-				// statement and immediately commit the change.
-				if (entry != null) {
-					entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), null);
-					fPage.transactionManager.commit("Unreconcile Entry");
-				}
-			}
+/* This code needs to be made to work, but dragging the button would suffice (and drop anyway on the row?}
+		fReconciledEntriesControl.addSelectionListener(new EntryRowSelectionAdapter() {
         });
         
         // Allow entries to be dropped in the statment tablein the account to be moved from the unreconciled list
@@ -300,7 +311,7 @@ public class StatementSection extends SectionPart {
         dropTarget.addDropListener(new DropTargetAdapter() {
 
 			public void dragEnter(DropTargetEvent event) {
-				if (/* we don't want to accept drop*/false) {
+				if (/* we don't want to accept drop* /false) {
 					event.detail = DND.DROP_NONE;
 				}
 			}
@@ -332,7 +343,7 @@ public class StatementSection extends SectionPart {
 					/*
 					 * Merge data from dragged transaction into the target transaction
 					 * and delete the dragged transaction.
-					 */
+					 * /
 					mergeTransaction(unrecEntryInAccount, recEntryInAccount);
 				}
 				
@@ -348,12 +359,29 @@ public class StatementSection extends SectionPart {
 				dropTarget.dispose();
 			}
         });
-        
+*/        
         getSection().setClient(container);
         toolkit.paintBordersFor(container);
         refresh();
     }
 
+	public void unreconcileEntry(EntryData selectedObject) {
+		Entry entry = selectedObject.getEntry();
+		// If the blank new entry row, entry will be null.
+		// We must guard against that.
+		
+// TODO: How do we handle the blank row?
+		
+		// The EntriesTree control will always validate and commit
+		// any outstanding changes before firing a default selection
+		// event.  We set the property to take the entry out of the
+		// statement and immediately commit the change.
+		if (entry != null) {
+			entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), null);
+			fPage.transactionManager.commit("Unreconcile Entry");
+		}
+	}
+	
 	/**
 	 * Merge data from other transaction.
 	 * 
@@ -477,6 +505,10 @@ public class StatementSection extends SectionPart {
 		
     	fReconciledEntriesControl.refreshEntryList();
 
+    	// TODO: this should be automatic from the above, i.e.
+    	// content provider should tell the table?
+    	fReconciledEntriesControl.table.refreshContent();
+    	
 		if (statement == null) {
 	        getSection().setText("Entries Shown on Statement");
 	        refresh();  // Must refresh to see new section title

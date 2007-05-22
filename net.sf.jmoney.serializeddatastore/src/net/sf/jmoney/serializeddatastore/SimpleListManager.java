@@ -22,20 +22,14 @@
 
 package net.sf.jmoney.serializeddatastore;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.ExtensionPropertySet;
 import net.sf.jmoney.model2.IListManager;
-import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.IValues;
 
 /**
  * Every datastore implementation must provide an implementation
@@ -55,38 +49,8 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 	 }
 
 	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
-		Collection<?> constructorProperties = propertySet.getDefaultConstructorProperties();
-		
-		int numberOfParameters = constructorProperties.size();
-		if (!propertySet.isExtension()) {
-			numberOfParameters += 3;
-		}
-		Object[] constructorParameters = new Object[numberOfParameters];
-		
 		SimpleObjectKey objectKey = new SimpleObjectKey(sessionManager);
-		
-		int index = 0;
-		// TODO: We can assert that the property set is not an extension
-		if (!propertySet.isExtension()) {
-			constructorParameters[0] = objectKey;
-			constructorParameters[1] = null;
-			constructorParameters[2] = parent.getObjectKey();
-			index = 3;
-		}
-		
-		// Construct the extendable object using the 'default' constructor.
-		// This constructor takes the minimum number of parameters necessary
-		// to properly construct the object, setting default values for all
-		// the scalar properties.  We must, however, pass objects that manage
-		// any lists within the object.
-		
-		// Add a list manager for each list property in the object.
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); iter.next()) {
-			constructorParameters[index++] = new SimpleListManager(sessionManager);
-		}
-		
-		// We can now create the object.
-		F extendableObject = propertySet.constructDefaultImplementationObject(constructorParameters);
+		F extendableObject = propertySet.constructDefaultImplementationObject(objectKey, parent.getObjectKey());
 		
 		objectKey.setObject(extendableObject);
 
@@ -116,55 +80,9 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 		return extendableObject;
 	}
 
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, Object[] values) {
-		Collection<?> constructorProperties = propertySet.getConstructorProperties();
-		
-		int numberOfParameters = constructorProperties.size();
-		if (!propertySet.isExtension()) {
-			numberOfParameters += 3;
-		}
-		Object[] constructorParameters = new Object[numberOfParameters];
-		
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, IValues values) {
 		SimpleObjectKey objectKey = new SimpleObjectKey(sessionManager);
-		
-		Map<ExtensionPropertySet<?>, Object[]> extensionMap = new HashMap<ExtensionPropertySet<?>, Object[]>();
-		
-		if (!propertySet.isExtension()) {
-			constructorParameters[0] = objectKey;
-			constructorParameters[1] = extensionMap;
-			constructorParameters[2] = parent.getObjectKey();
-		}
-		
-		int indexIntoValues = 0;
-		for (PropertyAccessor propertyAccessor: propertySet.getProperties3()) {
-			
-			// For this property, determine the parameter value to be passed to the
-			// constructor.
-			Object value;
-			if (propertyAccessor.isScalar()) {
-				value = values[indexIntoValues++];
-			} else {
-				value = new SimpleListManager(sessionManager);
-			}
-
-			// Determine how this value is passed to the constructor.
-			// If the property comes from an extension then we must set
-			// the property into an extension, otherwise we simply set
-			// the property into the constructor parameters.
-			if (!propertyAccessor.getPropertySet().isExtension()) {
-				constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
-			} else {
-				Object [] extensionConstructorParameters = (Object[])extensionMap.get(propertyAccessor.getPropertySet());
-				if (extensionConstructorParameters == null) {
-					extensionConstructorParameters = new Object [propertyAccessor.getPropertySet().getConstructorProperties().size()];
-					extensionMap.put((ExtensionPropertySet<?>)propertyAccessor.getPropertySet(), extensionConstructorParameters);
-				}
-				extensionConstructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
-			}
-		}
-			
-		// We can now create the object.
-		F extendableObject = propertySet.constructImplementationObject(constructorParameters);
+		F extendableObject = propertySet.constructImplementationObject(objectKey, parent.getObjectKey(), values);
 		
 		objectKey.setObject(extendableObject);
 

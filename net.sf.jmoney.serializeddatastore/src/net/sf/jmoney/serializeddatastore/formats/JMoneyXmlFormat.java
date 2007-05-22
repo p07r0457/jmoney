@@ -69,6 +69,9 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.ExtensionPropertySet;
+import net.sf.jmoney.model2.IListManager;
+import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertyAccessor;
@@ -103,7 +106,8 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author Nigel Westbury
  */
 public class JMoneyXmlFormat implements IFileDatastore {
-
+	public static String ID_FILE_FORMAT = "net.sf.jmoney.serializeddatastore.jmxFormat"; 
+	
 	/**
 	 * Date format used for dates in this file format:
 	 * yyyy.MM.dd
@@ -363,15 +367,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			}
 			
 			SimpleObjectKey key = new SimpleObjectKey(sessionManager); 
-			Session newSessionNewFormat = new Session(
-				key,
-				null,
-				null,
-				new SimpleListManager<Commodity>(sessionManager),
-				new SimpleListManager<Account>(sessionManager),
-				new SimpleListManager<Transaction>(sessionManager),
-				null
-			);
+			Session newSessionNewFormat = new Session(key, null);
 			key.setObject(newSessionNewFormat);
 			sessionManager.setSession(newSessionNewFormat);
 			
@@ -588,18 +584,19 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		SimpleObjectKey objectKey;
 		
 		/**
+		 * Key to the parent of the object being parsed.  This is saved
+		 * because we will need it when the object is constructed.
+		 */
+		IObjectKey parentKey;
+		
+		/**
 		 * The list of parameters to be passed to the constructor
 		 * of this object.
 		 */
-		private Object[] constructorParameters;
+		private Map<PropertyAccessor, Object> propertyValueMap = new HashMap<PropertyAccessor, Object>();
 		
-		/**
-		 * Map of extension PropertySet objects to arrays of
-		 * constructor parameters that construct the extension
-		 * objects. 
-		 */
-		private HashMap<ExtensionPropertySet<?>, Object[]> extensionMap;
-		
+		private Set<ExtensionPropertySet<?>> nonDefaultExtensions = new HashSet<ExtensionPropertySet<?>>();
+
 		/**
 		 * Saved id of objects that are Currency or Account objects.
 		 * This id is saved so that when the object is later created, it can
@@ -622,39 +619,16 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			super(sessionManager, parent);
 			
 			objectKey = new SimpleObjectKey(sessionManager);
-
+			parentKey = (parent == null) ? null : parent.objectKey;
+			
 			try {
 				this.propertySet = PropertySet.getExtendablePropertySet(propertySetId);
 			} catch (PropertySetNotFoundException e) {
 				throw new RuntimeException("internal error");
 			}
-			
-			Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
-			int numberOfParameters = constructorProperties.size();
-			if (!propertySet.isExtension()) {
-				numberOfParameters += 3;
-			}
-			constructorParameters = new Object[numberOfParameters];
-			extensionMap = new HashMap<ExtensionPropertySet<?>, Object[]>();
-			constructorParameters[0] = objectKey;
-			constructorParameters[1] = extensionMap;
-			if (parent == null) {
-				constructorParameters[2] = null;
-			} else {
-				constructorParameters[2] = parent.objectKey;
-			}
-			
-			// For all lists, set the Collection object to be a Vector.
-			// For all other parameters, the value is set when the property
-			// value is found.  We initialize to null here so a null value
-			// will be passed to the constructor if no value is found.
-			for (PropertyAccessor propertyAccessor: constructorProperties) {
-				if (propertyAccessor.isList()) {
-					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = new SimpleListManager(sessionManager);
-				} else {
-					ScalarPropertyAccessor<?> scalarAccessor = (ScalarPropertyAccessor<?>)propertyAccessor; 
-					constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = scalarAccessor.getDefaultValue();
-				}
+
+			for (PropertyAccessor propertyAccessor: propertySet.getListProperties3()) {
+				propertyValueMap.put(propertyAccessor, new SimpleListManager(sessionManager));
 			}
 		}
 		
@@ -809,9 +783,36 @@ public class JMoneyXmlFormat implements IFileDatastore {
 
 		public SAXEventProcessor endElement()
 		throws SAXException {
+
+			IValues values = new IValues() {
+
+				public <V> V getScalarValue(ScalarPropertyAccessor<V> propertyAccessor) {
+					if (propertyValueMap.containsKey(propertyAccessor)) {
+						return propertyAccessor.getClassOfValueObject().cast(propertyValueMap.get(propertyAccessor));
+					} else {
+						return propertyAccessor.getDefaultValue();
+					}
+				}
+
+				public IObjectKey getReferencedObjectKey(ScalarPropertyAccessor<? extends ExtendableObject> propertyAccessor) {
+					if (propertyValueMap.containsKey(propertyAccessor)) {
+						return ((ExtendableObject)propertyValueMap.get(propertyAccessor)).getObjectKey();
+					} else {
+						return null;
+					}
+				}
+
+				public <E extends ExtendableObject> IListManager<E> getListManager(IObjectKey listOwnerKey, ListPropertyAccessor<E> listAccessor) {
+					return (IListManager<E>)propertyValueMap.get(listAccessor);
+				}
+
+				public Collection<ExtensionPropertySet<?>> getNonDefaultExtensions() {
+					return nonDefaultExtensions;
+				}
+			};
 			
 			// We can now create the object.
-			ExtendableObject extendableObject = (ExtendableObject)propertySet.constructImplementationObject(constructorParameters);
+			ExtendableObject extendableObject = propertySet.constructImplementationObject(objectKey, parentKey, values);
 			
 			objectKey.setObject(extendableObject);
 			
@@ -865,50 +866,30 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			// Set the value in our object.  If the property
 			// is a list property then the object is added to
 			// the list.
-			if (!propertyAccessor.getPropertySet().isExtension()) {
-				int index = propertyAccessor.getIndexIntoConstructorParameters(); 
-				if (index != -1) {
-					if (propertyAccessor.isScalar()) {
-						if (value instanceof ExtendableObject) {
-							constructorParameters[index] = ((ExtendableObject)value).getObjectKey();
-						} else {
-							constructorParameters[index] = value;
-						}
-					} else {
-						// Must be an element in an array.
-						//extendableObject.addPropertyValue(propertyAccessor, value);
-						((Collection)constructorParameters[index]).add(value);
-						
-						// For Currency and Account objects, we also add to a map so that
-						// references can be resolved.
-						if (map != null) {
-							map.put(id, value);
-						}
-					}
+			if (propertyAccessor.isScalar()) {
+				if (value instanceof ExtendableObject) {
+					propertyValueMap.put(propertyAccessor, ((ExtendableObject)value).getObjectKey());
+				} else {
+					propertyValueMap.put(propertyAccessor, value);
 				}
 			} else {
-				// Property is in an extension.
-				ExtensionPropertySet<?> extensionPropertySet = (ExtensionPropertySet<?>)propertyAccessor.getPropertySet();
-				Object[] extensionConstructorParameters = extensionMap.get(extensionPropertySet);
-				if (extensionConstructorParameters == null) {
-					extensionConstructorParameters = new Object[extensionPropertySet.getConstructorProperties().size()];
-					extensionMap.put(extensionPropertySet, extensionConstructorParameters);
+				// Must be an element in an array.
+				SimpleListManager list = (SimpleListManager)propertyValueMap.get(propertyAccessor);
+				list.add(value);
+				
+				// For Currency and Account objects, we also add to a map so that
+				// references can be resolved.
+				if (map != null) {
+					map.put(id, value);
 				}
-
-				int index = propertyAccessor.getIndexIntoConstructorParameters(); 
-				if (index != -1) {
-					if (propertyAccessor.isScalar()) {
-						ScalarPropertyAccessor<?> scalarAccessor = (ScalarPropertyAccessor<?>)propertyAccessor;
-						if (ExtendableObject.class.isAssignableFrom(scalarAccessor.getClassOfValueObject())) {
-							extensionConstructorParameters[index] = ((ExtendableObject)value).getObjectKey();
-						} else {
-							extensionConstructorParameters[index] = value;
-						}
-					} else {
-						// Must be an element in an array.
-						((Collection)extensionConstructorParameters[index]).add(value);
-					}
-				}
+			}
+			
+			/*
+			 * Update set of all extensions for which a property value has
+			 * been set.
+			 */
+			if (propertyAccessor.getPropertySet() instanceof ExtensionPropertySet) {
+				nonDefaultExtensions.add((ExtensionPropertySet)propertyAccessor.getPropertySet());
 			}
 		}
 

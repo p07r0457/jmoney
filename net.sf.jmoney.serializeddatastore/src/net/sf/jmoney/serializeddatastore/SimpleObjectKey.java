@@ -29,7 +29,9 @@ import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
@@ -92,5 +94,9 @@ public class SimpleObjectKey implements IObjectKey {
 
 	public DataManager getSessionManager() {
 		return sessionManager;
+	}
+
+	public <E extends ExtendableObject> IListManager<E> constructListManager(ListPropertyAccessor<E> listAccessor) {
+		return new SimpleListManager<E>(sessionManager);
 	}
 }

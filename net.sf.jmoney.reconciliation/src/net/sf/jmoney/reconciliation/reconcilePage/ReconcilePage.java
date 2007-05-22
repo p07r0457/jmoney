@@ -23,13 +23,18 @@ package net.sf.jmoney.reconciliation.reconcilePage;
 
 import java.util.Collection;
 import java.util.Vector;
+import java.util.regex.Matcher;
 
 import net.sf.jmoney.IBookkeepingPage;
+import net.sf.jmoney.entrytable.BalanceColumn;
+import net.sf.jmoney.entrytable.DebitAndCreditColumns;
+import net.sf.jmoney.entrytable.EntriesSectionCategoryProperty;
+import net.sf.jmoney.entrytable.EntriesSectionProperty;
+import net.sf.jmoney.entrytable.EntryData;
+import net.sf.jmoney.entrytable.IEntriesTableProperty;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -38,12 +43,9 @@ import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
-import net.sf.jmoney.pages.entries.EntrySection;
-import net.sf.jmoney.pages.entries.IDisplayableItem;
-import net.sf.jmoney.pages.entries.IEntriesTableProperty;
-import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.IBankStatementSource;
+import net.sf.jmoney.reconciliation.MemoPattern;
 import net.sf.jmoney.reconciliation.ReconciliationAccount;
 import net.sf.jmoney.reconciliation.ReconciliationAccountInfo;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
@@ -70,14 +72,12 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Sash;
-import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.ui.IMemento;
@@ -126,7 +126,6 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 	protected StatementsSection fStatementsSection;
     protected StatementSection fStatementSection;
     protected UnreconciledSection fUnreconciledSection;
-	protected EntrySection fEntrySection;
 
 	/**
 	 * The statement currently being shown in this page.
@@ -189,8 +188,8 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         // Add properties from the transaction.
    		for (final ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
         	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "transaction") {
-        		public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
-        			return data.getTransactionForTransactionFields();
+        		public ExtendableObject getObjectContainingProperty(EntryData data) {
+        			return data.getEntry().getTransaction();
         		}
         	});
         }
@@ -204,36 +203,37 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
            		&& propertyAccessor != EntryInfo.getDescriptionAccessor()
            		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
             	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "this") {
-            		public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
-            			return data.getEntryForAccountFields();
+            		public ExtendableObject getObjectContainingProperty(EntryData data) {
+            			return data.getEntry();
             		}
             	});
             }
         }
 
-        // Add properties from the other entry where the property also is
-        // applicable for capital accounts.
-        // For time being, this is just the account.
-   		for (ScalarPropertyAccessor<?> propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
-            if (propertyAccessor == EntryInfo.getAccountAccessor()) {
-            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "common2") {
-					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
-						return data.getEntryForCommon2Fields();
-					}
-            	});
-            } else if (propertyAccessor == EntryInfo.getDescriptionAccessor()) {
-            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "other") {
-					public ExtendableObject getObjectContainingProperty(IDisplayableItem data) {
-						return data.getEntryForOtherFields();
-					}
-            	});
-            }
-        }
+        /* Add properties that show values from the other entries.
+         * These are the account, description, and amount properties.
+         * 
+         * I don't know what to do if there are other capital accounts
+         * (a transfer or a purchase with money coming from more than one account).
+         */
+   		allEntryDataObjects.add(new EntriesSectionCategoryProperty(EntryInfo.getAccountAccessor(), "common2") {
+   			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
+   				IPropertyControl control = EntryInfo.getAccountAccessor().createPropertyControl(parent, otherEntry.getSession());
+   				control.load(otherEntry);
+   				return control;
+   			}
+   		});
+   		allEntryDataObjects.add(new EntriesSectionCategoryProperty(EntryInfo.getDescriptionAccessor(), "other") {
+   			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
+   				IPropertyControl control = EntryInfo.getDescriptionAccessor().createPropertyControl(parent, otherEntry.getSession());
+   				control.load(otherEntry);
+   				return control;
+   			}
+   		});
         
-		debitColumnManager = new DebitAndCreditColumns("Debit", "debit", true);     //$NON-NLS-2$
-		creditColumnManager = new DebitAndCreditColumns("Credit", "credit", false); //$NON-NLS-2$
-		balanceColumnManager = new BalanceColumn();
-
+		debitColumnManager = new DebitAndCreditColumns("Debit", "debit", account.getCurrency(), true);     //$NON-NLS-2$
+		creditColumnManager = new DebitAndCreditColumns("Credit", "credit", account.getCurrency(), false); //$NON-NLS-2$
+		balanceColumnManager = new BalanceColumn(account.getCurrency());
     	
     	ScrolledForm form = managedForm.getForm();
         GridLayout layout = new GridLayout();
@@ -363,7 +363,57 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 						           		Entry entry2 = transaction.createEntry();
 						           		entry1.setAccount(accountInTransaction);
 						           		entry1.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), getStatement());
-						           		entry2.setAccount(defaultCategoryInTransaction);
+						           		
+						           		/*
+						           		 * Scan for a match in the patterns.  If a match is found,
+						           		 * use the values for memo, description etc. from the pattern.
+						           		 */
+						           		String memo = entryData.getMemo();
+						           		for (MemoPattern pattern: account.getPatternCollection()) {
+						           			Matcher m = pattern.getCompiledPattern().matcher(memo);
+						           			if (m.matches()) {
+						           				Object [] args = new Object[m.groupCount()];
+						           				for (int i = 0; i < m.groupCount(); i++) {
+						           					args[i] = m.group(i);
+						           				}
+						           				
+						           				// TODO: What effect does the locale have in the following?
+						           				if (pattern.getCheck() != null) {
+						           					entry1.setCheck(
+						           							new java.text.MessageFormat(
+						           									pattern.getCheck(), 
+						           									java.util.Locale.US)
+						           							.format(args));
+						           				}
+						           				
+						           				if (pattern.getMemo() != null) {
+						           					entry1.setMemo(
+						           							new java.text.MessageFormat(
+						           									pattern.getMemo(), 
+						           									java.util.Locale.US)
+						           							.format(args));
+						           				}
+						           				
+						           				if (pattern.getDescription() != null) {
+							           				entry2.setDescription(
+							           						new java.text.MessageFormat(
+							           								pattern.getDescription(), 
+							           								java.util.Locale.US)
+							           								.format(args));
+						           				}
+						           				
+								           		entry2.setAccount(pattern.getAccount());
+								           		
+								           		break;
+						           			}
+						           		}
+						           		
+						           		// If nothing matched, set the default account but no 
+						           		// other property.
+						           		if (entry2.getAccount() == null) {
+						           			entry2.setAccount(defaultCategoryInTransaction);
+						           		}
+						           		
 						           		entryData.assignPropertyValues(transaction, entry1, entry2);
 									}
 									
@@ -372,7 +422,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 									 * have been set and should be in a valid state, so we
 									 * can now commit the imported entries to the datastore.
 									 */
-									transactionManager.commit();									
+									transactionManager.commit("Import Entries");									
 								}
 							} catch (CoreException e) {
 								// TODO Auto-generated catch block
@@ -490,13 +540,6 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         formData.right = new FormAttachment(100, 0);
         fUnreconciledSection.getSection().setLayoutData(formData);
 
-        fEntrySection = new EntrySection(form.getBody(), managedForm.getToolkit(), account.getSession(), account.getCurrency());
-        data = new GridData(GridData.FILL_HORIZONTAL);
-        data.horizontalSpan = 2;
-        fEntrySection.getSection().setLayoutData(data);
-        managedForm.addPart(fStatementSection);
-        fEntrySection.initialize(managedForm);
-
         form.setText("Reconcile Entries against Bank Statement/Bank's Records");
 /* probably no longer needed
         IToolBarManager toolBarManager = form.getToolBarManager();
@@ -532,319 +575,4 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		// Save view state (e.g. the sort order, the set of extension properties that are
 		// displayed in the table).
 	}
-
-	// TODO: These IEntriesTableProperty implementations are duplicated.
-	// Remove the duplication.  We also should probably persist column
-	// selection in a memento, and also save so that when a new account
-	// is opened, the previously made selection is used.
-	
-	
-	/**
-	 * Represents a property that can be displayed in the entries table,
-	 * edited by the user, or used in the filter.
-	 * <P>
-	 * The credit, debit, and balance columns are hard coded at the end
-	 * of the table and are not represented by objects of this class.
-	 * 
-	 * @author Nigel Westbury
-	 */
-	abstract class EntriesSectionProperty implements IEntriesTableProperty {
-		private ScalarPropertyAccessor<?> accessor;
-		private String id;
-		
-		EntriesSectionProperty(ScalarPropertyAccessor accessor, String source) {
-			this.accessor = accessor;
-			this.id = source + '.' + accessor.getName();
-		}
-
-		public String getText() {
-			return accessor.getDisplayName();
-		}
-
-		public String getId() {
-			return id;
-		}
-
-		public int getWeight() {
-			return accessor.getWeight();
-		}
-
-		public int getMinimumWidth() {
-			return accessor.getMinimumWidth();
-		}
-
-		/**
-		 * @param entry
-		 * @return
-		 */
-		public String getValueFormattedForTable(IDisplayableItem data) {
-			ExtendableObject extendableObject = getObjectContainingProperty(data);
-			if (extendableObject == null) {
-				return "";
-			} else {
-				return accessor.formatValueForTable(extendableObject);
-			}
-		}
-
-		public abstract ExtendableObject getObjectContainingProperty(IDisplayableItem data);
-
-		/**
-		 * @param table
-		 * @return
-		 */
-		public IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data) {
-			IPropertyControl propertyControl = accessor.createPropertyControl(parent, account.getSession()); 
-				
-			ExtendableObject extendableObject = getObjectContainingProperty(data);
-
-			// If the returned object is null, that means this column contains a property
-			// that does not apply to this row.  Perhaps the property is the transaction date
-			// and this is a split entry, or perhaps the property is
-			// a property for an income and expense category but this row 
-			// is a transfer transaction.
-			// We return null to indicate that the cell is not editable.
-			if (extendableObject == null) {
-					return null;
-			}
-				
-			propertyControl.load(extendableObject);
-			
-			return propertyControl;
-		}
-
-		public int compare(DisplayableTransaction trans1, DisplayableTransaction trans2) {
-			ExtendableObject extendableObject1 = getObjectContainingProperty(trans1);
-			ExtendableObject extendableObject2 = getObjectContainingProperty(trans2);
-			if (extendableObject1 == null && extendableObject2 == null) return 0;
-			if (extendableObject1 == null) return 1;
-			if (extendableObject2 == null) return -1;
-			return accessor.getComparator().compare(extendableObject1, extendableObject2);
-		}
-	}
-	
-	/**
-	 * Represents a table column that is either the debit or the credit column.
-	 * Use two instances of this class instead of a single instance of the
-	 * above <code>EntriesSectionProperty</code> class if you want the amount to be
-	 * displayed in seperate debit and credit columns.
-	 */
-	class DebitAndCreditColumns implements IEntriesTableProperty {
-		private String id;
-		private String name;
-		private boolean isDebit;
-		
-		DebitAndCreditColumns(String id, String name, boolean isDebit) {
-			this.id = id;
-			this.name = name;
-			this.isDebit = isDebit;
-		}
-		
-		public String getText() {
-			return name;
-		}
-
-		public String getId() {
-			return id;
-		}
-
-		public int getWeight() {
-			return 2;
-		}
-
-		public int getMinimumWidth() {
-			return 70;
-		}
-
-		public String getValueFormattedForTable(IDisplayableItem data) {
-			Entry entry = data.getEntryForAccountFields();
-			if (entry == null) {
-				return "";
-			}
-			
-			long amount = entry.getAmount();
-			Commodity commodity = ReconcilePage.this.getAccount().getCurrency();
-
-			if (isDebit) {
-				return amount < 0 ? commodity.format(-amount) : "";
-			} else {
-				return amount > 0 ? commodity.format(amount) : "";
-			}
-		}
-
-		public IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data) {
-			// This is the entry whose amount is being edited by
-			// this control.
-			final Entry entry = data.getEntryForAccountFields();
-			if (entry == null) {
-				return null;
-			}
-			
-			long amount = entry.getAmount();
-
-			final Text textControl = new Text(parent, SWT.NONE);
-
-			Commodity commodity = ReconcilePage.this.getAccount().getCurrency();
-			if (isDebit) {
-				// Debit column
-				textControl.setText(amount < 0 
-						? commodity.format(-amount) 
-								: ""
-				);
-			} else {
-				// Credit column
-				textControl.setText(amount > 0 
-						? commodity.format(amount) 
-								: ""
-				);
-			}
-
-			IPropertyControl propertyControl = new IPropertyControl() {
-				public Control getControl() {
-					return textControl;
-				}
-				public void load(ExtendableObject object) {
-					throw new RuntimeException();
-				}
-				public void save() {
-					// We need a currency so that we can format the amount.
-					// Get the currency from this entry if possible.
-					// However, the user may not have yet entered enough information
-					// to determine the currency for this entry, in which case
-					// use the currency for the account being listed in this editor.
-					// FIXME change this when we can get the currency for income/expense
-					// accounts.
-					Commodity commodityForFormatting = null;
-					if (entry.getAccount() != null
-							&& entry.getAccount() instanceof CapitalAccount) {
-						commodityForFormatting = entry.getCommodity();
-					}
-					if (commodityForFormatting == null) {
-						commodityForFormatting = getAccount().getCurrency();
-					}
-					
-					String amountString = textControl.getText();
-					long amount = commodityForFormatting.parse(amountString);
-					
-					long previousEntryAmount = entry.getAmount();
-					long newEntryAmount;
-					
-					if (isDebit) {
-						if (amount != 0) {
-							newEntryAmount = -amount;
-						} else {
-							if (previousEntryAmount < 0) { 
-								newEntryAmount  = 0;
-							} else {
-								newEntryAmount = previousEntryAmount;
-							}
-						}
-					} else {
-						if (amount != 0) {
-							newEntryAmount = amount;
-						} else {
-							if (previousEntryAmount > 0) { 
-								newEntryAmount  = 0;
-							} else {
-								newEntryAmount = previousEntryAmount;
-							}
-						}
-					}
-
-					entry.setAmount(newEntryAmount);
-
-					// If there are two entries in the transaction and
-					// if both entries have accounts in the same currency or
-					// one or other account is not known or one or other account
-					// is a multi-currency account then we set the amount in
-					// the other entry to be the same but opposite signed amount.
-					
-					if (entry.getTransaction().hasTwoEntries()) {
-						Entry otherEntry = entry.getTransaction().getOther(entry);
-						Commodity commodity1 = entry.getCommodity();
-						Commodity commodity2 = otherEntry.getCommodity();
-						if (commodity1 == null || commodity2 == null || commodity1.equals(commodity2)) {
-							otherEntry.setAmount(-newEntryAmount);
-						}
-					}
-				}
-			};
-			
-			return propertyControl;
-		}
-
-		public boolean isTransactionProperty() {
-			return false;
-		}
-
-		public int compare(DisplayableTransaction trans1, DisplayableTransaction trans2) {
-			long amount1 = trans1.getEntryForAccountFields().getAmount();
-			long amount2 = trans2.getEntryForAccountFields().getAmount();
-			
-			int result;
-			if (amount1 < amount2) {
-				result = -1;
-			} else if (amount1 > amount2) {
-				result = 1;
-			} else {
-				result = 0;
-			}
-
-			// If debit column then reverse.  Ascending sort should
-			// result in the user seeing ascending numbers in the
-			// sorted column.
-			if (isDebit) {
-				result = -result;
-			}
-			
-			return result;
-		}
-    }
-	
-	/**
-	 * Represents a table column that is the account balance.
-	 */
-	class BalanceColumn implements IEntriesTableProperty {
-		public String getText() {
-			return "Balance";
-		}
-
-		public String getId() {
-			return "balance"; //$NON-NLS-1$
-		}
-
-		public int getWeight() {
-			return 2;
-		}
-
-		public int getMinimumWidth() {
-			return 70;
-		}
-
-		public String getValueFormattedForTable(IDisplayableItem data) {
-		    if (data.isBalanceAffected()) {
-				Commodity commodity = ReconcilePage.this.getAccount().getCurrency();
-		        return commodity.format(data.getBalance());
-		    } else { 
-				// Display an empty cell in this column for the entry rows
-		        return "";
-		    }
-		}
-
-		public IPropertyControl createAndLoadPropertyControl(Composite parent, IDisplayableItem data) {
-			// This column is not editable so return null
-			return null;
-		}
-
-		public boolean isTransactionProperty() {
-			// This is displayed on transaction lines only,
-			// 
-			return false;
-		}
-
-		public int compare(DisplayableTransaction trans1, DisplayableTransaction trans2) {
-			// Entries lists cannot be sorted based on the balance.
-			// The caller should not do this.
-			throw new RuntimeException("internal error - attempt to sort on balance");
-		}
-    }
 }

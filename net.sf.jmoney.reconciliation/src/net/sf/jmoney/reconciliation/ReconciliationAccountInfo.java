@@ -22,12 +22,19 @@
 
 package net.sf.jmoney.reconciliation;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountControlFactory;
 import net.sf.jmoney.fields.CheckBoxControlFactory;
 import net.sf.jmoney.fields.CurrencyAccountInfo;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionPropertySet;
+import net.sf.jmoney.model2.IExtensionObjectConstructors;
+import net.sf.jmoney.model2.IListGetter;
 import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
@@ -39,14 +46,37 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  */
 public class ReconciliationAccountInfo implements IPropertySetInfo {
 
-	private static ExtensionPropertySet<ReconciliationAccount> propertySet = PropertySet.addExtensionPropertySet(ReconciliationAccount.class, CurrencyAccountInfo.getPropertySet());
+	private static ExtensionPropertySet<ReconciliationAccount> propertySet = PropertySet.addExtensionPropertySet(ReconciliationAccount.class, CurrencyAccountInfo.getPropertySet(), new IExtensionObjectConstructors<ReconciliationAccount>() {
+
+		public ReconciliationAccount construct(ExtendableObject extendedObject) {
+			return new ReconciliationAccount(extendedObject);
+		}
+
+		public ReconciliationAccount construct(ExtendableObject extendedObject, IValues values) {
+			return new ReconciliationAccount(
+					extendedObject, 
+					values.getScalarValue(reconcilableAccessor),
+					values.getListManager(extendedObject.getObjectKey(), patternsAccessor),
+					values.getReferencedObjectKey(defaultCategoryAccessor) 
+			);
+		}
+	});
+	
 	private static ScalarPropertyAccessor<Boolean> reconcilableAccessor = null;
 	private static ScalarPropertyAccessor<IncomeExpenseAccount> defaultCategoryAccessor = null;
+	private static ListPropertyAccessor<MemoPattern> patternsAccessor = null;
 	
 	public PropertySet registerProperties() {
 		AccountControlFactory<IncomeExpenseAccount> accountControlFactory = new AccountControlFactory<IncomeExpenseAccount>();
-		
+
+		IListGetter<ReconciliationAccount, MemoPattern> patternListGetter = new IListGetter<ReconciliationAccount, MemoPattern>() {
+			public ObjectCollection<MemoPattern> getList(ReconciliationAccount parentObject) {
+				return parentObject.getPatternCollection();
+			}
+		};
+	
 		reconcilableAccessor = propertySet.addProperty("reconcilable", ReconciliationPlugin.getResourceString("Account.isReconcilable"), Boolean.class, 1, 5, new CheckBoxControlFactory(), null);
+		patternsAccessor = propertySet.addPropertyList("patterns", JMoneyPlugin.getResourceString("<not used???>"), MemoPatternInfo.getPropertySet(), patternListGetter, null);
 		defaultCategoryAccessor = propertySet.addProperty("defaultCategory", ReconciliationPlugin.getResourceString("Account.defaultCategory"), IncomeExpenseAccount.class, 1, 20, accountControlFactory, null);
 		
 		return propertySet;
@@ -65,6 +95,13 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 	public static ScalarPropertyAccessor<Boolean> getReconcilableAccessor() {
 		return reconcilableAccessor;
 	}
+
+	/**
+	 * @return
+	 */
+	public static ListPropertyAccessor<MemoPattern> getPatternsAccessor() {
+		return patternsAccessor;
+	}	
 
 	/**
 	 * @return
