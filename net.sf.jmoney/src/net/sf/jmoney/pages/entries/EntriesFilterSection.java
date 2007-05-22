@@ -22,6 +22,7 @@
 package net.sf.jmoney.pages.entries;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.entrytable.IEntriesTableProperty;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;

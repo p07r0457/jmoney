@@ -24,6 +24,7 @@ package net.sf.jmoney.pages.entries;
 
 import java.text.MessageFormat;
 
+import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertyControl;
@@ -70,7 +71,7 @@ public class ForeignCurrencyDialog {
 
     private Display display;
 
-    public ForeignCurrencyDialog(Shell parent, IDisplayableItem item) {
+    public ForeignCurrencyDialog(Shell parent, EntryData item) {
     	
         this.display = parent.getDisplay();
         
@@ -92,8 +93,8 @@ public class ForeignCurrencyDialog {
         transactionArea.setLayout(transactionLayout);
 
         Label label1 = new Label(transactionArea, SWT.NONE);
-        Entry entry1 = item.getEntryForAccountFields();
-        Entry entry2 = item.getEntryForOtherFields();
+        Entry entry1 = item.getEntry();
+        Entry entry2 = item.getOtherEntry();
 		Object[] messageArgs = new Object[] { 
 				entry1.getAmount() > 0 ? "credit" : "debit",
 				entry1.getCommodity().format(Math.abs(entry1.getAmount())),
@@ -118,7 +119,7 @@ public class ForeignCurrencyDialog {
 				.format(messageArgs2));
 		
 		final IPropertyControl propertyControl = EntryInfo.getAmountAccessor().createPropertyControl(transactionArea, entry1.getSession());
-		propertyControl.load(item.getEntryForOtherFields());
+		propertyControl.load(item.getOtherEntry());
 		
 		// Create the button area
 		Composite buttonArea = new Composite(shell, 0);

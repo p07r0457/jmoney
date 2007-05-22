@@ -19,12 +19,19 @@
 package net.sf.jmoney.pages.entries;
 
 import java.util.Collection;
-import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.entrytable.Block;
+import net.sf.jmoney.entrytable.CellBlock;
+import net.sf.jmoney.entrytable.EntriesSectionProperty;
+import net.sf.jmoney.entrytable.EntriesTable;
+import net.sf.jmoney.entrytable.EntryData;
+import net.sf.jmoney.entrytable.HorizontalBlock;
+import net.sf.jmoney.entrytable.IEntriesContent;
+import net.sf.jmoney.entrytable.VerticalBlock;
+import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.pages.entries.EntriesTree.DisplayableEntry;
-import net.sf.jmoney.pages.entries.EntriesTree.DisplayableTransaction;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.SectionPart;
@@ -39,9 +46,12 @@ import org.eclipse.ui.forms.widgets.Section;
 public class EntriesSection extends SectionPart implements IEntriesContent {
 
     private EntriesPage fPage;
-    private EntriesTree fEntriesControl;
+
+    private EntriesTable fEntriesControl;
     
     private EntryRowSelectionListener tableSelectionListener = null;
+    
+    private Block rootBlock;
     
     public EntriesSection(EntriesPage page, Composite parent) {
         super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
@@ -57,75 +67,57 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     protected void createClient(FormToolkit toolkit) {
     	
     	tableSelectionListener = new EntryRowSelectionAdapter() {
-    		public void widgetSelected(IDisplayableItem selectedObject) {
+    		public void widgetSelected(EntryData selectedObject) {
     			JMoneyPlugin.myAssert(selectedObject != null);
     			
-    			// We should never get here with the item data set to the
-    			// DisplayableNewEmptyEntry object as a result of the user
-    			// selecting the row.  The reason being that the EntryTree
-    			// object intercepts mouse down events first and replaces the
-    			// data with a new entry.  However, SWT seems to set the selection
-    			// to the last row in certain circumstances such as when
-    			// applying a filter.  In such a situation, both the top-level
-    			// entry and the selected entry will be given as null.
-    			// Two null values passed to the entry section will cause
-    			// the section to be blanked.
-    			
-    			IDisplayableItem data = (IDisplayableItem)selectedObject;
-
-    			if (selectedObject instanceof DisplayableTransaction) {
-    				DisplayableTransaction transData = (DisplayableTransaction)selectedObject;
-    				if (transData.isSimpleEntry()) {
-    					fPage.fEntrySection.update(data.getEntryInAccount(), data.getEntryForOtherFields(), true);
-    				} else {
-    					fPage.fEntrySection.update(data.getEntryInAccount(), null, true);
-    				}
-    			} else if (selectedObject instanceof DisplayableEntry) {
-					fPage.fEntrySection.update(data.getEntryForThisRow(), null, false);
-    			} else {
-    				// We were not on a transaction (we were probably on the
-    				// blank 'new transaction' line.
-					fPage.fEntrySection.update(null, null, false);
-    			}
+    			// Do we want to keep the entry section at the bottom?
+    			// Do we need this listener at all?
 			}
         };
 
-        // Create the table control.
-        fEntriesControl = new EntriesTree(getSection(), toolkit, fPage.transactionManager, this, fPage.getAccount().getSession()); 
-		fEntriesControl.addSelectionListener(tableSelectionListener);
+        
+
+		// By default, do not include the column for the currency
+		// of the entry in the category (which applies only when
+		// the category is a multi-currency income/expense category)
+		// and the column for the amount (which applies only when
+		// the currency is different from the entry in the capital 
+		// account)
+//		if (!entriesSectionProperty.getId().equals("common2.net.sf.jmoney.entry.incomeExpenseCurrency")
+//				&& !entriesSectionProperty.getId().equals("other.net.sf.jmoney.entry.amount")) {
+  
+        
+		/*
+		 * Setup the layout structure of the header and rows.
+		 */
+		rootBlock = new HorizontalBlock(new Block [] {
+				new CellBlock(EntriesSectionProperty.createTransactionColumn(TransactionInfo.getDateAccessor())),
+				new VerticalBlock(new Block [] {
+						new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getMemoAccessor())),
+						new HorizontalBlock(new Block [] {
+								new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getCheckAccessor())),
+								new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getValutaAccessor())),
+						}),
+				}),
+				new CellBlock(EntriesSectionProperty.createOtherEntryColumn(EntryInfo.getAccountAccessor())),
+				new CellBlock(EntriesSectionProperty.createOtherEntryColumn(EntryInfo.getDescriptionAccessor())),
+				new CellBlock(EntriesSectionProperty.createOtherEntryColumn(EntryInfo.getAmountAccessor())),
+				new CellBlock(fPage.debitColumnManager),
+				new CellBlock(fPage.creditColumnManager),
+				new CellBlock(fPage.balanceColumnManager),
+		});
 		
+//		cellList = new ArrayList<IEntriesTableProperty>();
+//		rootBlock.buildCellList(cellList);
+
+		// Create the table control.
+		fEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, this, fPage.getAccount().getSession(), new EntriesTable.IMenuItem [] {}); 
+		fEntriesControl.addSelectionListener(tableSelectionListener);
+			
         getSection().setClient(fEntriesControl);
         toolkit.paintBordersFor(fEntriesControl);
         refresh();
     }
-
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.pages.entries.IEntriesContent#getAllEntryDataObjects()
-	 */
-	public Vector<IEntriesTableProperty> getAllEntryDataObjects() {
-		return fPage.allEntryDataObjects;
-	}
-
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.pages.entries.IEntriesContent#getDebitColumnManager()
-	 */
-	public IEntriesTableProperty getDebitColumnManager() {
-		return fPage.debitColumnManager;
-	}
-
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.pages.entries.IEntriesContent#getCreditColumnManager()
-	 */
-	public IEntriesTableProperty getCreditColumnManager() {
-		return fPage.creditColumnManager;
-	}
-
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.pages.entries.IEntriesContent#getBalanceColumnManager()
-	 */
-	public IEntriesTableProperty getBalanceColumnManager() {
-		return fPage.balanceColumnManager;
-	}
 
 	public Collection<Entry> getEntries() {
 /* The caller always sorts, so there is no point in us returning
@@ -150,7 +142,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.pages.entries.IEntriesContent#filterEntry(net.sf.jmoney.pages.entries.EntriesTable.DisplayableTransaction)
 	 */
-	public boolean filterEntry(IDisplayableItem data) {
+	public boolean filterEntry(EntryData data) {
 		return fPage.filter.filterEntry(data);
 	}
 

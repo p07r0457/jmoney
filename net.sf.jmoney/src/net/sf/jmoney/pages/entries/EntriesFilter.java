@@ -26,6 +26,7 @@ import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
 import net.sf.jmoney.Constants;
+import net.sf.jmoney.entrytable.EntryData;
 
 /**
  * TODO Move to non-UI plug-in
@@ -115,11 +116,12 @@ public class EntriesFilter implements Constants {
      *			to be filered 			
      * @return True, if "entry" matches the filter criteria; false, else
      */
-	public boolean filterEntry(IDisplayableItem data) {
+	public boolean filterEntry(EntryData data) {
 		if (pattern.equals("")) {
 			// Filter is not active so all entries match
 			return true;
 		} else {
+/* TODO: fix this.  Filter should be based on property, not IEntriesProperty.			
 			if (filterColumnIndex == 0) {
 				// 'Entry' selected.  Entry matches if any of the properties
 				// match.
@@ -135,6 +137,8 @@ public class EntriesFilter implements Constants {
 				String text = entriesSectionProperty.getValueFormattedForTable(data);
 				return containsPattern(text);
 			}
+*/
+			return false;
 		}
     }
 	

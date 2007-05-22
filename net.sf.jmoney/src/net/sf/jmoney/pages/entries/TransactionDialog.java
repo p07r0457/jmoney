@@ -223,7 +223,7 @@ public class TransactionDialog {
         okButton.setText("OK");
         okButton.addSelectionListener(new SelectionAdapter() {
         	public void widgetSelected(SelectionEvent event) {
-        		transactionManager.commit();
+        		transactionManager.commit("Edit Transaction");
         		shell.close();
         	}
         });

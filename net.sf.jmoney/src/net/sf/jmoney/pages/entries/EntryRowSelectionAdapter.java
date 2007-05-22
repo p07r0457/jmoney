@@ -22,10 +22,12 @@
 
 package net.sf.jmoney.pages.entries;
 
+import net.sf.jmoney.entrytable.EntryData;
+
 public class EntryRowSelectionAdapter implements EntryRowSelectionListener {
-	public void widgetSelected(IDisplayableItem data) {
+	public void widgetSelected(EntryData data) {
 	};
 	
-	public void widgetDefaultSelected(IDisplayableItem data) {
+	public void widgetDefaultSelected(EntryData data) {
 	};
 }

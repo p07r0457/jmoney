@@ -22,7 +22,9 @@
 
 package net.sf.jmoney.pages.entries;
 
+import net.sf.jmoney.entrytable.EntryData;
+
 public interface EntryRowSelectionListener {
-	void widgetSelected(IDisplayableItem data);
-	void widgetDefaultSelected(IDisplayableItem data);
+	void widgetSelected(EntryData data);
+	void widgetDefaultSelected(EntryData data);
 }

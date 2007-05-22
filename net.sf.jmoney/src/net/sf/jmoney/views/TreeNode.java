@@ -180,7 +180,7 @@ public class TreeNode implements IAdaptable {
 								ExtendablePropertySet<?> pagePropertySet = PropertySet.getExtendablePropertySet(propertySetId);
 								PageEntry pageEntry = new PageEntry(pageId, elements[j], pos);  
 								
-								for (ExtendablePropertySet derivedPropertySet: pagePropertySet.getDerivedPropertySets()) {
+								for (ExtendablePropertySet<?> derivedPropertySet: pagePropertySet.getDerivedPropertySets()) {
 									derivedPropertySet.addPage(pageEntry);
 								}
 							} catch (PropertySetNotFoundException e1) {

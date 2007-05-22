@@ -275,7 +275,7 @@ public class NavigationView extends ViewPart {
 	 * thread.
 	 *
 	 * My best guess is that this method was originally added back when JMoney still had
-	 * some Swing code running on another thead.
+	 * some Swing code running on another thread.
 	 */
 	// TODO: remove this method????
 	private void refreshViewer () {
