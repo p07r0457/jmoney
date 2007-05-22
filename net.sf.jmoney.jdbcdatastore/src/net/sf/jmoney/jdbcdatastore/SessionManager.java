@@ -48,9 +48,11 @@ import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.ExtensionPropertySet;
 import net.sf.jmoney.model2.IEntryQueries;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
@@ -96,7 +98,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * derived property set are put in the map for the base property
 	 * set.
 	 */
-	private Map<ExtendablePropertySet, Map<Integer, WeakReference<ExtendableObject>>> objectMaps = new HashMap<ExtendablePropertySet, Map<Integer, WeakReference<ExtendableObject>>>();
+	private Map<ExtendablePropertySet<?>, Map<Integer, WeakReference<ExtendableObject>>> objectMaps = new HashMap<ExtendablePropertySet<?>, Map<Integer, WeakReference<ExtendableObject>>>();
 	
 	private class ParentList {
 		ParentList(ExtendablePropertySet<?> parentPropertySet, PropertyAccessor listProperty) {
@@ -116,7 +118,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * vector contains a list of the list properties in all property
 	 * sets that contain a list of objects of the property set.
 	 */
-	private Map<ExtendablePropertySet, Vector<ParentList>> tablesMap = null;
+	private Map<ExtendablePropertySet<?>, Vector<ParentList>> tablesMap = null;
 	
 	public SessionManager(Connection connection) throws SQLException {
 		this.connection = connection;
@@ -154,8 +156,8 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		 * 
 		 * The exception is that no such column exists if the list property is
 		 * in the session object (not including extentions of the session
-		 * object). This is an optimization that saves columns and works because
-		 * we know there is only ever a single session object.
+		 * object). This is an optimization that saves columns. The optimization
+		 * works because we know there is only ever a single session object.
 		 * 
 		 * The reason why extensions are not included is because we do not know
 		 * what lists may be added in extensions. A list may be added that
@@ -166,11 +168,11 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		 * currency is in a list property of the session object but we would not
 		 * know which list.
 		 */
-		tablesMap = new Hashtable<ExtendablePropertySet, Vector<ParentList>>();
-		for (ExtendablePropertySet propertySet: PropertySet.getAllExtendablePropertySets()) {
+		tablesMap = new Hashtable<ExtendablePropertySet<?>, Vector<ParentList>>();
+		for (ExtendablePropertySet<?> propertySet: PropertySet.getAllExtendablePropertySets()) {
 			Vector<ParentList> list = new Vector<ParentList>();  // List of PropertyAccessors
 			for (ExtendablePropertySet<?> propertySet2: PropertySet.getAllExtendablePropertySets()) {
-				for (ListPropertyAccessor listAccessor: propertySet2.getListProperties2()) {
+				for (ListPropertyAccessor<?> listAccessor: propertySet2.getListProperties2()) {
 					if (listAccessor.getPropertySet() != SessionInfo.getPropertySet()) {
 						if (propertySet.getImplementationClass() == listAccessor.getElementPropertySet().getImplementationClass()) {
 							// Add to the list of possible parents.
@@ -351,7 +353,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @return
 	 * @throws SQLException
 	 */
-	String buildJoins(ExtendablePropertySet finalPropertySet) {
+	String buildJoins(ExtendablePropertySet<?> finalPropertySet) {
 		/*
 		 * Some databases (e.g. HDBSQL) execute queries faster if JOIN ON is
 		 * used rather than a WHERE clause, and will also execute faster if the
@@ -361,7 +363,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		 */
 		String tableName = finalPropertySet.getId().replace('.', '_');
 		String sql = "SELECT * FROM " + tableName;
-		for (ExtendablePropertySet propertySet2 = finalPropertySet.getBasePropertySet(); propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
+		for (ExtendablePropertySet<?> propertySet2 = finalPropertySet.getBasePropertySet(); propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
 			String tableName2 = propertySet2.getId().replace('.', '_');
 			sql += " JOIN " + tableName2
 					+ " ON " + tableName + "._ID = " + tableName2 + "._ID";
@@ -386,7 +388,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @return
 	 * @throws SQLException
 	 */
-	ResultSet executeListQuery(IDatabaseRowKey parentKey, ListPropertyAccessor listProperty, ExtendablePropertySet finalPropertySet) throws SQLException {
+	ResultSet executeListQuery(IDatabaseRowKey parentKey, ListPropertyAccessor<?> listProperty, ExtendablePropertySet<?> finalPropertySet) throws SQLException {
 		String sql = buildJoins(finalPropertySet);
 		
 		/*
@@ -402,7 +404,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		if (listProperty.getPropertySet() == SessionInfo.getPropertySet()) {
 			String whereClause = "";
 			String separator = "";
-			for (ExtendablePropertySet propertySet = finalPropertySet; propertySet != null; propertySet = propertySet.getBasePropertySet()) {
+			for (ExtendablePropertySet<?> propertySet = finalPropertySet; propertySet != null; propertySet = propertySet.getBasePropertySet()) {
 				Vector<ParentList> possibleContainingLists = tablesMap.get(propertySet);
 				for (ParentList parentList: possibleContainingLists) {
 					whereClause += separator + "\"" + parentList.columnName + "\" IS NULL";
@@ -439,7 +441,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * 
 	 * @return The id of the inserted row
 	 */
-	public int insertIntoDatabase(ExtendablePropertySet propertySet, ExtendableObject newObject, ListPropertyAccessor listProperty, ExtendableObject parent) {
+	public int insertIntoDatabase(ExtendablePropertySet<?> propertySet, ExtendableObject newObject, ListPropertyAccessor<?> listProperty, ExtendableObject parent) {
 		int rowId = -1;
 
 		// We must insert into the base table first, then the table for the objects
@@ -450,8 +452,8 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		// therefore store these so that we can loop through the property sets in
 		// the reverse order.
 		
-		Vector<ExtendablePropertySet> propertySets = new Vector<ExtendablePropertySet>();
-		for (ExtendablePropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
+		Vector<ExtendablePropertySet<?>> propertySets = new Vector<ExtendablePropertySet<?>>();
+		for (ExtendablePropertySet<?> propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
 			propertySets.add(propertySet2);
 		}
 		
@@ -515,7 +517,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				columnNames += separator + "_PROPERTY_SET";
 				// Set to the id of the final
 				// (non-derivable) property set for this object.
-				PropertySet finalPropertySet = (PropertySet)propertySets.get(0); 
+				ExtendablePropertySet<?> finalPropertySet = propertySets.get(0); 
 				columnValues += separator + "\'" + finalPropertySet.getId() + "\'";
 				separator = ", ";
 			}
@@ -572,7 +574,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @param newValues
 	 * @param sessionManager
 	 */
-	public void updateProperties(ExtendablePropertySet propertySet, int rowId, Object[] oldValues, Object[] newValues) {
+	public void updateProperties(ExtendablePropertySet<?> propertySet, int rowId, Object[] oldValues, Object[] newValues) {
 		Statement stmt = getReusableStatement();
 
 		// The array of property values contains the properties from the
@@ -580,8 +582,8 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		// We therefore process the tables starting with the base table
 		// first.  This requires first copying the property sets into
 		// an array so that we can iterate them in reverse order.
-		Vector<ExtendablePropertySet> propertySets = new Vector<ExtendablePropertySet>();
-		for (ExtendablePropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
+		Vector<ExtendablePropertySet<?>> propertySets = new Vector<ExtendablePropertySet<?>>();
+		for (ExtendablePropertySet<?> propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
 			propertySets.add(propertySet2);
 		}
 		
@@ -656,7 +658,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		String valueString;
 		
 		if (value != null) {
-			Class valueClass = value.getClass();
+			Class<?> valueClass = value.getClass();
 			if (valueClass == String.class
 					|| valueClass == char.class
 					|| valueClass == Character.class) {
@@ -700,7 +702,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 */
 // TODO: throw error if object is referenced.
 	public boolean deleteFromDatabase(IDatabaseRowKey objectKey) {
-		ExtendablePropertySet propertySet = PropertySet.getPropertySet(objectKey.getObject().getClass()); 
+		ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(objectKey.getObject().getClass()); 
 		
 		Statement stmt = getReusableStatement();
 
@@ -721,7 +723,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		 * the database and just delete the row in the base-most table. However,
 		 * it is perhaps safer not to use 'CASCADE'.
 		 */
-		for (ExtendablePropertySet propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
+		for (ExtendablePropertySet<?> propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
 			
 			String sql = "DELETE FROM " 
 				+ propertySet2.getId().replace('.', '_')
@@ -792,7 +794,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			 */
 			Statement stmt = this.reusableStatement;
 			
-			PropertySet propertySet2 = listProperty.getElementPropertySet();
+			ExtendablePropertySet<?> propertySet2 = listProperty.getElementPropertySet();
 			String sql = "DELETE FROM " 
 				+ propertySet2.getId().replace('.', '_')
 				+ " WHERE " 
@@ -823,46 +825,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @return
 	 */
 	public <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, ExtendableObject parent) {
-		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
-		int numberOfParameters = constructorProperties.size();
-		if (!propertySet.isExtension()) {
-			numberOfParameters += 3;
-		}
-		Object[] constructorParameters = new Object[numberOfParameters];
-		
-		constructorParameters[0] = objectKey;
-		constructorParameters[1] = null;
-		constructorParameters[2] = parent.getObjectKey();
-	
-		// For all lists, set the Collection object to be a Vector.
-		// For all primative properties, get the value from the passed object.
-		// For all extendable objects, we get the property value from
-		// the passed object and then get the object key from that.
-		// This works because all objects must be in a list and that
-		// list owns the object, not us.
-		for (PropertyAccessor propertyAccessor: constructorProperties) {
-			int index = propertyAccessor.getIndexIntoConstructorParameters();
-			if (propertyAccessor.isScalar()) {
-				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor; 
-				
-				// Use the default value
-				Object value = scalarAccessor.getDefaultValue();
-				
-				if (value instanceof ExtendableObject) {
-					constructorParameters[index] = ((ExtendableObject)value).getObjectKey();
-				} else { 
-					constructorParameters[index] = value;
-				}
-			} else {
-				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor; 
-
-				// Must be an element in an array.
-				constructorParameters[index] = createListManager(objectKey, listAccessor);
-			}
-		}
-		
-		// We can now create the object.
-		E extendableObject = propertySet.constructImplementationObject(constructorParameters);
+		E extendableObject = propertySet.constructDefaultImplementationObject(objectKey, parent.getObjectKey());
 		
 		setMaterializedObject(getBasemostPropertySet(propertySet), objectKey.getRowId(), extendableObject);
 		
@@ -887,60 +850,8 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * 			with ExtendableObject properties having the object key in this array 
 	 * @return
 	 */
-	public <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, ExtendableObject parent, Object[] values) {
-		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
-		int numberOfParameters = constructorProperties.size();
-		if (!propertySet.isExtension()) {
-			numberOfParameters += 3;
-		}
-		Object[] constructorParameters = new Object[numberOfParameters];
-		
-		Map<PropertySet, Object[]> extensionMap = new HashMap<PropertySet, Object[]>();
-		
-		constructorParameters[0] = objectKey;
-		constructorParameters[1] = extensionMap;
-		constructorParameters[2] = parent.getObjectKey();
-		
-		// Construct the extendable object using the 'full' constructor.
-		// This constructor takes a parameter for every property in the object.
-		
-		// TODO: This code is not very efficient because it creates extension objects
-		// in the new object even if none existed in the original object (all properties
-		// in the extension having default values).
-		
-		int valuesIndex = 0;
-		for (PropertyAccessor propertyAccessor: propertySet.getProperties3()) {
-			
-			Object value;
-			if (propertyAccessor.isScalar()) {
-				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
-				if (valuesIndex != scalarAccessor.getIndexIntoScalarProperties()) {
-					throw new RuntimeException("index mismatch");
-				}
-				value = values[valuesIndex++];
-			} else {
-				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
-				value = createListManager(objectKey, listAccessor);
-			}
-			
-			// Determine how this value is passed to the constructor.
-			// If the property comes from an extension then we must set
-			// the property into an extension, otherwise we simply set
-			// the property into the constructor parameters.
-			if (!propertyAccessor.getPropertySet().isExtension()) {
-				constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
-			} else {
-				Object [] extensionConstructorParameters = extensionMap.get(propertyAccessor.getPropertySet());
-				if (extensionConstructorParameters == null) {
-					extensionConstructorParameters = new Object [propertyAccessor.getPropertySet().getConstructorProperties().size()];
-					extensionMap.put(propertyAccessor.getPropertySet(), extensionConstructorParameters);
-				}
-				extensionConstructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
-			}
-		}
-
-		// We can now create the object.
-		E extendableObject = propertySet.constructImplementationObject(constructorParameters);
+	public <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, ExtendableObject parent, IValues values) {
+		E extendableObject = propertySet.constructImplementationObject(objectKey, parent.getObjectKey(), values);
 
 		setMaterializedObject(getBasemostPropertySet(propertySet), objectKey.getRowId(), extendableObject);
 		
@@ -964,64 +875,30 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @return
 	 * @throws SQLException
 	 */ 
-	<E extends ExtendableObject> E materializeObject(ResultSet rs, ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, IObjectKey parentKey) throws SQLException {
+	<E extends ExtendableObject> E materializeObject(final ResultSet rs, final ExtendablePropertySet<E> propertySet, final IDatabaseRowKey objectKey, IObjectKey parentKey) throws SQLException {
 		/**
 		 * The list of parameters to be passed to the constructor
 		 * of this object.
 		 */
-		Object[] constructorParameters;
-		
-		Collection<PropertyAccessor> constructorProperties = propertySet.getConstructorProperties();
-		constructorParameters = new Object[3 + constructorProperties.size()];
+		IValues values = new IValues() {
 
-		Map<PropertySet, Object[]> extensionMap = new HashMap<PropertySet, Object[]>();
-		
-		constructorParameters[0] = objectKey;
-		constructorParameters[1] = extensionMap;
-		constructorParameters[2] = parentKey;
+			public <V> V getScalarValue(ScalarPropertyAccessor<V> propertyAccessor) {
+				String columnName = getColumnName(propertyAccessor);
 
-
-		int valuesIndex = 0;
-		for (PropertyAccessor propertyAccessor: propertySet.getProperties3()) {
-			
-			Object value;
-			if (propertyAccessor.isScalar()) {
-				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
-				if (valuesIndex != scalarAccessor.getIndexIntoScalarProperties()) {
-					throw new RuntimeException("index mismatch");
-				}
-				valuesIndex++;
-				
-				String columnName = getColumnName(scalarAccessor);
-
-				Class<?> valueClass = scalarAccessor.getClassOfValueObject(); 
+				try {
+				Class<V> valueClass = propertyAccessor.getClassOfValueObject(); 
 				if (valueClass == Character.class) {
-					value = rs.getString(columnName).charAt(0);
+					return valueClass.cast(rs.getString(columnName).charAt(0));
 				} else if (valueClass == Long.class) {
-					value = rs.getLong(columnName);
+					return valueClass.cast(rs.getLong(columnName));
 				} else if (valueClass == Integer.class) {
-					value = rs.getInt(columnName);
+					return valueClass.cast(rs.getInt(columnName));
 				} else if (valueClass == String.class) {
-					value = rs.getString(columnName);
+					return valueClass.cast(rs.getString(columnName));
 				} else if (valueClass == Boolean.class) {
-					value = rs.getBoolean(columnName);
+					return valueClass.cast(rs.getBoolean(columnName));
 				} else if (valueClass == Date.class) {
-					value = rs.getDate(columnName);
-				} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
-					Class<? extends ExtendableObject> objectClass = valueClass.asSubclass(ExtendableObject.class);
-					int rowIdOfProperty = rs.getInt(columnName);
-					if (rs.wasNull()) {
-						value = null;
-					} else {
-						ExtendablePropertySet<? extends ExtendableObject> propertySetOfProperty = PropertySet.getPropertySet(objectClass);
-
-						/*
-						 * We must obtain an object key.  However, we do not have to create
-						 * the object or obtain a reference to the object itself at this time.
-						 * Nor do we want to for performance reasons.
-						 */
-						value = new ObjectKey(rowIdOfProperty, propertySetOfProperty, this);
-					}
+					return valueClass.cast(rs.getDate(columnName));
 				} else {
 					/*
 					 * Must be a user defined object.  Construct it using
@@ -1029,7 +906,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 					 */
 					String text = rs.getString(columnName);
 					if (rs.wasNull() || text.length() == 0) {
-						value = null;
+						return null;
 					} else {
 						/*
 						 * The property value is an class that is in none of the
@@ -1037,7 +914,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 						 * constructor to construct the object.
 						 */
 						try {
-							value = valueClass
+							return valueClass
 							.getConstructor( new Class [] { String.class } )
 							.newInstance(new Object [] { text });
 						} catch (Exception e) {
@@ -1055,29 +932,69 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 						}
 					}
 				}
-			} else {
-				ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
-				value = constructListManager(objectKey, listAccessor);
+				} catch (SQLException e) {
+					e.printStackTrace();
+					throw new RuntimeException("database error");
+				}
 			}
 			
-			// Determine how this value is passed to the constructor.
-			// If the property comes from an extension then we must set
-			// the property into an extension, otherwise we simply set
-			// the property into the constructor parameters.
-			if (!propertyAccessor.getPropertySet().isExtension()) {
-				constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
-			} else {
-				Object [] extensionConstructorParameters = extensionMap.get(propertyAccessor.getPropertySet());
-				if (extensionConstructorParameters == null) {
-					extensionConstructorParameters = new Object [propertyAccessor.getPropertySet().getConstructorProperties().size()];
-					extensionMap.put(propertyAccessor.getPropertySet(), extensionConstructorParameters);
-				}
-				extensionConstructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
-			}
-		}
+			public IObjectKey getReferencedObjectKey(ScalarPropertyAccessor<? extends ExtendableObject> propertyAccessor) {
+				String columnName = getColumnName(propertyAccessor);
+				try {
+					int rowIdOfProperty = rs.getInt(columnName);
+					if (rs.wasNull()) {
+						return null;
+					} else {
+						ExtendablePropertySet<? extends ExtendableObject> propertySetOfProperty = PropertySet.getPropertySet(propertyAccessor.getClassOfValueObject());
 
-		// We can now create the object.
-		E extendableObject = propertySet.constructImplementationObject(constructorParameters);
+						/*
+						 * We must obtain an object key.  However, we do not have to create
+						 * the object or obtain a reference to the object itself at this time.
+						 * Nor do we want to for performance reasons.
+						 */
+						return new ObjectKey(rowIdOfProperty, propertySetOfProperty, SessionManager.this);
+					}
+				} catch (SQLException e) {
+					e.printStackTrace();
+					throw new RuntimeException("database error");
+				}
+			}
+
+			public <E2 extends ExtendableObject> IListManager<E2> getListManager(IObjectKey listOwnerKey, ListPropertyAccessor<E2> listAccessor) {
+				return objectKey.constructListManager(listAccessor);
+			}
+
+			public Collection<ExtensionPropertySet<?>> getNonDefaultExtensions() {
+				/*
+				 * In order to find out which extensions have non-default values, we have to read the property
+				 * values from the rowset and compare against the default values given by the accessor.
+				 * Note that the values may be null so we use the utility method to do the comparison.
+				 */
+				Collection<ExtensionPropertySet<?>> nonDefaultExtensions = new Vector<ExtensionPropertySet<?>>();
+				outerLoop: for (ExtensionPropertySet<?> extensionPropertySet: propertySet.getExtensionPropertySets()) {
+					boolean nonDefaultValueFound = false;
+					for (ScalarPropertyAccessor accessor: extensionPropertySet.getScalarProperties1()) {
+						// TODO: Complete this implementation, if it is worth it.  On the other hand, perhaps it
+						// is not unacceptable to always create extensions.
+						if (true) {
+//						if (!JMoneyPlugin.areEqual(getValue(rs, accessor), accessor.getDefaultValue())) {
+							nonDefaultExtensions.add(extensionPropertySet);
+							continue outerLoop;
+						}
+					}
+					for (ListPropertyAccessor accessor: extensionPropertySet.getListProperties1()) {
+						// For time being, always create an extension if there is a list property in it.
+						nonDefaultExtensions.add(extensionPropertySet);
+						continue outerLoop;
+					}
+				}
+				
+				return nonDefaultExtensions;
+			}
+
+		};
+		
+		E extendableObject = propertySet.constructImplementationObject(objectKey, parentKey, values);
 		
 		setMaterializedObject(getBasemostPropertySet(propertySet), objectKey.getRowId(), extendableObject);
 		
@@ -1101,19 +1018,11 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @return an SQL compliant column name, guaranteed to be unique within the
 	 *         table
 	 */
-	private String getColumnName(ScalarPropertyAccessor propertyAccessor) {
+	private String getColumnName(ScalarPropertyAccessor<?> propertyAccessor) {
 		if (propertyAccessor.getPropertySet().isExtension()) {
 			return propertyAccessor.getName().replace('.', '_');
 		} else {
 			return propertyAccessor.getLocalName();
-		}
-	}
-
-	private <E extends ExtendableObject> IListManager<E> constructListManager(IDatabaseRowKey parentKey, ListPropertyAccessor<E> listAccessor) {
-		if (listAccessor == SessionInfo.getTransactionsAccessor()) {
-			return new ListManagerUncached<E>(this, parentKey, listAccessor);
-		} else {
-			return new ListManagerCached<E>(this, parentKey, listAccessor, false);
 		}
 	}
 
@@ -1168,11 +1077,11 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		 * For each list that may contain this object, see if the appropriate
 		 * column is non-null.
 		 */
-		ExtendablePropertySet<? extends ExtendableObject> parentPropertySet = null;
+		ExtendablePropertySet<?> parentPropertySet = null;
 		int parentId = -1;
 		boolean nonNullValueFound = false;
 		
-		ExtendablePropertySet propertySet2 = propertySet;
+		ExtendablePropertySet<?> propertySet2 = propertySet;
 		do {
 			Vector<ParentList> list = tablesMap.get(propertySet);
 
@@ -1210,7 +1119,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	private class ColumnInfo {
 		String columnName;
 		String columnDefinition;
-		PropertySet foreignKeyPropertySet = null;
+		ExtendablePropertySet<?> foreignKeyPropertySet = null;
 		ColumnNature nature;
 	}
 	
@@ -1227,8 +1136,6 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * <P>
 	 * The "_ID" column is required in all tables as a primary
 	 * key and is not returned by this method.
-	 * <P>
-	 * This method may not be called with an extension property set.
 	 * 
 	 * @return A Vector containing objects of class 
 	 * 		<code>ColumnInfo</code>.
@@ -1289,16 +1196,16 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		
 		// The columns for each property in this property set
 		// (including the extension property sets).
-		for (ScalarPropertyAccessor propertyAccessor: propertySet.getScalarProperties2()) {
+		for (ScalarPropertyAccessor<?> propertyAccessor: propertySet.getScalarProperties2()) {
 			ColumnInfo info = new ColumnInfo();
 
 			info.nature = ColumnNature.SCALAR_PROPERTY;
 			info.columnName = getColumnName(propertyAccessor);
 
-			Class valueClass = propertyAccessor.getClassOfValueObject();
+			Class<?> valueClass = propertyAccessor.getClassOfValueObject();
 			if (valueClass == Integer.class) {
 				info.columnDefinition = "INT";
-			} if (valueClass == Long.class) {
+			} else if (valueClass == Long.class) {
 				info.columnDefinition = "BIGINT";
 			} else if (valueClass == Character.class) {
 				info.columnDefinition = "CHAR";
@@ -1331,7 +1238,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				// The return type from a getter for a property that is a reference
 				// to an extendable object must be the getter interface.
 				info.foreignKeyPropertySet = null;
-				for (ExtendablePropertySet propertySet2: PropertySet.getAllExtendablePropertySets()) {
+				for (ExtendablePropertySet<?> propertySet2: PropertySet.getAllExtendablePropertySets()) {
 					if (propertySet2.getImplementationClass() == valueClass) {
 						info.foreignKeyPropertySet = propertySet2;
 						break;
@@ -1427,7 +1334,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		
 		DatabaseMetaData dmd = con.getMetaData();
 		
-		for (ExtendablePropertySet propertySet: PropertySet.getAllExtendablePropertySets()) {
+		for (ExtendablePropertySet<?> propertySet: PropertySet.getAllExtendablePropertySets()) {
 			String tableName = propertySet.getId().replace('.', '_');
 
 			// Check that the table exists.
@@ -1467,7 +1374,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		 * might try to create a foreign key constraint before the foreign key
 		 * has been created.
 		 */
-		for (ExtendablePropertySet propertySet: PropertySet.getAllExtendablePropertySets()) {
+		for (ExtendablePropertySet<?> propertySet: PropertySet.getAllExtendablePropertySets()) {
 			String tableName = propertySet.getId().replace('.', '_');
 
 			/*
@@ -1568,7 +1475,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * 			to submit the 'CREATE TABLE' command.
 	 * @throws SQLException
 	 */
-	void createTable(ExtendablePropertySet propertySet, Statement stmt) throws SQLException {
+	void createTable(ExtendablePropertySet<?> propertySet, Statement stmt) throws SQLException {
 		/*
 		 * The _ID column is always a primary key. However, it has automatically
 		 * generated values only for the base tables. Derived tables contain ids

@@ -26,9 +26,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IListManager;
+import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;
@@ -199,7 +202,7 @@ public class ObjectKey implements IDatabaseRowKey {
 					 * for the base-most property sets contain the _PROPERTY_SET
 					 * columns from which we can determine the exact class of the object.
 					 */
-					ExtendablePropertySet basemostPropertySet = typedPropertySet;
+					ExtendablePropertySet<?> basemostPropertySet = typedPropertySet;
 					while (basemostPropertySet.getBasePropertySet() != null) {
 						basemostPropertySet = basemostPropertySet.getBasePropertySet();
 					}
@@ -296,7 +299,7 @@ public class ObjectKey implements IDatabaseRowKey {
 		return rowId;
 	}
 	
-	public void updateProperties(ExtendablePropertySet actualPropertySet, Object[] oldValues, Object[] newValues) {
+	public void updateProperties(ExtendablePropertySet<?> actualPropertySet, Object[] oldValues, Object[] newValues) {
 		sessionManager.updateProperties(actualPropertySet, rowId, oldValues, newValues);
 	}
 
@@ -306,6 +309,14 @@ public class ObjectKey implements IDatabaseRowKey {
 
 	public DataManager getSessionManager() {
 		return sessionManager;
+	}
+
+	public <E extends ExtendableObject> IListManager<E> constructListManager(ListPropertyAccessor<E> listAccessor) {
+		if (listAccessor == SessionInfo.getTransactionsAccessor()) {
+			return new ListManagerUncached<E>(sessionManager, this, listAccessor);
+		} else {
+			return new ListManagerCached<E>(sessionManager, this, listAccessor, false);
+		}
 	}
 
 	/**

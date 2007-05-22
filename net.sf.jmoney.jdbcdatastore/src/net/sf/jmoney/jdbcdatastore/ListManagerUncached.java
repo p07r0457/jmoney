@@ -30,6 +30,7 @@ import java.util.Iterator;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
+import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 
 /**
@@ -76,7 +77,7 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		return extendableObject;
 	}
 	
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, Object[] values) {
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, IValues values) {
  		/*
 		 * First build the in-memory object. Even though the object is not
 		 * cached in the parent list property, the object must be constructed to
