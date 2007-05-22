@@ -23,8 +23,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.util.Map;
-
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.BankAccountInfo;
 
@@ -50,7 +48,6 @@ public class BankAccount extends CurrencyAccount {
 	 */
 	public BankAccount(
 			IObjectKey objectKey, 
-			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parent,
 			String name,
 			IListManager<CapitalAccount> subAccounts,
@@ -60,8 +57,9 @@ public class BankAccount extends CurrencyAccount {
 			long startBalance,
 			String bank,
 			String accountNumber,
-			Long minBalance) {
-		super(objectKey, extensions, parent, name, subAccounts, abbreviation, comment, currencyKey, startBalance);
+			Long minBalance,
+			IValues extensionValues) { 
+		super(objectKey, parent, name, subAccounts, abbreviation, comment, currencyKey, startBalance, extensionValues);
 		
         this.bank = bank;
         this.accountNumber = accountNumber;
@@ -77,10 +75,8 @@ public class BankAccount extends CurrencyAccount {
 	 */
 	public BankAccount(
 			IObjectKey objectKey, 
-			Map<ExtensionPropertySet, Object[]> extensions, 
-			IObjectKey parent,
-			IListManager<CapitalAccount> subAccounts) {
-		super(objectKey, extensions, parent, subAccounts);
+			IObjectKey parent) { 
+		super(objectKey, parent);
 		
 		// Overwrite the default name with our own default name.
 		this.name = JMoneyPlugin.getResourceString("Account.newAccount");

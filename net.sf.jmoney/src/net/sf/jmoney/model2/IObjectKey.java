@@ -136,4 +136,15 @@ public interface IObjectKey {
 	 * @return
 	 */
 	DataManager getSessionManager();
+
+	/**
+	 * Constructs a list manager that is suitable for managing a list
+	 * property in the object represented by this object key.
+	 * 
+	 * @param <E>
+	 * @param listAccessor a list property, which must be a property of
+	 * 			the object represented by this object key
+	 * @return
+	 */
+	<E extends ExtendableObject> IListManager<E> constructListManager(ListPropertyAccessor<E> listAccessor);
 }

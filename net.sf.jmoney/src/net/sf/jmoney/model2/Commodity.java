@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.util.Map;
-
 import net.sf.jmoney.fields.CommodityInfo;
 
 /**
@@ -36,13 +34,20 @@ public abstract class Commodity extends ExtendableObject implements Comparable<C
 	
 	protected Commodity(
 			IObjectKey objectKey, 
-			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parentKey,
-			String name) {
-		super(objectKey, extensions, parentKey);
+			String name,
+			IValues extensionValues) { 
+		super(objectKey, parentKey, extensionValues);
 		this.name = name;
 	}
 	
+protected Commodity(
+		IObjectKey objectKey, 
+		IObjectKey parentKey) { 
+	super(objectKey, parentKey);
+	this.name = null;
+}
+
 	/**
 	 * @return the name of the currency.
 	 */

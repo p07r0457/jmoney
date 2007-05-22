@@ -56,7 +56,7 @@ public interface SessionChangeListener extends EventListener {
 	 * an easier case with which to deal.
 	 * 
 	 * Listeners should put code in this method to avoid complications that can
-	 * arise if objects and there children are added piecemeal.
+	 * arise if objects and their children are added piecemeal.
 	 * 
 	 * @param newObject
 	 */

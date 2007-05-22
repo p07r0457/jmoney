@@ -36,7 +36,8 @@ package net.sf.jmoney.model2;
  */
 public abstract class CurrencyAccountExtension extends AccountExtension {
     
-    public CurrencyAccountExtension() {
+    public CurrencyAccountExtension(ExtendableObject extendedObject) {
+    	super(extendedObject);
     }
 
     /*

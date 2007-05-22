@@ -24,7 +24,6 @@ package net.sf.jmoney.model2;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
-import java.util.Map;
 
 import net.sf.jmoney.fields.CurrencyInfo;
 
@@ -57,12 +56,12 @@ public class Currency extends Commodity {
      */
 	public Currency(
 				IObjectKey objectKey,
-	    		Map<ExtensionPropertySet, Object[]> extensions,
 				IObjectKey parentKey,
 				String name,
 				String code,
-				int decimals) {
-		super(objectKey, extensions, parentKey, name);
+				int decimals,
+				IValues extensionValues) {
+		super(objectKey, parentKey, name, extensionValues);
 		
 		if (decimals < 0 || decimals > MAX_DECIMALS)
 			throw new IllegalArgumentException("Number of decimals not supported");
@@ -77,10 +76,8 @@ public class Currency extends Commodity {
      */
 	public Currency(
 				IObjectKey objectKey,
-	    		Map<ExtensionPropertySet, Object[]> extensions,
 				IObjectKey parentKey) {
-		super(objectKey, extensions, parentKey, "New Currency");
-		
+		super(objectKey, parentKey);
 		this.code = null;
 		this.decimals = 2;
 	}

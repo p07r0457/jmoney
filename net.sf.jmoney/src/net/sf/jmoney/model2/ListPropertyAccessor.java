@@ -36,5 +36,5 @@ public abstract class ListPropertyAccessor<E extends ExtendableObject> extends P
 
 	/**
 	 */
-	public abstract ObjectCollection<E> getElements(Object invocationTarget);
+	public abstract ObjectCollection<E> getElements(ExtendableObject invocationTarget);
 }

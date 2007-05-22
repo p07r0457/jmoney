@@ -34,10 +34,14 @@ public abstract class ExtensionObject {
 	protected ExtendableObject baseObject;
 	protected PropertySet propertySet;
 	
+	public ExtensionObject(ExtendableObject extendedObject) {
+		this.baseObject = extendedObject;
+	}
+/*
 	void setBaseObject(ExtendableObject baseObject) {
 		this.baseObject = baseObject;
 	}
-	
+*/	
 	void setPropertySet(PropertySet propertySet) {
 		this.propertySet = propertySet;
 	}

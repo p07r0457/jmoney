@@ -24,7 +24,6 @@
 package net.sf.jmoney.model2;
 
 import java.util.Date;
-import java.util.Map;
 
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
@@ -41,11 +40,11 @@ public class Transaction extends ExtendableObject {
     
 	public Transaction(
 			IObjectKey objectKey,
-    		Map<ExtensionPropertySet, Object[]> extensions,
 			IObjectKey parentKey,
     		IListManager<Entry> entries,
-    		Date date) {
-		super(objectKey, extensions, parentKey);
+    		Date date,
+			IValues extensionValues) {
+		super(objectKey, parentKey, extensionValues);
 
 		this.entries = entries;
 		this.date = date;
@@ -53,12 +52,11 @@ public class Transaction extends ExtendableObject {
 	
 	public Transaction(
 			IObjectKey objectKey,
-    		Map<ExtensionPropertySet, Object[]> extensions,
-			IObjectKey parentKey,
-    		IListManager<Entry> entries) {
-		super(objectKey, extensions, parentKey);
+			IObjectKey parentKey) {
+		super(objectKey, parentKey);
 
-		this.entries = entries;
+		this.entries = objectKey.constructListManager(TransactionInfo.getEntriesAccessor());
+
 		// TODO: Check that this sets the date to the current date.
 		this.date = new Date();
 	}

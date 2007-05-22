@@ -25,7 +25,6 @@ package net.sf.jmoney.model2;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -40,11 +39,18 @@ public abstract class Account extends ExtendableObject implements Comparable<Acc
 
 	protected Account(
 			IObjectKey objectKey, 
-			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parentKey,
-			String name) {
-		super(objectKey, extensions, parentKey);
+			String name,
+			IValues extensionValues) { 
+		super(objectKey, parentKey, extensionValues);
 		this.name = name;
+	}
+	
+	protected Account(
+			IObjectKey objectKey, 
+			IObjectKey parentKey) { 
+		super(objectKey, parentKey);
+		this.name = null;
 	}
 	
 	/**

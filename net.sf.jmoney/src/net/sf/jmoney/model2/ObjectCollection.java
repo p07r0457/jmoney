@@ -39,7 +39,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	ExtendableObject parent;
 	ListPropertyAccessor<E> listPropertyAccessor;
 	
-	ObjectCollection(IListManager<E> listManager, ExtendableObject parent, ListPropertyAccessor<E> listPropertyAccessor) {
+	public ObjectCollection(IListManager<E> listManager, ExtendableObject parent, ListPropertyAccessor<E> listPropertyAccessor) {
 		this.listManager = listManager;
 		this.parent = parent;
 		this.listPropertyAccessor = listPropertyAccessor;
@@ -90,23 +90,10 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	 * 			being inserted in the same transaction, false if this object is being inserted
 	 *          into a list that existed prior to this transaction
 	 */
-	public <F extends E> F createNewElement(ExtendablePropertySet<F> actualPropertySet, Object values[], final boolean isDescendentInsert) {
+	public <F extends E> F createNewElement(ExtendablePropertySet<F> actualPropertySet, IValues values, final boolean isDescendentInsert) {
 		final F newObject = listManager.createNewElement(parent, actualPropertySet, values);
 		
 		parent.getSession().getChangeManager().processObjectCreation(parent, listPropertyAccessor, newObject);
-		
-		/*
-		 * This version of this method is called only from within a transaction.   
-		 */
-		parent.getObjectKey().getSessionManager().fireEvent(
-				new ISessionChangeFirer() {
-					public void fire(SessionChangeListener listener) {
-						if (!isDescendentInsert) {
-							listener.objectInserted(newObject);
-						}
-						listener.objectCreated(newObject);
-					}
-				});
 		
 		return newObject;
 	}
@@ -152,6 +139,10 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 		}
 		
 		ExtendableObject extendableObject = (ExtendableObject)object;
+		
+		if (extendableObject.getObjectKey().getSessionManager() != parent.getObjectKey().getSessionManager()) {
+    		throw new RuntimeException("Invalid call to remove.  The object passed does not belong to the data manager that is the base data manager of this collection.");
+		}
 		
 		// TODO: We should check the containing list property too, as it
 		// is possible that there is more than one list in a given parent

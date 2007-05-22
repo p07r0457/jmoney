@@ -25,7 +25,6 @@ package net.sf.jmoney.model2;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Map;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.EntryInfo;
@@ -79,7 +78,6 @@ public final class Entry extends ExtendableObject {
      */
 	public Entry(
 			IObjectKey objectKey,
-    		Map<ExtensionPropertySet, Object[]> extensions,
 			IObjectKey parentKey,
     		String     check,
     		String     description,
@@ -88,8 +86,9 @@ public final class Entry extends ExtendableObject {
     		String     memo,
     		long       amount,
     		long       creation,
-    		IObjectKey incomeExpenseCurrencyKey) {
-		super(objectKey, extensions, parentKey);
+    		IObjectKey incomeExpenseCurrencyKey,
+    		IValues extensionValues) {
+		super(objectKey, parentKey, extensionValues);
 		
 		if (creation == 0) {
 			this.creation = Calendar.getInstance().getTime().getTime();
@@ -124,9 +123,8 @@ public final class Entry extends ExtendableObject {
      */
 	public Entry(
 			IObjectKey objectKey,
-    		Map<ExtensionPropertySet, Object[]> extensions,
 			IObjectKey parentKey) {
-		super(objectKey, extensions, parentKey);
+		super(objectKey, parentKey);
 		
 		this.creation = Calendar.getInstance().getTime().getTime();
 		this.check = null;

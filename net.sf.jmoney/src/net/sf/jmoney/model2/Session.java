@@ -27,7 +27,6 @@ import java.security.InvalidParameterException;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -52,6 +51,11 @@ public class Session extends ExtendableObject implements IAdaptable {
 
     private IListManager<Transaction> transactions;
 
+    /**
+     * A map cache of currencies, used to get a currency object given
+     * a currency code.  This cache must be updated as currencies are
+     * added, removed, or when a currency's code changes. 
+     */
     Hashtable<String, Currency> currencies = new Hashtable<String, Currency>();
         
 	private ChangeManager changeManager = new ChangeManager();
@@ -64,13 +68,13 @@ public class Session extends ExtendableObject implements IAdaptable {
      */
     public Session(
     		IObjectKey objectKey,
-    		Map<ExtensionPropertySet, Object[]> extensions,
 			IObjectKey parentKey,
     		IListManager<Commodity> commodities,
 			IListManager<Account> accounts,
 			IListManager<Transaction> transactions,
-			IObjectKey defaultCurrencyKey) {
-    	super(objectKey, extensions, parentKey);
+			IObjectKey defaultCurrencyKey,
+    		IValues extensionValues) {
+    	super(objectKey, parentKey, extensionValues);
 
     	this.commodities = commodities;
     	this.accounts = accounts;
@@ -78,9 +82,8 @@ public class Session extends ExtendableObject implements IAdaptable {
     	this.defaultCurrencyKey = defaultCurrencyKey;
     	
         /*
-		 * Set up a hash table that maps currency codes to the currency object.
+		 * Load the currencies into our cached map.
 		 */
-    	this.currencies = new Hashtable<String, Currency>();
     	for (Commodity commodity: commodities) {
     		if (commodity instanceof Currency) {
     			Currency currency = (Currency)commodity;
@@ -97,30 +100,12 @@ public class Session extends ExtendableObject implements IAdaptable {
      */
     public Session(
     		IObjectKey objectKey,
-    		Map<ExtensionPropertySet, Object[]> extensions,
-			IObjectKey parentKey,
-    		IListManager<Commodity> commodities,
-			IListManager<Account> accounts,
-			IListManager<Transaction> transactions) {
-    	super(objectKey, extensions, parentKey);
+			IObjectKey parentKey) {
+    	super(objectKey, parentKey);
 
-    	this.commodities = commodities;
-    	this.accounts = accounts;
-    	this.transactions = transactions;
-    	
-        // Set up a hash table that maps currency codes to
-        // the currency object.
-    	// It may be that no 
-    	this.currencies = new Hashtable<String, Currency>();
-    	for (Commodity commodity: commodities) {
-    		if (commodity instanceof Currency) {
-    			Currency currency = (Currency)commodity;
-    			if (currency.getCode() != null) {
-    				this.currencies.put(currency.getCode(), currency);
-    			}
-    		}
-    	}
-    	
+    	this.commodities = objectKey.constructListManager(SessionInfo.getCommoditiesAccessor());
+    	this.accounts = objectKey.constructListManager(SessionInfo.getAccountsAccessor());
+    	this.transactions = objectKey.constructListManager(SessionInfo.getTransactionsAccessor());
    		this.defaultCurrencyKey = null;
     }
 

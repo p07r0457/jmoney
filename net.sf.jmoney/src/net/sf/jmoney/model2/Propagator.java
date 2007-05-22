@@ -110,8 +110,8 @@ public class Propagator {
 					if (parameters.length != 3) {
 						throw new MalformedPluginException("propertyChange methods in propagators must have three parameters");
 					}
-					if (parameters[0] != String.class) {
-						throw new MalformedPluginException("The first parameter in propertyChange methods in propagators must be of type String");
+					if (parameters[0] != ScalarPropertyAccessor.class) {
+						throw new MalformedPluginException("The first parameter in propertyChange methods in propagators must be of type " + ScalarPropertyAccessor.class.getSimpleName());
 					}
 
 					/*
@@ -145,7 +145,7 @@ public class Propagator {
 	 * @param method
 	 */    
 	private static void CheckExtensions(ExtendablePropertySet<?> extendablePropertySet1, ExtendablePropertySet extendablePropertySet2, Method method) {
-		for (ExtensionPropertySet sourcePropertySet: extendablePropertySet1.getExtensionPropertySets()) {
+		for (ExtensionPropertySet sourcePropertySet: extendablePropertySet1.getDirectExtensionPropertySets()) {
 			CheckPropertySetAgainstExtensions(sourcePropertySet, extendablePropertySet2, method);
 		}
 	}
@@ -159,7 +159,7 @@ public class Propagator {
 		PropertySet sourcePropertySet = propertySet1;
 		if (sourcePropertySet.getImplementationClass().equals(parameters[1])) {
 
-			for (ExtensionPropertySet destinationPropertySet: extendablePropertySet2.getExtensionPropertySets()) {
+			for (ExtensionPropertySet destinationPropertySet: extendablePropertySet2.getDirectExtensionPropertySets()) {
 				if (destinationPropertySet.getImplementationClass().equals(parameters[2])) {
 					
 					// Method looks ok so add to map.

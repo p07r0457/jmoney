@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +36,12 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 
 	ExtendablePropertySet<? super E> basePropertySet;
 
+	/**
+	 * An interface that can be used to construct implementation objects,
+	 * or null if this is an abstract property set.
+	 */
+	IExtendableObjectConstructors<E> constructors;
+	
 	/**
 	 * true if further property sets must be derived from this property set,
 	 * false if property sets cannot be derived from this property set.
@@ -50,7 +57,7 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 
 	private Collection<ExtendablePropertySet<? extends E>> directlyDerivedPropertySets = new Vector<ExtendablePropertySet<? extends E>>(); 
 	
-	Map<String, ExtensionPropertySet> extensionPropertySets = null;  
+	Map<String, ExtensionPropertySet<?>> extensionPropertySets = null;  
 
 	/**
 	 * Localized text describing the type of object represented
@@ -83,38 +90,32 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	private Vector<PageEntry> pageExtensions = null;
 
 	/**
-	 * Constructs a base property set object.
-	 *  
+	 * Constructs a property set object.
+	 * 
 	 * @param classOfObject
-	 * @param objectDescription 
+	 *            the class of the implementation object
+	 * @param objectDescription
+	 *            a localized description of this object class, suitable for use
+	 *            in the UI
+	 * @param basePropertySet
+	 *            the property set from which this property set is derived, or
+	 *            null if we are constructing a base property set
+	 * @param constructors
+	 *            an interface containing methods for constructing
+	 *            implementation objects, or null if this is an abstract
+	 *            property set
 	 */
-	protected ExtendablePropertySet(Class<E> classOfObject, String objectDescription) {
-		this.isExtension = false;
-		this.classOfObject = classOfObject;
-		this.basePropertySet = null;
-
-		this.derivable = false;
-		this.objectDescription = objectDescription;
-		this.iconFileName = null;
-
-		extensionPropertySets = new HashMap<String, ExtensionPropertySet>();
-	}
-	
-	/**
-	 * Constructs a derived property set object.
-	 *  
-	 * @param classOfObject
-	 */
-	protected ExtendablePropertySet(Class<E> classOfObject, String objectDescription, ExtendablePropertySet<? super E> basePropertySet) {
+	protected ExtendablePropertySet(Class<E> classOfObject, String objectDescription, ExtendablePropertySet<? super E> basePropertySet, IExtendableObjectConstructors<E> constructors) {
 		this.isExtension = false;
 		this.classOfObject = classOfObject;
 		this.basePropertySet = basePropertySet;
-
+		this.constructors = constructors;
+		
 		this.derivable = false;
 		this.objectDescription = objectDescription;
 		this.iconFileName = null;
 
-		extensionPropertySets = new HashMap<String, ExtensionPropertySet>();
+		extensionPropertySets = new HashMap<String, ExtensionPropertySet<?>>();
 	}
 
 	public void initProperties(String propertySetId) {
@@ -145,19 +146,20 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 			for (ExtendablePropertySet<? super E> base = this; base != null; base = base.getBasePropertySet()) {
 				base.derivedPropertySets.put(classOfObject, this);
 			}
-
+/*
 			// Build the list of properties that are passed to
 			// the 'new object' constructor and another list that
 			// are passed to the 're-instantiating' constructor.
 
 			constructorProperties = new Vector<PropertyAccessor>();
 			defaultConstructorProperties = new Vector<PropertyAccessor>();
+*/			
 		}
 
 		if (basePropertySet != null) {
 			basePropertySet.directlyDerivedPropertySets.add(this);
 		}
-		
+/*		
 		// We need to be able to iterate through property sets
 		// starting at the base property set and continuing through
 		// derived property sets until we get to this property set.
@@ -198,11 +200,7 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 				}
 			}
 		}
-
-		if (!derivable) {
-			findConstructors(false);
-		}
-
+*/
 		/*
 		 * Set the icon associated with this property set. The icon will already
 		 * have been set in any property set for which an icon is specifically
@@ -562,10 +560,57 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	 * @return the extension property sets that extend this property
 	 * 			set
 	 */
-	public Collection<ExtensionPropertySet> getExtensionPropertySets() {
+	public Collection<ExtensionPropertySet<?>> getDirectExtensionPropertySets() {
 		return extensionPropertySets.values();
 	}
 	
+	/**
+	 * Gets a list of all property sets that extend the given property set.
+	 * Property sets that extend any base property sets are also included.
+	 * 
+	 * Note: This method does not return derived property sets.
+	 * 
+	 * @return the extension property sets that extend this property set
+	 */
+	public Collection<ExtensionPropertySet<?>> getExtensionPropertySets() {
+		Collection<ExtensionPropertySet<?>> result = new ArrayList<ExtensionPropertySet<?>>();
+	
+		ExtendablePropertySet<?> propertySet = this;
+		do {
+			result.addAll(propertySet.extensionPropertySets.values());
+			propertySet = propertySet.getBasePropertySet();
+		} while (propertySet != null);
+		
+		return result;
+	}
+	
+	/**
+	 * This method should be used only by plug-ins that implement
+	 * a datastore.
+	 * 
+	 * @param constructorParameters an array of values to be passed to
+	 * 		the constructor.  If an extendable object is being constructed
+	 * 		then the first three elements of this array must be the
+	 * 		object key, the extension map, and the parent object key.
+	 * @return A newly constructed object, constructed from the given
+	 * 		parameters.  This object may be an ExtendableObject or
+	 * 		may be an ExtensionObject.
+	 */
+	public E constructImplementationObject(IObjectKey objectKey, IObjectKey parentKey, IValues values) {
+		return constructors.construct(objectKey, parentKey, values);
+	}
+
+	/**
+	 * This method should be used only by plug-ins that implement
+	 * a datastore.
+	 * 
+	 * @return A newly constructed object, constructed from the given
+	 * 		parameters.  This object may be an ExtendableObject or
+	 * 		may be an ExtensionObject.
+	 */
+	public E constructDefaultImplementationObject(IObjectKey objectKey, IObjectKey parentKey) {
+		return constructors.construct(objectKey, parentKey);
+	}
 	
 	/**
 	 * Returns the set of tabbed pages that are to be shown in the
@@ -627,5 +672,8 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 		return null;
 	}
 
-
+	@Override
+	protected E getImplementationObject(ExtendableObject extendableObject) {
+		return (E)classOfObject.cast(extendableObject);
+	}
 }

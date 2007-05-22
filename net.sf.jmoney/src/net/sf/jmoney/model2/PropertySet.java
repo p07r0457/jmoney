@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.model2;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -75,8 +73,8 @@ public abstract class PropertySet<E> {
 	/**
 	 * These arrays are built on first use and then cached.
 	 */
-	private Vector<ScalarPropertyAccessor> scalarProperties1 = null;
-	private Vector<ListPropertyAccessor> listProperties1 = null;
+	private Vector<ScalarPropertyAccessor<?>> scalarProperties1 = null;
+	private Vector<ListPropertyAccessor<?>> listProperties1 = null;
 
 	boolean isExtension;
 	
@@ -86,60 +84,13 @@ public abstract class PropertySet<E> {
 	/**
 	 * Maps property set id to the property set
 	 */
-//	protected static Map<String, PropertySet> allPropertySetsMap = new HashMap<String, PropertySet>();
-	protected static Map<String, ExtendablePropertySet> allExtendablePropertySetsMap = new HashMap<String, ExtendablePropertySet>();
-	protected static Map<String, ExtensionPropertySet> allExtensionPropertySetsMap = new HashMap<String, ExtensionPropertySet>();
+	protected static Map<String, ExtendablePropertySet<?>> allExtendablePropertySetsMap = new HashMap<String, ExtendablePropertySet<?>>();
+	protected static Map<String, ExtensionPropertySet<?>> allExtensionPropertySetsMap = new HashMap<String, ExtensionPropertySet<?>>();
 
 	/**
 	 * Map extendable classes to property sets.
 	 */
 	protected static Map<Class<? extends ExtendableObject>, ExtendablePropertySet> classToPropertySetMap = new HashMap<Class<? extends ExtendableObject>, ExtendablePropertySet>();
-	
-	// Valid for all property sets except those that are
-	// extendable and must be derived from.
-	private Constructor<E> implementationClassConstructor;
-	
-	// Valid for all property sets except those that are
-	// extendable and must be derived from.
-	private Constructor<E> defaultImplementationClassConstructor;
-	
-	/**
-	 * A list of all properties in this and base property sets that are
-	 * passed to the 're-instantiating' constructor.  The order of properties in
-	 * this vector object is the same as the order in which the
-	 * properties are passed as parameters into the constructor. 
-	 * <P>
-	 * Note that constructors for extendable objects take extra
-	 * parameters at the start before the property parameters.
-	 * There are no elements in this Vector corresponding to 
-	 * these parameters.  Therefore the
-	 * indexes into this Vector will not correspond to the index into
-	 * the parameter list.
-	 * <P>
-	 * This field is undefined for derivable property sets.
-	 */
-	protected Vector<PropertyAccessor> constructorProperties;
-	
-	/**
-	 * A list of all properties in this and base property sets that are
-	 * passed to the 'new object' constructor.  The 'new object' constructor
-	 * takes parameters only for the properties that are lists, so this
-	 * vector is a list of the list properties.  The order of properties in
-	 * this vector object is the same as the order in which the
-	 * properties are passed as parameters into the constructor. 
-	 * <P>
-	 * Note that constructors for extendable objects take extra
-	 * parameters at the start before the property parameters.
-	 * There are no elements in this Vector corresponding to 
-	 * these parameters.  Therefore the
-	 * indexes into this Vector will not correspond to the index into
-	 * the parameter list.
-	 * <P>
-	 * This field is undefined for derivable property sets.
-	 */
-	protected Vector<PropertyAccessor> defaultConstructorProperties;
-	
-//	private Method theDefaultPropertiesMethod;
 	
 	protected PropertySet() {
 		// Add to our list of all property sets
@@ -288,165 +239,6 @@ public abstract class PropertySet<E> {
 	}
 	
 	/**
-	 * Helper method to find the constructors.
-	 * 
-	 * This method is called both for extendable property
-	 * sets (final, not derivable) and extension property
-	 * sets.
-	 *  
-	 * @param isExtension
-	 */
-	protected void findConstructors(boolean isExtension) {
-		// Build the list of properties that are passed to
-		// the 'new object' constructor and another list that
-		// are passed to the 're-instantiating' constructor.
-		{
-			int i = 0;
-			int parameterCount = constructorProperties.size();
-			if (!isExtension) {
-				parameterCount += 3;
-			}
-			Class parameters[] = new Class[parameterCount];
-			
-			// In the extendable objects, the first parameters are always:
-			// - the key to this object
-			// - a map of extensions
-			// - the key to the object which is the parent of this object
-			if (!isExtension) {
-				parameters[i++] = IObjectKey.class;
-				parameters[i++] = Map.class;
-				parameters[i++] = IObjectKey.class;
-			}
-			
-			for (PropertyAccessor propertyAccessor: constructorProperties) {
-				if (propertyAccessor.isScalar()) {
-					ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
-					if (ExtendableObject.class.isAssignableFrom(scalarAccessor.getClassOfValueType())) { 		
-						// For extendable objects, we pass not the object
-						// but a key to the object.  This is so that we do not
-						// have to read the object from the database unless it
-						// is necessary.
-						parameters[i] = IObjectKey.class; 
-					} else {
-						// The property type is either a primative (int, boolean etc),
-						// or a non-extendable class (Long, String, Date)
-						// or a non-extendable class added by a plug-in.
-						parameters[i] = scalarAccessor.getClassOfValueType();
-					}
-				} else {
-					parameters[i] = IListManager.class; 
-				}
-				i++;
-			}
-			
-			try {
-				implementationClassConstructor =
-					classOfObject.getConstructor(parameters);
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchMethodException e) {
-				String parameterText = "";
-				for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
-					if (paramIndex > 0) {
-						parameterText = parameterText + ", ";
-					}
-					parameterText = parameterText + parameters[paramIndex].getName();
-				}
-				throw new MalformedPluginException("The " + classOfObject.getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
-			}
-		}
-		
-		// Find the 'new object' constructor which sets the default values for
-		// the scalar properties.
-		// Build the list of types of the constructor parameters.
-		{
-			int i = 0;
-			int parameterCount = defaultConstructorProperties.size();
-			if (!isExtension) {
-				parameterCount += 3;
-			}
-			Class parameters[] = new Class[parameterCount];
-			
-			// In the extendable objects, the first parameters are always:
-			// - the key to this object
-			// - a map of extensions
-			// - the key to the object which is the parent of this object
-			if (!isExtension) {
-				parameters[i++] = IObjectKey.class;
-				parameters[i++] = Map.class;
-				parameters[i++] = IObjectKey.class;
-			}
-			
-			/*
-			 * The default constructor takes a parameter for each list property
-			 * but does not take any parameters for the scalar properties.  All
-			 * list property parameters are of type IListManager, so add 
-			 * IListManager class to the constructor prototype once for each
-			 * list property.
-			 */
-			for (int j = 0; j < defaultConstructorProperties.size(); j++) {
-				parameters[i++] = IListManager.class; 
-			}
-			
-			try {
-				defaultImplementationClassConstructor =
-					classOfObject.getConstructor(parameters);
-			} catch (SecurityException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (NoSuchMethodException e) {
-				String parameterText = "";
-				for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
-					if (paramIndex > 0) {
-						parameterText = parameterText + ", ";
-					}
-					parameterText = parameterText + parameters[paramIndex].getName();
-				}
-				throw new MalformedPluginException("The " + classOfObject.getName() + " class must have a constructor that takes parameters of types (" + parameterText + ").");
-			}
-		}
-	}
-	
-	/**
-	 * Returns the list of properties whose values are passed as
-	 * parameters to the 're-instantiating' constructor of the implementation class.
-	 * <P>
-	 * All properties, scalar and list properties, are included
-	 * in this list.  The collection is ordered in the same order
-	 * as the property values are passed to the constructor.
-	 * <P>
-	 * This method may not be called on derivable property sets
-	 * because objects implementing derivable property sets are
-	 * abstract and so no constructor is used by the JMoney framework.
-	 *  
-	 * @return
-	 */
-	public Collection<PropertyAccessor> getConstructorProperties() {
-		return constructorProperties;
-	}
-
-
-	/**
-	 * Returns the list of properties whose values are passed as
-	 * parameters to the 'new object' constructor of the implementation class.
-	 * <P>
-	 * Only list properties are included
-	 * in this list.  The collection is ordered in the same order
-	 * as the property values are passed to the constructor.
-	 * <P>
-	 * This method may not be called on derivable property sets
-	 * because objects implementing derivable property sets are
-	 * abstract and so no constructor is used by the JMoney framework.
-	 *  
-	 * @return
-	 */
-	public Collection<PropertyAccessor> getDefaultConstructorProperties() {
-		return defaultConstructorProperties;
-	}
-
-
-	/**
 	 * 
 	 * @param propertySetId
 	 * @param basePropertySetId If this property set is derived from
@@ -587,7 +379,7 @@ public abstract class PropertySet<E> {
 	 *  
 	 * @return the collection of all property sets
 	 */
-	static public Collection<ExtensionPropertySet> getAllExtensionPropertySets() {
+	static public Collection<ExtensionPropertySet<?>> getAllExtensionPropertySets() {
 		return allExtensionPropertySetsMap.values();
 	}
 	
@@ -596,7 +388,7 @@ public abstract class PropertySet<E> {
 	 *  
 	 * @return the collection of all property sets
 	 */
-	static public Collection<ExtendablePropertySet> getAllExtendablePropertySets() {
+	static public Collection<ExtendablePropertySet<?>> getAllExtendablePropertySets() {
 		return allExtendablePropertySetsMap.values();
 	}
 	
@@ -605,18 +397,16 @@ public abstract class PropertySet<E> {
 	 * 		in this property set, returning, for each property,
 	 * 		the PropertyAccessor object for that property.
 	 */
-	// What is the difference between this and the construction
-	// properties????
 	public Collection<PropertyAccessor> getProperties1() {
 		return properties;
 	}
 	
-	public Collection<ScalarPropertyAccessor> getScalarProperties1() {
+	public Collection<ScalarPropertyAccessor<?>> getScalarProperties1() {
 		if (scalarProperties1 == null) {
-			scalarProperties1 = new Vector<ScalarPropertyAccessor>();
+			scalarProperties1 = new Vector<ScalarPropertyAccessor<?>>();
 			for (PropertyAccessor propertyAccessor: properties) {
 				if (propertyAccessor instanceof ScalarPropertyAccessor) {
-					scalarProperties1.add((ScalarPropertyAccessor)propertyAccessor);
+					scalarProperties1.add((ScalarPropertyAccessor<?>)propertyAccessor);
 				}
 			}
 		}
@@ -624,12 +414,12 @@ public abstract class PropertySet<E> {
 		return scalarProperties1;
 	}
 	
-	public Collection<ListPropertyAccessor> getListProperties1() {
+	public Collection<ListPropertyAccessor<?>> getListProperties1() {
 		if (listProperties1 == null) {
-			listProperties1 = new Vector<ListPropertyAccessor>();
+			listProperties1 = new Vector<ListPropertyAccessor<?>>();
 			for (PropertyAccessor propertyAccessor: properties) {
 				if (propertyAccessor instanceof ListPropertyAccessor) {
-					listProperties1.add((ListPropertyAccessor)propertyAccessor);
+					listProperties1.add((ListPropertyAccessor<?>)propertyAccessor);
 				}
 			}
 		}
@@ -643,76 +433,25 @@ public abstract class PropertySet<E> {
 	public boolean isExtension() {
 		return isExtension;
 	}
-	
-	/**
-	 * This method should be used only by plug-ins that implement
-	 * a datastore.
-	 * 
-	 * @param constructorParameters an array of values to be passed to
-	 * 		the constructor.  If an extendable object is being constructed
-	 * 		then the first three elements of this array must be the
-	 * 		object key, the extension map, and the parent object key.
-	 * @return A newly constructed object, constructed from the given
-	 * 		parameters.  This object may be an ExtendableObject or
-	 * 		may be an ExtensionObject.
-	 */
-	public E constructImplementationObject(Object [] constructorParameters) {
-		// TODO: tidy up error processing
-		try {
-			return implementationClassConstructor.newInstance(constructorParameters);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		} catch (IllegalAccessException e) {
-			throw new MalformedPluginException("Constructor must be public.");
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-			throw new MalformedPluginException("An exception occured within a constructor in a plug-in.", e);
-		}
+
+	public static <E2 extends ExtendableObject> ExtendablePropertySet<E2> addBaseAbstractPropertySet(Class<E2> classOfImplementationObject, String description) {
+		return new ExtendablePropertySet<E2>(classOfImplementationObject, description, null, null);
 	}
 
-
-	/**
-	 * This method should be used only by plug-ins that implement
-	 * a datastore.
-	 * 
-	 * @return A newly constructed object, constructed from the given
-	 * 		parameters.  This object may be an ExtendableObject or
-	 * 		may be an ExtensionObject.
-	 */
-	public E constructDefaultImplementationObject(Object [] constructorParameters) {
-		// TODO: tidy up error processing
-		try {
-			return (E)defaultImplementationClassConstructor.newInstance(constructorParameters);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		} catch (InstantiationException e) {
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		} catch (IllegalAccessException e) {
-			throw new MalformedPluginException("Constructor must be public.");
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-			throw new MalformedPluginException("An exception occured within a constructor in a plug-in.", e);
-		}
+	public static <E2 extends ExtendableObject> ExtendablePropertySet<E2> addBaseFinalPropertySet(Class<E2> classOfImplementationObject, String description, IExtendableObjectConstructors<E2> constructors) {
+		return new ExtendablePropertySet<E2>(classOfImplementationObject, description, null, constructors);
 	}
 
-
-
-	public static <E2 extends ExtendableObject> ExtendablePropertySet<E2> addBasePropertySet(Class<E2> classOfImplementationObject, String description) {
-		return new ExtendablePropertySet<E2>(classOfImplementationObject, description);
+	public static <E extends ExtendableObject> ExtendablePropertySet<E> addDerivedAbstractPropertySet(Class<E> classOfImplementationObject, String description, ExtendablePropertySet<? super E> basePropertySet) {
+		return new ExtendablePropertySet<E>(classOfImplementationObject, description, basePropertySet, null);
 	}
 
-	public static <E extends ExtendableObject> ExtendablePropertySet<E> addDerivedPropertySet(Class<E> classOfImplementationObject, String description, ExtendablePropertySet<? super E> basePropertySet) {
-		return new ExtendablePropertySet<E>(classOfImplementationObject, description, basePropertySet);
+	public static <E extends ExtendableObject> ExtendablePropertySet<E> addDerivedFinalPropertySet(Class<E> classOfImplementationObject, String description, ExtendablePropertySet<? super E> basePropertySet, IExtendableObjectConstructors<E> constructors) {
+		return new ExtendablePropertySet<E>(classOfImplementationObject, description, basePropertySet, constructors);
 	}
 
-	public static <E extends ExtensionObject> ExtensionPropertySet<E> addExtensionPropertySet(Class<E> classOfImplementationObject, ExtendablePropertySet<?> extendablePropertySet) {
-		return new ExtensionPropertySet<E>(classOfImplementationObject, extendablePropertySet, true);
+	public static <E extends ExtensionObject> ExtensionPropertySet<E> addExtensionPropertySet(Class<E> classOfImplementationObject, ExtendablePropertySet<?> extendablePropertySet, IExtensionObjectConstructors<E> constructors) {
+		return new ExtensionPropertySet<E>(classOfImplementationObject, extendablePropertySet, constructors);
 	}
 
 	public <V> ScalarPropertyAccessor<V> addProperty(String name, String displayName, Class<V> classOfValue, int weight, int minimumWidth, IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency propertyDependency) {
@@ -731,8 +470,8 @@ public abstract class PropertySet<E> {
 	public <E2 extends ExtendableObject> ListPropertyAccessor<E2> addPropertyList(String name, String displayName, ExtendablePropertySet<E2> elementPropertySet, final IListGetter<E, E2> listGetter, IPropertyDependency propertyDependency) {
 		ListPropertyAccessor<E2> accessor = new ListPropertyAccessor<E2>(this, name, displayName, elementPropertySet, propertyDependency) {
 			@Override
-			public ObjectCollection<E2> getElements(Object invocationTarget) {
-				return listGetter.getList((E)classOfObject.cast(invocationTarget));
+			public ObjectCollection<E2> getElements(ExtendableObject extendableObject) {
+				return listGetter.getList(getImplementationObject(extendableObject));
 			}
 		};
 		
@@ -740,4 +479,18 @@ public abstract class PropertySet<E> {
 		return accessor;
 	}
 
+	/**
+	 * Given an extendable object, return the Java object that contains the
+	 * getters and setters for this property set.
+	 * 
+	 * If this property set is an extendable property set then this method
+	 * should return the passed object as is. If this property set is an
+	 * extension property set then this method should get the appropriate
+	 * extension object.
+	 * 
+	 * @param extendableObject
+	 * @return
+	 */
+	protected abstract E getImplementationObject(ExtendableObject extendableObject);
 }
+

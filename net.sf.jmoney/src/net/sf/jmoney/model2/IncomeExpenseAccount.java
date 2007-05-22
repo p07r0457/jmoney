@@ -23,8 +23,7 @@
 
 package net.sf.jmoney.model2;
 
-import java.util.Map;
-
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 
 /**
@@ -51,27 +50,23 @@ public class IncomeExpenseAccount extends Account {
 
 	public IncomeExpenseAccount(
 			IObjectKey objectKey, 
-			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parent,
 			String name,
 			IListManager<IncomeExpenseAccount> subAccounts,
 			boolean multiCurrency,
-			IObjectKey currencyKey) {
-		super(objectKey, extensions, parent, name);
+			IObjectKey currencyKey,
+			IValues extensionValues) { 
+		super(objectKey, parent, name, extensionValues);
 
 		this.subAccounts = subAccounts;
 		this.multiCurrency = multiCurrency;
 		this.currencyKey = currencyKey;
 	}
 
-	public IncomeExpenseAccount(
-			IObjectKey objectKey, 
-			Map<ExtensionPropertySet, Object[]> extensions, 
-			IObjectKey parent,
-			IListManager<IncomeExpenseAccount> subAccounts) {
-		super(objectKey, extensions, parent, null);
-
-		this.subAccounts = subAccounts;
+	public IncomeExpenseAccount(IObjectKey objectKey, IObjectKey parentKey) { 
+		super(objectKey, parentKey);
+		this.name = JMoneyPlugin.getResourceString("Account.newAccount");
+		this.subAccounts = objectKey.constructListManager(IncomeExpenseAccountInfo.getSubAccountAccessor());
 	}
 
 	protected String getExtendablePropertySetId() {

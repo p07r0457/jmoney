@@ -48,10 +48,10 @@ public interface IListManager<E extends ExtendableObject> extends Collection<E> 
 	/**
 	 * This method creates a new object in this collection
 	 * in the datastore.  The new object will be initialized
-	 * with property values in the given array.
+	 * with property values taken from the given interface.
 	 * 
 	 * @param values values to be set in the properties of the new object 
 	 * @return the newly created object.
 	 */
-	<F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, Object values[]);
+	<F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, IValues values);
 }

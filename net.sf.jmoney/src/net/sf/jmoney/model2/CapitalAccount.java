@@ -30,7 +30,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -61,13 +60,13 @@ public abstract class CapitalAccount extends Account {
 	 */
 	public CapitalAccount(
 			IObjectKey objectKey, 
-			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parent,
 			String name,
 			IListManager<CapitalAccount> subAccounts,
 			String abbreviation,
-			String comment) {
-		super(objectKey, extensions, parent, name);
+			String comment,
+			IValues extensionValues) { 
+		super(objectKey, parent, name, extensionValues);
 		
 		this.subAccounts = subAccounts;
         this.abbreviation = abbreviation;
@@ -83,12 +82,12 @@ public abstract class CapitalAccount extends Account {
 	 */
 	public CapitalAccount(
 			IObjectKey objectKey, 
-			Map<ExtensionPropertySet, Object[]> extensions, 
-			IObjectKey parent,
-			IListManager<CapitalAccount> subAccounts) {
-		super(objectKey, extensions, parent, JMoneyPlugin.getResourceString("Account.newAccount"));
+			IObjectKey parent) { 
+		super(objectKey, parent);
+
+		this.name = JMoneyPlugin.getResourceString("Account.newAccount");
 		
-		this.subAccounts = subAccounts;
+		this.subAccounts = objectKey.constructListManager(CapitalAccountInfo.getSubAccountAccessor());
         this.abbreviation = null;
         this.comment = null;
 	}

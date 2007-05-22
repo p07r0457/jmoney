@@ -36,8 +36,8 @@ package net.sf.jmoney.model2;
  */
 public abstract class AccountExtension extends ExtensionObject {
     
-    /** Creates a new instance of EntryExtension */
-    public AccountExtension() {
+    public AccountExtension(ExtendableObject extendedObject) {
+    	super(extendedObject);
     }
 
     /*

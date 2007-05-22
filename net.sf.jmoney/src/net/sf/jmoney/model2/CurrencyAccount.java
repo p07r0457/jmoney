@@ -24,7 +24,6 @@
 package net.sf.jmoney.model2;
 
 import java.util.Date;
-import java.util.Map;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.CurrencyAccountInfo;
@@ -32,7 +31,7 @@ import net.sf.jmoney.fields.CurrencyAccountInfo;
 /**
  * The data model for an account.
  */
-public class CurrencyAccount extends CapitalAccount {
+public abstract class CurrencyAccount extends CapitalAccount {
 
 	/**
 	 * Guaranteed non-null because the session default currency is
@@ -53,15 +52,15 @@ public class CurrencyAccount extends CapitalAccount {
 	 */
 	public CurrencyAccount(
 			IObjectKey objectKey, 
-			Map<ExtensionPropertySet, Object[]> extensions, 
 			IObjectKey parent,
 			String name,
 			IListManager<CapitalAccount> subAccounts,
 			String abbreviation,
 			String comment,
 			IObjectKey currencyKey,
-			long startBalance) {
-		super(objectKey, extensions, parent, name, subAccounts, abbreviation, comment);
+			long startBalance,
+			IValues extensionValues) { 
+		super(objectKey, parent, name, subAccounts, abbreviation, comment, extensionValues);
 		
 		/*
 		 * The currency for this account is not allowed to be null, because
@@ -93,10 +92,8 @@ public class CurrencyAccount extends CapitalAccount {
 	 */
 	public CurrencyAccount(
 			IObjectKey objectKey, 
-			Map<ExtensionPropertySet, Object[]> extensions, 
-			IObjectKey parent,
-			IListManager<CapitalAccount> subAccounts) {
-		super(objectKey, extensions, parent, subAccounts);
+			IObjectKey parent) { 
+		super(objectKey, parent);
 		
 		// Set a default name.
 		this.name = JMoneyPlugin.getResourceString("Account.newAccount");

@@ -22,21 +22,30 @@
 
 package net.sf.jmoney.model2;
 
-import java.util.Vector;
 
 public class ExtensionPropertySet<E extends ExtensionObject> extends PropertySet<E> {
 
 	private ExtendablePropertySet<?> extendablePropertySet;	
 
 	/**
+	 * An interface that can be used to construct implementation objects,
+	 * or null if this is an abstract property set.
+	 */
+	IExtensionObjectConstructors<E> constructors;
+	
+	/**
 	 * Constructs an extension property set object.
 	 *  
 	 * @param classOfObject
+	 * @param constructors
+	 *            a required interface containing methods for constructing
+	 *            implementation objects
 	 */
-	protected ExtensionPropertySet(Class<E> classOfObject, ExtendablePropertySet<?> extendablePropertySet, boolean isExtension) {
+	protected ExtensionPropertySet(Class<E> classOfObject, ExtendablePropertySet<?> extendablePropertySet, IExtensionObjectConstructors<E> constructors) {
 		this.isExtension = true;
 		this.classOfObject = classOfObject;
 		this.extendablePropertySet = extendablePropertySet;
+		this.constructors = constructors;
 
 		// TODO: move outside this constructor.
 		if (extendablePropertySet == null) {
@@ -53,7 +62,7 @@ public class ExtensionPropertySet<E extends ExtensionObject> extends PropertySet
 		// Add to our map that maps ids to ExtensionPropertySet objects
 		// within a particular extendable object.
 		extendablePropertySet.extensionPropertySets.put(propertySetId, this);
-		
+/*		
 		// Build the list of properties that are passed to
 		// the 'new object' constructor and another list that
 		// are passed to the 're-instantiating' constructor.
@@ -70,11 +79,47 @@ public class ExtensionPropertySet<E extends ExtensionObject> extends PropertySet
 				defaultConstructorProperties.add(propertyAccessor);
 			}
 		}
-
-		findConstructors(true);
+*/		
 	}
 
 	public ExtendablePropertySet getExtendablePropertySet() {
 		return extendablePropertySet;
+	}
+
+	/**
+	 * This method should be used only by plug-ins that implement
+	 * a datastore.
+	 * @param constructorParameters an array of values to be passed to
+	 * 		the constructor.  If an extendable object is being constructed
+	 * 		then the first three elements of this array must be the
+	 * 		object key, the extension map, and the parent object key.
+	 * 
+	 * @return A newly constructed object, constructed from the given
+	 * 		parameters.  This object may be an ExtendableObject or
+	 * 		may be an ExtensionObject.
+	 */
+	public E constructImplementationObject(ExtendableObject extendedObject, IValues values) {
+		E extensionObject = constructors.construct(extendedObject, values);
+		extensionObject.setPropertySet(this);
+		return extensionObject;
+	}
+
+	/**
+	 * This method should be used only by plug-ins that implement
+	 * a datastore.
+	 * 
+	 * @return A newly constructed object, constructed from the given
+	 * 		parameters.  This object may be an ExtendableObject or
+	 * 		may be an ExtensionObject.
+	 */
+	public E constructDefaultImplementationObject(ExtendableObject extendedObject) {
+		E extensionObject = constructors.construct(extendedObject);
+		extensionObject.setPropertySet(this);
+		return extensionObject;
+	}
+	
+	@Override
+	protected E getImplementationObject(ExtendableObject extendableObject) {
+		return extendableObject.getExtension(this, true);
 	}
 }

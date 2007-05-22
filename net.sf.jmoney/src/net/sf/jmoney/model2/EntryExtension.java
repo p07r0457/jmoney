@@ -37,8 +37,8 @@ import java.util.Date;
  */
 public abstract class EntryExtension extends ExtensionObject {
 	
-	/** Creates a new instance of EntryExtension */
-	public EntryExtension() {
+	public EntryExtension(ExtendableObject extendedObject) {
+		super(extendedObject);
 	}
 	
 	/*

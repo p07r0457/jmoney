@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.model2;
 
+import java.util.Collection;
 import java.util.Vector;
 
 /**
@@ -199,6 +200,8 @@ public class ChangeManager {
 	 */
 	class ChangeEntry_Delete<E extends ExtendableObject> extends ChangeEntry {
 		private Object[] oldValues;
+		private Collection<ExtensionPropertySet<?>> nonDefaultExtensions;
+		
 		private KeyProxy parentKeyProxy;
 		private ListPropertyAccessor<E> owningListProperty;
 		private KeyProxy objectKeyProxy;
@@ -214,9 +217,12 @@ public class ChangeManager {
 					.getActualPropertySet(
 							(Class<? extends E>) oldObject.getClass());
 
-			// Save all the property values from the deleted object.
-			// We need these to re-create the object if this change
-			// is undone.
+			/*
+			 * Save all the property values from the deleted object. We need
+			 * these to re-create the object if this change is undone.
+			 */
+			nonDefaultExtensions = oldObject.getExtensions();
+
 			int count = actualPropertySet.getScalarProperties3().size();
 			oldValues = new Object[count];
 			int index = 0;
@@ -250,15 +256,28 @@ public class ChangeManager {
 			 * However, we must first convert the key proxies back to keys before passing
 			 * on to the constructor.
 			 */
-			Object oldValues2[] = new Object[oldValues.length];
-			for (int i = 0; i < oldValues.length; i++) {
-				if (oldValues[i] instanceof KeyProxy) {
-					oldValues2[i] = ((KeyProxy) oldValues[i]).key;
-				} else {
-					oldValues2[i] = oldValues[i];
-				}
-			}
+			IValues oldValues2 = new IValues() {
 
+				public <V> V getScalarValue(ScalarPropertyAccessor<V> propertyAccessor) {
+					return propertyAccessor.getClassOfValueObject().cast(oldValues[propertyAccessor.getIndexIntoScalarProperties()]);
+				}
+
+				public IObjectKey getReferencedObjectKey(
+						ScalarPropertyAccessor<? extends ExtendableObject> propertyAccessor) {
+					return ((KeyProxy)oldValues[propertyAccessor.getIndexIntoScalarProperties()]).key;
+				}
+
+				public <E2 extends ExtendableObject> IListManager<E2> getListManager(
+						IObjectKey listOwnerKey,
+						ListPropertyAccessor<E2> listAccessor) {
+					return listOwnerKey.constructListManager(listAccessor);
+				}
+
+				public Collection<ExtensionPropertySet<?>> getNonDefaultExtensions() {
+					return nonDefaultExtensions;
+				}
+			};
+			
 			ExtendableObject parent = parentKeyProxy.key.getObject();
 			ExtendableObject object = parent.getListPropertyValue(
 					owningListProperty).createNewElement(actualPropertySet,
@@ -334,7 +353,7 @@ public class ChangeManager {
 	}
 
 	public void processObjectCreation(ExtendableObject parent,
-			ListPropertyAccessor owningListProperty, ExtendableObject newObject) {
+			ListPropertyAccessor<?> owningListProperty, ExtendableObject newObject) {
 
 		ChangeEntry newChangeEntry = new ChangeEntry_Insert(getKeyProxy(parent
 				.getObjectKey()), owningListProperty, getKeyProxy(newObject

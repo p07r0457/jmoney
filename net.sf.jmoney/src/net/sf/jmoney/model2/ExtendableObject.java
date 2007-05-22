@@ -61,7 +61,7 @@ public abstract class ExtendableObject {
 	 * property set and then adding that property set to the object class. This
 	 * map will map property sets to the appropriate extension object.
 	 */
-	protected Map<ExtensionPropertySet, ExtensionObject> extensions = new HashMap<ExtensionPropertySet, ExtensionObject>();
+	protected Map<ExtensionPropertySet<?>, ExtensionObject> extensions = new HashMap<ExtensionPropertySet<?>, ExtensionObject>();
 	
 	/**
 	 * The key from which this object's parent can be fetched from
@@ -74,27 +74,29 @@ public abstract class ExtendableObject {
 	protected abstract String getExtendablePropertySetId();
 
 	/**
-	 * @param extensions A map from PropertySet objects representing
-	 * 			extension property sets to the parameter lists from
-	 * 			which the extension property set objects can be
-	 * 			constructed.
+	 * Constructs a new object with property values obtained from
+	 * the given IValues interface.
+	 * 
+	 * Derived classes will set their own properties from this interface,
+	 * but this method is responsible for ensuring the appropriate extensions
+	 * are created and passes on the IValues interface to the extension constructors.
 	 */
-	protected ExtendableObject(IObjectKey objectKey, Map<ExtensionPropertySet, Object[]> extensionParameters, IObjectKey parentKey) {
+	protected ExtendableObject(IObjectKey objectKey, IObjectKey parentKey,	IValues extensionValues) { 
 		this.objectKey = objectKey;
 		this.parentKey = parentKey;
-		
-		if (extensionParameters != null) {
-			for (Map.Entry<ExtensionPropertySet, Object[]> entry: extensionParameters.entrySet()) {
-				ExtensionPropertySet propertySet = entry.getKey();
-				Object[] constructorParameters = entry.getValue();
-				
-				ExtensionObject extensionObject = (ExtensionObject)propertySet.constructImplementationObject(constructorParameters);
-				
-				extensionObject.setBaseObject(this);
-				extensionObject.setPropertySet(propertySet);
-				extensions.put(propertySet, extensionObject);
-			}
+
+		for (ExtensionPropertySet<?> propertySet: extensionValues.getNonDefaultExtensions()) {
+			ExtensionObject extensionObject = propertySet.constructImplementationObject(this, extensionValues);
+			extensions.put(propertySet, extensionObject);
 		}
+	}
+	
+	/**
+	 * Constructs a new object with default property values.
+	 */
+	protected ExtendableObject(IObjectKey objectKey, IObjectKey parentKey) { 
+		this.objectKey = objectKey;
+		this.parentKey = parentKey;
 	}
 	
 	/**
@@ -260,25 +262,14 @@ public abstract class ExtendableObject {
 			if (alwaysReturnNonNullExtensions) {
 				// Create a new extension and look to the original
 				// for default values.
-				
-				try {
-					extension = propertySet.getImplementationClass().newInstance();
-					// TODO: plugin error if null is returned
-				} catch (Exception e) {
-					// TODO: ensure that we check for a default constructor
-					// at the time the plug-in is loaded.  Errors by plug-in
-					// developers should not cause this type of exception.
-					throw new RuntimeException("internal error");
-				}
-				
+				extension = propertySet.constructDefaultImplementationObject(this);
+
 				// Add the extension now.
 				// It is important that this is done before the property
 				// values are set in it.  The property may be propagated
 				// to other extensions, and back to this extension, through
 				// propagators.  We could get infinite recursion if the propagation
 				// got back to this extension and the extension was not set.
-				extension.setBaseObject(this);
-				extension.setPropertySet(propertySet);
 				extensions.put(propertySet, extension);
 			} else {
 				// Return null to indicate that no extension exists
@@ -444,7 +435,7 @@ public abstract class ExtendableObject {
 	 * 		key of type PropertySet and a value of
 	 * 		ExtensionObject.
 	 */
-	public Collection<ExtensionPropertySet> getExtensions() {
+	public Collection<ExtensionPropertySet<?>> getExtensions() {
 		return extensions.keySet();
 	}
 	
