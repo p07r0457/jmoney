@@ -22,14 +22,12 @@
 
 package net.sf.jmoney.isolation;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
+import net.sf.jmoney.model2.IValues;
 
 /**
  * This is a special implementation of the IListManager interface.
@@ -59,33 +57,9 @@ public class UncommittedListManager<E extends ExtendableObject> extends Vector<E
 	 * committed list.
 	 */
 	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
-		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
-		
-		JMoneyPlugin.myAssert (!propertySet.isExtension());
-
-		int numberOfParameters = 3 + constructorProperties.size();
-		Object[] constructorParameters = new Object[numberOfParameters];
-		
 		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
-		
-		constructorParameters[0] = objectKey;
-		constructorParameters[1] = null;
-		constructorParameters[2] = parent.getObjectKey();
-		
-		// Construct the extendable object using the 'default' constructor.
-		// This constructor takes the minimum number of parameters necessary
-		// to properly construct the object, setting default values for all
-		// the scalar properties.  We must, however, pass objects that manage
-		// any lists within the object.
-		
-		// Add a list manager for each list property in the object.
-		int index = 3;
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); iter.next()) {
-			constructorParameters[index++] = new UncommittedListManager(transactionManager);
-		}
-		
-		// We can now create the object.
-		F extendableObject = propertySet.constructDefaultImplementationObject(constructorParameters);
+		F extendableObject = propertySet.constructDefaultImplementationObject(objectKey, parent.getObjectKey());
+
 		
 		objectKey.setObject(extendableObject);
 
@@ -94,43 +68,13 @@ public class UncommittedListManager<E extends ExtendableObject> extends Vector<E
 		return extendableObject;
 	}
 
-	// TODO: Complete the implementation of this method.
-	// The implementation may be copied from DeltaListManager.
-	// (Even better, put the code into a common method to avoid
-	// duplicating it).
-	
 	// This method is never used, because new objects are only created
 	// with non-default values when objects are being committed.
 	// If we support nested transactions then this method will be required.
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, Object[] values/*, ExtensionProperties[] extensionProperties */) {
-		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
-		
-		JMoneyPlugin.myAssert (!propertySet.isExtension());
-
-		int numberOfParameters = 3 + constructorProperties.size();
-		Object[] constructorParameters = new Object[numberOfParameters];
-		
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, IValues values) {
 		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
-		
-		constructorParameters[0] = objectKey;
-		constructorParameters[1] = null;
-		constructorParameters[2] = parent.getObjectKey();
-		
-		// Construct the extendable object using the 'default' constructor.
-		// This constructor takes the minimum number of parameters necessary
-		// to properly construct the object, setting default values for all
-		// the scalar properties.  We must, however, pass objects that manage
-		// any lists within the object.
-		
-		// Add a list manager for each list property in the object.
-		int index = 3;
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); iter.next()) {
-			constructorParameters[index++] = new UncommittedListManager(transactionManager);
-		}
-		
-		// We can now create the object.
-		F extendableObject = propertySet.constructDefaultImplementationObject(constructorParameters);
-		
+		F extendableObject = propertySet.constructImplementationObject(objectKey, parent.getObjectKey(), values);
+
 		objectKey.setObject(extendableObject);
 
 		add(extendableObject);

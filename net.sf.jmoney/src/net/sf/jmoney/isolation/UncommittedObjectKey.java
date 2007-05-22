@@ -26,7 +26,9 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
@@ -266,5 +268,9 @@ public class UncommittedObjectKey implements IObjectKey {
 		// because once the object is committed, others can change it
 		// and so we can not longer keep a cached version.
 		extendableObject = null;
+	}
+
+	public <E extends ExtendableObject> IListManager<E> constructListManager(ListPropertyAccessor<E> listAccessor) {
+		return new UncommittedListManager<E>(transactionManager);
 	}
 }

@@ -24,21 +24,16 @@ package net.sf.jmoney.isolation;
 
 import java.util.AbstractCollection;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Map;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
-import net.sf.jmoney.model2.PropertyAccessor;
-import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 /**
  * This is a special implementation of the IListManager interface. It is used
@@ -62,6 +57,9 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 
 	private TransactionManager transactionManager;
 	
+	/**
+	 * The key for the committed parent object
+	 */
 	IObjectKey parentKey;
 
 	ListPropertyAccessor<E> listAccessor;
@@ -109,33 +107,8 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	 * committed list.
 	 */
 	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
-		Collection constructorProperties = propertySet.getDefaultConstructorProperties();
-		
-		JMoneyPlugin.myAssert (!propertySet.isExtension());
-
-		int numberOfParameters = 3 + constructorProperties.size();
-		Object[] constructorParameters = new Object[numberOfParameters];
-		
 		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
-		
-		constructorParameters[0] = objectKey;
-		constructorParameters[1] = null;
-		constructorParameters[2] = parent.getObjectKey();
-		
-		// Construct the extendable object using the 'default' constructor.
-		// This constructor takes the minimum number of parameters necessary
-		// to properly construct the object, setting default values for all
-		// the scalar properties.  We must, however, pass objects that manage
-		// any lists within the object.
-		
-		// Add a list manager for each list property in the object.
-		int index = 3;
-		for (Iterator iter = constructorProperties.iterator(); iter.hasNext(); iter.next()) {
-			constructorParameters[index++] = new UncommittedListManager(transactionManager);
-		}
-		
-		// We can now create the object.
-		F extendableObject = propertySet.constructDefaultImplementationObject(constructorParameters);
+		F extendableObject = propertySet.constructDefaultImplementationObject(objectKey, parent.getObjectKey());
 		
 		objectKey.setObject(extendableObject);
 		
@@ -167,61 +140,11 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	 * object and setting the property values in a single call. That can only be
 	 * done when using a transaction manager.
 	 */
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, Object[] values) {
-		Collection constructorProperties = propertySet.getConstructorProperties();
-		
-		JMoneyPlugin.myAssert (!propertySet.isExtension());
-
-		int numberOfParameters = 3 + constructorProperties.size();
-		Object[] constructorParameters = new Object[numberOfParameters];
-		
+	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, IValues values) {
 		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
-		
-		Map<PropertySet, Object[]> extensionMap = new HashMap<PropertySet, Object[]>();
-		
-		constructorParameters[0] = objectKey;
-		constructorParameters[1] = extensionMap;
-		constructorParameters[2] = parent.getObjectKey();
-		
-		// Construct the extendable object using the 'full' constructor.
-		// This constructor takes a parameter for every property in the object.
-		
-		// TODO: This code is not very efficient because it creates extension objects
-		// in the new object even if none existed in the original object (all properties
-		// in the extension having default values).
-		
-		int valuesIndex = 0;
-		for (PropertyAccessor propertyAccessor: propertySet.getProperties3()) {
-			
-			Object value;
-			if (propertyAccessor.isScalar()) {
-				ScalarPropertyAccessor scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
-				if (valuesIndex != scalarAccessor.getIndexIntoScalarProperties()) {
-					throw new RuntimeException("index mismatch");
-				}
-				value = values[valuesIndex++];
-			} else {
-				value = new UncommittedListManager(transactionManager);
-			}
-			
-			// Determine how this value is passed to the constructor.
-			// If the property comes from an extension then we must set
-			// the property into an extension, otherwise we simply set
-			// the property into the constructor parameters.
-			if (!propertyAccessor.getPropertySet().isExtension()) {
-				constructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
-			} else {
-				Object [] extensionConstructorParameters = extensionMap.get(propertyAccessor.getPropertySet());
-				if (extensionConstructorParameters == null) {
-					extensionConstructorParameters = new Object [propertyAccessor.getPropertySet().getConstructorProperties().size()];
-					extensionMap.put(propertyAccessor.getPropertySet(), extensionConstructorParameters);
-				}
-				extensionConstructorParameters[propertyAccessor.getIndexIntoConstructorParameters()] = value;
-			}
-		}
-		
+
 		// We can now create the object.
-		F extendableObject = propertySet.constructImplementationObject(constructorParameters);
+		F extendableObject = propertySet.constructImplementationObject(objectKey, parent.getObjectKey(), values);
 		
 		objectKey.setObject(extendableObject);
 
