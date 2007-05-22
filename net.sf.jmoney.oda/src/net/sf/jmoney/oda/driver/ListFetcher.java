@@ -22,15 +22,15 @@
 
 package net.sf.jmoney.oda.driver;
 
-import net.sf.jmoney.model2.*;
-
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
