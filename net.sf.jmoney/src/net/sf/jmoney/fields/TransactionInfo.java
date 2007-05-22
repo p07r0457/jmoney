@@ -27,9 +27,12 @@ import java.util.Date;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IExtendableObjectConstructors;
 import net.sf.jmoney.model2.IListGetter;
+import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
@@ -55,7 +58,24 @@ import net.sf.jmoney.model2.Transaction;
  */
 public class TransactionInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<Transaction> propertySet = PropertySet.addBasePropertySet(Transaction.class, "Financial Transaction");
+	private static ExtendablePropertySet<Transaction> propertySet = PropertySet.addBaseFinalPropertySet(Transaction.class, "Financial Transaction", new IExtendableObjectConstructors<Transaction>() {
+
+		public Transaction construct(IObjectKey objectKey, IObjectKey parentKey) {
+			return new Transaction(objectKey, parentKey);
+		}
+
+		public Transaction construct(IObjectKey objectKey,
+				IObjectKey parentKey, IValues values) {
+			return new Transaction(
+					objectKey, 
+					parentKey, 
+					values.getListManager(objectKey, TransactionInfo.getEntriesAccessor()),
+					values.getScalarValue(TransactionInfo.getDateAccessor()),
+					values
+			);
+		}
+	});
+
 
 	private static ScalarPropertyAccessor<Date> dateAccessor = null;
 	private static ListPropertyAccessor<Entry> entriesAccessor = null;

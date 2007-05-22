@@ -27,9 +27,12 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IExtendableObjectConstructors;
 import net.sf.jmoney.model2.IListGetter;
+import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
@@ -56,7 +59,26 @@ import net.sf.jmoney.model2.Transaction;
  */
 public class SessionInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<Session> propertySet = PropertySet.addBasePropertySet(Session.class, "JMoney Session");
+	private static ExtendablePropertySet<Session> propertySet = PropertySet.addBaseFinalPropertySet(Session.class, "JMoney Session", new IExtendableObjectConstructors<Session>() {
+
+		public Session construct(IObjectKey objectKey, IObjectKey parentKey) {
+			return new Session(objectKey, parentKey);
+		}
+
+		public Session construct(IObjectKey objectKey,
+				IObjectKey parentKey, IValues values) {
+			return new Session(
+					objectKey, 
+					parentKey, 
+					values.getListManager(objectKey, SessionInfo.getCommoditiesAccessor()),
+					values.getListManager(objectKey, SessionInfo.getAccountsAccessor()),
+					values.getListManager(objectKey, SessionInfo.getTransactionsAccessor()),
+					values.getReferencedObjectKey(SessionInfo.getDefaultCurrencyAccessor()),
+					values
+			);
+		}
+	});
+
 	
 	private static ListPropertyAccessor<Commodity> commoditiesAccessor = null;
 	private static ListPropertyAccessor<Account> accountsAccessor = null;

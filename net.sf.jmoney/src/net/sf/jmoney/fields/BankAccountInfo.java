@@ -25,8 +25,11 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IExtendableObjectConstructors;
+import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
@@ -49,7 +52,33 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  */
 public class BankAccountInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<BankAccount> propertySet = PropertySet.addDerivedPropertySet(BankAccount.class, JMoneyPlugin.getResourceString("AccountPropertiesPanel.ObjectDescription"), CurrencyAccountInfo.getPropertySet()); //$NON-NLS-1$
+	private static ExtendablePropertySet<BankAccount> propertySet = PropertySet.addDerivedFinalPropertySet(BankAccount.class, JMoneyPlugin.getResourceString("AccountPropertiesPanel.ObjectDescription"), CurrencyAccountInfo.getPropertySet(), new IExtendableObjectConstructors<BankAccount>() { //$NON-NLS-1$
+
+		public BankAccount construct(IObjectKey objectKey, IObjectKey parentKey) {
+			return new BankAccount(
+					objectKey, 
+					parentKey
+			);
+		}
+
+		public BankAccount construct(IObjectKey objectKey,
+				IObjectKey parentKey, IValues values) {
+			return new BankAccount(
+					objectKey, 
+					parentKey, 
+					values.getScalarValue(AccountInfo.getNameAccessor()),
+					values.getListManager(objectKey, CapitalAccountInfo.getSubAccountAccessor()),
+					values.getScalarValue(CapitalAccountInfo.getAbbreviationAccessor()),
+					values.getScalarValue(CapitalAccountInfo.getCommentAccessor()),
+					values.getReferencedObjectKey(CurrencyAccountInfo.getCurrencyAccessor()),
+					values.getScalarValue(CurrencyAccountInfo.getStartBalanceAccessor()),
+					values.getScalarValue(BankAccountInfo.getBankAccessor()),
+					values.getScalarValue(BankAccountInfo.getAccountNumberAccessor()),
+					values.getScalarValue(BankAccountInfo.getMinBalanceAccessor()),
+					values
+			);
+		}
+	});
 	
 	private static ScalarPropertyAccessor<String> bankAccessor = null;
 	private static ScalarPropertyAccessor<String> accountNumberAccessor = null;

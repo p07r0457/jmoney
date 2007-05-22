@@ -32,16 +32,22 @@ import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IExtendableObjectConstructors;
+import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -85,7 +91,30 @@ public class EntryInfo implements IPropertySetInfo {
     */
 
 	
-	private static ExtendablePropertySet<Entry> propertySet = PropertySet.addBasePropertySet(Entry.class, "Accounting Entry");
+	private static ExtendablePropertySet<Entry> propertySet = PropertySet.addBaseFinalPropertySet(Entry.class, "Accounting Entry", new IExtendableObjectConstructors<Entry>() {
+
+		public Entry construct(IObjectKey objectKey, IObjectKey parentKey) {
+			return new Entry(objectKey, parentKey);
+		}
+
+		public Entry construct(IObjectKey objectKey,
+				IObjectKey parentKey, IValues values) {
+			return new Entry(
+					objectKey, 
+					parentKey, 
+					values.getScalarValue(EntryInfo.getCheckAccessor()),
+					values.getScalarValue(EntryInfo.getDescriptionAccessor()),
+					values.getReferencedObjectKey(EntryInfo.getAccountAccessor()),
+					values.getScalarValue(EntryInfo.getValutaAccessor()),
+					values.getScalarValue(EntryInfo.getMemoAccessor()),
+					values.getScalarValue(EntryInfo.getAmountAccessor()),
+					values.getScalarValue(EntryInfo.getCreationAccessor()),
+					values.getReferencedObjectKey(EntryInfo.getIncomeExpenseCurrencyAccessor()),
+					values 
+			);
+		}
+	});
+
 	
 	private static ScalarPropertyAccessor<String> checkAccessor = null;
 	private static ScalarPropertyAccessor<String> descriptionAccessor = null;
@@ -104,7 +133,14 @@ public class EntryInfo implements IPropertySetInfo {
         IPropertyControlFactory<Long> amountControlFactory = new AmountControlFactory() {
 
 			protected Commodity getCommodity(ExtendableObject object) {
-	    	    return ((Entry) object).getCommodity();
+				// If not enough information has yet been set to determine
+				// the currency of the amount in this entry, return
+				// the default currency.
+	    	    Commodity commodity = ((Entry) object).getCommodity();
+	    	    if (commodity == null) {
+	    	    	commodity = ((Entry) object).getSession().getDefaultCurrency();
+	    	    }
+	    	    return commodity;
 			}
 
 			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor, Session session) {
@@ -168,9 +204,21 @@ public class EntryInfo implements IPropertySetInfo {
 		        return dateFormat.format(date);
 			}
 
-			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor, Session session) {
+			public IPropertyControl createPropertyControl(Composite parent, final ScalarPropertyAccessor<Long> propertyAccessor, Session session) {
 				// This property is not editable
-		    	return null;
+				final Label control = new Label(parent, SWT.NONE);
+				
+		    	return new IPropertyControl() {
+					public Control getControl() {
+						return control;
+					}
+					public void load(ExtendableObject object) {
+						control.setText(formatValueForTable(object, propertyAccessor));
+					}
+					public void save() {
+						// Not editable so nothing to do
+					}
+				};
 			}
 
 			public Long getDefaultValue() {

@@ -56,7 +56,7 @@ public class AccountInfo implements IPropertySetInfo {
 	 * This enables type safety and also avoids the need to worry about
 	 * the order in which 
 	 */
-	private static ExtendablePropertySet<Account> propertySet = PropertySet.addBasePropertySet(Account.class, "Account");
+	private static ExtendablePropertySet<Account> propertySet = PropertySet.addBaseAbstractPropertySet(Account.class, "Account");
 
 	private static ScalarPropertyAccessor<String> nameAccessor = null;
 

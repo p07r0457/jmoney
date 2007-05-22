@@ -31,9 +31,9 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
+import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
@@ -55,14 +55,14 @@ public class CurrencyEditor implements IPropertyControl {
 
     private ScalarPropertyAccessor<Currency> currencyPropertyAccessor;
 
-    private Combo propertyControl;
+    private CCombo propertyControl;
 
     /** 
      * @param propertyAccessor the accessor for the property to be edited
      * 			by this control.  The property must be of type Currency.
      */
     public CurrencyEditor(Composite parent, ScalarPropertyAccessor<Currency> propertyAccessor) {
-        propertyControl = new Combo(parent, 0);
+        propertyControl = new CCombo(parent, 0);
         this.currencyPropertyAccessor = propertyAccessor;
 
         Session session = JMoneyPlugin.getDefault().getSession();

@@ -26,6 +26,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
@@ -46,7 +47,7 @@ public class TextEditor implements IPropertyControl {
 
     /** Creates new TextEditor */
     public TextEditor(Composite parent, ScalarPropertyAccessor<String> propertyAccessor) {
-        propertyControl = new Text(parent, 0);
+        propertyControl = new Text(parent, SWT.NONE);
         this.propertyAccessor = propertyAccessor;
     }
 

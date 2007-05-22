@@ -29,6 +29,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeListener;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
@@ -70,7 +71,7 @@ public class AmountEditor implements IPropertyControl {
      * Create a new amount editor.
      */
     public AmountEditor(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor, AmountControlFactory factory) {
-    	propertyControl = new Text(parent, 0);
+    	propertyControl = new Text(parent, SWT.TRAIL);
     	this.amountPropertyAccessor = propertyAccessor;
     	this.factory = factory;
     }

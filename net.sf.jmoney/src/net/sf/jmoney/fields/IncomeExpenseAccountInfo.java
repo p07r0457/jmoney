@@ -25,8 +25,11 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IExtendableObjectConstructors;
 import net.sf.jmoney.model2.IListGetter;
+import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
@@ -51,7 +54,27 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  */
 public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<IncomeExpenseAccount> propertySet = PropertySet.addDerivedPropertySet(IncomeExpenseAccount.class, "Income or Expense Category", AccountInfo.getPropertySet());
+	private static ExtendablePropertySet<IncomeExpenseAccount> propertySet = PropertySet.addDerivedFinalPropertySet(IncomeExpenseAccount.class, "Income or Expense Category", AccountInfo.getPropertySet(), new IExtendableObjectConstructors<IncomeExpenseAccount>() {
+
+		public IncomeExpenseAccount construct(IObjectKey objectKey,
+				IObjectKey parentKey) {
+			return new IncomeExpenseAccount(objectKey, parentKey);
+		}
+
+		public IncomeExpenseAccount construct(IObjectKey objectKey,
+				IObjectKey parentKey, IValues values) {
+			return new IncomeExpenseAccount(
+					objectKey, 
+					parentKey, 
+					values.getScalarValue(AccountInfo.getNameAccessor()),
+					values.getListManager(objectKey, IncomeExpenseAccountInfo.getSubAccountAccessor()),
+					values.getScalarValue(IncomeExpenseAccountInfo.getMultiCurrencyAccessor()),
+					values.getReferencedObjectKey(IncomeExpenseAccountInfo.getCurrencyAccessor()),
+					values 
+			);
+		}
+	});
+
 
 	private static ListPropertyAccessor<IncomeExpenseAccount> subAccountAccessor = null;
 	private static ScalarPropertyAccessor<Boolean> multiCurrencyAccessor = null;

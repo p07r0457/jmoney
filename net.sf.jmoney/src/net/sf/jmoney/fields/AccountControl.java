@@ -65,6 +65,9 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
 
 	Text textControl;
 	
+	private Session session;
+	private Class<A> accountClass;
+	
     /**
      * List of accounts put into account list.
      */
@@ -81,9 +84,13 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
 	 * @param parent
 	 * @param style
 	 */
-	public AccountControl(final Composite parent, final Session session, final Class<A> accountClass) {
+	public AccountControl(final Composite parent, Session session, Class<A> accountClass) {
 		super(parent, SWT.NONE);
+		this.session = session;
+		this.accountClass = accountClass;
 
+		setBackgroundMode(SWT.INHERIT_FORCE);
+		
 		setLayout(new FillLayout(SWT.VERTICAL));
 		
 		textControl = new Text(this, SWT.LEFT);
@@ -102,12 +109,13 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
 		        shell.setLayout(new RowLayout());
 
 		        final List listControl = new List(shell, SWT.SINGLE | SWT.V_SCROLL);
-		        RowData rd = new RowData();
-		        rd.height = 100;
-		        listControl.setLayoutData(rd);
+		        listControl.setLayoutData(new RowData(SWT.DEFAULT, 100));
 
+		        // Important we use the field for the session and accountClass.  We do not use the parameters
+		        // (the parameters may be null, but fields should always have been set by
+		        // the time control gets focus).
 		        allAccounts = new Vector<A>();
-		        addAccounts("", session.getAccountCollection(), listControl, accountClass);
+		        addAccounts("", AccountControl.this.session.getAccountCollection(), listControl, AccountControl.this.accountClass);
 		        
 //		        shell.setSize(listControl.computeSize(SWT.DEFAULT, listControl.getItemHeight()*10));
 		        
@@ -284,5 +292,17 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
 
 	public void saveState(IMemento memento) {
 		// No state to save
+	}
+
+	/**
+	 * Normally the session is set through the constructor. However in some
+	 * circumstances (i.e. in the custom cell editors) the session is not
+	 * available at construction time and null will be set. This method must
+	 * then be called to set the session before the control is used (i.e. before
+	 * the control gets focus).
+	 */
+	public void setSession(Session session, Class<A> accountClass) {
+		this.session = session;
+		this.accountClass = accountClass;
 	}
 }

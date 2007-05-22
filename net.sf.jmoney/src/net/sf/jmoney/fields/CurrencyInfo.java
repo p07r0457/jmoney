@@ -25,9 +25,12 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IExtendableObjectConstructors;
+import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
+import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
@@ -54,7 +57,28 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class CurrencyInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<Currency> propertySet = PropertySet.addDerivedPropertySet(Currency.class, "Currency", CommodityInfo.getPropertySet());
+	private static ExtendablePropertySet<Currency> propertySet = PropertySet.addDerivedFinalPropertySet(Currency.class, "Currency", CommodityInfo.getPropertySet(), new IExtendableObjectConstructors<Currency>() {
+
+		public Currency construct(IObjectKey objectKey, IObjectKey parentKey) {
+			return new Currency(
+					objectKey, 
+					parentKey
+			);
+		}
+
+		public Currency construct(IObjectKey objectKey,
+				IObjectKey parentKey, IValues values) {
+			return new Currency(
+					objectKey, 
+					parentKey, 
+					values.getScalarValue(CommodityInfo.getNameAccessor()),
+					values.getScalarValue(CurrencyInfo.getCodeAccessor()),
+					values.getScalarValue(CurrencyInfo.getDecimalsAccessor()),
+					values
+			);
+		}
+	});
+
 	private static ScalarPropertyAccessor<String> codeAccessor = null;
 	private static ScalarPropertyAccessor<Integer> decimalsAccessor = null;
 

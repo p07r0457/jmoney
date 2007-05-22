@@ -50,7 +50,8 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  */
 public class CurrencyAccountInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<CurrencyAccount> propertySet = PropertySet.addDerivedPropertySet(CurrencyAccount.class, "Account containing a single currency", CapitalAccountInfo.getPropertySet());
+	private static ExtendablePropertySet<CurrencyAccount> propertySet = PropertySet.addDerivedAbstractPropertySet(CurrencyAccount.class, "Account containing a single currency", CapitalAccountInfo.getPropertySet());
+
 	private static ScalarPropertyAccessor<Currency> currencyAccessor = null;
 	private static ScalarPropertyAccessor<Long> startBalanceAccessor = null;
 

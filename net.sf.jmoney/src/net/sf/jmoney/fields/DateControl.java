@@ -37,6 +37,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
@@ -87,6 +88,8 @@ public class DateControl extends DateComposite {
 	public DateControl(final Composite parent) {
 		super(parent, SWT.NULL);
 
+		setBackgroundMode(SWT.INHERIT_FORCE);
+		
 		setLayout(new DialogCellLayout());
 
 		textControl = new Text(this, SWT.LEFT);
