@@ -23,11 +23,12 @@ import java.util.Collection;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.CellBlock;
-import net.sf.jmoney.entrytable.EntriesSectionProperty;
 import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.IEntriesContent;
+import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
+import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.VerticalBlock;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
@@ -90,28 +91,30 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		/*
 		 * Setup the layout structure of the header and rows.
 		 */
+		CellBlock transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+
 		rootBlock = new HorizontalBlock(new Block [] {
-				new CellBlock(EntriesSectionProperty.createTransactionColumn(TransactionInfo.getDateAccessor())),
+				transactionDateColumn,
 				new VerticalBlock(new Block [] {
-						new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getMemoAccessor())),
+						PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
 						new HorizontalBlock(new Block [] {
-								new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getCheckAccessor())),
-								new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getValutaAccessor())),
+								PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
+								PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor()),
 						}),
 				}),
-				new CellBlock(EntriesSectionProperty.createOtherEntryColumn(EntryInfo.getAccountAccessor())),
-				new CellBlock(EntriesSectionProperty.createOtherEntryColumn(EntryInfo.getDescriptionAccessor())),
-				new CellBlock(EntriesSectionProperty.createOtherEntryColumn(EntryInfo.getAmountAccessor())),
-				new CellBlock(fPage.debitColumnManager),
-				new CellBlock(fPage.creditColumnManager),
-				new CellBlock(fPage.balanceColumnManager),
+				new OtherEntriesPropertyBlock(EntryInfo.getAccountAccessor()),
+				new OtherEntriesPropertyBlock(EntryInfo.getDescriptionAccessor()),
+				new OtherEntriesPropertyBlock(EntryInfo.getAmountAccessor()),
+				fPage.debitColumnManager,
+				fPage.creditColumnManager,
+				fPage.balanceColumnManager,
 		});
 		
 //		cellList = new ArrayList<IEntriesTableProperty>();
 //		rootBlock.buildCellList(cellList);
 
 		// Create the table control.
-		fEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, this, fPage.getAccount().getSession(), new EntriesTable.IMenuItem [] {}); 
+		fEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, this, fPage.getAccount().getSession(), transactionDateColumn, new EntriesTable.IMenuItem [] {}); 
 		fEntriesControl.addSelectionListener(tableSelectionListener);
 			
         getSection().setClient(fEntriesControl);

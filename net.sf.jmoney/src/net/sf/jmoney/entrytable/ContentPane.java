@@ -577,13 +577,13 @@ public class ContentPane extends Composite {
 	 * Sets the focus to the given row and column.
 	 * 
 	 * @param row
-	 * @param entriesSectionProperty
+	 * @param column
 	 * @return true if the new row selection could be made, false if there
 	 * 		are issues with a previously selected row that prevent the change
 	 * 		in selection from being made
 	 */
 	public boolean setSelection(Row row,
-			IEntriesTableProperty entriesSectionProperty) {
+			CellBlock column) {
 		Row currentRowControl = getSelectedRow();
 		if (row != currentRowControl) {
 			if (currentRowControl != null) {

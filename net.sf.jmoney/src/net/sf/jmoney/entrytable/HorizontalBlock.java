@@ -51,7 +51,7 @@ public class HorizontalBlock extends Block {
 	}
 
 	@Override
-	public void buildCellList(ArrayList<IEntriesTableProperty> cellList) {
+	public void buildCellList(ArrayList<CellBlock> cellList) {
 		for (Block child: children) {
 			child.buildCellList(cellList);
 		}

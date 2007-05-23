@@ -46,7 +46,7 @@ public class Header extends Composite {
 
 	private EntriesTable entriesTable;
 
-	private Vector<IEntriesTableProperty> properties = new Vector<IEntriesTableProperty>();
+	private Vector<CellBlock> properties = new Vector<CellBlock>();
 
 	public Header(Composite parent, int style, EntriesTable entriesTable) {
 		super(parent, style);
@@ -58,7 +58,7 @@ public class Header extends Composite {
 
 		setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GRAY));
 		
-		for (IEntriesTableProperty entriesSectionProperty: entriesTable.getCellList()) {
+		for (CellBlock entriesSectionProperty: entriesTable.getCellList()) {
 				Label label = new Label(this, SWT.NULL);
 				label.setText(entriesSectionProperty.getText());
 				label.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_GRAY));
@@ -68,7 +68,7 @@ public class Header extends Composite {
 	}
 	
 	protected boolean sortOnColumn(int column, int sortDirection) {
-		IEntriesTableProperty sortProperty = properties.get(column);
+		CellBlock sortProperty = properties.get(column);
 		entriesTable.sort(sortProperty, sortDirection == SWT.UP);
 
 		// TODO: Is there a better way of getting the table?
@@ -84,22 +84,24 @@ public class Header extends Composite {
 */		
 	}
 
+	// TODO: This class is duplicated in EntriesTable.
+	// Need to get sorting working.
 	private class RowComparator implements Comparator<EntryData> {
-		private IEntriesTableProperty sortProperty;
+		private Comparator<EntryData> cellComparator;
 		private boolean ascending;
 		
-		RowComparator(IEntriesTableProperty sortProperty, boolean ascending) {
-			this.sortProperty = sortProperty;
+		RowComparator(CellBlock sortProperty, boolean ascending) {
+			this.cellComparator = sortProperty.getComparator();
 			this.ascending = ascending;
 		}
 		
 		public int compare(EntryData entryData1, EntryData entryData2) {
-			int result = sortProperty.compare(entryData1, entryData2);
+			int result = cellComparator.compare(entryData1, entryData2);
 			return ascending ? result : -result;
 		}
 	}
 	
-	private Menu buildPopupMenu(IEntriesTableProperty entriesSectionProperty) {
+	private Menu buildPopupMenu(CellBlock entriesSectionProperty) {
 		// Bring up a pop-up menu.
 		// It would be a more consistent interface if this menu were
 		// linked to the column header.  However, TableColumn has

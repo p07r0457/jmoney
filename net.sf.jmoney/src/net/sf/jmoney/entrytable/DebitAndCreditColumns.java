@@ -40,34 +40,22 @@ import org.eclipse.swt.widgets.Text;
  * above <code>EntriesSectionProperty</code> class if you want the amount to be
  * displayed in seperate debit and credit columns.
  */
-public class DebitAndCreditColumns implements IEntriesTableProperty {
+public class DebitAndCreditColumns extends CellBlock {
 	private String id;
-	private String name;
 	private Commodity commodity;
 	private boolean isDebit;
 
 	public DebitAndCreditColumns(String id, String name, Commodity commodity, boolean isDebit) {
+		super(name, 2, 70);
 		this.id = id;
-		this.name = name;
 		this.commodity = commodity;
 		this.isDebit = isDebit;
-	}
-
-	public String getText() {
-		return name;
 	}
 
 	public String getId() {
 		return id;
 	}
 
-	public int getWeight() {
-		return 2;
-	}
-
-	public int getMinimumWidth() {
-		return 70;
-	}
 	/* No longer needed...
 		public String getValueFormattedForTable(IDisplayableItem data) {
 			Entry entry = data.getEntryForThisRow();

@@ -23,30 +23,51 @@
 package net.sf.jmoney.entrytable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+
+import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-public class CellBlock extends Block {
-	private IEntriesTableProperty cellProperty;
-
+/**
+ * Represents a column of data that can be displayed in the entries table,
+ * edited by the user, sorted, or used in a filter.
+ * <P>
+ * All columns are managed by an object of this class.  Special
+ * implementations exist for the credit, debit, and balance columns.
+ * More generic implementations exist for the other properties.
+ */
+public abstract class CellBlock extends Block {
 	/**
 	 * The index of this cell in the list returned by buildCellList.
 	 * This is not set until buildCellList is called.
 	 */
 	private int index;
 	
-	public CellBlock(IEntriesTableProperty cellProperty) {
-		this.cellProperty = cellProperty;
-		this.minimumWidth = cellProperty.getMinimumWidth();
-		this.weight = cellProperty.getWeight();
+	/**
+	 * The localized text to be shown in the header.
+	 */
+	private String text;
+	
+	public abstract ICellControl createCellControl(Composite parent, Session session);
+	
+	public CellBlock(String text, int minimumWidth, int weight) {
+		this.text = text;
+		this.minimumWidth = minimumWidth;
+		this.weight = weight;
 	}
 
+	public String getText() {
+		return text;
+	}
+	
 	@Override
-	public void buildCellList(ArrayList<IEntriesTableProperty> cellList) {
+	public void buildCellList(ArrayList<CellBlock> cellList) {
 		this.index = cellList.size();
-		cellList.add(cellProperty);
+		cellList.add(this);
 	}
 
 	@Override
@@ -70,5 +91,13 @@ public class CellBlock extends Block {
 	@Override
 	void paintRowLines(GC gc, int x, int y, int verticalSpacing, Control[] controls) {
 		// Nothing to do.
+	}
+
+	/**
+	 * @return a comparator to be used for sorting rows based on the values in
+	 *         this column, or null if this column is not suitable for sorting
+	 */
+	public Comparator<EntryData> getComparator() {
+		return null;
 	}
 }

@@ -37,32 +37,24 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-abstract public class EntriesSectionCategoryProperty implements IEntriesTableProperty {
+public class OtherEntriesPropertyBlock extends CellBlock {
 	protected ScalarPropertyAccessor<?> accessor;
 	private String id;
 	
-	public EntriesSectionCategoryProperty(ScalarPropertyAccessor accessor, String source) {
-		this.accessor = accessor;
-		this.id = source + '.' + accessor.getName();
-	}
+	public OtherEntriesPropertyBlock(ScalarPropertyAccessor accessor) {
+		super(
+				accessor.getDisplayName(),
+				accessor.getWeight(),
+				accessor.getMinimumWidth()
+		);
 
-	public String getText() {
-		return accessor.getDisplayName();
+		this.accessor = accessor;
+		this.id = "other." + accessor.getName();
 	}
 
 	public String getId() {
 		return id;
 	}
-
-	public int getWeight() {
-		return accessor.getWeight();
-	}
-
-	public int getMinimumWidth() {
-		return accessor.getMinimumWidth();
-	}
-
-	public abstract IPropertyControl createPropertyControl(Composite parent, Entry otherEntry);
 
 	public ICellControl createCellControl(Composite parent, Session session) {
 		// Because this may be multi-valued, setup the container only.

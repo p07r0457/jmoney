@@ -31,11 +31,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
-public class BalanceColumn implements IEntriesTableProperty {
+public class BalanceColumn extends CellBlock {
 
 	private Commodity commodityForFormatting;
 
 	public BalanceColumn(Commodity commodityForFormatting) {
+		super("Balance", 70, 2);
 		this.commodityForFormatting = commodityForFormatting;
 	}
 	
@@ -69,20 +70,8 @@ public class BalanceColumn implements IEntriesTableProperty {
 		};
 	}
 
-	public String getText() {
-		return "Balance";
-	}
-
 	public String getId() {
 		return "balance"; //$NON-NLS-1$
-	}
-
-	public int getWeight() {
-		return 2;
-	}
-
-	public int getMinimumWidth() {
-		return 70;
 	}
 };
 

@@ -165,7 +165,7 @@ public class EntriesTable extends Composite {
 	}
 	
 	public EntriesTable(Composite parent, FormToolkit toolkit,
-			Block rootBlock, final IEntriesContent entriesContent, final Session session, final IMenuItem [] contextMenuItems) {
+			Block rootBlock, final IEntriesContent entriesContent, final Session session, CellBlock defaultSortColumn, final IMenuItem [] contextMenuItems) {
 		super(parent, SWT.NONE);
 		
 		this.session = session;
@@ -189,9 +189,7 @@ public class EntriesTable extends Composite {
 		 * the composite table because the constructor for the composite table
 		 * requires a row content provider.
 		 */
-	    // TODO: This is not the most efficient, nor probably correct
-	    // in the general case.
-	    sort(getCellList().iterator().next(), true);
+	    sort(defaultSortColumn, true);
 	    
 		table = new VirtualRowTable(this, rootBlock, this, new ReusableRowProvider(this));
 		
@@ -753,8 +751,8 @@ public class EntriesTable extends Composite {
 
 	}
 
-	public Collection<IEntriesTableProperty> getCellList() {
-		ArrayList<IEntriesTableProperty> cellList = new ArrayList<IEntriesTableProperty>();
+	public Collection<CellBlock> getCellList() {
+		ArrayList<CellBlock> cellList = new ArrayList<CellBlock>();
 		rootBlock.buildCellList(cellList);
 		return cellList;
 	}
@@ -814,7 +812,7 @@ public class EntriesTable extends Composite {
 		}
 	}
 
-	public void sort(IEntriesTableProperty sortProperty, boolean ascending) {
+	public void sort(CellBlock sortProperty, boolean ascending) {
 		
 		// Sort the entries.
 		rowComparator = new RowComparator(sortProperty, ascending);
@@ -1284,17 +1282,19 @@ public class EntriesTable extends Composite {
 				message);
 	}
 
+	// TODO: This class is duplicated in Header.
+	// Need to get sorting working.
 	private class RowComparator implements Comparator<EntryData> {
-		private IEntriesTableProperty sortProperty;
+		private Comparator<EntryData> cellComparator;
 		private boolean ascending;
 		
-		RowComparator(IEntriesTableProperty sortProperty, boolean ascending) {
-			this.sortProperty = sortProperty;
+		RowComparator(CellBlock sortProperty, boolean ascending) {
+			this.cellComparator = sortProperty.getComparator();
 			this.ascending = ascending;
 		}
 		
-		public int compare(EntryData dTrans1, EntryData dTrans2) {
-			int result = sortProperty.compare(dTrans1, dTrans2);
+		public int compare(EntryData entryData1, EntryData entryData2) {
+			int result = cellComparator.compare(entryData1, entryData2);
 			return ascending ? result : -result;
 		}
 	}

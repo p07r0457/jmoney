@@ -26,11 +26,11 @@ import java.util.Vector;
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.BalanceColumn;
+import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.DebitAndCreditColumns;
-import net.sf.jmoney.entrytable.EntriesSectionCategoryProperty;
-import net.sf.jmoney.entrytable.EntriesSectionProperty;
 import net.sf.jmoney.entrytable.EntryData;
-import net.sf.jmoney.entrytable.IEntriesTableProperty;
+import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
+import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.CurrencyAccount;
@@ -60,11 +60,11 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
     
 	protected NodeEditor fEditor;
 
-	protected Vector<IEntriesTableProperty> allEntryDataObjects = new Vector<IEntriesTableProperty>();
+	protected Vector<CellBlock> allEntryDataObjects = new Vector<CellBlock>();
 
-	IEntriesTableProperty debitColumnManager;
-	IEntriesTableProperty creditColumnManager;
-	IEntriesTableProperty balanceColumnManager;
+	CellBlock debitColumnManager;
+	CellBlock creditColumnManager;
+	CellBlock balanceColumnManager;
 	
     protected EntriesFilterSection fEntriesFilterSection;
     protected EntriesSection fEntriesSection;
@@ -101,7 +101,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         
         // Add properties from the transaction.
         for (ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
-        	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "transaction") {
+        	allEntryDataObjects.add(new PropertyBlock(propertyAccessor, "transaction") {
         		public ExtendableObject getObjectContainingProperty(EntryData data) {
         			return data.getEntry().getTransaction();
         		}
@@ -118,7 +118,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
            		&& propertyAccessor != EntryInfo.getIncomeExpenseCurrencyAccessor()
         		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
             	if (propertyAccessor.isScalar() && propertyAccessor.isEditable()) {
-            		allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "this") {
+            		allEntryDataObjects.add(new PropertyBlock(propertyAccessor, "this") {
     					public ExtendableObject getObjectContainingProperty(EntryData data) {
     						return data.getEntry();
     					}
@@ -133,21 +133,21 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
          * I don't know what to do if there are other capital accounts
          * (a transfer or a purchase with money coming from more than one account).
          */
-   		allEntryDataObjects.add(new EntriesSectionCategoryProperty(EntryInfo.getAccountAccessor(), "common2") {
+   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAccountAccessor()) {
    			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
    				IPropertyControl control = EntryInfo.getAccountAccessor().createPropertyControl(parent, otherEntry.getSession());
    				control.load(otherEntry);
    				return control;
    			}
    		});
-   		allEntryDataObjects.add(new EntriesSectionCategoryProperty(EntryInfo.getDescriptionAccessor(), "other") {
+   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getDescriptionAccessor()) {
    			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
    				IPropertyControl control = EntryInfo.getDescriptionAccessor().createPropertyControl(parent, otherEntry.getSession());
    				control.load(otherEntry);
    				return control;
    			}
    		});
-   		allEntryDataObjects.add(new EntriesSectionCategoryProperty(EntryInfo.getAmountAccessor(), "common2") {
+   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAmountAccessor()) {
    			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
    				IPropertyControl control = EntryInfo.getAmountAccessor().createPropertyControl(parent, otherEntry.getSession());
    				control.load(otherEntry);
@@ -166,7 +166,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		 * account object.
 		 */
    		// TODO: This is not correct at all...
-        allEntryDataObjects.add(new EntriesSectionProperty(EntryInfo.getIncomeExpenseCurrencyAccessor(), "common2") {
+        allEntryDataObjects.add(new PropertyBlock(EntryInfo.getIncomeExpenseCurrencyAccessor(), "common2") {
         	public ExtendableObject getObjectContainingProperty(EntryData data) {
         		Entry entry = data.getEntry();
         		if (entry != null
@@ -197,7 +197,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		 * determined from whether the other currency amount is in
 		 * the credit or debit column).
 		 */
-        allEntryDataObjects.add(new EntriesSectionProperty(EntryInfo.getAmountAccessor(), "other") {
+        allEntryDataObjects.add(new PropertyBlock(EntryInfo.getAmountAccessor(), "other") {
         	public ExtendableObject getObjectContainingProperty(EntryData data) {
         			if (data.isSimpleEntry()) {
         				Entry entry = data.getOtherEntry();

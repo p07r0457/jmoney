@@ -59,7 +59,7 @@ public abstract class Block {
 
 	protected int width;
 
-	public abstract void buildCellList(ArrayList<IEntriesTableProperty> cellList);
+	public abstract void buildCellList(ArrayList<CellBlock> cellList);
 	
 	abstract void layout(int width);
 

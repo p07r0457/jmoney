@@ -156,7 +156,7 @@ public class Row extends Composite {
 		 */
 		setBackgroundMode(SWT.INHERIT_FORCE);
 
-		for (final IEntriesTableProperty entriesSectionProperty: entriesTable.getCellList()) {
+		for (final CellBlock entriesSectionProperty: entriesTable.getCellList()) {
 			// Create the control with no content set.
 			final ICellControl cellControl = entriesSectionProperty.createCellControl(this, entriesTable.getSession());
 			controls.add(cellControl);

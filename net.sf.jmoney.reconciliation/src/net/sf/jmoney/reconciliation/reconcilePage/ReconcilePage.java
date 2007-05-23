@@ -27,11 +27,11 @@ import java.util.regex.Matcher;
 
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.entrytable.BalanceColumn;
+import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.DebitAndCreditColumns;
-import net.sf.jmoney.entrytable.EntriesSectionCategoryProperty;
-import net.sf.jmoney.entrytable.EntriesSectionProperty;
 import net.sf.jmoney.entrytable.EntryData;
-import net.sf.jmoney.entrytable.IEntriesTableProperty;
+import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
+import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
@@ -117,11 +117,11 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 	 */
 	protected ReconciliationAccount account = null;
 	
-	protected Vector<IEntriesTableProperty> allEntryDataObjects = new Vector<IEntriesTableProperty>();
+	protected Vector<CellBlock> allEntryDataObjects = new Vector<CellBlock>();
 
-	IEntriesTableProperty debitColumnManager;
-	IEntriesTableProperty creditColumnManager;
-	IEntriesTableProperty balanceColumnManager;
+	CellBlock debitColumnManager;
+	CellBlock creditColumnManager;
+	CellBlock balanceColumnManager;
 	
 	protected StatementsSection fStatementsSection;
     protected StatementSection fStatementSection;
@@ -187,7 +187,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         
         // Add properties from the transaction.
    		for (final ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
-        	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "transaction") {
+        	allEntryDataObjects.add(new PropertyBlock(propertyAccessor, "transaction") {
         		public ExtendableObject getObjectContainingProperty(EntryData data) {
         			return data.getEntry().getTransaction();
         		}
@@ -202,7 +202,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
             if (propertyAccessor != EntryInfo.getAccountAccessor() 
            		&& propertyAccessor != EntryInfo.getDescriptionAccessor()
            		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
-            	allEntryDataObjects.add(new EntriesSectionProperty(propertyAccessor, "this") {
+            	allEntryDataObjects.add(new PropertyBlock(propertyAccessor, "this") {
             		public ExtendableObject getObjectContainingProperty(EntryData data) {
             			return data.getEntry();
             		}
@@ -216,14 +216,14 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
          * I don't know what to do if there are other capital accounts
          * (a transfer or a purchase with money coming from more than one account).
          */
-   		allEntryDataObjects.add(new EntriesSectionCategoryProperty(EntryInfo.getAccountAccessor(), "common2") {
+   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAccountAccessor()) {
    			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
    				IPropertyControl control = EntryInfo.getAccountAccessor().createPropertyControl(parent, otherEntry.getSession());
    				control.load(otherEntry);
    				return control;
    			}
    		});
-   		allEntryDataObjects.add(new EntriesSectionCategoryProperty(EntryInfo.getDescriptionAccessor(), "other") {
+   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getDescriptionAccessor()) {
    			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
    				IPropertyControl control = EntryInfo.getDescriptionAccessor().createPropertyControl(parent, otherEntry.getSession());
    				control.load(otherEntry);

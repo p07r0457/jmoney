@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -48,66 +49,58 @@ import org.eclipse.swt.widgets.Control;
  */
 public class OtherEntriesBlock extends Block {
 
-	private Block otherEntryBlock;
+	private Block otherEntriesRootBlock;
 	
-	private IEntriesTableProperty cellProperty;
-
 	/**
 	 * The index of this cell in the list returned by buildCellList.
 	 * This is not set until buildCellList is called.
 	 */
 	private int index;
 	
-	public OtherEntriesBlock(Block otherEntryBlock) {
-		this.otherEntryBlock = otherEntryBlock;
-		this.minimumWidth = otherEntryBlock.minimumWidth;
-		this.weight = otherEntryBlock.weight;
+	public OtherEntriesBlock(Block otherEntriesRootBlock) {
+		this.minimumWidth = otherEntriesRootBlock.minimumWidth;
+		this.weight = otherEntriesRootBlock.weight;
 		
-		cellProperty = new IEntriesTableProperty() {
+		this.otherEntriesRootBlock = otherEntriesRootBlock;
+	}
 
-			public int compare(EntryData trans1, EntryData trans2) {
-				// TODO Auto-generated method stub
-				return 0;
-			}
+	public ICellControl createCellControl(Composite parent,
+			Session session) {
+		return new ICellControl() {
 
-			public ICellControl createCellControl(Composite parent,
-					Session session) {
-				// TODO Auto-generated method stub
-				return null;
-			}
-
-			public String getId() {
+			public Control getControl() {
 				// TODO Auto-generated method stub
 				return null;
 			}
 
-			public int getMinimumWidth() {
+			public void load(EntryData data) {
 				// TODO Auto-generated method stub
-				return 0;
+				
 			}
 
-			public String getText() {
+			public void save() {
 				// TODO Auto-generated method stub
-				return null;
+				
 			}
 
-			public int getWeight() {
+			public void setFocusListener(FocusListener controlFocusListener) {
 				// TODO Auto-generated method stub
-				return 0;
+				
 			}
-		}; 
+		};
 	}
 
 	@Override
-	public void buildCellList(ArrayList<IEntriesTableProperty> cellList) {
-		this.index = cellList.size();
-		cellList.add(cellProperty);
+	public void buildCellList(ArrayList<CellBlock> cellList) {
+		// TODO: Need to sort this one out.
+//		this.index = cellList.size();
+//		cellList.add(cellProperty);
 	}
 
 	@Override
 	void layout(int width) {
 		this.width = width;
-		otherEntryBlock.layout(width);
+		otherEntriesRootBlock.layout(width);
 	}
 
 	@Override

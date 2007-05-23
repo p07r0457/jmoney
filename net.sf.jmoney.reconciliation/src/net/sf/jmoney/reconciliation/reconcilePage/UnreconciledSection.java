@@ -30,13 +30,12 @@ import java.util.Vector;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.ButtonCellControl;
 import net.sf.jmoney.entrytable.CellBlock;
-import net.sf.jmoney.entrytable.EntriesSectionProperty;
 import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
-import net.sf.jmoney.entrytable.IEntriesTableProperty;
+import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.EntriesTable.IMenuItem;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
@@ -78,7 +77,7 @@ public class UnreconciledSection extends SectionPart {
 
 	private IEntriesContent unreconciledTableContents = null;
 
-	private ArrayList<IEntriesTableProperty> cellList;
+	private ArrayList<CellBlock> cellList;
 
 	public UnreconciledSection(ReconcilePage page, Composite parent) {
 		super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
@@ -168,7 +167,7 @@ public class UnreconciledSection extends SectionPart {
 			}
 		});
 		
-		IEntriesTableProperty reconcileButton = new IEntriesTableProperty() {
+		CellBlock reconcileButton = new CellBlock("", 20, 0) {
 
 			public int compare(EntryData trans1, EntryData trans2) {
 				// TODO Sort this out.  We cannot sort on this.
@@ -189,39 +188,29 @@ public class UnreconciledSection extends SectionPart {
 			public String getId() {
 				return "unreconcile";
 			}
-
-			public int getMinimumWidth() {
-				return 20;
-			}
-
-			public String getText() {
-				return "";
-			}
-
-			public int getWeight() {
-				return 0;
-			}
 		};
+
+		CellBlock transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
 
 		/*
 		 * Setup the layout structure of the header and rows.
 		 */
 		Block rootBlock = new HorizontalBlock(new Block [] {
-				new CellBlock(reconcileButton),
-				new CellBlock(EntriesSectionProperty.createTransactionColumn(TransactionInfo.getDateAccessor())),
-				new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getValutaAccessor())),
-				new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getCheckAccessor())),
-				new CellBlock(EntriesSectionProperty.createEntryColumn(EntryInfo.getMemoAccessor())),
-				new CellBlock(fPage.debitColumnManager),
-				new CellBlock(fPage.creditColumnManager),
-				new CellBlock(fPage.balanceColumnManager),
+				reconcileButton,
+				transactionDateColumn,
+				PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor()),
+				PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
+				PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
+				fPage.debitColumnManager,
+				fPage.creditColumnManager,
+				fPage.balanceColumnManager,
 		});
 
-		cellList = new ArrayList<IEntriesTableProperty>();
+		cellList = new ArrayList<CellBlock>();
 		rootBlock.buildCellList(cellList);
 
 		// Create the table control.
-		fUnreconciledEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, unreconciledTableContents, fPage.getAccount().getSession(), new IMenuItem [] { reconcileAction } ); 
+		fUnreconciledEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, unreconciledTableContents, fPage.getAccount().getSession(), transactionDateColumn, new IMenuItem [] { reconcileAction } ); 
 
 		// Allow entries in the account to be moved from the unreconciled list
 		final DragSource dragSource = new DragSource(fUnreconciledEntriesControl.getControl(), DND.DROP_MOVE);
