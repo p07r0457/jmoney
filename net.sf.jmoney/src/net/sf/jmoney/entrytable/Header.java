@@ -25,9 +25,6 @@ package net.sf.jmoney.entrytable;
 import java.util.Comparator;
 import java.util.Vector;
 
-import net.sf.jmoney.entrytable.EntriesTable.IMenuItem;
-import net.sf.jmoney.model2.Entry;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;

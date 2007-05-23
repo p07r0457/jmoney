@@ -314,15 +314,15 @@ public class TransferTemplate implements ITransactionTemplate {
 	    	// Set the account that this page is viewing and editing.
 	    	// We set an account object that is managed by our own
 	    	// transaction manager.
-	        Session ourSession = (Session)transactionManager.getCopyInTransaction(session);
+	        Session ourSession = transactionManager.getCopyInTransaction(session);
 	        
 		    // Add the transaction
 	   		Transaction transaction = ourSession.createTransaction();
 	   		Entry entry1 = transaction.createEntry();
 	   		Entry entry2 = transaction.createEntry();
 	   		
-	   		Account sourceAccountInTrans = (Account)transactionManager.getCopyInTransaction(sourceAccount);
-	   		Account destinationAccountInTrans = (Account)transactionManager.getCopyInTransaction(destinationAccount);
+	   		Account sourceAccountInTrans = transactionManager.getCopyInTransaction(sourceAccount);
+	   		Account destinationAccountInTrans = transactionManager.getCopyInTransaction(destinationAccount);
 	   		
 	   		transaction.setDate(date);
 	   		entry1.setAccount(sourceAccountInTrans);

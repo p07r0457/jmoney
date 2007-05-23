@@ -328,7 +328,7 @@ public class QIFFileFormat implements FileFormat {
 			Transaction transaction = session.createTransaction();
 
 			// Add the first entry for this transaction and set the account
-			QIFEntry firstEntry = (QIFEntry)transaction.createEntry().getExtension(QIFEntryInfo.getPropertySet(), true);
+			QIFEntry firstEntry = transaction.createEntry().getExtension(QIFEntryInfo.getPropertySet(), true);
 			firstEntry.setAccount(account);
 
 			// Add the second entry for this transaction
@@ -680,8 +680,7 @@ public class QIFFileFormat implements FileFormat {
 					writeln(writer, "M" + entry.getMemo());
 
 				// status
-				QIFEntry ourEntry = (QIFEntry) entry
-						.getExtension(QIFEntryInfo.getPropertySet());
+				QIFEntry ourEntry = entry.getExtension(QIFEntryInfo.getPropertySet());
 				if (ourEntry.getReconcilingState() == '*')
 					writeln(writer, "C*");
 				else if (ourEntry.getReconcilingState() == 'X')
@@ -788,7 +787,7 @@ public class QIFFileFormat implements FileFormat {
 		IncomeExpenseAccount category;
 		category = categoryMap.get(name);
 		if (category == null) {
-			category = (IncomeExpenseAccount) session.createAccount(IncomeExpenseAccountInfo.getPropertySet());
+			category = session.createAccount(IncomeExpenseAccountInfo.getPropertySet());
 			category.setName(name);
 			categoryMap.put(name, category);
 		}

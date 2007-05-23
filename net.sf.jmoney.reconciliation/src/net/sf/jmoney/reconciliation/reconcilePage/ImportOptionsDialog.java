@@ -128,7 +128,7 @@ class ImportOptionsDialog extends Dialog {
 		 */
 		transactionManager = new TransactionManager(account.getObjectKey().getSessionManager());
 		ExtendableObject accountInTransaction = transactionManager.getCopyInTransaction(account.getBaseObject()); 
-		this.account = (ReconciliationAccount) accountInTransaction.getExtension(ReconciliationAccountInfo.getPropertySet(), true);
+		this.account = accountInTransaction.getExtension(ReconciliationAccountInfo.getPropertySet(), true);
 
 		// Load the error indicator
 		URL installURL = ReconciliationPlugin.getDefault().getBundle().getEntry("/icons/error.gif");

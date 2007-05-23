@@ -97,7 +97,7 @@ public class JMoneyIntroPart extends IntroPart {
 			if (index == childPages.size() - 1 || index == -1)
 				// last page or page not found
 				return null;
-			return (IWizardPage) childPages.get(index + 1);
+			return childPages.get(index + 1);
 		}
 	}
 	
@@ -201,7 +201,7 @@ public class JMoneyIntroPart extends IntroPart {
 				childPages.add(noDataPage);
 			}
 			
-			return (IWizardPage)childPages.get(0);
+			return childPages.get(0);
 		}
 	}
 	

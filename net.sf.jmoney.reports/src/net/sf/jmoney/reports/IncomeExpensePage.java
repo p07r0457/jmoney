@@ -928,13 +928,13 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 						byCurrency.put(e.getCommodity(), items);
 					}
 					
-					Item i = (Item) items.get(a);
-					if (i == null) {
-						i = new Item(a, e.getCommodity(), e.getAmount());
-						items.put(e.getAccount(), i);
-						allItems.add(i);
+					Item item = items.get(a);
+					if (item == null) {
+						item = new Item(a, e.getCommodity(), e.getAmount());
+						items.put(e.getAccount(), item);
+						allItems.add(item);
 					} else {
-						i.addToSum(e.getAmount());
+						item.addToSum(e.getAmount());
 					}
 				}
 			}

@@ -254,7 +254,7 @@ public class StatementsSection extends SectionPart {
 					if (newObject instanceof Entry) {
 						Entry newEntry = (Entry)newObject;
 						if (account.equals(newEntry.getAccount())) {
-							BankStatement statement = (BankStatement)newEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
+							BankStatement statement = newEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 							adjustStatement(statement, newEntry.getAmount());
 						}
 					}
@@ -271,7 +271,7 @@ public class StatementsSection extends SectionPart {
 						Transaction deletedTransaction = (Transaction)deletedObject;
 						for (Entry deletedEntry: deletedTransaction.getEntryCollection()) {
 							if (account.equals(deletedEntry.getAccount())) {
-								BankStatement statement = (BankStatement)deletedEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
+								BankStatement statement = deletedEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 								adjustStatement(statement, -deletedEntry.getAmount());
 							}
 						}
@@ -284,17 +284,17 @@ public class StatementsSection extends SectionPart {
 						
 						if (changedProperty == EntryInfo.getAccountAccessor()) {
 							if (account.equals(oldValue)) {
-								BankStatement statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
+								BankStatement statement = entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 								adjustStatement(statement, -entry.getAmount());
 							}
 							if (account.equals(newValue)) {
-								BankStatement statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
+								BankStatement statement = entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 								adjustStatement(statement, entry.getAmount());
 							}
 						} else {
 							if (account.equals(entry.getAccount())) {
 								if (changedProperty == EntryInfo.getAmountAccessor()) {
-									BankStatement statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
+									BankStatement statement = entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 									long oldAmount = ((Long)oldValue).longValue();
 									long newAmount = ((Long)newValue).longValue();
 									adjustStatement(statement, newAmount - oldAmount);

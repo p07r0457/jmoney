@@ -32,7 +32,6 @@ import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.ITransactionTemplate;
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.entrytable.BalanceColumn;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.DebitAndCreditColumns;
@@ -347,7 +346,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			if (memento != null) {
 				IMemento [] templateMementos = memento.getChildren("template");
 				for (int i = 0; i < templateMementos.length; i++) {
-					ITransactionTemplate transactionType = (ITransactionTemplate)transactionTypes.get(templateMementos[i].getID());
+					ITransactionTemplate transactionType = transactionTypes.get(templateMementos[i].getID());
 					if (transactionType != null) {
 						transactionType.init(templateMementos[i]);
 					}
@@ -357,7 +356,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 		
 		public void saveState(IMemento memento) {
 			for (String id: transactionTypes.keySet()) {
-				ITransactionTemplate transactionType = (ITransactionTemplate)transactionTypes.get(id);
+				ITransactionTemplate transactionType = transactionTypes.get(id);
 				transactionType.saveState(memento.createChild("template", id));
 			}
 		}

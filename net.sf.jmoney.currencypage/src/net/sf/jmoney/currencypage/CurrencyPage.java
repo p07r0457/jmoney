@@ -658,7 +658,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 
 				data.add(currencyData);
 
-				Currency newCurrency = (Currency)session.createCommodity(CurrencyInfo.getPropertySet());
+				Currency newCurrency = session.createCommodity(CurrencyInfo.getPropertySet());
 				newCurrency.setName(currencyData.name);
 				newCurrency.setCode(currencyData.code);
 				newCurrency.setDecimals(currencyData.decimals);

@@ -353,7 +353,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 							    	 * The account being shown in this page.  This account
 							    	 * object exists in the context of transactionManager.
 							    	 */
-							    	CurrencyAccount accountInTransaction = (CurrencyAccount)account.getBaseObject();
+							    	CurrencyAccount accountInTransaction = account.getBaseObject();
 							    	IncomeExpenseAccount defaultCategoryInTransaction = account.getDefaultCategory();
 					           		Session sessionInTransaction = accountInTransaction.getSession();
 							  

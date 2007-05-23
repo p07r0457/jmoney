@@ -114,7 +114,7 @@ public class UnreconciledSection extends SectionPart {
 			public boolean isEntryInTable(Entry entry) {
 				// This entry is to be shown if the account
 				// matches and no statement is set.
-				BankStatement statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
+				BankStatement statement = entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 				return fPage.getAccount().equals(entry.getAccount())
 				&& statement == null;
 			}

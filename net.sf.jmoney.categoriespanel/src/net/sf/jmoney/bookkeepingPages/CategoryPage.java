@@ -455,8 +455,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
         private void makeActions() {
 			newAccountAction = new Action() {
                 public void run() {
-                    IncomeExpenseAccount account = (IncomeExpenseAccount) session.createAccount(IncomeExpenseAccountInfo
-                            .getPropertySet());
+                    IncomeExpenseAccount account = session.createAccount(IncomeExpenseAccountInfo.getPropertySet());
                     account.setName(CategoriesPanelPlugin.getResourceString("CategoryPanel.newCategory"));
 //                  session.registerUndoableChange("add new category");
                     viewer.setSelection(new StructuredSelection(account), true);

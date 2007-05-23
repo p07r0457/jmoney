@@ -330,15 +330,15 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
     	// Set the account that this page is viewing and editing.
     	// We set an account object that is managed by our own
     	// transaction manager.
-        Session ourSession = (Session)transactionManager.getCopyInTransaction(session);
+        Session ourSession = transactionManager.getCopyInTransaction(session);
         
 	    // Add the transaction
    		Transaction transaction = ourSession.createTransaction();
    		Entry entry1 = transaction.createEntry();
    		Entry entry2 = transaction.createEntry();
    		
-   		Account bankAccountInTrans = (Account)transactionManager.getCopyInTransaction(bankAccount);
-   		Account categoryAccountInTrans = (Account)transactionManager.getCopyInTransaction(categoryAccount);
+   		Account bankAccountInTrans = transactionManager.getCopyInTransaction(bankAccount);
+   		Account categoryAccountInTrans = transactionManager.getCopyInTransaction(categoryAccount);
    		
    		transaction.setDate(date);
    		entry1.setAccount(bankAccountInTrans);

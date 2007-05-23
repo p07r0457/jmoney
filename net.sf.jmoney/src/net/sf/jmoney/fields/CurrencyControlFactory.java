@@ -44,12 +44,12 @@ public class CurrencyControlFactory extends PropertyControlFactory<Currency> {
     }
 
     public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Currency> propertyAccessor) {
-        Currency value = (Currency) extendableObject.getPropertyValue(propertyAccessor);
+        Currency value = extendableObject.getPropertyValue(propertyAccessor);
         return value == null ? "none" : "'" + value.getName() + "'";
     }
 
     public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Currency> propertyAccessor) {
-        Currency value = (Currency) extendableObject.getPropertyValue(propertyAccessor);
+        Currency value = extendableObject.getPropertyValue(propertyAccessor);
         return value == null ? "" : value.getCode();
     }
 

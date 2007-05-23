@@ -150,7 +150,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 		// in the core JMoney schema).
 		
 		if (extendableObject.parentKey.equals(parent.objectKey)) {
-			final E objectToRemove = (E)this.listPropertyAccessor.getElementPropertySet().getImplementationClass().cast(extendableObject);
+			final E objectToRemove = listPropertyAccessor.getElementPropertySet().getImplementationClass().cast(extendableObject);
 
 			/*
 			 * Deletion events are fired before the object is removed from the

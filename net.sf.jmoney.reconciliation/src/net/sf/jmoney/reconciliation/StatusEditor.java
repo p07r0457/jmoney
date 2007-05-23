@@ -82,7 +82,7 @@ public class StatusEditor implements IPropertyControl {
     	if (object != null) {
     		entry = (Entry)object;
     		
-    		ReconciliationEntry ourEntry = (ReconciliationEntry)object.getExtension(ReconciliationEntryInfo.getPropertySet());
+    		ReconciliationEntry ourEntry = object.getExtension(ReconciliationEntryInfo.getPropertySet());
     		if (ourEntry == null) {
     			propertyControl.setText("");
     		} else {

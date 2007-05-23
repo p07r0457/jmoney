@@ -201,8 +201,8 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
 			if (JMoneyPlugin.DEBUG) System.out.println("no pages set in " + nodeObject.toString());
 		} else {
 			for (int i = 0; i < pageFactories.size(); i++) {
-				PageEntry entry = (PageEntry)pageFactories.get(i);
-				String pageId = (String)entry.getPageId();
+				PageEntry entry = pageFactories.get(i);
+				String pageId = entry.getPageId();
 				pages[i].saveState(memento.createChild(pageId));
 			}
 		}

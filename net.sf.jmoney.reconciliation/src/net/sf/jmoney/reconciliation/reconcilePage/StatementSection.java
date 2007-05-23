@@ -151,7 +151,7 @@ public class StatementSection extends SectionPart {
 		        
 				// This entry is to be shown if both the account and
 				// the statement match.
-	        	BankStatement statement = (BankStatement)entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
+	        	BankStatement statement = entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 				return fPage.getAccount().equals(entry.getAccount())
 	        	 && fPage.getStatement().equals(statement);
 			}

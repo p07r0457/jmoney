@@ -93,8 +93,8 @@ public class TransactionDialog {
     	 */
     	final TransactionManager transactionManager = new TransactionManager(originalSession.getObjectKey().getSessionManager());
     	
-    	this.session = (Session)transactionManager.getCopyInTransaction(originalSession);
-    	Entry accountEntry = (Entry)transactionManager.getCopyInTransaction(originalAccountEntry);
+    	this.session = transactionManager.getCopyInTransaction(originalSession);
+    	Entry accountEntry = transactionManager.getCopyInTransaction(originalAccountEntry);
     	
     	this.defaultCurrency = accountEntry.getCommodity() instanceof Currency
     	? (Currency)accountEntry.getCommodity()

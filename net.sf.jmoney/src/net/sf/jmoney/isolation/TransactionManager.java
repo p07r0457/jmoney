@@ -847,7 +847,7 @@ public class TransactionManager extends DataManager {
 									// Note that addedEntries must contain objects that
 									// are being managed by the transaction manager
 									// (not the committed versions).
-									addedEntries.add((Entry)getCopyInTransaction(entry));
+									addedEntries.add(getCopyInTransaction(entry));
 								}
 							}
 						}

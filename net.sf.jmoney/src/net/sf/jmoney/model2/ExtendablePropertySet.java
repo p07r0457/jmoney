@@ -631,7 +631,7 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	public void addPage(PageEntry newPage) {
 		int addIndex = pageExtensions.size();
 		for (int i = 0; i < pageExtensions.size(); i++) {
-			PageEntry page = (PageEntry) pageExtensions.get(i);
+			PageEntry page = pageExtensions.get(i);
 			if (newPage.getPosition() < page.getPosition()) {
 				addIndex = i;
 				break;
@@ -674,6 +674,6 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 
 	@Override
 	protected E getImplementationObject(ExtendableObject extendableObject) {
-		return (E)classOfObject.cast(extendableObject);
+		return classOfObject.cast(extendableObject);
 	}
 }

@@ -1417,7 +1417,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			Object obj = node.getUserObject();
 			if (obj instanceof net.sf.jmoney.model.SimpleCategory) {
 				net.sf.jmoney.model.SimpleCategory oldCategory = (net.sf.jmoney.model.SimpleCategory) obj;
-				IncomeExpenseAccount newCategory = (IncomeExpenseAccount)newSession.createAccount(IncomeExpenseAccountInfo.getPropertySet());
+				IncomeExpenseAccount newCategory = newSession.createAccount(IncomeExpenseAccountInfo.getPropertySet());
 				copyCategoryProperties(oldCategory, newCategory, accountMap);
 			}
 		}
@@ -1427,7 +1427,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		for (Iterator iter = oldAccounts.iterator(); iter.hasNext(); ) {
 			net.sf.jmoney.model.Account oldAccount = (net.sf.jmoney.model.Account)iter.next();
 			
-            BankAccount newAccount = (BankAccount)newSession.createAccount(BankAccountInfo.getPropertySet());
+            BankAccount newAccount = newSession.createAccount(BankAccountInfo.getPropertySet());
 			newAccount.setName(oldAccount.getName());
 			newAccount.setAbbreviation(oldAccount.getAbbrevation());
 			newAccount.setAccountNumber(oldAccount.getAccountNumber());
@@ -1530,8 +1530,8 @@ public class JMoneyXmlFormat implements IFileDatastore {
 						Entry entry2 = trans.createEntry();
 						entry1.setAmount(de.getAmount());
 						entry2.setAmount(-de.getAmount());
-						entry1.setAccount((Account)accountMap.get(de.getOther().getCategory()));
-						entry2.setAccount((Account)accountMap.get(de.getCategory()));
+						entry1.setAccount(accountMap.get(de.getOther().getCategory()));
+						entry2.setAccount(accountMap.get(de.getCategory()));
 						
 						copyEntryProperties(de, entry1, statusProperty);
 						copyEntryProperties(de.getOther(), entry2, statusProperty);
@@ -1557,7 +1557,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 						
 						subEntry = trans.createEntry();
 						subEntry.setAmount(oldSubEntry.getAmount());
-						subEntry.setAccount((Account)accountMap.get(oldSubEntry.getCategory()));
+						subEntry.setAccount(accountMap.get(oldSubEntry.getCategory()));
 						copyEntryProperties(oldSubEntry, subEntry, statusProperty);
 						
 						
@@ -1577,7 +1577,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					entry2.setAmount(-oldEntry.getAmount());
 					entry1.setAccount(newAccount);
 					if (oldEntry.getCategory() != null) {
-					    entry2.setAccount((Account)accountMap.get(oldEntry.getCategory()));
+					    entry2.setAccount(accountMap.get(oldEntry.getCategory()));
 					}
 					
 					// Put the check, memo, valuta, and status into the account entry only.
@@ -1614,7 +1614,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			Object obj2 = subNode.getUserObject();
 			if (obj2 instanceof net.sf.jmoney.model.SimpleCategory) {
 				net.sf.jmoney.model.SimpleCategory oldSubCategory = (net.sf.jmoney.model.SimpleCategory) obj2;
-				IncomeExpenseAccount newSubCategory = (IncomeExpenseAccount)newCategory.createSubAccount();
+				IncomeExpenseAccount newSubCategory = newCategory.createSubAccount();
 				copyCategoryProperties(oldSubCategory, newSubCategory, accountMap);
 
 				accountMap.put(oldSubCategory, newSubCategory);

@@ -360,7 +360,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
             log(nfex);
         }
 
-        result = (Currency) session.createCommodity(CurrencyInfo.getPropertySet());
+        result = session.createCommodity(CurrencyInfo.getPropertySet());
         result.setCode(code);
         result.setName(res.getString(code));
         result.setDecimals(decimals);

@@ -258,7 +258,7 @@ class EntryControls {
 
 				// Regardless of the property changed, re-load the control.
 				for (int i = 0; i < entryPropertyControls.size(); i++) {
-					LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
+					LabelAndEditControlPair controlPair = entryPropertyControls.get(i);
 					if (controlPair.propertyAccessor == changedProperty) {
 						if (controlPair.pairComposite != null) {
 							controlPair.load(entry);
@@ -467,7 +467,7 @@ class EntryControls {
 		this.entry = entry;
 		
 		for (int i = 0; i < entryPropertyControls.size(); i++) {
-			LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
+			LabelAndEditControlPair controlPair = entryPropertyControls.get(i);
 			controlPair.refreshState(entry, true);
 		}
 		
@@ -525,7 +525,7 @@ class EntryControls {
 	 */
 	void updateSetOfEntryControls() {
 		for (int i = 1; i < entryPropertyControls.size(); i++) {
-			LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
+			LabelAndEditControlPair controlPair = entryPropertyControls.get(i);
 			controlPair.refreshState(entry, false);
 		}
 		
@@ -579,7 +579,7 @@ class EntryControls {
         debitLabel.setBackground(entryColor);
         creditLabel.setBackground(entryColor);
 		for (int i = 0; i < entryPropertyControls.size(); i++) {
-			LabelAndEditControlPair controlPair = (LabelAndEditControlPair)entryPropertyControls.get(i);
+			LabelAndEditControlPair controlPair = entryPropertyControls.get(i);
 			controlPair.setBackground(entryColor);
 		}
 	}

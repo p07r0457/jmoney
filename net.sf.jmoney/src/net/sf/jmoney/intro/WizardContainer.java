@@ -262,7 +262,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 	public boolean close() {
 		// inform wizards
 		for (int i = 0; i < createdWizards.size(); i++) {
-			IWizard createdWizard = (IWizard) createdWizards.get(i);
+			IWizard createdWizard = createdWizards.get(i);
 			createdWizard.dispose();
 			// Remove this dialog as a parent from the managed wizard.
 			// Note that we do this after calling dispose as the wizard or
@@ -567,7 +567,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 			// Call perform finish on outer wizards in the nested chain
 			// (to allow them to save state for example)
 			for (int i = 0; i < nestedWizards.size() - 1; i++) {
-				((IWizard) nestedWizards.get(i)).performFinish();
+				nestedWizards.get(i).performFinish();
 			}
 			
 			// Hard close the intro part 

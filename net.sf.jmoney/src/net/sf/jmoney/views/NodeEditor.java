@@ -64,8 +64,8 @@ public class NodeEditor extends FormEditor {
         
     	for (int i = 0; i < pageListeners.size(); i++) {
     		PageEntry entry = (PageEntry)pageListeners.get(i);
-    		String pageId = (String)entry.getPageId();
-    		IBookkeepingPageFactory pageListener = (IBookkeepingPageFactory)entry.getPageFactory();
+    		String pageId = entry.getPageId();
+    		IBookkeepingPageFactory pageListener = entry.getPageFactory();
     		pages[i] = pageListener.createFormPage(this, memento==null?null:memento.getChild(pageId));
     	}
     	

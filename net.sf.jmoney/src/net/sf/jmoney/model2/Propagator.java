@@ -170,7 +170,7 @@ public class Propagator {
 						propagatorMap.put(sourcePropertySet, secondaryMap);
 					}
 					
-					Method methodFromMap = (Method)secondaryMap.get(destinationPropertySet);
+					Method methodFromMap = secondaryMap.get(destinationPropertySet);
 					if (methodFromMap != null) {
 						// We have two propagators for the same pair of property sets.
 						// For the time being, consider this an error.

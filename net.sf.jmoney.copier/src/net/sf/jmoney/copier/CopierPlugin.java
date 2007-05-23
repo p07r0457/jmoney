@@ -198,7 +198,7 @@ public class CopierPlugin extends AbstractUIPlugin {
     		V oldValue = oldObject.getPropertyValue(propertyAccessor);
     		V newValue;
     		if (oldValue instanceof ExtendableObject) {
-    			newValue = (V)propertyAccessor.getClassOfValueObject().cast(objectMap.get(oldValue));
+    			newValue = propertyAccessor.getClassOfValueObject().cast(objectMap.get(oldValue));
     			JMoneyPlugin.myAssert(newValue != null);
     		} else {
     			newValue = oldValue;

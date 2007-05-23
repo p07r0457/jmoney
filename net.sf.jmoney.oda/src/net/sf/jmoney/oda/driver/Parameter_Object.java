@@ -72,7 +72,7 @@ class Parameter_Object extends Parameter {
 			this.value = matchingCurrencies;
 			
 		} else if (Account.class.isAssignableFrom(propertySet.getImplementationClass())) {
-			String pattern = ((String)value).toUpperCase();
+			String pattern = value.toUpperCase();
 			
 			/*
 			 * We return all accounts, at all levels, where the name contains the given string.

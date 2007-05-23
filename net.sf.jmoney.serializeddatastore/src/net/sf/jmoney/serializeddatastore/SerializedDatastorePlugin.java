@@ -197,7 +197,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		IExtensionPoint extensionPoint = registry.getExtensionPoint("net.sf.jmoney.serializeddatastore.filestores");
 		IExtension[] extensions = extensionPoint.getExtensions();
 
-		Vector matchingElements = new Vector();
+		Vector<IConfigurationElement> matchingElements = new Vector<IConfigurationElement>();
 		for (int i = 0; i < extensions.length; i++) {
 			IConfigurationElement[] elements = extensions[i].getConfigurationElements();
 			for (int j = 0; j < elements.length; j++) {
@@ -212,7 +212,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			}
 		}
 		
-		return (IConfigurationElement[]) matchingElements.toArray(new IConfigurationElement[0]);
+		return matchingElements.toArray(new IConfigurationElement[0]);
 	}
 					
 	/**
