@@ -680,11 +680,16 @@ public class QIFFileFormat implements FileFormat {
 					writeln(writer, "M" + entry.getMemo());
 
 				// status
-				QIFEntry ourEntry = entry.getExtension(QIFEntryInfo.getPropertySet());
-				if (ourEntry.getReconcilingState() == '*')
+				QIFEntry ourEntry = entry.getExtension(QIFEntryInfo.getPropertySet(), false);
+				if (ourEntry == null) {
+					writeln(writer, "C ");
+				} else if (ourEntry.getReconcilingState() == ' ') {
+					writeln(writer, "C ");
+				} else if (ourEntry.getReconcilingState() == '*') {
 					writeln(writer, "C*");
-				else if (ourEntry.getReconcilingState() == 'X')
+				} else if (ourEntry.getReconcilingState() == 'X') {
 					writeln(writer, "CX");
+				}
 
 				// amount
 				writeln(writer, "T" + formatAmount(entry.getAmount(), account));
