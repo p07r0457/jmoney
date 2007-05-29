@@ -25,12 +25,13 @@ package net.sf.jmoney.entrytable;
 import java.util.ArrayList;
 
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-public class HorizontalBlock extends Block {
-	private Block [] children;
+public class HorizontalBlock<T> extends Block<T> {
+	private Block<T> [] children;
 	
-	public HorizontalBlock(Block [] children) {
+	public HorizontalBlock(Block<T>... children) {
 		this.children = children;
 
 		/*
@@ -40,7 +41,7 @@ public class HorizontalBlock extends Block {
 		 */
 		minimumWidth = 0;
 		weight = 0;
-		for (Block child: children) {
+		for (Block<T> child: children) {
 			minimumWidth += child.minimumWidth;
 			weight += child.weight;
 		}
@@ -51,9 +52,16 @@ public class HorizontalBlock extends Block {
 	}
 
 	@Override
-	public void buildCellList(ArrayList<CellBlock> cellList) {
-		for (Block child: children) {
+	public void buildCellList(ArrayList<CellBlock<T>> cellList) {
+		for (Block<T> child: children) {
 			child.buildCellList(cellList);
+		}
+	}
+
+	@Override
+	public void createHeaderControls(Composite parent) {
+		for (Block child: children) {
+			child.createHeaderControls(parent);
 		}
 	}
 

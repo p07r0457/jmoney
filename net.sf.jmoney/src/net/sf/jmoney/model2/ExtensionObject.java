@@ -71,8 +71,8 @@ public abstract class ExtensionObject {
     	return baseObject.equals(object);
 	}
 	
-	public <E extends ExtensionObject> E getExtension(ExtensionPropertySet<E> propertySet) {
-    	return baseObject.getExtension(propertySet);
+	public <E extends ExtensionObject> E getExtension(ExtensionPropertySet<E> propertySet, boolean alwaysReturnNonNull) {
+    	return baseObject.getExtension(propertySet, alwaysReturnNonNull);
     }
     
     public <V> V getPropertyValue(ScalarPropertyAccessor<V> propertyAccessor) {

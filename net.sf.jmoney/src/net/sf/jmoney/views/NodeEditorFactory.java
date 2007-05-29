@@ -73,7 +73,6 @@ public class NodeEditorFactory implements IElementFactory {
 		// See if the node is an account.
 		String fullAccountName = memento.getString("account");
 		if (fullAccountName != null) {
-			if (JMoneyPlugin.DEBUG) System.out.println("editor factory, session = " + session);
 			Account account = JMoneyPlugin.getDefault().getSession().getAccountByFullName(fullAccountName);
 			if (account != null) {
    				ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(account.getClass());

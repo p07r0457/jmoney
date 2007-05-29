@@ -34,6 +34,7 @@ import org.eclipse.swt.widgets.Layout;
 public class BlockLayout extends Layout {
 
 	private Block block;
+	private boolean linkedToHeader;
 
 	/**
 	 * marginTop specifies the number of pixels of vertical margin
@@ -59,17 +60,31 @@ public class BlockLayout extends Layout {
 	 */
  	public int verticalSpacing = 1;
 	
-	public BlockLayout(Block block) {
+ 	/**
+ 	 * 
+ 	 * @param block
+ 	 * @param linkedToHeader if false then rows and headers are layed out according
+ 	 * 			to the passed hints.  We don't really know if the rows will be laid out
+ 	 * 			before or after the header, so they are all layed out independently.
+ 	 * 			If true then the hints are ignored and the widths are always taken from
+ 	 * 			the blocks.
+ 	 */
+	public BlockLayout(Block block, boolean linkedToHeader) {
 		this.block = block;
+		this.linkedToHeader = linkedToHeader;
 	}
 	
 	@Override
 	protected Point computeSize(Composite composite, int wHint, int hHint, boolean flushCache) {
 		int width;
-		if (wHint == SWT.DEFAULT) {
-			width = block.minimumWidth;
+		if (linkedToHeader) {
+			width = block.width;
 		} else {
-			width = wHint; 
+			if (wHint == SWT.DEFAULT) {
+				width = block.minimumWidth;
+			} else {
+				width = wHint; 
+			}
 		}
 		
 		// TODO:

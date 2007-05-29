@@ -23,7 +23,6 @@
 package net.sf.jmoney.entrytable;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 
 import net.sf.jmoney.model2.Session;
 
@@ -33,39 +32,27 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 /**
- * Represents a column of data that can be displayed in the entries table,
- * edited by the user, sorted, or used in a filter.
- * <P>
- * All columns are managed by an object of this class.  Special
- * implementations exist for the credit, debit, and balance columns.
- * More generic implementations exist for the other properties.
+ * Represents a block that represents a single child control in
+ * both the header and the row controls.  This may represent a
+ * single piece of data with header text(e.g. the IndividualBlock derived class) or
+ * it may represent a composite column (e.g. the OtherEntriesBlock).
  */
-public abstract class CellBlock extends Block {
+public abstract class CellBlock<T> extends Block<T> {
 	/**
 	 * The index of this cell in the list returned by buildCellList.
 	 * This is not set until buildCellList is called.
 	 */
 	private int index;
 	
-	/**
-	 * The localized text to be shown in the header.
-	 */
-	private String text;
+	public abstract ICellControl<T> createCellControl(Composite parent, Session session);
 	
-	public abstract ICellControl createCellControl(Composite parent, Session session);
-	
-	public CellBlock(String text, int minimumWidth, int weight) {
-		this.text = text;
+	public CellBlock(int minimumWidth, int weight) {
 		this.minimumWidth = minimumWidth;
 		this.weight = weight;
 	}
 
-	public String getText() {
-		return text;
-	}
-	
 	@Override
-	public void buildCellList(ArrayList<CellBlock> cellList) {
+	public void buildCellList(ArrayList<CellBlock<T>> cellList) {
 		this.index = cellList.size();
 		cellList.add(this);
 	}
@@ -91,13 +78,5 @@ public abstract class CellBlock extends Block {
 	@Override
 	void paintRowLines(GC gc, int x, int y, int verticalSpacing, Control[] controls) {
 		// Nothing to do.
-	}
-
-	/**
-	 * @return a comparator to be used for sorting rows based on the values in
-	 *         this column, or null if this column is not suitable for sorting
-	 */
-	public Comparator<EntryData> getComparator() {
-		return null;
 	}
 }

@@ -28,31 +28,37 @@ import org.eclipse.swt.SWT;
 
 public class ReusableRowProvider implements IRowProvider {
 
-	EntriesTable entriesTable;
+	private EntriesTable entriesTable;
+	
+	private RowSelectionTracker rowSelectionTracker;
+	
+	private FocusCellTracker focusCellTracker;
 	
 	/**
 	 * a list of row objects of rows that had been in use but are no longer
 	 * visible. These a free for re-use, thus avoiding the need to create new
 	 * controls.
 	 */
-	private LinkedList<Row> spareRows = new LinkedList<Row>();
+	private LinkedList<EntryRowControl> spareRows = new LinkedList<EntryRowControl>();
 
-	public ReusableRowProvider(EntriesTable entriesTable) {
+	public ReusableRowProvider(EntriesTable entriesTable, RowSelectionTracker rowSelectionTracker, FocusCellTracker focusCellTracker) {
 		this.entriesTable = entriesTable;
+		this.rowSelectionTracker = rowSelectionTracker;
+		this.focusCellTracker = focusCellTracker;
 	}
 	
 	public int getRowCount() {
 		return entriesTable.sortedEntries.size();
 	}
 	
-	public Row getNewRow(ContentPane parent, int rowNumber) {
-		Row rowControl;
+	public EntryRowControl getNewRow(ContentPane parent, int rowNumber) {
+		EntryRowControl rowControl;
 		
 		if (spareRows.size() > 0) {
 			rowControl = spareRows.removeFirst();
 			rowControl.setVisible(true);
 		} else {
-			rowControl = new Row(parent, SWT.NONE, entriesTable);
+			rowControl = new EntryRowControl(parent, SWT.NONE, entriesTable, rowSelectionTracker, focusCellTracker);
 		}
 		
 		EntryData data = entriesTable.sortedEntries.get(rowNumber); 
@@ -61,7 +67,7 @@ public class ReusableRowProvider implements IRowProvider {
 		return rowControl;
 	}
 	
-	public void releaseRow(Row rowControl) {
+	public void releaseRow(EntryRowControl rowControl) {
 		rowControl.setVisible(false);
 		spareRows.add(rowControl);
 	}

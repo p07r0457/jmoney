@@ -25,10 +25,8 @@ import java.util.Vector;
 
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.entrytable.BalanceColumn;
-import net.sf.jmoney.entrytable.CellBlock;
-import net.sf.jmoney.entrytable.DebitAndCreditColumns;
 import net.sf.jmoney.entrytable.EntryData;
+import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.fields.EntryInfo;
@@ -60,15 +58,10 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
     
 	protected NodeEditor fEditor;
 
-	protected Vector<CellBlock> allEntryDataObjects = new Vector<CellBlock>();
+	protected Vector<IndividualBlock> allEntryDataObjects = new Vector<IndividualBlock>();
 
-	CellBlock debitColumnManager;
-	CellBlock creditColumnManager;
-	CellBlock balanceColumnManager;
-	
     protected EntriesFilterSection fEntriesFilterSection;
     protected EntriesSection fEntriesSection;
-	protected EntrySection fEntrySection;
 
 	final EntriesFilter filter = new EntriesFilter(this);
 
@@ -199,7 +192,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		 */
         allEntryDataObjects.add(new PropertyBlock(EntryInfo.getAmountAccessor(), "other") {
         	public ExtendableObject getObjectContainingProperty(EntryData data) {
-        			if (data.isSimpleEntry()) {
+        			if (!data.hasSplitEntries()) {
         				Entry entry = data.getOtherEntry();
         				if (entry.getAccount() instanceof IncomeExpenseAccount
         				&& !JMoneyPlugin.areEqual(entry.getCommodity(), account.getCurrency())) {
@@ -212,10 +205,6 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         	}
         });
 
-		debitColumnManager = new DebitAndCreditColumns("debit", "Debit", account.getCurrency(), true);     //$NON-NLS-2$
-		creditColumnManager = new DebitAndCreditColumns("credit", "Credit", account.getCurrency(), false); //$NON-NLS-2$
-		balanceColumnManager = new BalanceColumn(account.getCurrency());
-		
     	ScrolledForm form = managedForm.getForm();
         GridLayout layout = new GridLayout();
         form.getBody().setLayout(layout);
@@ -229,11 +218,6 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         fEntriesSection.getSection().setLayoutData(new GridData(GridData.FILL_BOTH));
         managedForm.addPart(fEntriesSection);
         fEntriesSection.initialize(managedForm);
-
-        fEntrySection = new EntrySection(form.getBody(), managedForm.getToolkit(), account.getSession(), account.getCurrency());
-        fEntrySection.getSection().setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        managedForm.addPart(fEntriesSection);
-        fEntrySection.initialize(managedForm);
 
         form.setText("Accounting Entries");
 /* We need to get this working so we can remove that row of buttons.

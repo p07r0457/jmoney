@@ -41,7 +41,7 @@ import org.eclipse.swt.widgets.Composite;
 public class AmountInCurrencyAccountControlFactory extends AmountControlFactory {
 
     public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor, Session session) {
-    	final AmountEditor editor = new AmountEditor(parent, propertyAccessor, this);
+    	final AmountEditor editor = new AmountEditor(parent, propertyAccessor, session, this);
         
         editor.setListener(new SessionChangeAdapter() {
         	public void objectChanged(ExtendableObject extendableObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {

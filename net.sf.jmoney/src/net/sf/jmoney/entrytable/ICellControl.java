@@ -29,9 +29,12 @@ import org.eclipse.swt.widgets.Control;
  * This interface is used to control the cell controls in
  * an entries table.
  * 
+ * @param T the type of the object that supplies the data
+ * 			for this cell
+ * 
  * @author Nigel Westbury
  */
-public interface ICellControl {
+public interface ICellControl<T> {
 
     /**
      * This method gives access to the underlying control.
@@ -49,7 +52,7 @@ public interface ICellControl {
     /**
      * Load data data for the given row into this control.
      */
-    void load(EntryData data);
+    void load(T data);
 
     /**
      * This method takes the data in the control and sets it

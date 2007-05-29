@@ -40,7 +40,7 @@ import org.eclipse.swt.widgets.Text;
  * above <code>EntriesSectionProperty</code> class if you want the amount to be
  * displayed in seperate debit and credit columns.
  */
-public class DebitAndCreditColumns extends CellBlock {
+public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
 	private String id;
 	private Commodity commodity;
 	private boolean isDebit;
@@ -102,7 +102,7 @@ public class DebitAndCreditColumns extends CellBlock {
 			}
 		});
 		
-		return new ICellControl() {
+		return new ICellControl<EntryData>() {
 
 			private Entry entry = null;
 

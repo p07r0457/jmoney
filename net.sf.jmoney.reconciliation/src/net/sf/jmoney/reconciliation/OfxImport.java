@@ -112,10 +112,7 @@ public class OfxImport implements IBankStatementSource {
 		if (foundElement != null) {
 			// found a default currency to use
 			String currencyCode = foundElement.getTrimmedText();
-			System.out.println("Currency found : " + currencyCode);
 			currency = Currency.getInstance(currencyCode);
-			System.out
-					.println("Currency found : " + currency.getCurrencyCode());
 		}
 
 		foundElement = rootElement.findElement("STMTTRN");

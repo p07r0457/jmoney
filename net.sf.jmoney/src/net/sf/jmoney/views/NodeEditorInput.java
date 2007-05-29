@@ -65,7 +65,6 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
         this.image = image;
         this.pageFactories = pageFactories;
         this.memento = memento;
-        if (JMoneyPlugin.DEBUG) System.out.println("number of pages set in " + nodeObject.toString() + ": " + (pageFactories==null?-1:pageFactories.size()));
     }
 
     /* (non-Javadoc)
@@ -167,7 +166,6 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
 	 * @param memento
 	 */
 	public void saveState(IMemento memento) {
-		if (JMoneyPlugin.DEBUG) System.out.println("saveState called for input editor " + label);
 		// Views and editors can be restored in any order, and
 		// all must be able to be restored independently of the
 		// others.  Therefore the session memento must be saved in the memento 

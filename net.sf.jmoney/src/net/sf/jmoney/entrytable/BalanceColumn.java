@@ -31,7 +31,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
-public class BalanceColumn extends CellBlock {
+public class BalanceColumn extends IndividualBlock<EntryData> {
 
 	private Commodity commodityForFormatting;
 
@@ -46,11 +46,11 @@ public class BalanceColumn extends CellBlock {
 		throw new RuntimeException("internal error - attempt to sort on balance");
 	}
 
-	public ICellControl createCellControl(Composite parent,
+	public ICellControl<EntryData> createCellControl(Composite parent,
 			Session session) {
 		final Label balanceLabel = new Label(parent, SWT.TRAIL);
 		
-		return new ICellControl() {
+		return new ICellControl<EntryData>() {
 
 			public Control getControl() {
 				return balanceLabel;

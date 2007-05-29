@@ -312,7 +312,6 @@ public class Session extends ExtendableObject implements IAdaptable {
      */
 	public Account getAccountByFullName(String name) {
 		for (Account a: getAllAccounts()) {
-	        if (JMoneyPlugin.DEBUG) System.out.println("Compare " + name + " to " + a.getFullAccountName());
 	        if (a.getFullAccountName().equals(name))
 	            return a;
 	    }
@@ -329,7 +328,6 @@ public class Session extends ExtendableObject implements IAdaptable {
 	    Iterator it = getAllAccounts().iterator();
 	    while (it.hasNext()) {
 	        Account a = (Account) it.next();
-	        if (JMoneyPlugin.DEBUG) System.out.println("Compare " + name + " to " + a.getName());
 	        if (a.getName().equals(name)) {
 	            if (foundAccount != null) {
 	                throw new SeveralAccountsFoundException ();

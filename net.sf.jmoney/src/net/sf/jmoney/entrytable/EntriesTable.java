@@ -34,7 +34,6 @@ import java.util.Vector;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CommodityInfo;
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -122,7 +121,7 @@ public class EntriesTable extends Composite {
 	
 	protected IEntriesContent entriesContent;
 
-	public Block rootBlock;
+	public Block<EntryData> rootBlock;
 	
 	public VirtualRowTable table;
 	
@@ -156,16 +155,8 @@ public class EntriesTable extends Composite {
 	 */
 	protected boolean ignoreSelectionEvent = false;
 
-	public interface IMenuItem {
-
-		String getText();
-
-		void run(Entry selectedEntry);
-		
-	}
-	
 	public EntriesTable(Composite parent, FormToolkit toolkit,
-			Block rootBlock, final IEntriesContent entriesContent, final Session session, CellBlock defaultSortColumn, final IMenuItem [] contextMenuItems) {
+			Block<EntryData> rootBlock, final IEntriesContent entriesContent, final Session session, IndividualBlock defaultSortColumn) {
 		super(parent, SWT.NONE);
 		
 		this.session = session;
@@ -189,9 +180,17 @@ public class EntriesTable extends Composite {
 		 * the composite table because the constructor for the composite table
 		 * requires a row content provider.
 		 */
-	    sort(defaultSortColumn, true);
-	    
-		table = new VirtualRowTable(this, rootBlock, this, new ReusableRowProvider(this));
+		rowComparator = new RowComparator(defaultSortColumn, true);
+	    sort();
+
+	    /*
+	     * Use a single row tracker and cell focus tracker for this
+	     * table.  This needs to be generalized for, say, the reconciliation
+	     * editor if there is to be a single row selection for both tables.
+	     */
+	    RowSelectionTracker rowTracker = new RowSelectionTracker();
+	    FocusCellTracker cellTracker = new FocusCellTracker();
+		table = new VirtualRowTable(this, rootBlock, this, new ReusableRowProvider(this, rowTracker, cellTracker));
 		
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gridData.heightHint = 100;
@@ -273,108 +272,6 @@ public class EntriesTable extends Composite {
         	}
         });
         
-        // Create the 'add split' button.
-        Button addEntryButton = toolkit.createButton(buttonArea, "New Split", SWT.PUSH);
-        addEntryButton.addSelectionListener(new SelectionAdapter() {
-           public void widgetSelected(SelectionEvent event) {
-        		Entry selectedEntry = getSelectedEntry();
-        		if (selectedEntry != null) {
-        			Transaction transaction = selectedEntry.getTransaction();
-        			Entry newEntry = transaction.createEntry();
-        			
-        			long total = 0;
-        			Commodity commodity = null;
-        			for (Entry entry: transaction.getEntryCollection()) {
-        				if (entry.getCommodity() != null) {
-            				if (commodity == null) {
-            					commodity = entry.getCommodity();
-            				} else if (!commodity.equals(entry.getCommodity())) {
-            					// We have entries with mismatching commodities set.
-            					// This means there is an exchange of one commodity
-            					// for another so we do not expect the total amount
-            					// of all the entries to be zero.  Leave the amount
-            					// for this new entry blank (a zero amount).
-            					total = 0;
-            					break;
-            				}
-        				}
-
-        				total += entry.getAmount();
-        			}
-        			
-        			newEntry.setAmount(-total);
-        			
-        			// We set the currency by default to be the currency
-        			// of the top-level entry.
-        			
-        			// The currency of an entry is not
-        			// applicable if the entry is an entry in a currency account
-        			// (because all entries in a currency account must have the
-        			// currency of the account).  However, we set it anyway so
-        			// the value is there if the entry is set to an income and
-        			// expense account (which would cause the currency property
-        			// to become applicable).
-
-    				// It may be that the currency of the top-level entry is not known.
-    				// This is not possible if entries in a currency account
-    				// are being listed, but may be possible if this entries list
-    				// control is used for more general purposes.  In this case,
-        			// the currency is not set and so the user must enter it.
-        			if (selectedEntry.getCommodity() instanceof Currency) {
-            			newEntry.setIncomeExpenseCurrency((Currency)selectedEntry.getCommodity());
-        			}
-        			
-               		// Select the new entry in the entries list.
-//???                    setSelection(selectedEntry, newEntry);
-        		} else {
-        			showMessage("You cannot add a new split to an entry until you have selected an entry from the above list.");
-        		}
-           }
-        });
-        
-/* remove split processing for time being....
-        // Create the 'delete split' button.
-        Button deleteSplitButton = toolkit.createButton(buttonArea, "Delete Split", SWT.PUSH);
-        deleteSplitButton.addSelectionListener(new SelectionAdapter() {
-        	public void widgetSelected(SelectionEvent event) {
-				// Clean up any cell editor
-				closeCellEditor();
-
-				if (fTable.getSelectionCount() != 1) {
-					showMessage("No split entry is selected in the entries list");
-					return;
-				}
-
-				IDisplayableItem data = (IDisplayableItem)fTable.getSelection()[0].getData();
-				
-				if (!(data instanceof DisplayableEntry)) {
-					showMessage("No split entry is selected in the entries list");
-					return;
-				}
-
-				DisplayableTransaction dTrans = ((DisplayableEntry)data).transactionData;
-				
-				if (dTrans.otherEntries.size() == 1) {
-					showMessage("You cannot delete the transfer account entry in a double entry transaction.  If you do not intend this transaction to be a transfer then change the category as appropriate.");
-					return;
-				}
-
-        		Entry selectedEntryInAccount = getSelectedEntryInAccount();
-        		Entry selectedEntry = getSelectedEntry();
-        		if (selectedEntry != null 
-        				&& selectedEntry != selectedEntryInAccount) {
-
-        			// Set the previouslySelectedItem to be the item of the top-level entry,
-    				// as this item will no longer be valid after we dispose it.
-    				previouslySelectedItem = previouslySelectedItem.getParentItem();
-    				fTable.setSelection(new TreeItem [] { previouslySelectedItem });
-    				
-        			Transaction transaction = selectedEntry.getTransaction();
-        			transaction.deleteEntry(selectedEntry);
-        		}
-        	}
-        });
-*/        
         // Create the 'details' button.
         Button detailsButton = toolkit.createButton(buttonArea, "Details", SWT.PUSH);
         detailsButton.addSelectionListener(new SelectionAdapter() {
@@ -392,140 +289,6 @@ public class EntriesTable extends Composite {
         	}
         });
         
-        
-/*		
-		fTable.addMouseListener(new MouseAdapter() {
-			public void mouseDown(MouseEvent event) {
-				Point pt = new Point(event.x, event.y);
-				final TreeItem item = fTable.getItem(pt);
-				
-				// User may have clicked on space after the last row (i.e. after the new entry row).
-				// The selection is not changed by SWT when the user does this, so ignore
-				// this mouse down event, leaving the current selection and any
-				// open cell editor.
-				if (item == null) {
-					return;
-				}
-				
-				// Clean up any previous editor control
-				closeCellEditor();
-
-				final int column = getColumn(pt, item);
-
-				// User may have clicked on the expand button, or perhaps somewhere else.
-				if (column == -1) {
-					return;
-				}
-
-				if (event.button == 1) {
-					final IDisplayableItem data = (IDisplayableItem)item.getData();
-
-					if (!checkAndCommitTransaction(data)) {
-						return;
-					}
-					
-					// Go into edit mode only if the user clicked on a field in the
-					// selected row or on the new transaction row.
-					if (item != previouslySelectedItem) {
-						previouslySelectedItem = item;
-						if (data instanceof DisplayableNewEmptyEntry) {
-							// Replace with a real transaction.
-							// Note that all transactions must have at least
-							// two entries.
-			           		Transaction transaction = session.createTransaction();
-			           		Entry entry1 = transaction.createEntry();
-			           		transaction.createEntry();
-			           		
-			           		// TODO: There is so much duplicated stuff here that it
-			           		// would be better if we could get the listener to do this.
-			     
-			           		// When we set the account, the entry will be added
-			           		// to the list through the listener.  However, we want this
-			           		// new entry to be replaced into the new entry item.
-			           		// We do this by setting a reference to this entry in
-			           		// a field.  When the listener is notified of a new entry,
-			           		// it checks this field against the new entry and, if
-			           		// it matches, places the new entry in the new entry row.
-			           		// (The listener then resets the field to null).
-			           		newEntryRowEntry = entry1;
-			           		entriesContent.setNewEntryProperties(entry1);
-			           		JMoneyPlugin.myAssert(newEntryRowEntry == null);
-			           		
-			           		// Get the balance from the previous item.
-			           		long balance;
-			           		if (fTable.getItemCount() == 1) {
-			           			balance = entriesContent.getStartBalance();
-			           		} else {
-			           			balance = 
-			           				((DisplayableTransaction) 
-			           						fTable
-			           						.getItem(fTable.getItemCount() - 2)
-			           						.getData()
-									).balance;
-			           		}
-			           		
-			           		DisplayableTransaction dTrans = new DisplayableTransaction(entry1, balance);
-			           		item.setData(dTrans);
-			           		
-			           		// Although most properties will be blank, some, such
-			           		// as the date, default to non-blank values and these
-			           		// should be shown now.
-			           		updateItem(item);
-			           		
-			           		// Add to our cached list of all transactions in the table
-			           		entries.put(entry1, dTrans);
-			           		
-			           		// Add another blank new entry row to replace the one we
-			           		// have just converted to a new transaction.
-			    			TreeItem blankItem = new TreeItem(fTable, SWT.NULL);
-			    			blankItem.setData(new DisplayableNewEmptyEntry());
-			    			blankItem.setBackground(fTable.getItemCount() % 2 == 0 ? alternateTransactionColor
-								: transactionColor);
-						} else {
-							return;
-						}
-					}
-
-					// This is not right.  Should data not have been replaced by the
-					// new dTrans object created above?
-					
-					IEntriesTableProperty entryData = (IEntriesTableProperty) fTable.getColumn(column).getData();
-					currentCellPropertyControl = entryData.createAndLoadPropertyControl(fTable, data);
-					if (currentCellPropertyControl != null) {
-						createCellEditor(item, column, currentCellPropertyControl);
-						
-						/*
-						 * If the category property, listen for changes and set
-						 * the currency to be the currency of the listed account
-						 * whenever the category is set to a multi-currency
-						 * category and no currency is set.
-						 * /
-						if (entryData.getId().equals("common2.net.sf.jmoney.entry.account")) {
-							currentCellPropertyControl.getControl().addListener(SWT.Selection, new Listener() {
-								public void handleEvent(Event event) {
-									Entry changedEntry = data.getEntryForCommon2Fields();
-									Account account = changedEntry.getAccount();
-									if (account instanceof IncomeExpenseAccount) {
-										IncomeExpenseAccount incomeExpenseAccount = (IncomeExpenseAccount)account;
-										if (incomeExpenseAccount.isMultiCurrency()
-												&& changedEntry.getIncomeExpenseCurrency() == null) {
-											// Find the capital account in this transaction and set
-											// the currency of this income or expense to match the
-											// currency of the capital entry.
-											Commodity defaultCommodity = data.getEntryInAccount().getCommodity();
-											if (defaultCommodity instanceof Currency) {
-												changedEntry.setIncomeExpenseCurrency((Currency)defaultCommodity);
-											}
-										}
-									}
-								}
-							});
-						}
-					}
-				}
-			}
-		});
-*/	
 		
 		session.getObjectKey().getSessionManager().addChangeListener(new SessionChangeAdapter() {
 			public void objectInserted(ExtendableObject newObject) {
@@ -734,7 +497,7 @@ public class EntriesTable extends Composite {
 					EntryData data = sortedEntries.get(i);
 					if (data.getEntry() == null
 							|| rowComparator.compare(newData, data) >= 0) {
-						insertIndex = i + 1;
+						insertIndex = i;
 						balance = data.getBalance();
 						break;
 					}
@@ -751,8 +514,8 @@ public class EntriesTable extends Composite {
 
 	}
 
-	public Collection<CellBlock> getCellList() {
-		ArrayList<CellBlock> cellList = new ArrayList<CellBlock>();
+	public Collection<CellBlock<EntryData>> getCellList() {
+		ArrayList<CellBlock<EntryData>> cellList = new ArrayList<CellBlock<EntryData>>();
 		rootBlock.buildCellList(cellList);
 		return cellList;
 	}
@@ -812,10 +575,18 @@ public class EntriesTable extends Composite {
 		}
 	}
 
-	public void sort(CellBlock sortProperty, boolean ascending) {
-		
-		// Sort the entries.
-		rowComparator = new RowComparator(sortProperty, ascending);
+	/**
+	 * Change the sort according to the given parameters.
+	 */
+	public void sort(IndividualBlock<EntryData> sortProperty, boolean sortAscending) {
+		rowComparator = new RowComparator(sortProperty, sortAscending);
+		sort();
+	}
+	
+	/**
+	 * Sort the entries according to the rowComparator field.
+	 */
+	public void sort() {
 		
 		/*
 		 * It would be efficient if we could create a sorted TreeSet and copy
@@ -910,13 +681,9 @@ public class EntriesTable extends Composite {
 		buildEntryList();
 
 		/*
-		 * Build the initial sort order. This must be done before we can create
-		 * the composite table because the constructor for the composite table
-		 * requires a row content provider.
+		 * Re-sort using the rowComparator field as a comparator.
 		 */
-	    // TODO: This is not the most efficient, nor probably correct
-	    // in the general case.
-	    sort(getCellList().iterator().next(), true);
+	    sort();
 	    
 	}
 
@@ -1288,7 +1055,7 @@ public class EntriesTable extends Composite {
 		private Comparator<EntryData> cellComparator;
 		private boolean ascending;
 		
-		RowComparator(CellBlock sortProperty, boolean ascending) {
+		RowComparator(IndividualBlock<EntryData> sortProperty, boolean ascending) {
 			this.cellComparator = sortProperty.getComparator();
 			this.ascending = ascending;
 		}

@@ -454,7 +454,7 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	 */
 	public IObjectKey invokeObjectKeyField(ExtendableObject object) {
 		if (getPropertySet().isExtension()) {
-			ExtensionObject extension = object.getExtension((ExtensionPropertySet<?>)getPropertySet());
+			ExtensionObject extension = object.getExtension((ExtensionPropertySet<?>)getPropertySet(), false);
 			if (extension == null) {
 				return null;
 			} else {

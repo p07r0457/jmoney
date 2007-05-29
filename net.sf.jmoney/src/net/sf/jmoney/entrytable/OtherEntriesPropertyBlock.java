@@ -37,7 +37,15 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-public class OtherEntriesPropertyBlock extends CellBlock {
+/**
+ * This class represents columns containing data from the other
+ * entries.  If there are multiple other entries (split entries)
+ * then these values are displayed in a list.  This creates variable
+ * height rows.
+ * 
+ * @author Nigel Westbury
+ */
+public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData> {
 	protected ScalarPropertyAccessor<?> accessor;
 	private String id;
 	
@@ -56,7 +64,7 @@ public class OtherEntriesPropertyBlock extends CellBlock {
 		return id;
 	}
 
-	public ICellControl createCellControl(Composite parent, Session session) {
+	public ICellControl<EntryData> createCellControl(Composite parent, Session session) {
 		// Because this may be multi-valued, setup the container only.
 		final Composite composite = new Composite(parent, SWT.NONE);
 		
@@ -67,7 +75,7 @@ public class OtherEntriesPropertyBlock extends CellBlock {
 		layout.verticalSpacing = 1;
 		composite.setLayout(layout);
 		
-		return new ICellControl() {
+		return new ICellControl<EntryData>() {
 
 			private Vector<IPropertyControl> propertyControls = new Vector<IPropertyControl>();
 			private FocusListener controlFocusListener;
@@ -115,14 +123,14 @@ public class OtherEntriesPropertyBlock extends CellBlock {
 	}
 
 	public int compare(EntryData trans1, EntryData trans2) {
-		if (!trans1.isSimpleEntry()) {
-			if (!trans2.isSimpleEntry()) {
+		if (trans1.hasSplitEntries()) {
+			if (trans2.hasSplitEntries()) {
 				return 0;
 			} else {
 				return 1;
 			}
 		} else {
-			if (!trans2.isSimpleEntry()) {
+			if (trans2.hasSplitEntries()) {
 				return -1;
 			} else {
 				ExtendableObject extendableObject1 = trans1.getOtherEntry();

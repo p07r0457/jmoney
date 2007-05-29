@@ -22,17 +22,13 @@
 
 package net.sf.jmoney.entrytable;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Vector;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
 
 /**
  * by extending AbstractNativeHeader, we get a native header control which
@@ -53,22 +49,19 @@ public class Header extends Composite {
 
 		this.entriesTable = entriesTable;
 
-		BlockLayout layout = new BlockLayout(entriesTable.rootBlock);
+		BlockLayout layout = new BlockLayout(entriesTable.rootBlock, false);
 		setLayout(layout);
 
 		setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GRAY));
 		
-		for (CellBlock entriesSectionProperty: entriesTable.getCellList()) {
-				Label label = new Label(this, SWT.NULL);
-				label.setText(entriesSectionProperty.getText());
-				label.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_GRAY));
-
-				label.setMenu(buildPopupMenu(entriesSectionProperty));
-		}
+		// KLUDGE: These next two lines are just so the indexes are set.
+		ArrayList<CellBlock<EntryData>> cellList = new ArrayList<CellBlock<EntryData>>();
+		entriesTable.rootBlock.buildCellList(cellList);
+		
+		entriesTable.rootBlock.createHeaderControls(this);
 	}
 	
-	protected boolean sortOnColumn(int column, int sortDirection) {
-		CellBlock sortProperty = properties.get(column);
+	protected boolean sortOnColumn(IndividualBlock<EntryData> sortProperty, int sortDirection) {
 		entriesTable.sort(sortProperty, sortDirection == SWT.UP);
 
 		// TODO: Is there a better way of getting the table?
@@ -90,7 +83,7 @@ public class Header extends Composite {
 		private Comparator<EntryData> cellComparator;
 		private boolean ascending;
 		
-		RowComparator(CellBlock sortProperty, boolean ascending) {
+		RowComparator(IndividualBlock<EntryData> sortProperty, boolean ascending) {
 			this.cellComparator = sortProperty.getComparator();
 			this.ascending = ascending;
 		}
@@ -99,96 +92,5 @@ public class Header extends Composite {
 			int result = cellComparator.compare(entryData1, entryData2);
 			return ascending ? result : -result;
 		}
-	}
-	
-	private Menu buildPopupMenu(CellBlock entriesSectionProperty) {
-		// Bring up a pop-up menu.
-		// It would be a more consistent interface if this menu were
-		// linked to the column header.  However, TableColumn has
-		// no setMenu method, nor does the column header respond to
-		// SWT.MenuDetect nor any other event when right clicked.
-		// This code works but does not follow the popup-menu conventions
-		// on even one platform!
-
-		Menu popupMenu = new Menu(getShell(), SWT.POP_UP);
-
-		MenuItem removeColItem = new MenuItem(popupMenu, SWT.NONE);
-
-		MenuItem shiftColLeftItem = new MenuItem(popupMenu,
-				SWT.NONE);
-
-		MenuItem shiftColRightItem = new MenuItem(popupMenu,
-				SWT.NONE);
-
-		Object[] messageArgs = new Object[] { entriesSectionProperty.getText() };
-
-		removeColItem.setText(new java.text.MessageFormat(
-				"Remove {0} column", java.util.Locale.US)
-				.format(messageArgs));
-		shiftColLeftItem.setText(new java.text.MessageFormat(
-				"Move {0} column left", java.util.Locale.US)
-				.format(messageArgs));
-		shiftColRightItem.setText(new java.text.MessageFormat(
-				"Move {0} column right", java.util.Locale.US)
-				.format(messageArgs));
-
-		removeColItem.addSelectionListener(new SelectionAdapter() {
-			public void widgetSelected(SelectionEvent e) {
-				// TODO:
-			}
-		});
-
-		shiftColLeftItem
-				.addSelectionListener(new SelectionAdapter() {
-					public void widgetSelected(SelectionEvent e) {
-						// TODO: shift left if we can
-					}
-				});
-
-		shiftColRightItem
-				.addSelectionListener(new SelectionAdapter() {
-					public void widgetSelected(SelectionEvent e) {
-						// TODO: shift right if we can
-					}
-				});
-/* TODO: complete implementation of this.
- * We need to allow the user to add columns?????
- 
-		new MenuItem(popupMenu, SWT.SEPARATOR);
-		
-		for (final IEntriesTableProperty entriesSectionProperty: entriesContent.getAllEntryDataObjects()) {
-			boolean found = false;
-			for (int index = 0; index < fTable.getColumnCount(); index++) {
-				IEntriesTableProperty entryData2 = (IEntriesTableProperty) (fTable
-						.getColumn(index).getData());
-				if (entryData2 == entriesSectionProperty) {
-					found = true;
-					break;
-				}
-			}
-
-			if (!found) {
-				Object[] messageArgs2 = new Object[] { entriesSectionProperty
-						.getText() };
-
-				MenuItem addColItem = new MenuItem(popupMenu,
-						SWT.NONE);
-				addColItem.setText(new java.text.MessageFormat(
-						"Add {0} column", java.util.Locale.US)
-						.format(messageArgs2));
-
-				addColItem
-						.addSelectionListener(new SelectionAdapter() {
-							public void widgetSelected(
-									SelectionEvent e) {
-								addColumn(entriesSectionProperty,
-										Math.max(1, column));
-							}
-						});
-			}
-		}
-*/
-//		popupMenu.setVisible(true);
-		return popupMenu;
 	}
 }

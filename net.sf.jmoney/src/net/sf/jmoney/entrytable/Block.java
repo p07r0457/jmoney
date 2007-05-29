@@ -25,9 +25,10 @@ package net.sf.jmoney.entrytable;
 import java.util.ArrayList;
 
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-public abstract class Block {
+public abstract class Block<T> {
  	/**
 	 * marginLeft specifies the number of pixels of horizontal margin
 	 * that will be placed along the left edge of the layout.
@@ -59,7 +60,9 @@ public abstract class Block {
 
 	protected int width;
 
-	public abstract void buildCellList(ArrayList<CellBlock> cellList);
+	public abstract void createHeaderControls(Composite parent);
+
+	public abstract void buildCellList(ArrayList<CellBlock<T>> cellList);
 	
 	abstract void layout(int width);
 

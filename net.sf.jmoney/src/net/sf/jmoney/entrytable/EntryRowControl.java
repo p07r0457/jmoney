@@ -23,7 +23,6 @@
 package net.sf.jmoney.entrytable;
 
 import java.util.Iterator;
-import java.util.Vector;
 
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
@@ -35,8 +34,6 @@ import net.sf.jmoney.pages.entries.ForeignCurrencyDialog;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
@@ -52,7 +49,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
-public class Row extends Composite {
+public class EntryRowControl extends RowControl<EntryData> {
 	// The darker blue and green lines for the listed entry in each transaction
 	protected static final Color transactionColor = new Color(Display
 			.getCurrent(), 235, 235, 255);
@@ -69,9 +66,6 @@ public class Row extends Composite {
 
 	protected static final Color selectedRowColor = new Color(Display.getCurrent(), 215, 215, 255);
 
-	protected static final Color selectedCellColor = new Color(Display
-	.getCurrent(), 255, 255, 255);
-
 	/**
 	 * The transaction manager used for all changes made in
 	 * this row.  It is created when the contents are set into this object and
@@ -84,9 +78,7 @@ public class Row extends Composite {
 	 * The EntryData object currently set into this object, or null
 	 * if this object does not represent a currently visible row
 	 */
-	EntryData dataInTransaction = null;
-
-	private Vector<ICellControl> controls = new Vector<ICellControl>();
+	EntryData uncommittedEntryData = null;
 
 	/**
 	 * The color of this row when this row is not selected.  Set only when content is set.
@@ -132,7 +124,7 @@ public class Row extends Composite {
 		}
 	};
 
-	public Row(final ContentPane parent, int style, final EntriesTable entriesTable) {
+	public EntryRowControl(final Composite parent, int style, final EntriesTable entriesTable, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style);
 
 		/*
@@ -144,7 +136,7 @@ public class Row extends Composite {
 		 * the selected row.  The top and bottom margins are there only
 		 * so we can draw these lines.
 		 */
-		BlockLayout layout = new BlockLayout(entriesTable.rootBlock);
+		BlockLayout layout = new BlockLayout(entriesTable.rootBlock, false);
 		layout.marginTop = 1;
 		layout.marginBottom = 2;
 		layout.verticalSpacing = 1;
@@ -156,62 +148,15 @@ public class Row extends Composite {
 		 */
 		setBackgroundMode(SWT.INHERIT_FORCE);
 
-		for (final CellBlock entriesSectionProperty: entriesTable.getCellList()) {
+		for (final CellBlock<EntryData> cell: entriesTable.getCellList()) {
 			// Create the control with no content set.
-			final ICellControl cellControl = entriesSectionProperty.createCellControl(this, entriesTable.getSession());
+			// Passing a null session is ok here because we set it when the object is set.
+			// This is necessary because each content is in a different data manager.
+			// TODO: remove the session parameter altogether, here and elsewhere.
+			final ICellControl<EntryData> cellControl = cell.createCellControl(this, null);
 			controls.add(cellControl);
 
-			FocusListener controlFocusListener = new FocusAdapter() {
-				public void focusLost(FocusEvent e) {
-					/*
-					 * Save the control and do all the processing in the
-					 * focusGained method. This gives us better control over the
-					 * process of moving focus. We know then both the old and
-					 * new focus cell, which means we know if we are really
-					 * moving cells or moving rows.
-					 */
-					parent.previousFocus = cellControl;
-				}
-				public void focusGained(FocusEvent e) {
-					if (cellControl == parent.previousFocus) {
-						/*
-						 * The focus has changed to a different control as far
-						 * as SWT is concerned, but the focus is still within
-						 * the same cell control. This can happen if the cell
-						 * control is a composite that contains multiple child
-						 * controls, such as the date control. Focus may move
-						 * from the text box of a date control to the button in
-						 * the date control, but focus has not left the cell. We
-						 * take no action in this situation.
-						 */
-						return;
-					}
-					
-					if (parent.previousFocus != null) {
-						parent.previousFocus.save();
-
-						// Set the control back to the color of this row composite.
-						parent.previousFocus.getControl().setBackground(null);
-					}
-
-					/*
-					 * Note that setSelection will (if the new focus is in a different
-					 * row) update the color of all the controls in both rows to reflect
-					 * the new selection.  It is thus important that we set the color
-					 * of the selected cell after the setSelection call.
-					 */
-					boolean success = parent.setSelection(Row.this, entriesSectionProperty);
-					cellControl.getControl().setBackground(selectedCellColor);
-					if (!success) {
-						// Should only fail if there is a previous control.
-						parent.getDisplay().asyncExec (new Runnable () {
-							public void run () {
-								parent.previousFocus.getControl().setFocus();
-							}
-						});
-					}
-				}
-			};
+			FocusListener controlFocusListener = new CellFocusListener(cellControl, selectionTracker, focusCellTracker);
 			
 			Control control = cellControl.getControl();
 //			control.addKeyListener(keyListener);
@@ -225,6 +170,7 @@ public class Row extends Composite {
 		}
 
 		addPaintListener(paintListener);
+
 	}
 
 	/**
@@ -327,20 +273,25 @@ public class Row extends Composite {
 		} else {
 			entryInTransaction = transactionManager.getCopyInTransaction(data.getEntry());
 		}
-		dataInTransaction = new EntryData(entryInTransaction, transactionManager);
-		dataInTransaction.setIndex(data.getIndex());
-		dataInTransaction.setBalance(data.getBalance());
+		uncommittedEntryData = new EntryData(entryInTransaction, transactionManager);
+		uncommittedEntryData.setIndex(data.getIndex());
+		uncommittedEntryData.setBalance(data.getBalance());
 		
-		for (final ICellControl control: controls) {
-			control.load(dataInTransaction);
+		for (final ICellControl<EntryData> control: controls) {
+			control.load(uncommittedEntryData);
 		}
 	}
 
-	private void setSelected(boolean isSelected) {
+	@Override
+	protected void setSelected(boolean isSelected) {
 		this.isSelected = isSelected;
 		Color backgroundColor = (isSelected ? selectedRowColor : rowColor); 
 		setBackground(backgroundColor);
-//		this.redraw();
+	}
+
+	@Override
+	protected boolean commitChanges() {
+		return commitChanges("Transaction Changes");
 	}
 
 	/**
@@ -359,7 +310,7 @@ public class Row extends Composite {
 	 *         canceled by the user, false if the changes were neither committed
 	 *         or cancelled (and thus remain outstanding)
 	 */
-	private boolean commitChanges() {
+	public boolean commitChanges(String transactionLabel) {
 		// If changes have been made then check they are valid and ask
 		// the user if the changes should be committed.
 		if (transactionManager.hasChanges()) {
@@ -389,12 +340,12 @@ public class Row extends Composite {
 			};
 
 			try {
-				if (dataInTransaction.getEntry().getTransaction().getDate() == null) {
+				if (uncommittedEntryData.getEntry().getTransaction().getDate() == null) {
 					throw new InvalidUserEntryException(
 							"The date cannot be blank.",
 							null);
 				} else {
-					for (Entry entry: dataInTransaction.getEntry().getTransaction().getEntryCollection()) {
+					for (Entry entry: uncommittedEntryData.getEntry().getTransaction().getEntryCollection()) {
 						if (entry.getAccount() == null) {
 							throw new InvalidUserEntryException(
 									"A category must be selected.",
@@ -435,42 +386,41 @@ public class Row extends Composite {
 				 * amount.
 				 */
 				if (totalAmount != 0 && !mixedCommodities) {
-					// TODO: For double entries where both accounts are in the same currency,
-					// should the amount for one account automatically change when the user changes
-					// the amount for the other account?  Currently the user must update both
-					// to keep the transaction balanced and to avoid the following error message.
-					if (dataInTransaction.hasSplitEntries() || dataInTransaction.isDoubleEntry()) {
+					if (uncommittedEntryData.hasSplitEntries()) {
 						throw new InvalidUserEntryException(
 								"The transaction does not balance.  " +
 								"Unless some entries in the transaction are in different currencies, " +
 								"the sum of all the entries in a transaction must add up to zero.",
 								null);
 					} else {
-						Entry accountEntry = dataInTransaction.getEntry();
-						Entry otherEntry = dataInTransaction.getOtherEntry();
+						Entry accountEntry = uncommittedEntryData.getEntry();
+						Entry otherEntry = uncommittedEntryData.getOtherEntry();
 						otherEntry.setAmount(-accountEntry.getAmount());
 					}
 				}
 
 				/*
-				 * Check for zero amounts. A zero amount is
-				 * normally a user error and will not be accepted. However, if
-				 * this is a simple transaction and the currencies are different
-				 * then we prompt the user for the amount of the other entry
-				 * (the income and expense entry). This is very desirable
-				 * because the foreign currency column (being used so little) is
-				 * not displayed by default.
+				 * Check for zero amounts. A zero amount is normally a user
+				 * error and will not be accepted. However, if this is not a
+				 * split transaction and the currencies are different then we
+				 * prompt the user for the amount of the other entry (the income
+				 * and expense entry). This is very desirable because the
+				 * foreign currency column (being used so little) is not
+				 * displayed by default.
 				 */
-				if (dataInTransaction.isSimpleEntry()
-						&& dataInTransaction.getEntry().getAmount() != 0
-						&& dataInTransaction.getOtherEntry().getAmount() == 0
-						&& dataInTransaction.getOtherEntry().getCommodity() != dataInTransaction.getEntry().getCommodity()) {
+				// TODO: We could drop down the shell as though this is a split
+				// entry whenever the currencies do not match.  This would expose
+				// the amount of the other entry.
+				if (!uncommittedEntryData.hasSplitEntries()
+						&& uncommittedEntryData.getEntry().getAmount() != 0
+						&& uncommittedEntryData.getOtherEntry().getAmount() == 0
+						&& uncommittedEntryData.getOtherEntry().getCommodity() != uncommittedEntryData.getEntry().getCommodity()) {
 					ForeignCurrencyDialog dialog = new ForeignCurrencyDialog(
 							getShell(),
-							dataInTransaction);
+							uncommittedEntryData);
 					dialog.open();
 				} else {
-					for (Entry entry: dataInTransaction.getEntry().getTransaction().getEntryCollection()) {
+					for (Entry entry: uncommittedEntryData.getEntry().getTransaction().getEntryCollection()) {
 						if (entry.getAmount() == 0) {
 							throw new InvalidUserEntryException(
 									"A non-zero credit or debit amount must be entered.",
@@ -484,13 +434,15 @@ public class Row extends Composite {
 						"Incomplete or invalid data in entry", 
 						e.getLocalizedMessage());
 
-				e.getItemWithError().setFocus();
+				if (e.getItemWithError() != null) {
+					e.getItemWithError().setFocus();
+				}
 
 				return false;
 			}
 
 			// Commit the changes to the transaction
-			transactionManager.commit("Transaction Changes");
+			transactionManager.commit(transactionLabel);
 			
 			/*
 			 * It may be that this was a new entry not previously committed.
@@ -498,10 +450,10 @@ public class Row extends Composite {
 			 * and we must set it now to the non-null newly committed entry.
 			 * This ensures that the EntryData now represents a regular entry.
 			 */
-			if (dataInTransaction.getEntry() == null) {
-				UncommittedObjectKey uncommittedKey = (UncommittedObjectKey)dataInTransaction.getEntry().getObjectKey();
+			if (uncommittedEntryData.getEntry() == null) {
+				UncommittedObjectKey uncommittedKey = (UncommittedObjectKey)uncommittedEntryData.getEntry().getObjectKey();
 				Entry committedEntry = (Entry)uncommittedKey.getCommittedObjectKey().getObject();
-				dataInTransaction.setEntry(committedEntry);
+				uncommittedEntryData.setEntry(committedEntry);
 			}
 		}
 
@@ -523,11 +475,11 @@ public class Row extends Composite {
 	 * (By design, only the focus row should ever have uncommitted data).
 	 */
 	public void initializeFromTemplate(EntryData sourceEntryData) {
-		Transaction targetTransaction = dataInTransaction.getEntry().getTransaction(); 
+		Transaction targetTransaction = uncommittedEntryData.getEntry().getTransaction(); 
 		
-		copyData(sourceEntryData.getEntry(), dataInTransaction.getEntry());
+		copyData(sourceEntryData.getEntry(), uncommittedEntryData.getEntry());
 
-		Iterator<Entry> iter = dataInTransaction.getSplitEntries().iterator();
+		Iterator<Entry> iter = uncommittedEntryData.getSplitEntries().iterator();
 		for (Entry sourceEntry: sourceEntryData.getSplitEntries()) {
 			Entry targetEntry;
 			if (iter.hasNext()) {
@@ -560,24 +512,6 @@ public class Row extends Composite {
 	}
 
 	/**
-	 * This version is called when the selection changed as a result
-	 * of the user clicking on a control in another row.  Therefore
-	 * we do not set the cell selection.
-	 */
-	public void arrive() {
-		setSelected(true);
-	}
-
-	public boolean canDepart() {
-		if (!commitChanges()) {
-			return false;
-		}
-
-		setSelected(false);
-		return true;
-	}
-
-	/**
 	 * Gets the column that has the focus.
 	 * 
 	 * This method is used to preserve the column selection when cursoring up
@@ -607,5 +541,9 @@ public class Row extends Composite {
 		// We probably have to call recursively on child controls -
 		// but let's try first without.
 		return false;
+	}
+
+	public Entry getUncommittedTopEntry() {
+		return uncommittedEntryData.getEntry();
 	}
 }

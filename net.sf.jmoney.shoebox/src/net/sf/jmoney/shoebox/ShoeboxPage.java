@@ -39,10 +39,10 @@ import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.IEntriesContent;
+import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.VerticalBlock;
-import net.sf.jmoney.entrytable.EntriesTable.IMenuItem;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
@@ -91,7 +91,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 	 */
 	TransactionManager transactionManager = null;
 
-    private Block rootBlock;
+    private Block<EntryData> rootBlock;
     
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
@@ -257,31 +257,31 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			/*
 			 * Setup the layout structure of the header and rows.
 			 */
-			CellBlock transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
-			CellBlock debitColumnManager = new DebitAndCreditColumns("debit", "Debit", session.getDefaultCurrency(), true);     //$NON-NLS-2$
-			CellBlock creditColumnManager = new DebitAndCreditColumns("credit", "Credit", session.getDefaultCurrency(), false); //$NON-NLS-2$
+			IndividualBlock<EntryData> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+			CellBlock<EntryData> debitColumnManager = new DebitAndCreditColumns("debit", "Debit", session.getDefaultCurrency(), true);     //$NON-NLS-2$
+			CellBlock<EntryData> creditColumnManager = new DebitAndCreditColumns("credit", "Credit", session.getDefaultCurrency(), false); //$NON-NLS-2$
 			
-			rootBlock = new HorizontalBlock(new Block [] {
+			rootBlock = new HorizontalBlock<EntryData>(
 					transactionDateColumn,
-					new VerticalBlock(new Block [] {
-							new HorizontalBlock(new Block [] {
+					new VerticalBlock<EntryData>(
+							new HorizontalBlock<EntryData>(
 									PropertyBlock.createEntryColumn(EntryInfo.getAccountAccessor()),
-									PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
-							}),
-							new HorizontalBlock(new Block [] {
+									PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor())
+							),
+							new HorizontalBlock<EntryData>(
 									PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
-									PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor()),
-							}),
-					}),
+									PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor())
+							)
+					),
 					new OtherEntriesPropertyBlock(EntryInfo.getAccountAccessor()),
 					new OtherEntriesPropertyBlock(EntryInfo.getDescriptionAccessor()),
 					new OtherEntriesPropertyBlock(EntryInfo.getAmountAccessor()),
 					debitColumnManager,
-					creditColumnManager,
-			});
+					creditColumnManager
+			);
 			
 	        // Create the table control.
-	        recentlyAddedEntriesControl = new EntriesTable(topLevelControl, toolkit, rootBlock, recentEntriesTableContents, this.session, creditColumnManager, new IMenuItem [] {}); 
+	        recentlyAddedEntriesControl = new EntriesTable(topLevelControl, toolkit, rootBlock, recentEntriesTableContents, this.session, transactionDateColumn); 
 			
 			recentlyAddedEntriesControl.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
 

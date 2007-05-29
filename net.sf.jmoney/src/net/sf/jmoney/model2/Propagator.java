@@ -243,7 +243,7 @@ public class Propagator {
 				throw new InconsistentCircularPropagatorsException(propertyAccessor.getName(), source.getPropertyValue(propertyAccessor));
 			}
 
-			// Add this property to the map of properties that have been changed.
+			// Add this property to the set of properties that have been changed.
 			updatedProperties.add(propertyAccessor);
 
 			Map<ExtensionPropertySet, Method> secondaryMap = propagatorMap.get(sourcePropertySet);
@@ -254,9 +254,8 @@ public class Propagator {
 
 					Object[] parameters = new Object[3];
 					parameters[0] = propertyAccessor.getLocalName();
-					parameters[1] = source.getExtension(sourcePropertySet);
-					parameters[2] = source.getExtension(destinationPropertySet);
-					try {
+					parameters[1] = source.getExtension(sourcePropertySet, true);
+					parameters[2] = source.getExtension(destinationPropertySet, true);				try {
 						// Kludge.  When properties are being loaded from file, the objects
 						// are not the mutable versions.  Therefore when we obtain the
 						// destination extension, it may be null.  We do nothing in this

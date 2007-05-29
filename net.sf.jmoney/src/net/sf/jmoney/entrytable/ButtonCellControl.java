@@ -33,14 +33,13 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-abstract public class ButtonCellControl implements ICellControl {
+abstract public class ButtonCellControl implements ICellControl<EntryData> {
 
 	private Button button;
-	private EntryData data;
 
-	protected abstract void run(EntryData data); 
+	protected abstract void run(EntryRowControl rowControl); 
 
-	public ButtonCellControl (Composite parent, Image image, String toolTipText) {
+	public ButtonCellControl (final EntryRowControl parent, Image image, String toolTipText) {
 		/*
 		 * Create a button, but override the preferred size to be 10 (by default
 		 * it is 64).  This prevents the button from making the lines too high.
@@ -60,10 +59,10 @@ abstract public class ButtonCellControl implements ICellControl {
 			
 		button.addSelectionListener(new SelectionListener() {
 			public void widgetDefaultSelected(SelectionEvent e) {
-				run(data);
+				run(parent);
 			}
 			public void widgetSelected(SelectionEvent e) {
-				run(data);
+				run(parent);
 			}
 		});
 	}
@@ -73,9 +72,11 @@ abstract public class ButtonCellControl implements ICellControl {
 	}
 
 	public void load(EntryData data) {
-		// We only need to save the data so we know the object
-		// on which the action is to act.
-		this.data = data;
+		/*
+		 * The button is always the same, so nothing to do here. Note that the
+		 * entryData can be obtained from the RowControl object, so the
+		 * entryData is available to the run method in the button's action.
+		 */
 	}
 
 	public void save() {

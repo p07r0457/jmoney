@@ -24,11 +24,11 @@ package net.sf.jmoney.entrytable;
 
 import java.util.ArrayList;
 
+import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
@@ -47,77 +47,73 @@ import org.eclipse.swt.widgets.Control;
  * 
  * @author Nigel Westbury
  */
-public class OtherEntriesBlock extends Block {
+public class OtherEntriesBlock extends CellBlock<EntryData> {
 
-	private Block otherEntriesRootBlock;
+	private final static int DROPDOWN_BUTTON_WIDTH = 15;
 	
-	/**
-	 * The index of this cell in the list returned by buildCellList.
-	 * This is not set until buildCellList is called.
-	 */
-	private int index;
+	private Block<Entry> otherEntriesRootBlock;
 	
-	public OtherEntriesBlock(Block otherEntriesRootBlock) {
-		this.minimumWidth = otherEntriesRootBlock.minimumWidth;
-		this.weight = otherEntriesRootBlock.weight;
+	public OtherEntriesBlock(Block<Entry> otherEntriesRootBlock) {
+		super(
+				otherEntriesRootBlock.minimumWidth + DROPDOWN_BUTTON_WIDTH,
+				otherEntriesRootBlock.weight
+		);
 		
 		this.otherEntriesRootBlock = otherEntriesRootBlock;
 	}
 
-	public ICellControl createCellControl(Composite parent,
+	public ICellControl<EntryData> createCellControl(Composite parent,
 			Session session) {
-		return new ICellControl() {
+		
+	    /*
+	     * Use a single row tracker and cell focus tracker for this
+	     * table.  This needs to be generalized for, say, the reconciliation
+	     * editor if there is to be a single row selection for both tables.
+	     */
+		// TODO: This is not right - should not be created here.
+	    RowSelectionTracker rowTracker = new RowSelectionTracker();
+	    FocusCellTracker cellTracker = new FocusCellTracker();
 
+		final OtherEntriesControl control = new OtherEntriesControl(parent, otherEntriesRootBlock, session, rowTracker, cellTracker);
+		
+		return new ICellControl<EntryData>() {
 			public Control getControl() {
-				// TODO Auto-generated method stub
-				return null;
+				return control;
 			}
-
 			public void load(EntryData data) {
-				// TODO Auto-generated method stub
-				
+				control.load(data);
 			}
-
 			public void save() {
-				// TODO Auto-generated method stub
-				
+				control.save();
 			}
-
 			public void setFocusListener(FocusListener controlFocusListener) {
 				// TODO Auto-generated method stub
-				
 			}
 		};
 	}
 
 	@Override
-	public void buildCellList(ArrayList<CellBlock> cellList) {
-		// TODO: Need to sort this one out.
-//		this.index = cellList.size();
-//		cellList.add(cellProperty);
-	}
+	public void createHeaderControls(Composite parent) {
+		Composite composite = new Composite(parent, SWT.NONE);
+		
+		// KLUDGE: These next two lines are just so the indexes are set.
+		ArrayList<CellBlock<Entry>> cellList = new ArrayList<CellBlock<Entry>>();
+		otherEntriesRootBlock.buildCellList(cellList);
 
+		composite.setLayout(new BlockLayout(otherEntriesRootBlock, false));
+
+		otherEntriesRootBlock.createHeaderControls(composite);
+	}
+	
 	@Override
 	void layout(int width) {
 		this.width = width;
-		otherEntriesRootBlock.layout(width);
-	}
-
-	@Override
-	void positionControls(int x, int y, int verticalSpacing, Control[] controls, boolean changed) {
-		Control control = controls[index];
-		int height = control.computeSize(width, SWT.DEFAULT, changed).y;
-		control.setBounds(x, y, width, height);
-	};
-
-	@Override
-	int getHeight(int verticalSpacing, Control[] controls) {
-		Control control = controls[index];
-		return control.getSize().y;
-	}
-
-	@Override
-	void paintRowLines(GC gc, int x, int y, int verticalSpacing, Control[] controls) {
-		// Nothing to do.
+		
+		/*
+		 * This control has a drop-down button to the right of the cells in this
+		 * control. We therefore must substact the width of the button in order
+		 * to get the width into which the child cells must fit.
+		 */
+		otherEntriesRootBlock.layout(width - DROPDOWN_BUTTON_WIDTH);
 	}
 }

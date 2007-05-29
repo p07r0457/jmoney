@@ -101,8 +101,24 @@ public class VirtualRowTable extends Composite {
 	 * @param data
 	 */
 	public void deleteRow(int index) {
-		// TODO Auto-generated method stub
+		if (index == contentPane.currentRow) {
+			contentPane.currentRow = -1;
+		}
 		
+		// Three cases
+		if (index < contentPane.topVisibleRow) {
+			contentPane.topVisibleRow--;
+		} else if (index >= contentPane.topVisibleRow + contentPane.rows.size()) {
+			// nothing to do in this case
+		} else {
+			EntryRowControl removedRow = contentPane.rows.remove(index - contentPane.topVisibleRow);
+			contentPane.rowProvider.releaseRow(removedRow);
+		}
+		
+		contentPane.rowCount--;
+		
+		// TODO: This line is not right, but will do for time being.
+		contentPane.scrollToGivenFix(contentPane.topVisibleRow, 0);
 		refreshBalancesOfAllRows();
 	}
 
@@ -120,7 +136,20 @@ public class VirtualRowTable extends Composite {
 	 * @param data
 	 */
 	public void insertRow(int index) {
-		// TODO Auto-generated method stub
+		// Three cases
+		if (index < contentPane.topVisibleRow) {
+			contentPane.topVisibleRow++;
+		} else if (index >= contentPane.topVisibleRow + contentPane.rows.size()) {
+			// nothing to do in this case
+		} else {
+			EntryRowControl newRow = contentPane.rowProvider.getNewRow(contentPane, index);
+			contentPane.rows.add(index - contentPane.topVisibleRow, newRow);
+		}
+		
+		contentPane.rowCount++;
+		
+		// TODO: This line is not right, but will do for time being.
+		contentPane.scrollToGivenFix(contentPane.topVisibleRow, 0);
 		
 		refreshBalancesOfAllRows();
 	}

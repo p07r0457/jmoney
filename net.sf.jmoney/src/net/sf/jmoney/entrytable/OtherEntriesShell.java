@@ -1,0 +1,278 @@
+/**
+ * 
+ */
+package net.sf.jmoney.entrytable;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.model2.Transaction;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.ShellAdapter;
+import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.events.ShellListener;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+
+/**
+ * This class implements the shell that drops down to show the split entries.
+ * 
+ * @author Nigel Westbury
+ */
+public class OtherEntriesShell {
+
+		private Shell parentShell;
+		
+		private EntryData entryData;
+
+		private Block rootBlock;
+		
+		private Shell shell;
+		
+		private RowSelectionTracker rowTracker = new RowSelectionTracker();
+
+	    private Map<Entry, SplitEntryRowControl> rowControls = new HashMap<Entry, SplitEntryRowControl>();
+
+		public OtherEntriesShell(Shell parent, int style, EntryData entryData, Block rootBlock) {
+			shell = new Shell(parent, style | SWT.MODELESS);
+		
+			this.parentShell = parent;
+			this.entryData = entryData;
+			this.rootBlock = rootBlock;
+			
+			GridLayout layout = new GridLayout(1, false);
+			layout.marginWidth = 0;
+			layout.marginHeight = 0;
+			layout.verticalSpacing = 3;
+	        shell.setLayout(layout);
+
+	        Control entriesTable = createEntriesTable(shell);
+	        entriesTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+
+	        Control buttonArea = createButtonArea(shell);
+	        buttonArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+	        
+	        shell.pack();
+		}
+
+		private Control createEntriesTable(Composite parent) {
+			final Composite composite = new Composite(parent, SWT.NONE);
+			
+			GridLayout layout = new GridLayout(1, false);
+			layout.marginWidth = 0;
+			layout.marginHeight = 0;
+			layout.horizontalSpacing = 0;
+			layout.verticalSpacing = 0;
+			composite.setLayout(layout);
+		
+		    /*
+		     * Use a single row tracker and cell focus tracker for this table.
+		     */
+		    final FocusCellTracker cellTracker = new FocusCellTracker();
+			for (Entry entry: entryData.getSplitEntries()) {
+				SplitEntryRowControl row = new SplitEntryRowControl(composite, SWT.NONE, rootBlock, rowTracker, cellTracker);
+				row.setContent(entry);
+				rowControls.put(entry, row);
+			}
+			
+			((TransactionManager)entryData.getEntry().getObjectKey().getSessionManager()).addChangeListener(new SessionChangeAdapter() {
+				@Override
+				public void objectInserted(ExtendableObject newObject) {
+					if (newObject instanceof Entry) {
+						Entry newEntry = (Entry) newObject;
+						if (newEntry.getTransaction() == entryData.getEntry().getTransaction()) {
+							entryData.getSplitEntries().add(newEntry);
+							SplitEntryRowControl row = new SplitEntryRowControl(composite, SWT.NONE, rootBlock, rowTracker, cellTracker);
+							row.setContent(newEntry);
+							rowControls.put(newEntry, row);
+			    	        shell.pack();
+						}
+					}
+				}
+				
+				@Override
+				public void objectRemoved(ExtendableObject deletedObject) {
+					if (deletedObject instanceof Entry) {
+						Entry deletedEntry = (Entry) deletedObject;
+						if (deletedEntry.getTransaction() == entryData.getEntry().getTransaction()) {
+							entryData.getSplitEntries().remove(deletedEntry);
+							rowControls.get(deletedEntry).dispose();
+							rowControls.remove(deletedEntry);
+			    	        shell.pack();
+						}
+					}
+				}
+			}, composite);
+
+			return composite;
+		}
+		
+		private Control createButtonArea(Composite parent) {
+			Composite composite = new Composite(parent, SWT.NONE);
+			
+			RowLayout layout = new RowLayout(SWT.HORIZONTAL);
+			layout.marginBottom = 0;
+			layout.marginTop = 0;
+			composite.setLayout(layout);
+
+	        Button newSplitButton = new Button(composite, SWT.PUSH);
+	        newSplitButton.setText("New Split");
+	        newSplitButton.addSelectionListener(new SelectionAdapter() {
+	        	@Override
+				public void widgetSelected(SelectionEvent e) {
+					addSplit();
+				}
+			}); 
+	        
+	        Button deleteSplitButton = new Button(composite, SWT.PUSH);
+	        deleteSplitButton.setText("Delete Split");
+	        deleteSplitButton.addSelectionListener(new SelectionAdapter() {
+	        	@Override
+				public void widgetSelected(SelectionEvent e) {
+					deleteSplit();
+				}
+			}); 
+	        
+	        Button adjustButton = new Button(composite, SWT.PUSH);
+	        adjustButton.setText("Adjust");
+	        adjustButton.setToolTipText("Adjust the amount of the selected split to balance the transaction");
+	        adjustButton.addSelectionListener(new SelectionAdapter() {
+	        	@Override
+				public void widgetSelected(SelectionEvent e) {
+					adjustAmount();
+				}
+			}); 
+	        
+			return composite;
+		}
+
+		private void addSplit() {
+//			entryData.getEntry().getTransaction().createEntry();
+
+			Transaction transaction = entryData.getEntry().getTransaction();
+			Entry newEntry = transaction.createEntry();
+			
+			long total = 0;
+			Commodity commodity = null;
+			for (Entry entry: transaction.getEntryCollection()) {
+				if (entry.getCommodity() != null) {
+    				if (commodity == null) {
+    					commodity = entry.getCommodity();
+    				} else if (!commodity.equals(entry.getCommodity())) {
+    					// We have entries with mismatching commodities set.
+    					// This means there is an exchange of one commodity
+    					// for another so we do not expect the total amount
+    					// of all the entries to be zero.  Leave the amount
+    					// for this new entry blank (a zero amount).
+    					total = 0;
+    					break;
+    				}
+				}
+
+				total += entry.getAmount();
+			}
+			
+			newEntry.setAmount(-total);
+			
+			// We set the currency by default to be the currency
+			// of the top-level entry.
+			
+			// The currency of an entry is not
+			// applicable if the entry is an entry in a currency account
+			// (because all entries in a currency account must have the
+			// currency of the account).  However, we set it anyway so
+			// the value is there if the entry is set to an income and
+			// expense account (which would cause the currency property
+			// to become applicable).
+
+			// It may be that the currency of the top-level entry is not known.
+			// This is not possible if entries in a currency account
+			// are being listed, but may be possible if this entries list
+			// control is used for more general purposes.  In this case,
+			// the currency is not set and so the user must enter it.
+			if (entryData.getEntry().getCommodity() instanceof Currency) {
+    			newEntry.setIncomeExpenseCurrency((Currency)entryData.getEntry().getCommodity());
+			}
+			
+       		// Select the new entry in the entries list.
+//???                    setSelection(selectedEntry, newEntry);
+		}
+
+		private void deleteSplit() {
+			RowControl rowControl = rowTracker.getSelectedRow();
+			// TODO: Is a row ever not selected?
+			// TODO: Use generics in rowTracker so we avoid this cast
+			if (rowControl != null) {
+				Entry entry = ((SplitEntryRowControl)rowControl).getContent();
+				entryData.getEntry().getTransaction().deleteEntry(entry);
+			}
+		}
+		
+		private void adjustAmount() {
+			RowControl rowControl = rowTracker.getSelectedRow();
+			// TODO: Is a row ever not selected?
+			// TODO: Use generics in rowTracker so we avoid this cast
+			if (rowControl != null) {
+				Entry entry = ((SplitEntryRowControl)rowControl).getContent();
+				
+				long totalAmount = 0;
+				for (Entry eachEntry: entryData.getEntry().getTransaction().getEntryCollection()) {
+					totalAmount += eachEntry.getAmount();
+				}
+				
+				entry.setAmount(entry.getAmount() - totalAmount);
+			}
+		}
+
+		public void open(Rectangle rect) {
+	        Display display = shell.getDisplay();
+	        int shellHeight = shell.getSize().y;
+	        if (rect.y + rect.height + shellHeight <= display.getBounds().height) {
+    	        shell.setLocation(rect.x - 1, rect.y);
+	        } else {
+    	        shell.setLocation(rect.x - 1, rect.y + rect.height - shellHeight);
+	        }
+	        
+	        shell.open();
+	        
+	        /*
+	         * We need to be sure to close the shell when it is no longer active.
+	         * Listening for this shell to be deactivated does not work because there
+	         * may be child controls which create child shells (third level shells).
+	         * We do not want this shell to close if a child shell has been created
+	         * and activated.  We want to close this shell only if the parent shell
+	         * have been activated.  Note that is a grandparent shell is activated then
+	         * we do not want to close this shell.  The parent will be closed anyway
+	         * which would automatically close this one.
+	         */
+	        final ShellListener parentActivationListener = new ShellAdapter() {
+	        	public void shellActivated(ShellEvent e) {
+	        		shell.close();
+	        	}
+	        };
+	        
+	        parentShell.addShellListener(parentActivationListener);
+	        
+	        shell.addShellListener(new ShellAdapter() {
+				public void shellClosed(ShellEvent e) {
+	        		parentShell.removeShellListener(parentActivationListener);
+				}
+	        });
+		}
+	}

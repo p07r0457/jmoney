@@ -40,7 +40,7 @@ import org.eclipse.swt.widgets.Composite;
 public class AccountControlFactory<A extends Account> extends PropertyControlFactory<A> {
     
     public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<A> propertyAccessor, Session session) {
-        return new AccountEditor<A>(parent, propertyAccessor, session);
+        return new AccountEditor<A>(parent, propertyAccessor);
     }
 
 	public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends A> propertyAccessor) {

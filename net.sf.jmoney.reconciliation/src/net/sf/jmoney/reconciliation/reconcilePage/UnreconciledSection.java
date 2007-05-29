@@ -27,18 +27,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Vector;
 
+import net.sf.jmoney.entrytable.BalanceColumn;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.ButtonCellControl;
 import net.sf.jmoney.entrytable.CellBlock;
+import net.sf.jmoney.entrytable.DebitAndCreditColumns;
 import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
+import net.sf.jmoney.entrytable.EntryRowControl;
 import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
+import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
-import net.sf.jmoney.entrytable.EntriesTable.IMenuItem;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
+import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.reconciliation.BankStatement;
@@ -47,6 +51,7 @@ import net.sf.jmoney.reconciliation.ReconciliationPlugin;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSource;
 import org.eclipse.swt.dnd.DragSourceEvent;
@@ -57,6 +62,7 @@ import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
@@ -77,7 +83,7 @@ public class UnreconciledSection extends SectionPart {
 
 	private IEntriesContent unreconciledTableContents = null;
 
-	private ArrayList<CellBlock> cellList;
+	private ArrayList<CellBlock<EntryData>> cellList;
 
 	public UnreconciledSection(ReconcilePage page, Composite parent) {
 		super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
@@ -131,30 +137,10 @@ public class UnreconciledSection extends SectionPart {
 			}
 
 			public void setNewEntryProperties(Entry newEntry) {
-				newEntry.setAccount(fPage.getAccount());
-			}
-		};
-
-		IMenuItem reconcileAction = new IMenuItem() {
-
-			public String getText() {
-				return "Reconcile";
-			}
-
-			public void run(Entry selectedEntry) {
-				if (fPage.getStatement() != null) {
-					// If the user double clicked on the blank new entry row, then
-					// entry will be null.  We must guard against that.
-
-					// The EntriesTree control will always validate and commit
-					// any outstanding changes before firing a default selection
-					// event.  We set the property to put the entry into the
-					// statement and immediately commit the change.
-					if (selectedEntry != null) {
-						selectedEntry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), fPage.getStatement());
-						fPage.transactionManager.commit("Reconcile Entry");
-					}
-				}
+				// It is assumed that the entry is in a data manager that is a direct
+				// child of the data manager that contains the account.
+				TransactionManager tm = (TransactionManager)newEntry.getObjectKey().getSessionManager();
+				newEntry.setAccount(tm.getCopyInTransaction(fPage.getAccount()));
 			}
 		};
 
@@ -167,50 +153,55 @@ public class UnreconciledSection extends SectionPart {
 			}
 		});
 		
-		CellBlock reconcileButton = new CellBlock("", 20, 0) {
-
-			public int compare(EntryData trans1, EntryData trans2) {
-				// TODO Sort this out.  We cannot sort on this.
-				return 0;
-			}
-
-			public ICellControl createCellControl(Composite parent,
-					Session session) {
-				return new ButtonCellControl(parent, reconcileImage, "Reconcile this Entry to the above Statement") {
-
+		CellBlock<EntryData> reconcileButton = new CellBlock<EntryData>(20, 0) {
+			@Override
+			public ICellControl<EntryData> createCellControl(Composite parent, Session session) {
+				// TODO: remove unsafe cast
+				return new ButtonCellControl((EntryRowControl)parent, reconcileImage, "Reconcile this Entry to the above Statement") {
 					@Override
-					protected void run(EntryData data) {
-						unreconcileEntry(data);
+					protected void run(EntryRowControl rowControl) {
+						reconcileEntry(rowControl);
 					}
 				};
 			}
 
-			public String getId() {
-				return "unreconcile";
+			@Override
+			public void createHeaderControls(Composite parent) {
+				// All CellBlock implementations must create a control because
+				// the header and rows must match.
+				// Maybe these objects could just point to the header
+				// controls, in which case this would not be necessary.
+				// Note also we use Label, not an empty Composite,
+				// because we don't want a preferred height that is higher
+				// than the labels.
+				new Label(parent, SWT.NONE);
 			}
 		};
 
-		CellBlock transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		IndividualBlock<EntryData> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		CellBlock<EntryData> debitColumnManager = new DebitAndCreditColumns("Debit", "debit", fPage.getAccount().getCurrency(), true);     //$NON-NLS-2$
+		CellBlock<EntryData> creditColumnManager = new DebitAndCreditColumns("Credit", "credit", fPage.getAccount().getCurrency(), false); //$NON-NLS-2$
+		CellBlock<EntryData> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
 
 		/*
 		 * Setup the layout structure of the header and rows.
 		 */
-		Block rootBlock = new HorizontalBlock(new Block [] {
+		Block<EntryData> rootBlock = new HorizontalBlock(
 				reconcileButton,
 				transactionDateColumn,
 				PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor()),
 				PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
 				PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
-				fPage.debitColumnManager,
-				fPage.creditColumnManager,
-				fPage.balanceColumnManager,
-		});
+				debitColumnManager,
+				creditColumnManager,
+				balanceColumnManager
+		);
 
-		cellList = new ArrayList<CellBlock>();
+		cellList = new ArrayList<CellBlock<EntryData>>();
 		rootBlock.buildCellList(cellList);
 
 		// Create the table control.
-		fUnreconciledEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, unreconciledTableContents, fPage.getAccount().getSession(), transactionDateColumn, new IMenuItem [] { reconcileAction } ); 
+		fUnreconciledEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, unreconciledTableContents, fPage.getAccount().getSession(), transactionDateColumn); 
 
 		// Allow entries in the account to be moved from the unreconciled list
 		final DragSource dragSource = new DragSource(fUnreconciledEntriesControl.getControl(), DND.DROP_MOVE);
@@ -264,14 +255,21 @@ public class UnreconciledSection extends SectionPart {
 		refresh();
 	}
 
-	public void unreconcileEntry(EntryData data) {
+	public void reconcileEntry(EntryRowControl rowControl) {
 		if (fPage.getStatement() != null) {
-			Entry entry = data.getEntry();
-
-			// If the user double clicked on the blank new entry row, then
-			// entry will be null.  We must guard against that.
+			Entry entry = rowControl.getUncommittedTopEntry();
 
 			// TODO: What do we do about the blank entry???
+			
+			/*
+			 * It is possible that the user has made changes to this entry
+			 * that have not yet been committed.  Furthermore, those changes
+			 * may have put the entry into an invalid state that prevents them
+			 * from being committed.
+			 * 
+			 * As validation is done at commit time, we can only set the entry as
+			 * reconciled and then attempt to commit it.
+			 */
 			
 			// The EntriesTree control will always validate and commit
 			// any outstanding changes before firing a default selection
@@ -279,7 +277,23 @@ public class UnreconciledSection extends SectionPart {
 			// statement and immediately commit the change.
 			if (entry != null) {
 				entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), fPage.getStatement());
-				fPage.transactionManager.commit("Reconcile Entry");
+
+				/*
+				 * We tell the row control to commit its changes. These changes
+				 * include the above change. They may also include prior changes
+				 * made by the user.
+				 * 
+				 * The tables and controls in this editor should all be capable of
+				 * updating themselves correctly when the change is committed. There
+				 * is a listener that is listening for changes to the committed data
+				 * and this listener should ensure all is updated appropriately,
+				 * just as though the change came from outside this view. However,
+				 * we must go through the row control to commit the changes. This
+				 * ensures that the row control knows that its changes are being
+				 * committed and it does not get confused when the listener
+				 * processes the changes.
+				 */
+				rowControl.commitChanges("Reconcile Entry");
 			}
 		} else {
 			MessageDialog.openError(getSection().getShell(), "Action is Not Available", "You must select a statement first before you can reconcile an entry.  The entry will then reconcile to the statement in the upper table.");

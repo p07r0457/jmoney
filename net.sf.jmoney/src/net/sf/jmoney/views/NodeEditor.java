@@ -56,7 +56,6 @@ public class NodeEditor extends FormEditor {
      * @see org.eclipse.ui.forms.editor.FormEditor#addPages()
      */
     protected void addPages() {
-    	if (JMoneyPlugin.DEBUG) System.out.println("adding pages");
         NodeEditorInput cInput = (NodeEditorInput)this.getEditorInput();
         IMemento memento = cInput.getMemento();
         

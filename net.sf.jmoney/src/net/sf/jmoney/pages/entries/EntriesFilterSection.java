@@ -22,7 +22,7 @@
 package net.sf.jmoney.pages.entries;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.entrytable.CellBlock;
+import net.sf.jmoney.entrytable.IndividualBlock;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
@@ -99,7 +99,7 @@ public class EntriesFilterSection extends SectionPart {
         String[] filterTypes = new String[fPage.allEntryDataObjects.size() + 1];
         int i = 0;
         filterTypes[i++] = JMoneyPlugin.getResourceString("EntryFilter.entry"); 
-        for (CellBlock entriesSectionProperty: fPage.allEntryDataObjects) {
+        for (IndividualBlock entriesSectionProperty: fPage.allEntryDataObjects) {
             filterTypes[i++] = entriesSectionProperty.getText();
         }
         

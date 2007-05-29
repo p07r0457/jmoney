@@ -49,6 +49,14 @@ public abstract class DataManager implements IAdaptable {
 
 //	private ReferenceQueue referenceQueue = new ReferenceQueue();
 
+	public void addChangeListener(SessionChangeListener listener) {
+        sessionChangeListeners.add(listener);
+	}
+
+	public void removeChangeListener(SessionChangeListener listener) {
+        sessionChangeListeners.remove(listener);
+	}
+
 	/**
 	 * Adds a change listener.
 	 * <P>

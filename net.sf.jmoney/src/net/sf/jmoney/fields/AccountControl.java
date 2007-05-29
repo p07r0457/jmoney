@@ -183,10 +183,12 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
 
     			shell.pack();
     	        
-    	        // Position the calendar shell below the date control,
-    	        // unless the date control is so near the bottom of the display that
-    	        // the calendar control would go off the bottom of the display,
-    	        // in which case position the calendar shell above the date control.
+    	        /*
+				 * Position the shell below the text box, unless the account
+				 * control is so near the bottom of the display that the shell
+				 * would go off the bottom of the display, in which case
+				 * position the shell above the text box.
+				 */
     	        Display display = getDisplay();
     	        Rectangle rect = display.map(parent, null, getBounds());
     	        int calendarShellHeight = shell.getSize().y;

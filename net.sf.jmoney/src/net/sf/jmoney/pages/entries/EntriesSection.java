@@ -21,17 +21,22 @@ package net.sf.jmoney.pages.entries;
 import java.util.Collection;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.entrytable.BalanceColumn;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.CellBlock;
+import net.sf.jmoney.entrytable.DebitAndCreditColumns;
 import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.IEntriesContent;
-import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
+import net.sf.jmoney.entrytable.IndividualBlock;
+import net.sf.jmoney.entrytable.OtherEntriesBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.entrytable.VerticalBlock;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
+import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Entry;
 
 import org.eclipse.swt.widgets.Composite;
@@ -52,7 +57,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     
     private EntryRowSelectionListener tableSelectionListener = null;
     
-    private Block rootBlock;
+    private Block<EntryData> rootBlock;
     
     public EntriesSection(EntriesPage page, Composite parent) {
         super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
@@ -91,30 +96,35 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		/*
 		 * Setup the layout structure of the header and rows.
 		 */
-		CellBlock transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		IndividualBlock<EntryData> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
 
-		rootBlock = new HorizontalBlock(new Block [] {
-				transactionDateColumn,
-				new VerticalBlock(new Block [] {
-						PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
-						new HorizontalBlock(new Block [] {
-								PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
-								PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor()),
-						}),
-				}),
-				new OtherEntriesPropertyBlock(EntryInfo.getAccountAccessor()),
-				new OtherEntriesPropertyBlock(EntryInfo.getDescriptionAccessor()),
-				new OtherEntriesPropertyBlock(EntryInfo.getAmountAccessor()),
-				fPage.debitColumnManager,
-				fPage.creditColumnManager,
-				fPage.balanceColumnManager,
-		});
+    	CellBlock<EntryData> debitColumnManager = new DebitAndCreditColumns("debit", "Debit", fPage.getAccount().getCurrency(), true);     //$NON-NLS-2$
+    	CellBlock<EntryData> creditColumnManager = new DebitAndCreditColumns("credit", "Credit", fPage.getAccount().getCurrency(), false); //$NON-NLS-2$
+    	CellBlock<EntryData> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
 		
-//		cellList = new ArrayList<IEntriesTableProperty>();
-//		rootBlock.buildCellList(cellList);
+		rootBlock = new HorizontalBlock<EntryData>(
+				transactionDateColumn,
+				new VerticalBlock<EntryData>(
+						PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
+						new HorizontalBlock<EntryData>(
+								PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
+								PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor())
+						)
+				),
+				new OtherEntriesBlock(
+						new HorizontalBlock<Entry>(
+								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
+								new SingleOtherEntryPropertyBlock(EntryInfo.getDescriptionAccessor()),
+								new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
+						)
+				),
+				debitColumnManager,
+				creditColumnManager,
+				balanceColumnManager
+		);
 
 		// Create the table control.
-		fEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, this, fPage.getAccount().getSession(), transactionDateColumn, new EntriesTable.IMenuItem [] {}); 
+		fEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, this, fPage.getAccount().getSession(), transactionDateColumn); 
 		fEntriesControl.addSelectionListener(tableSelectionListener);
 			
         getSection().setClient(fEntriesControl);
@@ -157,6 +167,9 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 	}
 
 	public void setNewEntryProperties(Entry newEntry) {
-   		newEntry.setAccount(fPage.getAccount());
+		// It is assumed that the entry is in a data manager that is a direct
+		// child of the data manager that contains the account.
+		TransactionManager tm = (TransactionManager)newEntry.getObjectKey().getSessionManager();
+		newEntry.setAccount(tm.getCopyInTransaction(fPage.getAccount()));
 	}
 }

@@ -27,23 +27,27 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Vector;
 
+import net.sf.jmoney.entrytable.BalanceColumn;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.ButtonCellControl;
 import net.sf.jmoney.entrytable.CellBlock;
+import net.sf.jmoney.entrytable.DebitAndCreditColumns;
 import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
+import net.sf.jmoney.entrytable.EntryRowControl;
 import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
+import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
-import net.sf.jmoney.entrytable.EntriesTable.IMenuItem;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
+import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.reconciliation.BankStatement;
-import net.sf.jmoney.reconciliation.ReconciliationEntry;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
 
@@ -92,7 +96,7 @@ public class StatementSection extends SectionPart {
     
     private IEntriesContent reconciledTableContents = null;
 
-    private ArrayList<CellBlock> cellList;
+    private ArrayList<CellBlock<EntryData>> cellList;
     
     private long openingBalance = 0;
     
@@ -165,7 +169,11 @@ public class StatementSection extends SectionPart {
 			}
 
 			public void setNewEntryProperties(Entry newEntry) {
-				newEntry.setAccount(fPage.getAccount());
+				// It is assumed that the entry is in a data manager that is a direct
+				// child of the data manager that contains the account.
+				TransactionManager tm = (TransactionManager)newEntry.getObjectKey().getSessionManager();
+				newEntry.setAccount(tm.getCopyInTransaction(fPage.getAccount()));
+
 				newEntry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), fPage.getStatement());
 			}
         };
@@ -181,27 +189,6 @@ public class StatementSection extends SectionPart {
 		noStatementMessage.setText(ReconciliationPlugin.getResourceString("EntriesSection.noStatementMessage"));
 		noStatementMessage.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED));
 
-		IMenuItem unreconcileAction = new IMenuItem() {
-
-			public String getText() {
-				return "Unreconcile";
-			}
-
-			public void run(Entry selectedEntry) {
-				// If the blank new entry row, entry will be null.
-				// We must guard against that.
-
-				// The EntriesTree control will always validate and commit
-				// any outstanding changes before firing a default selection
-				// event.  We set the property to take the entry out of the
-				// statement and immediately commit the change.
-				if (selectedEntry != null) {
-					selectedEntry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), null);
-					fPage.transactionManager.commit("Unreconcile Entry");
-				}
-			}
-		};
-
 		// Load the 'unreconcile' indicator
 		URL installURL = ReconciliationPlugin.getDefault().getBundle().getEntry("/icons/unreconcile.gif");
 		final Image unreconcileImage = ImageDescriptor.createFromURL(installURL).createImage();
@@ -211,50 +198,57 @@ public class StatementSection extends SectionPart {
 			}
 		});
 		
-		CellBlock unreconcileButton = new CellBlock("", 20, 0) {
+		CellBlock<EntryData> unreconcileButton = new CellBlock<EntryData>(20, 0) {
 
-			public int compare(EntryData trans1, EntryData trans2) {
-				// TODO Sort this out.  We cannot sort on this.
-				return 0;
-			}
-
-			public ICellControl createCellControl(Composite parent,
+			@Override
+			public ICellControl<EntryData> createCellControl(Composite parent,
 					Session session) {
-				return new ButtonCellControl(parent, unreconcileImage, "Remove Entry from this Statement") {
-
+				// TODO: remove cast in following line.  There is a risk of a cast exception.
+				return new ButtonCellControl((EntryRowControl)parent, unreconcileImage, "Remove Entry from this Statement") {
 					@Override
-					protected void run(EntryData data) {
-						unreconcileEntry(data);
+					protected void run(EntryRowControl rowControl) {
+						unreconcileEntry(rowControl);
 					}
 				};
 			}
 
-			public String getId() {
-				return "unreconcile";
+			@Override
+			public void createHeaderControls(Composite parent) {
+				// All CellBlock implementations must create a control because
+				// the header and rows must match.
+				// Maybe these objects could just point to the header
+				// controls, in which case this would not be necessary.
+				// Note also we use Label, not an empty Composite,
+				// because we don't want a preferred height that is higher
+				// than the labels.
+				new Label(parent, SWT.NONE);
 			}
 		};
 		
-		CellBlock transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		IndividualBlock<EntryData> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		CellBlock<EntryData> debitColumnManager = new DebitAndCreditColumns("Debit", "debit", fPage.getAccount().getCurrency(), true);     //$NON-NLS-2$
+		CellBlock<EntryData> creditColumnManager = new DebitAndCreditColumns("Credit", "credit", fPage.getAccount().getCurrency(), false); //$NON-NLS-2$
+		CellBlock<EntryData> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
 
 		/*
 		 * Setup the layout structure of the header and rows.
 		 */
-		Block rootBlock = new HorizontalBlock(new Block [] {
+		Block<EntryData> rootBlock = new HorizontalBlock<EntryData>(
 				unreconcileButton,
 				transactionDateColumn,
 				PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor()),
 				PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
 				PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
-				fPage.debitColumnManager,
-				fPage.creditColumnManager,
-				fPage.balanceColumnManager,
-		});
+				debitColumnManager,
+				creditColumnManager,
+				balanceColumnManager
+		);
 		
-		cellList = new ArrayList<CellBlock>();
+		cellList = new ArrayList<CellBlock<EntryData>>();
 		rootBlock.buildCellList(cellList);
 
 		// Create the table control.
-        fReconciledEntriesControl = new EntriesTable(container, toolkit, rootBlock, reconciledTableContents, fPage.getAccount().getSession(), transactionDateColumn, new IMenuItem [] { unreconcileAction }); 
+        fReconciledEntriesControl = new EntriesTable(container, toolkit, rootBlock, reconciledTableContents, fPage.getAccount().getSession(), transactionDateColumn); 
         
 		// TODO: do not duplicate this.
 		if (fPage.getStatement() == null) {
@@ -354,8 +348,9 @@ public class StatementSection extends SectionPart {
         refresh();
     }
 
-	public void unreconcileEntry(EntryData selectedObject) {
-		Entry entry = selectedObject.getEntry();
+	public void unreconcileEntry(EntryRowControl rowControl) {
+		Entry entry = rowControl.getUncommittedTopEntry();
+		
 		// If the blank new entry row, entry will be null.
 		// We must guard against that.
 		
@@ -367,7 +362,23 @@ public class StatementSection extends SectionPart {
 		// statement and immediately commit the change.
 		if (entry != null) {
 			entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), null);
-			fPage.transactionManager.commit("Unreconcile Entry");
+			
+			/*
+			 * We tell the row control to commit its changes. These changes
+			 * include the above change. They may also include prior changes
+			 * made by the user.
+			 * 
+			 * The tables and controls in this editor should all be capable of
+			 * updating themselves correctly when the change is committed. There
+			 * is a listener that is listening for changes to the committed data
+			 * and this listener should ensure all is updated appropriately,
+			 * just as though the change came from outside this view. However,
+			 * we must go through the row control to commit the changes. This
+			 * ensures that the row control knows that its changes are being
+			 * committed and it does not get confused when the listener
+			 * processes the changes.
+			 */
+			rowControl.commitChanges("Unreconcile Entry");
 		}
 	}
 	
@@ -395,12 +406,20 @@ public class StatementSection extends SectionPart {
 	 * - there are properties set in the other entry other that the required account,
 	 *     or the account in the other entry is not the default account
 	 *
-	 * We actually merge the target into the source transaction and then set the source
-	 * entry as reconciled.  This is a little easier.
+	 * The source and targets will be in different transaction managers.
+	 * We want to take the properties from the source transaction and move them into
+	 * the target transaction without committing the target transaction.  The taret row
+	 * control should update itself automatically because the controls always listen
+	 * for property changes in the model.  The source is deleted, with any uncommitted
+	 * changes being dropped.
 	 * 
 	 * The merge constitutes a single undoable action.  
 	 */
-	private void mergeTransaction(Entry unrecEntryInAccount, Entry recEntryInAccount) {
+	private void mergeTransaction(EntryRowControl unrecRowControl, EntryRowControl recRowControl) {
+		
+		Entry unrecEntryInAccount = unrecRowControl.getUncommittedTopEntry();
+		Entry recEntryInAccount = recRowControl.getUncommittedTopEntry();
+		
 		Entry recOther = recEntryInAccount.getTransaction().getOther(recEntryInAccount);
 		Entry unrecOther = unrecEntryInAccount.getTransaction().getOther(unrecEntryInAccount);
 		
@@ -411,11 +430,6 @@ public class StatementSection extends SectionPart {
 	        if (diag.open() != SWT.YES) {
 	        	return;
 	        }
-		}
-		
-		// There should not be any uncommitted changes.
-		if (fPage.transactionManager.hasChanges()) {
-			System.out.println("something is wrong");
 		}
 		
 		if (recEntryInAccount.getCheck() != null) {
@@ -459,27 +473,33 @@ public class StatementSection extends SectionPart {
 		}
 
 		/*
-		 * Now we delete the reconciled entry and set the previously unreconciled
-		 * entry to be reconciled.
+		 * Now we delete the unreconciled entry.  This is done through the row control
+		 * so that the row control does not think the entry got deleted by someone else.
 		 */
-		Session session = fPage.transactionManager.getSession();
-		session.getTransactionCollection().remove(recEntryInAccount.getTransaction());
-
-		ReconciliationEntry unrecEntry2 = unrecEntryInAccount.getExtension(ReconciliationEntryInfo.getPropertySet());
-		unrecEntry2.setStatement(fPage.getStatement());
-		
-		fPage.transactionManager.commit("Match Entry to Bank's Entry");
+		Session session = unrecEntryInAccount.getSession();
+		session.getTransactionCollection().remove(unrecEntryInAccount.getTransaction());
+		unrecRowControl.commitChanges("Delete Merged Entry");
 	}
 
 	/**
 	 * Helper method to copy a property from the target entry to the source entry if the
 	 * property is null in the source entry but not null in the target entry.
 	 */
-	private <V> void copyProperty(ScalarPropertyAccessor<V> propertyAccessor, Entry unrecEntryInAccount, Entry recEntryInAccount) {
-		V sourceValue = unrecEntryInAccount.getPropertyValue(propertyAccessor);
-		V targetValue = recEntryInAccount.getPropertyValue(propertyAccessor);
-		if (sourceValue == null && targetValue != null) {
-			unrecEntryInAccount.setPropertyValue(propertyAccessor, targetValue);
+	private <V> void copyProperty(ScalarPropertyAccessor<V> propertyAccessor, Entry sourceAccount, Entry targetAccount) {
+		V sourceValue = sourceAccount.getPropertyValue(propertyAccessor);
+		V targetValue = targetAccount.getPropertyValue(propertyAccessor);
+		if (sourceValue != null && targetValue == null) {
+			if (sourceValue instanceof ExtendableObject) {
+				/*
+				 * We need to get a copy in the correct data manager.
+				 */
+// TODO: sort this out.				
+//				UncommittedObjectKey uncommittedObjectKey = (UncommittedObjectKey)((ExtendableObject)sourceValue).getObjectKey();
+//				V committedObject = propertyAccessor.getClassOfValueObject().cast(uncommittedObjectKey.getCommittedObjectKey().getObject());
+//				targetValue = ((TransactionManager)targetAccount.getObjectKey().getSessionManager()).getCopyInTransaction(committedObject);
+			} else {
+				targetAccount.setPropertyValue(propertyAccessor, sourceValue);
+			}
 		}
 	}
 

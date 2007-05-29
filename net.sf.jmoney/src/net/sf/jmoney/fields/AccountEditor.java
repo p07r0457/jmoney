@@ -26,7 +26,6 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -36,10 +35,10 @@ import org.eclipse.swt.widgets.Control;
 /**
  * Note that this class has neither get/set methods for the value being edited
  * and no support for property change listeners.  This is
- * because objects of this class are tied to an CapitalAccount object.  
+ * because objects of this class are tied to an Account object.  
  * Changes to this
- * object are reflected by this object in the CapitalAccount class objects.  
- * Consumers who are interested in changes to the CapitalAccount class objects should
+ * object are reflected by this object in the Account class objects.  
+ * Consumers who are interested in changes to the Account class objects should
  * add themselves as listeners to the appropriate PropertyAccessor object.
  *
  * @author Nigel Westbury
@@ -62,8 +61,8 @@ public class AccountEditor<A extends Account> implements IPropertyControl {
      * 			of the appropriate type.
      * @param session the session whose accounts are listed in the combo box
      */
-    public AccountEditor(Composite parent, ScalarPropertyAccessor<A> propertyAccessor, Session session) {
-        propertyControl = new AccountControl<A>(parent, session, propertyAccessor.getClassOfValueObject());
+    public AccountEditor(Composite parent, ScalarPropertyAccessor<A> propertyAccessor) {
+        propertyControl = new AccountControl<A>(parent, null, propertyAccessor.getClassOfValueObject());
         this.accountPropertyAccessor = propertyAccessor;
 
         /*
@@ -94,8 +93,10 @@ public class AccountEditor<A extends Account> implements IPropertyControl {
      */
     public void load(ExtendableObject object) {
     	extendableObject = object;
-    	
-		A account = object.getPropertyValue(accountPropertyAccessor);
+
+    	propertyControl.setSession(object.getSession(), accountPropertyAccessor.getClassOfValueObject());
+
+    	A account = object.getPropertyValue(accountPropertyAccessor);
         propertyControl.setAccount(account);
     }
 

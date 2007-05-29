@@ -144,7 +144,7 @@ public class EntryInfo implements IPropertySetInfo {
 			}
 
 			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor, Session session) {
-		    	final AmountEditor editor = new AmountEditor(parent, propertyAccessor, this);
+		    	final AmountEditor editor = new AmountEditor(parent, propertyAccessor, session, this);
 		        
 		    	// The format of the amount will change if either
 		    	// the account property of the entry changes or if

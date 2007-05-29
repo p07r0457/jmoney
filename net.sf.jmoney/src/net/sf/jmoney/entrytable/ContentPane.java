@@ -41,18 +41,18 @@ import org.eclipse.swt.widgets.Slider;
 public class ContentPane extends Composite {
 
 	/** the number of rows in the data structure */
-	private int rowCount;
+	int rowCount;
 
 	/**
 	 * the 0-based index of the object in the underlying model that is currently
 	 * the top row in the visible area
 	 */ 
-	private int topVisibleRow = 0;
+	int topVisibleRow = 0;
 
 	/**
 	 * the list of row objects for all the rows that are currently visible
 	 */
-	private LinkedList<Row> rows = new LinkedList<Row>();
+	LinkedList<EntryRowControl> rows = new LinkedList<EntryRowControl>();
 
 	/**
 	 * the currently selected row, as a 0-based index into the underlying rows,
@@ -60,14 +60,14 @@ public class ContentPane extends Composite {
 	 * To get the selected row as an index into the <code>rows</code> list,
 	 * you must subtract currentVisibleTopRow from this value.
 	 */
-	private int currentRow = -1;
+	int currentRow = -1;
 
 	/**
 	 * Size of this composite, cached for performance reasons only
 	 */
 	private Point clientAreaSize;
 
-	private IRowProvider rowProvider;
+	IRowProvider rowProvider;
 
 	/**
 	 * Must be non-null.
@@ -102,7 +102,7 @@ public class ContentPane extends Composite {
 
 				if (newSize.x != clientAreaSize.x) {
 					// Width has changed.  Re-layout the row controls.
-					for (Row rowControl: rows) {
+					for (EntryRowControl rowControl: rows) {
 						int rowHeight = rowControl.computeSize(newSize.x, SWT.DEFAULT).y;
 						rowControl.setSize(newSize.x, rowHeight);
 					}
@@ -193,7 +193,7 @@ public class ContentPane extends Composite {
 	 * @return the position at which any attached vertical scrollbar should
 	 *     be positioned if it is to match the position of the contents
 	 */
-	private void scrollToGivenFix(int anchorRowNumber, int anchorRowPosition) {
+	void scrollToGivenFix(int anchorRowNumber, int anchorRowPosition) {
 		scrollViewToGivenFix(anchorRowNumber, anchorRowPosition);
 
 		// Having updated the view, we must move the scroll bar to match.
@@ -204,7 +204,7 @@ public class ContentPane extends Composite {
 		 * This is a little bit complex, but I think this code is correct.
 		 */
 
-		System.out.println("-----------------");
+//		System.out.println("-----------------");
 		for (int row = topVisibleRow; row < topVisibleRow + rows.size(); row++) {
 			Rectangle bounds = getTableRow(row).getBounds();
 
@@ -212,9 +212,9 @@ public class ContentPane extends Composite {
 
 			double p = ((double)(row * bounds.height - bounds.y)) / (rowCount * bounds.height - clientAreaSize.y);
 
-			double start = ((double)row) / rowCount;
-			double end = ((double)(row + 1)) / rowCount;
-			System.out.println("p = " + p + ", start = " + start + ", end = " + end + ", height = " + bounds.height);
+//			double start = ((double)row) / rowCount;
+//			double end = ((double)(row + 1)) / rowCount;
+//			System.out.println("p = " + p + ", start = " + start + ", end = " + end + ", height = " + bounds.height);
 			if (p >= ((double)row) / rowCount && p <= ((double)(row + 1)) / rowCount) {
 				double maximum = vSlider.getMaximum() - vSlider.getThumb();
 				sliderPosition = (int)(p * maximum);
@@ -269,7 +269,7 @@ public class ContentPane extends Composite {
 		 */
 		if (anchorRowNumber < topVisibleRow-1 || anchorRowNumber > topVisibleRow + rows.size()) {
 			while (!rows.isEmpty()) {
-				Row rowControl = rows.removeFirst();
+				EntryRowControl rowControl = rows.removeFirst();
 				rowProvider.releaseRow(rowControl);
 			}
 		}
@@ -334,7 +334,7 @@ public class ContentPane extends Composite {
 		// currentVisibleTopRow (the absolute index of the start
 		// of the list) up to newTopRow.
 		while (topVisibleRow < newTopRow) {
-			Row rowControl = rows.removeFirst();
+			EntryRowControl rowControl = rows.removeFirst();
 			rowProvider.releaseRow(rowControl);
 			topVisibleRow++;
 		}
@@ -343,7 +343,7 @@ public class ContentPane extends Composite {
 		// currentVisibleTopRow + rows.size (the absolute index of the end
 		// of the list) down to newBottomRow.
 		while (topVisibleRow + rows.size() > newBottomRow) {
-			Row rowControl = rows.removeLast();
+			EntryRowControl rowControl = rows.removeLast();
 			rowProvider.releaseRow(rowControl);
 		}
 
@@ -368,9 +368,9 @@ public class ContentPane extends Composite {
 		 */
 		int topPosition = newTopRowOffset;
 
-		ListIterator<Row> rowsIter = rows.listIterator();
+		ListIterator<EntryRowControl> rowsIter = rows.listIterator();
 		while (rowsIter.hasNext()) {
-			Row rowControl = rowsIter.next();
+			EntryRowControl rowControl = rowsIter.next();
 			rowControl.layout(true); // must do first now???? - nrw
 			int rowHeight = rowControl.computeSize(clientAreaSize.x, SWT.DEFAULT).y;
 			if (rowControl.getBounds().y >= topPosition) {
@@ -380,7 +380,7 @@ public class ContentPane extends Composite {
 		}
 
 		while (rowsIter.hasPrevious()) {
-			Row rowControl = rowsIter.previous();
+			EntryRowControl rowControl = rowsIter.previous();
 			rowControl.layout(true); // must do first now???? - nrw
 			int rowHeight = rowControl.computeSize(clientAreaSize.x, SWT.DEFAULT).y;
 			topPosition -= rowHeight;
@@ -413,15 +413,15 @@ public class ContentPane extends Composite {
 	 * 			on the rows in the underlying model
 	 * @return
 	 */
-	private Row getTableRow(int rowNumber) {
+	private EntryRowControl getTableRow(int rowNumber) {
 		if (rowNumber >= topVisibleRow && rowNumber < topVisibleRow + rows.size()) {
-			Row row = rows.get(rowNumber - topVisibleRow);
+			EntryRowControl row = rows.get(rowNumber - topVisibleRow);
 			if (row == null)
 				System.out.println("");
 			return row;
 		} else {
 			// we must create a new row object
-			Row newRow = rowProvider.getNewRow(this, rowNumber);
+			EntryRowControl newRow = rowProvider.getNewRow(this, rowNumber);
 			if (newRow == null)
 				System.out.println("");
 
@@ -439,9 +439,6 @@ public class ContentPane extends Composite {
 				rows.addLast(newRow);
 			} else {
 				throw new RuntimeException("internal error");
-			}
-			if (rows.size() > 20) {
-				System.out.println("big rows");
 			}
 
 			return newRow;
@@ -463,7 +460,7 @@ public class ContentPane extends Composite {
 		}
 
 		if (currentRow > 0) {
-			Row selectedRow = getSelectedRow();
+			EntryRowControl selectedRow = getSelectedRow();
 
 			if (!selectedRow.canDepart()) {
 				return;
@@ -497,7 +494,7 @@ public class ContentPane extends Composite {
 		}
 
 		if (currentRow < rowCount - 1) {
-			Row selectedRow = getSelectedRow();
+			EntryRowControl selectedRow = getSelectedRow();
 
 			if (!selectedRow.canDepart()) {
 				return;
@@ -531,7 +528,7 @@ public class ContentPane extends Composite {
 		}
 
 		if (currentRow > 0) {
-			Row selectedRow = getSelectedRow();
+			EntryRowControl selectedRow = getSelectedRow();
 
 			if (!selectedRow.canDepart()) {
 				return;
@@ -551,7 +548,7 @@ public class ContentPane extends Composite {
 		}
 
 		if (currentRow < rowCount - 1) {
-			Row selectedRow = getSelectedRow();
+			EntryRowControl selectedRow = getSelectedRow();
 
 			if (!selectedRow.canDepart()) {
 				return;
@@ -565,7 +562,7 @@ public class ContentPane extends Composite {
 		}
 	}
 
-	private Row getSelectedRow() {
+	private EntryRowControl getSelectedRow() {
 		if (currentRow == -1) {
 			return null;
 		} else {
@@ -582,21 +579,21 @@ public class ContentPane extends Composite {
 	 * 		are issues with a previously selected row that prevent the change
 	 * 		in selection from being made
 	 */
-	public boolean setSelection(Row row,
-			CellBlock column) {
-		Row currentRowControl = getSelectedRow();
-		if (row != currentRowControl) {
-			if (currentRowControl != null) {
-				if (!currentRowControl.canDepart()) {
-					return false;
-				}
-			}
-			
-			row.arrive();  // Causes the selection colors etc.  Focus is already set.
-			currentRow = rows.indexOf(row) + topVisibleRow; 
-		}
-		return true;
-	}
+//	public boolean setSelection(EntryRowControl row,
+//			CellBlock column) {
+//		EntryRowControl currentRowControl = getSelectedRow();
+//		if (row != currentRowControl) {
+//			if (currentRowControl != null) {
+//				if (!currentRowControl.canDepart()) {
+//					return false;
+//				}
+//			}
+//			
+//			row.arrive();  // Causes the selection colors etc.  Focus is already set.
+//			currentRow = rows.indexOf(row) + topVisibleRow; 
+//		}
+//		return true;
+//	}
 
 	/**
 	 * The SelectionListener for the table's vertical slider control.
@@ -698,9 +695,6 @@ public class ContentPane extends Composite {
 				}
 				sliderPosition = selection;
 
-				if (sliderPosition == 90) {
-					System.out.println("");
-				}
 				double maximum = vSlider.getMaximum() - vSlider.getThumb();
 				double portion = selection / maximum;
 
@@ -716,7 +710,7 @@ public class ContentPane extends Composite {
 				// start afresh.
 				if (anchorRowNumber < topVisibleRow || anchorRowNumber >= topVisibleRow + rows.size()) {
 					while (!rows.isEmpty()) {
-						Row row = rows.removeFirst();
+						EntryRowControl row = rows.removeFirst();
 						rowProvider.releaseRow(row);
 					}
 					rows.clear();
@@ -725,7 +719,7 @@ public class ContentPane extends Composite {
 				if (anchorRowNumber == rowCount) {
 					scrollViewToGivenFix(anchorRowNumber, clientAreaSize.y);
 				} else {
-				Row anchorRowControl = getTableRow(anchorRowNumber);
+				EntryRowControl anchorRowControl = getTableRow(anchorRowNumber);
 				int anchorRowHeight = anchorRowControl.computeSize(clientAreaSize.x, SWT.DEFAULT).y;
 				int anchorRowPosition = (int)(portion * clientAreaSize.y - anchorRowHeight * rowRemainder);
 				anchorRowControl.setSize(clientAreaSize.x, anchorRowHeight);
@@ -740,10 +734,10 @@ public class ContentPane extends Composite {
 		}
 	};
 
-	protected ICellControl previousFocus = null;
-
+	protected FocusCellTracker focusCellTracker = new FocusCellTracker();
+	
 	public void refreshContent() {
-		for (Row rowControl: rows) {
+		for (EntryRowControl rowControl: rows) {
 			rowProvider.releaseRow(rowControl);
 		}
 		

@@ -26,9 +26,7 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 
 import net.sf.jmoney.IBookkeepingPage;
-import net.sf.jmoney.entrytable.BalanceColumn;
 import net.sf.jmoney.entrytable.CellBlock;
-import net.sf.jmoney.entrytable.DebitAndCreditColumns;
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
@@ -101,28 +99,12 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 	protected NodeEditor fEditor;
 
 	/**
-	 * The transaction manager used for all changes made by
-	 * this page.  It is created when this page is created and
-	 * remains usable for the rest of the time that this page
-	 * exists.
-	 */
-	// TODO: at some point, see if we can move the transaction
-	// into the EntryTree.  Transactions should be handled
-	// more locally than as currently done.
-	TransactionManager transactionManager = null;
-
-	/**
-	 * The account being shown in this page.  This account
-	 * object exists in the context of transactionManager.
+	 * The account being shown in this page.
 	 */
 	protected ReconciliationAccount account = null;
 	
 	protected Vector<CellBlock> allEntryDataObjects = new Vector<CellBlock>();
 
-	CellBlock debitColumnManager;
-	CellBlock creditColumnManager;
-	CellBlock balanceColumnManager;
-	
 	protected StatementsSection fStatementsSection;
     protected StatementSection fStatementSection;
     protected UnreconciledSection fUnreconciledSection;
@@ -160,19 +142,8 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
      * @see org.eclipse.ui.forms.editor.FormPage#createFormContent(org.eclipse.ui.forms.IManagedForm)
      */
     protected void createFormContent(IManagedForm managedForm) {
-        CurrencyAccount originalAccount = (CurrencyAccount) fEditor.getSelectedObject();
+        account = ((CurrencyAccount)fEditor.getSelectedObject()).getExtension(ReconciliationAccountInfo.getPropertySet(), true);
 
-        // Create our own transaction manager.
-        // This ensures that uncommitted changes
-    	// made by this page are isolated from datastore usage outside
-    	// of this page.
-        transactionManager = new TransactionManager(originalAccount.getObjectKey().getSessionManager());
-    	
-    	// Set the account that this page is viewing and editing.
-    	// We set an account object that is managed by our own
-    	// transaction manager.
-        account = transactionManager.getCopyInTransaction(originalAccount).getExtension(ReconciliationAccountInfo.getPropertySet(), true);
-        
         /*
 		 * Set the statement to show initially. If there are any entries in
 		 * statements after the last reconciled statement, set the first such
@@ -231,10 +202,6 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
    			}
    		});
         
-		debitColumnManager = new DebitAndCreditColumns("Debit", "debit", account.getCurrency(), true);     //$NON-NLS-2$
-		creditColumnManager = new DebitAndCreditColumns("Credit", "credit", account.getCurrency(), false); //$NON-NLS-2$
-		balanceColumnManager = new BalanceColumn(account.getCurrency());
-    	
     	ScrolledForm form = managedForm.getForm();
         GridLayout layout = new GridLayout();
         layout.numColumns = 2;
@@ -349,12 +316,14 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 								IBankStatementSource statementSource = (IBankStatementSource)thisElement.createExecutableExtension("class");
 								Collection<IBankStatementSource.EntryData> importedEntries = statementSource.importEntries(getSite().getShell(), getAccount());
 								if (importedEntries != null) {
-							    	/**
-							    	 * The account being shown in this page.  This account
-							    	 * object exists in the context of transactionManager.
+							    	/*
+							    	 * Create a transaction to be used to import the entries.  This allows the entries to
+							    	 * be more efficiently written to the back-end datastore and it also groups
+							    	 * the entire import as a single change for undo/redo purposes.
 							    	 */
-							    	CurrencyAccount accountInTransaction = account.getBaseObject();
-							    	IncomeExpenseAccount defaultCategoryInTransaction = account.getDefaultCategory();
+									TransactionManager transactionManager = new TransactionManager(account.getObjectKey().getSessionManager());
+							    	CurrencyAccount accountInTransaction = transactionManager.getCopyInTransaction(account.getBaseObject());
+							    	IncomeExpenseAccount defaultCategoryInTransaction = accountInTransaction.getPropertyValue(ReconciliationAccountInfo.getDefaultCategoryAccessor());
 					           		Session sessionInTransaction = accountInTransaction.getSession();
 							  
 									for (IBankStatementSource.EntryData entryData: importedEntries) {

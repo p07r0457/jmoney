@@ -27,6 +27,8 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
 
 import org.eclipse.swt.SWT;
@@ -67,10 +69,18 @@ public class AmountEditor implements IPropertyControl {
     
     private Text propertyControl;
 
+    SessionChangeListener amountChangeListener = new SessionChangeAdapter() {
+		public void objectChanged(ExtendableObject extendableObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
+			if (extendableObject.equals(fObject) && changedProperty == amountPropertyAccessor) {
+				setControlContent();
+			}
+		}
+	};
+	
     /**
      * Create a new amount editor.
      */
-    public AmountEditor(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor, AmountControlFactory factory) {
+    public AmountEditor(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor, Session session, AmountControlFactory factory) {
     	propertyControl = new Text(parent, SWT.TRAIL);
     	this.amountPropertyAccessor = propertyAccessor;
     	this.factory = factory;
@@ -80,25 +90,43 @@ public class AmountEditor implements IPropertyControl {
      * Load the control with the value from the given account.
      */
     public void load(ExtendableObject object) {
+    	if (fObject != null) {
+            fObject.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+    	}
+    	
         fObject = object;
         
     	if (object == null) {
             propertyControl.setText("");
     	} else {
-            fCommodity = factory.getCommodity(fObject);
-    		
-    		// Some amounts may be of type Long, not long, so that 
-    		// they can be null, so we must get the property
-    		// value as a Long.
-    		Long amount = fObject.getPropertyValue(amountPropertyAccessor);
-    		if (amount == null) {
-    			propertyControl.setText("");
-    		} else {
-    			propertyControl.setText(fCommodity.format(amount.longValue()));
-    		}
+            setControlContent();
+        	
+        	/*
+        	 * We must listen to the model for changes in the value
+        	 * of this property.
+        	 */
+            object.getObjectKey().getSessionManager().addChangeListener(amountChangeListener);
     	}
     	propertyControl.setEnabled(object != null);
     }
+
+	/**
+	 * Puts the current value of this property (taken from the model)
+	 * into the control.
+	 */
+	private void setControlContent() {
+		fCommodity = factory.getCommodity(fObject);
+		
+		// Some amounts may be of type Long, not long, so that 
+		// they can be null, so we must get the property
+		// value as a Long.
+		Long amount = fObject.getPropertyValue(amountPropertyAccessor);
+		if (amount == null) {
+			propertyControl.setText("");
+		} else {
+			propertyControl.setText(fCommodity.format(amount.longValue()));
+		}
+	}
     
     /**
      * Set a listener that listens for changes to properties

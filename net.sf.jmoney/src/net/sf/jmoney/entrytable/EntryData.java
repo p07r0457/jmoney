@@ -22,11 +22,10 @@
 
 package net.sf.jmoney.entrytable;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
 
@@ -44,12 +43,6 @@ public class EntryData {
 
 	private long balance;
 	private int index;
-
-	/**
-	 * A cache of the entries in this transaction excluding
-	 * the entry itself.
-	 */
-	private Vector<Entry> otherEntries = null;
 
 	/**
 	 * @param entry
@@ -80,70 +73,22 @@ public class EntryData {
 	 * expense category).
 	 */
 	public boolean hasSplitEntries() {
-		buildOtherEntriesList();
-		return otherEntries.size() > 1;
-	}
-
-	/**
-	 * A double entry transaction is a transaction with two
-	 * entries (a credit entry and a debit entry) and where
-	 * both entries are capital accounts.
-	 * <P>
-	 * A double entry is not a special case as far as the model
-	 * is concerned.  However, it is a special case as far
-	 * as the entries list is concerned because such transactions
-	 * are displayed on two lines.  The reason why the transaction
-	 * must take two lines is that both entries will have
-	 * capital account properties such as the value date
-	 * (valuta) and a memo and thus needs two lines to display.
-	 */
-	public boolean isDoubleEntry() {
-		buildOtherEntriesList();
-		return otherEntries.size() == 1
-				&& otherEntries.firstElement().getAccount() instanceof CapitalAccount;
-	}
-
-	/**
-	 * A simple entry is a transaction that contains two
-	 * entries, one being a capital account and the other
-	 * being an income or expense account.  Most transactions
-	 * are simple entries.
-	 * <P>
-	 * Note that jmoney requires all transactions to have
-	 * at least two entries.  Therefore, with the rare exception
-	 * of a transaction that has two entries both of which
-	 * are income and expense accounts, all transactions will
-	 * be either a split transaction, a double entry, or a
-	 * simple entry.
-	 * <P>
-	 * The user may not have yet selected the category for a
-	 * simple transaction.  Such a transaction is displayed on
-	 * a single line and therefore considered a simple transaction.
-	 * Therefore the test to be used here is that the category is NOT a
-	 * capital account (rather than testing FOR an income and
-	 * expense account. 
-	 */
-	public boolean isSimpleEntry() {
-		buildOtherEntriesList();
-		return otherEntries.size() == 1
-				&& !(otherEntries.firstElement().getAccount() instanceof CapitalAccount);
+		return entry.getTransaction().getEntryCollection().size() >= 3;
 	}
 
 	/**
 	 * @return
 	 */
 	public Entry getOtherEntry() {
-		buildOtherEntriesList();
-		JMoneyPlugin.myAssert(isSimpleEntry());
-		return otherEntries.firstElement();
+		JMoneyPlugin.myAssert(!hasSplitEntries());
+		return buildOtherEntriesList().get(0);
 	}
 
 	/**
 	 * @return
 	 */
 	public Collection<Entry> getSplitEntries() {
-		buildOtherEntriesList();
-		return otherEntries;
+		return buildOtherEntriesList();
 	}
 
 	public long getBalance() {
@@ -173,15 +118,14 @@ public class EntryData {
 	 * 
 	 * We must be careful with this cached list because it is not kept up to date.
 	 */
-	private void buildOtherEntriesList() {
-		if (otherEntries == null) {
-			otherEntries = new Vector<Entry>();
+	private ArrayList<Entry> buildOtherEntriesList() {
+		ArrayList<Entry> otherEntries = new ArrayList<Entry>();
 			for (Entry entry2 : entry.getTransaction().getEntryCollection()) {
 				if (!entry2.equals(entry)) {
 					otherEntries.add(entry2);
 				}
 			}
-		}
+			return otherEntries;
 	}
 
 	/**

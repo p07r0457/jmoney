@@ -69,8 +69,6 @@ public abstract class ExtendableObject {
 	 */
 	protected IObjectKey parentKey;
 	
-	protected boolean alwaysReturnNonNullExtensions = false;
-	
 	protected abstract String getExtendablePropertySetId();
 
 	/**
@@ -231,94 +229,20 @@ public abstract class ExtendableObject {
 	}
 	
 	/**
-	 * Get the extension that implements the properties needed by a given
-	 * plug-in.
+	 * Get the extension that implements the properties needed by
+	 * a given plug-in.
 	 * 
-	 * @param alwaysReturnNonNullExtensions
+	 * @param alwaysReturnNonNull
 	 *            If true then the return value is guaranteed to be non-null. If false
 	 *            then the return value may be null, indicating that all properties in
 	 *            the extension have default values.
-	 * @return
 	 */
-	// TODO: clean this up.
-	public <X extends ExtensionObject> X getExtension(ExtensionPropertySet<X> propertySet, boolean alwaysReturnNonNullExtensions) {
-		boolean saveFlag = this.alwaysReturnNonNullExtensions;
-		this.alwaysReturnNonNullExtensions = alwaysReturnNonNullExtensions;
-		X result = getExtension(propertySet);
-		this.alwaysReturnNonNullExtensions = saveFlag;
-		return result;
-	}
-	
-	/**
-	 * Get the extension that implements the properties needed by
-	 * a given plug-in.
-	 */
-	public <X extends ExtensionObject> X getExtension(ExtensionPropertySet<X> propertySet) {
+	public <X extends ExtensionObject> X getExtension(ExtensionPropertySet<X> propertySet, boolean alwaysReturnNonNull) {
 		X extension = propertySet.classOfObject.cast(extensions.get(propertySet));
 		
-		if (extension == null) {
-			// Extension does not exist.
-			
-			if (alwaysReturnNonNullExtensions) {
-				// Create a new extension and look to the original
-				// for default values.
+		if (extension == null && alwaysReturnNonNull) {
 				extension = propertySet.constructDefaultImplementationObject(this);
-
-				// Add the extension now.
-				// It is important that this is done before the property
-				// values are set in it.  The property may be propagated
-				// to other extensions, and back to this extension, through
-				// propagators.  We could get infinite recursion if the propagation
-				// got back to this extension and the extension was not set.
 				extensions.put(propertySet, extension);
-			} else {
-				// Return null to indicate that no extension exists
-				// and default values should be used.
-				extension = null;
-			}
-		} else {
-			// The extension exists.
-/*			
-			// However, it may be in string format.
-			// If the extension is in string format then it must be
-			// converted to the appropriate extension object before
-			// being returned.
-			
-			if (extensionObject instanceof String) {
-				String extensionString = (String) extensionObject;
-				
-				try {
-					extension = (ExtensionObject)
-					propertySet.getImplementationClass().newInstance();
-					// TODO: plugin error if null is returned
-				} catch (Exception e) {
-					// TODO: ensure that we check for a default constructor
-					// at the time the plug-in is loaded.  Errors by plug-in
-					// developers should not cause this type of exception.
-					throw new RuntimeException("internal error");
-				}
-				
-				// Add the extension now.
-				// It is important that this is done before the property
-				// values are set in it.  The property may be propagated
-				// to other extensions, and back to this extension, through
-				// propagators.  We could get infinite recursion if the propagation
-				// got back to this extension and the extension was not set.
-				
-				// TODO: We really should not be propagating properties now.
-				// If there are changes, the datastore was inconsistent,
-				// and changing other properties now could cause confusion.
-				extension.setBaseObject(this);
-				extension.setPropertySet(propertySet);
-				extensions.put(propertySet, extension);
-				stringToExtension(extensionString, extension);
-			} else {
-*/			
-				// Extension object is not a string so it must be
-				// an extension object in the de-serialized state.
-				// Return the extension as is.
-//				extension = (ExtensionObject)extensionObject;
-//			}
 		}
 		
 		return extension;
@@ -347,7 +271,7 @@ public abstract class ExtendableObject {
 			objectWithProperties =  this;
 			implementationClass = propertySet.getImplementationClass();
 		} else {
-			ExtensionObject extension = getExtension((ExtensionPropertySet<?>)propertySet);
+			ExtensionObject extension = getExtension((ExtensionPropertySet<?>)propertySet, false);
 
 			implementationClass = ((ExtensionPropertySet)propertySet).getExtendablePropertySet().getImplementationClass();
 
@@ -398,21 +322,13 @@ public abstract class ExtendableObject {
 	}
 	
 	public <V> void setPropertyValue(ScalarPropertyAccessor<V> propertyAccessor, V value) {
-		// The problem here is that the XML parser sets the properties directly in
-		// the object, without going through a mutable object.
-		// We cannot therefore rely on this object being mutable, so temporarily
-		// set this flag.
-		// TODO: review this method.
 		Object objectWithProperties;
 		PropertySet propertySet = propertyAccessor.getPropertySet();
 		if (!propertySet.isExtension()) {
 			objectWithProperties = this;
 		} else {
-			// Because this is a mutable object, the following call will always
-			// return a non-null extension.
-			alwaysReturnNonNullExtensions = true;
-			objectWithProperties = getExtension((ExtensionPropertySet<?>)propertySet);
-			alwaysReturnNonNullExtensions = false;
+			// Get the extension, creating one if necessary.
+			objectWithProperties = getExtension((ExtensionPropertySet<?>)propertySet, true);
 		}
 		
 		propertyAccessor.invokeSetMethod(objectWithProperties, value);

@@ -27,8 +27,8 @@ public interface IRowProvider {
 
 	int getRowCount();
 
-	Row getNewRow(ContentPane parent, int rowNumber);
+	EntryRowControl getNewRow(ContentPane parent, int rowNumber);
 
-	void releaseRow(Row rowControl);
+	void releaseRow(EntryRowControl rowControl);
 
 }
