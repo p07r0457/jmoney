@@ -27,7 +27,6 @@ import java.util.Comparator;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.widgets.Composite;
@@ -66,8 +65,8 @@ abstract public class PropertyBlock extends IndividualBlock<EntryData> {
 
 	public abstract ExtendableObject getObjectContainingProperty(EntryData data);
 
-	public ICellControl<EntryData> createCellControl(Composite parent, Session session) {
-		final IPropertyControl propertyControl = accessor.createPropertyControl(parent, session);
+	public ICellControl<EntryData> createCellControl(Composite parent) {
+		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		
 		return new ICellControl<EntryData>() {
 

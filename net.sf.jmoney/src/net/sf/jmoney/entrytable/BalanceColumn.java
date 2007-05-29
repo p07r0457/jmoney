@@ -23,7 +23,6 @@
 package net.sf.jmoney.entrytable;
 
 import net.sf.jmoney.model2.Commodity;
-import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
@@ -46,8 +45,7 @@ public class BalanceColumn extends IndividualBlock<EntryData> {
 		throw new RuntimeException("internal error - attempt to sort on balance");
 	}
 
-	public ICellControl<EntryData> createCellControl(Composite parent,
-			Session session) {
+	public ICellControl<EntryData> createCellControl(Composite parent) {
 		final Label balanceLabel = new Label(parent, SWT.TRAIL);
 		
 		return new ICellControl<EntryData>() {

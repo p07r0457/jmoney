@@ -5,7 +5,6 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
 
@@ -94,7 +93,7 @@ public class OtherEntriesControl extends Composite {
 	
 	static private Image downArrowImage = null;
 
-	public OtherEntriesControl(Composite parent, Block<Entry> rootBlock, Session session, RowSelectionTracker selectionTracker, FocusCellTracker focusCellTracker) {
+	public OtherEntriesControl(Composite parent, Block<Entry> rootBlock, RowSelectionTracker selectionTracker, FocusCellTracker focusCellTracker) {
 		super(parent, SWT.NONE);
 		this.rootBlock = rootBlock;
 		this.selectionTracker = selectionTracker;

@@ -44,7 +44,7 @@ public interface IPropertyControlFactory<V> {
 	 * @return An interface to the class that wraps the
 	 * 			control.
 	 */
-	IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<V> propertyAccessor, Session session);
+	IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<V> propertyAccessor);
 
 	/**
 	 * Format the value of a property so it can be embedded into a

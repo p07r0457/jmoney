@@ -41,7 +41,6 @@ import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 
 import org.eclipse.swt.SWT;
@@ -143,8 +142,8 @@ public class EntryInfo implements IPropertySetInfo {
 	    	    return commodity;
 			}
 
-			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor, Session session) {
-		    	final AmountEditor editor = new AmountEditor(parent, propertyAccessor, session, this);
+			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Long> propertyAccessor) {
+		    	final AmountEditor editor = new AmountEditor(parent, propertyAccessor, this);
 		        
 		    	// The format of the amount will change if either
 		    	// the account property of the entry changes or if
@@ -204,7 +203,7 @@ public class EntryInfo implements IPropertySetInfo {
 		        return dateFormat.format(date);
 			}
 
-			public IPropertyControl createPropertyControl(Composite parent, final ScalarPropertyAccessor<Long> propertyAccessor, Session session) {
+			public IPropertyControl createPropertyControl(Composite parent, final ScalarPropertyAccessor<Long> propertyAccessor) {
 				// This property is not editable
 				final Label control = new Label(parent, SWT.NONE);
 				

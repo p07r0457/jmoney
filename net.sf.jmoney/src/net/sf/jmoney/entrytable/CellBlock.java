@@ -24,8 +24,6 @@ package net.sf.jmoney.entrytable;
 
 import java.util.ArrayList;
 
-import net.sf.jmoney.model2.Session;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
@@ -44,7 +42,7 @@ public abstract class CellBlock<T> extends Block<T> {
 	 */
 	private int index;
 	
-	public abstract ICellControl<T> createCellControl(Composite parent, Session session);
+	public abstract ICellControl<T> createCellControl(Composite parent);
 	
 	public CellBlock(int minimumWidth, int weight) {
 		this.minimumWidth = minimumWidth;

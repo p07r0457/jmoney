@@ -128,21 +128,21 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
          */
    		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAccountAccessor()) {
    			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
-   				IPropertyControl control = EntryInfo.getAccountAccessor().createPropertyControl(parent, otherEntry.getSession());
+   				IPropertyControl control = EntryInfo.getAccountAccessor().createPropertyControl(parent);
    				control.load(otherEntry);
    				return control;
    			}
    		});
    		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getDescriptionAccessor()) {
    			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
-   				IPropertyControl control = EntryInfo.getDescriptionAccessor().createPropertyControl(parent, otherEntry.getSession());
+   				IPropertyControl control = EntryInfo.getDescriptionAccessor().createPropertyControl(parent);
    				control.load(otherEntry);
    				return control;
    			}
    		});
    		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAmountAccessor()) {
    			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
-   				IPropertyControl control = EntryInfo.getAmountAccessor().createPropertyControl(parent, otherEntry.getSession());
+   				IPropertyControl control = EntryInfo.getAmountAccessor().createPropertyControl(parent);
    				control.load(otherEntry);
    				return control;
    			}

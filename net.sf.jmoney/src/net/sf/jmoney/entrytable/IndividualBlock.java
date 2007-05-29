@@ -24,8 +24,6 @@ package net.sf.jmoney.entrytable;
 
 import java.util.Comparator;
 
-import net.sf.jmoney.model2.Session;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -50,8 +48,6 @@ public abstract class IndividualBlock<T> extends CellBlock<T> {
 	 * The localized text to be shown in the header.
 	 */
 	private String text;
-	
-	public abstract ICellControl<T> createCellControl(Composite parent, Session session);
 	
 	public IndividualBlock(String text, int minimumWidth, int weight) {
 		super(minimumWidth, weight);

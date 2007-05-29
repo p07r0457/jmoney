@@ -28,7 +28,6 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -41,7 +40,7 @@ import org.eclipse.swt.widgets.Text;
  */
 public class IntegerControlFactory implements IPropertyControlFactory<Integer> {
 
-    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Integer> propertyAccessor, Session session) {
+    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Integer> propertyAccessor) {
         return new IntegerEditor(parent, 0, propertyAccessor);
     }
 

@@ -150,10 +150,7 @@ public class EntryRowControl extends RowControl<EntryData> {
 
 		for (final CellBlock<EntryData> cell: entriesTable.getCellList()) {
 			// Create the control with no content set.
-			// Passing a null session is ok here because we set it when the object is set.
-			// This is necessary because each content is in a different data manager.
-			// TODO: remove the session parameter altogether, here and elsewhere.
-			final ICellControl<EntryData> cellControl = cell.createCellControl(this, null);
+			final ICellControl<EntryData> cellControl = cell.createCellControl(this);
 			controls.add(cellControl);
 
 			FocusListener controlFocusListener = new CellFocusListener(cellControl, selectionTracker, focusCellTracker);

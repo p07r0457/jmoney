@@ -28,7 +28,6 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
@@ -64,7 +63,7 @@ public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData> {
 		return id;
 	}
 
-	public ICellControl<EntryData> createCellControl(Composite parent, Session session) {
+	public ICellControl<EntryData> createCellControl(Composite parent) {
 		// Because this may be multi-valued, setup the container only.
 		final Composite composite = new Composite(parent, SWT.NONE);
 		
@@ -91,7 +90,7 @@ public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData> {
 				propertyControls.clear();
 				
 				for (Entry entry: data.getSplitEntries()) {
-					IPropertyControl propertyControl = accessor.createPropertyControl(composite, data.getEntry().getSession()); 
+					IPropertyControl propertyControl = accessor.createPropertyControl(composite); 
 					propertyControl.load(entry);
 					propertyControls.add(propertyControl);
 

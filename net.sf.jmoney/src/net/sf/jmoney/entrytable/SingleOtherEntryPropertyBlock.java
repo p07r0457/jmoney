@@ -25,7 +25,6 @@ package net.sf.jmoney.entrytable;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.widgets.Composite;
@@ -60,8 +59,8 @@ public class SingleOtherEntryPropertyBlock extends IndividualBlock<Entry> {
 		return accessor.getName();
 	}
 
-	public ICellControl<Entry> createCellControl(Composite parent, Session session) {
-		final IPropertyControl propertyControl = accessor.createPropertyControl(parent, session);
+	public ICellControl<Entry> createCellControl(Composite parent) {
+		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		
 		return new ICellControl<Entry>() {
 

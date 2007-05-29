@@ -34,7 +34,6 @@ import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.widgets.Composite;
 
@@ -86,7 +85,7 @@ public class CurrencyInfo implements IPropertySetInfo {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		
 		IPropertyControlFactory<Integer> numberControlFactory = new PropertyControlFactory<Integer>() {
-			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Integer> propertyAccessor, Session session) {
+			public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Integer> propertyAccessor) {
 				// Property is not editable
 				return null;
 			}

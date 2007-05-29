@@ -118,7 +118,7 @@ public class ForeignCurrencyDialog {
 				java.util.Locale.US)
 				.format(messageArgs2));
 		
-		final IPropertyControl propertyControl = EntryInfo.getAmountAccessor().createPropertyControl(transactionArea, entry1.getSession());
+		final IPropertyControl propertyControl = EntryInfo.getAmountAccessor().createPropertyControl(transactionArea);
 		propertyControl.load(item.getOtherEntry());
 		
 		// Create the button area

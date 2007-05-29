@@ -31,7 +31,6 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.widgets.Composite;
 
@@ -71,7 +70,7 @@ public class DateControlFactory implements IPropertyControlFactory<Date> {
         this.readOnly = readOnly;
     }
 
-    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Date> propertyAccessor, Session session) {
+    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Date> propertyAccessor) {
         return new DateEditor(parent, propertyAccessor);
     }
 

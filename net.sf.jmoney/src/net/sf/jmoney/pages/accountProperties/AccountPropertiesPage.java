@@ -71,6 +71,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 	private class AccountPropertiesControl extends Composite {
 		CapitalAccount account;
 		Session session;
+
 		/**
 		 * List of the IPropertyControl objects for the
 		 * properties that can be edited in this panel.
@@ -122,7 +123,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 
 				Label propertyLabel = new Label(this, 0);
 				propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
-				final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(this, session);
+				final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(this);
 
 				/*
 				 * If the control factory set up grid data then leave it

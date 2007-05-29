@@ -25,7 +25,6 @@ package net.sf.jmoney.entrytable;
 import java.util.ArrayList;
 
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
@@ -62,8 +61,7 @@ public class OtherEntriesBlock extends CellBlock<EntryData> {
 		this.otherEntriesRootBlock = otherEntriesRootBlock;
 	}
 
-	public ICellControl<EntryData> createCellControl(Composite parent,
-			Session session) {
+	public ICellControl<EntryData> createCellControl(Composite parent) {
 		
 	    /*
 	     * Use a single row tracker and cell focus tracker for this
@@ -74,7 +72,7 @@ public class OtherEntriesBlock extends CellBlock<EntryData> {
 	    RowSelectionTracker rowTracker = new RowSelectionTracker();
 	    FocusCellTracker cellTracker = new FocusCellTracker();
 
-		final OtherEntriesControl control = new OtherEntriesControl(parent, otherEntriesRootBlock, session, rowTracker, cellTracker);
+		final OtherEntriesControl control = new OtherEntriesControl(parent, otherEntriesRootBlock, rowTracker, cellTracker);
 		
 		return new ICellControl<EntryData>() {
 			public Control getControl() {

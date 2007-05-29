@@ -28,7 +28,6 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.widgets.Composite;
 
@@ -42,7 +41,7 @@ public class CheckBoxControlFactory implements IPropertyControlFactory<Boolean> 
     public CheckBoxControlFactory() {
     }
     
-    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Boolean> propertyAccessor, Session session) {
+    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Boolean> propertyAccessor) {
   		return new CheckMarkEditor(parent, propertyAccessor);
     }
 

@@ -171,7 +171,7 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 		
 		for (final CellBlock<Entry> entriesSectionProperty: cellList) {
 			// Create the control with no content set.
-			final ICellControl<Entry> cellControl = entriesSectionProperty.createCellControl(this, null);
+			final ICellControl<Entry> cellControl = entriesSectionProperty.createCellControl(this);
 			controls.add(cellControl);
 
 			FocusListener controlFocusListener = new CellFocusListener(cellControl, selectionTracker, focusCellTracker);

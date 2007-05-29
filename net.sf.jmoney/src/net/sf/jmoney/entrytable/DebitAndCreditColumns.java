@@ -24,7 +24,6 @@ package net.sf.jmoney.entrytable;
 
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
@@ -82,7 +81,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
 			}
 		}
 	 */
-	public ICellControl createCellControl(Composite parent, Session session) {
+	public ICellControl createCellControl(Composite parent) {
 		final Text textControl = new Text(parent, SWT.TRAIL);
 		textControl.addTraverseListener(new TraverseListener() {
 			public void keyTraversed(TraverseEvent e) {
