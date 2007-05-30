@@ -58,7 +58,7 @@ public class StatusControlFactory implements IPropertyControlFactory<Integer> {
 			ReconciliationPlugin.getResourceString("Entry.clearedShort"),
 	};
 	
-    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Integer> propertyAccessor, Session session) {
+    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<Integer> propertyAccessor) {
         return new StatusEditor(parent, propertyAccessor, statusText);
     }
 

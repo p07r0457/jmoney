@@ -91,7 +91,7 @@ public class QIFEntryInfo implements IPropertySetInfo {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		IPropertyControlFactory<Character> stateControlFactory = new PropertyControlFactory<Character>() {
 
-			public IPropertyControl createPropertyControl(Composite parent, final ScalarPropertyAccessor<Character> propertyAccessor, Session session) {
+			public IPropertyControl createPropertyControl(Composite parent, final ScalarPropertyAccessor<Character> propertyAccessor) {
 				// This property is not editable???
 				final Label control = new Label(parent, SWT.NONE);
 				

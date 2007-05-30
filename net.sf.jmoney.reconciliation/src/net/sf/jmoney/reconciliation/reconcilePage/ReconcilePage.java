@@ -121,13 +121,6 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 	 */
 	protected Transaction currentTransaction = null;
 
-	/**
-	 * This is a kludge.  I do not know how to transfer a reference to a Java object,
-	 * so the entry is set here by the drag source and fetched from here by the drag
-	 * target.
-	 */
-	protected Entry entryBeingDragged = null;
-
     /**
      * Create a new page to edit entries.
      * 
@@ -189,14 +182,14 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
          */
    		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAccountAccessor()) {
    			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
-   				IPropertyControl control = EntryInfo.getAccountAccessor().createPropertyControl(parent, otherEntry.getSession());
+   				IPropertyControl control = EntryInfo.getAccountAccessor().createPropertyControl(parent);
    				control.load(otherEntry);
    				return control;
    			}
    		});
    		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getDescriptionAccessor()) {
    			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
-   				IPropertyControl control = EntryInfo.getDescriptionAccessor().createPropertyControl(parent, otherEntry.getSession());
+   				IPropertyControl control = EntryInfo.getDescriptionAccessor().createPropertyControl(parent);
    				control.load(otherEntry);
    				return control;
    			}
