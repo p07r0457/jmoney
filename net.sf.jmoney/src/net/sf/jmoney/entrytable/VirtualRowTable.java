@@ -170,9 +170,7 @@ public class VirtualRowTable extends Composite {
 	 * @return the selected row, or -1 if no row is selected
 	 */
 	public int getSelection() {
-		// TODO Auto-generated method stub
-		return -1;
-		
+		return contentPane.currentRow;
 	}
 
 	/**

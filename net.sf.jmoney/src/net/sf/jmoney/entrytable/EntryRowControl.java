@@ -543,4 +543,8 @@ public class EntryRowControl extends RowControl<EntryData> {
 	public Entry getUncommittedTopEntry() {
 		return uncommittedEntryData.getEntry();
 	}
+
+	public EntryData getUncommittedEntryData() {
+		return uncommittedEntryData;
+	}
 }
