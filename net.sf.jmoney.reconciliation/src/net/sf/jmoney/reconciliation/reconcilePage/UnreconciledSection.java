@@ -51,12 +51,13 @@ import net.sf.jmoney.reconciliation.ReconciliationPlugin;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DragSource;
 import org.eclipse.swt.dnd.DragSourceEvent;
 import org.eclipse.swt.dnd.DragSourceListener;
-import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -155,14 +156,57 @@ public class UnreconciledSection extends SectionPart {
 		
 		CellBlock<EntryData> reconcileButton = new CellBlock<EntryData>(20, 0) {
 			@Override
-			public ICellControl<EntryData> createCellControl(Composite parent, Session session) {
+			public ICellControl<EntryData> createCellControl(Composite parent) {
 				// TODO: remove unsafe cast
-				return new ButtonCellControl((EntryRowControl)parent, reconcileImage, "Reconcile this Entry to the above Statement") {
+				final EntryRowControl rowControl = (EntryRowControl)parent;
+				
+				ButtonCellControl cellControl = new ButtonCellControl(rowControl, reconcileImage, "Reconcile this Entry to the above Statement") {
 					@Override
 					protected void run(EntryRowControl rowControl) {
 						reconcileEntry(rowControl);
 					}
 				};
+
+				// Allow entries in the account to be moved from the unreconciled list
+				final DragSource dragSource = new DragSource(cellControl.getControl(), DND.DROP_MOVE);
+
+				// Provide data using a local reference only (can only drag and drop
+				// within the Java VM)
+				Transfer[] types = new Transfer[] { LocalSelectionTransfer.getTransfer() };
+				dragSource.setTransfer(types);
+
+				dragSource.addDragListener(new DragSourceListener() {
+					public void dragStart(DragSourceEvent event) {
+						// Always allow a drag (i.e. we leave event.doit set to true)
+					}
+					public void dragSetData(DragSourceEvent event) {
+						// Provide the data of the requested type.
+						if (LocalSelectionTransfer.getTransfer().isSupportedType(event.dataType)) {
+							EntryData entryData = rowControl.getUncommittedEntryData();
+							LocalSelectionTransfer.getTransfer().setSelection(new StructuredSelection(entryData));
+						}
+					}
+					public void dragFinished(DragSourceEvent event) {
+						if (event.detail == DND.DROP_MOVE) {
+							/*
+							 * Having moved the entry, we must delete this one. This is
+							 * done through the row control so that the row control does
+							 * not think the entry got deleted by someone else.
+							 */
+							Session session = rowControl.getUncommittedTopEntry().getSession();
+							session.getTransactionCollection().remove(rowControl.getUncommittedTopEntry().getTransaction());
+							rowControl.commitChanges("Delete Merged Entry");
+						}
+					}
+				});
+
+				fUnreconciledEntriesControl.addDisposeListener(new DisposeListener() {
+					public void widgetDisposed(DisposeEvent e) {
+						dragSource.dispose();
+					}
+				});
+
+				return cellControl;
 			}
 
 			@Override
@@ -186,7 +230,7 @@ public class UnreconciledSection extends SectionPart {
 		/*
 		 * Setup the layout structure of the header and rows.
 		 */
-		Block<EntryData> rootBlock = new HorizontalBlock(
+		Block<EntryData> rootBlock = new HorizontalBlock<EntryData>(
 				reconcileButton,
 				transactionDateColumn,
 				PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor()),
@@ -202,53 +246,6 @@ public class UnreconciledSection extends SectionPart {
 
 		// Create the table control.
 		fUnreconciledEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, unreconciledTableContents, fPage.getAccount().getSession(), transactionDateColumn); 
-
-		// Allow entries in the account to be moved from the unreconciled list
-		final DragSource dragSource = new DragSource(fUnreconciledEntriesControl.getControl(), DND.DROP_MOVE);
-
-//		Provide data in Text format
-		Transfer[] types = new Transfer[] {TextTransfer.getInstance()};
-		dragSource.setTransfer(types);
-
-		dragSource.addDragListener(new DragSourceListener() {
-			public void dragStart(DragSourceEvent event) {
-				/*
-				 * It is not possible to start a drag without the current selection
-				 * first being set to the dragged item.  We can therefore use the
-				 * current selection as the dragged item.
-				 */
-				Entry entry = fUnreconciledEntriesControl.getSelectedEntry();
-
-				// Do not start the drag if the empty 'new entry' row is being dragged.
-				if (entry == null) {
-					event.doit = false;
-				}
-			}
-			public void dragSetData(DragSourceEvent event) {
-				// Provide the data of the requested type.
-				if (TextTransfer.getInstance().isSupportedType(event.dataType)) {
-					Entry entry = fUnreconciledEntriesControl.getSelectedEntry();
-					fPage.entryBeingDragged = entry;
-					event.data = "get entry from fPage";
-					//event.data = entry;
-				}
-			}
-			public void dragFinished(DragSourceEvent event) {
-				if (event.detail == DND.DROP_MOVE) {
-					/*
-					 * Normally the dragged item would be removed at this point.
-					 * However, the move is handled by the destination onto which
-					 * the item is dropped.
-					 */
-				}
-			}
-		});
-
-		fUnreconciledEntriesControl.addDisposeListener(new DisposeListener() {
-			public void widgetDisposed(DisposeEvent e) {
-				dragSource.dispose();
-			}
-		});
 
 		getSection().setClient(fUnreconciledEntriesControl);
 		toolkit.paintBordersFor(fUnreconciledEntriesControl);

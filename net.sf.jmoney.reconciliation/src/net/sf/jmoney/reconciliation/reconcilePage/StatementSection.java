@@ -52,16 +52,30 @@ import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DropTarget;
+import org.eclipse.swt.dnd.DropTargetAdapter;
+import org.eclipse.swt.dnd.DropTargetEvent;
+import org.eclipse.swt.dnd.FileTransfer;
+import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Tree;
+import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
@@ -201,15 +215,99 @@ public class StatementSection extends SectionPart {
 		CellBlock<EntryData> unreconcileButton = new CellBlock<EntryData>(20, 0) {
 
 			@Override
-			public ICellControl<EntryData> createCellControl(Composite parent,
-					Session session) {
+			public ICellControl<EntryData> createCellControl(final Composite parent) {
 				// TODO: remove cast in following line.  There is a risk of a cast exception.
-				return new ButtonCellControl((EntryRowControl)parent, unreconcileImage, "Remove Entry from this Statement") {
+				ButtonCellControl cellControl = new ButtonCellControl((EntryRowControl)parent, unreconcileImage, "Remove Entry from this Statement") {
 					@Override
 					protected void run(EntryRowControl rowControl) {
 						unreconcileEntry(rowControl);
 					}
 				};
+
+
+				// Allow entries to be dropped in the statement table in the account to be moved from the unreconciled list
+				final DropTarget dropTarget = new DropTarget(cellControl.getControl(), DND.DROP_MOVE);
+
+				// Data is provided using a local reference only (can only drag and drop
+				// within the Java VM)
+				Transfer[] types = new Transfer[] { LocalSelectionTransfer.getTransfer() };
+				dropTarget.setTransfer(types);
+
+				dropTarget.addDropListener(new DropTargetAdapter() {
+
+					public void dragEnter(DropTargetEvent event) {
+						/*
+						 * We want to check what is being dragged, in case it is not an
+						 * EntryData object.  Unfortunately this is not available on all platforms,
+						 * only on Windows.  The following call to the nativeToJava method will
+						 * return the ISelection object on Windows but null on other platforms.
+						 * If we get null back, we assume the drop is valid.
+						 */
+						ISelection selection = (ISelection)LocalSelectionTransfer.getTransfer().nativeToJava(event.currentDataType);
+						if (selection == null) {
+							// The selection cannot be determined on this platform - accept the drop
+							return;
+						}
+						
+						if (selection instanceof StructuredSelection) {
+							StructuredSelection structured = (StructuredSelection)selection;
+							if (structured.size() == 1
+									&& structured.getFirstElement() instanceof EntryData) {
+								// We do want to accept the drop
+								return;
+							}
+						}
+
+						// we don't want to accept drop
+						event.detail = DND.DROP_NONE;
+					}
+
+					public void dragLeave(DropTargetEvent event) {
+						// TODO Auto-generated method stub
+
+					}
+
+					public void dragOperationChanged(DropTargetEvent event) {
+						// TODO Auto-generated method stub
+
+					}
+
+					public void dragOver(DropTargetEvent event) {
+						// TODO Auto-generated method stub
+
+					}
+
+					public void drop(DropTargetEvent event) {
+						if (LocalSelectionTransfer.getTransfer().isSupportedType(event.currentDataType)) {
+							ISelection selection = LocalSelectionTransfer.getTransfer().getSelection();
+							EntryData unrecEntryInAccount = (EntryData)((StructuredSelection)selection).getFirstElement();
+							EntryRowControl dropRow = (EntryRowControl)parent;
+
+							/*
+							 * Merge data from dragged transaction into the target transaction
+							 * and delete the dragged transaction.
+							 */
+							boolean success = mergeTransaction(unrecEntryInAccount, dropRow);
+							if (!success) {
+								event.detail = DND.DROP_NONE;
+							}
+						}
+
+					}
+
+					public void dropAccept(DropTargetEvent event) {
+						// TODO Auto-generated method stub
+					}
+				});
+
+				fReconciledEntriesControl.getControl().addDisposeListener(new DisposeListener() {
+					public void widgetDisposed(DisposeEvent e) {
+						dropTarget.dispose();
+					}
+				});
+
+
+				return cellControl;
 			}
 
 			@Override
@@ -280,69 +378,6 @@ public class StatementSection extends SectionPart {
 			}
 		});
 
-/* This code needs to be made to work, but dragging the button would suffice (and drop anyway on the row?}
-		fReconciledEntriesControl.addSelectionListener(new EntryRowSelectionAdapter() {
-        });
-        
-        // Allow entries to be dropped in the statment tablein the account to be moved from the unreconciled list
-        final DropTarget dropTarget = new DropTarget(fReconciledEntriesControl.getControl(), DND.DROP_MOVE);
- 	         
-        // Provide data in Text format???
-        Transfer[] types = new Transfer[] {TextTransfer.getInstance()};
-        dropTarget.setTransfer(types);
-         	 
-        dropTarget.addDropListener(new DropTargetAdapter() {
-
-			public void dragEnter(DropTargetEvent event) {
-				if (/* we don't want to accept drop* /false) {
-					event.detail = DND.DROP_NONE;
-				}
-			}
-
-			public void dragLeave(DropTargetEvent event) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			public void dragOperationChanged(DropTargetEvent event) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			public void dragOver(DropTargetEvent event) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			public void drop(DropTargetEvent event) {
-				if (TextTransfer.getInstance().isSupportedType(event.currentDataType)) {
-					//String text = (String) event.data;
-					//Entry unrecEntryInAccount = (Entry)event.data;
-					Entry unrecEntryInAccount = fPage.entryBeingDragged;
-	    			Point pt = fReconciledEntriesControl.getControl().toControl(event.x, event.y);
-					final TreeItem item = ((Tree)fReconciledEntriesControl.getControl()).getItem(pt);
-					Entry recEntryInAccount = ((IDisplayableItem)item.getData()).getEntryInAccount();
-
-					/*
-					 * Merge data from dragged transaction into the target transaction
-					 * and delete the dragged transaction.
-					 * /
-					mergeTransaction(unrecEntryInAccount, recEntryInAccount);
-				}
-				
-			}
-
-			public void dropAccept(DropTargetEvent event) {
-				// TODO Auto-generated method stub
-			}
-        });
-        
-        fReconciledEntriesControl.getControl().addDisposeListener(new DisposeListener() {
-			public void widgetDisposed(DisposeEvent e) {
-				dropTarget.dispose();
-			}
-        });
-*/        
         getSection().setClient(container);
         toolkit.paintBordersFor(container);
         refresh();
@@ -385,39 +420,42 @@ public class StatementSection extends SectionPart {
 	/**
 	 * Merge data from other transaction.
 	 * 
-	 * The normal case is that the reconciled transaction was imported from the bank
-	 * and the statement being merged into this transaction has been manually edited.
-	 * We therefore take the following properties from the reconciled transaction:
-	 * - the valuta date
-	 * - the amount
-	 * - the check number
+	 * The normal case is that the reconciled transaction was imported from the
+	 * bank and the statement being merged into this transaction has been
+	 * manually edited. We therefore take the following properties from the
+	 * reconciled transaction: - the valuta date - the amount - the check number
 	 * 
-	 * And we take all other properties and all the other entries from the source transaction.
+	 * And we take all other properties and all the other entries from the
+	 * source transaction.
 	 * 
 	 * However, if any property is null in one transaction and non-null in the
 	 * other then we use the non-null property.
 	 * 
 	 * If any of the following conditions apply in the target transaction then
-	 * we give a warning to the user.  These conditions indicate that there is data
-	 * in the target transaction that will be lost and that information was probably
-	 * manually entered.
+	 * we give a warning to the user. These conditions indicate that there is
+	 * data in the target transaction that will be lost and that information was
+	 * probably manually entered.
+	 *  - the transaction has split entries - there are properties set in the
+	 * other entry other that the required account, or the account in the other
+	 * entry is not the default account
 	 * 
-	 * - the transaction has split entries
-	 * - there are properties set in the other entry other that the required account,
-	 *     or the account in the other entry is not the default account
-	 *
-	 * The source and targets will be in different transaction managers.
-	 * We want to take the properties from the source transaction and move them into
-	 * the target transaction without committing the target transaction.  The taret row
-	 * control should update itself automatically because the controls always listen
-	 * for property changes in the model.  The source is deleted, with any uncommitted
-	 * changes being dropped.
+	 * The source and targets will be in different transaction managers. We want
+	 * to take the properties from the source transaction and move them into the
+	 * target transaction without committing the target transaction. The taret
+	 * row control should update itself automatically because the controls
+	 * always listen for property changes in the model.
 	 * 
-	 * The merge constitutes a single undoable action.  
+	 * The source is deleted, with any uncommitted changes being dropped, but
+	 * this is done by the drop source.
+	 * 
+	 * The merge constitutes a single undoable action.
+	 * 
+	 * @return true if the merge succeeded, false if it failed (in which case
+	 *         the user is notified by this method of the failure)
 	 */
-	private void mergeTransaction(EntryRowControl unrecRowControl, EntryRowControl recRowControl) {
+	private boolean mergeTransaction(EntryData unrecEntryData, EntryRowControl recRowControl) {
 		
-		Entry unrecEntryInAccount = unrecRowControl.getUncommittedTopEntry();
+		Entry unrecEntryInAccount = unrecEntryData.getEntry();
 		Entry recEntryInAccount = recRowControl.getUncommittedTopEntry();
 		
 		Entry recOther = recEntryInAccount.getTransaction().getOther(recEntryInAccount);
@@ -428,7 +466,7 @@ public class StatementSection extends SectionPart {
 	        diag.setText("Warning");
 	        diag.setMessage("The target entry has split entries.  These entries will be replaced by the data from the transaction for the dragged entry.  The split entries will be lost.  Are you sure you want to do this?");
 	        if (diag.open() != SWT.YES) {
-	        	return;
+	        	return false;
 	        }
 		}
 		
@@ -458,7 +496,7 @@ public class StatementSection extends SectionPart {
 	        		+ "."
 	        		+ "These amounts should normally be equal.  It may be that the incorrect amount was originally entered for the dragged entry and you want the amount corrected to the amount given by the import.  If so, continue and the amount will be corrected.  Do you want to continue?");
 	        if (diag.open() != SWT.YES) {
-	        	return;
+	        	return false;
 	        }
 
 	        unrecEntryInAccount.setAmount(recEntryInAccount.getAmount());
@@ -471,14 +509,8 @@ public class StatementSection extends SectionPart {
 		for (ScalarPropertyAccessor<?> propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
 			copyProperty(propertyAccessor, unrecEntryInAccount, recEntryInAccount);
 		}
-
-		/*
-		 * Now we delete the unreconciled entry.  This is done through the row control
-		 * so that the row control does not think the entry got deleted by someone else.
-		 */
-		Session session = unrecEntryInAccount.getSession();
-		session.getTransactionCollection().remove(unrecEntryInAccount.getTransaction());
-		unrecRowControl.commitChanges("Delete Merged Entry");
+		
+		return true;
 	}
 
 	/**
