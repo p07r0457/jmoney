@@ -22,12 +22,12 @@
 
 package net.sf.jmoney.entrytable;
 
+import org.eclipse.swt.widgets.Composite;
+
 
 public interface IRowProvider {
 
-	int getRowCount();
-
-	EntryRowControl getNewRow(ContentPane parent, int rowNumber);
+	EntryRowControl getNewRow(Composite parent, EntryData entryData);
 
 	void releaseRow(EntryRowControl rowControl);
 

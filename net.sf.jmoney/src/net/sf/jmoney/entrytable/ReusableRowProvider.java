@@ -25,6 +25,7 @@ package net.sf.jmoney.entrytable;
 import java.util.LinkedList;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
 
 public class ReusableRowProvider implements IRowProvider {
 
@@ -47,11 +48,7 @@ public class ReusableRowProvider implements IRowProvider {
 		this.focusCellTracker = focusCellTracker;
 	}
 	
-	public int getRowCount() {
-		return entriesTable.sortedEntries.size();
-	}
-	
-	public EntryRowControl getNewRow(ContentPane parent, int rowNumber) {
+	public EntryRowControl getNewRow(Composite parent, EntryData entryData) {
 		EntryRowControl rowControl;
 		
 		if (spareRows.size() > 0) {
@@ -61,8 +58,7 @@ public class ReusableRowProvider implements IRowProvider {
 			rowControl = new EntryRowControl(parent, SWT.NONE, entriesTable, rowSelectionTracker, focusCellTracker);
 		}
 		
-		EntryData data = entriesTable.sortedEntries.get(rowNumber); 
-		rowControl.setContent(data);
+		rowControl.setContent(entryData);
 		
 		return rowControl;
 	}

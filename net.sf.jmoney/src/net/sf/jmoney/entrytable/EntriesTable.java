@@ -183,6 +183,17 @@ public class EntriesTable extends Composite {
 		rowComparator = new RowComparator(defaultSortColumn, true);
 	    sort();
 
+	    IContentProvider contentProvider = new IContentProvider() {
+
+			public EntryData getElement(int rowNumber) {
+				return sortedEntries.get(rowNumber); 
+			}
+
+			public int getRowCount() {
+				return sortedEntries.size();
+			}
+	    };
+	    
 	    /*
 	     * Use a single row tracker and cell focus tracker for this
 	     * table.  This needs to be generalized for, say, the reconciliation
@@ -190,7 +201,7 @@ public class EntriesTable extends Composite {
 	     */
 	    RowSelectionTracker rowTracker = new RowSelectionTracker();
 	    FocusCellTracker cellTracker = new FocusCellTracker();
-		table = new VirtualRowTable(this, rootBlock, this, new ReusableRowProvider(this, rowTracker, cellTracker));
+		table = new VirtualRowTable(this, rootBlock, this, contentProvider, new ReusableRowProvider(this, rowTracker, cellTracker));
 		
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gridData.heightHint = 100;
