@@ -241,7 +241,23 @@ public class OtherEntriesShell {
 		}
 
 		public void open(Rectangle rect) {
-	        Display display = shell.getDisplay();
+	        /*
+			 * Position the split-entries shell below the given rectangle, unless
+			 * this control is so near the bottom of the display that the
+			 * shell would go off the bottom of the display, in
+			 * which case position the split-entries shell above this
+			 * control.
+			 * 
+			 * In either case, the shell should overlap the rectangle, so if it
+			 * is going downwards, align the top with the top of this control.
+			 * 
+			 * Note also that we put the shell one pixel to the left.  This is because
+			 * a single pixel margin is always added to BlockLayout so that the
+			 * selection line can be drawn.  We want the controls in the shell to
+			 * exactly line up with the table header.
+			 */
+
+			Display display = shell.getDisplay();
 	        int shellHeight = shell.getSize().y;
 	        if (rect.y + rect.height + shellHeight <= display.getBounds().height) {
     	        shell.setLocation(rect.x - 1, rect.y);

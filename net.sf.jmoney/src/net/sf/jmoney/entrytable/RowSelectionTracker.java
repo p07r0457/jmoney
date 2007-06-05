@@ -17,8 +17,7 @@ public class RowSelectionTracker {
 	 * 		are issues with a previously selected row that prevent the change
 	 * 		in selection from being made
 	 */
-	public boolean setSelection(RowControl row,
-			CellBlock column) {
+	public boolean setSelection(RowControl row,	CellBlock column) {
 		if (row != currentRowControl) {
 			if (currentRowControl != null) {
 				if (!currentRowControl.canDepart()) {

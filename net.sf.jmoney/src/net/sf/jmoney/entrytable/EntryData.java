@@ -127,15 +127,4 @@ public class EntryData {
 			}
 			return otherEntries;
 	}
-
-	/**
-	 * This method is used when a new entry is committed.  This 
-	 * object is updated to show that it now represents a committed
-	 * entry.
-	 * 
-	 * @param committedEntry
-	 */
-	public void setEntry(Entry committedEntry) {
-		this.entry = committedEntry;
-	}
 }

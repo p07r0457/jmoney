@@ -123,22 +123,6 @@ public class OtherEntriesControl extends Composite {
 		downArrowButton.addSelectionListener(new SelectionAdapter() {
 		    public void widgetSelected(SelectionEvent event) {
 				final OtherEntriesShell shell = new OtherEntriesShell(getShell(), SWT.ON_TOP, entryData, rootBlock);
-    	        
-    	        /*
-				 * Position the split-entries shell below this control, unless
-				 * this control is so near the bottom of the display that the
-				 * shell would go off the bottom of the display, in
-				 * which case position the split-entries shell above this
-				 * control.
-				 * 
-				 * In either case, the shell should overlap this control, so if it
-				 * is going downwards, align the top with the top of this control.
-				 * 
-				 * Note also that we put the shell one pixel to the left.  This is because
-				 * a single pixel margin is always added to BlockLayout so that the
-				 * selection line can be drawn.  We want the controls in the shell to
-				 * exactly line up with the table header.
-				 */
     	        Display display = getDisplay();
     	        Rectangle rect = display.map(OtherEntriesControl.this.getParent(), null, getBounds());
     	        shell.open(rect);

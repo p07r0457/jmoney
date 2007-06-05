@@ -75,6 +75,13 @@ public class EntryRowControl extends RowControl<EntryData> {
 	TransactionManager transactionManager = null;
 
 	/**
+	 * The EntryData object on which this row is based.  This will contain
+	 * the committed version of the entry, or a null Entry object if this row
+	 * represents the 'new entry' row.
+	 */
+	EntryData committedEntryData = null;
+
+	/**
 	 * The EntryData object currently set into this object, or null
 	 * if this object does not represent a currently visible row
 	 */
@@ -107,7 +114,7 @@ public class EntryRowControl extends RowControl<EntryData> {
 			/*
 			 * FEATURE IN SWT: When SWT needs to resolve a mnemonic (accelerator)
 			 * character, it recursively calls the traverse event down all
-			 * controls in the containership hierarchy.  If e.doit is false,
+			 * controls in the container hierarchy.  If e.doit is false,
 			 * no control has yet matched the mnemonic, and we don't have to
 			 * do anything since we don't do mnemonic matching and no mnemonic
 			 * has matched.
@@ -249,8 +256,10 @@ public class EntryRowControl extends RowControl<EntryData> {
 		}
 	}
 
-	public void setContent(EntryData data) {
-		rowColor = (data.getIndex()%2 == 0)  ? alternateTransactionColor : transactionColor;
+	public void setContent(EntryData committedEntryData) {
+		this.committedEntryData = committedEntryData;
+
+		rowColor = (committedEntryData.getIndex()%2 == 0)  ? alternateTransactionColor : transactionColor;
 		setBackground(rowColor);
 
 		/*
@@ -258,9 +267,12 @@ public class EntryRowControl extends RowControl<EntryData> {
 		 * made at any time but the edits are not validated and no one else sees
 		 * the changes until the selection is moved off this row.
 		 */
-		transactionManager = new TransactionManager(data.getBaseSessionManager());
+		// TODO: Some cleanup.  We don't need to create a new transaction each time.
+		// Perhaps we should have separate derived classes for the regular rows and
+		// the new entry row.
+		transactionManager = new TransactionManager(committedEntryData.getBaseSessionManager());
 		Entry entryInTransaction;
-		if (data.getEntry() == null) {
+		if (committedEntryData.getEntry() == null) {
 			Transaction newTransaction = transactionManager.getSession().createTransaction();
 			entryInTransaction = newTransaction.createEntry();
 			newTransaction.createEntry();
@@ -268,11 +280,11 @@ public class EntryRowControl extends RowControl<EntryData> {
 			// TODO: Kludge here
 			((EntriesTable)getParent().getParent().getParent()).entriesContent.setNewEntryProperties(entryInTransaction);
 		} else {
-			entryInTransaction = transactionManager.getCopyInTransaction(data.getEntry());
+			entryInTransaction = transactionManager.getCopyInTransaction(committedEntryData.getEntry());
 		}
 		uncommittedEntryData = new EntryData(entryInTransaction, transactionManager);
-		uncommittedEntryData.setIndex(data.getIndex());
-		uncommittedEntryData.setBalance(data.getBalance());
+		uncommittedEntryData.setIndex(committedEntryData.getIndex());
+		uncommittedEntryData.setBalance(committedEntryData.getBalance());
 		
 		for (final ICellControl<EntryData> control: controls) {
 			control.load(uncommittedEntryData);
@@ -305,13 +317,13 @@ public class EntryRowControl extends RowControl<EntryData> {
 	 * 
 	 * @return true if the changes are either valid and were committed or were
 	 *         canceled by the user, false if the changes were neither committed
-	 *         or cancelled (and thus remain outstanding)
+	 *         or canceled (and thus remain outstanding)
 	 */
 	public boolean commitChanges(String transactionLabel) {
 		// If changes have been made then check they are valid and ask
 		// the user if the changes should be committed.
 		if (transactionManager.hasChanges()) {
-			// Validate the transacion.
+			// Validate the transaction.
 
 			long totalAmount = 0;
 			Commodity commodity = null;
@@ -442,15 +454,33 @@ public class EntryRowControl extends RowControl<EntryData> {
 			transactionManager.commit(transactionLabel);
 			
 			/*
-			 * It may be that this was a new entry not previously committed.
-			 * If so, the committed entry in the EntryData object will be null
-			 * and we must set it now to the non-null newly committed entry.
-			 * This ensures that the EntryData now represents a regular entry.
+			 * It may be that this was a new entry not previously committed. If
+			 * so, the committed entry in the EntryData object will be null. In
+			 * this case we now clear out the controls so that it is ready for
+			 * the next new transaction. (A new row will have been created for
+			 * the new entry that we have just committed because the table is
+			 * listening for new entries).
+			 * 
+			 * This listener should also have caused the balance for the new entry
+			 * row to be updated.
 			 */
-			if (uncommittedEntryData.getEntry() == null) {
-				UncommittedObjectKey uncommittedKey = (UncommittedObjectKey)uncommittedEntryData.getEntry().getObjectKey();
-				Entry committedEntry = (Entry)uncommittedKey.getCommittedObjectKey().getObject();
-				uncommittedEntryData.setEntry(committedEntry);
+			if (committedEntryData.getEntry() == null) {
+				Transaction newTransaction = transactionManager.getSession().createTransaction();
+				Entry entryInTransaction = newTransaction.createEntry();
+				newTransaction.createEntry();
+
+				// TODO: Kludge here
+				((EntriesTable)getParent().getParent().getParent()).entriesContent.setNewEntryProperties(entryInTransaction);
+
+				// Update the controls.
+				
+				uncommittedEntryData = new EntryData(entryInTransaction, transactionManager);
+				uncommittedEntryData.setIndex(committedEntryData.getIndex());
+				uncommittedEntryData.setBalance(committedEntryData.getBalance());
+				
+				for (final ICellControl<EntryData> control: controls) {
+					control.load(uncommittedEntryData);
+				}
 			}
 		}
 
