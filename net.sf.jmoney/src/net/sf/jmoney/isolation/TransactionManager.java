@@ -628,7 +628,7 @@ public class TransactionManager extends DataManager {
 		 * that the objectCreated event, as opposed to the objectInserted event,
 		 * is fired as soon as any object is created and before it's children
 		 * are created. A later call to objectCreated will be made for each
-		 * descendent.
+		 * descendant.
 		 */
 		parent.getObjectKey().getSessionManager().fireEvent(
 				new ISessionChangeFirer() {
@@ -671,7 +671,7 @@ public class TransactionManager extends DataManager {
 
 			/*
 			 * Now we can fire the notifications of newly inserted objects. This
-			 * is done now after all the descendents of the object have been
+			 * is done now after all the descendants of the object have been
 			 * created.
 			 * 
 			 * Note that if this object references other objects that are added
@@ -779,7 +779,20 @@ public class TransactionManager extends DataManager {
 		}
 		
 		public int size() {
-			throw new RuntimeException("not implemented");
+			Vector<Entry> addedEntries = new Vector<Entry>();
+			Vector<IObjectKey> removedEntries = new Vector<IObjectKey>();
+			buildAddedAndRemovedEntryLists(addedEntries, removedEntries);
+			
+			IObjectKey committedAccountKey = ((UncommittedObjectKey)account.getObjectKey()).getCommittedObjectKey();
+			if (committedAccountKey == null) {
+				// This is a new account created in this transaction
+				JMoneyPlugin.myAssert(removedEntries.isEmpty());
+				return addedEntries.size();
+			} else {
+				Account committedAccount = (Account)committedAccountKey.getObject();
+				Collection<Entry> committedCollection = committedAccount.getEntries();
+				return committedCollection.size() + addedEntries.size() - removedEntries.size();
+			}
 		}
 
 		public Iterator<Entry> iterator() {
@@ -790,7 +803,21 @@ public class TransactionManager extends DataManager {
 			
 			Vector<Entry> addedEntries = new Vector<Entry>();
 			Vector<IObjectKey> removedEntries = new Vector<IObjectKey>();
+			buildAddedAndRemovedEntryLists(addedEntries, removedEntries);
 			
+			IObjectKey committedAccountKey = ((UncommittedObjectKey)account.getObjectKey()).getCommittedObjectKey();
+			if (committedAccountKey == null) {
+				// This is a new account created in this transaction
+				JMoneyPlugin.myAssert(removedEntries.isEmpty());
+				return addedEntries.iterator();
+			} else {
+				Account committedAccount = (Account)committedAccountKey.getObject();
+				Collection<Entry> committedCollection = committedAccount.getEntries();
+				return new DeltaListIterator<Entry>(TransactionManager.this, committedCollection.iterator(), addedEntries, removedEntries);
+			}
+		}
+
+		private void buildAddedAndRemovedEntryLists(Vector<Entry> addedEntries,	Vector<IObjectKey> removedEntries) {
 			// Process all the new objects added within this transaction
 			for (DeltaListManager<?> modifiedList: modifiedLists) {
 				
@@ -858,17 +885,6 @@ public class TransactionManager extends DataManager {
 						}
 					}
 				}
-			}
-			
-			IObjectKey committedAccountKey = ((UncommittedObjectKey)account.getObjectKey()).getCommittedObjectKey();
-			if (committedAccountKey == null) {
-				// This is a new account created in this transaction
-				JMoneyPlugin.myAssert(removedEntries.isEmpty());
-				return addedEntries.iterator();
-			} else {
-				Account committedAccount = (Account)committedAccountKey.getObject();
-				Collection<Entry> committedCollection = committedAccount.getEntries();
-				return new DeltaListIterator<Entry>(TransactionManager.this, committedCollection.iterator(), addedEntries, removedEntries);
 			}
 		}
 	}
