@@ -222,11 +222,11 @@ public class NavigationView extends ViewPart {
 				viewer.getControl().setSize(viewer.getControl().getParent().getSize());
 			}
 
+			NavigationView.this.session = newSession;
+			
 			// Update the viewer (if new session is null then the
 			// viewer will not be visible but it is good to release the
 			// references to the account objects in the dead session).
-			NavigationView.this.session = newSession;
-			TreeNode.getAccountsRootNode().setSession(newSession);
             viewer.refresh(TreeNode.getAccountsRootNode(), false);
 		}
 		
@@ -279,11 +279,6 @@ public class NavigationView extends ViewPart {
         	session = null;
         }
 
-        // The accounts root node caches the top level accounts, so set
-        // the session so this can be done.
-        // TODO: change this when the accounts are no longer cached in the node.
-        TreeNode.getAccountsRootNode().setSession(session);
-        
         // init is called before createPartControl,
         // and the objects that need the memento are not
         // created until createPartControl is called so we save

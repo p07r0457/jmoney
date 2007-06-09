@@ -33,18 +33,14 @@ import net.sf.jmoney.model2.Session;
  * @author Administrateur
  */
 class AccountsNode extends TreeNode {
-	private Session session = null;
 
 	public AccountsNode(TreeNode parent) {
 		super("net.sf.jmoney.capitalAccounts", JMoneyPlugin.getResourceString("NavigationTreeModel.accounts"), JMoneyPlugin.createImageDescriptor("icons/accounts.gif"), null, 100);
 	}
 	
-	public void setSession(Session session) {
-		this.session = session;
-	}
-
 	@Override
 	public boolean hasChildren() {
+		Session session = JMoneyPlugin.getDefault().getSession();
 		if (session != null) {
 			return session.getCapitalAccountIterator().hasNext();
 		} else {
@@ -54,6 +50,7 @@ class AccountsNode extends TreeNode {
 
 	@Override
 	public Object[] getChildren() {
+		Session session = JMoneyPlugin.getDefault().getSession();
 		ArrayList<Object> children = new ArrayList<Object>();
 		if (session != null) {
 			for (Iterator<CapitalAccount> iter = session.getCapitalAccountIterator(); iter.hasNext(); ) {
