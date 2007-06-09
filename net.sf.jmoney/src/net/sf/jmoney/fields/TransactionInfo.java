@@ -90,7 +90,7 @@ public class TransactionInfo implements IPropertySetInfo {
         IPropertyControlFactory<Date> dateControlFactory = new DateControlFactory();
 		
 		entriesAccessor = propertySet.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), EntryInfo.getPropertySet(), entryGetter, null);
-		dateAccessor = propertySet.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), Date.class, 0, 76, dateControlFactory, null);
+		dateAccessor = propertySet.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), Date.class, 0, 74, dateControlFactory, null);
 		
 		return propertySet;
 	}
