@@ -48,7 +48,7 @@ import org.eclipse.swt.widgets.Control;
  */
 public class OtherEntriesBlock extends CellBlock<EntryData> {
 
-	private final static int DROPDOWN_BUTTON_WIDTH = 15;
+	final static int DROPDOWN_BUTTON_WIDTH = 15;
 	
 	private Block<Entry> otherEntriesRootBlock;
 	
@@ -98,7 +98,8 @@ public class OtherEntriesBlock extends CellBlock<EntryData> {
 		ArrayList<CellBlock<Entry>> cellList = new ArrayList<CellBlock<Entry>>();
 		otherEntriesRootBlock.buildCellList(cellList);
 
-		composite.setLayout(new BlockLayout(otherEntriesRootBlock, false));
+		BlockLayout layout = new BlockLayout(otherEntriesRootBlock, true);
+		composite.setLayout(layout);
 
 		otherEntriesRootBlock.createHeaderControls(composite);
 	}

@@ -47,19 +47,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
 public class SplitEntryRowControl extends RowControl<Entry> {
-	// The darker blue and green lines for the listed entry in each transaction
-//	protected static final Color transactionColor = new Color(Display
-//			.getCurrent(), 235, 235, 255);
-//
-//	protected static final Color alternateTransactionColor = new Color(Display
-//			.getCurrent(), 235, 255, 237);
 
 	// The lighter colors for the sub-entry lines
 	protected static final Color normalColor = new Color(Display.getCurrent(),
 			245, 245, 255);
-
-//	protected static final Color alternateEntryColor = new Color(Display
-//			.getCurrent(), 245, 255, 255);
 
 	protected static final Color selectedRowColor = new Color(Display.getCurrent(), 215, 215, 255);
 
@@ -145,17 +136,13 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 		super(parent, style);
 
 		/*
-		 * We have a margin of 1 at the top and 2 at the bottom.
-		 * The reason for this is because we want a 2-pixel wide black
-		 * line around the selected row.  However, a 1-pixel wide black
-		 * line is drawn along the bottom of every row.  Therefore we
-		 * we want to draw only a 1-pixel wide black line at the top of
-		 * the selected row.  The top and bottom margins are there only
-		 * so we can draw these lines.
+		 * We set the top and bottom margins to zero here because that ensures
+		 * the controls inside this composite line up with the rows that are
+		 * outside this composite and in the same row.
 		 */
 		BlockLayout layout = new BlockLayout(rootBlock, true);
-		layout.marginTop = 1;
-		layout.marginBottom = 2;
+		layout.marginTop = 0;
+		layout.marginBottom = 0;
 		layout.verticalSpacing = 1;
 		setLayout(layout);
 
@@ -356,5 +343,13 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 		// Nothing is committed when split entries are departed,
 		// so nothing to do.
 		return true;
+	}
+
+	@Override
+	protected void scrollToShowRow() {
+		/*
+		 * There is no scrolling of these rows so the row is always visible and
+		 * there is nothing to do.
+		 */
 	}
 }

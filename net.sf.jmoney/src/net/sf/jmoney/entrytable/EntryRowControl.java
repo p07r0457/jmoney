@@ -25,13 +25,13 @@ package net.sf.jmoney.entrytable;
 import java.util.Iterator;
 
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.isolation.UncommittedObjectKey;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.pages.entries.ForeignCurrencyDialog;
 
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
@@ -66,6 +66,8 @@ public class EntryRowControl extends RowControl<EntryData> {
 
 	protected static final Color selectedRowColor = new Color(Display.getCurrent(), 215, 215, 255);
 
+	private EntriesTable entriesTable;
+	
 	/**
 	 * The transaction manager used for all changes made in
 	 * this row.  It is created when the contents are set into this object and
@@ -133,7 +135,8 @@ public class EntryRowControl extends RowControl<EntryData> {
 
 	public EntryRowControl(final Composite parent, int style, final EntriesTable entriesTable, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style);
-
+		this.entriesTable = entriesTable;
+		
 		/*
 		 * We have a margin of 1 at the top and 2 at the bottom.
 		 * The reason for this is because we want a 2-pixel wide black
@@ -296,6 +299,15 @@ public class EntryRowControl extends RowControl<EntryData> {
 		this.isSelected = isSelected;
 		Color backgroundColor = (isSelected ? selectedRowColor : rowColor); 
 		setBackground(backgroundColor);
+		
+		/*
+		 * We need to tell the table that contains this row. This allows the
+		 * table to release the row if it is not currently visible and is now
+		 * not selected.
+		 */
+		if (!isSelected) {
+			entriesTable.table.rowDeselected(this);
+		}
 	}
 
 	@Override
@@ -317,7 +329,7 @@ public class EntryRowControl extends RowControl<EntryData> {
 	 * 
 	 * @return true if the changes are either valid and were committed or were
 	 *         canceled by the user, false if the changes were neither committed
-	 *         or canceled (and thus remain outstanding)
+	 *         nor discarded (and thus remain outstanding)
 	 */
 	public boolean commitChanges(String transactionLabel) {
 		// If changes have been made then check they are valid and ask
@@ -438,16 +450,51 @@ public class EntryRowControl extends RowControl<EntryData> {
 					}
 				}
 			} catch (InvalidUserEntryException e) {
-				MessageDialog.openError(
+		        MessageDialog dialog = new MessageDialog(
 						getShell(), 
 						"Incomplete or invalid data in entry", 
-						e.getLocalizedMessage());
+		        		null, // accept the default window icon
+						e.getLocalizedMessage(),
+						MessageDialog.ERROR, 
+						new String[] { "Discard", IDialogConstants.CANCEL_LABEL }, 
+						1);
+		        int result = dialog.open();
+		        if (result == 0) {
+		        	// Discard
+		        	
+		        	// TODO: Some of this code is duplicated below.
+		        	
+					transactionManager = new TransactionManager(committedEntryData.getBaseSessionManager());
+					Entry entryInTransaction;
+					if (committedEntryData.getEntry() == null) {
+						Transaction newTransaction = transactionManager.getSession().createTransaction();
+						entryInTransaction = newTransaction.createEntry();
+						newTransaction.createEntry();
 
-				if (e.getItemWithError() != null) {
-					e.getItemWithError().setFocus();
-				}
+						// TODO: Kludge here
+						((EntriesTable)getParent().getParent().getParent()).entriesContent.setNewEntryProperties(entryInTransaction);
+					} else {
+						entryInTransaction = transactionManager.getCopyInTransaction(committedEntryData.getEntry());
+					}
+					
+					// Update the controls.
 
-				return false;
+					uncommittedEntryData = new EntryData(entryInTransaction, transactionManager);
+					uncommittedEntryData.setIndex(committedEntryData.getIndex());
+					uncommittedEntryData.setBalance(committedEntryData.getBalance());
+
+					for (final ICellControl<EntryData> control: controls) {
+						control.load(uncommittedEntryData);
+					}
+					
+		        	return true;
+		        } else {
+		        	// Cancel the selection change
+		        	if (e.getItemWithError() != null) {
+		        		e.getItemWithError().setFocus();
+		        	}
+					return false;
+		        }
 			}
 
 			// Commit the changes to the transaction
@@ -576,5 +623,10 @@ public class EntryRowControl extends RowControl<EntryData> {
 
 	public EntryData getUncommittedEntryData() {
 		return uncommittedEntryData;
+	}
+
+	@Override
+	protected void scrollToShowRow() {
+		entriesTable.table.scrollToShowRow(this);
 	}
 }

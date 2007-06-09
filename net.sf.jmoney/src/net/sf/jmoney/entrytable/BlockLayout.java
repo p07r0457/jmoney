@@ -78,10 +78,10 @@ public class BlockLayout extends Layout {
 	protected Point computeSize(Composite composite, int wHint, int hHint, boolean flushCache) {
 		int width;
 		if (linkedToHeader) {
-			width = block.width;
+			width = block.width + Block.marginLeft + Block.marginRight;
 		} else {
 			if (wHint == SWT.DEFAULT) {
-				width = block.minimumWidth;
+				width = block.minimumWidth + Block.marginLeft + Block.marginRight;
 			} else {
 				width = wHint; 
 			}
@@ -95,7 +95,7 @@ public class BlockLayout extends Layout {
 		block.layout(width - Block.marginLeft - Block.marginRight);
 		block.positionControls(Block.marginLeft, marginTop, verticalSpacing, composite.getChildren(), flushCache);
 		int height = marginTop + block.getHeight(verticalSpacing, composite.getChildren()) + marginBottom;
-		return new Point(block.minimumWidth, height);
+		return new Point(width, height);
 	}
 
 	@Override
@@ -106,11 +106,13 @@ public class BlockLayout extends Layout {
 
 	@Override
 	protected void layout(Composite composite, boolean flushCache) {
-		Rectangle rect = composite.getClientArea ();
-		block.layout(rect.width - Block.marginLeft - Block.marginRight);
+		if (!linkedToHeader) {
+			Rectangle rect = composite.getClientArea();
+			block.layout(rect.width - Block.marginLeft - Block.marginRight);
+		}
 		
-		Control [] children = composite.getChildren ();
-		block.positionControls(rect.x + Block.marginLeft, rect.y + marginTop, verticalSpacing, children, flushCache);
+		Control [] children = composite.getChildren();
+		block.positionControls(Block.marginLeft, marginTop, verticalSpacing, children, flushCache);
 	}
 
 	public void paintRowLines(GC gc, Composite composite) {

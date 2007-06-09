@@ -6,5 +6,5 @@ public interface IContentProvider {
 
 	EntryData getElement(int rowNumber);
 
-	
+	int indexOf(EntryData entryData);
 }

@@ -45,7 +45,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
 	private boolean isDebit;
 
 	public DebitAndCreditColumns(String id, String name, Commodity commodity, boolean isDebit) {
-		super(name, 2, 70);
+		super(name, 70, 2);
 		this.id = id;
 		this.commodity = commodity;
 		this.isDebit = isDebit;

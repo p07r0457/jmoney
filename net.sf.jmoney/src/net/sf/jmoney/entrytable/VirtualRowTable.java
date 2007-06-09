@@ -67,12 +67,25 @@ public class VirtualRowTable extends Composite {
 	
 	/**
 	 * the currently selected row, as a 0-based index into the underlying rows,
-	 * or -1 if no row is selected.
-	 * To get the selected row as an index into the <code>rows</code> list,
-	 * you must subtract currentVisibleTopRow from this value.
+	 * or -1 if no row is selected. To get the selected row as an index into the
+	 * <code>rows</code> list, you must subtract currentVisibleTopRow from
+	 * this value.
+	 * <P>
+	 * This field always represents the same row as
+	 * <code>currentRowControl</code>.
 	 */
 	int currentRow = -1;
 
+	/**
+	 * The user is allowed to scroll the selected row off the client area.  There may
+	 * be uncommitted changes in this row.  These changes are not committed until the user
+	 * attempts to select another row.  Therefore we must keep the row control even though
+	 * it is not visible.
+	 * <P> 
+	 *  This field always represents the same row as <code>currentRow</code>. 
+	 */
+	RowSelectionTracker rowTracker;
+	
 	IContentProvider contentProvider;
 
 	IRowProvider rowProvider;
@@ -118,12 +131,14 @@ public class VirtualRowTable extends Composite {
 	 * @param parent
 	 * @param rootBlock
 	 * @param contentProvider
+	 * @param rowTracker 
 	 */
 	// TODO: tidy up EntriesTable parameter.  Perhaps we need to remove EntriesTable altogether?
-	public VirtualRowTable(Composite parent, Block rootBlock, EntriesTable entriesTable, IContentProvider contentProvider, IRowProvider rowProvider) {
+	public VirtualRowTable(Composite parent, Block rootBlock, EntriesTable entriesTable, IContentProvider contentProvider, IRowProvider rowProvider, RowSelectionTracker rowTracker) {
 		super(parent, SWT.NONE);
 		this.contentProvider = contentProvider;
 		this.rowProvider = rowProvider;
+		this.rowTracker = rowTracker;
 		
 		GridLayout layout = new GridLayout(2, false);
 		layout.marginWidth = 0;
@@ -316,27 +331,18 @@ public class VirtualRowTable extends Composite {
 	 * </ol>
 	 * 
 	 * If the given row is bigger than the visible area then it will not be
-	 * possible to fully show that row. In such case, the table is scrolled by
-	 * the least amount so that no part of any other row is visible.
+	 * possible to fully show that row. In such case, the table is scrolled to
+	 * show the top of the row if there are no visible rows above the selected row,
+	 * otherwise to show the bottom of the row.
 	 * 
 	 * @param index
 	 *            of the row to show, where 0 is the index of the first row
 	 *            in the underlying list of rows
 	 */
-	private void scrollToShowRow(int rowIndex) {
-		if (rowIndex < topVisibleRow) {
+	void scrollToShowRow(int rowIndex) {
+		if (rowIndex <= topVisibleRow) {
 			setTopRow(rowIndex);
-		} else if (rowIndex == topVisibleRow) {
-			Control rowControl = rows.get(contentProvider.getElement(rowIndex));
-			if (rowControl.getLocation().y < 0) {
-				setTopRow(rowIndex);
-			}		
-		} else if (rowIndex == topVisibleRow+rows.size()-1) {
-			Control rowControl = rows.get(contentProvider.getElement(rowIndex));
-			if (rowControl.getBounds().y + rowControl.getBounds().height > clientAreaSize.y) {
-				setBottomRow(rowIndex);
-			}
-		} else if (rowIndex >= topVisibleRow+rows.size()) {
+		} else if (rowIndex >= topVisibleRow+rows.size() - 1) {
 			setBottomRow(rowIndex);
 		}
 	}
@@ -520,6 +526,30 @@ public class VirtualRowTable extends Composite {
 			}
 		}
 
+		/*
+		 * We must keep the selected row, even if it is not visible.
+		 * 
+		 * Note that we want to make the selected control invisible but we do
+		 * not set the visible property to false. This is because all rows in
+		 * the rows map are assumed to be visible and the visible property is
+		 * not set on when this row becomes visible. Also, we must be sure not
+		 * to mess with the height, because this is not re-calculated each time,
+		 * so we move it off just before the top of the visible area. This
+		 * ensures it remains not visible even if the client area is re-sized.
+		 */
+		// TODO: parameterize row tracker?
+		EntryRowControl selectedRow = (EntryRowControl)rowTracker.getSelectedRow();
+		if (selectedRow != null) {
+			EntryData selectedEntryData = selectedRow.committedEntryData;
+			if (previousRows.containsKey(selectedEntryData)) {
+				rows.put(selectedEntryData, selectedRow);
+				previousRows.remove(selectedEntryData);
+
+				int rowHeight = selectedRow.getSize().y;
+				selectedRow.setLocation(0, -rowHeight);
+			}
+		}
+		
 		/*
 		 * Remove any previous rows that are now unused.
 		 * 
@@ -876,5 +906,28 @@ public class VirtualRowTable extends Composite {
 		// TODO: ensure selected row remains selected and visible
 		// (if a sort.  Now if a filter then it may not remain visible).
 		setTopRow(0);
+	}
+
+	/**
+	 * This method is called when an attempt to leave the selected row fails.
+	 * We want to be sure that the selected row becomes visible because
+	 * the user needs to correct the errors in the row.
+	 */
+	public void scrollToShowRow(EntryRowControl rowControl) {
+		int rowIndex = contentProvider.indexOf(rowControl.committedEntryData);
+		scrollToShowRow(rowIndex);
+	}
+
+	/**
+	 * This method is called whenever a row in this table ceases to be a selected row,
+	 * regardless of whether the row is currently visible or not.
+	 */
+	public void rowDeselected(EntryRowControl rowControl) {
+		/*
+		 * If the row is not visible then we can release it.
+		 */
+		if (!rows.containsKey(rowControl.committedEntryData)) {
+			rowProvider.releaseRow(rowControl);
+		}
 	}
 }

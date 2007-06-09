@@ -51,8 +51,8 @@ public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData> {
 	public OtherEntriesPropertyBlock(ScalarPropertyAccessor accessor) {
 		super(
 				accessor.getDisplayName(),
-				accessor.getWeight(),
-				accessor.getMinimumWidth()
+				accessor.getMinimumWidth(),
+				accessor.getWeight()
 		);
 
 		this.accessor = accessor;
@@ -121,19 +121,19 @@ public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData> {
 		};
 	}
 
-	public int compare(EntryData trans1, EntryData trans2) {
-		if (trans1.hasSplitEntries()) {
-			if (trans2.hasSplitEntries()) {
+	public int compare(EntryData entryData1, EntryData entryData2) {
+		if (entryData1.hasSplitEntries()) {
+			if (entryData2.hasSplitEntries()) {
 				return 0;
 			} else {
 				return 1;
 			}
 		} else {
-			if (trans2.hasSplitEntries()) {
+			if (entryData2.hasSplitEntries()) {
 				return -1;
 			} else {
-				ExtendableObject extendableObject1 = trans1.getOtherEntry();
-				ExtendableObject extendableObject2 = trans2.getOtherEntry();
+				ExtendableObject extendableObject1 = entryData1.getOtherEntry();
+				ExtendableObject extendableObject2 = entryData2.getOtherEntry();
 				return accessor.getComparator().compare(extendableObject1, extendableObject2);
 			}
 		}

@@ -185,12 +185,16 @@ public class EntriesTable extends Composite {
 
 	    IContentProvider contentProvider = new IContentProvider() {
 
+			public int getRowCount() {
+				return sortedEntries.size();
+			}
+
 			public EntryData getElement(int rowNumber) {
 				return sortedEntries.get(rowNumber); 
 			}
 
-			public int getRowCount() {
-				return sortedEntries.size();
+			public int indexOf(EntryData entryData) {
+				return sortedEntries.indexOf(entryData);
 			}
 	    };
 	    
@@ -199,9 +203,9 @@ public class EntriesTable extends Composite {
 	     * table.  This needs to be generalized for, say, the reconciliation
 	     * editor if there is to be a single row selection for both tables.
 	     */
-	    RowSelectionTracker rowTracker = new RowSelectionTracker();
+	    final RowSelectionTracker rowTracker = new RowSelectionTracker();
 	    FocusCellTracker cellTracker = new FocusCellTracker();
-		table = new VirtualRowTable(this, rootBlock, this, contentProvider, new ReusableRowProvider(this, rowTracker, cellTracker));
+		table = new VirtualRowTable(this, rootBlock, this, contentProvider, new ReusableRowProvider(this, rowTracker, cellTracker), rowTracker);
 		
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gridData.heightHint = 100;
@@ -265,20 +269,29 @@ public class EntriesTable extends Composite {
         Button deleteButton = toolkit.createButton(buttonArea, "Delete Transaction", SWT.PUSH);
         deleteButton.addSelectionListener(new SelectionAdapter() {
         	public void widgetSelected(SelectionEvent event) {
-        		Entry selectedEntry = getSelectedEntry();
-        		if (selectedEntry != null) {
-        			// Clear the selection.  This should not be necessary but.....
-//        			table.setSelection(new TreeItem [] {});
+        		// TODO: Parameterize the row tracker?
+        		EntryRowControl selectedRowControl = (EntryRowControl)rowTracker.getSelectedRow();
+        		
+        		if (selectedRowControl != null) {
+            		Entry selectedEntry = selectedRowControl.committedEntryData.getEntry();
         			
-        			// Does this need be so complex??? It is only in a transaction
-        			// so we can undo it.  A more efficient way would be to make the change
-        			// in a callback.
-        			
-        			TransactionManager transactionManager = new TransactionManager(selectedEntry.getObjectKey().getSessionManager());
-        			Entry selectedEntry2 = transactionManager.getCopyInTransaction(selectedEntry); 
-        			Transaction transaction = selectedEntry2.getTransaction();
-        			transaction.getSession().deleteTransaction(transaction);
-        			transactionManager.commit("Delete Transaction");
+            		if (selectedEntry == null) {
+            			// This is the empty row control.
+            			// TODO: Should we just clear the control contents?
+            			MessageDialog.openInformation(getShell(), "No Selection", "You must first select the entry you want to delete. (The current selection is a new entry that has not yet been registered).");
+            		} else {
+            			// Does this need be so complex??? It is only in a transaction
+            			// so we can undo it.  A more efficient way would be to make the change
+            			// in a callback.
+
+            			TransactionManager transactionManager = new TransactionManager(selectedEntry.getObjectKey().getSessionManager());
+            			Entry selectedEntry2 = transactionManager.getCopyInTransaction(selectedEntry); 
+            			Transaction transaction = selectedEntry2.getTransaction();
+            			transaction.getSession().deleteTransaction(transaction);
+            			transactionManager.commit("Delete Transaction");
+            		}
+        		} else {
+        			MessageDialog.openInformation(getShell(), "No Selection", "You must first select the entry you want to delete.");
         		}
         	}
         });
@@ -675,6 +688,7 @@ public class EntriesTable extends Composite {
 		return false;
 	}
 
+	// TODO: Not used???
 	public Entry getSelectedEntry() {
 		int row = table.getSelection();
 		if (row == -1) {

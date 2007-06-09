@@ -4,7 +4,6 @@ package net.sf.jmoney.entrytable;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
 
@@ -16,8 +15,6 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -63,11 +60,6 @@ public class OtherEntriesControl extends Composite {
 
 	private SessionChangeListener splitEntryListener = new SessionChangeAdapter() {
 
-		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
-			// TODO Auto-generated method stub
-			
-		}
-
 		public void objectInserted(ExtendableObject newObject) {
 			if (newObject instanceof Entry
 					&& ((Entry)newObject).getTransaction() == entryData.getEntry().getTransaction()
@@ -99,17 +91,10 @@ public class OtherEntriesControl extends Composite {
 		this.selectionTracker = selectionTracker;
 		this.focusCellTracker = focusCellTracker;
 		
-//		setLayout(new DropdownButtonLayout());
-		GridLayout layout = new GridLayout(2, false);
-		layout.marginHeight = 0;
-		layout.marginWidth = 0;
-		layout.horizontalSpacing = 0;
-		setLayout(layout);
+		setLayout(new DropdownButtonLayout());
 		
 		Control childArea = createChildComposite();
 		Control dropDownButton = createDownArrowButton();
-
-		dropDownButton.setLayoutData(new GridData(10, 10));
 	}
 
 	private Control createDownArrowButton() {
@@ -167,8 +152,7 @@ public class OtherEntriesControl extends Composite {
 	}
 
 	public void save() {
-		// TODO Auto-generated method stub
-		
+		// TODO Do we need to pass this on to the child controls?
 	}
 
 	/**
@@ -177,23 +161,20 @@ public class OtherEntriesControl extends Composite {
 	 * a drop-down button.
 	 */
 	private class DropdownButtonLayout extends Layout {
-		public void layout(Composite editor, boolean force) {
-			Rectangle bounds = editor.getClientArea();
-			Point buttonSize =  downArrowButton.computeSize(SWT.DEFAULT, SWT.DEFAULT, force);
-			childComposite.setBounds(0, 0, bounds.width-buttonSize.x, bounds.height);
-			downArrowButton.setBounds(bounds.width-buttonSize.x, 0, buttonSize.x, buttonSize.y);
+		public void layout(Composite composite, boolean force) {
+			Rectangle bounds = composite.getClientArea();
+			childComposite.setBounds(0, 0, bounds.width-OtherEntriesBlock.DROPDOWN_BUTTON_WIDTH, bounds.height);
+			downArrowButton.setBounds(bounds.width-OtherEntriesBlock.DROPDOWN_BUTTON_WIDTH, 0, OtherEntriesBlock.DROPDOWN_BUTTON_WIDTH, bounds.height);
 		}
 
-		public Point computeSize(Composite editor, int wHint, int hHint, boolean force) {
+		public Point computeSize(Composite composite, int wHint, int hHint, boolean force) {
 			/*
-			 * The button is always its preferred width.  Therefore we simply pass on to the contents,
+			 * The button is always a fixed width.  Therefore we simply pass on to the contents,
 			 * after adjusting for the button width. 
 			 */
-			Point buttonSize =  downArrowButton.computeSize(SWT.DEFAULT, SWT.DEFAULT, force);
-			int contentsWidthHint = (wHint == SWT.DEFAULT) ? SWT.DEFAULT : wHint - buttonSize.x; 
+			int contentsWidthHint = (wHint == SWT.DEFAULT) ? SWT.DEFAULT : wHint - OtherEntriesBlock.DROPDOWN_BUTTON_WIDTH; 
 			Point contentsSize = childComposite.computeSize(contentsWidthHint, hHint, force);
-			return new Point(contentsSize.x + buttonSize.x, contentsSize.y);
+			return new Point(contentsSize.x + OtherEntriesBlock.DROPDOWN_BUTTON_WIDTH, contentsSize.y);
 		}
 	}
-
 }

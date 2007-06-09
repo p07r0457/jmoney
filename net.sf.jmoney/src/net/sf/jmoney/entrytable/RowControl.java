@@ -116,6 +116,9 @@ public abstract class RowControl<T> extends Composite {
 						/*
 						 * The row selection change was rejected so restore the original cell selection.
 						 */
+						
+						selectionTracker.getSelectedRow().scrollToShowRow();
+						
 						// TODO: Should we be restoring selection to the cell that needs correcting?
 						focusCellTracker.setFocusCell(previousFocus);
 						previousFocus.getControl().setFocus();
@@ -123,5 +126,12 @@ public abstract class RowControl<T> extends Composite {
 				}
 			});
 		}
-	};
+	}
+
+	/**
+	 * This method is called when the selected row may not be visible (because the
+	 * user scrolled the table) but we want to make it visible again because there
+	 * was an error in it and we were unable to move the selection off the row.
+	 */
+	protected abstract void scrollToShowRow();
 }

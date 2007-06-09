@@ -51,8 +51,8 @@ abstract public class PropertyBlock extends IndividualBlock<EntryData> {
 	public PropertyBlock(ScalarPropertyAccessor accessor, String source) {
 		super(
 				accessor.getDisplayName(),
-				accessor.getWeight(),
-				accessor.getMinimumWidth()
+				accessor.getMinimumWidth(),
+				accessor.getWeight()
 		);
 
 		this.accessor = accessor;
