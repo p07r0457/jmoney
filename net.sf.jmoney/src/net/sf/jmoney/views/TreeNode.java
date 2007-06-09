@@ -29,10 +29,12 @@ import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.MalformedPluginException;
 import net.sf.jmoney.model2.PageEntry;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
 
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -62,6 +64,7 @@ public class TreeNode implements IAdaptable {
 
 	// TODO: generalize this code
 	private static AccountsNode accountsRootNode;
+//	private static CategoriesNode categoriesRootNode;
 
 	private String id;
 	private String label;
@@ -70,6 +73,7 @@ public class TreeNode implements IAdaptable {
 	private TreeNode parent;
 	private String parentId;
 	private int position;
+	private IDynamicTreeNode dynamicTreeNode;
 	protected ArrayList<Object> children = null;
 	
 	private Vector<PageEntry> pageFactories = new Vector<PageEntry>();
@@ -114,19 +118,65 @@ public class TreeNode implements IAdaptable {
 						if (position != null) {
 							positionNumber = Integer.parseInt(position);
 						}
-						
-						TreeNode node = new TreeNode(fullNodeId, label, descriptor, parentNodeId, positionNumber);
+
+						IDynamicTreeNode dynamicTreeNode = null;
+						try {
+							Object listener = elements[j].createExecutableExtension("class");
+							if (!(listener instanceof IDynamicTreeNode)) {
+								throw new MalformedPluginException(
+										"Plug-in " + extensions[i].getNamespaceIdentifier()
+										+ " extends the net.sf.jmoney.pages extension point. "
+										+ "However, the class specified by the class attribute in the node element "
+										+ "(" + listener.getClass().getName() + ") "
+										+ "does not implement the IDynamicTreeNode interface. "
+										+ "This interface must be implemented by all classes referenced "
+										+ "by the class attribute.");
+							}
+
+							dynamicTreeNode = (IDynamicTreeNode)listener;
+						} catch (CoreException e) {
+							if (e.getStatus().getException() == null) {
+								/*
+								 * The most likely situation is that no class is specified.
+								 * This is valid because the class attribute is optional.
+								 * It this situation we contruct a TreeNode.
+								 */
+							} else {
+								if (e.getStatus().getException() instanceof ClassNotFoundException) {
+									ClassNotFoundException e2 = (ClassNotFoundException)e.getStatus().getException();
+									throw new MalformedPluginException(
+											"Plug-in " + extensions[i].getNamespaceIdentifier()
+											+ " extends the net.sf.jmoney.pages extension point. "
+											+ "However, the class specified by the class attribute in the node element "
+											+ "(" + e2.getMessage() + ") "
+											+ "could not be found. "
+											+ "The class attribute must specify a class that implements the "
+											+ "IDynamicTreeNode interface.");
+								}
+								e.printStackTrace();
+								continue;
+							}
+						}
+
+						TreeNode node = new TreeNode(fullNodeId, label, descriptor, parentNodeId, positionNumber, dynamicTreeNode);
 						idToNodeMap.put(fullNodeId, node);
 					}
 				}
 			}
 		}
 		
+		// Special case nodes
+		accountsRootNode = new AccountsNode();
+		idToNodeMap.put(accountsRootNode.getId(), accountsRootNode);
+
+//		categoriesRootNode = new CategoriesNode();
+//		idToNodeMap.put(categoriesRootNode.getId(), categoriesRootNode);
+
 		// Set each node's parent.  If no node exists
 		// with the given parent node id then the node
 		// is placed at the root.
 
-		invisibleRoot = new TreeNode("root", "", null, "", 0);
+		invisibleRoot = new TreeNode("root", "", null, "", 0, null);
 
 		for (TreeNode treeNode: idToNodeMap.values()) {
 			TreeNode parentNode;
@@ -194,10 +244,6 @@ public class TreeNode implements IAdaptable {
 			}
 		}
 
-		// Special case node
-		accountsRootNode = new AccountsNode(invisibleRoot);
-		invisibleRoot.addChild(accountsRootNode);
-
 		// If a node has no child nodes and no page listeners
 		// then the node is removed.  This allows nodes to be
 		// created by the framework or the more general plug-ins
@@ -222,6 +268,12 @@ public class TreeNode implements IAdaptable {
 		return accountsRootNode;
 	}
 	
+	// At some point this node will be generalized and this method
+	// can be removed.  For time being, this node is a special case node.
+	public static TreeNode getCategoriesRootNode() {
+		return idToNodeMap.get("net.sf.jmoney.categoriesNode");
+	}
+	
 	/**
 	 * @param nodeId the full id of a node
 	 * @return the node, or null if no node with the given id exists
@@ -230,12 +282,13 @@ public class TreeNode implements IAdaptable {
 		return idToNodeMap.get(nodeId);
 	}
 	
-	public TreeNode(String id, String label, ImageDescriptor imageDescriptor, String parentId, int position) {
+	public TreeNode(String id, String label, ImageDescriptor imageDescriptor, String parentId, int position, IDynamicTreeNode dynamicTreeNode) {
 		this.id = id;
 		this.label = label;
 		this.imageDescriptor = imageDescriptor;
 		this.parentId = parentId;
 		this.position = position;
+		this.dynamicTreeNode = dynamicTreeNode;
 	}
 
 	/**
@@ -276,16 +329,31 @@ public class TreeNode implements IAdaptable {
 	public void removeChild(Object child) {
 		children.remove(child);
 	}
+	
 	public Object [] getChildren() {
 		if (children == null) {
-			return new Object[0];
+			if (dynamicTreeNode == null) {
+				return new Object[0];
+			} else {
+				return dynamicTreeNode.getChildren().toArray();
+			}
 		} else {
-			return children.toArray();
+			if (dynamicTreeNode == null) {
+				return children.toArray();
+			} else {
+				ArrayList<Object> combinedChildren = new ArrayList<Object>();
+				combinedChildren.addAll(dynamicTreeNode.getChildren());
+				combinedChildren.addAll(children);
+				return combinedChildren.toArray();
+			}
 		}
 	}
+	
 	public boolean hasChildren() {
-		return children != null && children.size()>0;
+		return (children != null && children.size() > 0)
+		|| (dynamicTreeNode != null && dynamicTreeNode.hasChildren());
 	}
+	
 	/**
 	 * @return
 	 */

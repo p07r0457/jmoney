@@ -23,6 +23,7 @@
 package net.sf.jmoney.views;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -34,31 +35,30 @@ import net.sf.jmoney.model2.Session;
  */
 class AccountsNode extends TreeNode {
 
-	public AccountsNode(TreeNode parent) {
-		super("net.sf.jmoney.capitalAccounts", JMoneyPlugin.getResourceString("NavigationTreeModel.accounts"), JMoneyPlugin.createImageDescriptor("icons/accounts.gif"), null, 100);
-	}
-	
-	@Override
-	public boolean hasChildren() {
-		Session session = JMoneyPlugin.getDefault().getSession();
-		if (session != null) {
-			return session.getCapitalAccountIterator().hasNext();
-		} else {
-			return false;
-		}
-	}
+	public AccountsNode() {
+		super("net.sf.jmoney.capitalAccounts", JMoneyPlugin.getResourceString("NavigationTreeModel.accounts"), JMoneyPlugin.createImageDescriptor("icons/accounts.gif"), null, 100, new IDynamicTreeNode() {
 
-	@Override
-	public Object[] getChildren() {
-		Session session = JMoneyPlugin.getDefault().getSession();
-		ArrayList<Object> children = new ArrayList<Object>();
-		if (session != null) {
-			for (Iterator<CapitalAccount> iter = session.getCapitalAccountIterator(); iter.hasNext(); ) {
-				CapitalAccount account = iter.next();
-				children.add(account);
+			public boolean hasChildren() {
+				Session session = JMoneyPlugin.getDefault().getSession();
+				if (session != null) {
+					return session.getCapitalAccountIterator().hasNext();
+				} else {
+					return false;
+				}
 			}
-		}
-		return children.toArray();
+
+			public Collection<Object> getChildren() {
+				Session session = JMoneyPlugin.getDefault().getSession();
+				ArrayList<Object> children = new ArrayList<Object>();
+				if (session != null) {
+					for (Iterator<CapitalAccount> iter = session.getCapitalAccountIterator(); iter.hasNext(); ) {
+						CapitalAccount account = iter.next();
+						children.add(account);
+					}
+				}
+				return children;
+			}
+		});
 	}
 }
 

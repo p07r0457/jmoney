@@ -25,11 +25,15 @@ package net.sf.jmoney.wizards;
 import java.util.Vector;
 
 import net.sf.jmoney.fields.AccountInfo;
+import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
@@ -50,16 +54,16 @@ import org.eclipse.ui.PlatformUI;
 
 public class NewAccountWizard extends Wizard {
 	
-	private ExtendablePropertySet<? extends CapitalAccount> accountPropertySet;
+	private ExtendablePropertySet<? extends Account> accountPropertySet;
 
 	private TransactionManager transactionManager;
 	
-	private CapitalAccount newUncommittedAccount;
+	private Account newUncommittedAccount;
 	
 	/**
 	 * This is set when 'finish' is pressed and the new account is committed.
 	 */
-	private CapitalAccount newCommittedAccount;
+	private Account newCommittedAccount;
 	
 	/**
 	 * 
@@ -68,18 +72,43 @@ public class NewAccountWizard extends Wizard {
 	 * @param parentAccount the parent account or null if this is to be
 	 * 		a top level account 
 	 */
-	public NewAccountWizard(CapitalAccount parentAccount, ExtendablePropertySet<? extends CapitalAccount> accountPropertySet) {
+	public NewAccountWizard(Session session, IncomeExpenseAccount parentAccount) {
+		this.accountPropertySet = IncomeExpenseAccountInfo.getPropertySet();
+		
+		this.setWindowTitle("Create a New Category");
+		this.setHelpAvailable(true);
+		
+		transactionManager = new TransactionManager(session.getObjectKey().getSessionManager());
+		
+		IncomeExpenseAccount parentAccount2 = transactionManager.getCopyInTransaction(parentAccount);
+		if (parentAccount2 == null) {
+			Session session2 = transactionManager.getSession();
+			newUncommittedAccount = session2.createAccount(accountPropertySet);
+		} else {
+			newUncommittedAccount = parentAccount2.createSubAccount();
+		}
+//		PlatformUI.getWorkbench().getHelpSystem().setHelp(this.getContainer(), "com.toutvirtual.help.locationDialogId");
+	}
+	
+	/**
+	 * 
+	 * @param finalPropertySet the property set object of the class
+	 * 		of account to create 
+	 * @param parentAccount the parent account or null if this is to be
+	 * 		a top level account 
+	 */
+	public NewAccountWizard(Session session, CapitalAccount parentAccount, ExtendablePropertySet<? extends CapitalAccount> accountPropertySet) {
 		this.accountPropertySet = accountPropertySet;
 		
 		this.setWindowTitle("Create a New Account");
 		this.setHelpAvailable(true);
 		
-		transactionManager = new TransactionManager(parentAccount.getObjectKey().getSessionManager());
+		transactionManager = new TransactionManager(session.getObjectKey().getSessionManager());
 		
 		CapitalAccount parentAccount2 = transactionManager.getCopyInTransaction(parentAccount);
-		Session session = transactionManager.getSession();
 		if (parentAccount2 == null) {
-			newUncommittedAccount = session.createAccount(accountPropertySet);
+			Session session2 = transactionManager.getSession();
+			newUncommittedAccount = session2.createAccount(accountPropertySet);
 		} else {
 			newUncommittedAccount = parentAccount2.createSubAccount(accountPropertySet);
 		}
@@ -103,7 +132,7 @@ public class NewAccountWizard extends Wizard {
 		
 		transactionManager.commit("Add New Account");
 		
-		newCommittedAccount = (CapitalAccount)((UncommittedObjectKey)newUncommittedAccount.getObjectKey()).getCommittedObjectKey().getObject();
+		newCommittedAccount = (Account)((UncommittedObjectKey)newUncommittedAccount.getObjectKey()).getCommittedObjectKey().getObject();
 		
 		return true;
 	}
@@ -247,7 +276,7 @@ public class NewAccountWizard extends Wizard {
 		}
 	}
 
-	public CapitalAccount getNewAccount() {
+	public Account getNewAccount() {
 		return newCommittedAccount;
 	}
 }

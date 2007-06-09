@@ -27,6 +27,7 @@ import java.util.Vector;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CapitalAccountInfo;
+import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.AbstractDataOperation;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
@@ -34,6 +35,7 @@ import net.sf.jmoney.model2.CurrentSessionChangeListener;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PageEntry;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
@@ -113,6 +115,7 @@ public class NavigationView extends ViewPart {
 
 	private Action openEditorAction;
 	private Vector<Action> newAccountActions = new Vector<Action>();
+	private Action newCategoryAction;
 	private Action deleteAccountAction;
 
 	private Session session;
@@ -145,6 +148,13 @@ public class NavigationView extends ViewPart {
 				} else {
 					return TreeNode.getAccountsRootNode();
 				}
+			} else if (child instanceof IncomeExpenseAccount) {
+				IncomeExpenseAccount account = (IncomeExpenseAccount)child;
+				if (account.getParent() != null) {
+					return account.getParent();
+				} else {
+					return TreeNode.getCategoriesRootNode();
+				}
 			}
 			return null;
 		}
@@ -155,6 +165,9 @@ public class NavigationView extends ViewPart {
 			} else if (parent instanceof CapitalAccount) {
 				CapitalAccount account = (CapitalAccount)parent;
 				return account.getSubAccountCollection().toArray();
+			} else if (parent instanceof IncomeExpenseAccount) {
+				IncomeExpenseAccount account = (IncomeExpenseAccount)parent;
+				return account.getSubAccountCollection().toArray();
 			};
 			return new Object[0];
 		}
@@ -164,6 +177,9 @@ public class NavigationView extends ViewPart {
 				return ((TreeNode)parent).hasChildren();
 			} else if (parent instanceof CapitalAccount) {
 				CapitalAccount account = (CapitalAccount)parent;
+				return !account.getSubAccountCollection().isEmpty();
+			} else if (parent instanceof IncomeExpenseAccount) {
+				IncomeExpenseAccount account = (IncomeExpenseAccount)parent;
 				return !account.getSubAccountCollection().isEmpty();
 			}
 			return false;
@@ -228,17 +244,18 @@ public class NavigationView extends ViewPart {
 			// viewer will not be visible but it is good to release the
 			// references to the account objects in the dead session).
             viewer.refresh(TreeNode.getAccountsRootNode(), false);
+            viewer.refresh(TreeNode.getCategoriesRootNode(), false);
 		}
 		
 		public void objectInserted(ExtendableObject newObject) {
-			if (newObject instanceof CapitalAccount) {
+			if (newObject instanceof Account) {
 				Object parentElement = contentProvider.getParent(newObject);
                 viewer.insert(parentElement, newObject, 0);
 			}
 		}
 
 		public void objectRemoved(final ExtendableObject deletedObject) {
-			if (deletedObject instanceof CapitalAccount) {
+			if (deletedObject instanceof Account) {
 				/*
 				 * This listener method is called before the object is deleted.
 				 * This allows listener methods to access the deleted object and
@@ -255,7 +272,7 @@ public class NavigationView extends ViewPart {
 		}
 		
 		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-			if (changedObject instanceof CapitalAccount
+			if (changedObject instanceof Account
 					&& propertyAccessor == AccountInfo.getNameAccessor()) {
 				viewer.update(changedObject, null);
 			}
@@ -333,7 +350,7 @@ public class NavigationView extends ViewPart {
 		// hard coded into this view).
 		JMoneyPlugin.getDefault().addSessionChangeListener(new MyCurrentSessionChangeListener(), viewer.getControl());
 		
-		viewer.expandAll();
+//		viewer.expandAll();
 		makeActions();
 		hookContextMenu();
 		contributeToActionBars();
@@ -481,6 +498,7 @@ public class NavigationView extends ViewPart {
 		for (Action newAccountAction: newAccountActions) {
 			manager.add(newAccountAction);
 		}
+		manager.add(newCategoryAction);
 		manager.add(new Separator());
 		manager.add(deleteAccountAction);
 
@@ -508,22 +526,28 @@ public class NavigationView extends ViewPart {
 		
 		manager.add(new Separator());
 
-		if (selectedObject instanceof AccountsNode 
-				|| selectedObject instanceof Account) {
+		if (selectedObject == TreeNode.getAccountsRootNode() 
+				|| selectedObject instanceof CapitalAccount) {
 			for (Action newAccountAction: newAccountActions) {
 				manager.add(newAccountAction);
 			}
-			if (selectedObject instanceof Account) {
-				manager.add(deleteAccountAction);
-			}
 		}
 
+		if (selectedObject == TreeNode.getCategoriesRootNode() 
+				|| selectedObject instanceof IncomeExpenseAccount) {
+			manager.add(newCategoryAction);
+		}
+
+		if (selectedObject instanceof Account) {
+			manager.add(deleteAccountAction);
+		}
+		
 		manager.add(new Separator());
 
 		
 		ActionGroup ag = new UndoRedoActionGroup(
-				this.getSite(), 
-				this.getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
+				getSite(), 
+				getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
 				true);
 		ag.fillContextMenu(manager);
 		
@@ -587,7 +611,7 @@ public class NavigationView extends ViewPart {
 						}
 					}
 					
-					NewAccountWizard wizard = new NewAccountWizard(account, derivedPropertySet);
+					NewAccountWizard wizard = new NewAccountWizard(session, account, derivedPropertySet);
 					WizardDialog dialog = new WizardDialog(getSite().getShell(), wizard);
 					dialog.setPageSize(600, 300);
 					int result = dialog.open();
@@ -620,18 +644,60 @@ public class NavigationView extends ViewPart {
 			
 			newAccountActions.add(newAccountAction);
 		}
+
+		newCategoryAction = new Action() {
+			public void run() {
+				IncomeExpenseAccount account = null;
+				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+		   		for (Object selectedObject: selection.toList()) {
+					if (selectedObject instanceof IncomeExpenseAccount) {
+						account = (IncomeExpenseAccount)selectedObject;
+						break;
+					}
+				}
+				
+				NewAccountWizard wizard = new NewAccountWizard(session, account);
+				WizardDialog dialog = new WizardDialog(getSite().getShell(), wizard);
+				dialog.setPageSize(600, 300);
+				int result = dialog.open();
+				if (result == WizardDialog.OK) {
+					// Having added the new account, set it as the selected
+					// account in the tree viewer.
+					viewer.setSelection(new StructuredSelection(wizard.getNewAccount()), true);
+				}
+			}
+		};
+		
+		Object [] messageArgs = new Object[] {
+				IncomeExpenseAccountInfo.getPropertySet().getObjectDescription()
+		};
+		
+		newCategoryAction.setText(
+				new java.text.MessageFormat(
+						JMoneyPlugin.getResourceString("MainFrame.newAccount"), 
+						java.util.Locale.US)
+						.format(messageArgs));
+		
+		newCategoryAction.setToolTipText(
+				new java.text.MessageFormat(
+						"Create a New {0}", 
+						java.util.Locale.US)
+						.format(messageArgs));
+		
+		newCategoryAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
+				getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
 		
 		deleteAccountAction = new Action() {
 			public void run() {
 				final Session session = JMoneyPlugin.getDefault().getSession();
-				CapitalAccount account = null;
+				Account account = null;
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 		   		for (Object selectedObject: selection.toList()) {
-					account = (CapitalAccount)selectedObject;
+					account = (Account)selectedObject;
 					break;
 				}
 				if (account != null) {
-					final CapitalAccount account2 = account;
+					final Account account2 = account;
 
 					IOperationHistory history = NavigationView.this.getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getOperationHistory();
 					
@@ -639,7 +705,11 @@ public class NavigationView extends ViewPart {
 						@Override
 						public IStatus execute() throws ExecutionException {
 							if (account2.getParent() != null) {
-								((CapitalAccount)account2.getParent()).getSubAccountCollection().remove(account2);
+								if (account2.getParent() instanceof CapitalAccount) {
+									((CapitalAccount)account2.getParent()).getSubAccountCollection().remove(account2);
+								} else {
+									((IncomeExpenseAccount)account2.getParent()).getSubAccountCollection().remove(account2);
+								}
 							} else {
 								session.deleteAccount(account2);
 						}
