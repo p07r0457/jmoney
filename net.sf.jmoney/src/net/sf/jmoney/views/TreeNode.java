@@ -195,7 +195,7 @@ public class TreeNode implements IAdaptable {
 		}
 
 		// Special case node
-		accountsRootNode = new AccountsNode(JMoneyPlugin.getResourceString("NavigationTreeModel.accounts"), JMoneyPlugin.createImageDescriptor("icons/accounts.gif"), invisibleRoot);
+		accountsRootNode = new AccountsNode(invisibleRoot);
 		invisibleRoot.addChild(accountsRootNode);
 
 		// If a node has no child nodes and no page listeners

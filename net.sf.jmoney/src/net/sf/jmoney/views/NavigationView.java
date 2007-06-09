@@ -39,6 +39,7 @@ import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.wizards.NewAccountWizard;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IOperationHistory;
@@ -60,9 +61,11 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
@@ -105,6 +108,7 @@ public class NavigationView extends ViewPart {
     
 	private TreeViewer viewer;
 	private DrillDownAdapter drillDownAdapter;
+	private ViewContentProvider contentProvider;
 	private ILabelProvider labelProvider; 
 
 	private Action openEditorAction;
@@ -123,11 +127,14 @@ public class NavigationView extends ViewPart {
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 			// The input never changes so we don't do anything here.
 		}
+		
 		public void dispose() {
 		}
+		
 		public Object[] getElements(Object parent) {
 			return getChildren(parent);
 		}
+		
 		public Object getParent(Object child) {
 			if (child instanceof TreeNode) {
 				return ((TreeNode)child).getParent();
@@ -141,6 +148,7 @@ public class NavigationView extends ViewPart {
 			}
 			return null;
 		}
+		
 		public Object [] getChildren(Object parent) {
 			if (parent instanceof TreeNode) {
 				return ((TreeNode)parent).getChildren();
@@ -166,6 +174,7 @@ public class NavigationView extends ViewPart {
 		public String getText(Object obj) {
 			return obj.toString();
 		}
+		
 		public Image getImage(Object obj) {
 			if (obj instanceof TreeNode) {
 				return ((TreeNode)obj).getImage();
@@ -218,74 +227,41 @@ public class NavigationView extends ViewPart {
 			// references to the account objects in the dead session).
 			NavigationView.this.session = newSession;
 			TreeNode.getAccountsRootNode().setSession(newSession);
-			refreshViewer();
+            viewer.refresh(TreeNode.getAccountsRootNode(), false);
 		}
 		
 		public void objectInserted(ExtendableObject newObject) {
 			if (newObject instanceof CapitalAccount) {
-				CapitalAccount newAccount = (CapitalAccount)newObject;
-				if (newAccount.getParent() == null) {
-					// An array of top level accounts is cached, so we add it now.
-					TreeNode.getAccountsRootNode().addChild(newAccount);
-				} else {
-					// Sub-accounts are not cached in any tree node, so there is
-					// nothing to do except to refresh the viewer.
-				}
-				refreshViewer();
+				Object parentElement = contentProvider.getParent(newObject);
+                viewer.insert(parentElement, newObject, 0);
 			}
 		}
 
-		public void objectRemoved(ExtendableObject deletedObject) {
+		public void objectRemoved(final ExtendableObject deletedObject) {
 			if (deletedObject instanceof CapitalAccount) {
-				CapitalAccount deletedAccount = (CapitalAccount)deletedObject;
-				if (deletedAccount.getParent() == null) {
-					// An array of top level accounts is cached, so we remove it now.
-					TreeNode.getAccountsRootNode().removeChild(deletedAccount);
-				} else {
-					// Sub-accounts are not cached in any tree node, so there is
-					// nothing to do except to refresh the viewer.
-				}
-				
-                viewer.remove(deletedAccount);
+				/*
+				 * This listener method is called before the object is deleted.
+				 * This allows listener methods to access the deleted object and
+				 * its position in the model.  However, this is too early to
+				 * refresh views.  Therefore we must delay the refresh of the view
+				 * until after the object is deleted.
+				 */
+				getSite().getShell().getDisplay().asyncExec(new Runnable() {
+					public void run() {
+		                viewer.remove(deletedObject);
+					}
+				});
 			}
 		}
 		
 		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 			if (changedObject instanceof CapitalAccount
 					&& propertyAccessor == AccountInfo.getNameAccessor()) {
-				final CapitalAccount account = (CapitalAccount)changedObject;
-				
-				// SWTException: Invalid thread access can occur
-				// without wrapping the call to update.
-		        Display.getDefault().syncExec( new Runnable() {
-		            public void run() {
-						viewer.update(account, null);
-		            }
-		        });
+				viewer.update(changedObject, null);
 			}
 		}
 	};
 	
-	/**
-	 * Refresh the viewer Object thread-safe.
-	 * 
-	 * Actually, JMoney is single threaded, and all processing is on the SWT thread by
-	 * default, so this is not necessary.  In the exceptional case where a plug-in does
-	 * use another thread, it must be up to that thread to queue SWT methods on the SWT
-	 * thread.
-	 *
-	 * My best guess is that this method was originally added back when JMoney still had
-	 * some Swing code running on another thread.
-	 */
-	// TODO: remove this method????
-	private void refreshViewer () {
-        Display.getDefault().syncExec( new Runnable() {
-            public void run() {
-                viewer.refresh(TreeNode.getAccountsRootNode(), false);
-            }
-        });
-	}
-
 	/**
 	 * The constructor.
 	 */
@@ -349,7 +325,7 @@ public class NavigationView extends ViewPart {
 		viewer = new TreeViewer(parent, SWT.H_SCROLL | SWT.V_SCROLL);
 		drillDownAdapter = new DrillDownAdapter(viewer);
 		labelProvider = new ViewLabelProvider();
-		ViewContentProvider contentProvider = new ViewContentProvider();
+		contentProvider = new ViewContentProvider();
 		viewer.setContentProvider(contentProvider);
 		viewer.setLabelProvider(labelProvider);
 		viewer.setSorter(new NameSorter());
@@ -368,8 +344,13 @@ public class NavigationView extends ViewPart {
 		contributeToActionBars();
 		
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
+			/**
+			 * When an element is selected and the editor for that element is
+			 * already open then we bring that editor to the top.  We do not,
+			 * however, open an editor if it is not already open.  To do that,
+			 * the user must double click.
+			 */
 			public void selectionChanged(SelectionChangedEvent event) {
-			   	// if the selection is empty clear the label
 			   	if (event.getSelection().isEmpty()) {
 			   		// I don't see how this can happen.
 			   	} else if (event.getSelection() instanceof IStructuredSelection) {
@@ -395,9 +376,12 @@ public class NavigationView extends ViewPart {
 		   }
 		});
 
+		/**
+		 * When an element is double-clicked, we open the editor (if one exists)
+		 * for this element.
+		 */
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			   public void doubleClick(DoubleClickEvent event) {
-				   	// if the selection is empty clear the label
 				   	if (event.getSelection().isEmpty()) {
 				   		// I don't see how this can happen.
 				   	} else if (event.getSelection() instanceof IStructuredSelection) {
@@ -590,10 +574,11 @@ public class NavigationView extends ViewPart {
 		openEditorAction.setText(JMoneyPlugin.getResourceString("MainFrame.openEditor"));
 		openEditorAction.setToolTipText(JMoneyPlugin.getResourceString("MainFrame.openEditor"));
 		
-		// For each class of object derived (directly or indirectly)
-		// from the capital account class, and that is not itself
-		// derivable, add a menu item to create a new account of
-		// that type.
+		/*
+		 * For each class of object derived (directly or indirectly) from the
+		 * capital account class, and that is not itself derivable, add a menu
+		 * item to create a new account of that type.
+		 */
 		for (final ExtendablePropertySet<? extends CapitalAccount> derivedPropertySet: CapitalAccountInfo.getPropertySet().getDerivedPropertySets()) {
 			
 			Action newAccountAction = new Action() {
@@ -606,36 +591,16 @@ public class NavigationView extends ViewPart {
 							break;
 						}
 					}
-					final CapitalAccount account2 = account;
-				
-					IOperationHistory history = JMoneyPlugin.getDefault().getWorkbench().getOperationSupport().getOperationHistory();
 					
-					IUndoableOperation operation = new AbstractDataOperation(session, "add new account") {
-						@Override
-						public IStatus execute() throws ExecutionException {
-							CapitalAccount newAccount;
-							if (account2 == null) {
-								newAccount = session.createAccount(derivedPropertySet);
-							} else {
-								newAccount = account2.createSubAccount(derivedPropertySet);
-							}
-							newAccount.setName(JMoneyPlugin.getResourceString("Account.newAccount"));
-							
-							return Status.OK_STATUS;
-						}
-					};
-					
-					operation.addContext(session.getUndoContext());
-					try {
-						history.execute(operation, null, null);
-					} catch (ExecutionException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					NewAccountWizard wizard = new NewAccountWizard(account, derivedPropertySet);
+					WizardDialog dialog = new WizardDialog(getSite().getShell(), wizard);
+					dialog.setPageSize(600, 300);
+					int result = dialog.open();
+					if (result == WizardDialog.OK) {
+						// Having added the new account, set it as the selected
+						// account in the tree viewer.
+						viewer.setSelection(new StructuredSelection(wizard.getNewAccount()), true);
 					}
-
-					// Having added the new account, set it as the selected
-					// account in the tree viewer.
-//?????					viewer.setSelection(new StructuredSelection(newAccount), true);
 				}
 			};
 			
@@ -678,7 +643,11 @@ public class NavigationView extends ViewPart {
 					IUndoableOperation operation = new AbstractDataOperation(session, "delete account") {
 						@Override
 						public IStatus execute() throws ExecutionException {
-							session.deleteAccount(account2);
+							if (account2.getParent() != null) {
+								((CapitalAccount)account2.getParent()).getSubAccountCollection().remove(account2);
+							} else {
+								session.deleteAccount(account2);
+						}
 							return Status.OK_STATUS;
 						}
 					};

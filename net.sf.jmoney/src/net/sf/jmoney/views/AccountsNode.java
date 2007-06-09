@@ -25,37 +25,43 @@ package net.sf.jmoney.views;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Session;
-
-import org.eclipse.jface.resource.ImageDescriptor;
 
 /**
  * @author Administrateur
  */
-// TODO: Should the list of accounts be cached by the TreeNode object?
-// Or should we change this code and send the request to the datastore each time the tree view requests
-// a list of accounts or sub-accounts?
 class AccountsNode extends TreeNode {
-	public AccountsNode(String label, ImageDescriptor imageDescriptor, TreeNode parent) {
-		super("net.sf.jmoney.capitalAccounts", label, imageDescriptor, null, 100);
-		
-		setParent(parent);
+	private Session session = null;
+
+	public AccountsNode(TreeNode parent) {
+		super("net.sf.jmoney.capitalAccounts", JMoneyPlugin.getResourceString("NavigationTreeModel.accounts"), JMoneyPlugin.createImageDescriptor("icons/accounts.gif"), null, 100);
 	}
 	
 	public void setSession(Session session) {
-		// Initialize with list of top level accounts from the session.
-		if (children == null) {
-			children = new ArrayList<Object>();
+		this.session = session;
+	}
+
+	@Override
+	public boolean hasChildren() {
+		if (session != null) {
+			return session.getCapitalAccountIterator().hasNext();
 		} else {
-			children.clear();
+			return false;
 		}
+	}
+
+	@Override
+	public Object[] getChildren() {
+		ArrayList<Object> children = new ArrayList<Object>();
 		if (session != null) {
 			for (Iterator<CapitalAccount> iter = session.getCapitalAccountIterator(); iter.hasNext(); ) {
 				CapitalAccount account = iter.next();
 				children.add(account);
 			}
 		}
+		return children.toArray();
 	}
 }
 

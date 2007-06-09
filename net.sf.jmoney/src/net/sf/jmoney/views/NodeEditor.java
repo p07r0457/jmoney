@@ -27,10 +27,15 @@ import java.util.Vector;
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.AccountInfo;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.PageEntry;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.model2.SessionChangeListener;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IEditorInput;
@@ -52,6 +57,8 @@ public class NodeEditor extends FormEditor {
     protected Object navigationTreeNode;
     protected Vector pageListeners;
 
+    protected SessionChangeListener accountNameChangeListener = null;
+    
     /* (non-Javadoc)
      * @see org.eclipse.ui.forms.editor.FormEditor#addPages()
      */
@@ -83,7 +90,11 @@ public class NodeEditor extends FormEditor {
     	// of pages.
         NodeEditorInput cInput = (NodeEditorInput)this.getEditorInput();
     	cInput.pages = null;
-    	
+
+    	if (accountNameChangeListener != null) {
+    		((Account)cInput.getNode()).getObjectKey().getSessionManager().removeChangeListener(accountNameChangeListener);
+    	}
+
     	super.dispose();
     }
     
@@ -93,13 +104,32 @@ public class NodeEditor extends FormEditor {
     public void init(IEditorSite site, IEditorInput input) throws PartInitException {
         super.init(site, input);
 
-        NodeEditorInput cInput = (NodeEditorInput) input;
+        final NodeEditorInput cInput = (NodeEditorInput) input;
 
         navigationTreeNode = cInput.getNode();
     	pageListeners = cInput.getPageListeners();
 
        	setPartName(cInput.getName());
 		setTitleImage(cInput.getImage());
+		
+		/*
+		 * If the node object is an account then the title is the name of the account.
+		 * We must listen for changes in the name and update the title accordingly.
+		 * This ensures the title changes when the account name is edited.
+		 */
+		if (cInput.getNode() instanceof Account) {
+			final Account account = (Account)cInput.getNode();
+			accountNameChangeListener = new SessionChangeAdapter() {
+				@Override
+				public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+					if (changedObject == account
+							&& propertyAccessor == AccountInfo.getNameAccessor()) {
+				       	setPartName(account.getName());
+					}
+				}
+			};
+			account.getObjectKey().getSessionManager().addChangeListener(accountNameChangeListener);
+		}
 		
 		ActionGroup ag = new UndoRedoActionGroup(
 //				getSite(), 
