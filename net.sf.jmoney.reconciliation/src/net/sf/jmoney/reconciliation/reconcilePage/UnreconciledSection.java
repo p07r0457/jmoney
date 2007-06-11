@@ -39,7 +39,9 @@ import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IndividualBlock;
+import net.sf.jmoney.entrytable.OtherEntriesButton;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
@@ -236,6 +238,13 @@ public class UnreconciledSection extends SectionPart {
 				PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor()),
 				PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
 				PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
+				new OtherEntriesButton(
+						new HorizontalBlock<Entry>(
+								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
+								new SingleOtherEntryPropertyBlock(EntryInfo.getDescriptionAccessor()),
+								new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
+						)
+				),
 				debitColumnManager,
 				creditColumnManager,
 				balanceColumnManager

@@ -39,14 +39,15 @@ import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IndividualBlock;
+import net.sf.jmoney.entrytable.OtherEntriesButton;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
@@ -55,27 +56,21 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.ViewerDropAdapter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTarget;
 import org.eclipse.swt.dnd.DropTargetAdapter;
 import org.eclipse.swt.dnd.DropTargetEvent;
-import org.eclipse.swt.dnd.FileTransfer;
 import org.eclipse.swt.dnd.Transfer;
-import org.eclipse.swt.dnd.TransferData;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Tree;
-import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
@@ -312,13 +307,15 @@ public class StatementSection extends SectionPart {
 
 			@Override
 			public void createHeaderControls(Composite parent) {
-				// All CellBlock implementations must create a control because
-				// the header and rows must match.
-				// Maybe these objects could just point to the header
-				// controls, in which case this would not be necessary.
-				// Note also we use Label, not an empty Composite,
-				// because we don't want a preferred height that is higher
-				// than the labels.
+				/*
+				 * All CellBlock implementations must create a control because
+				 * the header and rows must match. Maybe these objects could
+				 * just point to the header controls, in which case this would
+				 * not be necessary.
+				 * 
+				 * Note also we use Label, not an empty Composite, because we
+				 * don't want a preferred height that is higher than the labels.
+				 */
 				new Label(parent, SWT.NONE);
 			}
 		};
@@ -337,6 +334,13 @@ public class StatementSection extends SectionPart {
 				PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor()),
 				PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
 				PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
+				new OtherEntriesButton(
+						new HorizontalBlock<Entry>(
+								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
+								new SingleOtherEntryPropertyBlock(EntryInfo.getDescriptionAccessor()),
+								new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
+						)
+				),
 				debitColumnManager,
 				creditColumnManager,
 				balanceColumnManager
