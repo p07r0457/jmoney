@@ -4,14 +4,8 @@
 
      <extension
          point="net.sf.jmoney.pages">
-      <node
-          id="categoriesNode"
-	      label="%NavigationTreeModel.categories"
-    	  icon="icons/category.gif"
-    	  position="200">
-      </node>
       <pages
-            node="net.sf.jmoney.categoriespanel.categoriesNode"
+            node="net.sf.jmoney.categoriesNode"
             class="net.sf.jmoney.bookkeepingPages.CategoryPage"
             id="categories">
       </pages>
