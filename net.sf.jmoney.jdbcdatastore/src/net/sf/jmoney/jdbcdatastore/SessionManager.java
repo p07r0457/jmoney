@@ -1621,15 +1621,25 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	public void commitTransaction() {
 		try {
 			connection.commit();
-			connection.setAutoCommit(false);
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			// TODO We need a mechanism to log and report errors
+			e.printStackTrace();
+		}
+
+		/*
+		 * Note that we want to turn on auto-commit even if
+		 * the above commit failed.
+		 */
+		try {
+			connection.setAutoCommit(true);
+		} catch (SQLException e) {
+			// TODO We need a mechanism to log and report errors
 			e.printStackTrace();
 		}
 	}
 
 	/**
-	 * This is a helper method to get the basemost property set for
+	 * This is a helper method to get the base-most property set for
 	 * a given property set.
 	 * 
 	 * @param propertySet
