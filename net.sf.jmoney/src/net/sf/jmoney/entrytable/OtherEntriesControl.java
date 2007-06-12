@@ -124,7 +124,7 @@ public class OtherEntriesControl extends Composite {
 		childComposite.setLayout(stackLayout);
 		
 		splitLabel = new Label(childComposite, SWT.NONE);
-		splitLabel.setText("--split entry--");
+		splitLabel.setText(JMoneyPlugin.getResourceString("SplitCategory.name"));
 
 		otherEntryControl = new SplitEntryRowControl(childComposite, SWT.NONE, rootBlock, true, selectionTracker, focusCellTracker);
 		
