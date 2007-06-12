@@ -33,12 +33,11 @@ import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
-import net.sf.jmoney.entrytable.VerticalBlock;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.SectionPart;
@@ -50,18 +49,18 @@ import org.eclipse.ui.forms.widgets.Section;
  * 
  * @author Johann Gyger
  */
-public class EntriesSection extends SectionPart implements IEntriesContent {
+public class CategoryEntriesSection extends SectionPart implements IEntriesContent {
 
-	private CurrencyAccount account;
+	private IncomeExpenseAccount account;
 	private EntriesFilter filter;
-
+	
     private EntriesTable fEntriesControl;
     
     private EntryRowSelectionListener tableSelectionListener = null;
     
     private Block<EntryData> rootBlock;
     
-    public EntriesSection(Composite parent, CurrencyAccount account, EntriesFilter filter, FormToolkit toolkit) {
+    public CategoryEntriesSection(Composite parent, IncomeExpenseAccount account, EntriesFilter filter, FormToolkit toolkit) {
         super(parent, toolkit, Section.TITLE_BAR);
         getSection().setText("All Entries");
         this.account = account;
@@ -107,17 +106,11 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		
 		rootBlock = new HorizontalBlock<EntryData>(
 				transactionDateColumn,
-				new VerticalBlock<EntryData>(
-						PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
-						new HorizontalBlock<EntryData>(
-								PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
-								PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor())
-						)
-				),
+				PropertyBlock.createEntryColumn(EntryInfo.getDescriptionAccessor()),
 				new OtherEntriesBlock(
 						new HorizontalBlock<Entry>(
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
-								new SingleOtherEntryPropertyBlock(EntryInfo.getDescriptionAccessor()),
+								new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor()),
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
 						)
 				),
@@ -166,7 +159,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 	 * @see net.sf.jmoney.pages.entries.IEntriesContent#getStartBalance()
 	 */
 	public long getStartBalance() {
-        return account.getStartBalance();
+        return 0;
 	}
 
 	public void setNewEntryProperties(Entry newEntry) {

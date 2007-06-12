@@ -45,12 +45,9 @@ public class EntriesFilter implements Constants {
      */
     protected String pattern = "";
 
-    protected EntriesPage fPage;
-    
     protected transient PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
-    public EntriesFilter(EntriesPage fPage) {
-    	this.fPage = fPage;
+    public EntriesFilter() {
     }
     
 	/**
@@ -72,7 +69,6 @@ public class EntriesFilter implements Constants {
         if (!aPattern.equals(pattern)) {
             pattern = aPattern;
             changeSupport.firePropertyChange("pattern", null, null);
-			fPage.fEntriesSection.refreshEntryList();
         }
     }
 
@@ -95,9 +91,6 @@ public class EntriesFilter implements Constants {
         if (filterColumnIndex == aType) return;
         filterColumnIndex = aType;
         changeSupport.firePropertyChange("type", null, null);
-        if (!pattern.equals("")) {
-        	fPage.fEntriesSection.refreshEntryList();
-        }
     }
 
     /**

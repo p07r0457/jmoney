@@ -21,6 +21,8 @@
  */
 package net.sf.jmoney.pages.entries;
 
+import java.util.Collection;
+
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.IndividualBlock;
 
@@ -47,15 +49,18 @@ import org.eclipse.ui.forms.widgets.Section;
  */
 public class EntriesFilterSection extends SectionPart {
 
-	protected EntriesPage fPage;
     protected Combo fFilterCombo;
     protected Combo fFilterTypeCombo;
     protected Combo fOperationCombo;
     protected Text fFilterText;
+	private EntriesFilter filter;
+	private Collection<IndividualBlock> allEntryDataObjects;
 
-	public EntriesFilterSection(EntriesPage page, Composite parent) {
-        super(parent, page.getManagedForm().getToolkit(), Section.DESCRIPTION | Section.TITLE_BAR | Section.TWISTIE);
-        fPage = page;
+	public EntriesFilterSection(Composite parent, EntriesFilter filter, Collection<IndividualBlock> allEntryDataObjects, FormToolkit toolkit) {
+        super(parent, toolkit, Section.DESCRIPTION | Section.TITLE_BAR | Section.TWISTIE);
+        this.filter = filter;
+        this.allEntryDataObjects = allEntryDataObjects;
+        
         getSection().addExpansionListener(new ExpansionAdapter() {
     		public void expansionStateChanged(ExpansionEvent e) {
     			// TODO warn the user if the section is being collapsed
@@ -67,7 +72,7 @@ public class EntriesFilterSection extends SectionPart {
     	});
     	getSection().setText("Entries Filter");
         getSection().setDescription("Show only entries in the table below that match your filter criteria.");
-		createClient(page.getManagedForm().getToolkit());
+		createClient(toolkit);
 	}
 
 	protected void createClient(FormToolkit toolkit) {
@@ -87,7 +92,7 @@ public class EntriesFilterSection extends SectionPart {
 			public void widgetSelected(SelectionEvent e) {
 				if (fFilterCombo.getSelectionIndex() == 1) {
 					fFilterText.setText("");
-					fPage.filter.setPattern("");
+					filter.setPattern("");
 					// always leave selection at 'filter' (this combo is acting as a push button)
 					fFilterCombo.select(0);
 				}
@@ -96,10 +101,10 @@ public class EntriesFilterSection extends SectionPart {
 
         // Build an array of the localized names of the properties
         // on which a filter may be based.
-        String[] filterTypes = new String[fPage.allEntryDataObjects.size() + 1];
+        String[] filterTypes = new String[allEntryDataObjects.size() + 1];
         int i = 0;
         filterTypes[i++] = JMoneyPlugin.getResourceString("EntryFilter.entry"); 
-        for (IndividualBlock entriesSectionProperty: fPage.allEntryDataObjects) {
+        for (IndividualBlock entriesSectionProperty: allEntryDataObjects) {
             filterTypes[i++] = entriesSectionProperty.getText();
         }
         
@@ -109,7 +114,7 @@ public class EntriesFilterSection extends SectionPart {
         fFilterTypeCombo.select(0);
         fFilterTypeCombo.addSelectionListener(new SelectionAdapter() {
 			public void widgetSelected(SelectionEvent e) {
-				fPage.filter.setType(fFilterTypeCombo.getSelectionIndex());
+				filter.setType(fFilterTypeCombo.getSelectionIndex());
 			}
         });
         
@@ -123,7 +128,7 @@ public class EntriesFilterSection extends SectionPart {
         fFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         fFilterText.addFocusListener(new FocusAdapter() {
 			public void focusLost(FocusEvent e) {
-				fPage.filter.setPattern(fFilterText.getText());
+				filter.setPattern(fFilterText.getText());
 			}
         });
 

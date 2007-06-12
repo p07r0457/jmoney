@@ -38,17 +38,14 @@ public class EntriesBookkeepingPage implements IBookkeepingPageFactory {
     /* (non-Javadoc)
      * @see net.sf.jmoney.IBookkeepingPage#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
      */
-    public IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento) {
-        EntriesPage formPage = new EntriesPage(editor);
-
-        try {
+	public IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento) {
+		EntriesPage formPage = new EntriesPage(editor);
+		try {
 			editor.addPage(formPage);
 		} catch (PartInitException e) {
 			JMoneyPlugin.log(e);
 			// TODO: cleanly leave out this page.
 		}
-		
 		return formPage;
     }
-
 }

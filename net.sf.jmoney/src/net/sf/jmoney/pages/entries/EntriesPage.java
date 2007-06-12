@@ -21,6 +21,8 @@
  */
 package net.sf.jmoney.pages.entries;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Vector;
 
 import net.sf.jmoney.IBookkeepingPage;
@@ -31,6 +33,7 @@ import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -61,14 +64,15 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 	protected Vector<IndividualBlock> allEntryDataObjects = new Vector<IndividualBlock>();
 
     protected EntriesFilterSection fEntriesFilterSection;
-    protected EntriesSection fEntriesSection;
+//    protected EntriesSection fEntriesSection;
+//    protected IEntriesContent fEntriesSection;
 
-	final EntriesFilter filter = new EntriesFilter(this);
+	final EntriesFilter filter = new EntriesFilter();
 
 	/**
 	 * The account being shown in this page.
 	 */
-	private CurrencyAccount account;
+	private Account account;
 	
     /**
      * Create a new page to edit entries.
@@ -84,10 +88,8 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
      * @see org.eclipse.ui.forms.editor.FormPage#createFormContent(org.eclipse.ui.forms.IManagedForm)
      */
     protected void createFormContent(IManagedForm managedForm) {
-        CurrencyAccount originalAccount = (CurrencyAccount) fEditor.getSelectedObject();
-
     	// Set the account that this page is viewing and editing.
-        account = originalAccount;
+    	account = (Account) fEditor.getSelectedObject();
         
     	// Build an array of all possible properties that may be
     	// displayed in the table.
@@ -190,34 +192,55 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		 * determined from whether the other currency amount is in
 		 * the credit or debit column).
 		 */
-        allEntryDataObjects.add(new PropertyBlock(EntryInfo.getAmountAccessor(), "other") {
-        	public ExtendableObject getObjectContainingProperty(EntryData data) {
+        if (account instanceof CurrencyAccount) {
+        	allEntryDataObjects.add(new PropertyBlock(EntryInfo.getAmountAccessor(), "other") {
+        		public ExtendableObject getObjectContainingProperty(EntryData data) {
         			if (!data.hasSplitEntries()) {
         				Entry entry = data.getOtherEntry();
         				if (entry.getAccount() instanceof IncomeExpenseAccount
-        				&& !JMoneyPlugin.areEqual(entry.getCommodity(), account.getCurrency())) {
+        						&& !JMoneyPlugin.areEqual(entry.getCommodity(), ((CurrencyAccount)account).getCurrency())) {
         					return entry;
         				}
         			}
-        		
-        		// If we get here, the property is not applicable for this entry.
-        		return null;
-        	}
-        });
+
+        			// If we get here, the property is not applicable for this entry.
+        			return null;
+        		}
+        	});
+        }
 
     	ScrolledForm form = managedForm.getForm();
         GridLayout layout = new GridLayout();
         form.getBody().setLayout(layout);
         
-        fEntriesFilterSection = new EntriesFilterSection(this, form.getBody());
+        fEntriesFilterSection = new EntriesFilterSection(form.getBody(), filter, allEntryDataObjects, getManagedForm().getToolkit());
         fEntriesFilterSection.getSection().setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         managedForm.addPart(fEntriesFilterSection);
         fEntriesFilterSection.initialize(managedForm);
         
-        fEntriesSection = new EntriesSection(this, form.getBody());
-        fEntriesSection.getSection().setLayoutData(new GridData(GridData.FILL_BOTH));
-        managedForm.addPart(fEntriesSection);
-        fEntriesSection.initialize(managedForm);
+        if (account instanceof CurrencyAccount) {
+        	final EntriesSection fEntriesSection = new EntriesSection(form.getBody(), (CurrencyAccount)account, filter, getManagedForm().getToolkit());
+            fEntriesSection.getSection().setLayoutData(new GridData(GridData.FILL_BOTH));
+            managedForm.addPart(fEntriesSection);
+            fEntriesSection.initialize(managedForm);
+
+            filter.addPropertyChangeListener(new PropertyChangeListener() {
+    			public void propertyChange(PropertyChangeEvent event) {
+    				fEntriesSection.refreshEntryList();
+    			}
+    		});
+        } else {
+        	final CategoryEntriesSection fEntriesSection = new CategoryEntriesSection(form.getBody(), (IncomeExpenseAccount)account, filter, getManagedForm().getToolkit());
+            fEntriesSection.getSection().setLayoutData(new GridData(GridData.FILL_BOTH));
+            managedForm.addPart(fEntriesSection);
+            fEntriesSection.initialize(managedForm);
+
+            filter.addPropertyChangeListener(new PropertyChangeListener() {
+    			public void propertyChange(PropertyChangeEvent event) {
+    				fEntriesSection.refreshEntryList();
+    			}
+    		});
+        }
 
         form.setText("Accounting Entries");
 /* We need to get this working so we can remove that row of buttons.
@@ -271,7 +294,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 */        
     }
     
-    public CurrencyAccount getAccount () {
+    public Account getAccount () {
     	return account;
     }
 
