@@ -111,8 +111,13 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
      * @see org.eclipse.ui.IEditorInput#getToolTipText()
      */
     public String getToolTipText() {
-        // TODO Auto-generated method stub
-        return "tool tip text to distinquish pages with same name";
+		if (nodeObject instanceof TreeNode) {
+			return ((TreeNode)nodeObject).getId();
+		} else if (nodeObject instanceof Account) {
+			return ((Account)nodeObject).getFullAccountName();
+		} else {
+	        return "tool tip text to distinquish pages with same name";
+		}
     }
 
     /* (non-Javadoc)
