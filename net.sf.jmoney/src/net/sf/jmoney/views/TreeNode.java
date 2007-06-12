@@ -62,10 +62,6 @@ public class TreeNode implements IAdaptable {
 	
 	private static TreeNode invisibleRoot;
 
-	// TODO: generalize this code
-	private static AccountsNode accountsRootNode;
-//	private static CategoriesNode categoriesRootNode;
-
 	private String id;
 	private String label;
 	private Image image = null;
@@ -165,13 +161,6 @@ public class TreeNode implements IAdaptable {
 			}
 		}
 		
-		// Special case nodes
-		accountsRootNode = new AccountsNode();
-		idToNodeMap.put(accountsRootNode.getId(), accountsRootNode);
-
-//		categoriesRootNode = new CategoriesNode();
-//		idToNodeMap.put(categoriesRootNode.getId(), categoriesRootNode);
-
 		// Set each node's parent.  If no node exists
 		// with the given parent node id then the node
 		// is placed at the root.
@@ -262,18 +251,6 @@ public class TreeNode implements IAdaptable {
 		return invisibleRoot;
 	}
 
-	// At some point this node will be generalized and this method
-	// can be removed.  For time being, this node is a special case node.
-	public static AccountsNode getAccountsRootNode() {
-		return accountsRootNode;
-	}
-	
-	// At some point this node will be generalized and this method
-	// can be removed.  For time being, this node is a special case node.
-	public static TreeNode getCategoriesRootNode() {
-		return idToNodeMap.get("net.sf.jmoney.categoriesNode");
-	}
-	
 	/**
 	 * @param nodeId the full id of a node
 	 * @return the node, or null if no node with the given id exists

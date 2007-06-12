@@ -83,6 +83,47 @@
          </action>
       </actionSet>
    </extension>
+
+<!-- Update Actions -->
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            label="%UpdateActionSet.label"
+            visible="true"
+            id="net.sf.jmoney.softwareUpdates">
+         <menu
+               label="%UpdateActionSet.menu.label"
+               path="help/group.updates"
+               id="net.sf.jmoney.updateMenu">
+            <separator
+                  name="group0">
+            </separator>
+            <separator
+                  name="group1">
+            </separator>
+         </menu>
+         <action
+               class="net.sf.jmoney.actions.ConfigurationManagerAction"
+               definitionId="org.eclipse.ui.update.manageConfiguration"
+               helpContextId="org.eclipse.update.ui.newUpdates"
+               icon="$nl$/icons/full/elcl16/configs.gif"
+               id="net.sf.jmoney.configManager"
+               label="%UpdateActionSet.configManager.label"
+               menubarPath="help/net.sf.jmoney.updateMenu/group0">
+         </action>
+<!--               definitionId="org.eclipse.ui.update.findAndInstallUpdates"
+               helpContextId="org.eclipse.update.ui.newUpdates"
+    -->           
+         <action
+               class="net.sf.jmoney.actions.InstallWizardAction"
+               icon="$nl$/icons/full/elcl16/usearch_obj.gif"
+               id="net.sf.jmoney.newUpdates"
+               label="%UpdateActionSet.updates.label"
+               menubarPath="help/net.sf.jmoney.updateMenu/group0">
+         </action>
+      </actionSet>
+   </extension>
+
    <extension
          point="org.eclipse.help.toc">
       <toc
@@ -165,6 +206,14 @@
          point="net.sf.jmoney.pages">
          
       <node
+          id="capitalAccounts"
+	      label="%NavigationTreeModel.accounts"
+    	  icon="icons/accounts.gif"
+    	  position="100"
+    	  class="net.sf.jmoney.views.AccountsNode">
+      </node>
+
+      <node
           id="categoriesNode"
 	      label="%NavigationTreeModel.categories"
     	  icon="icons/category.gif"
@@ -176,6 +225,13 @@
             class="net.sf.jmoney.pages.entries.EntriesBookkeepingPage"
             extendable-property-set="net.sf.jmoney.currencyAccount"
             id="entries"
+            position="1">
+      </pages>
+
+      <pages
+            class="net.sf.jmoney.pages.entries.EntriesBookkeepingPage"
+            extendable-property-set="net.sf.jmoney.categoryAccount"
+            id="categoryEntries"
             position="1">
       </pages>
 

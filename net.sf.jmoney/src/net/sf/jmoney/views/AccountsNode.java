@@ -33,32 +33,29 @@ import net.sf.jmoney.model2.Session;
 /**
  * @author Administrateur
  */
-class AccountsNode extends TreeNode {
+public class AccountsNode implements IDynamicTreeNode {
 
-	public AccountsNode() {
-		super("net.sf.jmoney.capitalAccounts", JMoneyPlugin.getResourceString("NavigationTreeModel.accounts"), JMoneyPlugin.createImageDescriptor("icons/accounts.gif"), null, 100, new IDynamicTreeNode() {
+    public static final String ID = "net.sf.jmoney.capitalAccounts"; //$NON-NLS-1$
 
-			public boolean hasChildren() {
-				Session session = JMoneyPlugin.getDefault().getSession();
-				if (session != null) {
-					return session.getCapitalAccountIterator().hasNext();
-				} else {
-					return false;
-				}
+	public boolean hasChildren() {
+		Session session = JMoneyPlugin.getDefault().getSession();
+		if (session != null) {
+			return session.getCapitalAccountIterator().hasNext();
+		} else {
+			return false;
+		}
+	}
+
+	public Collection<Object> getChildren() {
+		Session session = JMoneyPlugin.getDefault().getSession();
+		ArrayList<Object> children = new ArrayList<Object>();
+		if (session != null) {
+			for (Iterator<CapitalAccount> iter = session.getCapitalAccountIterator(); iter.hasNext(); ) {
+				CapitalAccount account = iter.next();
+				children.add(account);
 			}
-
-			public Collection<Object> getChildren() {
-				Session session = JMoneyPlugin.getDefault().getSession();
-				ArrayList<Object> children = new ArrayList<Object>();
-				if (session != null) {
-					for (Iterator<CapitalAccount> iter = session.getCapitalAccountIterator(); iter.hasNext(); ) {
-						CapitalAccount account = iter.next();
-						children.add(account);
-					}
-				}
-				return children;
-			}
-		});
+		}
+		return children;
 	}
 }
 

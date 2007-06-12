@@ -146,14 +146,14 @@ public class NavigationView extends ViewPart {
 				if (account.getParent() != null) {
 					return account.getParent();
 				} else {
-					return TreeNode.getAccountsRootNode();
+					return TreeNode.getTreeNode(AccountsNode.ID);
 				}
 			} else if (child instanceof IncomeExpenseAccount) {
 				IncomeExpenseAccount account = (IncomeExpenseAccount)child;
 				if (account.getParent() != null) {
 					return account.getParent();
 				} else {
-					return TreeNode.getCategoriesRootNode();
+					return TreeNode.getTreeNode(CategoriesNode.ID);
 				}
 			}
 			return null;
@@ -243,8 +243,8 @@ public class NavigationView extends ViewPart {
 			// Update the viewer (if new session is null then the
 			// viewer will not be visible but it is good to release the
 			// references to the account objects in the dead session).
-            viewer.refresh(TreeNode.getAccountsRootNode(), false);
-            viewer.refresh(TreeNode.getCategoriesRootNode(), false);
+            viewer.refresh(TreeNode.getTreeNode(AccountsNode.ID), false);
+            viewer.refresh(TreeNode.getTreeNode(CategoriesNode.ID), false);
 		}
 		
 		public void objectInserted(ExtendableObject newObject) {
@@ -526,14 +526,14 @@ public class NavigationView extends ViewPart {
 		
 		manager.add(new Separator());
 
-		if (selectedObject == TreeNode.getAccountsRootNode() 
+		if (selectedObject == TreeNode.getTreeNode(AccountsNode.ID) 
 				|| selectedObject instanceof CapitalAccount) {
 			for (Action newAccountAction: newAccountActions) {
 				manager.add(newAccountAction);
 			}
 		}
 
-		if (selectedObject == TreeNode.getCategoriesRootNode() 
+		if (selectedObject == TreeNode.getTreeNode(CategoriesNode.ID) 
 				|| selectedObject instanceof IncomeExpenseAccount) {
 			manager.add(newCategoryAction);
 		}

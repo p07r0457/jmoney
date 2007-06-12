@@ -35,10 +35,8 @@ import net.sf.jmoney.model2.Session;
  */
 public class CategoriesNode implements IDynamicTreeNode {
 
-//	public CategoriesNode() {
-//		super("net.sf.jmoney.categoriesNode", JMoneyPlugin.getResourceString("NavigationTreeModel.categories"), JMoneyPlugin.createImageDescriptor("icons/category.gif"), null, 200);
-//	}
-	
+    public static final String ID = "net.sf.jmoney.categoriesNode"; //$NON-NLS-1$
+
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.views.IDynamicTreeNode#hasChildren()
 	 */
