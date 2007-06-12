@@ -49,7 +49,7 @@ public class OtherEntriesShell {
 
 	    private Map<Entry, SplitEntryRowControl> rowControls = new HashMap<Entry, SplitEntryRowControl>();
 
-		public OtherEntriesShell(Shell parent, int style, EntryData entryData, Block<Entry> rootBlock) {
+		public OtherEntriesShell(Shell parent, int style, EntryData entryData, Block<Entry> rootBlock, boolean isLinked) {
 			shell = new Shell(parent, style | SWT.MODELESS);
 		
 			this.parentShell = parent;
@@ -62,7 +62,7 @@ public class OtherEntriesShell {
 			layout.verticalSpacing = 3;
 	        shell.setLayout(layout);
 
-	        Control entriesTable = createEntriesTable(shell);
+	        Control entriesTable = createEntriesTable(shell, isLinked);
 	        entriesTable.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 
 	        Control buttonArea = createButtonArea(shell);
@@ -71,7 +71,7 @@ public class OtherEntriesShell {
 	        shell.pack();
 		}
 
-		private Control createEntriesTable(Composite parent) {
+		private Control createEntriesTable(Composite parent, final boolean isLinked) {
 			final Composite composite = new Composite(parent, SWT.NONE);
 			
 			GridLayout layout = new GridLayout(1, false);
@@ -86,7 +86,7 @@ public class OtherEntriesShell {
 		     */
 		    final FocusCellTracker cellTracker = new FocusCellTracker();
 			for (Entry entry: entryData.getSplitEntries()) {
-				SplitEntryRowControl row = new SplitEntryRowControl(composite, SWT.NONE, rootBlock, rowTracker, cellTracker);
+				SplitEntryRowControl row = new SplitEntryRowControl(composite, SWT.NONE, rootBlock, isLinked, rowTracker, cellTracker);
 				row.setContent(entry);
 				rowControls.put(entry, row);
 			}
@@ -98,7 +98,7 @@ public class OtherEntriesShell {
 						Entry newEntry = (Entry) newObject;
 						if (newEntry.getTransaction() == entryData.getEntry().getTransaction()) {
 							entryData.getSplitEntries().add(newEntry);
-							SplitEntryRowControl row = new SplitEntryRowControl(composite, SWT.NONE, rootBlock, rowTracker, cellTracker);
+							SplitEntryRowControl row = new SplitEntryRowControl(composite, SWT.NONE, rootBlock, isLinked, rowTracker, cellTracker);
 							row.setContent(newEntry);
 							rowControls.put(newEntry, row);
 			    	        shell.pack();

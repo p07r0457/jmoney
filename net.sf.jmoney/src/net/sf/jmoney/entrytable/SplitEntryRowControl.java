@@ -132,7 +132,7 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 						}
  */
 	
-	public SplitEntryRowControl(final Composite parent, int style, Block<Entry> rootBlock, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
+	public SplitEntryRowControl(final Composite parent, int style, Block<Entry> rootBlock, boolean isLinked, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style);
 
 		/*
@@ -140,7 +140,7 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 		 * the controls inside this composite line up with the rows that are
 		 * outside this composite and in the same row.
 		 */
-		BlockLayout layout = new BlockLayout(rootBlock, true);
+		BlockLayout layout = new BlockLayout(rootBlock, isLinked);
 		layout.marginTop = 0;
 		layout.marginBottom = 0;
 		layout.verticalSpacing = 1;

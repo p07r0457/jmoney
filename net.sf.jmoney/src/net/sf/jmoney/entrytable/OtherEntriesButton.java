@@ -76,7 +76,7 @@ public class OtherEntriesButton extends CellBlock<EntryData> {
 		return new ButtonCellControl((EntryRowControl)parent, downArrowImage, "Show the other entries in this transaction.") {
 			@Override
 			protected void run(EntryRowControl rowControl) {
-				final OtherEntriesShell shell = new OtherEntriesShell(parent.getShell(), SWT.ON_TOP, rowControl.getUncommittedEntryData(), otherEntriesRootBlock);
+				final OtherEntriesShell shell = new OtherEntriesShell(parent.getShell(), SWT.ON_TOP, rowControl.getUncommittedEntryData(), otherEntriesRootBlock, false);
     	        Display display = parent.getDisplay();
     	        Rectangle rect = display.map(parent, null, this.getControl().getBounds());
     	        shell.open(rect);

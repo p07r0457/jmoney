@@ -295,7 +295,13 @@ public class VirtualRowTable extends Composite {
 				 * this method is not necessary. However, changing the width
 				 * could potentially change the preferred height of each row.
 				 */
-				scrollToSliderPosition();  
+				scrollToSliderPosition();
+				
+				/*
+				 * Adjust the vertical scroller (make it invisible if all the rows
+				 * fit in the client area, or change the thumb bar height)
+				 */
+				adjustVerticalScrollBar();
 			}
 		});
 		
@@ -317,6 +323,31 @@ public class VirtualRowTable extends Composite {
 		});
 
 		return composite;
+	}
+
+	/*
+	 * Adjust the vertical scroller (make it invisible if all the rows
+	 * fit in the client area, or change the thumb bar height)
+	 */
+	protected void adjustVerticalScrollBar() {
+		/*
+		 * Calculate the average height of all the visible (or partially
+		 * visible) rows.
+		 */
+		int totalHeight = 0;
+		for (Control rowControl: rows.values()) {
+			totalHeight += rowControl.getSize().y;
+		}
+		double averageHeight = ((double)totalHeight) / rows.size();
+		
+		double heightAllRows = rowCount * averageHeight;
+		
+		if (heightAllRows <= clientAreaSize.y) {
+			vSlider.setVisible(false);
+		} else {
+			vSlider.setThumb((int)(vSlider.getMaximum() * clientAreaSize.y / heightAllRows));
+			vSlider.setVisible(true);
+		}
 	}
 
 	/**

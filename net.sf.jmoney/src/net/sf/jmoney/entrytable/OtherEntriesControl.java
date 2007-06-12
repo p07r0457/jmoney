@@ -107,7 +107,7 @@ public class OtherEntriesControl extends Composite {
 
 		downArrowButton.addSelectionListener(new SelectionAdapter() {
 		    public void widgetSelected(SelectionEvent event) {
-				final OtherEntriesShell shell = new OtherEntriesShell(getShell(), SWT.ON_TOP, entryData, rootBlock);
+				final OtherEntriesShell shell = new OtherEntriesShell(getShell(), SWT.ON_TOP, entryData, rootBlock, true);
     	        Display display = getDisplay();
     	        Rectangle rect = display.map(OtherEntriesControl.this.getParent(), null, getBounds());
     	        shell.open(rect);
@@ -126,7 +126,7 @@ public class OtherEntriesControl extends Composite {
 		splitLabel = new Label(childComposite, SWT.NONE);
 		splitLabel.setText("--split entry--");
 
-		otherEntryControl = new SplitEntryRowControl(childComposite, SWT.NONE, rootBlock, selectionTracker, focusCellTracker);
+		otherEntryControl = new SplitEntryRowControl(childComposite, SWT.NONE, rootBlock, true, selectionTracker, focusCellTracker);
 		
 		return childComposite;
 	}
