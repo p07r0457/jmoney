@@ -574,7 +574,6 @@ public class EntryRowControl extends RowControl<EntryData> {
 	 * @param targetEntry
 	 */
 	private void copyData(Entry sourceEntry, Entry targetEntry) {
-		targetEntry.setDescription(sourceEntry.getDescription());
 		targetEntry.setMemo(sourceEntry.getMemo());
 		targetEntry.setIncomeExpenseCurrency(transactionManager.getCopyInTransaction(sourceEntry.getIncomeExpenseCurrency()));
 		targetEntry.setAmount(sourceEntry.getAmount());

@@ -40,8 +40,9 @@ import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IndividualBlock;
-import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
+import net.sf.jmoney.entrytable.OtherEntriesBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.entrytable.VerticalBlock;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
@@ -266,16 +267,17 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 					new VerticalBlock<EntryData>(
 							new HorizontalBlock<EntryData>(
 									PropertyBlock.createEntryColumn(EntryInfo.getAccountAccessor()),
-									PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor())
+									PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor())
 							),
-							new HorizontalBlock<EntryData>(
-									PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
-									PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor())
+							PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor())
+					),
+					new OtherEntriesBlock(
+							new HorizontalBlock<Entry>(
+									new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
+									new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), JMoneyPlugin.getResourceString("Entry.description")),
+									new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
 							)
 					),
-					new OtherEntriesPropertyBlock(EntryInfo.getAccountAccessor()),
-					new OtherEntriesPropertyBlock(EntryInfo.getDescriptionAccessor()),
-					new OtherEntriesPropertyBlock(EntryInfo.getAmountAccessor()),
 					debitColumnManager,
 					creditColumnManager
 			);

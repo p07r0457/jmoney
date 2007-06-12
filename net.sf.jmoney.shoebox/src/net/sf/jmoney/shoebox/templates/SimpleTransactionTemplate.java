@@ -345,7 +345,7 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
    		entry2.setAccount(categoryAccountInTrans);
    		
    		entry1.setMemo(memoControl.getText());
-   		entry2.setDescription(descriptionControl.getText());
+   		entry2.setMemo(descriptionControl.getText());
    		
    		if (isIncome) {
    			entry1.setAmount(amount);

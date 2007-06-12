@@ -797,8 +797,8 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
         while (it.hasNext()) {
             Entry e = (Entry) it.next();
             if (s == null)
-                s = e.getDescription();
-            else if (e.getDescription() != s)
+                s = e.getMemo();
+            else if (e.getMemo() != s)
                 s = new String("Splitted!");
         }
 

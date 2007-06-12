@@ -102,7 +102,6 @@ public class EntryInfo implements IPropertySetInfo {
 					objectKey, 
 					parentKey, 
 					values.getScalarValue(EntryInfo.getCheckAccessor()),
-					values.getScalarValue(EntryInfo.getDescriptionAccessor()),
 					values.getReferencedObjectKey(EntryInfo.getAccountAccessor()),
 					values.getScalarValue(EntryInfo.getValutaAccessor()),
 					values.getScalarValue(EntryInfo.getMemoAccessor()),
@@ -116,7 +115,6 @@ public class EntryInfo implements IPropertySetInfo {
 
 	
 	private static ScalarPropertyAccessor<String> checkAccessor = null;
-	private static ScalarPropertyAccessor<String> descriptionAccessor = null;
 	private static ScalarPropertyAccessor<Account> accountAccessor = null;
 	private static ScalarPropertyAccessor<Date> valutaAccessor = null;
 	private static ScalarPropertyAccessor<String> memoAccessor = null;
@@ -230,7 +228,6 @@ public class EntryInfo implements IPropertySetInfo {
 		};
 
 		checkAccessor       = propertySet.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),       String.class, 2, 50,  textControlFactory, null);
-		descriptionAccessor = propertySet.addProperty("description", JMoneyPlugin.getResourceString("Entry.description"), String.class, 5, 100, textControlFactory, null);
 		accountAccessor     = propertySet.addProperty("account",     JMoneyPlugin.getResourceString("Entry.category"),    Account.class, 2, 70,  accountControlFactory, null);
 		valutaAccessor      = propertySet.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      Date.class, 0, 74,  dateControlFactory, null);
 		memoAccessor        = propertySet.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        String.class, 5, 100, textControlFactory, null);
@@ -253,13 +250,6 @@ public class EntryInfo implements IPropertySetInfo {
 	 */
 	public static ScalarPropertyAccessor<String> getCheckAccessor() {
 		return checkAccessor;
-	}	
-
-	/**
-	 * @return
-	 */
-	public static ScalarPropertyAccessor<String> getDescriptionAccessor() {
-		return descriptionAccessor;
 	}	
 
 	/**

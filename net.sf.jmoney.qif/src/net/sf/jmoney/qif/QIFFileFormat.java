@@ -370,7 +370,7 @@ public class QIFFileFormat implements FileFormat {
 					break;
 				case QIFCashTransaction.PAYEE:
 					String payee = line.substring(1);
-					firstEntry.setDescription(payee);
+					firstEntry.setMemo(payee);
 					break;
 				case QIFCashTransaction.CATEGORY:
 				{
@@ -448,11 +448,7 @@ public class QIFFileFormat implements FileFormat {
 						amountInSplitAlreadySpecified = false;
 					}
 					
-					if (splitEntry.getAccount() instanceof CapitalAccount) {
-						splitEntry.setMemo(line.substring(1));
-					} else {
-						splitEntry.setDescription(line.substring(1));
-					}
+					splitEntry.setMemo(line.substring(1));
 				
 					memoInSplitAlreadySpecified = true;
 					break;
@@ -697,8 +693,8 @@ public class QIFFileFormat implements FileFormat {
 				if (entry.getCheck() != null)
 					writeln(writer, "N" + entry.getCheck());
 				// description
-				if (entry.getDescription() != null)
-					writeln(writer, "P" + entry.getDescription());
+				if (entry.getMemo() != null)
+					writeln(writer, "P" + entry.getMemo());
 				// category
 				Account category = entry.getAccount();
 				if (category != null) {

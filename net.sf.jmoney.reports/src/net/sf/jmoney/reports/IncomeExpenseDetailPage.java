@@ -488,7 +488,7 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 		}
 		
 		public String getDescription() {
-			return entry.getDescription();
+			return entry.getMemo();
 		}
 		
 		private String formatAmount(Commodity commodity, Long amount) {

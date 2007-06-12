@@ -642,6 +642,12 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 */
 		public void startElement(String uri, String localName, Attributes atts)
 		throws SAXException {
+			// Kludge: "memo" is now used for both accounts and categories.
+			// This can be removed once all old xml format files have been updated.
+			if (localName.equals("description")) {
+				localName = "memo";
+			}
+			
 			// We set propertyAccessor to be the property accessor
 			// for the property whose value is contained in this
 			// element.  This property may be a scalar or a list
@@ -1585,7 +1591,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					copyEntryProperties(oldEntry, entry1, statusProperty);
 					
 					entry2.setCreation(oldEntry.getCreation());
-					entry2.setDescription(oldEntry.getDescription());
+					entry2.setMemo(oldEntry.getDescription());
 					
 					// Under the old model, all categories are multi-currency categories
 					// and the currency of the category matches the currency of the account
@@ -1624,8 +1630,11 @@ public class JMoneyXmlFormat implements IFileDatastore {
 	private void copyEntryProperties(net.sf.jmoney.model.Entry oldEntry, Entry entry, ScalarPropertyAccessor<?> statusProperty) {
 		entry.setCheck(oldEntry.getCheck());
 		entry.setCreation(oldEntry.getCreation());
-		entry.setDescription(oldEntry.getDescription());
-		entry.setMemo(oldEntry.getMemo());
+		if (oldEntry.getCategory() instanceof net.sf.jmoney.model.Account) {
+			entry.setMemo(oldEntry.getMemo());
+		} else {
+			entry.setMemo(oldEntry.getDescription());
+		}
 		entry.setValuta(oldEntry.getValuta());
 		if (statusProperty != null && oldEntry.getStatus() != 0) {
 			entry.setPropertyValue((ScalarPropertyAccessor<Integer>)statusProperty, oldEntry.getStatus());

@@ -117,7 +117,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 				new OtherEntriesBlock(
 						new HorizontalBlock<Entry>(
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
-								new SingleOtherEntryPropertyBlock(EntryInfo.getDescriptionAccessor()),
+								new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), JMoneyPlugin.getResourceString("Entry.description")),
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
 						)
 				),

@@ -55,6 +55,16 @@ public class SingleOtherEntryPropertyBlock extends IndividualBlock<Entry> {
 		this.accessor = accessor;
 	}
 
+	public SingleOtherEntryPropertyBlock(ScalarPropertyAccessor accessor, String displayName) {
+		super(
+				displayName,
+				accessor.getMinimumWidth(),
+				accessor.getWeight()
+		);
+
+		this.accessor = accessor;
+	}
+
 	public String getId() {
 		return accessor.getName();
 	}

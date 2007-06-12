@@ -49,13 +49,6 @@ public abstract class EntryExtension extends ExtensionObject {
 	 */
 	
 	/**
-	 * Returns the description.
-	 */
-	public String getDescription() {
-		return getBaseObject().getDescription();
-	}
-	
-	/**
 	 * Returns the category.
 	 */
 	public Account getAccount() {
@@ -67,13 +60,6 @@ public abstract class EntryExtension extends ExtensionObject {
 	 */
 	public long getAmount() {
 		return getBaseObject().getAmount();
-	}
-	
-	/**
-	 * Sets the description.
-	 */
-	public void setDescription(String aDescription) {
-		getBaseObject().setDescription(aDescription);
 	}
 	
 	/**

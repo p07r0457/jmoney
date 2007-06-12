@@ -406,13 +406,13 @@ class EntryControls {
 		
 		// The other controls depend on the type of account.
 		// This needs to be generalized in the metadata, but until
-		// that work is done, the description applies to entries in
-		// income/expense accounts and all other properties apply
-		// to capital accounts.
+		// that work is done, the memo applies to all entries
+		// and all other properties apply
+		// to capital accounts only.
 		entryPropertyControls.add(
-				new LabelAndEditControlPair(EntryInfo.getDescriptionAccessor()) {
+				new LabelAndEditControlPair(EntryInfo.getMemoAccessor()) {
 					boolean isApplicable(Account account) {
-						return account instanceof IncomeExpenseAccount;
+						return true;
 					}
 				});
 		
@@ -429,7 +429,7 @@ class EntryControls {
 			if (propertyAccessor.isEditable()
 					&& propertyAccessor != EntryInfo.getAccountAccessor() 
 					&& propertyAccessor != EntryInfo.getAmountAccessor()
-					&& propertyAccessor != EntryInfo.getDescriptionAccessor()
+					&& propertyAccessor != EntryInfo.getMemoAccessor()
 					&& propertyAccessor != EntryInfo.getIncomeExpenseCurrencyAccessor()) {
 				entryPropertyControls.add(
 						new LabelAndEditControlPair(propertyAccessor) {

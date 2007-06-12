@@ -104,12 +104,11 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         }
 
         // Add properties from this entry.
-        // For time being, this is all the entry properties except the account and description
+        // For time being, this is all the entry properties except the account
         // which come from the other entry, and the amount which is shown in the debit and
         // credit columns.
    		for (ScalarPropertyAccessor propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
             if (propertyAccessor != EntryInfo.getAccountAccessor() 
-           		&& propertyAccessor != EntryInfo.getDescriptionAccessor()
            		&& propertyAccessor != EntryInfo.getIncomeExpenseCurrencyAccessor()
         		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
             	if (propertyAccessor.isScalar() && propertyAccessor.isEditable()) {
@@ -135,9 +134,11 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
    				return control;
    			}
    		});
-   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getDescriptionAccessor()) {
+   		
+   		// TODO: override "memo" with "description", but this code is probably going away anyway.
+   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getMemoAccessor()) {
    			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
-   				IPropertyControl control = EntryInfo.getDescriptionAccessor().createPropertyControl(parent);
+   				IPropertyControl control = EntryInfo.getMemoAccessor().createPropertyControl(parent);
    				control.load(otherEntry);
    				return control;
    			}

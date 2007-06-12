@@ -59,6 +59,17 @@ abstract public class PropertyBlock extends IndividualBlock<EntryData> {
 		this.id = source + '.' + accessor.getName();
 	}
 
+	public PropertyBlock(ScalarPropertyAccessor accessor, String source, String displayName) {
+		super(
+				displayName,
+				accessor.getMinimumWidth(),
+				accessor.getWeight()
+		);
+
+		this.accessor = accessor;
+		this.id = source + '.' + accessor.getName();
+	}
+
 	public String getId() {
 		return id;
 	}
@@ -119,6 +130,21 @@ abstract public class PropertyBlock extends IndividualBlock<EntryData> {
 	public static PropertyBlock createEntryColumn(
 			ScalarPropertyAccessor<?> propertyAccessor) {
 		return new PropertyBlock(propertyAccessor, "entry") {
+			@Override
+			public ExtendableObject getObjectContainingProperty(EntryData data) {
+				return data.getEntry();
+			}
+		};
+	}
+
+	/**
+	 * This version allows the caller to override the text used in the header.
+	 * @param propertyAccessor
+	 * @param displayName the text to use in the header
+	 * @return
+	 */
+	public static PropertyBlock createEntryColumn(ScalarPropertyAccessor<?> propertyAccessor, String displayName) {
+		return new PropertyBlock(propertyAccessor, "entry", displayName) {
 			@Override
 			public ExtendableObject getObjectContainingProperty(EntryData data) {
 				return data.getEntry();

@@ -106,7 +106,7 @@ public class CategoryEntriesSection extends SectionPart implements IEntriesConte
 		
 		rootBlock = new HorizontalBlock<EntryData>(
 				transactionDateColumn,
-				PropertyBlock.createEntryColumn(EntryInfo.getDescriptionAccessor()),
+				PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor(), JMoneyPlugin.getResourceString("Entry.description")),
 				new OtherEntriesBlock(
 						new HorizontalBlock<Entry>(
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),

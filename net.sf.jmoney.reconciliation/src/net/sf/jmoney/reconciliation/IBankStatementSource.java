@@ -127,7 +127,7 @@ public interface IBankStatementSource {
 			entry1.setPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor(), uniqueId);
 			
 			entry1.setMemo(memo==null? (name==null?payee: name):memo);
-			entry2.setDescription(payee == null?(memo==null?name:memo):payee);
+			entry2.setMemo(payee == null?(memo==null?name:memo):payee);
 			
 			entry1.setAmount(amount);
 			entry2.setAmount(-amount);

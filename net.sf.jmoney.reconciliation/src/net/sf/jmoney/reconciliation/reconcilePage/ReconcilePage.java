@@ -159,12 +159,11 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         }
 
         // Add properties from this entry.
-        // For time being, this is all the properties except the account and description
+        // For time being, this is all the properties except the account
         // which come from the other entry, and the amount which is shown in the debit and
         // credit columns.
    		for (ScalarPropertyAccessor<?> propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
             if (propertyAccessor != EntryInfo.getAccountAccessor() 
-           		&& propertyAccessor != EntryInfo.getDescriptionAccessor()
            		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
             	allEntryDataObjects.add(new PropertyBlock(propertyAccessor, "this") {
             		public ExtendableObject getObjectContainingProperty(EntryData data) {
@@ -187,9 +186,11 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
    				return control;
    			}
    		});
-   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getDescriptionAccessor()) {
+   		
+   		// TODO: Override "memo" to "description" 
+   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getMemoAccessor()) {
    			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
-   				IPropertyControl control = EntryInfo.getDescriptionAccessor().createPropertyControl(parent);
+   				IPropertyControl control = EntryInfo.getMemoAccessor().createPropertyControl(parent);
    				control.load(otherEntry);
    				return control;
    			}
@@ -357,7 +358,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 						           				}
 						           				
 						           				if (pattern.getDescription() != null) {
-							           				entry2.setDescription(
+							           				entry2.setMemo(
 							           						new java.text.MessageFormat(
 							           								pattern.getDescription(), 
 							           								java.util.Locale.US)

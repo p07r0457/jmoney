@@ -40,8 +40,6 @@ public final class Entry extends ExtendableObject {
 	
 	protected Date valuta = null;
 	
-	protected String description = null;
-	
 	/**
 	 * Element: Account
 	 */
@@ -80,7 +78,6 @@ public final class Entry extends ExtendableObject {
 			IObjectKey objectKey,
 			IObjectKey parentKey,
     		String     check,
-    		String     description,
     		IObjectKey accountKey,
     		Date       valuta,
     		String     memo,
@@ -97,7 +94,6 @@ public final class Entry extends ExtendableObject {
 		}
 		this.check = check;
 		this.valuta = valuta;
-		this.description = description;
 		this.accountKey = accountKey;
 		this.amount = amount;
 		this.memo = memo;
@@ -129,7 +125,6 @@ public final class Entry extends ExtendableObject {
 		this.creation = Calendar.getInstance().getTime().getTime();
 		this.check = null;
 		this.valuta = null;
-		this.description = null;
 		this.accountKey = null;
 		this.amount = 0;
 		this.memo = null;
@@ -166,13 +161,6 @@ public final class Entry extends ExtendableObject {
 	 */
 	public Date getValuta() {
 		return valuta;
-	}
-	
-	/**
-	 * Returns the description.
-	 */
-	public String getDescription() {
-		return description;
 	}
 	
 	/**
@@ -287,17 +275,6 @@ public final class Entry extends ExtendableObject {
 		
 		// Notify the change manager.
 		processPropertyChange(EntryInfo.getValutaAccessor(), oldValuta, valuta);
-	}
-	
-	/**
-	 * Sets the description.
-	 */
-	public void setDescription(String aDescription) {
-		String oldDescription = this.description;
-		description = (aDescription != null && aDescription.length() == 0) ? null : aDescription;
-		
-		// Notify the change manager.
-		processPropertyChange(EntryInfo.getDescriptionAccessor(), oldDescription, description);
 	}
 	
 	/**
