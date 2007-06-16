@@ -32,6 +32,7 @@ import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.entrytable.VerticalBlock;
 import net.sf.jmoney.fields.EntryInfo;
@@ -127,7 +128,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		);
 
 		// Create the table control.
-		fEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, this, account.getSession(), transactionDateColumn); 
+		fEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, this, account.getSession(), transactionDateColumn, new RowSelectionTracker()); 
 		fEntriesControl.addSelectionListener(tableSelectionListener);
 			
         getSection().setClient(fEntriesControl);
