@@ -29,6 +29,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
 /**
@@ -40,7 +41,7 @@ import org.eclipse.swt.widgets.Composite;
 public class TextControlFactory implements IPropertyControlFactory<String> {
 
     public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<String> propertyAccessor) {
-        return new TextEditor(parent, 0, propertyAccessor);
+        return new TextEditor(parent, SWT.NONE, propertyAccessor);
     }
 
    public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends String> propertyAccessor) {

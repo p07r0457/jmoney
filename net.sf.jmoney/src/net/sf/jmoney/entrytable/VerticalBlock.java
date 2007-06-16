@@ -43,7 +43,7 @@ public class VerticalBlock<T> extends Block<T> {
 		weight = 0;
 		for (Block<T> child: children) {
 			minimumWidth = Math.max(minimumWidth, child.minimumWidth);
-			weight += Math.max(minimumWidth, child.weight);
+			weight = Math.max(weight, child.weight);
 		}
 	}
 
@@ -56,16 +56,26 @@ public class VerticalBlock<T> extends Block<T> {
 
 	@Override
 	public void createHeaderControls(Composite parent) {
-		for (Block child: children) {
+		for (Block<T> child: children) {
 			child.createHeaderControls(parent);
 		}
+	}
+
+	@Override
+	int getHeightForGivenWidth(int width, int verticalSpacing, Control[] controls, boolean changed) {
+		int height = 0; 
+		for (Block<T> child: children) {
+			height += child.getHeightForGivenWidth(width, verticalSpacing, controls, changed);
+		}
+		height += (children.length - 1) * verticalSpacing;
+		return height;
 	}
 
 	@Override
 	void layout(int width) {
 		if (this.width != width) {
 			this.width = width;
-			for (Block child: children) {
+			for (Block<T> child: children) {
 				child.layout(width);
 			}
 		}
@@ -73,7 +83,7 @@ public class VerticalBlock<T> extends Block<T> {
 
 	@Override
 	void positionControls(int x, int y, int verticalSpacing, Control[] controls, boolean flushCache) {
-		for (Block child: children) {
+		for (Block<T> child: children) {
 			child.positionControls(x, y, verticalSpacing, controls, flushCache);
 			y += child.getHeight(verticalSpacing, controls) + verticalSpacing;
 		}
@@ -82,7 +92,7 @@ public class VerticalBlock<T> extends Block<T> {
 	@Override
 	int getHeight(int verticalSpacing, Control[] controls) {
 		int height = 0; 
-		for (Block child: children) {
+		for (Block<T> child: children) {
 			height += child.getHeight(verticalSpacing, controls);
 		}
 		height += (children.length - 1) * verticalSpacing;

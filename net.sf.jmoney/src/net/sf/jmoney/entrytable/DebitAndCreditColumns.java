@@ -22,10 +22,17 @@
 
 package net.sf.jmoney.entrytable;
 
+import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.model2.SessionChangeListener;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.events.TraverseListener;
@@ -37,9 +44,148 @@ import org.eclipse.swt.widgets.Text;
  * Represents a table column that is either the debit or the credit column.
  * Use two instances of this class instead of a single instance of the
  * above <code>EntriesSectionProperty</code> class if you want the amount to be
- * displayed in seperate debit and credit columns.
+ * displayed in separate debit and credit columns.
  */
 public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
+
+	private class DebitAndCreditCellControl implements ICellControl<EntryData> {
+		private Text textControl;
+		private Entry entry = null;
+		
+		private SessionChangeListener amountChangeListener = new SessionChangeAdapter() {
+			public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
+				if (changedObject.equals(entry) && changedProperty == EntryInfo.getAmountAccessor()) {
+					setControlContent();
+				}
+			}
+		};
+
+		public DebitAndCreditCellControl(Text textControl) {
+			this.textControl = textControl;
+
+			textControl.addDisposeListener(new DisposeListener() {
+				public void widgetDisposed(DisposeEvent e) {
+			    	if (entry != null) {
+			    		entry.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+			    	}
+				}
+			});
+		}
+
+		public Control getControl() {
+			return textControl;
+		}
+
+		public void load(EntryData data) {
+	    	if (entry != null) {
+	    		entry.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+	    	}
+	    	
+			entry = data.getEntry();
+
+        	/*
+        	 * We must listen to the model for changes in the value
+        	 * of this property.
+        	 */
+			entry.getObjectKey().getSessionManager().addChangeListener(amountChangeListener);
+			
+			setControlContent();
+		}
+
+		private void setControlContent() {
+			long amount = entry.getAmount();
+
+			/*
+			 * We need a currency so that we can format the amount. Get the
+			 * currency from this entry if possible. However, the user may
+			 * not have yet entered enough information to determine the
+			 * currency for this entry, in which case use the default
+			 * currency for this entry table.
+			 */
+			Commodity commodityForFormatting = entry.getCommodity();
+			if (commodityForFormatting == null) {
+				commodityForFormatting = commodity;
+			}
+			
+			if (isDebit) {
+				// Debit column
+				textControl.setText(amount < 0 
+						? commodityForFormatting.format(-amount) 
+								: ""
+				);
+			} else {
+				// Credit column
+				textControl.setText(amount > 0 
+						? commodityForFormatting.format(amount) 
+								: ""
+				);
+			}
+		}
+
+		public void save() {
+			/*
+			 * We need a currency so that we can parse the amount. Get the
+			 * currency from this entry if possible. However, the user may
+			 * not have yet entered enough information to determine the
+			 * currency for this entry, in which case use the default
+			 * currency for this entry table.
+			 */
+			Commodity commodityForFormatting = entry.getCommodity();
+			if (commodityForFormatting == null) {
+				commodityForFormatting = commodity;
+			}
+
+			String amountString = textControl.getText();
+			long amount = commodityForFormatting.parse(amountString);
+
+			long previousEntryAmount = entry.getAmount();
+			long newEntryAmount;
+
+			if (isDebit) {
+				if (amount != 0) {
+					newEntryAmount = -amount;
+				} else {
+					if (previousEntryAmount < 0) { 
+						newEntryAmount  = 0;
+					} else {
+						newEntryAmount = previousEntryAmount;
+					}
+				}
+			} else {
+				if (amount != 0) {
+					newEntryAmount = amount;
+				} else {
+					if (previousEntryAmount > 0) { 
+						newEntryAmount  = 0;
+					} else {
+						newEntryAmount = previousEntryAmount;
+					}
+				}
+			}
+
+			entry.setAmount(newEntryAmount);
+
+			// If there are two entries in the transaction and
+			// if both entries have accounts in the same currency or
+			// one or other account is not known or one or other account
+			// is a multi-currency account then we set the amount in
+			// the other entry to be the same but opposite signed amount.
+
+			if (entry.getTransaction().hasTwoEntries()) {
+				Entry otherEntry = entry.getTransaction().getOther(entry);
+				Commodity commodity1 = entry.getCommodity();
+				Commodity commodity2 = otherEntry.getCommodity();
+				if (commodity1 == null || commodity2 == null || commodity1.equals(commodity2)) {
+					otherEntry.setAmount(-newEntryAmount);
+				}
+			}
+		}
+
+		public void setFocusListener(FocusListener controlFocusListener) {
+			// Nothing to do
+		}
+	}
+
 	private String id;
 	private Commodity commodity;
 	private boolean isDebit;
@@ -55,33 +201,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
 		return id;
 	}
 
-	/* No longer needed...
-		public String getValueFormattedForTable(IDisplayableItem data) {
-			Entry entry = data.getEntryForThisRow();
-			if (entry == null) {
-				return "";
-			}
-
-			long amount = entry.getAmount();
-
-			Commodity commodity = entry.getCommodity();
-			if (commodity == null) {
-				// The commodity should never be null after all the data for the
-				// entry has been entered.  However, the user may enter an amount
-				// before entering the currency, and the best we can do in such a
-				// situation is to format the amount assuming the currency for
-				// the account.
-				commodity = EntriesPage.this.getAccount().getCurrency();
-			}
-
-			if (isDebit) {
-				return amount < 0 ? commodity.format(-amount) : "";
-			} else {
-				return amount > 0 ? commodity.format(amount) : "";
-			}
-		}
-	 */
-	public ICellControl createCellControl(Composite parent) {
+	public ICellControl<EntryData> createCellControl(Composite parent) {
 		final Text textControl = new Text(parent, SWT.TRAIL);
 		textControl.addTraverseListener(new TraverseListener() {
 			public void keyTraversed(TraverseEvent e) {
@@ -101,114 +221,12 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
 			}
 		});
 		
-		return new ICellControl<EntryData>() {
-
-			private Entry entry = null;
-
-			public Control getControl() {
-				return textControl;
-			}
-
-			public void load(EntryData data) {
-				entry = data.getEntry();
-
-				long amount = entry.getAmount();
-
-				/*
-				 * We need a currency so that we can format the amount. Get the
-				 * currency from this entry if possible. However, the user may
-				 * not have yet entered enough information to determine the
-				 * currency for this entry, in which case use the default
-				 * currency for this entry table.
-				 */
-				Commodity commodityForFormatting = entry.getCommodity();
-				if (commodityForFormatting == null) {
-					commodityForFormatting = commodity;
-				}
-				
-				if (isDebit) {
-					// Debit column
-					textControl.setText(amount < 0 
-							? commodityForFormatting.format(-amount) 
-									: ""
-					);
-				} else {
-					// Credit column
-					textControl.setText(amount > 0 
-							? commodityForFormatting.format(amount) 
-									: ""
-					);
-				}
-			}
-
-			public void save() {
-				/*
-				 * We need a currency so that we can parse the amount. Get the
-				 * currency from this entry if possible. However, the user may
-				 * not have yet entered enough information to determine the
-				 * currency for this entry, in which case use the default
-				 * currency for this entry table.
-				 */
-				Commodity commodityForFormatting = entry.getCommodity();
-				if (commodityForFormatting == null) {
-					commodityForFormatting = commodity;
-				}
-
-				String amountString = textControl.getText();
-				long amount = commodityForFormatting.parse(amountString);
-
-				long previousEntryAmount = entry.getAmount();
-				long newEntryAmount;
-
-				if (isDebit) {
-					if (amount != 0) {
-						newEntryAmount = -amount;
-					} else {
-						if (previousEntryAmount < 0) { 
-							newEntryAmount  = 0;
-						} else {
-							newEntryAmount = previousEntryAmount;
-						}
-					}
-				} else {
-					if (amount != 0) {
-						newEntryAmount = amount;
-					} else {
-						if (previousEntryAmount > 0) { 
-							newEntryAmount  = 0;
-						} else {
-							newEntryAmount = previousEntryAmount;
-						}
-					}
-				}
-
-				entry.setAmount(newEntryAmount);
-
-				// If there are two entries in the transaction and
-				// if both entries have accounts in the same currency or
-				// one or other account is not known or one or other account
-				// is a multi-currency account then we set the amount in
-				// the other entry to be the same but opposite signed amount.
-
-				if (entry.getTransaction().hasTwoEntries()) {
-					Entry otherEntry = entry.getTransaction().getOther(entry);
-					Commodity commodity1 = entry.getCommodity();
-					Commodity commodity2 = otherEntry.getCommodity();
-					if (commodity1 == null || commodity2 == null || commodity1.equals(commodity2)) {
-						otherEntry.setAmount(-newEntryAmount);
-					}
-				}
-			}
-
-			public void setFocusListener(FocusListener controlFocusListener) {
-				// Nothing to do
-			}
-		};
+    	return new DebitAndCreditCellControl(textControl);
 	}
 
-	public int compare(EntryData trans1, EntryData trans2) {
-		long amount1 = trans1.getEntry().getAmount();
-		long amount2 = trans2.getEntry().getAmount();
+	public int compare(EntryData entryData1, EntryData entryData2) {
+		long amount1 = entryData1.getEntry().getAmount();
+		long amount2 = entryData2.getEntry().getAmount();
 
 		int result;
 		if (amount1 < amount2) {

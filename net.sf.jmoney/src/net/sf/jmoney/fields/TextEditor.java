@@ -25,8 +25,12 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.model2.SessionChangeListener;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
@@ -45,19 +49,34 @@ public class TextEditor implements IPropertyControl {
 
     private Text propertyControl;
 
-    /** Creates new TextEditor */
-    public TextEditor(Composite parent, ScalarPropertyAccessor<String> propertyAccessor) {
-        propertyControl = new Text(parent, SWT.NONE);
-        this.propertyAccessor = propertyAccessor;
-    }
-
+    private SessionChangeListener amountChangeListener = new SessionChangeAdapter() {
+		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
+			if (changedObject.equals(extendableObject) && changedProperty == propertyAccessor) {
+	            String text = extendableObject.getPropertyValue(propertyAccessor);
+	            propertyControl.setText(text == null ? "" : text);
+			}
+		}
+	};
+	
     /** Creates new TextEditor */
     public TextEditor(Composite parent, int style, ScalarPropertyAccessor<String> propertyAccessor) {
         propertyControl = new Text(parent, style);
         this.propertyAccessor = propertyAccessor;
+    	
+    	propertyControl.addDisposeListener(new DisposeListener() {
+			public void widgetDisposed(DisposeEvent e) {
+		    	if (extendableObject != null) {
+		    		extendableObject.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+		    	}
+			}
+		});
     }
 
     public void load(ExtendableObject object) {
+    	if (extendableObject != null) {
+    		extendableObject.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+    	}
+    	
         extendableObject = object;
 
         if (object == null) {
@@ -65,6 +84,12 @@ public class TextEditor implements IPropertyControl {
     	} else {
             String text = object.getPropertyValue(propertyAccessor);
             propertyControl.setText(text == null ? "" : text);
+        	
+        	/*
+        	 * We must listen to the model for changes in the value
+        	 * of this property.
+        	 */
+            object.getObjectKey().getSessionManager().addChangeListener(amountChangeListener);
     	}
     	propertyControl.setEnabled(object != null);
     }

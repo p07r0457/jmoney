@@ -26,7 +26,11 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.model2.SessionChangeListener;
 
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Composite;
@@ -52,6 +56,15 @@ public class AccountEditor<A extends Account> implements IPropertyControl {
 
     private AccountControl<A> propertyControl;
 
+    private SessionChangeListener amountChangeListener = new SessionChangeAdapter() {
+		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
+			if (changedObject.equals(extendableObject) && changedProperty == accountPropertyAccessor) {
+		    	A account = extendableObject.getPropertyValue(accountPropertyAccessor);
+		        propertyControl.setAccount(account);
+			}
+		}
+	};
+	
     /** 
      * @param propertyAccessor the accessor for the property to be edited
      * 			by this control.  The property must be of type Account.
@@ -67,9 +80,12 @@ public class AccountEditor<A extends Account> implements IPropertyControl {
 
         /*
 		 * Selection changes are reflected immediately in the account object.
-		 * This allows other properties such as money amounts to listen for
-		 * changes to the currency and change their format to be correct for the
-		 * newly selected currency.
+		 * This allows other properties to enable/disable themselves if they
+		 * become applicable/inapplicable as a result of the account change.
+		 * 
+		 * More obscure, but an account change may result in the change of the
+		 * currency of the amounts in an entry and thus the amount controls can
+		 * re-format the amounts for the new currency.
 		 */
 
         propertyControl.addSelectionListener(new SelectionListener() {
@@ -86,15 +102,33 @@ public class AccountEditor<A extends Account> implements IPropertyControl {
         		save(); 
         	}
         });
+    	
+    	propertyControl.addDisposeListener(new DisposeListener() {
+			public void widgetDisposed(DisposeEvent e) {
+		    	if (extendableObject != null) {
+		    		extendableObject.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+		    	}
+			}
+		});
     }
     
     /**
      * Load the control with the value from the given account.
      */
     public void load(ExtendableObject object) {
+    	if (extendableObject != null) {
+    		extendableObject.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+    	}
+    	
     	extendableObject = object;
 
-    	propertyControl.setSession(object.getSession(), accountPropertyAccessor.getClassOfValueObject());
+    	/*
+    	 * We must listen to the model for changes in the value
+    	 * of this property.
+    	 */
+        object.getObjectKey().getSessionManager().addChangeListener(amountChangeListener);
+
+        propertyControl.setSession(object.getSession(), accountPropertyAccessor.getClassOfValueObject());
 
     	A account = object.getPropertyValue(accountPropertyAccessor);
         propertyControl.setAccount(account);

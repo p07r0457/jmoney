@@ -61,6 +61,12 @@ public abstract class CellBlock<T> extends Block<T> {
 	}
 
 	@Override
+	int getHeightForGivenWidth(int width, int verticalSpacing, Control[] controls, boolean changed) {
+		Control control = controls[index];
+		return control.computeSize(width, SWT.DEFAULT, changed).y;
+	}
+
+	@Override
 	void positionControls(int x, int y, int verticalSpacing, Control[] controls, boolean changed) {
 		Control control = controls[index];
 		int height = control.computeSize(width, SWT.DEFAULT, changed).y;

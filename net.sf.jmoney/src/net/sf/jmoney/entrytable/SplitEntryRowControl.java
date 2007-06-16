@@ -24,11 +24,7 @@ package net.sf.jmoney.entrytable;
 
 import java.util.ArrayList;
 
-import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.SessionChangeAdapter;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
@@ -200,19 +196,6 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 		for (final ICellControl<Entry> control: controls) {
 			control.load(entry);
 		}
-		((TransactionManager)entry.getObjectKey().getSessionManager()).addChangeListener(new SessionChangeAdapter() {
-			@Override
-			public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
-				if (changedObject instanceof Entry) {
-					Entry changedEntry = (Entry) changedObject;
-					if (changedEntry == entry) {
-						// TODO: should this be here, or
-						// in the controls themselves??????
-						// Probably in the controls themselves.
-					}
-				}
-			}
-		}, this);
 	}
 
 	public Entry getContent() {

@@ -31,6 +31,8 @@ import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
@@ -68,9 +70,9 @@ public class AmountEditor implements IPropertyControl {
     
     private Text propertyControl;
 
-    SessionChangeListener amountChangeListener = new SessionChangeAdapter() {
-		public void objectChanged(ExtendableObject extendableObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
-			if (extendableObject.equals(fObject) && changedProperty == amountPropertyAccessor) {
+    private SessionChangeListener amountChangeListener = new SessionChangeAdapter() {
+		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
+			if (changedObject.equals(fObject) && changedProperty == amountPropertyAccessor) {
 				setControlContent();
 			}
 		}
@@ -83,6 +85,14 @@ public class AmountEditor implements IPropertyControl {
     	propertyControl = new Text(parent, SWT.TRAIL);
     	this.amountPropertyAccessor = propertyAccessor;
     	this.factory = factory;
+    	
+    	propertyControl.addDisposeListener(new DisposeListener() {
+			public void widgetDisposed(DisposeEvent e) {
+		    	if (fObject != null) {
+		            fObject.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+		    	}
+			}
+		});
     }
     
     /**

@@ -961,4 +961,26 @@ public class VirtualRowTable extends Composite {
 			rowProvider.releaseRow(rowControl);
 		}
 	}
+
+	/**
+	 * This method will return a row control for a given EntryData
+	 * object.
+	 * 
+	 * It may be that the row is not visible.  In that case the view
+	 * is scrolled to make it visible.  The row is then selected.
+	 * 
+	 * This method is currently used only by 'duplicate transaction'
+	 * action and is called only on the new entry row.  We may therefore
+	 * want to review this method at some later time.
+	 *  
+	 * @param newEntryRow
+	 * @return
+	 */
+	public EntryRowControl getRowControl(EntryData entryData) {
+		// Crappy code...
+		scrollToShowRow(contentProvider.indexOf(entryData));
+		EntryRowControl rowControl = rows.get(entryData);
+		rowControl.getChildren()[0].setFocus();
+		return rowControl;
+	}
 }

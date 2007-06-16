@@ -60,7 +60,7 @@ public class HorizontalBlock<T> extends Block<T> {
 
 	@Override
 	public void createHeaderControls(Composite parent) {
-		for (Block child: children) {
+		for (Block<T> child: children) {
 			child.createHeaderControls(parent);
 		}
 	}
@@ -70,38 +70,7 @@ public class HorizontalBlock<T> extends Block<T> {
 		if (this.width != width) {
 			this.width = width;
 
-			int [] widths = new int[children.length];
-			for (int i = 0; i < children.length; i++) {
-				widths[i] = children[i].minimumWidth;
-			}
-
-			// Do we have extra width and columns with expansion weight?
-			if (weight > 0 && width > minimumWidth) {
-				// Now distribute the rest to the columns with weight.
-				int rest = width - minimumWidth;
-				int totalDistributed = 0;
-				for (int i = 0; i < children.length; i++) {
-					int pixels = children[i].weight * rest / weight;
-					totalDistributed += pixels;
-					widths[i] += pixels;
-				}
-
-				/*
-				 * We may still have a few pixels left to allocate
-				 * because the above divisions round the pixel count
-				 * downwards. Distribute any remaining pixels to columns
-				 * with weight. The number of pixels left can never be
-				 * more than the number of columns with non-zero
-				 * weights.
-				 */
-				int diff = rest - totalDistributed;
-				for (int i = 0; i < children.length && diff > 0; i++) {
-					if (children[i].weight > 0) {
-						++widths[i];
-						--diff;
-					}
-				}
-			}
+			int[] widths = distributeWidth(width);
 
 			for (int i = 0; i < children.length; i++) {
 				children[i].layout(widths[i]);
@@ -109,9 +78,45 @@ public class HorizontalBlock<T> extends Block<T> {
 		}
 	}
 
+	private int[] distributeWidth(int width) {
+		int [] widths = new int[children.length];
+		for (int i = 0; i < children.length; i++) {
+			widths[i] = children[i].minimumWidth;
+		}
+
+		// Do we have extra width and columns with expansion weight?
+		if (weight > 0 && width > minimumWidth) {
+			// Now distribute the rest to the columns with weight.
+			int rest = width - minimumWidth;
+			int totalDistributed = 0;
+			for (int i = 0; i < children.length; i++) {
+				int pixels = children[i].weight * rest / weight;
+				totalDistributed += pixels;
+				widths[i] += pixels;
+			}
+
+			/*
+			 * We may still have a few pixels left to allocate
+			 * because the above divisions round the pixel count
+			 * downwards. Distribute any remaining pixels to columns
+			 * with weight. The number of pixels left can never be
+			 * more than the number of columns with non-zero
+			 * weights.
+			 */
+			int diff = rest - totalDistributed;
+			for (int i = 0; i < children.length && diff > 0; i++) {
+				if (children[i].weight > 0) {
+					++widths[i];
+					--diff;
+				}
+			}
+		}
+		return widths;
+	}
+
 	@Override
 	void positionControls(int x, int y, int verticalSpacing, Control[] controls, boolean flushCache) {
-		for (Block child: children) {
+		for (Block<T> child: children) {
 			child.positionControls(x, y, verticalSpacing, controls, flushCache);
 			x += child.width + Block.horizontalSpacing;
 		}
@@ -120,7 +125,7 @@ public class HorizontalBlock<T> extends Block<T> {
 	@Override
 	int getHeight(int verticalSpacing, Control[] controls) {
 		int height = 0; 
-		for (Block child: children) {
+		for (Block<T> child: children) {
 			height = Math.max(height, child.getHeight(verticalSpacing, controls));
 		}
 		return height;
@@ -143,5 +148,15 @@ public class HorizontalBlock<T> extends Block<T> {
 				x += Block.horizontalSpacing;
 			}
 		}
+	}
+
+	@Override
+	int getHeightForGivenWidth(int width, int verticalSpacing, Control[] controls, boolean changed) {
+		int[] widths = distributeWidth(width);
+		int height = 0; 
+		for (int i = 0; i < children.length; i++) {
+			height = Math.max(height, children[i].getHeightForGivenWidth(widths[i], verticalSpacing, controls, changed));
+		}
+		return height;
 	}
 }

@@ -133,6 +133,12 @@ public class EntriesTable extends Composite {
 	Map<Entry, EntryData> entries;
 
 	/**
+	 * The 'new entry' row, being an extra blank row at the bottom of the table that
+	 * the user can use to enter new entries.
+	 */
+	EntryData newEntryRow;
+	
+	/**
 	 * The comparator that sorts entries according to the current sort order.
 	 */
 	Comparator<EntryData> rowComparator;
@@ -148,15 +154,8 @@ public class EntriesTable extends Composite {
 	 */
 	private Vector<EntryRowSelectionListener> selectionListeners = new Vector<EntryRowSelectionListener>();
 
-	/**
-	 * a kludgy field used to indicate that the next selection
-	 * event should be ignored.  i.e. the event should not be
-	 * passed on to our listeners.
-	 */
-	protected boolean ignoreSelectionEvent = false;
-
 	public EntriesTable(Composite parent, FormToolkit toolkit,
-			Block<EntryData> rootBlock, final IEntriesContent entriesContent, final Session session, IndividualBlock defaultSortColumn) {
+			Block<EntryData> rootBlock, final IEntriesContent entriesContent, final Session session, IndividualBlock defaultSortColumn, final RowSelectionTracker rowTracker) {
 		super(parent, SWT.NONE);
 		
 		this.session = session;
@@ -175,6 +174,8 @@ public class EntriesTable extends Composite {
 		// Fetch and sort the list of top level entries to display.
 		buildEntryList();
 
+		newEntryRow = new EntryData(null, session.getObjectKey().getSessionManager());
+		
 	    /*
 		 * Build the initial sort order. This must be done before we can create
 		 * the composite table because the constructor for the composite table
@@ -199,11 +200,10 @@ public class EntriesTable extends Composite {
 	    };
 	    
 	    /*
-	     * Use a single row tracker and cell focus tracker for this
-	     * table.  This needs to be generalized for, say, the reconciliation
-	     * editor if there is to be a single row selection for both tables.
-	     */
-	    final RowSelectionTracker rowTracker = new RowSelectionTracker();
+		 * Use a single cell focus tracker for this table. The row focus tracker
+		 * is passed to this object because it may be shared with other tables
+		 * (thus forcing a single row selection for two or more tables).
+		 */
 	    FocusCellTracker cellTracker = new FocusCellTracker();
 		table = new VirtualRowTable(this, rootBlock, this, contentProvider, new ReusableRowProvider(this, rowTracker, cellTracker), rowTracker);
 		
@@ -226,43 +226,66 @@ public class EntriesTable extends Composite {
 		buttonArea.setLayout(layoutOfButtons);
 		
         // Create the 'add transaction' button.
-        Button addButton = toolkit.createButton(buttonArea, "New Transaction", SWT.PUSH);
-        addButton.addSelectionListener(new SelectionAdapter() {
-           public void widgetSelected(SelectionEvent event) {
-/* not sure if we need this....        	   
-				if (!checkAndCommitTransaction(null)) {
-					return;
-				}
-           		
-           		insertNewEntry();
-*/           		
-           }
-        });
+		Button addButton = toolkit.createButton(buttonArea, "New Transaction", SWT.PUSH);
+		addButton.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent event) {
+				/*
+				 * This method scrolls the 'new entry' row into view
+				 * and selects it. 
+				 */
+				// TODO: Is this method name confusing?
+				table.getRowControl(newEntryRow);
+			}
+		});
 
         // Create the 'duplicate transaction' button.
         Button duplicateButton = toolkit.createButton(buttonArea, "Duplicate Transaction", SWT.PUSH);
         duplicateButton.addSelectionListener(new SelectionAdapter() {
-           public void widgetSelected(SelectionEvent event) {
-        	   
-        	   /*
-				 * Try and set the selection to the new empty row. If that works
-				 * then we know that the source entry was valid and the
-				 * duplicate is going to succeed, so copy the data into the new
-				 * empty transaction row.
-				 */        	   
-/* TODO: get this working        	   
-        	   int previousSelection = table.getSelection().y;
-				if (table.setSelection(0, getNewEmptyRowIndex())) {
-					return;
-				}
-           		
-				Entry selectedEntry = sortedEntries.get(previousSelection).getEntryInAccount();
-				
-        		Row newSelectedEntry = newEmptyRow;
+        	public void widgetSelected(SelectionEvent event) {
+        		// TODO: Parameterize the row tracker?
+        		EntryRowControl selectedRowControl = (EntryRowControl)rowTracker.getSelectedRow();
+        		
+        		if (selectedRowControl != null) {
+        			Entry selectedEntry = selectedRowControl.committedEntryData.getEntry();
 
-        		newSelectedEntry.initializeFromTemplate(selectedEntry);
-*/        		
-           }
+        			if (selectedEntry == null) {
+        				// This is the empty row control.
+        				// TODO: Should we attempt to commit this first, then duplicate it if it committed?
+        				MessageDialog.openInformation(getShell(), "No Selection", "You must first select the entry you want to duplicate. (The current selection is a new entry that has not yet been registered).");
+        			} else {
+        				/*
+						 * The 'new entry' row was not the selected row, so we
+						 * know that there can't be any changes in the 'new
+						 * entry' row. We copy properties from the selected
+						 * entry into the new 'entry row' and then select the
+						 * 'new entry' row.
+						 */
+
+        				EntryRowControl newEntryRowControl = table.getRowControl(newEntryRow);
+        				Entry newEntry = newEntryRowControl.uncommittedEntryData.getEntry();
+        				TransactionManager transactionManager = (TransactionManager)newEntry.getObjectKey().getSessionManager();
+        				
+        				newEntry.setMemo(selectedEntry.getMemo());
+        				newEntry.setAmount(selectedEntry.getAmount());
+        				
+        				Entry thisEntry = newEntryRowControl.uncommittedEntryData.getOtherEntry();
+        				for (Entry origEntry: selectedRowControl.committedEntryData.getSplitEntries()) {
+        					if (thisEntry == null) {
+        						thisEntry = newEntryRowControl.uncommittedEntryData.getEntry().getTransaction().createEntry();
+        					}
+            				thisEntry.setAccount(transactionManager.getCopyInTransaction(origEntry.getAccount()));
+            				thisEntry.setMemo(origEntry.getMemo());
+            				thisEntry.setAmount(origEntry.getAmount());
+            				thisEntry = null;
+        				}
+        				
+        				// The 'new entry' row control should be listening for changes to
+        				// its uncommitted data, so we have nothing more to do. 
+        			}
+        		} else {
+        			MessageDialog.openInformation(getShell(), "No Selection", "You must first select the entry you want to duplicate.");
+        		}
+        	}
         });
 
         // Create the 'delete transaction' button.
@@ -300,16 +323,17 @@ public class EntriesTable extends Composite {
         Button detailsButton = toolkit.createButton(buttonArea, "Details", SWT.PUSH);
         detailsButton.addSelectionListener(new SelectionAdapter() {
         	public void widgetSelected(SelectionEvent event) {
-        		Entry selectedEntry = getSelectedEntry();
-				if (selectedEntry != null) {
-					TransactionDialog dialog = new TransactionDialog(
-							getShell(),
-							selectedEntry,
-							session);
-					dialog.open();
-				} else {
-					// No entry selected.
-				}
+        		// TODO: Parameterize the row tracker?
+        		EntryRowControl selectedRowControl = (EntryRowControl)rowTracker.getSelectedRow();
+        		
+        		if (selectedRowControl != null) {
+        			Entry selectedEntry = selectedRowControl.uncommittedEntryData.getEntry();
+
+        			TransactionDialog dialog = new TransactionDialog(getShell(), selectedEntry);
+        			dialog.open();
+        		} else {
+        			MessageDialog.openInformation(getShell(), "No Selection", "You must first select the entry.");
+        		}
         	}
         });
         
@@ -631,7 +655,7 @@ public class EntriesTable extends Composite {
 		Collections.sort(sortedEntries, rowComparator);
 		
 		// Add an empty row at the end so that users can enter new entries.
-		sortedEntries.add(new EntryData(null, session.getObjectKey().getSessionManager()));
+		sortedEntries.add(newEntryRow);
 		
         /*
          * Having sorted the entries, the indexes and balances must be updated.
@@ -686,17 +710,6 @@ public class EntriesTable extends Composite {
 		}
 */
 		return false;
-	}
-
-	// TODO: Not used???
-	public Entry getSelectedEntry() {
-		int row = table.getSelection();
-		if (row == -1) {
-			return null;
-		} else {
-			EntryData data = sortedEntries.get(row);
-			return data.getEntry();
-		}
 	}
 
 	/**

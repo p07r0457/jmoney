@@ -53,7 +53,6 @@ public abstract class Block<T> {
 	 * The default value is 1.
 	 */
 	public static final int horizontalSpacing = 1;
-	
 
  	protected int minimumWidth;
 	protected int weight;
@@ -69,19 +68,44 @@ public abstract class Block<T> {
 	abstract void positionControls(int x, int y, int verticalSpacing, Control [] controls, boolean flushCache);
 
 	/**
-	 * Calculate the height of this block.  Because variable height rows are
-	 * supported, the height may vary from row to row and thus depends on
-	 * the controls in the row.
+	 * Calculate the height of this block. Because variable height rows are
+	 * supported, the height may vary from row to row and thus depends on the
+	 * controls in the row.
 	 * 
 	 * This method assumes that the contained controls have all been set to
-	 * their correct size.  This method does not resize controls.  Therefore
-	 * this method should only be called after <code>positionControls</code>
-	 * has been called.
+	 * their correct size. This method does not resize controls. Therefore this
+	 * method should only be called after <code>positionControls</code> has
+	 * been called.
 	 * 
-	 * @param controls a list of controls in a row
+	 * @param controls
+	 *            a list of controls in a row
 	 * @return the height of this block
 	 */
 	abstract int getHeight(int verticalSpacing, Control[] controls);
 
+	/**
+	 * Paints the lines between the controls.
+	 * 
+	 * This method assumes that the contained controls have all been set to
+	 * their correct size. Therefore this method should only be called after
+	 * <code>positionControls</code> has been called.
+	 * 
+	 * @param controls
+	 *            a list of controls in a row
+	 */
 	abstract void paintRowLines(GC gc, int x, int y, int verticalSpacing, Control[] controls);
+
+	/**
+	 * Given a width, calculate the preferred height.
+	 * 
+	 * @param width
+	 * @param verticalSpacing
+	 * @param controls
+	 *            a list of controls in a row
+	 * @param changed
+	 *            <code>true</code> if the control's contents have changed,
+	 *            and <code>false</code> otherwise
+	 * @return the preferred height
+	 */
+	abstract int getHeightForGivenWidth(int width, int verticalSpacing, Control[] controls, boolean changed);
 };

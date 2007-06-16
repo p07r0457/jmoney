@@ -33,7 +33,7 @@ import org.eclipse.swt.widgets.Layout;
 
 public class BlockLayout extends Layout {
 
-	private Block block;
+	private Block<?> block;
 	private boolean linkedToHeader;
 
 	/**
@@ -69,7 +69,7 @@ public class BlockLayout extends Layout {
  	 * 			If true then the hints are ignored and the widths are always taken from
  	 * 			the blocks.
  	 */
-	public BlockLayout(Block block, boolean linkedToHeader) {
+	public BlockLayout(Block<?> block, boolean linkedToHeader) {
 		this.block = block;
 		this.linkedToHeader = linkedToHeader;
 	}
@@ -87,21 +87,17 @@ public class BlockLayout extends Layout {
 			}
 		}
 		
-		// TODO:
-		// Not the best.  We should not be actually laying out the controls in order
-		// to compute the height of the row.
-		// This has an EXTREMELY high probability of getting the layout wrong,
-		// because layout may not be called after this, leaving it wrong.
-		block.layout(width - Block.marginLeft - Block.marginRight);
-		block.positionControls(Block.marginLeft, marginTop, verticalSpacing, composite.getChildren(), flushCache);
-		int height = marginTop + block.getHeight(verticalSpacing, composite.getChildren()) + marginBottom;
+		int widthOfRootBlock = width - Block.marginLeft - Block.marginRight;
+		int heightOfRootBlock = block.getHeightForGivenWidth(widthOfRootBlock, verticalSpacing, composite.getChildren(), flushCache);
+		int height = heightOfRootBlock + marginTop + marginBottom;
 		return new Point(width, height);
 	}
 
 	@Override
 	protected boolean flushCache (Control control) {
-		// TODO:
-		return false;
+		// We don't currently cache anything in this layout (though
+		// perhaps we should).
+		return true;
 	}
 
 	@Override
