@@ -156,7 +156,7 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
         return nodeObject;
     }
 
-    public Vector getPageListeners() {
+    public Vector<PageEntry> getPageListeners() {
         return pageFactories;
     }
 

@@ -55,7 +55,7 @@ import org.eclipse.ui.operations.UndoRedoActionGroup;
 public class NodeEditor extends FormEditor {
 
     protected Object navigationTreeNode;
-    protected Vector pageListeners;
+    protected Vector<PageEntry> pageListeners;
 
     protected SessionChangeListener accountNameChangeListener = null;
     
@@ -69,7 +69,7 @@ public class NodeEditor extends FormEditor {
         IBookkeepingPage pages [] = new IBookkeepingPage[pageListeners.size()];
         
     	for (int i = 0; i < pageListeners.size(); i++) {
-    		PageEntry entry = (PageEntry)pageListeners.get(i);
+    		PageEntry entry = pageListeners.get(i);
     		String pageId = entry.getPageId();
     		IBookkeepingPageFactory pageListener = entry.getPageFactory();
     		pages[i] = pageListener.createFormPage(this, memento==null?null:memento.getChild(pageId));
