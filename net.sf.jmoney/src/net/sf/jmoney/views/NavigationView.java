@@ -345,9 +345,19 @@ public class NavigationView extends ViewPart {
 		TreeNode invisibleRoot = TreeNode.getInvisibleRoot();
 		viewer.setInput(invisibleRoot);
 
-		// Listen for changes to the account list.
-		// (The node containing the list of accounts is currently
-		// hard coded into this view).
+		/*
+		 * Register the navigation tree as a selection provider to the global
+		 * selection. This enables views such as the property sheet viewer to
+		 * update themselves to the current selection without the need to depend
+		 * on this view.
+		 */
+		getSite().setSelectionProvider(viewer);
+		
+		/*
+		 * Listen for changes to the model that may affect the tree view.
+		 * Changes that affect this view include changes to account names and
+		 * new or deleted accounts.
+		 */
 		JMoneyPlugin.getDefault().addSessionChangeListener(new MyCurrentSessionChangeListener(), viewer.getControl());
 		
 //		viewer.expandAll();
@@ -426,10 +436,11 @@ public class NavigationView extends ViewPart {
 			   }
 			});
 
-		// There is no layout set on the navigation view.
-		// Therefore we must listen for changes to the size of
-		// the navigation view and adjust the size of the visible
-		// control to match.
+		/*
+		 * There is no layout set on the navigation view. Therefore we must
+		 * listen for changes to the size of the navigation view and adjust the
+		 * size of the visible control to match.
+		 */
 		parent.addControlListener(new ControlAdapter() {
 			public void controlResized(ControlEvent e) {
 				if (JMoneyPlugin.getDefault().getSession() == null) {
@@ -440,7 +451,6 @@ public class NavigationView extends ViewPart {
 					viewer.getControl().setSize(parent.getSize());
 				}
 			}
-			
 		});
 	}
 
@@ -487,11 +497,11 @@ public class NavigationView extends ViewPart {
 		fillLocalPullDown(bars.getMenuManager());
 		fillLocalToolBar(bars.getToolBarManager());
 		
-		ActionGroup ag = new UndoRedoActionGroup(
+		ActionGroup undoRedoActionGroup = new UndoRedoActionGroup(
 				getSite(), 
-				this.getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
+				getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
 				true);
-		ag.fillActionBars(bars);
+		undoRedoActionGroup.fillActionBars(bars);
 	}
 
 	private void fillLocalPullDown(IMenuManager manager) {
@@ -503,11 +513,11 @@ public class NavigationView extends ViewPart {
 		manager.add(deleteAccountAction);
 
 		
-		ActionGroup ag = new UndoRedoActionGroup(
-				this.getSite(), 
-				this.getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
+		ActionGroup undoRedoActionGroup = new UndoRedoActionGroup(
+				getSite(), 
+				getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
 				true);
-		ag.fillContextMenu(manager);
+		undoRedoActionGroup.fillContextMenu(manager);
 		
 	}
 
