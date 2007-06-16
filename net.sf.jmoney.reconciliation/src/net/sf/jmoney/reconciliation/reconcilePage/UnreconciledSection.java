@@ -42,6 +42,7 @@ import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesButton;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
@@ -89,7 +90,7 @@ public class UnreconciledSection extends SectionPart {
 
 	private ArrayList<CellBlock<EntryData>> cellList;
 
-	public UnreconciledSection(ReconcilePage page, Composite parent) {
+	public UnreconciledSection(ReconcilePage page, Composite parent, RowSelectionTracker rowTracker) {
 		super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
 		getSection().setText("Unreconciled Entries");
 		fPage = page;
@@ -255,7 +256,7 @@ public class UnreconciledSection extends SectionPart {
 		rootBlock.buildCellList(cellList);
 
 		// Create the table control.
-		fUnreconciledEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, unreconciledTableContents, fPage.getAccount().getSession(), transactionDateColumn); 
+		fUnreconciledEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, unreconciledTableContents, fPage.getAccount().getSession(), transactionDateColumn, rowTracker); 
 
 		getSection().setClient(fUnreconciledEntriesControl);
 		toolkit.paintBordersFor(fUnreconciledEntriesControl);

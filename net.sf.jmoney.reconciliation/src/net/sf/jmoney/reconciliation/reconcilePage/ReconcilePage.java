@@ -30,6 +30,7 @@ import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
@@ -478,8 +479,13 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		gridData1.grabExcessVerticalSpace = true;
         containerOfSash.setLayoutData(gridData1);
         
+        /*
+         * The common row tracker.  This is used by both tables, so that
+         * there is only one selection in the part.
+         */
+	    RowSelectionTracker rowTracker = new RowSelectionTracker();
         
-        fStatementSection = new StatementSection(this, containerOfSash);
+        fStatementSection = new StatementSection(this, containerOfSash, rowTracker);
         managedForm.addPart(fStatementSection);
         fStatementSection.initialize(managedForm);
 
@@ -492,7 +498,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 
         
         
-        fUnreconciledSection = new UnreconciledSection(this, containerOfSash);
+        fUnreconciledSection = new UnreconciledSection(this, containerOfSash, rowTracker);
         managedForm.addPart(fUnreconciledSection);
         fUnreconciledSection.initialize(managedForm);
 

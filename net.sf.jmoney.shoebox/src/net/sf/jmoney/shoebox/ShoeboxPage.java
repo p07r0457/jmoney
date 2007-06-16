@@ -42,6 +42,7 @@ import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.entrytable.VerticalBlock;
 import net.sf.jmoney.fields.EntryInfo;
@@ -283,7 +284,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			);
 			
 	        // Create the table control.
-	        recentlyAddedEntriesControl = new EntriesTable(topLevelControl, toolkit, rootBlock, recentEntriesTableContents, this.session, transactionDateColumn); 
+	        recentlyAddedEntriesControl = new EntriesTable(topLevelControl, toolkit, rootBlock, recentEntriesTableContents, this.session, transactionDateColumn, new RowSelectionTracker()); 
 			
 			recentlyAddedEntriesControl.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
 

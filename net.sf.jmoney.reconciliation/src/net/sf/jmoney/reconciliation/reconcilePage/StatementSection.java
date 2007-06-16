@@ -42,6 +42,7 @@ import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesButton;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
@@ -110,7 +111,7 @@ public class StatementSection extends SectionPart {
     
     private long openingBalance = 0;
     
-    public StatementSection(ReconcilePage page, Composite parent) {
+    public StatementSection(ReconcilePage page, Composite parent, RowSelectionTracker rowTracker) {
         super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
         getSection().setText("Entries Shown on Statement");
         fPage = page;
@@ -351,7 +352,7 @@ public class StatementSection extends SectionPart {
 		rootBlock.buildCellList(cellList);
 
 		// Create the table control.
-        fReconciledEntriesControl = new EntriesTable(container, toolkit, rootBlock, reconciledTableContents, fPage.getAccount().getSession(), transactionDateColumn); 
+        fReconciledEntriesControl = new EntriesTable(container, toolkit, rootBlock, reconciledTableContents, fPage.getAccount().getSession(), transactionDateColumn, rowTracker); 
         
 		// TODO: do not duplicate this.
 		if (fPage.getStatement() == null) {
