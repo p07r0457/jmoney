@@ -84,16 +84,16 @@ public class TransactionDialog {
     
     private Vector<IPropertyControl> transactionControls = new Vector<IPropertyControl>();
     
-    public TransactionDialog(Shell parent, Entry originalAccountEntry, Session originalSession) {
+    public TransactionDialog(Shell parent, Entry originalAccountEntry) {
     	
     	/*
     	 * Use a transaction manager to hold the changes.
     	 * This allows the changes to be easily cancelled
     	 * if the user presses the 'cancel' button.
     	 */
-    	final TransactionManager transactionManager = new TransactionManager(originalSession.getObjectKey().getSessionManager());
+    	final TransactionManager transactionManager = new TransactionManager(originalAccountEntry.getObjectKey().getSessionManager());
     	
-    	this.session = transactionManager.getCopyInTransaction(originalSession);
+    	this.session = transactionManager.getSession();
     	Entry accountEntry = transactionManager.getCopyInTransaction(originalAccountEntry);
     	
     	this.defaultCurrency = accountEntry.getCommodity() instanceof Currency
@@ -137,7 +137,7 @@ public class TransactionDialog {
         entriesArea.setLayout(entriesAreaLayout);
 
         // Add properties from the transaction.
-   		for (ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
+   		for (ScalarPropertyAccessor<?> propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
         	Label propertyLabel = new Label(transactionArea, 0);
         	propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
         	IPropertyControl propertyControl = propertyAccessor.createPropertyControl(transactionArea);
@@ -203,8 +203,8 @@ public class TransactionDialog {
         deleteButton.addSelectionListener(new SelectionAdapter() {
         	public void widgetSelected(SelectionEvent event) {
         		boolean alternate = false;
-        		for (Iterator iter = entryControlsList.iterator(); iter.hasNext(); ) {
-        			EntryControls entryControls = (EntryControls)iter.next();
+        		for (Iterator<EntryControls> iter = entryControlsList.iterator(); iter.hasNext(); ) {
+        			EntryControls entryControls = iter.next();
         			if (entryControls.entry.getAmount() == 0) {
         				entryControls.dispose();
         				transaction.deleteEntry(entryControls.entry);
