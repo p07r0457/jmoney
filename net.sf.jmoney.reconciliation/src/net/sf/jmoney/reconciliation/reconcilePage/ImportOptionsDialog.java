@@ -126,7 +126,7 @@ class ImportOptionsDialog extends Dialog {
 		 * All changes within this dialog are made within a transaction, so cancelling
 		 * is trivial (the transaction is simply not committed).
 		 */
-		transactionManager = new TransactionManager(account.getObjectKey().getSessionManager());
+		transactionManager = new TransactionManager(account.getDataManager());
 		ExtendableObject accountInTransaction = transactionManager.getCopyInTransaction(account.getBaseObject()); 
 		this.account = accountInTransaction.getExtension(ReconciliationAccountInfo.getPropertySet(), true);
 

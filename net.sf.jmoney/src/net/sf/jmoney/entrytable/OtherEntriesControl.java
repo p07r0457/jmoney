@@ -134,7 +134,7 @@ public class OtherEntriesControl extends Composite {
 	public void load(final EntryData entryData) {
 		// TODO: this should be done in a 'row release' method??
 		if (this.entryData != null) {
-			this.entryData.getEntry().getObjectKey().getSessionManager().removeChangeListener(splitEntryListener);
+			this.entryData.getEntry().getDataManager().removeChangeListener(splitEntryListener);
 		}
 		
 		this.entryData = entryData;
@@ -148,7 +148,7 @@ public class OtherEntriesControl extends Composite {
 		childComposite.layout(false);
 
 		// Listen for changes so this control is kept up to date.
-		entryData.getEntry().getObjectKey().getSessionManager().addChangeListener(splitEntryListener);
+		entryData.getEntry().getDataManager().addChangeListener(splitEntryListener);
 	}
 
 	public void save() {

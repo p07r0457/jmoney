@@ -91,7 +91,7 @@ public class OtherEntriesShell {
 				rowControls.put(entry, row);
 			}
 			
-			((TransactionManager)entryData.getEntry().getObjectKey().getSessionManager()).addChangeListener(new SessionChangeAdapter() {
+			((TransactionManager)entryData.getEntry().getDataManager()).addChangeListener(new SessionChangeAdapter() {
 				@Override
 				public void objectInserted(ExtendableObject newObject) {
 					if (newObject instanceof Entry) {

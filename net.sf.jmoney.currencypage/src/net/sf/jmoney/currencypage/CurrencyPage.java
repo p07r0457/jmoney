@@ -335,7 +335,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			updateCount();
 			
 			// Listen for changes to the session data.
-			session.getObjectKey().getSessionManager().addChangeListener(listener, parent);
+			session.getDataManager().addChangeListener(listener, parent);
 			
 			/*
 			 * Listen for events on the tables. The user may double click

@@ -37,11 +37,7 @@ public abstract class ExtensionObject {
 	public ExtensionObject(ExtendableObject extendedObject) {
 		this.baseObject = extendedObject;
 	}
-/*
-	void setBaseObject(ExtendableObject baseObject) {
-		this.baseObject = baseObject;
-	}
-*/	
+
 	void setPropertySet(PropertySet propertySet) {
 		this.propertySet = propertySet;
 	}
@@ -52,6 +48,10 @@ public abstract class ExtensionObject {
 	
 	public Session getSession() {
     	return baseObject.getSession();
+	}
+	
+	public DataManager getDataManager() {
+    	return baseObject.getDataManager();
 	}
 	
 	/**

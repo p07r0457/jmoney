@@ -144,7 +144,7 @@ public class UnreconciledSection extends SectionPart {
 			public void setNewEntryProperties(Entry newEntry) {
 				// It is assumed that the entry is in a data manager that is a direct
 				// child of the data manager that contains the account.
-				TransactionManager tm = (TransactionManager)newEntry.getObjectKey().getSessionManager();
+				TransactionManager tm = (TransactionManager)newEntry.getDataManager();
 				newEntry.setAccount(tm.getCopyInTransaction(fPage.getAccount()));
 			}
 		};

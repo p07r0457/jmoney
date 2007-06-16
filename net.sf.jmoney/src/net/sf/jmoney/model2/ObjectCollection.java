@@ -60,7 +60,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 		parent.getSession().getChangeManager().processObjectCreation(parent, listPropertyAccessor, newObject);
 		
 		// Fire the event.
-		parent.getObjectKey().getSessionManager().fireEvent(
+		parent.getDataManager().fireEvent(
 				new ISessionChangeFirer() {
 					public void fire(SessionChangeListener listener) {
 						listener.objectInserted(newObject);
@@ -140,7 +140,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 		
 		ExtendableObject extendableObject = (ExtendableObject)object;
 		
-		if (extendableObject.getObjectKey().getSessionManager() != parent.getObjectKey().getSessionManager()) {
+		if (extendableObject.getDataManager() != parent.getDataManager()) {
     		throw new RuntimeException("Invalid call to remove.  The object passed does not belong to the data manager that is the base data manager of this collection.");
 		}
 		
@@ -158,7 +158,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 			 * object deletion may need to fetch information about the object
 			 * from the datastore.
 			 */
-			parent.getObjectKey().getSessionManager().fireEvent(
+			parent.getDataManager().fireEvent(
 					new ISessionChangeFirer() {
 						public void fire(SessionChangeListener listener) {
 							listener.objectRemoved(objectToRemove);

@@ -367,7 +367,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 		// The SessionManager object is implemented by the datastore plug-in
 		// and therefore can provide a set of interface implementations that
 		// are optimized for the datastore.
-		return objectKey.getSessionManager().getAdapter(adapter);
+		return getDataManager().getAdapter(adapter);
 	}
 	
     public class NoAccountFoundException extends Exception {
@@ -397,7 +397,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 		// This may need some tidying up, but by using a common context,
 		// this allows undo/redo to work even across a closing or
 		// opening of a session.  There may be a better way of doing this.
-		if (this.getObjectKey().getSessionManager() instanceof TransactionManager) {
+		if (this.getDataManager() instanceof TransactionManager) {
 			return undoContext;
 		} else {
 			return JMoneyPlugin.getDefault().getWorkbench().getOperationSupport().getUndoContext();

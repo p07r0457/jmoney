@@ -122,7 +122,7 @@ public class CopierPlugin extends AbstractUIPlugin {
 		 * therefore save the default currency and delete it after the new data
 		 * has been copied in.
 		 */
-    	TransactionManager transaction = new TransactionManager(newSession.getObjectKey().getSessionManager());
+    	TransactionManager transaction = new TransactionManager(newSession.getDataManager());
     	Session newSessionInTrans = transaction.getSession();
     	
     	Currency previousDefaultCurrency = newSessionInTrans.getDefaultCurrency(); 

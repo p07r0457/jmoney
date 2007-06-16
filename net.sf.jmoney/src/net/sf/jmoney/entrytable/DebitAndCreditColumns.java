@@ -66,7 +66,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
 			textControl.addDisposeListener(new DisposeListener() {
 				public void widgetDisposed(DisposeEvent e) {
 			    	if (entry != null) {
-			    		entry.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+			    		entry.getDataManager().removeChangeListener(amountChangeListener);
 			    	}
 				}
 			});
@@ -78,7 +78,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
 
 		public void load(EntryData data) {
 	    	if (entry != null) {
-	    		entry.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+	    		entry.getDataManager().removeChangeListener(amountChangeListener);
 	    	}
 	    	
 			entry = data.getEntry();
@@ -87,7 +87,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
         	 * We must listen to the model for changes in the value
         	 * of this property.
         	 */
-			entry.getObjectKey().getSessionManager().addChangeListener(amountChangeListener);
+			entry.getDataManager().addChangeListener(amountChangeListener);
 			
 			setControlContent();
 		}

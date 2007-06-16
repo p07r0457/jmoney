@@ -106,7 +106,7 @@ public class AccountEditor<A extends Account> implements IPropertyControl {
     	propertyControl.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {
 		    	if (extendableObject != null) {
-		    		extendableObject.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+		    		extendableObject.getDataManager().removeChangeListener(amountChangeListener);
 		    	}
 			}
 		});
@@ -117,7 +117,7 @@ public class AccountEditor<A extends Account> implements IPropertyControl {
      */
     public void load(ExtendableObject object) {
     	if (extendableObject != null) {
-    		extendableObject.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+    		extendableObject.getDataManager().removeChangeListener(amountChangeListener);
     	}
     	
     	extendableObject = object;
@@ -126,7 +126,7 @@ public class AccountEditor<A extends Account> implements IPropertyControl {
     	 * We must listen to the model for changes in the value
     	 * of this property.
     	 */
-        object.getObjectKey().getSessionManager().addChangeListener(amountChangeListener);
+        object.getDataManager().addChangeListener(amountChangeListener);
 
         propertyControl.setSession(object.getSession(), accountPropertyAccessor.getClassOfValueObject());
 

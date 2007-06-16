@@ -91,7 +91,7 @@ public class TransactionDialog {
     	 * This allows the changes to be easily cancelled
     	 * if the user presses the 'cancel' button.
     	 */
-    	final TransactionManager transactionManager = new TransactionManager(originalAccountEntry.getObjectKey().getSessionManager());
+    	final TransactionManager transactionManager = new TransactionManager(originalAccountEntry.getDataManager());
     	
     	this.session = transactionManager.getSession();
     	Entry accountEntry = transactionManager.getCopyInTransaction(originalAccountEntry);

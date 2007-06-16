@@ -89,7 +89,7 @@ public class AmountEditor implements IPropertyControl {
     	propertyControl.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {
 		    	if (fObject != null) {
-		            fObject.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+		            fObject.getDataManager().removeChangeListener(amountChangeListener);
 		    	}
 			}
 		});
@@ -100,7 +100,7 @@ public class AmountEditor implements IPropertyControl {
      */
     public void load(ExtendableObject object) {
     	if (fObject != null) {
-            fObject.getObjectKey().getSessionManager().removeChangeListener(amountChangeListener);
+            fObject.getDataManager().removeChangeListener(amountChangeListener);
     	}
     	
         fObject = object;
@@ -114,7 +114,7 @@ public class AmountEditor implements IPropertyControl {
         	 * We must listen to the model for changes in the value
         	 * of this property.
         	 */
-            object.getObjectKey().getSessionManager().addChangeListener(amountChangeListener);
+            object.getDataManager().addChangeListener(amountChangeListener);
     	}
     	propertyControl.setEnabled(object != null);
     }

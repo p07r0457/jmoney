@@ -92,7 +92,7 @@ public class NodeEditor extends FormEditor {
     	cInput.pages = null;
 
     	if (accountNameChangeListener != null) {
-    		((Account)cInput.getNode()).getObjectKey().getSessionManager().removeChangeListener(accountNameChangeListener);
+    		((Account)cInput.getNode()).getDataManager().removeChangeListener(accountNameChangeListener);
     	}
 
     	super.dispose();
@@ -128,7 +128,7 @@ public class NodeEditor extends FormEditor {
 					}
 				}
 			};
-			account.getObjectKey().getSessionManager().addChangeListener(accountNameChangeListener);
+			account.getDataManager().addChangeListener(accountNameChangeListener);
 		}
 		
 		ActionGroup ag = new UndoRedoActionGroup(

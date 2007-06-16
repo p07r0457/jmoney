@@ -151,7 +151,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 							String oldValueText;
 
 							public void focusLost(FocusEvent e) {
-								if (AccountPropertiesControl.this.session.getObjectKey().getSessionManager().isSessionFiring()) {
+								if (AccountPropertiesControl.this.session.getDataManager().isSessionFiring()) {
 									return;
 								}
 
@@ -208,7 +208,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 				propertyControl.load(account);
 			}
 
-			session.getObjectKey().getSessionManager().addChangeListener(listener, this);
+			session.getDataManager().addChangeListener(listener, this);
 		}
 	}
 

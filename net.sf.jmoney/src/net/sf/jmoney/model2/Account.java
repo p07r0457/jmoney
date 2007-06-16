@@ -120,7 +120,7 @@ public abstract class Account extends ExtendableObject implements Comparable<Acc
 	 * 				type <code>Entry</code>
 	 */
 	public Collection<Entry> getEntries() {
-		Collection<Entry> accountEntries = getObjectKey().getSessionManager().getEntries(this);
+		Collection<Entry> accountEntries = getDataManager().getEntries(this);
 		return Collections.unmodifiableCollection(accountEntries);
 	}
 	
@@ -129,7 +129,7 @@ public abstract class Account extends ExtendableObject implements Comparable<Acc
 	 * 			false if no entries are in this account
 	 */
 	public boolean hasEntries() {
-		return getObjectKey().getSessionManager().hasEntries(this);
+		return getDataManager().hasEntries(this);
 	}
 	
     /**

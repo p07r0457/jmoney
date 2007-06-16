@@ -273,7 +273,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			viewer.setInput(session);
 
 			// Listen for changes to the category list.
-			session.getObjectKey().getSessionManager().addChangeListener(listener, viewer.getControl());
+			session.getDataManager().addChangeListener(listener, viewer.getControl());
 			
 			// Listen for changes in the selection and update the 
 			// edit controls.
@@ -351,7 +351,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 						String oldValueText;
 
 						public void focusLost(FocusEvent e) {
-							if (session.getObjectKey().getSessionManager().isSessionFiring()) {
+							if (session.getDataManager().isSessionFiring()) {
 								return;
 							}
 

@@ -316,7 +316,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 							    	 * be more efficiently written to the back-end datastore and it also groups
 							    	 * the entire import as a single change for undo/redo purposes.
 							    	 */
-									TransactionManager transactionManager = new TransactionManager(account.getObjectKey().getSessionManager());
+									TransactionManager transactionManager = new TransactionManager(account.getDataManager());
 							    	CurrencyAccount accountInTransaction = transactionManager.getCopyInTransaction(account.getBaseObject());
 							    	IncomeExpenseAccount defaultCategoryInTransaction = accountInTransaction.getPropertyValue(ReconciliationAccountInfo.getDefaultCategoryAccessor());
 					           		Session sessionInTransaction = accountInTransaction.getSession();

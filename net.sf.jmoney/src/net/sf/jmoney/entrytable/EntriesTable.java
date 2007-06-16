@@ -174,7 +174,7 @@ public class EntriesTable extends Composite {
 		// Fetch and sort the list of top level entries to display.
 		buildEntryList();
 
-		newEntryRow = new EntryData(null, session.getObjectKey().getSessionManager());
+		newEntryRow = new EntryData(null, session.getDataManager());
 		
 	    /*
 		 * Build the initial sort order. This must be done before we can create
@@ -263,7 +263,7 @@ public class EntriesTable extends Composite {
 
         				EntryRowControl newEntryRowControl = table.getRowControl(newEntryRow);
         				Entry newEntry = newEntryRowControl.uncommittedEntryData.getEntry();
-        				TransactionManager transactionManager = (TransactionManager)newEntry.getObjectKey().getSessionManager();
+        				TransactionManager transactionManager = (TransactionManager)newEntry.getDataManager();
         				
         				newEntry.setMemo(selectedEntry.getMemo());
         				newEntry.setAmount(selectedEntry.getAmount());
@@ -307,7 +307,7 @@ public class EntriesTable extends Composite {
             			// so we can undo it.  A more efficient way would be to make the change
             			// in a callback.
 
-            			TransactionManager transactionManager = new TransactionManager(selectedEntry.getObjectKey().getSessionManager());
+            			TransactionManager transactionManager = new TransactionManager(selectedEntry.getDataManager());
             			Entry selectedEntry2 = transactionManager.getCopyInTransaction(selectedEntry); 
             			Transaction transaction = selectedEntry2.getTransaction();
             			transaction.getSession().deleteTransaction(transaction);
@@ -338,7 +338,7 @@ public class EntriesTable extends Composite {
         });
         
 		
-		session.getObjectKey().getSessionManager().addChangeListener(new SessionChangeAdapter() {
+		session.getDataManager().addChangeListener(new SessionChangeAdapter() {
 			public void objectInserted(ExtendableObject newObject) {
 				if (newObject instanceof Entry) {
 					Entry newEntry = (Entry) newObject;
@@ -523,7 +523,7 @@ public class EntriesTable extends Composite {
 			}
 
 			private void addEntryToTable(Entry entry) {
-				EntryData newData = new EntryData(entry, session.getObjectKey().getSessionManager());
+				EntryData newData = new EntryData(entry, session.getDataManager());
 				
 				entries.put(entry, newData);
 				
@@ -675,7 +675,7 @@ public class EntriesTable extends Composite {
         // when the data is sorted.
         entries = new HashMap<Entry, EntryData>();
         for (Entry accountEntry: entriesContent.getEntries()) {
-        	EntryData data = new EntryData(accountEntry, session.getObjectKey().getSessionManager());
+        	EntryData data = new EntryData(accountEntry, session.getDataManager());
             if (matchesFilter(data)) {
                 entries.put(accountEntry, data);
             }

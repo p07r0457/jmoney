@@ -200,7 +200,7 @@ class EntryControls {
 			public void focusLost(FocusEvent e) {
 				ExtendableObject object = getExtendableObject();
 				
-				if (object.getObjectKey().getSessionManager().isSessionFiring()) {
+				if (object.getDataManager().isSessionFiring()) {
 					return;
 				}
 				
@@ -448,7 +448,7 @@ class EntryControls {
 		// Note: composite1 is used as the containing composite,
 		// even tho there are in fact 5 composites across the row.
 		// This is ok because they are all destroyed at the same time.
-		session.getObjectKey().getSessionManager().addChangeListener(mySessionChangeListener, composite1);
+		session.getDataManager().addChangeListener(mySessionChangeListener, composite1);
 		
 		// if the entry is known at construct time.  Set it
 		// into the controls.

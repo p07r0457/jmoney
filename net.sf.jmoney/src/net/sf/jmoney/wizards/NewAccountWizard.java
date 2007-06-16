@@ -78,7 +78,7 @@ public class NewAccountWizard extends Wizard {
 		this.setWindowTitle("Create a New Category");
 		this.setHelpAvailable(true);
 		
-		transactionManager = new TransactionManager(session.getObjectKey().getSessionManager());
+		transactionManager = new TransactionManager(session.getDataManager());
 		
 		IncomeExpenseAccount parentAccount2 = transactionManager.getCopyInTransaction(parentAccount);
 		if (parentAccount2 == null) {
@@ -103,7 +103,7 @@ public class NewAccountWizard extends Wizard {
 		this.setWindowTitle("Create a New Account");
 		this.setHelpAvailable(true);
 		
-		transactionManager = new TransactionManager(session.getObjectKey().getSessionManager());
+		transactionManager = new TransactionManager(session.getDataManager());
 		
 		CapitalAccount parentAccount2 = transactionManager.getCopyInTransaction(parentAccount);
 		if (parentAccount2 == null) {
@@ -196,7 +196,7 @@ public class NewAccountWizard extends Wizard {
 						new FocusAdapter() {
 							public void focusLost(FocusEvent e) {
 								// TODO: Verify this is needed.  Clean it up?
-								if (NewAccountWizard.this.newUncommittedAccount.getObjectKey().getSessionManager().isSessionFiring()) {
+								if (NewAccountWizard.this.newUncommittedAccount.getDataManager().isSessionFiring()) {
 									return;
 								}
 

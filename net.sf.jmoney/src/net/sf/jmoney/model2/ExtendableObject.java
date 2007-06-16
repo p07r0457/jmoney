@@ -122,6 +122,16 @@ public abstract class ExtendableObject {
 	}
 	
 	/**
+	 * @return The data manager containing this object
+	 */
+	public DataManager getDataManager() {
+		// The key must contain the data manager and so there is no reason
+		// for the extendable objects to also contain a data manager field.
+		// Get the data manager from the key.
+		return objectKey.getSessionManager();
+	}
+	
+	/**
 	 * Two or more instantiated objects may represent the same object
 	 * in the datastore.  Such objects should be considered
 	 * the same.  Therefore this method overrides the default
@@ -178,7 +188,7 @@ public abstract class ExtendableObject {
 		 * managers is not allowed.
 		 */
 		if (newValue instanceof ExtendableObject
-				&& ((ExtendableObject)newValue).getObjectKey().getSessionManager() != objectKey.getSessionManager()) {
+				&& ((ExtendableObject)newValue).getDataManager() != getDataManager()) {
 			throw new RuntimeException("The object being set as the value of a property and the parent object are being managed by different data managers.  Objects cannot contain references to objects from other data managers.");
 		}
 		
@@ -220,7 +230,7 @@ public abstract class ExtendableObject {
 		getSession().getChangeManager().processPropertyUpdate(this, propertyAccessor, oldValue, newValue);
 
 		// Fire an event for this change.
-		getObjectKey().getSessionManager().fireEvent(
+		getDataManager().fireEvent(
             	new ISessionChangeFirer() {
             		public void fire(SessionChangeListener listener) {
             			listener.objectChanged(ExtendableObject.this, propertyAccessor, oldValue, newValue);

@@ -182,7 +182,7 @@ public class StatementSection extends SectionPart {
 			public void setNewEntryProperties(Entry newEntry) {
 				// It is assumed that the entry is in a data manager that is a direct
 				// child of the data manager that contains the account.
-				TransactionManager tm = (TransactionManager)newEntry.getObjectKey().getSessionManager();
+				TransactionManager tm = (TransactionManager)newEntry.getDataManager();
 				newEntry.setAccount(tm.getCopyInTransaction(fPage.getAccount()));
 
 				newEntry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), fPage.getStatement());
@@ -534,7 +534,7 @@ public class StatementSection extends SectionPart {
 // TODO: sort this out.				
 //				UncommittedObjectKey uncommittedObjectKey = (UncommittedObjectKey)((ExtendableObject)sourceValue).getObjectKey();
 //				V committedObject = propertyAccessor.getClassOfValueObject().cast(uncommittedObjectKey.getCommittedObjectKey().getObject());
-//				targetValue = ((TransactionManager)targetAccount.getObjectKey().getSessionManager()).getCopyInTransaction(committedObject);
+//				targetValue = ((TransactionManager)targetAccount.getDataManager()).getCopyInTransaction(committedObject);
 			} else {
 				targetAccount.setPropertyValue(propertyAccessor, sourceValue);
 			}

@@ -222,7 +222,7 @@ public class TransactionManager extends DataManager {
     		return null;
     	}
     	
-    	if (committedObject.getObjectKey().getSessionManager() != baseDataManager) {
+    	if (committedObject.getDataManager() != baseDataManager) {
     		throw new RuntimeException("Invalid call to getCopyInTransaction.  The object passed must belong to the data manager that is the base data manager of this transaction manager.");
     	}
     	
@@ -630,7 +630,7 @@ public class TransactionManager extends DataManager {
 		 * are created. A later call to objectCreated will be made for each
 		 * descendant.
 		 */
-		parent.getObjectKey().getSessionManager().fireEvent(
+		parent.getDataManager().fireEvent(
 				new ISessionChangeFirer() {
 					public void fire(SessionChangeListener listener) {
 						listener.objectCreated(newCommittedObject);
@@ -679,7 +679,7 @@ public class TransactionManager extends DataManager {
 			 * the reference will be null. A later objectChanged event will be
 			 * fired when the reference is later set to the correct value.
 			 */
-			parent.getObjectKey().getSessionManager().fireEvent(
+			parent.getDataManager().fireEvent(
 					new ISessionChangeFirer() {
 						public void fire(SessionChangeListener listener) {
 							listener.objectInserted(newCommittedObject);
