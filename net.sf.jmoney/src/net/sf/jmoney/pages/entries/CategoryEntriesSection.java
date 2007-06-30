@@ -101,8 +101,8 @@ public class CategoryEntriesSection extends SectionPart implements IEntriesConte
 		 */
 		IndividualBlock<EntryData> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
 
-    	CellBlock<EntryData> debitColumnManager = new DebitAndCreditColumns("debit", "Debit", account.getCurrency(), true);     //$NON-NLS-2$
-    	CellBlock<EntryData> creditColumnManager = new DebitAndCreditColumns("credit", "Credit", account.getCurrency(), false); //$NON-NLS-2$
+		CellBlock<EntryData> debitColumnManager = DebitAndCreditColumns.createDebitColumn(account.getCurrency());
+		CellBlock<EntryData> creditColumnManager = DebitAndCreditColumns.createCreditColumn(account.getCurrency());
     	CellBlock<EntryData> balanceColumnManager = new BalanceColumn(account.getCurrency());
 		
 		rootBlock = new HorizontalBlock<EntryData>(

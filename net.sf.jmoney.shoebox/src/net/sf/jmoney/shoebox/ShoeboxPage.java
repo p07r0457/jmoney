@@ -260,8 +260,8 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			 * Setup the layout structure of the header and rows.
 			 */
 			IndividualBlock<EntryData> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
-			CellBlock<EntryData> debitColumnManager = new DebitAndCreditColumns("debit", "Debit", session.getDefaultCurrency(), true);     //$NON-NLS-2$
-			CellBlock<EntryData> creditColumnManager = new DebitAndCreditColumns("credit", "Credit", session.getDefaultCurrency(), false); //$NON-NLS-2$
+			CellBlock<EntryData> debitColumnManager = DebitAndCreditColumns.createDebitColumn(session.getDefaultCurrency());
+			CellBlock<EntryData> creditColumnManager = DebitAndCreditColumns.createCreditColumn(session.getDefaultCurrency());
 			
 			rootBlock = new HorizontalBlock<EntryData>(
 					transactionDateColumn,

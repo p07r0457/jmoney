@@ -190,7 +190,15 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
 	private Commodity commodity;
 	private boolean isDebit;
 
-	public DebitAndCreditColumns(String id, String name, Commodity commodity, boolean isDebit) {
+	public static DebitAndCreditColumns createCreditColumn(Commodity commodityForFormatting) {
+    	return new DebitAndCreditColumns("credit", "Credit", commodityForFormatting, false); //$NON-NLS-2$
+	}
+	
+	public static DebitAndCreditColumns createDebitColumn(Commodity commodityForFormatting) {
+    	return new DebitAndCreditColumns("debit", "Debit", commodityForFormatting, true);     //$NON-NLS-2$
+	}
+	
+	private DebitAndCreditColumns(String id, String name, Commodity commodity, boolean isDebit) {
 		super(name, 70, 2);
 		this.id = id;
 		this.commodity = commodity;

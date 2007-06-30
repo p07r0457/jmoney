@@ -323,8 +323,8 @@ public class StatementSection extends SectionPart {
 		};
 		
 		IndividualBlock<EntryData> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
-		CellBlock<EntryData> debitColumnManager = new DebitAndCreditColumns("Debit", "debit", fPage.getAccount().getCurrency(), true);     //$NON-NLS-2$
-		CellBlock<EntryData> creditColumnManager = new DebitAndCreditColumns("Credit", "credit", fPage.getAccount().getCurrency(), false); //$NON-NLS-2$
+		CellBlock<EntryData> debitColumnManager = DebitAndCreditColumns.createDebitColumn(fPage.getAccount().getCurrency());
+		CellBlock<EntryData> creditColumnManager = DebitAndCreditColumns.createCreditColumn(fPage.getAccount().getCurrency());
 		CellBlock<EntryData> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
 
 		/*
