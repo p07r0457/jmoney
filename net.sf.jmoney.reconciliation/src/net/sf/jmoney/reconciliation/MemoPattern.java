@@ -48,12 +48,14 @@ public final class MemoPattern extends ExtendableObject {
 	/**
 	 * Element: Account
 	 */
-	protected IObjectKey accountKey = null;
+	// TODO: public so framework can access.  We need to think about
+	// how this can be cleaned up.
+	public IObjectKey accountKey = null;
 	
 	protected String memo = null;
 
 	/*
-	 * The compliled pattern.  This is not a property but
+	 * The compiled pattern.  This is not a property but
 	 * it is compiled each time an object of this class is constructed.
 	 */
 	Pattern compiledPattern = null;
@@ -64,7 +66,8 @@ public final class MemoPattern extends ExtendableObject {
 	 * <P>
 	 * Element: Currency
 	 */
-	protected IObjectKey incomeExpenseCurrencyKey = null; 
+	// TODO: same comment as for account above.
+	public IObjectKey incomeExpenseCurrencyKey = null; 
 	
     /**
      * Constructor used by datastore plug-ins to create

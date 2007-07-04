@@ -24,6 +24,7 @@ package net.sf.jmoney.reconciliation.reconcilePage;
 import java.util.Collection;
 import java.util.Vector;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.entrytable.CellBlock;
@@ -332,10 +333,12 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 						           		 * Scan for a match in the patterns.  If a match is found,
 						           		 * use the values for memo, description etc. from the pattern.
 						           		 */
-						           		String memo = entryData.getMemo();
+					           			String text = entryData.getTextToMatch();
 						           		for (MemoPattern pattern: account.getPatternCollection()) {
-						           			Matcher m = pattern.getCompiledPattern().matcher(memo);
+						           			Matcher m = pattern.getCompiledPattern().matcher(text);
+						           			System.out.println(pattern.getPattern() + ", " + text);
 						           			if (m.matches()) {
+						           				System.out.println("matches!!!!!");
 						           				Object [] args = new Object[m.groupCount()];
 						           				for (int i = 0; i < m.groupCount(); i++) {
 						           					args[i] = m.group(i);
@@ -366,7 +369,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 							           								.format(args));
 						           				}
 						           				
-								           		entry2.setAccount(pattern.getAccount());
+								           		entry2.setAccount(transactionManager.getCopyInTransaction(pattern.getAccount()));
 								           		
 								           		break;
 						           			}
@@ -376,6 +379,9 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 						           		// other property.
 						           		if (entry2.getAccount() == null) {
 						           			entry2.setAccount(defaultCategoryInTransaction);
+						        			entry1.setMemo(entryData.getDefaultMemo());
+						        			entry2.setMemo(entryData.getDefaultDescription());
+						        			
 						           		}
 						           		
 						           		entryData.assignPropertyValues(transaction, entry1, entry2);
@@ -543,5 +549,15 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 	public void saveState(IMemento memento) {
 		// Save view state (e.g. the sort order, the set of extension properties that are
 		// displayed in the table).
+	}
+
+	public void deleteTransaction() {
+		// TODO Auto-generated method stub
+		System.out.println("delete transaction");
+	}
+
+	public boolean isDeleteTransactionApplicable() {
+		// TODO Auto-generated method stub
+		return true;
 	}
 }

@@ -29,6 +29,8 @@ import java.util.regex.PatternSyntaxException;
 
 import net.sf.jmoney.fields.AccountControl;
 import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.AccountCellEditor;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ObjectCollection;
@@ -44,9 +46,20 @@ import org.eclipse.jface.dialogs.DialogMessageArea;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ColumnViewerEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
+import org.eclipse.jface.viewers.EditingSupport;
+import org.eclipse.jface.viewers.FocusCellOwnerDrawHighlighter;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.TableViewerEditor;
+import org.eclipse.jface.viewers.TableViewerFocusCellManager;
+import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.swt.SWT;
@@ -293,13 +306,13 @@ class ImportOptionsDialog extends Dialog {
 		// Set up the table
 		final Table table = viewer.getTable();
 		table.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
-/* Not supported until Eclipse 3.3.		
+		
 		TableViewerFocusCellManager focusCellManager = new TableViewerFocusCellManager(viewer, new FocusCellOwnerDrawHighlighter(viewer));
 		ColumnViewerEditorActivationStrategy actSupport = new ColumnViewerEditorActivationStrategy(viewer) {
 			protected boolean isEditorActivationEvent(
 					ColumnViewerEditorActivationEvent event) {
 				return event.eventType == ColumnViewerEditorActivationEvent.TRAVERSAL
-						|| event.eventType == ColumnViewerEditorActivationEvent.MOUSE_DOUBLE_CLICK_SELECTION
+						|| event.eventType == ColumnViewerEditorActivationEvent.MOUSE_CLICK_SELECTION
 						|| (event.eventType == ColumnViewerEditorActivationEvent.KEY_PRESSED && event.keyCode == SWT.CR)
 						|| event.eventType == ColumnViewerEditorActivationEvent.PROGRAMMATIC;
 			}
@@ -316,7 +329,7 @@ class ImportOptionsDialog extends Dialog {
 
 		// Add the columns
 		TableViewerColumn column1 = new TableViewerColumn(viewer, SWT.LEFT);
-		column1.getColumn().setWidth(20);
+		column1.getColumn().setWidth(40);
 		column1.getColumn().setText("");
 		column1.setLabelProvider(new ColumnLabelProvider() {
 			public Image getImage(Object element) {
@@ -344,7 +357,7 @@ class ImportOptionsDialog extends Dialog {
 			protected void setValue(Object element, Object value) {
 			}
 		});
-*/
+
 		addColumn(MemoPatternInfo.getPatternAccessor(), "<html>The pattern is a Java regular expression that is matched against the memo in the downloadable file.<br>For each record from the bank, the first row in this table with a matching pattern is used.</html>");
 		addColumn(MemoPatternInfo.getCheckAccessor(), "The value to be put in the check field.  The values in this table may contain {0}, [1} etc. where the number matches the group number in the Java regular expression.");
 		addColumn(MemoPatternInfo.getMemoAccessor(), "The value to be put in the memo field.  The values in this table may contain {0}, [1} etc. where the number matches the group number in the Java regular expression.");
@@ -388,7 +401,6 @@ class ImportOptionsDialog extends Dialog {
 	}
 
 	private void addColumn(final ScalarPropertyAccessor<?> propertyAccessor, String tooltip) {
-/* Not supported until Eclipse 3.3.		
 		TableViewerColumn column = new TableViewerColumn(viewer, SWT.LEFT);
 		column.getColumn().setWidth(propertyAccessor.getMinimumWidth());
 		column.getColumn().setText(propertyAccessor.getDisplayName());
@@ -436,7 +448,6 @@ class ImportOptionsDialog extends Dialog {
 				pattern.setPropertyValue(property, typedValue);
 			}
 		});
-*/		
 	}
 
 	private Composite createButtonArea(Composite parent) {

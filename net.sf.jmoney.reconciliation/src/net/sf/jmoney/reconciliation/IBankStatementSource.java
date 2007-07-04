@@ -104,7 +104,7 @@ public interface IBankStatementSource {
 		 * This method assigns the properties from the bank statement
 		 * import to the properties in the transaction.
 		 * <P>
-		 * Other than the account property in entry1, no properties
+		 * Other than the account and memo properties, no properties
 		 * will have been set in the transaction  before this method
 		 * is called.
 		 * 
@@ -126,9 +126,6 @@ public interface IBankStatementSource {
 			entry1.setCheck(check);
 			entry1.setPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor(), uniqueId);
 			
-			entry1.setMemo(memo==null? (name==null?payee: name):memo);
-			entry2.setMemo(payee == null?(memo==null?name:memo):payee);
-			
 			entry1.setAmount(amount);
 			entry2.setAmount(-amount);
 		}
@@ -138,8 +135,43 @@ public interface IBankStatementSource {
 			return "[a:"+amount+";n:"+name+"]";
 		}
 		
-		public String getMemo() {
-			return memo;
+		/**
+		 * Returns the text that is to be used for pattern matching.
+		 * The patterns entered by the user are matched against the text
+		 * returned by this method.
+		 * 
+		 * @return the text which may be empty but must never be null
+		 */
+		public String getTextToMatch() {
+   			String text = "";
+   			if (memo != null) {
+   				text += "memo=" + memo;
+   			}
+   			if (name != null) {
+   				text += "name=" + name;
+   			}
+   			if (payee != null) {
+   				text += "payee=" + payee;
+   			}
+   			return text;
+		}
+		
+		public String getName() {
+			return name;
+		}
+		
+		/**
+		 * The memo if no patterns match
+		 */
+		public String getDefaultMemo() {
+			return memo==null? (name==null?payee: name):memo;
+		}
+
+		/**
+		 * The description if no patterns match
+		 */
+		public String getDefaultDescription() {
+			return payee == null?(memo==null?name:memo):payee;
 		}
 	}
 }
