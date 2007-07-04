@@ -47,6 +47,9 @@ Eclipse Foundation http://www.eclipse.org/
       <plugin id="net.sf.jmoney.copier"/>
       <plugin id="net.sf.jmoney.currencypage"/>
       <plugin id="net.sf.jmoney.gnucashXML"/>
+      <plugin id="net.sf.jmoney.jdbcdatastore"/>
+      <plugin id="net.sf.jmoney.oda"/>
+      <plugin id="net.sf.jmoney.oda.ui"/>
       <plugin id="net.sf.jmoney.propagators.reconciliation"/>
       <plugin id="net.sf.jmoney.qif"/>
       <plugin id="net.sf.jmoney.reconciliation"/>
