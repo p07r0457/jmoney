@@ -250,7 +250,7 @@ public class Query implements IQuery
 	 */
 	public void setInt(int parameterId, int value) throws OdaException
 	{
-		throw new UnsupportedOperationException( );
+		throw new UnsupportedOperationException();
 	}
 
 	/*
@@ -290,7 +290,7 @@ public class Query implements IQuery
 	public void setBigDecimal(int parameterId, BigDecimal value)
 			throws OdaException
 	{
-		throw new UnsupportedOperationException( );
+		throw new UnsupportedOperationException();
 	}
 
 	/*
@@ -340,7 +340,7 @@ public class Query implements IQuery
 	 */
 	public void setTime(String parameterName, Time value) throws OdaException
 	{
-		throw new UnsupportedOperationException( );
+		throw new UnsupportedOperationException();
 	}
 
 	/*
@@ -349,7 +349,7 @@ public class Query implements IQuery
 	 */
 	public void setTime(int parameterId, Time value) throws OdaException
 	{
-		throw new UnsupportedOperationException( );
+		throw new UnsupportedOperationException();
 	}
 
 	/*
@@ -359,7 +359,7 @@ public class Query implements IQuery
 	public void setTimestamp(String parameterName, Timestamp value)
 			throws OdaException
 	{
-		throw new UnsupportedOperationException( );
+		throw new UnsupportedOperationException();
 	}
 
 	/*
@@ -369,7 +369,25 @@ public class Query implements IQuery
 	public void setTimestamp(int parameterId, Timestamp value)
 			throws OdaException
 	{
-		throw new UnsupportedOperationException( );
+		throw new UnsupportedOperationException();
+	}
+
+	public void setBoolean(String parameterName, boolean value) throws OdaException {
+        int parameterIndex = findInParameter(parameterName) - 1;
+        setBoolean(parameterIndex, value);
+	}
+
+	public void setBoolean(int parameterId, boolean value) throws OdaException {
+		throw new UnsupportedOperationException();
+	}
+
+	public void setNull(String parameterName) throws OdaException {
+        int parameterIndex = findInParameter(parameterName) - 1;
+        setNull(parameterIndex);
+	}
+
+	public void setNull(int parameterId) throws OdaException {
+		throw new UnsupportedOperationException();
 	}
 
 	/*
@@ -399,23 +417,23 @@ public class Query implements IQuery
 	 */
 	public void clearInParameters() throws OdaException
 	{
-		throw new UnsupportedOperationException( );
+		throw new UnsupportedOperationException();
 	}
 
 	/*
 	 * @see org.eclipse.datatools.connectivity.oda.IQuery#setSortSpec(org.eclipse.datatools.connectivity.oda.SortSpec)
 	 */
-	public void setSortSpec( SortSpec sortBy ) throws OdaException
+	public void setSortSpec(SortSpec sortBy) throws OdaException
 	{
-		throw new UnsupportedOperationException( );
+		throw new UnsupportedOperationException();
 	}
 
 	/*
 	 * @see org.eclipse.datatools.connectivity.oda.IQuery#getSortSpec()
 	 */
-	public SortSpec getSortSpec( ) throws OdaException
+	public SortSpec getSortSpec() throws OdaException
 	{
-		throw new UnsupportedOperationException( );
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -424,7 +442,7 @@ public class Query implements IQuery
 	 * @throws OdaException
 	 *             if connection is not open yet
 	 */
-	private void validateOpenConnection( ) throws OdaException
+	private void validateOpenConnection() throws OdaException
 	{
 		if (connection.isOpen( ) == false) {
 			throw new OdaException( Messages.getString("common.connectionNotOpen")); //$NON-NLS-1$

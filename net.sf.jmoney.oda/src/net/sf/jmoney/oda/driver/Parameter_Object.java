@@ -94,7 +94,8 @@ class Parameter_Object extends Parameter {
 	}
 
 	private void addSubAccounts(CapitalAccount account, Vector<Account> matchingAccounts, String pattern) {
-		if (propertySet.getImplementationClass().isAssignableFrom(account.getClass())) {
+		if (propertySet.getImplementationClass().isAssignableFrom(account.getClass())
+				&& account.getName().toUpperCase().indexOf(pattern) >= 0) {
 			matchingAccounts.add(account);	
 		}
 		

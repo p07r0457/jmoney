@@ -2,6 +2,28 @@
 <?eclipse version="3.2"?>
 <plugin>
 
+     <extension
+         point="net.sf.jmoney.pages">
+      <node
+            id="birtReportsNode"
+            label="Birt Reports"
+            icon="icons/report.gif"
+            position="500">
+      </node>
+      <node
+            id="birtIncomeAndExpenses"
+            label="Income and Expenses"
+            icon="icons/report.gif"
+            parent="net.sf.jmoney.oda.birtReportsNode"
+            position="100">
+      </node>
+      <pages
+            class="net.sf.jmoney.oda.pages.IncomeExpenseDetailPage"
+            node="net.sf.jmoney.oda.birtIncomeAndExpenses"
+            id="birtIncomeAndExpensesPage">
+      </pages>
+   </extension>
+
    <extension
          point="org.eclipse.datatools.connectivity.oda.dataSource">
       <dataSource
@@ -33,7 +55,7 @@
             <dataTypeMapping
                   nativeDataType="Boolean"
                   nativeDataTypeCode="5"
-                  odaScalarDataType="String"/>
+                  odaScalarDataType="Boolean"/>
             <dataTypeMapping
                   nativeDataType="Date"
                   nativeDataTypeCode="6"

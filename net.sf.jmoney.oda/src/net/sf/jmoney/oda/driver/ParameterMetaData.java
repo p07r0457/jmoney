@@ -22,6 +22,10 @@ public class ParameterMetaData implements IParameterMetaData {
 		return parameterModeIn;
 	}
 
+	public String getParameterName(int parameterNumber) throws OdaException {
+		return parameters.get(parameterNumber-1).getName();
+	}
+
 	public int getParameterType(int parameterNumber) throws OdaException {
 		return parameters.get(parameterNumber-1).getColumnType().getNativeType();
 	}

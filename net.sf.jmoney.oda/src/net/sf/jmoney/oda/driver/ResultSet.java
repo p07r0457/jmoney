@@ -176,7 +176,7 @@ public class ResultSet implements IResultSet
     /*
      * @see org.eclipse.datatools.connectivity.oda.IResultSet#getInt(java.lang.String)
      */
-    public int getInt( String columnName ) throws OdaException
+    public int getInt(String columnName) throws OdaException
     {
         validateCursorState();
         int columnNumber = findColumn(columnName);
@@ -197,16 +197,7 @@ public class ResultSet implements IResultSet
     		wasNull = false;
     		
     		if (result instanceof Number) {
-    			/*
-    			 * This is not quite right, but as a first approximation,
-    			 * if the native type is a currency then we divide by 100.
-    			 */
-    			Double dValue = ((Number)result).doubleValue();
-        		if (resultSetMetaData.getColumnType(columnNumber-1) == 3) {
-        			return dValue / 100; 
-        		} else {
-        			return dValue;
-        		}
+    			return ((Number)result).doubleValue();
     		} else {
     			return 0;
     		}
@@ -347,6 +338,30 @@ public class ResultSet implements IResultSet
     {
         throw new UnsupportedOperationException();
     }
+
+	public boolean getBoolean(int columnNumber) throws OdaException {
+    	validateCursorState();
+    	Object result = resultSetMetaData.selectedProperties.get(columnNumber-1).getValue();
+    	if (result == null) {
+    		wasNull = true;
+    		return false;
+    	} else {
+    		wasNull = false;
+    		if (result instanceof Boolean) {
+    			return (Boolean)result;
+    		} else if (result instanceof Number) {
+    			return ((Number)result).intValue() != 0;
+    		} else {
+    			return false;
+    		}
+    	}
+	}
+
+	public boolean getBoolean(String columnName) throws OdaException {
+        validateCursorState();
+        int columnNumber = findColumn(columnName);
+        return getBoolean(columnNumber);
+	}
 
     /*
      * @see org.eclipse.datatools.connectivity.oda.IResultSet#wasNull()

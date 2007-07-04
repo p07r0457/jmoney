@@ -22,6 +22,9 @@
 
 package net.sf.jmoney.oda;
 
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
+
 import org.eclipse.core.runtime.Plugin;
 import org.osgi.framework.BundleContext;
 
@@ -36,11 +39,21 @@ public class Activator extends Plugin {
 	// The shared instance
 	private static Activator plugin;
 	
+	//Resource bundle.
+	private ResourceBundle resourceBundle;
+	
 	/**
 	 * The constructor
 	 */
 	public Activator() {
+		super();
 		plugin = this;
+
+		try {
+			resourceBundle = ResourceBundle.getBundle("net.sf.jmoney.oda.resources.Language");
+		} catch (MissingResourceException x) {
+			resourceBundle = null;
+		}
 	}
 
 	/*
@@ -69,4 +82,23 @@ public class Activator extends Plugin {
 		return plugin;
 	}
 
+	/**
+	 * Returns the string from the plugin's resource bundle,
+	 * or 'key' if not found.
+	 */
+	public static String getResourceString(String key) {
+		ResourceBundle bundle = getDefault().getResourceBundle();
+		try {
+			return (bundle != null) ? bundle.getString(key) : key;
+		} catch (MissingResourceException e) {
+			return key;
+		}
+	}
+
+	/**
+	 * Returns the plugin's resource bundle,
+	 */
+	public ResourceBundle getResourceBundle() {
+		return resourceBundle;
+	}
 }

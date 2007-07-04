@@ -9,6 +9,9 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.datatools.connectivity.oda,
  net.sf.jmoney,
  org.eclipse.birt.report.viewer,
- org.eclipse.ui
+ org.eclipse.ui,
+ org.eclipse.ui.forms,
+ org.eclipse.birt.report.engine,
+ org.eclipse.birt.report.engine.emitter.html
 Eclipse-LazyStart: true
 Export-Package: net.sf.jmoney.oda.driver

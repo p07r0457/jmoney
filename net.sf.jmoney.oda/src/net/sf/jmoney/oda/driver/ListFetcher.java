@@ -26,7 +26,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Vector;
 
-import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
@@ -142,16 +142,16 @@ public class ListFetcher implements IFetcher {
 		 * on which the balance is required.  If the data parameter is null, the
 		 * latest balance, including future entries, is given. 
 		 */
-		if (CapitalAccount.class.isAssignableFrom(filter.getImplementationClass())) {
+		if (CurrencyAccount.class.isAssignableFrom(filter.getImplementationClass())) {
 			columnProperties.add(new Column("balance", "Balance", Long.class, false) {
 				@Override
 				Object getValue() {
-					CapitalAccount account = ((CapitalAccount)currentObject);
+					CurrencyAccount account = ((CurrencyAccount)currentObject);
 					long total = 0;
 					for (Entry entry: account.getEntries()) {
 						total += entry.getAmount();
 					}
-					return new Long(total);
+					return Long.valueOf(total).doubleValue() / account.getCurrency().getScaleFactor();
 				}
 			});
 		}
@@ -172,6 +172,12 @@ public class ListFetcher implements IFetcher {
 					Date endDate = endDateParameter.getValue();
 					
 					IncomeExpenseAccount account = ((IncomeExpenseAccount)currentObject);
+					if (account.isMultiCurrency()) {
+						// We can't add values in different currencies,
+						// so for time being just return zero.
+						return 0.0;
+					}
+					
 					long total = 0;
 					for (Entry entry: account.getEntries()) {
 						if (!entry.getTransaction().getDate().before(startDate)
@@ -179,7 +185,7 @@ public class ListFetcher implements IFetcher {
 							total += entry.getAmount();
 						}
 					}
-					return new Long(total);
+					return Long.valueOf(total).doubleValue() / account.getCurrency().getScaleFactor();
 				}
 			});
 		}

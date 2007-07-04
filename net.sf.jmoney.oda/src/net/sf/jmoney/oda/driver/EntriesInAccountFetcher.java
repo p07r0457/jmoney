@@ -28,6 +28,7 @@ import java.util.Vector;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
@@ -76,7 +77,7 @@ public class EntriesInAccountFetcher implements IFetcher {
 			}
 		}
 
-		ExtendablePropertySet parentPropertySet = accountObjects.getPropertySet();
+		ExtendablePropertySet<?> parentPropertySet = accountObjects.getPropertySet();
 		if (!Account.class.isAssignableFrom(parentPropertySet.getImplementationClass())) {
 			throw new OdaException("error in query: entriesInAccount used, but the given list is not a list of accounts.");
 		}
@@ -93,7 +94,13 @@ public class EntriesInAccountFetcher implements IFetcher {
 			columns.add(new Column(property.getName(), property.getDisplayName(), property.getClassOfValueObject(), property.isNullAllowed()) {
 				@Override
 				Object getValue() {
-					return currentObject.getPropertyValue(property);
+					Object value = currentObject.getPropertyValue(property);
+					if (property == EntryInfo.getAmountAccessor()) {
+						Commodity commodity = ((Entry)currentObject).getCommodity();
+						return ((Long)value).doubleValue() / commodity.getScaleFactor();
+					} else {
+						return value;
+					}
 				}
 			});
 		}
@@ -112,7 +119,13 @@ public class EntriesInAccountFetcher implements IFetcher {
 					if (otherEntry == null) {
 						return null;
 					} else {
-						return otherEntry.getPropertyValue(property);
+						Object value = currentObject.getPropertyValue(property);
+						if (property == EntryInfo.getAmountAccessor()) {
+							Commodity commodity = ((Entry)currentObject).getCommodity();
+							return ((Long)value).doubleValue() / commodity.getScaleFactor();
+						} else {
+							return value;
+						}
 					}
 				}
 			});
