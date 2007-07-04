@@ -86,5 +86,5 @@ abstract public class ButtonCellControl implements ICellControl<EntryData> {
 	public void setFocusListener(FocusListener controlFocusListener) {
 		// Nothing to do
 	}
-};
+}
 

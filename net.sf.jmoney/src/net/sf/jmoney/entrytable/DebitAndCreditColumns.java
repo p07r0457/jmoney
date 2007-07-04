@@ -53,6 +53,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
 		private Entry entry = null;
 		
 		private SessionChangeListener amountChangeListener = new SessionChangeAdapter() {
+			@Override
 			public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 				if (changedObject.equals(entry) && changedProperty == EntryInfo.getAmountAccessor()) {
 					setControlContent();
@@ -209,6 +210,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
 		return id;
 	}
 
+    @Override	
 	public ICellControl<EntryData> createCellControl(Composite parent) {
 		final Text textControl = new Text(parent, SWT.TRAIL);
 		textControl.addTraverseListener(new TraverseListener() {

@@ -61,7 +61,7 @@ public abstract class CurrencyAccountExtension extends AccountExtension {
 	 */
 	public long getStartBalance() {
 		return getBaseObject().getStartBalance();
-	};
+	}
 
 	public void setCurrency(Currency currency) {
 		getBaseObject().setCurrency(currency);
@@ -77,6 +77,7 @@ public abstract class CurrencyAccountExtension extends AccountExtension {
 
 	// This does some casting - perhaps this is not needed
 	// if generics are used????
+    @Override	
 	public CurrencyAccount getBaseObject() {
 		return (CurrencyAccount)baseObject;
 	}

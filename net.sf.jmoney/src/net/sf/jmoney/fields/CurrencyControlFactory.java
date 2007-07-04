@@ -42,11 +42,13 @@ public class CurrencyControlFactory extends PropertyControlFactory<Currency> {
         return new CurrencyEditor(parent, propertyAccessor);
     }
 
+    @Override	
     public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Currency> propertyAccessor) {
         Currency value = extendableObject.getPropertyValue(propertyAccessor);
         return value == null ? "none" : "'" + value.getName() + "'";
     }
 
+    @Override	
     public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Currency> propertyAccessor) {
         Currency value = extendableObject.getPropertyValue(propertyAccessor);
         return value == null ? "" : value.getCode();

@@ -39,22 +39,27 @@ public class AccountControlUsingTextbox<A extends Account> extends AccountCompos
 		accountControl = new AccountControl<A>(this, session, classOfAccount);
 	}
 
+    @Override	
 	public A getAccount() {
 		return accountControl.getAccount();
 	}
 
+    @Override	
 	public void setAccount(A account) {
 		accountControl.setAccount(account);
 	}
     
+    @Override	
 	public void rememberChoice() {
 		// We don't remember choices so there is nothing to do.
     }
 
+    @Override	
 	public void init(IMemento memento) {
 		// No state to restore
 	}
 
+    @Override	
 	public void saveState(IMemento memento) {
 		// No state to save
 	}

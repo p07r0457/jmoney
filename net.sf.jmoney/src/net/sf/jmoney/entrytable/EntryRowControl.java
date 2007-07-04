@@ -103,6 +103,7 @@ public class EntryRowControl extends RowControl<EntryData> {
 	 * Forward key presses to the parent control
 	 */
 	private KeyListener keyListener = new KeyAdapter() {
+		@Override
 		public void keyPressed(KeyEvent e) {
 //			parent.keyPressed(TableRow.this, e);
 		}
@@ -358,7 +359,7 @@ public class EntryRowControl extends RowControl<EntryData> {
 				public Control getItemWithError() {
 					return itemWithError;
 				}
-			};
+			}
 
 			try {
 				if (uncommittedEntryData.getEntry().getTransaction().getDate() == null) {

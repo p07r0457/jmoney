@@ -156,6 +156,7 @@ class EntryControls {
 					
 					propertyControl.getControl().addFocusListener(
 							new PropertyControlFocusListener(propertyAccessor, propertyControl) {
+							    @Override	
 								ExtendableObject getExtendableObject() {
 									return entry;
 								}
@@ -197,6 +198,7 @@ class EntryControls {
 				this.propertyControl = propertyControl;
 			}
 			
+		    @Override	
 			public void focusLost(FocusEvent e) {
 				ExtendableObject object = getExtendableObject();
 				
@@ -219,6 +221,8 @@ class EntryControls {
 				object.getSession().registerUndoableChange(description);
 */				
 			}
+
+		    @Override	
 			public void focusGained(FocusEvent e) {
 				// Save the old value of this property for use in our 'undo' message.
 				ExtendableObject object = getExtendableObject();
@@ -226,7 +230,7 @@ class EntryControls {
 			}
 			
 			abstract ExtendableObject getExtendableObject();
-		};    
+		}   
 
 		abstract boolean isApplicable(Account account);
 	}
@@ -240,6 +244,7 @@ class EntryControls {
 	private Currency defaultCurrency;
 
 	private SessionChangeListener mySessionChangeListener = new SessionChangeAdapter() {
+	    @Override	
 		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 			if (changedObject.equals(entry)) {
 
@@ -337,6 +342,7 @@ class EntryControls {
 		
 		debitText.addFocusListener(
 				new FocusAdapter() {
+				    @Override	
 					public void focusLost(FocusEvent e) {
 						// We need a currency so that we can format the amount.
 						// Get the currency from this entry if possible.
@@ -367,6 +373,7 @@ class EntryControls {
 		
 		creditText.addFocusListener(
 				new FocusAdapter() {
+				    @Override	
 					public void focusLost(FocusEvent e) {
 						// We need a currency so that we can format the amount.
 						// Get the currency from this entry if possible.
@@ -399,6 +406,7 @@ class EntryControls {
 		// first, so add this first specifically.
 		entryPropertyControls.add(
 				new LabelAndEditControlPair(EntryInfo.getAccountAccessor()) {
+				    @Override
 					boolean isApplicable(Account account) {
 						return true;
 					}
@@ -411,6 +419,7 @@ class EntryControls {
 		// to capital accounts only.
 		entryPropertyControls.add(
 				new LabelAndEditControlPair(EntryInfo.getMemoAccessor()) {
+				    @Override	
 					boolean isApplicable(Account account) {
 						return true;
 					}
@@ -419,6 +428,7 @@ class EntryControls {
 		
 		entryPropertyControls.add(
 				new LabelAndEditControlPair(EntryInfo.getIncomeExpenseCurrencyAccessor()) {
+				    @Override	
 					boolean isApplicable(Account account) {
 						return account instanceof IncomeExpenseAccount
 							&& ((IncomeExpenseAccount)account).isMultiCurrency();
@@ -433,6 +443,7 @@ class EntryControls {
 					&& propertyAccessor != EntryInfo.getIncomeExpenseCurrencyAccessor()) {
 				entryPropertyControls.add(
 						new LabelAndEditControlPair(propertyAccessor) {
+						    @Override	
 							boolean isApplicable(Account account) {
 								return account instanceof CapitalAccount;
 							}

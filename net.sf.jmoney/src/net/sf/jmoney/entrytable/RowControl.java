@@ -52,6 +52,7 @@ public abstract class RowControl<T> extends Composite {
 			this.focusCellTracker = focusCellTracker;
 		}
 		
+	    @Override	
 		public void focusGained(FocusEvent e) {
 			final ICellControl<?> previousFocus = focusCellTracker.getFocusCell();
 			if (cellControl == previousFocus) {

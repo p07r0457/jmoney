@@ -43,6 +43,7 @@ public class PropertyNotFoundException extends Exception {
         this.localPropertyName = localPropertyName;
     }
     
+    @Override	
 	public String getMessage() {
         return "The '" + propertySetId + "." + localPropertyName + "' property was not found."
 		  + "  (The property set with an id of " + propertySetId + " has a property info class"

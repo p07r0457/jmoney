@@ -57,6 +57,7 @@ public class AccountEditor<A extends Account> implements IPropertyControl {
     private AccountControl<A> propertyControl;
 
     private SessionChangeListener amountChangeListener = new SessionChangeAdapter() {
+		@Override
 		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 			if (changedObject.equals(extendableObject) && changedProperty == accountPropertyAccessor) {
 		    	A account = extendableObject.getPropertyValue(accountPropertyAccessor);

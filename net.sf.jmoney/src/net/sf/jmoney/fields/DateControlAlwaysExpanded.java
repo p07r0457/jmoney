@@ -39,6 +39,7 @@ public class DateControlAlwaysExpanded extends DateComposite {
 
 	}
 
+    @Override	
 	public void setDate(Date date) {
 		if (date == null) {
 			textControl.setText("");
@@ -55,6 +56,7 @@ public class DateControlAlwaysExpanded extends DateComposite {
 	 * @return the date, or null if a valid date is not set in
 	 * 				the control
 	 */
+    @Override	
 	public Date getDate() {
         String text = textControl.getText();
         try {

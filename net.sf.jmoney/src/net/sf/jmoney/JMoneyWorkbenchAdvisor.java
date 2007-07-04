@@ -34,6 +34,7 @@ import org.eclipse.ui.application.WorkbenchWindowAdvisor;
  */
 public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
 
+    @Override	
 	public String getInitialWindowPerspectiveId() {
 		return JMoneyPerspective.ID_PERSPECTIVE;
 	}
@@ -41,10 +42,12 @@ public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
     /* (non-Javadoc)
      * @see org.eclipse.ui.application.WorkbenchAdvisor#createWorkbenchWindowAdvisor(org.eclipse.ui.application.IWorkbenchWindowConfigurer)
      */
+    @Override	
     public WorkbenchWindowAdvisor createWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer) {
         return  new JMoneyWorkbenchWindowAdvisor(configurer);
     }
     
+    @Override	
     public void initialize(IWorkbenchConfigurer configurer) {
         super.initialize(configurer);
 
@@ -53,6 +56,7 @@ public class JMoneyWorkbenchAdvisor extends WorkbenchAdvisor {
         configurer.setSaveAndRestore(true);
     }
 
+    @Override	
     public boolean preWindowShellClose(IWorkbenchWindowConfigurer configurer) {
         // If a session is open, ensure we have all the information we
         // need to close it. Some datastores need additional information

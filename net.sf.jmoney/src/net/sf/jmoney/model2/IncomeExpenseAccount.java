@@ -69,10 +69,12 @@ public class IncomeExpenseAccount extends Account {
 		this.subAccounts = objectKey.constructListManager(IncomeExpenseAccountInfo.getSubAccountAccessor());
 	}
 
+    @Override	
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.category";
 	}
 	
+    @Override	
 	public String getFullAccountName() {
 		if (fullAccountName == null) {
 			fullAccountName = name;
@@ -88,6 +90,7 @@ public class IncomeExpenseAccount extends Account {
 	// TODO: use debugger to see if this version is called
 	// when the Method object references the version in the
 	// abstract base class.  If not then this is broke.
+    @Override	
 	public void setName(String name) {
 		super.setName(name);
 		fullAccountName = null;
@@ -141,6 +144,7 @@ public class IncomeExpenseAccount extends Account {
 	/**
 	 * @return Commodity represented by the amount in the given entry
 	 */
+    @Override	
 	public Commodity getCommodity(Entry entry) {
 		// Income and expense accounts may be either single currency or
 		// multiple currency.
@@ -152,6 +156,7 @@ public class IncomeExpenseAccount extends Account {
 		}
 	}
 
+    @Override	
 	public ObjectCollection<IncomeExpenseAccount> getSubAccountCollection() {
 		return new ObjectCollection<IncomeExpenseAccount>(subAccounts, this, IncomeExpenseAccountInfo.getSubAccountAccessor());
 	}

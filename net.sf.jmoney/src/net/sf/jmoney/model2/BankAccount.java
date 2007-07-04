@@ -90,6 +90,7 @@ public class BankAccount extends CurrencyAccount {
 	// with the correct type as the generic parameter, then that would
 	// be great.  Otherwise this method is no use because we can get
 	// the property set from the map.
+    @Override	
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.bankAccount";
 	}
@@ -99,21 +100,21 @@ public class BankAccount extends CurrencyAccount {
 	 */
 	public String getBank() {
 		return bank;
-	};
+	}
 
 	/**
 	 * @return the account number of this account.
 	 */
 	public String getAccountNumber() {
 		return accountNumber;
-	};
+	}
 
 	/**
 	 * @return the minimal balance of this account.
 	 */
 	public Long getMinBalance() {
 		return minBalance;
-	};
+	}
 
 	/**
 	 * @param aBank the name of this account.

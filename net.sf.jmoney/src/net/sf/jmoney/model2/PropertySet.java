@@ -324,6 +324,7 @@ public abstract class PropertySet<E> {
 		return classToPropertySetMap.get(propertySetClass);
 	}
 
+	@Override
 	public String toString() {
 		return propertySetId;
 	}

@@ -82,6 +82,7 @@ public class Currency extends Commodity {
 		this.decimals = 2;
 	}
 
+    @Override	
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.currency";
 	}
@@ -126,6 +127,7 @@ public class Currency extends Commodity {
 		processPropertyChange(CurrencyInfo.getDecimalsAccessor(), new Integer(oldDecimals), new Integer(decimals));
 	}
 	
+	@Override
 	public String toString() {
 		return getName() + " (" + getCode() + ")";
 	}
@@ -140,6 +142,7 @@ public class Currency extends Commodity {
 		return numberFormat[getDecimals()];
 	}
 	
+	@Override
 	public long parse(String amountString) {
 		Number amount = new Double(0);
 		try {
@@ -150,6 +153,7 @@ public class Currency extends Commodity {
 				amount.doubleValue() * getScaleFactor());
 	}
 	
+    @Override	
 	public String format(long amount) {
 		double a = ((double) amount) / getScaleFactor();
 		return getNumberFormat().format(a);
@@ -158,7 +162,7 @@ public class Currency extends Commodity {
 	/**
 	 * @return the scale factor for this currency (10 to the number of decimals)
 	 */
-	
+    @Override	
 	public short getScaleFactor() {
 		return SCALE_FACTOR[decimals];
 	}

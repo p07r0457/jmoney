@@ -108,24 +108,26 @@ public abstract class IndividualBlock<T> extends CellBlock<T> {
 				.format(messageArgs));
 
 		removeColItem.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				// TODO:
 			}
 		});
 
-		shiftColLeftItem
-				.addSelectionListener(new SelectionAdapter() {
-					public void widgetSelected(SelectionEvent e) {
-						// TODO: shift left if we can
-					}
-				});
+		shiftColLeftItem.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				// TODO: shift left if we can
+			}
+		});
 
-		shiftColRightItem
-				.addSelectionListener(new SelectionAdapter() {
-					public void widgetSelected(SelectionEvent e) {
-						// TODO: shift right if we can
-					}
-				});
+		shiftColRightItem.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				// TODO: shift right if we can
+			}
+		});
+		
 /* TODO: complete implementation of this.
  * We need to allow the user to add columns?????
  

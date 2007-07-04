@@ -43,6 +43,7 @@ public class AmountInCurrencyAccountControlFactory extends AmountControlFactory 
     	final AmountEditor editor = new AmountEditor(parent, propertyAccessor, this);
         
         editor.setListener(new SessionChangeAdapter() {
+		    @Override	
         	public void objectChanged(ExtendableObject extendableObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
         			if (extendableObject.equals(editor.getObject()) && changedProperty == CurrencyAccountInfo.getCurrencyAccessor()) {
         				editor.updateCommodity((Commodity)newValue);	
@@ -53,10 +54,12 @@ public class AmountInCurrencyAccountControlFactory extends AmountControlFactory 
         return editor;
     }
 
+    @Override	
     protected Commodity getCommodity(ExtendableObject object) {
     	return ((CurrencyAccount) object).getCurrency();
     }
 
+    @Override	
 	public boolean isEditable() {
 		return true;
 	}

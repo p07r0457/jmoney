@@ -104,6 +104,7 @@ public abstract class CurrencyAccount extends CapitalAccount {
         this.startBalance = 0;
 	}
 
+    @Override	
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.currencyAccount";
 	}
@@ -119,6 +120,7 @@ public abstract class CurrencyAccount extends CapitalAccount {
         return (Currency)currencyKey.getObject();
 	}
 
+    @Override	
 	public Commodity getCommodity(Entry entry) {
 		// All entries in this account must be in the
 		// same currency, so return the currency for this
@@ -131,7 +133,7 @@ public abstract class CurrencyAccount extends CapitalAccount {
 	 */
 	public long getStartBalance() {
 		return startBalance;
-	};
+	}
 
 	public void setCurrency(Currency aCurrency) {
 	    if (aCurrency == null) throw new IllegalArgumentException();
@@ -154,17 +156,19 @@ public abstract class CurrencyAccount extends CapitalAccount {
 		processPropertyChange(CurrencyAccountInfo.getStartBalanceAccessor(), oldStartBalance, startBalance);
 	}
 
+    @Override	
 	public String toString() {
 		return name;
 	}
 
-	public String getFullAccountName() {
-	    if (getParent() == null) {
-		       return name;
-		    } else {
-		        return getParent().getFullAccountName() + "." + this.name;
-		    }
-	}
+    @Override	
+    public String getFullAccountName() {
+    	if (getParent() == null) {
+    		return name;
+    	} else {
+    		return getParent().getFullAccountName() + "." + this.name;
+    	}
+    }
 	
 	/**
 	 * Get the balance at a given date

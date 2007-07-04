@@ -67,6 +67,9 @@ public abstract class ExtensionObject {
 	 * @return true if the two objects represent the same object
 	 * 		in the datastore, false otherwise.
 	 */
+    // TODO: Is this method really correct?
+    // If so, we need a hashcode also.
+    @Override	
 	public boolean equals(Object object) {
     	return baseObject.equals(object);
 	}

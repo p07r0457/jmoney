@@ -76,6 +76,7 @@ public class CategoryEntriesSection extends SectionPart implements IEntriesConte
     protected void createClient(FormToolkit toolkit) {
     	
     	tableSelectionListener = new EntryRowSelectionAdapter() {
+			@Override
     		public void widgetSelected(EntryData selectedObject) {
     			JMoneyPlugin.myAssert(selectedObject != null);
     			

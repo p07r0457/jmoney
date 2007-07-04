@@ -69,6 +69,7 @@ public class SingleOtherEntryPropertyBlock extends IndividualBlock<Entry> {
 		return accessor.getName();
 	}
 
+    @Override	
 	public ICellControl<Entry> createCellControl(Composite parent) {
 		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		

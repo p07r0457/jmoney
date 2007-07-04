@@ -42,13 +42,15 @@ public class AccountControlFactory<A extends Account> extends PropertyControlFac
         return new AccountEditor<A>(parent, propertyAccessor);
     }
 
+    @Override	
 	public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends A> propertyAccessor) {
         Account value = extendableObject.getPropertyValue(propertyAccessor);
         return value == null ? "<none>" : value.getFullAccountName();
     }
 
+    @Override	
     public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends A> propertyAccessor) {
-        Account value = (Account) extendableObject.getPropertyValue(propertyAccessor);
+        Account value = extendableObject.getPropertyValue(propertyAccessor);
         return value == null ? "" : value.getFullAccountName();
     }
 

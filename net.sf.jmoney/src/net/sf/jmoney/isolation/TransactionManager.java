@@ -177,6 +177,7 @@ public class TransactionManager extends DataManager {
 	 * @return a session object representing an uncommitted
 	 * 			session object managed by this transaction manager
 	 */
+    @Override	
 	public Session getSession() {
 		return uncommittedSession;
 	}
@@ -214,7 +215,7 @@ public class TransactionManager extends DataManager {
      */
     public <E extends ExtendableObject> E getCopyInTransaction(final E committedObject) {
     	/*
-		 * As a convienience to the caller, this method accepts null objects. If
+		 * As a convenience to the caller, this method accepts null objects. If
 		 * a reference is null in the committed version of the data then it
 		 * should of course be null in the uncommitted version of the data.
 		 */
@@ -328,6 +329,7 @@ public class TransactionManager extends DataManager {
 	 * @param account
 	 * @return
 	 */
+    @Override	
 	public boolean hasEntries(Account account) {
 		return !new ModifiedAccountEntriesList(account).isEmpty();
 	}
@@ -336,6 +338,7 @@ public class TransactionManager extends DataManager {
 	 * @param account
 	 * @return
 	 */
+    @Override	
 	public Collection<Entry> getEntries(Account account) {
 		return new ModifiedAccountEntriesList(account);
 	}
@@ -778,6 +781,7 @@ public class TransactionManager extends DataManager {
 			this.account = account;
 		}
 		
+		@Override
 		public int size() {
 			Vector<Entry> addedEntries = new Vector<Entry>();
 			Vector<IObjectKey> removedEntries = new Vector<IObjectKey>();
@@ -795,6 +799,7 @@ public class TransactionManager extends DataManager {
 			}
 		}
 
+		@Override
 		public Iterator<Entry> iterator() {
 			// Build the list of differences between the committed
 			// list and the list in this transaction.
@@ -893,6 +898,7 @@ public class TransactionManager extends DataManager {
 	 * This method is called when a nested transaction manager is about to apply its
 	 * changes to our data.
 	 */
+	@Override
 	public void startTransaction() {
 		/*
 		 * This method is called only when transactions are nested. The nested
@@ -906,6 +912,7 @@ public class TransactionManager extends DataManager {
 	 * This method is called when a nested transaction manager has completed
 	 * making changes to our data.
 	 */
+    @Override	
 	public void commitTransaction() {
 		/*
 		 * This method is called only when transaction are nested.

@@ -35,6 +35,7 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  */
 public abstract class AmountControlFactory extends PropertyControlFactory<Long> {
 
+    @Override	
     public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
         Long amount = extendableObject.getPropertyValue(propertyAccessor);
         if (amount == null) {
@@ -44,6 +45,7 @@ public abstract class AmountControlFactory extends PropertyControlFactory<Long> 
         }
     }
 
+    @Override	
     public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
         Long amount = extendableObject.getPropertyValue(propertyAccessor);
         if (amount == null) {

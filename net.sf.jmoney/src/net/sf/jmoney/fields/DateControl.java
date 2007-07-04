@@ -94,6 +94,7 @@ public class DateControl extends DateComposite {
 		textControl = new Text(this, SWT.LEFT);
 		
 		textControl.addKeyListener(new KeyAdapter() {
+		    @Override	
 			public void keyPressed(KeyEvent e) {
 				// CTRL + and CTRL - increment and decrement the date respectively.
 				// It would be even easier for the user the CTRL did not have to be
@@ -134,6 +135,7 @@ public class DateControl extends DateComposite {
 		button.setImage(threeDotsImage);
 
 		button.addSelectionListener(new SelectionAdapter() {
+		    @Override	
 			public void widgetSelected(SelectionEvent event) {
 				final Shell shell = new Shell(parent.getShell(), SWT.ON_TOP);
 		        shell.setLayout(new RowLayout());
@@ -181,6 +183,7 @@ public class DateControl extends DateComposite {
     	        shell.open();
     	        
     	        shell.addShellListener(new ShellAdapter() {
+    	    	    @Override	
     	        	public void shellDeactivated(ShellEvent e) {
     	        		shell.close();
     	        		swtcal = null;
@@ -194,12 +197,15 @@ public class DateControl extends DateComposite {
 	 * Internal class for laying out the dialog.
 	 */
 	private class DialogCellLayout extends Layout {
+	    @Override	
 		public void layout(Composite editor, boolean force) {
 			Rectangle bounds = editor.getClientArea();
 			Point size = textControl.computeSize(SWT.DEFAULT, SWT.DEFAULT, force);
 			textControl.setBounds(0, 0, bounds.width-size.y, bounds.height);
 			button.setBounds(bounds.width-size.y, 0, size.y, bounds.height);
 		}
+
+	    @Override	
 		public Point computeSize(Composite editor, int wHint, int hHint, boolean force) {
 			if (JMoneyPlugin.DEBUG) System.out.println("wHint =" + wHint + ", " + hHint);
 			if (wHint != SWT.DEFAULT && hHint != SWT.DEFAULT)
@@ -221,6 +227,7 @@ public class DateControl extends DateComposite {
 	/**
 	 * @param object
 	 */
+    @Override	
 	public void setDate(Date date) {
 		if (date == null) {
         textControl.setText("");
@@ -233,6 +240,7 @@ public class DateControl extends DateComposite {
 	 * @return the date, or null if a valid date is not set in
 	 * 				the control
 	 */
+    @Override	
 	public Date getDate() {
         String text = textControl.getText();
         try {

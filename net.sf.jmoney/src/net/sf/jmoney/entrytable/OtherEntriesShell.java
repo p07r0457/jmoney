@@ -278,6 +278,7 @@ public class OtherEntriesShell {
 	         * which would automatically close this one.
 	         */
 	        final ShellListener parentActivationListener = new ShellAdapter() {
+				@Override
 	        	public void shellActivated(ShellEvent e) {
 	        		shell.close();
 	        	}
@@ -286,6 +287,7 @@ public class OtherEntriesShell {
 	        parentShell.addShellListener(parentActivationListener);
 	        
 	        shell.addShellListener(new ShellAdapter() {
+				@Override
 				public void shellClosed(ShellEvent e) {
 	        		parentShell.removeShellListener(parentActivationListener);
 				}

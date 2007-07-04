@@ -168,7 +168,7 @@ public class NavigationView extends ViewPart {
 			} else if (parent instanceof IncomeExpenseAccount) {
 				IncomeExpenseAccount account = (IncomeExpenseAccount)parent;
 				return account.getSubAccountCollection().toArray();
-			};
+			}
 			return new Object[0];
 		}
 		
@@ -187,10 +187,12 @@ public class NavigationView extends ViewPart {
 	}
 
 	class ViewLabelProvider extends LabelProvider {
+	    @Override	
 		public String getText(Object obj) {
 			return obj.toString();
 		}
 		
+	    @Override	
 		public Image getImage(Object obj) {
 			if (obj instanceof TreeNode) {
 				return ((TreeNode)obj).getImage();
@@ -204,6 +206,7 @@ public class NavigationView extends ViewPart {
 	}
 
 	class NameSorter extends ViewerSorter {
+	    @Override	
 		public int category(Object obj) {
 			if (obj instanceof TreeNode) {
 				return ((TreeNode)obj).getPosition();
@@ -215,6 +218,7 @@ public class NavigationView extends ViewPart {
 	}
 
 	private class MyCurrentSessionChangeListener extends SessionChangeAdapter implements CurrentSessionChangeListener {
+	    @Override	
 		public void sessionReplaced(Session oldSession, Session newSession) {
 			// Close all editors
 			IWorkbenchWindow window = getSite().getWorkbenchWindow();
@@ -247,6 +251,7 @@ public class NavigationView extends ViewPart {
             viewer.refresh(TreeNode.getTreeNode(CategoriesNode.ID), false);
 		}
 		
+	    @Override	
 		public void objectInserted(ExtendableObject newObject) {
 			if (newObject instanceof Account) {
 				Object parentElement = contentProvider.getParent(newObject);
@@ -254,6 +259,7 @@ public class NavigationView extends ViewPart {
 			}
 		}
 
+	    @Override	
 		public void objectRemoved(final ExtendableObject deletedObject) {
 			if (deletedObject instanceof Account) {
 				/*
@@ -271,13 +277,14 @@ public class NavigationView extends ViewPart {
 			}
 		}
 		
+	    @Override	
 		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 			if (changedObject instanceof Account
 					&& propertyAccessor == AccountInfo.getNameAccessor()) {
 				viewer.update(changedObject, null);
 			}
 		}
-	};
+	}
 	
 	/**
 	 * The constructor.
@@ -285,6 +292,7 @@ public class NavigationView extends ViewPart {
 	public NavigationView() {
 	}
 
+    @Override	
     public void init(IViewSite site, IMemento memento) throws PartInitException {
         init(site);
 
@@ -303,6 +311,7 @@ public class NavigationView extends ViewPart {
         // this.memento = memento; 
     }
     
+    @Override	
     public void saveState(IMemento memento) {
     	// Save the information required to re-create this navigation view.
     	
@@ -320,6 +329,7 @@ public class NavigationView extends ViewPart {
 	 * This is a callback that will allow us
 	 * to create the viewer and initialize it.
 	 */
+    @Override	
 	public void createPartControl(final Composite parent) {
 		// The parent will have fill layout set by default.
 		// We manage the layout ourselves because we want either
@@ -442,6 +452,7 @@ public class NavigationView extends ViewPart {
 		 * size of the visible control to match.
 		 */
 		parent.addControlListener(new ControlAdapter() {
+		    @Override	
 			public void controlResized(ControlEvent e) {
 				if (JMoneyPlugin.getDefault().getSession() == null) {
 					noSessionMessage.setSize(parent.getSize());
@@ -573,6 +584,7 @@ public class NavigationView extends ViewPart {
 
 	private void makeActions() {
 		openEditorAction = new Action() {
+		    @Override	
 			public void run() {
 				Object selectedObject = null;
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
@@ -611,6 +623,7 @@ public class NavigationView extends ViewPart {
 		for (final ExtendablePropertySet<? extends CapitalAccount> derivedPropertySet: CapitalAccountInfo.getPropertySet().getDerivedPropertySets()) {
 			
 			Action newAccountAction = new Action() {
+			    @Override	
 				public void run() {
 					CapitalAccount account = null;
 					IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
@@ -656,6 +669,7 @@ public class NavigationView extends ViewPart {
 		}
 
 		newCategoryAction = new Action() {
+		    @Override	
 			public void run() {
 				IncomeExpenseAccount account = null;
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
@@ -698,6 +712,7 @@ public class NavigationView extends ViewPart {
 				getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
 		
 		deleteAccountAction = new Action() {
+		    @Override	
 			public void run() {
 				final Session session = JMoneyPlugin.getDefault().getSession();
 				Account account = null;
@@ -747,6 +762,7 @@ public class NavigationView extends ViewPart {
 	/**
 	 * Passing the focus request to the viewer's control.
 	 */
+	@Override
 	public void setFocus() {
 		viewer.getControl().setFocus();
 	}

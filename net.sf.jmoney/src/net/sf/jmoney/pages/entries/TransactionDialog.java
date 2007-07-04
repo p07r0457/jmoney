@@ -157,15 +157,16 @@ public class TransactionDialog {
         Button addButton = new Button(buttonArea, SWT.PUSH);
         addButton.setText("Split off New Entry");
         addButton.addSelectionListener(new SelectionAdapter() {
-           public void widgetSelected(SelectionEvent event) {
-           		Entry newEntry = transaction.createEntry();
-           		
-           		// If all entries so far are in the same currency then set the
-           		// amount of the new entry to be the amount that takes the balance
-           		// to zero.  If we cannot determine the currency because the user
-           		// has not yet entered the necessary data, assume that the currencies
-           		// are all the same.
-           		Commodity commodity = null;
+        	@Override
+        	public void widgetSelected(SelectionEvent event) {
+        		Entry newEntry = transaction.createEntry();
+
+        		// If all entries so far are in the same currency then set the
+        		// amount of the new entry to be the amount that takes the balance
+        		// to zero.  If we cannot determine the currency because the user
+        		// has not yet entered the necessary data, assume that the currencies
+        		// are all the same.
+        		Commodity commodity = null;
            		boolean mismatchedCommodities = false;
            		long totalAmount = 0;
                 for (Entry entry: transaction.getEntryCollection()) {
@@ -201,6 +202,7 @@ public class TransactionDialog {
         Button deleteButton = new Button(buttonArea, SWT.PUSH);
         deleteButton.setText("Delete Entries with Zero or Blank Amounts");
         deleteButton.addSelectionListener(new SelectionAdapter() {
+			@Override
         	public void widgetSelected(SelectionEvent event) {
         		boolean alternate = false;
         		for (Iterator<EntryControls> iter = entryControlsList.iterator(); iter.hasNext(); ) {
@@ -222,6 +224,7 @@ public class TransactionDialog {
         Button okButton = new Button(buttonArea, SWT.PUSH);
         okButton.setText("OK");
         okButton.addSelectionListener(new SelectionAdapter() {
+			@Override
         	public void widgetSelected(SelectionEvent event) {
         		transactionManager.commit("Edit Transaction");
         		shell.close();
@@ -232,6 +235,7 @@ public class TransactionDialog {
         Button cancelButton = new Button(buttonArea, SWT.PUSH);
         cancelButton.setText("Cancel");
         cancelButton.addSelectionListener(new SelectionAdapter() {
+			@Override
         	public void widgetSelected(SelectionEvent event) {
         		shell.close();
         	}

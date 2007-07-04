@@ -39,6 +39,7 @@ public class JMoneyWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#createActionBarAdvisor(org.eclipse.ui.application.IActionBarConfigurer)
 	 */
+    @Override	
 	public ActionBarAdvisor createActionBarAdvisor(IActionBarConfigurer configurer) {
 		return new JMoneyActionBarAdvisor(configurer);
 	}
@@ -46,6 +47,7 @@ public class JMoneyWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.application.WorkbenchWindowAdvisor#preWindowOpen()
 	 */
+	@Override
 	public void preWindowOpen() {
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 		configurer.setShowCoolBar(false);

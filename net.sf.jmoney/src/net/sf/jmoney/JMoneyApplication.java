@@ -26,8 +26,9 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import org.eclipse.core.runtime.IPlatformRunnable;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.equinox.app.IApplication;
+import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
@@ -42,9 +43,9 @@ import org.eclipse.ui.application.WorkbenchAdvisor;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class JMoneyApplication implements IPlatformRunnable {
+public class JMoneyApplication implements IApplication {
 
-    public Object run(Object args) {
+	public Object start(IApplicationContext context) throws Exception {
         Display display = PlatformUI.createDisplay();
 
         try {
@@ -54,22 +55,26 @@ public class JMoneyApplication implements IPlatformRunnable {
                 // This is the place where application data is stored.
                 initializeInstanceLocation(shell);
             } finally {
-                if (shell != null)
-                    shell.dispose();
+                shell.dispose();
             }
 
             WorkbenchAdvisor workbenchAdvisor = new JMoneyWorkbenchAdvisor();
             int returnCode = PlatformUI.createAndRunWorkbench(display, workbenchAdvisor);
             if (returnCode == PlatformUI.RETURN_RESTART) {
-                return IPlatformRunnable.EXIT_RESTART;
+                return IApplication.EXIT_RESTART;
             } else {
-                return IPlatformRunnable.EXIT_OK;
+                return IApplication.EXIT_OK;
             }
         } finally {
             if (display != null)
                 display.dispose();
         }
-    }
+	}
+
+	public void stop() {
+		// TODO Auto-generated method stub
+		
+	}
 
     private void initializeInstanceLocation(Shell shell) {
         Location instanceLoc = Platform.getInstanceLocation();
@@ -112,5 +117,4 @@ public class JMoneyApplication implements IPlatformRunnable {
             MessageDialog.openError(shell, "Invalid Workspace", "Invalid pathname for JMoney workspace: " + pathname);
         }
     }
-
 }

@@ -62,6 +62,7 @@ public class NodeEditor extends FormEditor {
     /* (non-Javadoc)
      * @see org.eclipse.ui.forms.editor.FormEditor#addPages()
      */
+    @Override	
     protected void addPages() {
         NodeEditorInput cInput = (NodeEditorInput)this.getEditorInput();
         IMemento memento = cInput.getMemento();
@@ -78,6 +79,7 @@ public class NodeEditor extends FormEditor {
     	cInput.pages = pages;
     }
 
+    @Override	
     public void dispose() {
     	// When the editor is disposed, let the editor input
     	// know that there is no editor open.  This is necessary
@@ -101,6 +103,7 @@ public class NodeEditor extends FormEditor {
     /* (non-Javadoc)
      * @see org.eclipse.ui.IEditorPart#init(org.eclipse.ui.IEditorSite, org.eclipse.ui.IEditorInput)
      */
+    @Override	
     public void init(IEditorSite site, IEditorInput input) throws PartInitException {
         super.init(site, input);
 
@@ -142,6 +145,7 @@ public class NodeEditor extends FormEditor {
     /* (non-Javadoc)
      * @see org.eclipse.ui.ISaveablePart#doSave(org.eclipse.core.runtime.IProgressMonitor)
      */
+    @Override	
     public void doSave(IProgressMonitor monitor) {
         // TODO Auto-generated method stub
     }
@@ -149,6 +153,7 @@ public class NodeEditor extends FormEditor {
     /* (non-Javadoc)
      * @see org.eclipse.ui.ISaveablePart#doSaveAs()
      */
+    @Override	
     public void doSaveAs() {
         throw new RuntimeException("Illegal invocation");
     }
@@ -156,6 +161,7 @@ public class NodeEditor extends FormEditor {
     /* (non-Javadoc)
      * @see org.eclipse.ui.ISaveablePart#isSaveAsAllowed()
      */
+    @Override	
     public boolean isSaveAsAllowed() {
         return false;
     }

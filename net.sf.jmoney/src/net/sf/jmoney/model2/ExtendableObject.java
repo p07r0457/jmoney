@@ -147,6 +147,7 @@ public abstract class ExtendableObject {
 	// If we had an interface with the getObjectKey() method that
 	// both ExtendableObject and ExtensionObject implemented, then
 	// this method would be simpler.
+    @Override	
 	public boolean equals(Object object) {
 		// Two objects represent the same object if and only if
 		// the keys from which they were created are the same.
@@ -174,6 +175,7 @@ public abstract class ExtendableObject {
 	 * implementation must be provided for the object keys that
 	 * return the same hash code for each instance of the object key.
 	 */
+    @Override	
 	public int hashCode() {
 		return getObjectKey().hashCode();
 	}

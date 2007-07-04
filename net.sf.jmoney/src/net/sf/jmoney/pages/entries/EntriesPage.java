@@ -87,6 +87,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
     /* (non-Javadoc)
      * @see org.eclipse.ui.forms.editor.FormPage#createFormContent(org.eclipse.ui.forms.IManagedForm)
      */
+    @Override	
     protected void createFormContent(IManagedForm managedForm) {
     	// Set the account that this page is viewing and editing.
     	account = (Account) fEditor.getSelectedObject();
@@ -97,6 +98,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         // Add properties from the transaction.
         for (ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
         	allEntryDataObjects.add(new PropertyBlock(propertyAccessor, "transaction") {
+    		    @Override	
         		public ExtendableObject getObjectContainingProperty(EntryData data) {
         			return data.getEntry().getTransaction();
         		}
@@ -113,6 +115,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
             	if (propertyAccessor.isScalar() && propertyAccessor.isEditable()) {
             		allEntryDataObjects.add(new PropertyBlock(propertyAccessor, "this") {
+            		    @Override	
     					public ExtendableObject getObjectContainingProperty(EntryData data) {
     						return data.getEntry();
     					}
@@ -163,6 +166,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		 */
    		// TODO: This is not correct at all...
         allEntryDataObjects.add(new PropertyBlock(EntryInfo.getIncomeExpenseCurrencyAccessor(), "common2") {
+		    @Override	
         	public ExtendableObject getObjectContainingProperty(EntryData data) {
         		Entry entry = data.getEntry();
         		if (entry != null
@@ -195,6 +199,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		 */
         if (account instanceof CurrencyAccount) {
         	allEntryDataObjects.add(new PropertyBlock(EntryInfo.getAmountAccessor(), "other") {
+    		    @Override	
         		public ExtendableObject getObjectContainingProperty(EntryData data) {
         			if (!data.hasSplitEntries()) {
         				Entry entry = data.getOtherEntry();

@@ -53,6 +53,7 @@ public class ExtensionPropertySet<E extends ExtensionObject> extends PropertySet
 		}
 	}
 	
+	@Override
 	public void initProperties(String propertySetId) {
 		super.initProperties(propertySetId);
 		

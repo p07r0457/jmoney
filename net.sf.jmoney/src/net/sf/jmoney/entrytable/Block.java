@@ -108,4 +108,4 @@ public abstract class Block<T> {
 	 * @return the preferred height
 	 */
 	abstract int getHeightForGivenWidth(int width, int verticalSpacing, Control[] controls, boolean changed);
-};
+}

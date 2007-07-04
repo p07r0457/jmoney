@@ -174,6 +174,7 @@ public class JMoneyIntroPart extends IntroPart {
 			setControl(container);
 		}
 		
+	    @Override	
 		public IWizardPage getNextPage() {
 			childPages = new Vector<IWizardPage>();
 			
@@ -271,6 +272,7 @@ public class JMoneyIntroPart extends IntroPart {
 			setControl(container);			
 		}
 		
+	    @Override	
 		public IWizardPage getNextPage() {
 			// TextOnly pages have no child pages.
 			// Therefore pass the request on to the parent page which
@@ -289,6 +291,7 @@ public class JMoneyIntroPart extends IntroPart {
 	        setNeedsProgressMonitor(true);
 	    }
 
+	    @Override	
 	    public void addPages()
 	    {
 			introPage = new ExistingDataInquiryPage(selection);
@@ -327,14 +330,15 @@ public class JMoneyIntroPart extends IntroPart {
 	        addPage(summaryPage);
 	    }
 
-	    public boolean performFinish()
-	    {
+	    @Override	
+	    public boolean performFinish() {
 	    	// There is no special processing that we need to
 	    	// do when the user presses the Finish button.
 	        return true;
 	    }
 	}	
 	
+    @Override	
 	public void createPartControl(Composite parent) {
 		JMoneyIntroWizard wizard = new JMoneyIntroWizard();
 		wc = new WizardContainer(parent, wizard, JMoneyIntroPart.this);		
@@ -354,6 +358,7 @@ public class JMoneyIntroPart extends IntroPart {
 //		getIntroSite().getActionBars().updateActionBars();
 	}
 
+    @Override	
 	public void setFocus() {
 	}
 

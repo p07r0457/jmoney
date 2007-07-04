@@ -44,6 +44,7 @@ import org.eclipse.swt.widgets.Layout;
 public class AlternativeContentLayout extends Layout {
 	Control currentlyShowing = null;
 	
+	@Override
 	public void layout(Composite editor, boolean force) {
 		Rectangle bounds = editor.getClientArea();
 		
@@ -62,6 +63,7 @@ public class AlternativeContentLayout extends Layout {
 		}
 	}
 
+    @Override	
 	public Point computeSize(Composite editor, int wHint, int hHint, boolean force) {
 		Control [] children = editor.getChildren();
 		int maxWidth = 0;

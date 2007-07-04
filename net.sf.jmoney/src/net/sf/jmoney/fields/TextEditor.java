@@ -28,7 +28,6 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Composite;
@@ -50,6 +49,7 @@ public class TextEditor implements IPropertyControl {
     private Text propertyControl;
 
     private SessionChangeListener amountChangeListener = new SessionChangeAdapter() {
+		@Override
 		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 			if (changedObject.equals(extendableObject) && changedProperty == propertyAccessor) {
 	            String text = extendableObject.getPropertyValue(propertyAccessor);

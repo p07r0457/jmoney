@@ -118,6 +118,7 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 		extensionPropertySets = new HashMap<String, ExtensionPropertySet<?>>();
 	}
 
+	@Override
 	public void initProperties(String propertySetId) {
 		super.initProperties(propertySetId);
 		

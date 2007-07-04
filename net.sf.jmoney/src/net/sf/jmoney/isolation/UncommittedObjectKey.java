@@ -113,6 +113,7 @@ public class UncommittedObjectKey implements IObjectKey {
 		this.extendableObject = extendableObject;
 	}
 
+    @Override	
 	public boolean equals(Object object) {
 		if (object instanceof UncommittedObjectKey) {
 			UncommittedObjectKey otherKey = (UncommittedObjectKey)object; 
@@ -137,6 +138,7 @@ public class UncommittedObjectKey implements IObjectKey {
 		}
 	}
 	
+    @Override	
 	public int hashCode() {
 		if (extendableObject != null) {
 			// These are new objects, never previously committed to the datastore,

@@ -76,6 +76,7 @@ abstract public class PropertyBlock extends IndividualBlock<EntryData> {
 
 	public abstract ExtendableObject getObjectContainingProperty(EntryData data);
 
+    @Override	
 	public ICellControl<EntryData> createCellControl(Composite parent) {
 		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		
@@ -99,6 +100,7 @@ abstract public class PropertyBlock extends IndividualBlock<EntryData> {
 		};
 	}
 
+    @Override	
 	public Comparator<EntryData> getComparator() {
 		final Comparator<ExtendableObject> subComparator = accessor.getComparator();
 		if (subComparator == null) {

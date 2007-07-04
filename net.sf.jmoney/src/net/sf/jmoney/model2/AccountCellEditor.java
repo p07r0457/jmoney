@@ -82,6 +82,7 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
 //		comboBox.setFont(parent.getFont());
 		
         accountControl.addSelectionListener(new SelectionAdapter() {
+		    @Override	
             public void widgetDefaultSelected(SelectionEvent e) {
                 handleDefaultSelection(e);
                 
@@ -92,6 +93,7 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
         
         accountControl.addKeyListener(new KeyAdapter() {
             // hook key pressed - see PR 14201  
+		    @Override	
             public void keyPressed(KeyEvent e) {
                 keyReleaseOccured(e);
                 // TODO: Is this code needed?
@@ -118,12 +120,14 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
         // use a key listener and a mouse listener to know when selection changes
         // may have occured
         accountControl.addMouseListener(new MouseAdapter() {
+		    @Override	
             public void mouseUp(MouseEvent e) {
                 checkAccountSelected();
             }
         });
         
         accountControl.addFocusListener(new FocusAdapter() {
+		    @Override	
             public void focusLost(FocusEvent e) {
                 AccountCellEditor.this.focusLost();
             }
@@ -216,6 +220,7 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
      * Since a text editor field is scrollable we don't
      * set a minimumSize.
      */
+    @Override	
     public LayoutData getLayoutData() {
     	// Text did this:
 //        return new LayoutData();
@@ -281,6 +286,7 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
      * <code>CellEditor</code> method returns <code>true</code> if 
      * the current account is not null.
      */
+    @Override	
     public boolean isCopyEnabled() {
         return isAccountSelected();
     }
@@ -290,6 +296,7 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
      * <code>CellEditor</code> method returns <code>true</code> if 
      * the current account is not null.
      */
+    @Override	
     public boolean isCutEnabled() {
         return isAccountSelected();
     }
@@ -300,6 +307,7 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
      * in all cases.  This allows the account to be set to null
      * using the delete key.
      */
+    @Override	
     public boolean isDeleteEnabled() {
         return isAccountSelected();
     }
@@ -308,6 +316,7 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
      * The <code>TextCellEditor</code>  implementation of this 
      * <code>CellEditor</code> method always returns <code>true</code>.
      */
+    @Override	
     public boolean isPasteEnabled() {
         return true;
     }
@@ -317,6 +326,7 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
      *
      * @param keyEvent the key event
      */
+    @Override	
     protected void keyReleaseOccured(KeyEvent keyEvent) {
 /* No idea if any of this is needed.....    	
     	switch (mode) {
@@ -369,6 +379,7 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
      * <code>CellEditor</code> method copies the full account
      * name to the clipboard. 
      */
+    @Override	
     public void performCopy() {
     	// TODO: Implement this
     }
@@ -378,6 +389,7 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
      * <code>CellEditor</code> method copies the full account
      * name to the clipboard and sets the account to null.
      */
+    @Override	
     public void performCut() {
     	// TODO: Implement this
     	
@@ -391,6 +403,7 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
      * account entirely from the control.  The value in this
      * editor becomes a null account reference.
      */
+    @Override	
     public void performDelete() {
         accountControl.setAccount(null);
 
@@ -412,6 +425,7 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
      * If the text is not the full account name of a valid account then the
      * list is searched for matches. 
      */
+    @Override	
     public void performPaste() {
         // TODO: Implement this
     	
@@ -456,6 +470,7 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
      *  (non-Javadoc)
      * @see org.eclipse.jface.viewers.CellEditor#focusLost()
      */
+    @Override	
     protected void focusLost() {
     	// This was in the combo code only:
         if (isActivated()) {

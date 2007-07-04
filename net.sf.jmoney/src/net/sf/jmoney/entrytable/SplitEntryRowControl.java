@@ -68,6 +68,7 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 	 * Forward key presses to the parent control
 	 */
 	private KeyListener keyListener = new KeyAdapter() {
+		@Override
 		public void keyPressed(KeyEvent e) {
 //			parent.keyPressed(TableRow.this, e);
 		}
@@ -264,6 +265,7 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 		}
 	}
 
+	@Override
 	protected void setSelected(boolean isSelected) {
 		this.isSelected = isSelected;
 		Color backgroundColor = (isSelected ? selectedRowColor : normalColor); 
@@ -280,10 +282,12 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 	 * of the user clicking on a control in another row.  Therefore
 	 * we do not set the cell selection.
 	 */
+    @Override	
 	public void arrive() {
 		setSelected(true);
 	}
 
+    @Override	
 	public boolean canDepart() {
 		setSelected(false);
 		return true;

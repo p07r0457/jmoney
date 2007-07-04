@@ -89,6 +89,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 		
 		private SessionChangeListener listener =
 			new SessionChangeAdapter() {
+		    @Override	
         	public void objectChanged(ExtendableObject extendableObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 				if (extendableObject.equals(AccountPropertiesControl.this.account)) {
 					// Find the control for this property.
@@ -150,6 +151,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 							// This value is used in the change message.
 							String oldValueText;
 
+						    @Override	
 							public void focusLost(FocusEvent e) {
 								if (AccountPropertiesControl.this.session.getDataManager().isSessionFiring()) {
 									return;
@@ -189,6 +191,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 									e2.printStackTrace();
 								}
 							}
+						    @Override	
 							public void focusGained(FocusEvent e) {
 								// Save the old value of this property for use in our 'undo' message.
 								oldValueText = propertyAccessor.formatValueForMessage(
@@ -224,6 +227,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 				JMoneyPlugin.getResourceString("AccountPropertiesPanel.title"),  //$NON-NLS-1$
 				JMoneyPlugin.getResourceString("AccountPropertiesPanel.header")) { //$NON-NLS-1$
 			
+		    @Override	
 			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
 				CapitalAccount account = (CapitalAccount)nodeObject;
 				return new AccountPropertiesControl(parent, account, toolkit);

@@ -57,6 +57,7 @@ public class CheckMarkEditor implements IPropertyControl {
         // visible or invisible.
 
         propertyControl.addSelectionListener(new SelectionAdapter() {
+			@Override
             public void widgetSelected(SelectionEvent e) {
                 save();
             }

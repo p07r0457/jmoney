@@ -128,7 +128,7 @@ public class EntryInfo implements IPropertySetInfo {
         IPropertyControlFactory<Account> accountControlFactory = new AccountControlFactory<Account>();
 
         IPropertyControlFactory<Long> amountControlFactory = new AmountControlFactory() {
-
+		    @Override	
 			protected Commodity getCommodity(ExtendableObject object) {
 				// If not enough information has yet been set to determine
 				// the currency of the amount in this entry, return
@@ -147,6 +147,7 @@ public class EntryInfo implements IPropertySetInfo {
 		    	// the account property of the entry changes or if
 		    	// the commodity property of the account changes.
 		        editor.setListener(new SessionChangeAdapter() {
+		        		@Override	
 		        		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 		        			Entry entry = (Entry)editor.getObject();
 		        			if (entry == null) {

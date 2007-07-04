@@ -74,14 +74,13 @@ public class PreferencePage
 		store.setDefault("dateFormat", "yyyy-MM-dd");
 		store.setDefault("stringPreference", "Default value");
 	}
-	
-/**
- * Creates the field editors. Field editors are abstractions of
- * the common GUI blocks needed to manipulate various types
- * of preferences. Each field editor knows how to save and
- * restore itself.
- */
 
+	/**
+	 * Creates the field editors. Field editors are abstractions of the common
+	 * GUI blocks needed to manipulate various types of preferences. Each field
+	 * editor knows how to save and restore itself.
+	 */
+	@Override	
 	public void createFieldEditors() {
 		addField(new DirectoryFieldEditor(P_PATH, 
 				"&Directory preference:", getFieldEditorParent()));

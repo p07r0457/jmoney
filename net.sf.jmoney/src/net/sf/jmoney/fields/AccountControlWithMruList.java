@@ -70,6 +70,7 @@ public class AccountControlWithMruList<A extends Account> extends AccountComposi
 		});
 	}
 
+    @Override	
 	public void rememberChoice() {
     	A account = accountControl.getAccount();
     	if (account != null) {
@@ -91,14 +92,17 @@ public class AccountControlWithMruList<A extends Account> extends AccountComposi
     	}
 	}
 
+    @Override	
 	public A getAccount() {
 	    return accountControl.getAccount();
 	}
 	
+    @Override	
 	public void setAccount(A account) {
 		accountControl.setAccount(account);
 	}
 
+    @Override	
 	public void init(IMemento memento) {
 		if (memento != null) {
 			IMemento [] mruAccountMementos = memento.getChildren("mruAccount");
@@ -113,6 +117,7 @@ public class AccountControlWithMruList<A extends Account> extends AccountComposi
 		}
 	}
 
+	@Override
 	public void saveState(IMemento memento) {
 		for (Account account: recentlyUsedList) {
 			memento.createChild("mruAccount").putString("name", account.getFullAccountName());

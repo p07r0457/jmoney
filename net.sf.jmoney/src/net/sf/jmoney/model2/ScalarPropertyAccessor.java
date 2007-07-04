@@ -414,6 +414,7 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	/**
 	 * Indicates if the property is a list of objects.
 	 */
+	@Override
 	public boolean isList() {
 		return false;
 	}

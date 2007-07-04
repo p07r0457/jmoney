@@ -131,6 +131,7 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
     /* (non-Javadoc)
      * @see java.lang.Object#equals(java.lang.Object)
      */
+    @Override	
     public boolean equals(Object obj) {
         if (obj == this) return true;
 
@@ -145,6 +146,7 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
     /* (non-Javadoc)
      * @see java.lang.Object#hashCode()
      */
+    @Override	
     public int hashCode() {
         return nodeObject.hashCode();
     }

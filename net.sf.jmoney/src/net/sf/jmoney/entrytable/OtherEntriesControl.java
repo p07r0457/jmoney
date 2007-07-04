@@ -60,6 +60,7 @@ public class OtherEntriesControl extends Composite {
 
 	private SessionChangeListener splitEntryListener = new SessionChangeAdapter() {
 
+		@Override
 		public void objectInserted(ExtendableObject newObject) {
 			if (newObject instanceof Entry
 					&& ((Entry)newObject).getTransaction() == entryData.getEntry().getTransaction()
@@ -70,6 +71,7 @@ public class OtherEntriesControl extends Composite {
 			}
 		}
 
+		@Override
 		public void objectRemoved(ExtendableObject deletedObject) {
 			if (deletedObject instanceof Entry
 					&& ((Entry)deletedObject).getTransaction() == entryData.getEntry().getTransaction()
@@ -106,6 +108,7 @@ public class OtherEntriesControl extends Composite {
 		downArrowButton.setImage(downArrowImage);
 
 		downArrowButton.addSelectionListener(new SelectionAdapter() {
+			@Override
 		    public void widgetSelected(SelectionEvent event) {
 				final OtherEntriesShell shell = new OtherEntriesShell(getShell(), SWT.ON_TOP, entryData, rootBlock, true);
     	        Display display = getDisplay();
@@ -161,12 +164,14 @@ public class OtherEntriesControl extends Composite {
 	 * a drop-down button.
 	 */
 	private class DropdownButtonLayout extends Layout {
+	    @Override	
 		public void layout(Composite composite, boolean force) {
 			Rectangle bounds = composite.getClientArea();
 			childComposite.setBounds(0, 0, bounds.width-OtherEntriesBlock.DROPDOWN_BUTTON_WIDTH, bounds.height);
 			downArrowButton.setBounds(bounds.width-OtherEntriesBlock.DROPDOWN_BUTTON_WIDTH, 0, OtherEntriesBlock.DROPDOWN_BUTTON_WIDTH, bounds.height);
 		}
 
+	    @Override	
 		public Point computeSize(Composite composite, int wHint, int hHint, boolean force) {
 			/*
 			 * The button is always a fixed width.  Therefore we simply pass on to the contents,

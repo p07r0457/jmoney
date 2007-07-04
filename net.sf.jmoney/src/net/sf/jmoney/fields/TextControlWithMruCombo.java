@@ -41,6 +41,7 @@ public class TextControlWithMruCombo extends TextComposite {
     	combo = new Combo(this, SWT.NONE);
 	}
     
+    @Override	
 	public void rememberChoice() {
     	String text = combo.getText();
     	if (text.length() != 0) {
@@ -62,14 +63,17 @@ public class TextControlWithMruCombo extends TextComposite {
     	}
     }
 
+    @Override	
 	public String getText() {
 		return combo.getText();
 	}
 
+    @Override	
 	public void setText(String text) {
 		combo.setText(text);
 	}
 
+    @Override	
 	public void init(IMemento memento) {
 		if (memento != null) {
 			IMemento [] mruTextMementos = memento.getChildren("mruText");
@@ -81,6 +85,7 @@ public class TextControlWithMruCombo extends TextComposite {
 		}
 	}
 
+    @Override	
 	public void saveState(IMemento memento) {
 		for (String text: recentlyUsedList) {
 			memento.createChild("mruText").putString("text", text);

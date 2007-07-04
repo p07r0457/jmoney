@@ -62,6 +62,7 @@ public class EntriesFilterSection extends SectionPart {
         this.allEntryDataObjects = allEntryDataObjects;
         
         getSection().addExpansionListener(new ExpansionAdapter() {
+    	    @Override	
     		public void expansionStateChanged(ExpansionEvent e) {
     			// TODO warn the user if the section is being collapsed
     			// while a filter is in effect.  Alternatively, we can
@@ -89,6 +90,7 @@ public class EntriesFilterSection extends SectionPart {
         fFilterCombo.setItems(fFilterComboItems);
         fFilterCombo.select(0);
         fFilterCombo.addSelectionListener(new SelectionAdapter() {
+    	    @Override	
 			public void widgetSelected(SelectionEvent e) {
 				if (fFilterCombo.getSelectionIndex() == 1) {
 					fFilterText.setText("");
@@ -113,6 +115,7 @@ public class EntriesFilterSection extends SectionPart {
         fFilterTypeCombo.setItems(filterTypes);
         fFilterTypeCombo.select(0);
         fFilterTypeCombo.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				filter.setType(fFilterTypeCombo.getSelectionIndex());
 			}
@@ -127,6 +130,7 @@ public class EntriesFilterSection extends SectionPart {
         fFilterText = toolkit.createText(container, "");
         fFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         fFilterText.addFocusListener(new FocusAdapter() {
+		    @Override	
 			public void focusLost(FocusEvent e) {
 				filter.setPattern(fFilterText.getText());
 			}

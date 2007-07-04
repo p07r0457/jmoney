@@ -131,6 +131,7 @@ public final class Entry extends ExtendableObject {
 		this.incomeExpenseCurrencyKey = null;
 	}
 
+    @Override	
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.entry";
 	}

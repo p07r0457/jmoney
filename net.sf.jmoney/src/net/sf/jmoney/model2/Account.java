@@ -135,6 +135,7 @@ public abstract class Account extends ExtendableObject implements Comparable<Acc
     /**
 	 * This method is used for debugging purposes only.
 	 */
+	@Override
 	public String toString() {
 		return getName();
 	}

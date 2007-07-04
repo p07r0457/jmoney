@@ -109,6 +109,7 @@ public class Session extends ExtendableObject implements IAdaptable {
    		this.defaultCurrencyKey = null;
     }
 
+    @Override	
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.session";
 	}
@@ -372,7 +373,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 	
     public class NoAccountFoundException extends Exception {
 		private static final long serialVersionUID = -6022196945540827504L;
-	};
+	}
 
 	public class SeveralAccountsFoundException extends Exception {
 		private static final long serialVersionUID = -6427097946645258873L;
@@ -402,5 +403,5 @@ public class Session extends ExtendableObject implements IAdaptable {
 		} else {
 			return JMoneyPlugin.getDefault().getWorkbench().getOperationSupport().getUndoContext();
 		}
-	};
+	}
 }

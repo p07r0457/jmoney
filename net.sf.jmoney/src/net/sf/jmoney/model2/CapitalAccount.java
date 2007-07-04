@@ -92,6 +92,7 @@ public abstract class CapitalAccount extends Account {
         this.comment = null;
 	}
 
+    @Override	
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.capitalAccount";
 	}
@@ -101,15 +102,16 @@ public abstract class CapitalAccount extends Account {
 	 */
 	public String getAbbreviation() {
 		return abbreviation;
-	};
+	}
 
 	/**
 	 * @return the comment of this account.
 	 */
 	public String getComment() {
 		return comment;
-	};
+	}
 
+    @Override	
 	public ObjectCollection<CapitalAccount> getSubAccountCollection() {
 		return new ObjectCollection<CapitalAccount>(subAccounts, this, CapitalAccountInfo.getSubAccountAccessor());
 	}
@@ -173,7 +175,7 @@ public abstract class CapitalAccount extends Account {
     		
     		return sortedEntries;
     	}
-	};
+	}
 	
 	/**
 	 * @param anAbbrevation the abbrevation of this account.
@@ -199,10 +201,12 @@ public abstract class CapitalAccount extends Account {
         processPropertyChange(CapitalAccountInfo.getCommentAccessor(), oldComment, aComment);
 	}
 
+    @Override	
 	public String toString() {
 		return name;
 	}
 
+    @Override	
 	public String getFullAccountName() {
 	    if (getParent() == null) {
 		       return name;

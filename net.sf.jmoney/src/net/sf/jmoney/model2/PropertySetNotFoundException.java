@@ -37,6 +37,7 @@ public class PropertySetNotFoundException extends Exception {
         this.missingPropertySetId = missingPropertySetId;
     }
     
+    @Override	
     public String getMessage() {
         return "The '" + missingPropertySetId + "' property set was not found.";
     }

@@ -30,7 +30,6 @@ import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
@@ -194,6 +193,7 @@ public class NewAccountWizard extends Wizard {
 
 				propertyControl.getControl().addFocusListener(
 						new FocusAdapter() {
+						    @Override	
 							public void focusLost(FocusEvent e) {
 								// TODO: Verify this is needed.  Clean it up?
 								if (NewAccountWizard.this.newUncommittedAccount.getDataManager().isSessionFiring()) {

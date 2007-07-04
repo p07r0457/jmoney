@@ -63,6 +63,7 @@ public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData> {
 		return id;
 	}
 
+    @Override	
 	public ICellControl<EntryData> createCellControl(Composite parent) {
 		// Because this may be multi-valued, setup the container only.
 		final Composite composite = new Composite(parent, SWT.NONE);

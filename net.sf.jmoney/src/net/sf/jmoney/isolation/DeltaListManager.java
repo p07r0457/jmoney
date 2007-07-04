@@ -159,6 +159,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		return extendableObject;
 	}
 	
+    @Override	
 	public int size() {
 		// This method is called, for example when getting the number of entries
 		// in a transaction.
@@ -168,6 +169,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 			- deletedObjects.size(); 
 	}
 
+    @Override	
 	public Iterator<E> iterator() {
 		Iterator<E> committedListIterator = committedList.iterator();
 
@@ -180,6 +182,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		return new DeltaListIterator<E>(transactionManager, committedListIterator, addedObjects, deletedObjects);
 	}
 
+    @Override	
 	public boolean contains(Object object) {
 		IObjectKey committedObjectKey = ((UncommittedObjectKey)((ExtendableObject)object).getObjectKey()).getCommittedObjectKey();
 
@@ -194,6 +197,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		return committedList.contains(committedObjectKey.getObject());
 	}
 
+    @Override	
 	public boolean remove(Object object) {
 		ExtendableObject extendableObject = (ExtendableObject)object;
 

@@ -228,6 +228,7 @@ public class EntriesTable extends Composite {
         // Create the 'add transaction' button.
 		Button addButton = toolkit.createButton(buttonArea, "New Transaction", SWT.PUSH);
 		addButton.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent event) {
 				/*
 				 * This method scrolls the 'new entry' row into view
@@ -241,6 +242,7 @@ public class EntriesTable extends Composite {
         // Create the 'duplicate transaction' button.
         Button duplicateButton = toolkit.createButton(buttonArea, "Duplicate Transaction", SWT.PUSH);
         duplicateButton.addSelectionListener(new SelectionAdapter() {
+			@Override
         	public void widgetSelected(SelectionEvent event) {
         		// TODO: Parameterize the row tracker?
         		EntryRowControl selectedRowControl = (EntryRowControl)rowTracker.getSelectedRow();
@@ -291,6 +293,7 @@ public class EntriesTable extends Composite {
         // Create the 'delete transaction' button.
         Button deleteButton = toolkit.createButton(buttonArea, "Delete Transaction", SWT.PUSH);
         deleteButton.addSelectionListener(new SelectionAdapter() {
+			@Override
         	public void widgetSelected(SelectionEvent event) {
         		// TODO: Parameterize the row tracker?
         		EntryRowControl selectedRowControl = (EntryRowControl)rowTracker.getSelectedRow();
@@ -322,6 +325,7 @@ public class EntriesTable extends Composite {
         // Create the 'details' button.
         Button detailsButton = toolkit.createButton(buttonArea, "Details", SWT.PUSH);
         detailsButton.addSelectionListener(new SelectionAdapter() {
+			@Override
         	public void widgetSelected(SelectionEvent event) {
         		// TODO: Parameterize the row tracker?
         		EntryRowControl selectedRowControl = (EntryRowControl)rowTracker.getSelectedRow();
@@ -339,6 +343,7 @@ public class EntriesTable extends Composite {
         
 		
 		session.getDataManager().addChangeListener(new SessionChangeAdapter() {
+			@Override
 			public void objectInserted(ExtendableObject newObject) {
 				if (newObject instanceof Entry) {
 					Entry newEntry = (Entry) newObject;
@@ -369,6 +374,7 @@ public class EntriesTable extends Composite {
 				}
 			}
 
+			@Override
 			public void objectRemoved(ExtendableObject deletedObject) {
 				if (deletedObject instanceof Entry) {
 					Entry deletedEntry = (Entry) deletedObject;
@@ -401,6 +407,7 @@ public class EntriesTable extends Composite {
 				}
 			}
 
+			@Override
 			public void objectChanged(ExtendableObject extendableObject,
 					ScalarPropertyAccessor propertyAccessor, Object oldValue,
 					Object newValue) {
@@ -725,6 +732,7 @@ public class EntriesTable extends Composite {
 	    
 	}
 
+    @Override	
 	public void dispose() {
 		table.dispose();
 	}

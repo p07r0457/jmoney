@@ -66,6 +66,7 @@ protected Commodity(
 	/**
 	 * This method is used for debugging purposes only.
 	 */
+	@Override
 	public String toString() {
 		return name;
 	}

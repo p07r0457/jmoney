@@ -89,6 +89,7 @@ public abstract class SectionlessPage extends FormPage implements IBookkeepingPa
 	    /* (non-Javadoc)
 	     * @see org.eclipse.ui.forms.IFormPart#refresh()
 	     */
+		@Override
 	    public void refresh() {
 	// Not sure what we do here???????
 	        super.refresh();
@@ -104,6 +105,7 @@ public abstract class SectionlessPage extends FormPage implements IBookkeepingPa
     /* (non-Javadoc)
      * @see org.eclipse.ui.forms.editor.FormPage#createFormContent(org.eclipse.ui.forms.IManagedForm)
      */
+    @Override	
     protected void createFormContent(IManagedForm managedForm) {
         ScrolledForm form = managedForm.getForm();
         GridLayout layout = new GridLayout();

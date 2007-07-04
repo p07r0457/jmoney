@@ -61,6 +61,7 @@ public class Transaction extends ExtendableObject {
 		this.date = new Date();
 	}
 	
+    @Override	
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.transaction";
 	}

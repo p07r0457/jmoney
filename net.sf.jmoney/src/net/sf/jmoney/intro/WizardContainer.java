@@ -17,7 +17,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.jface.util.Assert;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.wizard.IWizard;
 import org.eclipse.jface.wizard.IWizardContainer2;
 import org.eclipse.jface.wizard.IWizardPage;
@@ -139,6 +139,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 		/* (non-Javadoc)
 		 * Method declared on Layout.
 		 */
+	    @Override	
 		public Point computeSize(Composite composite, int wHint, int hHint, boolean force) {
 			if (wHint != SWT.DEFAULT && hHint != SWT.DEFAULT)
 				return new Point(wHint, hHint);
@@ -182,6 +183,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 		/* (non-Javadoc)
 		 * Method declared on Layout.
 		 */
+	    @Override	
 		public void layout(Composite composite, boolean force) {
 			Rectangle rect = getClientArea(composite);
 			Control[] children = composite.getChildren();
@@ -290,6 +292,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 			helpButton = createButton(parent,
 					IDialogConstants.HELP_LABEL, false);
 			helpButton.addSelectionListener(new SelectionAdapter() {
+				@Override
 				public void widgetSelected(SelectionEvent event) {
 					helpPressed();
 				}
@@ -303,6 +306,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 		closeButton = createButton(parent,
 				IDialogConstants.CLOSE_LABEL, true);
 		closeButton.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent event) {
 				closePressed();
 			}
@@ -312,6 +316,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 				JMoneyPlugin.getResourceString("Intro.standby"), //$NON-NLS-1$
 				false);
 		standbyButton.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent event) {
 				standbyPressed();
 			}
@@ -525,6 +530,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 				IDialogConstants.BACK_LABEL,
 				false);
 		backButton.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent event) {
 				backPressed();
 			}
@@ -534,6 +540,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 				IDialogConstants.NEXT_LABEL,
 				false);
 		nextButton.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent event) {
 				nextPressed();
 			}
@@ -911,6 +918,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 	/**
 	 * Updates this dialog's controls to reflect the current page.
 	 */
+	@Override
 	public void update() {
 		// Update the window title
 		updateWindowTitle();

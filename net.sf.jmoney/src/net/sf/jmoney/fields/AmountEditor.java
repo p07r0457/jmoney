@@ -71,6 +71,7 @@ public class AmountEditor implements IPropertyControl {
     private Text propertyControl;
 
     private SessionChangeListener amountChangeListener = new SessionChangeAdapter() {
+		@Override
 		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 			if (changedObject.equals(fObject) && changedProperty == amountPropertyAccessor) {
 				setControlContent();

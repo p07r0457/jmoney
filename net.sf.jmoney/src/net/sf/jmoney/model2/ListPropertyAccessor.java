@@ -20,6 +20,7 @@ public abstract class ListPropertyAccessor<E extends ExtendableObject> extends P
 	/**
 	 * Indicates if the property is a list of objects.
 	 */
+	@Override
 	public boolean isList() {
 		return true;
 	}

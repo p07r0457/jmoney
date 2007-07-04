@@ -124,6 +124,7 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
                 
     	        listControl.addSelectionListener(
                 		new SelectionAdapter() {
+                		    @Override	
 							public void widgetSelected(SelectionEvent e) {
 								int selectionIndex = listControl.getSelectionIndex();
 								account = allAccounts.get(selectionIndex);
@@ -136,6 +137,7 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
     				String pattern;
     				int lastTime = 0;
     				
+    			    @Override	
     				public void keyPressed(KeyEvent e) {
     					if (Character.isLetterOrDigit(e.character)) {
     						if ((e.time - lastTime) < 1000) {
@@ -201,6 +203,7 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
     	        shell.open();
     	        
     	        shell.addShellListener(new ShellAdapter() {
+    			    @Override	
     	        	public void shellDeactivated(ShellEvent e) {
     	        		closingShell = true;
     	        		shell.close();
@@ -248,6 +251,7 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
     /**
 	 * @param object
 	 */
+	@Override
 	public void setAccount(A account) {
 		this.account = account;
 		
@@ -262,6 +266,7 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
 	 * @return the date, or null if a valid date is not set in
 	 * 				the control
 	 */
+    @Override	
 	public A getAccount() {
 		return account;
 	}
@@ -284,14 +289,17 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
 		return this;
 	}
 
+    @Override	
 	public void rememberChoice() {
 		// We don't remember choices, so nothing to do
 	}	
 
+    @Override	
 	public void init(IMemento memento) {
 		// No state to restore
 	}
 
+    @Override	
 	public void saveState(IMemento memento) {
 		// No state to save
 	}

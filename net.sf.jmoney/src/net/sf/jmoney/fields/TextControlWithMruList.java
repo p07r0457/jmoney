@@ -74,14 +74,17 @@ public class TextControlWithMruList extends TextComposite {
 			}});
 	}
     
+    @Override	
 	public String getText() {
 		return textbox.getText();
 	}
 
+    @Override	
     public void setText(String text) {
 		textbox.setText(text);
 	}
 
+    @Override	
 	public void rememberChoice() {
     	String text = textbox.getText();
     	if (text.length() != 0) {
@@ -103,6 +106,7 @@ public class TextControlWithMruList extends TextComposite {
     	}
     }
 
+    @Override	
 	public void init(IMemento memento) {
 		if (memento != null) {
 			IMemento [] mruTextMementos = memento.getChildren("mruText");
@@ -114,6 +118,7 @@ public class TextControlWithMruList extends TextComposite {
 		}
 	}
 
+    @Override	
 	public void saveState(IMemento memento) {
 		for (String text: recentlyUsedList) {
 			memento.createChild("mruText").putString("text", text);

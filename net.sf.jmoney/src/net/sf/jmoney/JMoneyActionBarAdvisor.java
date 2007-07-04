@@ -56,6 +56,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     /* (non-Javadoc)
      * @see org.eclipse.ui.application.ActionBarAdvisor#makeActions(org.eclipse.ui.IWorkbenchWindow)
      */
+    @Override	
     protected void makeActions(final IWorkbenchWindow window) {
         quitAction = ActionFactory.QUIT.create(window);
         register(quitAction);
@@ -81,6 +82,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     /* (non-Javadoc)
      * @see org.eclipse.ui.application.ActionBarAdvisor#fillMenuBar(org.eclipse.jface.action.IMenuManager)
      */
+    @Override	
     protected void fillMenuBar(IMenuManager menuBar) {
         menuBar.add(createFileMenu());
         menuBar.add(createEditMenu());

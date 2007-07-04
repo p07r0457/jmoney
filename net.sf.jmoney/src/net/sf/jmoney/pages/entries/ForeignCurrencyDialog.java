@@ -133,6 +133,7 @@ public class ForeignCurrencyDialog {
 		Button addButton = new Button(buttonArea, SWT.PUSH);
 		addButton.setText("OK");
 		addButton.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent event) {
 				propertyControl.save();
 				shell.close();
@@ -143,6 +144,7 @@ public class ForeignCurrencyDialog {
         Button closeButton = new Button(buttonArea, SWT.PUSH);
         closeButton.setText("Close");
         closeButton.addSelectionListener(new SelectionAdapter() {
+			@Override
         	public void widgetSelected(SelectionEvent event) {
         		propertyControl.save();
         		shell.close();

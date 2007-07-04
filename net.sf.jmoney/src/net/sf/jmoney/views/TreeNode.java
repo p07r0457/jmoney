@@ -278,24 +278,31 @@ public class TreeNode implements IAdaptable {
 	public String getLabel() {
 		return label;
 	}
+
 	public TreeNode getParent() {
 		return parent;
 	}
+
 	int getPosition() {
 		return position;
 	}
+
+	@Override
 	public String toString() {
 		return getLabel();
 	}
+
 	public Object getAdapter(Class key) {
 		return null;
 	}
+
 	public Image getImage() {
 		if (image == null && imageDescriptor != null) {
 			image = imageDescriptor.createImage();
 		}
 		return image;
 	}
+
 	public void addChild(Object child) {
 		if (children == null) {
 			children = new ArrayList<Object>();

@@ -45,6 +45,7 @@ public class BalanceColumn extends IndividualBlock<EntryData> {
 		throw new RuntimeException("internal error - attempt to sort on balance");
 	}
 
+    @Override	
 	public ICellControl<EntryData> createCellControl(Composite parent) {
 		final Label balanceLabel = new Label(parent, SWT.TRAIL);
 		
@@ -71,5 +72,5 @@ public class BalanceColumn extends IndividualBlock<EntryData> {
 	public String getId() {
 		return "balance"; //$NON-NLS-1$
 	}
-};
+}
 

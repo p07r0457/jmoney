@@ -12,7 +12,7 @@
  *******************************************************************************/
 package net.sf.jmoney.pages.entries;
 
-import org.eclipse.jface.util.Assert;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.viewers.ColumnLayoutData;
 import org.eclipse.jface.viewers.ColumnPixelData;
 import org.eclipse.jface.viewers.ColumnWeightData;
@@ -65,6 +65,7 @@ public class TableLayout extends Layout {
 	/* (non-Javadoc)
 	 * Method declared on Layout.
 	 */
+    @Override	
 	public Point computeSize(Composite c, int wHint, int hHint, boolean flush) {
 		if (wHint != SWT.DEFAULT && hHint != SWT.DEFAULT)
 			return new Point(wHint, hHint);
@@ -98,6 +99,7 @@ public class TableLayout extends Layout {
 	/* (non-Javadoc)
 	 * Method declared on Layout.
 	 */
+    @Override	
 	public void layout(Composite c, boolean flush) {
 		// Only do initial layout.  Trying to maintain proportions when resizing is too hard,
 		// causes lots of widget flicker, causes scroll bars to appear and occasionally stick around (on Windows),

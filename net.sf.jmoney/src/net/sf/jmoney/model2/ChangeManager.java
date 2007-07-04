@@ -133,6 +133,7 @@ public class ChangeManager {
 			this.oldValue = oldValue;
 		}
 
+		@Override
 		void undo() {
 			ExtendableObject object = objectKeyProxy.key.getObject(); // efficient???
 			object.setPropertyValue(propertyAccessor, oldValue);
@@ -162,6 +163,7 @@ public class ChangeManager {
 			this.oldValueProxy = oldValueProxy;
 		}
 
+		@Override
 		void undo() {
 			ExtendableObject object = objectKeyProxy.key.getObject(); // efficient???
 			// If IObjectKey had a type parameter, we would not need
@@ -185,6 +187,7 @@ public class ChangeManager {
 			this.objectKeyProxy = objectKeyProxy;
 		}
 
+		@Override
 		void undo() {
 			// Delete the object.
 			ExtendableObject object = objectKeyProxy.key.getObject(); // efficient???
@@ -251,6 +254,7 @@ public class ChangeManager {
 			}
 		}
 
+		@Override
 		void undo() {
 			/* Create the object in the datastore.
 			 * However, we must first convert the key proxies back to keys before passing

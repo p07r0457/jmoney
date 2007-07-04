@@ -56,6 +56,7 @@ public class OtherEntriesButton extends CellBlock<EntryData> {
 		this.otherEntriesRootBlock = otherEntriesRootBlock;
 	}
 
+    @Override	
 	public ICellControl<EntryData> createCellControl(final Composite parent) {
 		
 	    /*

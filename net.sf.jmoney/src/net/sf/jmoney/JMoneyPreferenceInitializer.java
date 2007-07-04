@@ -35,6 +35,7 @@ import org.osgi.service.prefs.Preferences;
  * @author Nigel Westbury
  */
 public class JMoneyPreferenceInitializer extends AbstractPreferenceInitializer {
+	@Override
 	public void initializeDefaultPreferences() {
 		Preferences node = new DefaultScope().getNode("net.sf.jmoney"); //$NON-NLS-1$
 		node.put("dateFormat", "yyyy-MM-dd");

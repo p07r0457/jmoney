@@ -38,22 +38,27 @@ public class TextControlWithSimpleTextbox extends TextComposite {
 		textbox = new Text(this, SWT.NONE);
 	}
 
+    @Override	
 	public String getText() {
 		return textbox.getText();
 	}
 
+    @Override	
 	public void setText(String text) {
 		textbox.setText(text);
 	}
     
+    @Override	
 	public void rememberChoice() {
 		// We don't remember choices so there is nothing to do.
     }
 
+    @Override	
 	public void init(IMemento memento) {
 		// No state to restore
 	}
 
+    @Override	
 	public void saveState(IMemento memento) {
 		// No state to save
 	}

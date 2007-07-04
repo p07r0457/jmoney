@@ -276,6 +276,7 @@ public class VirtualRowTable extends Composite {
 		clientAreaSize = new Point(0, 0);
 
 		composite.addControlListener(new ControlAdapter() {
+		    @Override	
 			public void controlResized(ControlEvent e) {
 				Point newSize = composite.getSize();
 

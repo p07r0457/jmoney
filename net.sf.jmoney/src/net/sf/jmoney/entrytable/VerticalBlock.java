@@ -87,7 +87,7 @@ public class VerticalBlock<T> extends Block<T> {
 			child.positionControls(x, y, verticalSpacing, controls, flushCache);
 			y += child.getHeight(verticalSpacing, controls) + verticalSpacing;
 		}
-	};
+	}
 
 	@Override
 	int getHeight(int verticalSpacing, Control[] controls) {
