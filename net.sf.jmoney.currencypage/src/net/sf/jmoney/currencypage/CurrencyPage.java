@@ -26,7 +26,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -152,8 +151,8 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 	        public Object[] getElements(Object parent) {
 	            Vector<ISOCurrencyData> currencies = new Vector<ISOCurrencyData>();
 
-	            for (Iterator iter = allIsoCurrencies.iterator(); iter.hasNext(); ) {
-	            	ISOCurrencyData isoCurrency = (ISOCurrencyData)iter.next();
+	            for (Iterator<ISOCurrencyData> iter = allIsoCurrencies.iterator(); iter.hasNext(); ) {
+	            	ISOCurrencyData isoCurrency = iter.next();
 	            	if (isoCurrency.currency != null) {
 	            		currencies.add(isoCurrency);
 	            	}
@@ -171,6 +170,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			/** null if this currency is not selected into the session */
 			Currency currency;
 			
+			@Override
 			public String toString() {
 				return name + " (" + code + ")";
 			}
@@ -198,7 +198,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 	    }
 
 	    class CurrencyLabelProvider extends LabelProvider implements ITableLabelProvider {
-	        protected NumberFormat nf = DecimalFormat.getCurrencyInstance();
+	        protected NumberFormat nf = NumberFormat.getCurrencyInstance();
 
 	        public String getColumnText(Object obj, int index) {
 	        	switch (index) {
@@ -226,7 +226,8 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 
 
 		
-		private class CurrencySorter extends ViewerSorter {
+		class CurrencySorter extends ViewerSorter {
+			@Override
 			public boolean isSorterProperty(Object element, String property) {
 				return property.equals("name");
 			}
@@ -236,20 +237,21 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 
 		private Label countLabel;
 
-		protected TableViewer selectedListViewer;
+		TableViewer selectedListViewer;
 
-		private Session session;
+		Session session;
 
 		/**
 		 * Set of currencies that are used in some way in the current session.
 		 * These currencies cannot be removed from the session.
 		 */
-		private Set<Currency> usedCurrencies = new HashSet<Currency>();
+		Set<Currency> usedCurrencies = new HashSet<Currency>();
 		
-		private Vector<ISOCurrencyData> allIsoCurrencies = new Vector<ISOCurrencyData>();
+		Vector<ISOCurrencyData> allIsoCurrencies = new Vector<ISOCurrencyData>();
 		
 		private SessionChangeListener listener =
 			new SessionChangeAdapter() {
+			@Override
 			public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 				if (changedObject.equals(session)
 						&& changedProperty == SessionInfo.getDefaultCurrencyAccessor()) {
@@ -264,10 +266,12 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 				}
 			}
 			
+			@Override
 			public void objectInserted(ExtendableObject newObject) {
 				// TODO: currency added
 			}
 
+			@Override
 			public void objectRemoved(ExtendableObject deletedObject) {
 				// TODO: currency removed
 			}
@@ -285,6 +289,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			this.session = JMoneyPlugin.getDefault().getSession();
 		}
 		
+		@Override
 		public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
 			Composite container = toolkit.createComposite(parent, SWT.NONE);
 			GridLayout layout = new GridLayout();
@@ -394,8 +399,8 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 					usedCurrencies.add(((CurrencyAccount)account).getCurrency());
 				} else {
 					CapitalAccount a = (CapitalAccount)account;
-					for (Iterator iter2 = a.getEntries().iterator(); iter2.hasNext(); ) {
-						Entry entry = (Entry)iter2.next();
+					for (Iterator<Entry> iter2 = a.getEntries().iterator(); iter2.hasNext(); ) {
+						Entry entry = iter2.next();
 						Commodity commodity = entry.getCommodity();
 						if (commodity instanceof Currency) {
 							usedCurrencies.add((Currency)commodity);
@@ -461,6 +466,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			button = toolkit.createButton(container, CurrencyPagePlugin.getResourceString("CurrencyPage.add"), SWT.PUSH); //$NON-NLS-1$
 			button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 			button.addSelectionListener(new SelectionAdapter() {
+				@Override
 				public void widgetSelected(SelectionEvent e) {
 					handleAdd();
 				}
@@ -470,6 +476,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			button = toolkit.createButton(container, CurrencyPagePlugin.getResourceString("CurrencyPage.addAll"), SWT.PUSH); //$NON-NLS-1$
 			button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 			button.addSelectionListener(new SelectionAdapter() {
+				@Override
 				public void widgetSelected(SelectionEvent e) {
 					handleAddAll();
 				}
@@ -479,6 +486,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			button = toolkit.createButton(container, CurrencyPagePlugin.getResourceString("CurrencyPage.remove"), SWT.PUSH); //$NON-NLS-1$
 			button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 			button.addSelectionListener(new SelectionAdapter() {
+				@Override
 				public void widgetSelected(SelectionEvent e) {
 					handleRemove();
 				}
@@ -488,6 +496,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			button = toolkit.createButton(container, CurrencyPagePlugin.getResourceString("CurrencyPage.removeUnused"), SWT.PUSH); //$NON-NLS-1$
 			button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 			button.addSelectionListener(new SelectionAdapter() {
+				@Override
 				public void widgetSelected(SelectionEvent e) {
 					handleRemoveUnused();
 				}
@@ -500,6 +509,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			button = toolkit.createButton(container, CurrencyPagePlugin.getResourceString("CurrencyPage.setDefault"), SWT.PUSH); //$NON-NLS-1$
 			button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 			button.addSelectionListener(new SelectionAdapter() {
+				@Override
 				public void widgetSelected(SelectionEvent e) {
 					handleSetDefault();
 				}
@@ -627,7 +637,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			countLabel.getParent().layout();
 		}
 		
-		private void handleAdd() {
+		void handleAdd() {
 			IStructuredSelection ssel = (IStructuredSelection)availableListViewer.getSelection();
 			if (ssel.size() > 0) {
 				Table table = availableListViewer.getTable();
@@ -649,7 +659,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			}		
 		}
 
-		private void handleAddAll() {
+		void handleAddAll() {
 			TableItem[] items = availableListViewer.getTable().getItems();
 
 			ArrayList<ISOCurrencyData> data = new ArrayList<ISOCurrencyData>();
@@ -672,7 +682,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			}
 		}
 		
-		private void handleRemove() {
+		void handleRemove() {
 			IStructuredSelection ssel = (IStructuredSelection)selectedListViewer.getSelection();
 			if (ssel.size() > 0) {
 				Table table = selectedListViewer.getTable();
@@ -708,7 +718,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			}		
 		}
 		
-		private void handleRemoveUnused() {
+		void handleRemoveUnused() {
 			TableItem[] items = selectedListViewer.getTable().getItems();
 			
 			ArrayList<ISOCurrencyData> data = new ArrayList<ISOCurrencyData>();
@@ -728,7 +738,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			}		
 		}
 		
-		private void handleSetDefault() {
+		void handleSetDefault() {
 			// If more than one currency is selected, set the
 			// first currency in the selection as the default.
 			IStructuredSelection ssel = (IStructuredSelection)selectedListViewer.getSelection();
@@ -756,9 +766,9 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			site.registerContextMenu(menuMgr, selectedListViewer);
 		}
 		
-		private void fillContextMenu(IMenuManager manager) {
+		protected void fillContextMenu(IMenuManager manager) {
 			// Other plug-ins can contribute their actions here
 			manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 		}
-	};
+	}
 }
