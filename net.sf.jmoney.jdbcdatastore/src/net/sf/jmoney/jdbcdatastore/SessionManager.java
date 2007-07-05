@@ -32,6 +32,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -240,6 +241,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		stmt.close();
 	}
 
+	@Override
 	public Session getSession() {
 		return (Session)sessionKey.getObject();
 	}
@@ -272,12 +274,14 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		return reusableStatement;
 	}
 	
+	@Override
 	public boolean canClose(IWorkbenchWindow window) {
 		// A JDBC database can always be closed without further
 		// input from the user.
 		return true;
 	}
 	
+	@Override
 	public void close() {
 		try {
 			reusableStatement.close();
@@ -288,6 +292,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		}
 	}
 	
+	@Override
 	public String getBriefDescription() {
 		// TODO: improve this implementation to give more
 		// details of the database.
@@ -1018,7 +1023,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @return an SQL compliant column name, guaranteed to be unique within the
 	 *         table
 	 */
-	private String getColumnName(ScalarPropertyAccessor<?> propertyAccessor) {
+	String getColumnName(ScalarPropertyAccessor<?> propertyAccessor) {
 		if (propertyAccessor.getPropertySet().isExtension()) {
 			return propertyAccessor.getName().replace('.', '_');
 		} else {
@@ -1116,7 +1121,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		return parentKey;
 	}
 
-	private class ColumnInfo {
+	class ColumnInfo {
 		String columnName;
 		String columnDefinition;
 		ExtendablePropertySet<?> foreignKeyPropertySet = null;
@@ -1510,6 +1515,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.model2.ISessionManager#hasEntries(net.sf.jmoney.model2.Account)
 	 */
+	@Override
 	public boolean hasEntries(Account account) {
 		// TODO: improve efficiency of this??????
 		// or should hasEntries be removed altogether and make caller
@@ -1519,6 +1525,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		return !(new AccountEntriesList(this, (IDatabaseRowKey)account.getObjectKey()).isEmpty());
 	}
 
+	@Override
 	public Collection<Entry> getEntries(Account account) {
 		return new AccountEntriesList(this, (IDatabaseRowKey)account.getObjectKey());
 	}
@@ -1575,10 +1582,14 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			+ '\'';
 
 		String accountList = "(" + proxy.getRowId();
-		accountList += ")";
 		if (includeSubAccounts) {
-			addEntriesFromSubAccounts(account, accountList);
+			ArrayList<Integer> accountIds = new ArrayList<Integer>();
+			addEntriesFromSubAccounts(account, accountIds);
+			for (Integer accountId: accountIds) {
+				accountList += "," + accountId; 
+			}
 		}
+		accountList += ")";
 		
 		try {
 			String sql = "SELECT SUM(amount), DateSerial(Year(date),Month(date),1) FROM net_sf_jmoney_entry, net_sf_jmoney_transaction"
@@ -1601,14 +1612,15 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		}
 	}
 	
-	private void addEntriesFromSubAccounts(CapitalAccount a, String accounts) {
-		for (CapitalAccount subAccount: a.getSubAccountCollection()) {
+	private void addEntriesFromSubAccounts(CapitalAccount account, ArrayList<Integer> accountIds) {
+		for (CapitalAccount subAccount: account.getSubAccountCollection()) {
 			IDatabaseRowKey proxy = (IDatabaseRowKey)subAccount.getObjectKey();
-			accounts += "," + proxy.getRowId();
-			addEntriesFromSubAccounts(subAccount, accounts);
+			accountIds.add(proxy.getRowId());
+			addEntriesFromSubAccounts(subAccount, accountIds);
 		}
 	}
 
+	@Override
 	public void startTransaction() {
 		try {
 			connection.setAutoCommit(false);
@@ -1618,6 +1630,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		}
 	}
 
+	@Override
 	public void commitTransaction() {
 		try {
 			connection.commit();

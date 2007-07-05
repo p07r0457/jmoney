@@ -15,6 +15,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		super();
 	}
 	
+	@Override
 	public void initializeDefaultPreferences() {
 		Preferences store = JDBCDatastorePlugin.getDefault().getPluginPreferences();
 		

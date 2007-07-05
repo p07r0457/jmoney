@@ -275,9 +275,10 @@ public class ObjectKey implements IDatabaseRowKey {
 	 * available. We therefore use these two fields to test for equality. We
 	 * also check the session manager because objects managed by different
 	 * session managers are considered different even if they represent the same
-	 * object. (In practise if the caller is comparing objects from different
+	 * object. (In practice if the caller is comparing objects from different
 	 * session managers then there is probably a bug).
 	 */
+	@Override
 	public boolean equals(Object object) {
 		if (object instanceof ObjectKey) {
 			ObjectKey otherKey = (ObjectKey)object; 
@@ -289,6 +290,7 @@ public class ObjectKey implements IDatabaseRowKey {
 		}
 	}
 	
+	@Override
 	public int hashCode() {
 		/*
 		 * We could include the basemostPropertySet, and even the
