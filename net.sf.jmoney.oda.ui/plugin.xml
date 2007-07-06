@@ -10,7 +10,7 @@
             parentCategory="net.sf.jmoney.oda.profileCategory"/>
       <connectionProfile
             category="net.sf.jmoney.oda"
-            icon="icons/file.gif"
+            icon="icons/jmoneyconnection.gif"
             id="net.sf.jmoney.oda"
             name="%connection.profile.name"
             pingFactory="org.eclipse.datatools.connectivity.oda.profile.OdaConnectionFactory"/>
