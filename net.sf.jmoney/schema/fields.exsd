@@ -13,8 +13,8 @@
    <element name="extension">
       <complexType>
          <sequence>
-            <element ref="extendable-property-set"/>
-            <element ref="extension-property-set"/>
+            <element ref="extendable-property-set" minOccurs="0" maxOccurs="unbounded"/>
+            <element ref="extension-property-set" minOccurs="0" maxOccurs="unbounded"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -38,7 +38,6 @@
                </documentation>
             </annotation>
          </attribute>
-         
          <attribute name="info-class" type="string" use="required">
             <annotation>
                <documentation>

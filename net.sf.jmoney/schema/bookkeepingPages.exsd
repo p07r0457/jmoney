@@ -148,6 +148,13 @@ Pages will be ordered according to this value.
                </documentation>
             </annotation>
          </attribute>
+         <attribute name="class" type="string">
+            <annotation>
+               <documentation>
+                  Class of object that must implement IDynamicTreeNode.  Use this attribute if this node has child nodes that are dynamically determined at runtime.  This attribute is typically used when objects from the datastore are listed in the navigation view.
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 
