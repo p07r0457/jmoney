@@ -42,6 +42,7 @@ public class DatasourceWizardPage extends DataSourceWizardPage
     /* (non-Javadoc)
      * @see org.eclipse.datatools.connectivity.oda.design.ui.wizards.DataSourceWizardPage#createPageCustomControl(org.eclipse.swt.widgets.Composite)
      */
+	@Override 
     public void createPageCustomControl( Composite parent )
     {
         if (pageHelper == null) {
@@ -60,6 +61,7 @@ public class DatasourceWizardPage extends DataSourceWizardPage
     /* (non-Javadoc)
      * @see org.eclipse.datatools.connectivity.oda.design.ui.wizards.DataSourceWizardPage#initPageCustomControl(java.util.Properties)
      */
+	@Override 
     public void setInitialProperties(Properties dataSourceProps) {
         this.datasourceProperties = dataSourceProps;
         if (pageHelper == null) {
@@ -71,6 +73,7 @@ public class DatasourceWizardPage extends DataSourceWizardPage
     /* (non-Javadoc)
      * @see org.eclipse.datatools.connectivity.oda.design.ui.wizards.DataSourceWizardPage#collectCustomProperties()
      */
+	@Override 
     public Properties collectCustomProperties() {
         /* 
          * Optionally assign a custom designer state, for inclusion

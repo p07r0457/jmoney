@@ -135,6 +135,7 @@ public final class MemoPattern extends ExtendableObject {
 		this.incomeExpenseCurrencyKey = null;
 	}
 
+	@Override
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.reconciliation.pattern";
 	}

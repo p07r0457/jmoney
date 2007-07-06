@@ -53,7 +53,7 @@ public class EntriesInAccountFetcher implements IFetcher {
 	private Vector<Column> columns = new Vector<Column>();
 	
 	private Iterator<? extends ExtendableObject> iterator;
-	private ExtendableObject currentObject;
+	ExtendableObject currentObject;
 	
 	private IFetcher accountObjects;
 	

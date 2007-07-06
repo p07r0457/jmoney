@@ -80,15 +80,15 @@ import org.eclipse.ui.forms.widgets.Section;
  */
 public class UnreconciledSection extends SectionPart {
 
-	private ReconcilePage fPage;
+	ReconcilePage fPage;
 
-	private EntriesTable fUnreconciledEntriesControl;
+	EntriesTable fUnreconciledEntriesControl;
 
-	private FormToolkit toolkit;
+	FormToolkit toolkit;
 
-	private IEntriesContent unreconciledTableContents = null;
+	IEntriesContent unreconciledTableContents = null;
 
-	private ArrayList<CellBlock<EntryData>> cellList;
+	ArrayList<CellBlock<EntryData>> cellList;
 
 	public UnreconciledSection(ReconcilePage page, Composite parent, RowSelectionTracker rowTracker) {
 		super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);

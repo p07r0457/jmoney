@@ -34,6 +34,7 @@ public class SortedTreeModel extends DefaultTreeModel {
 		super(root, false);
 	}
 
+	@Override
 	public void insertNodeInto(
 		MutableTreeNode newChild,
 		MutableTreeNode parent,

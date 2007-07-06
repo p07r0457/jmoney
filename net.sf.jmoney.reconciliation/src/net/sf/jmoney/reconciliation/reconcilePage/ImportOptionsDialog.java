@@ -91,14 +91,14 @@ class ImportOptionsDialog extends Dialog {
 	/**
 	 * The account for which we are configuring, which is in our own transaction.
 	 */
-	private ReconciliationAccount account;
+	ReconciliationAccount account;
 
 	private DialogMessageArea messageArea;
 
-	private Button reconcilableButton;
+	Button reconcilableButton;
 
 	// The table viewer
-	private TableViewer viewer;
+	TableViewer viewer;
 
 	private AccountControl<IncomeExpenseAccount> defaultAccountControl;
 
@@ -112,7 +112,7 @@ class ImportOptionsDialog extends Dialog {
 	 */
 	private Text errorMessageText;
 
-	private Image errorImage;
+	Image errorImage;
 	
 	/**
 	 * When adding new patterns, we add to the end by default.
@@ -121,7 +121,7 @@ class ImportOptionsDialog extends Dialog {
 	 * more than all existing values (or 0 if no patterns
 	 * currently exist). 
 	 */
-	private int nextOrderingIndex;
+	int nextOrderingIndex;
 
 	/**
 	 * Creates an input dialog with OK and Cancel buttons. Note that the dialog
@@ -157,6 +157,7 @@ class ImportOptionsDialog extends Dialog {
 		}
 	}
 
+	@Override
 	protected void buttonPressed(int buttonId) {
 		if (buttonId == IDialogConstants.OK_ID) {
 
@@ -183,6 +184,7 @@ class ImportOptionsDialog extends Dialog {
 		super.buttonPressed(buttonId);
 	}
 
+	@Override
 	protected void configureShell(Shell shell) {
 		super.configureShell(shell);
 		shell.setText("Import Options for " + account.getName());
@@ -200,6 +202,7 @@ class ImportOptionsDialog extends Dialog {
 		return closed;
 	}
 	
+	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		// create OK and Cancel buttons by default
 		okButton = createButton(parent, IDialogConstants.OK_ID,
@@ -208,6 +211,7 @@ class ImportOptionsDialog extends Dialog {
 				IDialogConstants.CANCEL_LABEL, false);
 	}
 
+	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite composite = (Composite) super.createDialogArea(parent);
 		composite.setLayout(new GridLayout(1, false));
@@ -248,6 +252,7 @@ class ImportOptionsDialog extends Dialog {
 		final Control whenIsReconcilableControl = createCategoryControls(stackContainer);
 
 		reconcilableButton.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (reconcilableButton.getSelection()) {
 					stackLayout.topControl = whenIsReconcilableControl;
@@ -265,6 +270,7 @@ class ImportOptionsDialog extends Dialog {
 		}
 
 		defaultAccountControl.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				updateErrorMessage();
 			}
@@ -309,6 +315,7 @@ class ImportOptionsDialog extends Dialog {
 		
 		TableViewerFocusCellManager focusCellManager = new TableViewerFocusCellManager(viewer, new FocusCellOwnerDrawHighlighter(viewer));
 		ColumnViewerEditorActivationStrategy actSupport = new ColumnViewerEditorActivationStrategy(viewer) {
+			@Override
 			protected boolean isEditorActivationEvent(
 					ColumnViewerEditorActivationEvent event) {
 				return event.eventType == ColumnViewerEditorActivationEvent.TRAVERSAL
@@ -332,28 +339,35 @@ class ImportOptionsDialog extends Dialog {
 		column1.getColumn().setWidth(40);
 		column1.getColumn().setText("");
 		column1.setLabelProvider(new ColumnLabelProvider() {
+			@Override
 			public Image getImage(Object element) {
 				MemoPattern pattern = (MemoPattern)element;
 				return isMemoPatternValid(pattern) ? null : errorImage;
 			}
+
+			@Override
 			public String getText(Object element) {
 				return null;
 			}
 		});
 
 		column1.setEditingSupport(new EditingSupport(viewer) {
+			@Override
 			protected boolean canEdit(Object element) {
 				return false;
 			}
 
+			@Override
 			protected CellEditor getCellEditor(Object element) {
 				return null;
 			}
 
+			@Override
 			protected Object getValue(Object element) {
 				return null;
 			}
 
+			@Override
 			protected void setValue(Object element, Object value) {
 			}
 		});
@@ -407,6 +421,7 @@ class ImportOptionsDialog extends Dialog {
 		column.getColumn().setToolTipText(tooltip);
 
 		column.setLabelProvider(new ColumnLabelProvider() {
+			@Override
 			public String getText(Object element) {
 				MemoPattern pattern = (MemoPattern)element;
 				return propertyAccessor.formatValueForTable(pattern);
@@ -414,10 +429,12 @@ class ImportOptionsDialog extends Dialog {
 
 		});
 		column.setEditingSupport(new EditingSupport(viewer) {
+			@Override
 			protected boolean canEdit(Object element) {
 				return true;
 			}
 
+			@Override
 			protected CellEditor getCellEditor(Object element) {
 				if (propertyAccessor == MemoPatternInfo.getAccountAccessor()) {
 					return new AccountCellEditor<Account>(viewer.getTable(), account.getSession(), Account.class);
@@ -426,6 +443,7 @@ class ImportOptionsDialog extends Dialog {
 				}
 			}
 
+			@Override
 			protected Object getValue(Object element) {
 				// The text cell editor requires that null is never returned
 				// by this method.
@@ -437,6 +455,7 @@ class ImportOptionsDialog extends Dialog {
 				return value;
 			}
 
+			@Override
 			protected void setValue(Object element, Object value) {
 				MemoPattern pattern = (MemoPattern)element;
 				setValue(pattern, propertyAccessor, value);
@@ -463,6 +482,7 @@ class ImportOptionsDialog extends Dialog {
 		button.setText("Add...");
 		button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		button.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ObjectCollection<MemoPattern> patterns = account.getPatternCollection();
 				MemoPattern newPattern = patterns.createNewElement(MemoPatternInfo.getPropertySet());
@@ -480,6 +500,7 @@ class ImportOptionsDialog extends Dialog {
 		button.setText("Remove");
 		button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		button.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				IStructuredSelection ssel = (IStructuredSelection)viewer.getSelection();
 				if (ssel.size() > 0) {
@@ -503,6 +524,7 @@ class ImportOptionsDialog extends Dialog {
 		button.setText("Up");
 		button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		button.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				IStructuredSelection ssel = (IStructuredSelection)viewer.getSelection();
 				if (ssel.size() == 1) {
@@ -536,6 +558,7 @@ class ImportOptionsDialog extends Dialog {
 		button.setText("Down");
 		button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		button.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				IStructuredSelection ssel = (IStructuredSelection)viewer.getSelection();
 				if (ssel.size() == 1) {
@@ -608,7 +631,7 @@ class ImportOptionsDialog extends Dialog {
 //		errorMessageText.getParent().update();
 	}
 
-	private void swapOrderOfPatterns(MemoPattern thisPattern,
+	void swapOrderOfPatterns(MemoPattern thisPattern,
 			MemoPattern abovePattern) {
 		// Swap the ordering indexes
 		int thisIndex = thisPattern.getOrderingIndex();
@@ -650,6 +673,7 @@ class ImportOptionsDialog extends Dialog {
 	 * This class implements the sorting for the type catalog table.
 	 */
 	class PatternSorter extends ViewerSorter {
+		@Override
 		public int compare(Viewer viewer, Object e1, Object e2) {
 			MemoPattern pattern1 = (MemoPattern) e1;
 			MemoPattern pattern2 = (MemoPattern) e2;

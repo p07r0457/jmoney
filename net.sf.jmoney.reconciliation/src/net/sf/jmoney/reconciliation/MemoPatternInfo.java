@@ -62,13 +62,13 @@ public class MemoPatternInfo implements IPropertySetInfo {
 			return new MemoPattern(
 					objectKey, 
 					parentKey, 
-					values.getScalarValue(orderingIndexAccessor),
-					values.getScalarValue(patternAccessor),
-					values.getScalarValue(checkAccessor),
-					values.getScalarValue(descriptionAccessor),
-					values.getReferencedObjectKey(accountAccessor),
-					values.getScalarValue(memoAccessor),
-					values.getReferencedObjectKey(incomeExpenseCurrencyAccessor),
+					values.getScalarValue(MemoPatternInfo.getOrderingIndexAccessor()),
+					values.getScalarValue(MemoPatternInfo.getPatternAccessor()),
+					values.getScalarValue(MemoPatternInfo.getCheckAccessor()),
+					values.getScalarValue(MemoPatternInfo.getDescriptionAccessor()),
+					values.getReferencedObjectKey(MemoPatternInfo.getAccountAccessor()),
+					values.getScalarValue(MemoPatternInfo.getMemoAccessor()),
+					values.getReferencedObjectKey(MemoPatternInfo.getIncomeExpenseCurrencyAccessor()),
 					values
 			);
 		}

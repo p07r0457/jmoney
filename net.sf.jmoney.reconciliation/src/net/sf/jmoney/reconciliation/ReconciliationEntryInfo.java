@@ -57,9 +57,9 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 		public ReconciliationEntry construct(ExtendableObject extendedObject, IValues values) {
 			return new ReconciliationEntry(
 					extendedObject, 
-					values.getScalarValue(statusAccessor),
-					values.getScalarValue(statementAccessor),
-					values.getScalarValue(uniqueIdAccessor)
+					values.getScalarValue(getStatusAccessor()),
+					values.getScalarValue(getStatementAccessor()),
+					values.getScalarValue(getUniqueIdAccessor())
 			);
 		}
 	});
@@ -99,11 +99,13 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 		        };
 			}
 
+			@Override
 			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends String> propertyAccessor) {
 				String value = extendableObject.getPropertyValue(propertyAccessor);
 				return (value == null) ? "<blank>" : value;
 			}
 
+			@Override
 			public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends String> propertyAccessor) {
 				String value = extendableObject.getPropertyValue(propertyAccessor);
 				return (value == null) ? "" : value;
@@ -116,7 +118,7 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 			public boolean isEditable() {
 				return true;
 			}
-		};
+		}
 
 		IPropertyControlFactory<BankStatement> statementControlFactory = new PropertyControlFactory<BankStatement>() {
 			public IPropertyControl createPropertyControl(Composite parent, final ScalarPropertyAccessor<BankStatement> propertyAccessor) {
@@ -154,6 +156,7 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 		        };
 			}
 
+			@Override
 			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends BankStatement> propertyAccessor) {
 				BankStatement statement = extendableObject.getPropertyValue(propertyAccessor);
 				if (statement == null) {
@@ -163,6 +166,7 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 				}
 			}
 
+			@Override
 			public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends BankStatement> propertyAccessor) {
 				BankStatement statement = extendableObject.getPropertyValue(propertyAccessor);
 				if (statement == null) {

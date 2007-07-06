@@ -24,7 +24,6 @@ package net.sf.jmoney.reconciliation.reconcilePage;
 import java.util.Collection;
 import java.util.Vector;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.entrytable.CellBlock;
@@ -115,7 +114,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 	 * The statement currently being shown in this page.
 	 * Null indicates that no statement is currently showing.
 	 */
-	private BankStatement statement;
+	BankStatement statement;
 	
 	/**
 	 * the transaction currently being edited, or null
@@ -136,6 +135,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
     /* (non-Javadoc)
      * @see org.eclipse.ui.forms.editor.FormPage#createFormContent(org.eclipse.ui.forms.IManagedForm)
      */
+	@Override
     protected void createFormContent(IManagedForm managedForm) {
         account = ((CurrencyAccount)fEditor.getSelectedObject()).getExtension(ReconciliationAccountInfo.getPropertySet(), true);
 
@@ -154,6 +154,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         // Add properties from the transaction.
    		for (final ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
         	allEntryDataObjects.add(new PropertyBlock(propertyAccessor, "transaction") {
+    			@Override
         		public ExtendableObject getObjectContainingProperty(EntryData data) {
         			return data.getEntry().getTransaction();
         		}
@@ -168,6 +169,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
             if (propertyAccessor != EntryInfo.getAccountAccessor() 
            		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
             	allEntryDataObjects.add(new PropertyBlock(propertyAccessor, "this") {
+        			@Override
             		public ExtendableObject getObjectContainingProperty(EntryData data) {
             			return data.getEntry();
             		}
@@ -214,6 +216,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		// Double clicking on a statement from the list will show
 		// that statement in the statement table.
         fStatementsSection.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
 				StatementDetails statementDetails = (StatementDetails)e.item.getData();
 		    	statement = statementDetails.statement;
@@ -237,6 +240,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		});
 		fStatementsViewCombo.select(2);
 		fStatementsViewCombo.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				GridData gd = (GridData)fStatementsSection.getSection().getLayoutData();
 				switch (fStatementsViewCombo.getSelectionIndex()) {
@@ -263,6 +267,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		Button newStatementButton = new Button(actionbarContainer, SWT.PUSH);
 		newStatementButton.setText("New Statement...");
 		newStatementButton.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				StatementDetails lastStatement = fStatementsSection.getLastStatement();
 				NewStatementDialog messageBox = 
@@ -306,6 +311,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 					final IConfigurationElement thisElement = elements[j];
 					
 					menuItem.addSelectionListener(new SelectionAdapter() {
+						@Override
 						public void widgetSelected(SelectionEvent event) {
 							try {
 								// Load the extension point listener for the selected source
@@ -435,6 +441,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		Button optionsButton = new Button(actionbarContainer, SWT.PUSH);
 		optionsButton.setText("Options...");
 		optionsButton.addSelectionListener(new SelectionAdapter() {
+			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ImportOptionsDialog messageBox = 
 					new ImportOptionsDialog(getSite().getShell(), account);
@@ -458,24 +465,25 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         sash.setLayoutData(formData);
 
         sash.addSelectionListener(new SelectionAdapter() {
-          public void widgetSelected(SelectionEvent event) {
-          	final int mimimumHeight = 61;  // In Windows, allows 3 lines minimum.  TODO: Calculate this for other OS's
-          	int y = event.y;
-          	if (y < mimimumHeight) {
-          		y = mimimumHeight;
-          	}
-          	if (y + sash.getSize().y > sash.getParent().getSize().y - mimimumHeight) {
-          		y = sash.getParent().getSize().y - mimimumHeight - sash.getSize().y;
-          	}
-          	
-            // We reattach to the top edge, and we use the y value of the event to
-            // determine the offset from the top
-            ((FormData) sash.getLayoutData()).top = new FormAttachment(0, y);
+        	@Override
+        	public void widgetSelected(SelectionEvent event) {
+        		final int mimimumHeight = 61;  // In Windows, allows 3 lines minimum.  TODO: Calculate this for other OS's
+        		int y = event.y;
+        		if (y < mimimumHeight) {
+        			y = mimimumHeight;
+        		}
+        		if (y + sash.getSize().y > sash.getParent().getSize().y - mimimumHeight) {
+        			y = sash.getParent().getSize().y - mimimumHeight - sash.getSize().y;
+        		}
 
-            // Until the parent window does a layout, the sash will not be redrawn in
-            // its new location.
-            sash.getParent().layout();
-          }
+        		// We re-attach to the top edge, and we use the y value of the event to
+        		// determine the offset from the top
+        		((FormData) sash.getLayoutData()).top = new FormAttachment(0, y);
+
+        		// Until the parent window does a layout, the sash will not be redrawn in
+        		// its new location.
+        		sash.getParent().layout();
+        	}
         });
 
         GridData gridData1 = new GridData(GridData.FILL_BOTH);

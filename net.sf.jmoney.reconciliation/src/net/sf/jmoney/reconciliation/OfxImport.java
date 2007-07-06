@@ -74,16 +74,10 @@ public class OfxImport implements IBankStatementSource {
 			return null;
 		}
 
-		try {
-			return getEntries(buffer);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return null;
-		}
+		return getEntries(buffer);
 	}
 
-	Collection<EntryData> getEntries(BufferedReader buffer) throws ParseException {
+	Collection<EntryData> getEntries(BufferedReader buffer) {
 		SimpleDOMParser parser = new SimpleDOMParser();
 		SimpleElement rootElement = null;
 		try {
@@ -104,8 +98,7 @@ public class OfxImport implements IBankStatementSource {
 		return entries;
 	}
 
-	private Collection<EntryData> parseOfx(SimpleElement rootElement)
-			throws ParseException {
+	private Collection<EntryData> parseOfx(SimpleElement rootElement) {
 		Vector<EntryData> v = new Vector<EntryData>();
 		SimpleElement foundElement = rootElement.findElement("CURDEF");
 		Currency currency = null;
@@ -124,8 +117,7 @@ public class OfxImport implements IBankStatementSource {
 		return v;
 	}
 
-	private EntryData parseSTMTTRN(SimpleElement foundElement, Currency currency)
-			throws ParseException {
+	private EntryData parseSTMTTRN(SimpleElement foundElement, Currency currency) {
 		EntryData entryData = new EntryData();
 
 		SimpleElement tmpElement = foundElement.findElement("DTPOSTED");

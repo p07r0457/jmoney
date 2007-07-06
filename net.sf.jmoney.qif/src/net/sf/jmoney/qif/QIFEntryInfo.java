@@ -34,7 +34,6 @@ import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -78,8 +77,8 @@ public class QIFEntryInfo implements IPropertySetInfo {
 		public QIFEntry construct(ExtendableObject extendedObject, IValues values) {
 			return new QIFEntry(
 					extendedObject, 
-					values.getScalarValue(reconcilingStateAccessor),
-					values.getScalarValue(addressAccessor) 
+					values.getScalarValue(getReconcilingStateAccessor()),
+					values.getScalarValue(getAddressAccessor()) 
 			);
 		}
 	});
@@ -108,6 +107,7 @@ public class QIFEntryInfo implements IPropertySetInfo {
 				};
 			}
 
+			@Override
 			public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Character> propertyAccessor) {
 				return "'" + extendableObject.getPropertyValue(propertyAccessor).toString() + "'";
 			}

@@ -43,7 +43,7 @@ public class AllTests {
 	 * PACKAGE_NAME, and adds those to the test path, providing that they are
 	 * {@link AllTests#isValidTest(String, boolean) valid}.
 	 */
-	private static class BundleTestDetector implements TestCollector {
+	static class BundleTestDetector implements TestCollector {
 		/*
 		 * @see junit.runner.TestCollector#collectTests()
 		 */
@@ -79,10 +79,11 @@ public class AllTests {
 	 * SUFFIX, excluding those which end in IN_CONTAINER_SUFFIX, providing that
 	 * they are {@link AllTests#isValidTest(String, boolean) valid}.
 	 */
-	private static class ClassFileDetector extends ClassPathTestCollector {
+	static class ClassFileDetector extends ClassPathTestCollector {
 		/*
 		 * @see junit.runner.ClassPathTestCollector#isTestClass(java.lang.String)
 		 */
+		@Override
 		protected boolean isTestClass(String classFileName) {
 			return classFileName.endsWith(SUFFIX + ".class")
 					&& isValidTest(classNameFromFile(classFileName), false);
@@ -151,7 +152,7 @@ public class AllTests {
 	 *         inContainer tests are to be included or the name does not end
 	 *         with IN_CONTAINER_SUFFIX
 	 */
-	private static boolean isValidTest(String name, boolean inContainer) {
+	static boolean isValidTest(String name, boolean inContainer) {
 		try {
 			return name.endsWith(SUFFIX)
 					&& (inContainer || !name.endsWith(IN_CONTAINER_SUFFIX))

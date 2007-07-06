@@ -44,6 +44,7 @@ public class SortedTreeNode
 		return toString().compareTo(o.toString());
 	}
 
+	@Override
 	public void insert(MutableTreeNode child, int index) {
 		super.insert(child, index);
 		sortChildren();

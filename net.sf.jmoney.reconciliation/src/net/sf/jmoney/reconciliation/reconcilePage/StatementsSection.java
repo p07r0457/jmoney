@@ -63,11 +63,11 @@ import org.eclipse.ui.forms.widgets.Section;
  */
 public class StatementsSection extends SectionPart {
 	
-	private Table statementTable;
+	Table statementTable;
 	
-	private StatementContentProvider contentProvider;
+	StatementContentProvider contentProvider;
 	
-	private TableColumn column2;
+	private TableColumn balanceColumn;
 	
 	public StatementsSection(Composite parent, FormToolkit toolkit, CurrencyAccount account) {
 		super(parent, toolkit, 
@@ -87,14 +87,14 @@ public class StatementsSection extends SectionPart {
 		statementTable.setLinesVisible(true);
 		
 		// 1st column contains the statement number/date
-		TableColumn column1 = new TableColumn(statementTable, SWT.LEFT, 0);
-		column1.setText("Statement");
-		column1.setWidth(50);
+		TableColumn statementColumn = new TableColumn(statementTable, SWT.LEFT, 0);
+		statementColumn.setText("Statement");
+		statementColumn.setWidth(50);
 		
 		// 2nd column contains the statement balance
-		column2 = new TableColumn(statementTable, SWT.RIGHT, 1);
-		column2.setText("Balance");
-		column2.setWidth(70);
+		balanceColumn = new TableColumn(statementTable, SWT.RIGHT, 1);
+		balanceColumn.setText("Balance");
+		balanceColumn.setWidth(70);
 		
 		// Create and setup the TableViewer
 		TableViewer tableViewer = new TableViewer(statementTable);   
@@ -183,11 +183,11 @@ public class StatementsSection extends SectionPart {
 		/**
 		 * The table viewer to be notified whenever the content changes.
 		 */
-		private TableViewer tableViewer;
+		TableViewer tableViewer;
 		
-		private CurrencyAccount account;
+		CurrencyAccount account;
 		
-		private SortedMap<BankStatement, StatementDetails> statementDetailsMap;
+		SortedMap<BankStatement, StatementDetails> statementDetailsMap;
 
 		StatementContentProvider(TableViewer tableViewer) {
 			this.tableViewer = tableViewer;
@@ -250,6 +250,7 @@ public class StatementsSection extends SectionPart {
 
 			// Listen for changes so we can keep the tree map upto date.
 			account.getDataManager().addChangeListener(new SessionChangeAdapter() {
+				@Override
 				public void objectInserted(ExtendableObject newObject) {
 					if (newObject instanceof Entry) {
 						Entry newEntry = (Entry)newObject;
@@ -260,6 +261,7 @@ public class StatementsSection extends SectionPart {
 					}
 				}
 				
+				@Override
 				public void objectRemoved(ExtendableObject deletedObject) {
 					if (deletedObject instanceof Entry) {
 						Entry deletedEntry = (Entry)deletedObject;
@@ -278,6 +280,7 @@ public class StatementsSection extends SectionPart {
 					}
 				}
 				
+				@Override
 				public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 					if (changedObject instanceof Entry) {
 						Entry entry = (Entry)changedObject;
@@ -315,7 +318,7 @@ public class StatementsSection extends SectionPart {
 		 * @param amount the amount by which the total for the given statement
 		 * 				is to be adjusted
 		 */
-		private void adjustStatement(BankStatement statement, long amount) {
+		void adjustStatement(BankStatement statement, long amount) {
 			if (statement != null) {
 				StatementDetails thisStatementDetails = statementDetailsMap.get(statement);
 				if (thisStatementDetails == null) {
@@ -406,9 +409,9 @@ public class StatementsSection extends SectionPart {
 	 */
 	public void showBalance(boolean show) {
 		if (show) {
-			column2.setWidth(SWT.DEFAULT);
+			balanceColumn.setWidth(SWT.DEFAULT);
 		} else {
-			column2.setWidth(0);
+			balanceColumn.setWidth(0);
 		}
 	}
 	

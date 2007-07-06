@@ -44,6 +44,7 @@ public class SimpleCategory extends AbstractCategory {
 		return categoryName;
 	}
 
+	@Override
 	public String getFullCategoryName() {
 		if (fullCategoryName == null) {
 			Object[] path = getCategoryNode().getUserObjectPath();

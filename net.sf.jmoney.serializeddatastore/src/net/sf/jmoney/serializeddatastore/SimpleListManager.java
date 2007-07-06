@@ -112,6 +112,7 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 		return extendableObject;
 	}
 	
+	@Override
 	public boolean remove(Object object) {
 		// If an account is removed then we
 		// clear out the list.

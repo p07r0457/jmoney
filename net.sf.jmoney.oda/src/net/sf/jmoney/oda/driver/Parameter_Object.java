@@ -51,14 +51,17 @@ class Parameter_Object extends Parameter {
 		return propertySet;
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public ColumnType getColumnType() {
 		return type;
 	}
 
+	@Override
 	public boolean isNullable() {
 		// For time being, do not allow null parameters
 		return false;

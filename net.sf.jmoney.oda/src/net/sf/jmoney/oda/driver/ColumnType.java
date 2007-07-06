@@ -33,39 +33,39 @@ package net.sf.jmoney.oda.driver;
 public enum ColumnType {
 
 	stringType {
-		int getNativeType() { return 1; }
-		String getNativeTypeName() { return "String"; }
-		int getDisplayLength() { return 10; }
+		@Override int getNativeType() { return 1; }
+		@Override String getNativeTypeName() { return "String"; }
+		@Override int getDisplayLength() { return 10; }
 	},
 	integerType {
-		int getNativeType() { return 2; }
-		String getNativeTypeName() { return "Integer"; }
-		int getDisplayLength() { return 5; }
+		@Override int getNativeType() { return 2; }
+		@Override String getNativeTypeName() { return "Integer"; }
+		@Override int getDisplayLength() { return 5; }
 	},
 	longType {
-		int getNativeType() { return 3; }
-		String getNativeTypeName() { return "Long"; }
-		int getDisplayLength() { return 10; }
+		@Override int getNativeType() { return 3; }
+		@Override String getNativeTypeName() { return "Long"; }
+		@Override int getDisplayLength() { return 10; }
 	},
 	doubleType {
-		int getNativeType() { return 4; }
-		String getNativeTypeName() { return "Double"; }
-		int getDisplayLength() { return 10; }
+		@Override int getNativeType() { return 4; }
+		@Override String getNativeTypeName() { return "Double"; }
+		@Override int getDisplayLength() { return 10; }
 	},
 	booleanType {
-		int getNativeType() { return 5; }
-		String getNativeTypeName() { return "Boolean"; }
-		int getDisplayLength() { return 10; }
+		@Override int getNativeType() { return 5; }
+		@Override String getNativeTypeName() { return "Boolean"; }
+		@Override int getDisplayLength() { return 10; }
 	},
 	dateType {
-		int getNativeType() { return 6; }
-		String getNativeTypeName() { return "Date"; }
-		int getDisplayLength() { return 10; }
+		@Override int getNativeType() { return 6; }
+		@Override String getNativeTypeName() { return "Date"; }
+		@Override int getDisplayLength() { return 10; }
 	};
 	
 	abstract String getNativeTypeName();
 	abstract int getDisplayLength();
-	int getPrecision() { return 10; };
-	int getScale() { return 10; };
+	int getPrecision() { return 10; }
+	int getScale() { return 10; }
 	abstract int getNativeType();
 }

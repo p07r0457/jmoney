@@ -85,19 +85,19 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 
     enum DateRanges {
     	THIS_MONTH {
-    		protected String getTextKey() { return "Report.IncomeExpense.thisMonth"; }
+    		@Override protected String getTextKey() { return "Report.IncomeExpense.thisMonth"; }
     	},
     	THIS_YEAR {
-    		protected String getTextKey() { return "Report.IncomeExpense.thisYear"; }
+    		@Override protected String getTextKey() { return "Report.IncomeExpense.thisYear"; }
     	},
     	LAST_MONTH {
-    		protected String getTextKey() { return "Report.IncomeExpense.lastMonth"; }
+    		@Override protected String getTextKey() { return "Report.IncomeExpense.lastMonth"; }
     	},
     	LAST_YEAR {
-    		protected String getTextKey() { return "Report.IncomeExpense.lastYear"; }
+    		@Override protected String getTextKey() { return "Report.IncomeExpense.lastYear"; }
     	},
     	CUSTOM {
-    		protected String getTextKey() { return "Report.IncomeExpense.custom"; }
+    		@Override protected String getTextKey() { return "Report.IncomeExpense.custom"; }
     	};
     	
     	protected abstract String getTextKey();
@@ -110,12 +110,12 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 	private Browser viewer;
 
 	private Label periodLabel;
-	private Combo periodBox;
+	Combo periodBox;
 	private Label fromLabel;
-	private DateControl fromField;
+	DateControl fromField;
 	private Label toLabel;
-	private DateControl toField;
-	private AccountControl<IncomeExpenseAccount> accountField;
+	DateControl toField;
+	AccountControl<IncomeExpenseAccount> accountField;
 	private Button generateButton;
 
 	/**
@@ -123,15 +123,15 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 	 */
 	Shell shell;
 	
-	private Date fromDate;
-	private Date toDate;
+	Date fromDate;
+	Date toDate;
 
 //	private IncomeExpenseAccount account = null;
 
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
 	 */
-	private Composite createContent(/*IncomeExpenseAccount account, */Composite parent) {
+	Composite createContent(/*IncomeExpenseAccount account, */Composite parent) {
 //		this.account = account;
 		
 		/**
@@ -215,6 +215,7 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 			 * 			that are IncomeExpenseAccount instances.  Therefore
 			 * 			<code>nodeObject</code> will always be an IncomeExpenseAccount instance.
 			 */
+			@Override
 			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {
 				Composite control = createContent(/*(IncomeExpenseAccount)nodeObject, */ parent);
 
@@ -273,7 +274,7 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 		return formPage;
 	}
 
-	private void updateFromAndTo() {
+	void updateFromAndTo() {
 		int index = periodBox.getSelectionIndex();
 		Calendar cal = Calendar.getInstance();
 		cal.set(Calendar.HOUR_OF_DAY, 0);
@@ -329,7 +330,7 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 		toField.setEnabled(period == DateRanges.CUSTOM);
 	}
 
-	private void generateReport() { 
+	void generateReport() { 
 		EngineConfig config = new EngineConfig();
 //		Create the report engine
 		IReportEngineFactory factory = 

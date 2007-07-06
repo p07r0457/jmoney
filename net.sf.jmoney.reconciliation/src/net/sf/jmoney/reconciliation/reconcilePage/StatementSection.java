@@ -85,9 +85,9 @@ import org.eclipse.ui.forms.widgets.Section;
  */
 public class StatementSection extends SectionPart {
 
-    private ReconcilePage fPage;
+    ReconcilePage fPage;
 
-    private EntriesTable fReconciledEntriesControl;
+    EntriesTable fReconciledEntriesControl;
     
 	/**
 	 * Contains two controls:
@@ -95,21 +95,21 @@ public class StatementSection extends SectionPart {
 	 * - containerOfTableAndButtons
 	 * Layout: AlternativeLayout
 	 */
-	private Composite container;
+	Composite container;
     
     /**
      * Control for the text that is displayed when no session
      * is open.
      */
-    private Label noStatementMessage;
+    Label noStatementMessage;
     
-    private FormToolkit toolkit;
+    FormToolkit toolkit;
     
-    private IEntriesContent reconciledTableContents = null;
+    IEntriesContent reconciledTableContents = null;
 
-    private ArrayList<CellBlock<EntryData>> cellList;
+    ArrayList<CellBlock<EntryData>> cellList;
     
-    private long openingBalance = 0;
+    long openingBalance = 0;
     
     public StatementSection(ReconcilePage page, Composite parent, RowSelectionTracker rowTracker) {
         super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
@@ -232,6 +232,7 @@ public class StatementSection extends SectionPart {
 
 				dropTarget.addDropListener(new DropTargetAdapter() {
 
+					@Override
 					public void dragEnter(DropTargetEvent event) {
 						/*
 						 * We want to check what is being dragged, in case it is not an
@@ -259,21 +260,25 @@ public class StatementSection extends SectionPart {
 						event.detail = DND.DROP_NONE;
 					}
 
+					@Override
 					public void dragLeave(DropTargetEvent event) {
 						// TODO Auto-generated method stub
 
 					}
 
+					@Override
 					public void dragOperationChanged(DropTargetEvent event) {
 						// TODO Auto-generated method stub
 
 					}
 
+					@Override
 					public void dragOver(DropTargetEvent event) {
 						// TODO Auto-generated method stub
 
 					}
 
+					@Override
 					public void drop(DropTargetEvent event) {
 						if (LocalSelectionTransfer.getTransfer().isSupportedType(event.currentDataType)) {
 							ISelection selection = LocalSelectionTransfer.getTransfer().getSelection();
@@ -292,6 +297,7 @@ public class StatementSection extends SectionPart {
 
 					}
 
+					@Override
 					public void dropAccept(DropTargetEvent event) {
 						// TODO Auto-generated method stub
 					}
@@ -366,12 +372,12 @@ public class StatementSection extends SectionPart {
 			fReconciledEntriesControl.layout(true);  // ??????
 		}
         
-        
 		// There is no layout set on the navigation view.
 		// Therefore we must listen for changes to the size of
 		// the navigation view and adjust the size of the visible
 		// control to match.
 		container.addControlListener(new ControlAdapter() {
+			@Override
 			public void controlResized(ControlEvent e) {
 				if (fPage.getStatement() == null) {
 					noStatementMessage.setSize(container.getSize());
@@ -459,7 +465,7 @@ public class StatementSection extends SectionPart {
 	 * @return true if the merge succeeded, false if it failed (in which case
 	 *         the user is notified by this method of the failure)
 	 */
-	private boolean mergeTransaction(EntryData unrecEntryData, EntryRowControl recRowControl) {
+	boolean mergeTransaction(EntryData unrecEntryData, EntryRowControl recRowControl) {
 		
 		Entry unrecEntryInAccount = unrecEntryData.getEntry();
 		Entry recEntryInAccount = recRowControl.getUncommittedTopEntry();

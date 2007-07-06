@@ -21,6 +21,7 @@ public class BankOfAmericaOfxTest extends TestCase {
 
 	private BufferedReader bufferedReader;
 
+	@Override
 	public void setUp() throws Exception {
 		ofxImport = new OfxImport();
 		bufferedReader = new BufferedReader(new InputStreamReader(this
@@ -33,7 +34,7 @@ public class BankOfAmericaOfxTest extends TestCase {
 	 * 
 	 * @throws ParseException
 	 */
-	public void testGetEntriesBufferedReader() throws ParseException {
+	public void testGetEntriesBufferedReader() {
 		Collection<EntryData> entries = ofxImport.getEntries(bufferedReader);
 		assertTrue(entries.size() > 0);
 		assertEquals(7, entries.size());

@@ -88,6 +88,7 @@ public class BankStatement implements Comparable<BankStatement> {
 		this.statementDate = statementDate;
 	}
 
+	@Override
 	public String toString() {
 		if (statementNumber != 0) {
 			return Integer.toString(statementNumber);
@@ -98,6 +99,7 @@ public class BankStatement implements Comparable<BankStatement> {
 		}
 	}
 	
+	@Override
 	public boolean equals(Object other) {
 		if (other == null)
 			return false;
@@ -106,6 +108,7 @@ public class BankStatement implements Comparable<BankStatement> {
 			&& JMoneyPlugin.areEqual(this.statementDate, otherStatement.statementDate);
 	}
 	
+	@Override
 	public int hashCode() {
 		return statementDate == null
 		? statementNumber

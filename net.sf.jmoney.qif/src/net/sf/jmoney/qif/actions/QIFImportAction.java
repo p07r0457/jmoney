@@ -105,7 +105,7 @@ public class QIFImportAction implements IWorkbenchWindowActionDelegate {
 			
 			IUndoableOperation operation = new AbstractDataOperation(session, "Import Account from " + qifFile) {
 				@Override
-				public IStatus execute() throws ExecutionException {
+				public IStatus execute() {
 					qif.importFile(session, qifFile);
 					return Status.OK_STATUS;
 				}

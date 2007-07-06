@@ -19,6 +19,7 @@ public class FortisbankingOfxTest extends TestCase {
 	private OfxImport ofxImport;
 	private BufferedReader bufferedReader;
 
+	@Override
 	public void setUp() throws Exception {
 		ofxImport = new OfxImport();
 		bufferedReader = new BufferedReader(new InputStreamReader( this.getClass().getResourceAsStream("/fortisbanking.be.ofx")));
@@ -29,7 +30,7 @@ public class FortisbankingOfxTest extends TestCase {
 	 * {@link net.sf.jmoney.reconciliation.OfxImport#getEntries(java.io.BufferedReader)}.
 	 * @throws ParseException 
 	 */
-	public void testGetEntriesBufferedReader() throws ParseException {
+	public void testGetEntriesBufferedReader() {
 		Collection<EntryData> entries = ofxImport.getEntries(bufferedReader);
 		assertTrue(entries.size() > 0);
 		assertEquals(32,entries.size());

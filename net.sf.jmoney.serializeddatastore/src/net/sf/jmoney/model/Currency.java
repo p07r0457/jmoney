@@ -127,6 +127,7 @@ public class Currency implements Comparable {
 		return NAME.getString(getCode());
 	}
 
+	@Override
 	public String toString() {
 		return getCurrencyName() + " (" + getCode() + ")";
 	}

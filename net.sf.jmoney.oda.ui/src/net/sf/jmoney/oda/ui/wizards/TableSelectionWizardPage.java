@@ -83,7 +83,7 @@ public class TableSelectionWizardPage extends DataSetWizardPage
 {
 	private IObjectList startingPoint = null;
 
-	private static String DEFAULT_MESSAGE = Messages.getString( "tableDialog.defaultMessage" ); //$NON-NLS-1$
+	static String DEFAULT_MESSAGE = Messages.getString( "tableDialog.defaultMessage" ); //$NON-NLS-1$
 
 	private final int DEFAULT_WIDTH = 200;
 	private final int DEFAULT_HEIGHT = 200;
@@ -93,11 +93,11 @@ public class TableSelectionWizardPage extends DataSetWizardPage
 	private Button sessionButton;
 	private Button parameterButton;
 
-	private Tree parameterClassTree = null;
-	private Tree objectClassTree = null;
+	Tree parameterClassTree = null;
+	Tree objectClassTree = null;
 
 	/** store latest selected list from session object */
-	private IObjectList selectedItemList;
+	IObjectList selectedItemList;
 
 	/**
 	 * @param pageName
@@ -127,6 +127,7 @@ public class TableSelectionWizardPage extends DataSetWizardPage
 	 * 
 	 * @see org.eclipse.datatools.connectivity.oda.design.ui.wizards.DataSetWizardPage#createPageCustomControl(org.eclipse.swt.widgets.Composite)
 	 */
+	@Override 
 	public void createPageCustomControl( Composite parent )
 	{
 		setControl( createPageControl( parent ) );
@@ -176,6 +177,7 @@ public class TableSelectionWizardPage extends DataSetWizardPage
 	 * (non-Javadoc)
 	 * @see org.eclipse.datatools.connectivity.oda.design.ui.wizards.DataSetWizardPage#collectDataSetDesign(org.eclipse.datatools.connectivity.oda.design.DataSetDesign)
 	 */
+	@Override 
 	protected DataSetDesign collectDataSetDesign( DataSetDesign design )
 	{
 		if( ! hasValidData() )
@@ -187,6 +189,7 @@ public class TableSelectionWizardPage extends DataSetWizardPage
 	/* (non-Javadoc)
 	 * @see org.eclipse.datatools.connectivity.oda.design.internal.ui.DataSetWizardPage#collectResponseState()
 	 */
+	@Override 
 	protected void collectResponseState()
 	{        
 		super.collectResponseState();
@@ -201,6 +204,7 @@ public class TableSelectionWizardPage extends DataSetWizardPage
 	/* (non-Javadoc)
 	 * @see org.eclipse.datatools.connectivity.oda.design.ui.wizards.DataSetWizardPage#canLeave()
 	 */
+	@Override 
 	protected boolean canLeave()
 	{
 		if(!isPageComplete()) {
@@ -245,6 +249,7 @@ public class TableSelectionWizardPage extends DataSetWizardPage
 
 		objectClassTree.setLayoutData(data);
 		objectClassTree.addSelectionListener(new SelectionAdapter() {
+			@Override 
 			public void widgetSelected(SelectionEvent e)
 			{
 				IObjectList file = (IObjectList) (objectClassTree.getSelection()[0].getData());
@@ -288,6 +293,7 @@ public class TableSelectionWizardPage extends DataSetWizardPage
 		parameterButton.setText("Start with an object or list of objects passed as a parameter at runtime");
 
 		sessionButton.addSelectionListener(new SelectionAdapter() {
+			@Override 
 			public void widgetSelected(SelectionEvent e) {
 				setStartingPoint(new ObjectList_SessionObject());
 				parameterClassTree.setEnabled(false);
@@ -299,6 +305,7 @@ public class TableSelectionWizardPage extends DataSetWizardPage
 				| GridData.VERTICAL_ALIGN_CENTER));
 
 		parameterButton.addSelectionListener(new SelectionAdapter() {
+			@Override 
 			public void widgetSelected(SelectionEvent e) {
 				if (parameterClassTree.getSelection().length == 1) {
 					setStartingPoint(new ObjectList_ParameterObject((ExtendablePropertySet)parameterClassTree.getSelection()[0].getData()));
@@ -352,6 +359,7 @@ public class TableSelectionWizardPage extends DataSetWizardPage
 		parameterClassTree.setLayoutData(data);
 
 		parameterClassTree.addSelectionListener(new SelectionAdapter() {
+			@Override 
 			public void widgetSelected( SelectionEvent e )
 			{
 				if (parameterClassTree.getSelection().length == 1) {

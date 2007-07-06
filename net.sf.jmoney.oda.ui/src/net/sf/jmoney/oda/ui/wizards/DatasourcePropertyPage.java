@@ -39,6 +39,7 @@ public class DatasourcePropertyPage extends DataSourceEditorPage
     /* (non-Javadoc)
      * @see org.eclipse.datatools.connectivity.oda.design.ui.wizards.DataSourceEditorPage#collectCustomProperties(java.util.Properties)
      */
+	@Override 
     public Properties collectCustomProperties( Properties profileProperties )
     {
         /* 
@@ -57,6 +58,7 @@ public class DatasourcePropertyPage extends DataSourceEditorPage
     /* (non-Javadoc)
      * @see org.eclipse.datatools.connectivity.oda.design.ui.wizards.DataSourceEditorPage#createAndInitCustomControl(org.eclipse.swt.widgets.Composite, java.util.Properties)
      */
+	@Override 
     protected void createAndInitCustomControl( Composite parent, Properties profileProps )
     {
         if (pageHelper == null) {

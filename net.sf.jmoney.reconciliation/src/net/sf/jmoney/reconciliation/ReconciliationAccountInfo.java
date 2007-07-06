@@ -55,9 +55,9 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 		public ReconciliationAccount construct(ExtendableObject extendedObject, IValues values) {
 			return new ReconciliationAccount(
 					extendedObject, 
-					values.getScalarValue(reconcilableAccessor),
-					values.getListManager(extendedObject.getObjectKey(), patternsAccessor),
-					values.getReferencedObjectKey(defaultCategoryAccessor) 
+					values.getScalarValue(getReconcilableAccessor()),
+					values.getListManager(extendedObject.getObjectKey(), getPatternsAccessor()),
+					values.getReferencedObjectKey(getDefaultCategoryAccessor()) 
 			);
 		}
 	});

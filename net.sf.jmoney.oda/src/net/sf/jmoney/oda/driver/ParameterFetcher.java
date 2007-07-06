@@ -56,7 +56,7 @@ public class ParameterFetcher implements IFetcher {
 	
 	private Iterator<? extends ExtendableObject> iterator = null;
 
-	private ExtendableObject parameterObject = null;
+	ExtendableObject parameterObject = null;
 	
 	public ParameterFetcher(IMemento memento) throws OdaException {
 		String propertySetId = memento.getString("propertySetId");

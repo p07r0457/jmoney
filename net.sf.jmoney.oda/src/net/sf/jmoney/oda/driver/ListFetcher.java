@@ -65,15 +65,15 @@ public class ListFetcher implements IFetcher {
 	private ExtendablePropertySet<?> filter = null;
 	
 	private Iterator<? extends ExtendableObject> iterator;
-	private ExtendableObject currentObject;
+	ExtendableObject currentObject;
 	
 	private IFetcher parentObjects;
 
 	/**
 	 * Set only if this is a list of income/expense accounts
 	 */
-	private Parameter_Date startDateParameter = null;
-	private Parameter_Date endDateParameter = null;
+	Parameter_Date startDateParameter = null;
+	Parameter_Date endDateParameter = null;
 	
 	/**
 	 * 

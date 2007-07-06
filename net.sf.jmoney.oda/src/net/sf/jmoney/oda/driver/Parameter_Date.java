@@ -33,14 +33,17 @@ class Parameter_Date extends Parameter {
 		super(name);
 	}
 
+	@Override
 	public String getName() {
 		return name;
 	}
 
+	@Override
 	public ColumnType getColumnType() {
 		return ColumnType.dateType;
 	}
 
+	@Override
 	public boolean isNullable() {
 		// For time being, do not allow null parameters
 		return false;

@@ -89,17 +89,15 @@ public AccountChooser(Shell parentShell, String dialogMessage) {
 	String dialogTitle = "JMoney: Choose account";
 	this.title = dialogTitle;
 	message = dialogMessage;
-	String initialValue = "Hello from the JMoney team";
+	value = "Hello from the JMoney team";
 	IInputValidator validator = null;
-	if (initialValue == null)
-		value = "";//$NON-NLS-1$
-	else
-		value = initialValue;
 	this.validator = validator;
 }
+
 /* (non-Javadoc)
  * Method declared on Dialog.
  */
+@Override
 protected void buttonPressed(int buttonId) {
 	if (buttonId == IDialogConstants.OK_ID) {
 		value= text.getText();
@@ -108,9 +106,11 @@ protected void buttonPressed(int buttonId) {
 	}
 	super.buttonPressed(buttonId);
 }
+
 /* (non-Javadoc)
  * Method declared in Window.
  */
+@Override
 protected void configureShell(Shell shell) {
 	super.configureShell(shell);
 	if (title != null)
@@ -119,6 +119,7 @@ protected void configureShell(Shell shell) {
 /* (non-Javadoc)
  * Method declared on Dialog.
  */
+@Override
 protected void createButtonsForButtonBar(Composite parent) {
 	// create OK and Cancel buttons by default
 	okButton = createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL, true);
@@ -134,6 +135,7 @@ protected void createButtonsForButtonBar(Composite parent) {
 /* (non-Javadoc)
  * Method declared on Dialog.
  */
+@Override
 protected Control createDialogArea(Composite parent) {
 	// create composite
 	Composite composite = (Composite)super.createDialogArea(parent);

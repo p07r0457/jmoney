@@ -36,6 +36,7 @@ import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Session;
 
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -54,17 +55,17 @@ import org.eclipse.ui.IWorkbenchWindow;
  */
 public class SessionManager extends DatastoreManager {
 
-	private Session session = null;
+	Session session = null;
 
-	private String fileDatastoreId = null;
+	String fileDatastoreId = null;
 	
-	private IFileDatastore fileDatastore = null;
+	IFileDatastore fileDatastore = null;
 	
-    private File sessionFile = null;
+    File sessionFile = null;
 
-    private boolean modified = false;
+    boolean modified = false;
 
-   private Map<Account, Collection<Entry>> accountEntriesListsMap = new HashMap<Account, Collection<Entry>>();
+    Map<Account, Collection<Entry>> accountEntriesListsMap = new HashMap<Account, Collection<Entry>>();
 	
 	/**
 	 * Construct the session manager.
@@ -95,6 +96,7 @@ public class SessionManager extends DatastoreManager {
 		this.session = session;
 	}
 	
+	@Override
 	public Session getSession() {
 		return session;
 	}
@@ -248,6 +250,7 @@ public class SessionManager extends DatastoreManager {
 		}
 	}
 	
+	@Override
     public boolean canClose(IWorkbenchWindow window) {
         if (isModified()) {
             return requestSave(window);
@@ -256,11 +259,13 @@ public class SessionManager extends DatastoreManager {
         }
     }
 
+	@Override
     public void close() {
         // There is nothing to do here.  No files, connections or other resources
         // are kept open so there is nothing to close.
     }
     
+	@Override
     public String getBriefDescription() {
         if (sessionFile == null) {
             return null;
@@ -332,22 +337,26 @@ public class SessionManager extends DatastoreManager {
 		accountEntriesListsMap.remove(account);
 	}
 
+	@Override
 	public boolean hasEntries(Account account) {
 		Collection<Entry> entriesList = accountEntriesListsMap.get(account);
-		JMoneyPlugin.myAssert(entriesList != null);
+		Assert.isNotNull(entriesList);
 		return !entriesList.isEmpty();
 	}
 
+	@Override
 	public Collection<Entry> getEntries(Account account) {
 		Collection<Entry> entriesList = accountEntriesListsMap.get(account);
 		JMoneyPlugin.myAssert(entriesList != null);
 		return Collections.unmodifiableCollection(entriesList);
 	}
 
+	@Override
 	public void startTransaction() {
 		// Nothing to do
 	}
 
+	@Override
 	public void commitTransaction() {
 		// Nothing to do
 	}

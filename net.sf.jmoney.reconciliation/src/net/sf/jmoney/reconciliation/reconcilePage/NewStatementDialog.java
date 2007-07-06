@@ -89,12 +89,12 @@ class NewStatementDialog extends Dialog {
 	/**
 	 * Input widget for statement number.
 	 */
-	private Text text;
+	Text text;
 
 	/**
 	 * Input widget for statement date.
 	 */
-	private DateControl dateControl;
+	DateControl dateControl;
 	
 	/**
 	 * Creates an input dialog with OK and Cancel buttons. Note that the dialog
@@ -112,6 +112,7 @@ class NewStatementDialog extends Dialog {
 		this.lastStatement = lastStatement;
 	}
 
+	@Override
 	protected void buttonPressed(int buttonId) {
 		if (buttonId == IDialogConstants.OK_ID) {
 			switch (statementIdType) {
@@ -131,11 +132,13 @@ class NewStatementDialog extends Dialog {
 		super.buttonPressed(buttonId);
 	}
 
+	@Override
 	protected void configureShell(Shell shell) {
 		super.configureShell(shell);
 			shell.setText("New Statement");
 	}
 
+	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		// create OK and Cancel buttons by default
 		okButton = createButton(parent, IDialogConstants.OK_ID,
@@ -144,6 +147,7 @@ class NewStatementDialog extends Dialog {
 				IDialogConstants.CANCEL_LABEL, false);
 	}
 
+	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite composite = (Composite) super.createDialogArea(parent);
 		
@@ -163,6 +167,7 @@ class NewStatementDialog extends Dialog {
 			Button byNumberButton = new Button(composite, SWT.RADIO);
 			byNumberButton.setText("Identify Bank Statements by Sequence Number");
 			byNumberButton.addSelectionListener(new SelectionAdapter() {
+				@Override
 				public void widgetSelected(SelectionEvent e) {
 					promptForNumber();
 				}
@@ -171,6 +176,7 @@ class NewStatementDialog extends Dialog {
 			Button byDateButton = new Button(composite, SWT.RADIO);
 			byDateButton.setText("Identify Bank Statements by Date");
 			byDateButton.addSelectionListener(new SelectionAdapter() {
+				@Override
 				public void widgetSelected(SelectionEvent e) {
 					promptForDate();
 				}

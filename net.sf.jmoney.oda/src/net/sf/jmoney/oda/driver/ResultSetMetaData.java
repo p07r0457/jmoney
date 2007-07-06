@@ -61,7 +61,7 @@ public class ResultSetMetaData implements IResultSetMetaData
      */
     Map<String, Integer> columnNameToIndexMap = new HashMap<String, Integer>();
 
-    ResultSetMetaData(IFetcher fetcher) throws OdaException
+    ResultSetMetaData(IFetcher fetcher)
     {
 		fetcher.buildColumnList(selectedProperties);
 		

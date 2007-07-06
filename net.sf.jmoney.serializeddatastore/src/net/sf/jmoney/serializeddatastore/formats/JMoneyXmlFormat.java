@@ -112,7 +112,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 	 * Date format used for dates in this file format:
 	 * yyyy.MM.dd
 	 */
-	private static SimpleDateFormat dateFormat = (SimpleDateFormat) DateFormat.getDateInstance();
+	static SimpleDateFormat dateFormat = (SimpleDateFormat) DateFormat.getDateInstance();
 	static {
 		dateFormat.applyPattern("yyyy.MM.dd");
 	}
@@ -146,7 +146,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			} else {
 				IRunnableWithProgress readSessionRunnable = new IRunnableWithProgress() {
 					
-					public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+					public void run(IProgressMonitor monitor) throws InvocationTargetException {
 						// Set the number of work units in the monitor where
 						// one work unit is reading 100 Kbytes.
 						int workUnits = (int)(sessionFile.length()/100000);
@@ -229,17 +229,20 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 * the count of bytes read just to stop errors creeping
 		 * in.  However, we don't bother to update the monitor.
 		 */
+		@Override
 		public int read() throws IOException {
 			totalBytes++;
 			return super.read();
 		}
 
+		@Override
 	    public int read(byte b[]) throws IOException {
 	    	int bytesRead = super.read(b);
 			updateProgress(bytesRead);
 			return bytesRead;
 	    }
 
+		@Override
 	    public int read(byte b[], int off, int len) throws IOException {
 		int bytesRead = super.read(b, off, len);
 		updateProgress(bytesRead);
@@ -411,6 +414,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *            wrapping another exception.
 		 * @see org.xml.sax.ContentHandler#startElement
 		 */
+		@Override
 		public void startElement(String uri, String localName,
 				String qName, Attributes attributes)
 		throws SAXException {
@@ -441,8 +445,8 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *            wrapping another exception.
 		 * @see org.xml.sax.ContentHandler#endElement
 		 */
-		public void endElement(String uri, String localName, String qName)
-		throws SAXException {
+		@Override
+		public void endElement(String uri, String localName, String qName) {
 			SAXEventProcessor parent = currentSAXEventProcessor.endElement();
 			
 			if (parent == null) {
@@ -469,6 +473,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *            wrapping another exception.
 		 * @see org.xml.sax.ContentHandler#characters
 		 */
+		@Override
 		public void characters(char ch[], int start, int length)
 		throws SAXException {
 			if (currentSAXEventProcessor == null) {
@@ -516,8 +521,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *
 		 * @throws SAXException DOCUMENT ME!
 		 */
-		public void characters(char ch[], int start, int length)
-		throws SAXException {
+		public void characters(char ch[], int start, int length) {
 			/* ignore data by default */
 		}
 		
@@ -530,8 +534,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *
 		 * @throws SAXException DOCUMENT ME!
 		 */
-		public SAXEventProcessor endElement()
-		throws SAXException {
+		public SAXEventProcessor endElement() {
 			return parent;
 		}
 
@@ -593,19 +596,19 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 * The list of parameters to be passed to the constructor
 		 * of this object.
 		 */
-		private Map<PropertyAccessor, Object> propertyValueMap = new HashMap<PropertyAccessor, Object>();
+		Map<PropertyAccessor, Object> propertyValueMap = new HashMap<PropertyAccessor, Object>();
 		
-		private Set<ExtensionPropertySet<?>> nonDefaultExtensions = new HashSet<ExtensionPropertySet<?>>();
+		Set<ExtensionPropertySet<?>> nonDefaultExtensions = new HashSet<ExtensionPropertySet<?>>();
 
 		/**
 		 * Saved id of objects that are Currency or Account objects.
 		 * This id is saved so that when the object is later created, it can
 		 * be added to a map.
 		 */
-		private Map<String, Object> map;
-		private String id;
+		Map<String, Object> map;
+		String id;
 
-		private Object value;
+		Object value;
 		
 		/**
 		 *
@@ -640,8 +643,8 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *
 		 * @throws SAXException DOCUMENT ME!
 		 */
-		public void startElement(String uri, String localName, Attributes atts)
-		throws SAXException {
+		@Override
+		public void startElement(String uri, String localName, Attributes atts) {
 			// Kludge: "memo" is now used for both accounts and categories.
 			// This can be removed once all old xml format files have been updated.
 			if (localName.equals("description")) {
@@ -662,7 +665,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			// "http://jmoney.sf.net".  If the element is a property in an
 			// extension property set then the id of the extension property
 			// set will be appended.
-			String namespace = null;
+			String namespace;
 			if (uri.length() == 20) {
 				namespace = null;
 			} else {
@@ -779,6 +782,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *
 		 * @throws SAXException DOCUMENT ME!
 		 */
+		@Override
 		public void characters(char ch[], int start, int length) {
 			for (int i = start; i < start + length; i++ ) {
 				if (ch[i] != ' ' && ch[i] != '\n' && ch[i] != '\t') {
@@ -787,8 +791,8 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			}
 		}
 
-		public SAXEventProcessor endElement()
-		throws SAXException {
+		@Override
+		public SAXEventProcessor endElement() {
 
 			IValues values = new IValues() {
 
@@ -853,6 +857,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 * We now set the value into the apppropriate property or
 		 * add it to the appropriate list.
 		 */
+		@Override
 		public void elementCompleted(Object value) {
 			/*
 			 * Now we have the value of this property. If it is null, something
@@ -902,6 +907,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		/* (non-Javadoc)
 		 * @see net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin.SAXEventProcessor#getValue()
 		 */
+		@Override
 		public Object getValue() {
 			return value;
 		}
@@ -948,6 +954,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *
 		 * @throws SAXException DOCUMENT ME!
 		 */
+		@Override
 		public void startElement(String uri, String localName, Attributes atts)
 		throws SAXException {
 			throw new SAXException("element not expected inside scalar property");
@@ -962,14 +969,13 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *
 		 * @throws SAXException DOCUMENT ME!
 		 */
-		public void characters(char ch[], int start, int length)
-		throws SAXException {
+		@Override
+		public void characters(char ch[], int start, int length) {
 			s += new String(ch, start, length);
 		}
 
-		public SAXEventProcessor endElement()
-		throws SAXException {
-			
+		@Override
+		public SAXEventProcessor endElement() {
 			// TODO: change this.  Find a constructor from string.
 			if (propertyClass.equals(Integer.class)) {
 				value = new Integer(s);
@@ -1019,6 +1025,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		/* (non-Javadoc)
 		 * @see net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin.SAXEventProcessor#getValue()
 		 */
+		@Override
 		public Object getValue() {
 			return value;
 		}
@@ -1058,8 +1065,8 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *
 		 * @throws SAXException DOCUMENT ME!
 		 */
-		public void startElement(String uri, String localName, Attributes atts)
-		throws SAXException {
+		@Override
+		public void startElement(String uri, String localName, Attributes atts) {
 			// If we are ignoring an element, also ignore elements inside it.
 			if (value != null) {
 				throw new RuntimeException("Cannot have content inside an element with an idref");
@@ -1076,8 +1083,8 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *
 		 * @throws SAXException DOCUMENT ME!
 		 */
-		public SAXEventProcessor endElement()
-		throws SAXException {
+		@Override
+		public SAXEventProcessor endElement() {
 			if (value != null) {
 				parent.elementCompleted(value);
 			}
@@ -1088,6 +1095,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		/* (non-Javadoc)
 		 * @see net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin.SAXEventProcessor#getValue()
 		 */
+		@Override
 		public Object getValue() {
 			return value;
 		}
@@ -1100,13 +1108,13 @@ public class JMoneyXmlFormat implements IFileDatastore {
 	/**
 	 * PropertySet to String (namespace prefix)
 	 */
-	private Map<PropertySet, String> namespaceMap;
-	private int accountId;
-	private Map<Account, String> accountIdMap;
+	Map<PropertySet, String> namespaceMap;
+	int accountId;
+	Map<Account, String> accountIdMap;
 	
 	// Used for reading
-	private Map<String, Object> idToCommodityMap;
-	private Map<String, Object> idToAccountMap;
+	Map<String, Object> idToCommodityMap;
+	Map<String, Object> idToAccountMap;
 	
 	/**
 	 * Current event processor.  A stack of event processors
@@ -1136,7 +1144,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			} else {
 				IRunnableWithProgress writeSessionRunnable = new IRunnableWithProgress() {
 					
-					public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException {
+					public void run(IProgressMonitor monitor) throws InvocationTargetException {
 						// Set the number of work units in the monitor where
 						// one work unit is writing 500 transactions
 						//int workUnits = (int)(session.getTransactionCount()/500);
@@ -1477,7 +1485,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		// the extension for this plug-in.
 		// This is an example of a plug-in that does not depend on another
 		// plug-in but will use it if it is there.
-		ScalarPropertyAccessor<?> statusProperty = null;
+		ScalarPropertyAccessor<?> statusProperty;
 		try {
 			ExtensionPropertySet<?> reconciliationProperties = PropertySet.getExtensionPropertySet("net.sf.jmoney.reconciliation.entryProperties");
 			statusProperty = (ScalarPropertyAccessor<?>)reconciliationProperties.getProperty("status");

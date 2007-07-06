@@ -44,6 +44,7 @@ public abstract class AbstractCategory implements Category {
 		categoryNode = aCategoryNode;
 	}
 
+	@Override
 	public String toString() {
 		return getCategoryName();
 	}
