@@ -106,9 +106,9 @@ public class SessionInfo implements IPropertySetInfo {
 		
 		IPropertyControlFactory<Currency> currencyControlFactory = new CurrencyControlFactory();
 
-		commoditiesAccessor = propertySet.addPropertyList("commodity", JMoneyPlugin.getResourceString("<not used???>"), CommodityInfo.getPropertySet(), commodityGetter, null);
-		accountsAccessor = propertySet.addPropertyList("account", JMoneyPlugin.getResourceString("<not used???>"), AccountInfo.getPropertySet(), accountGetter, null);
-		transactionsAccessor = propertySet.addPropertyList("transaction", JMoneyPlugin.getResourceString("<not used???>"), TransactionInfo.getPropertySet(), transactionGetter, null);
+		commoditiesAccessor = propertySet.addPropertyList("commodity", JMoneyPlugin.getResourceString("<not used???>"), CommodityInfo.getPropertySet(), commodityGetter);
+		accountsAccessor = propertySet.addPropertyList("account", JMoneyPlugin.getResourceString("<not used???>"), AccountInfo.getPropertySet(), accountGetter);
+		transactionsAccessor = propertySet.addPropertyList("transaction", JMoneyPlugin.getResourceString("<not used???>"), TransactionInfo.getPropertySet(), transactionGetter);
 		
 		defaultCurrencyAccessor = propertySet.addProperty("defaultCurrency", JMoneyPlugin.getResourceString("Session.defaultCurrency"), Currency.class, 2, 20, currencyControlFactory, null);
 		

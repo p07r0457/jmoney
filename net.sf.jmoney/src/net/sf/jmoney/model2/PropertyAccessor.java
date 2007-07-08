@@ -62,13 +62,10 @@ public abstract class PropertyAccessor {
 	 */
    protected int indexIntoConstructorParameters = -1;
 	
-   protected IPropertyDependency dependency;
-	
-   public PropertyAccessor(PropertySet propertySet, String localName, String displayName, IPropertyDependency propertyDependency) {
-   	this.propertySet = propertySet;
-       this.localName = localName;
-       this.displayName = displayName;
-       this.dependency = propertyDependency;
+   public PropertyAccessor(PropertySet propertySet, String localName, String displayName) {
+	   this.propertySet = propertySet;
+	   this.localName = localName;
+	   this.displayName = displayName;
    }
    
    /**
@@ -80,11 +77,11 @@ public abstract class PropertyAccessor {
 	 * @param displayName
 	 * @param propertyDependency
 	 */
-	public PropertyAccessor(PropertySet propertySet, String localName, String displayName, Class<? extends ExtendableObject> listItemClass, IPropertyDependency propertyDependency) {
-   	this.propertySet = propertySet;
-       this.localName = localName;
-       this.displayName = displayName;
-	}
+   public PropertyAccessor(PropertySet propertySet, String localName, String displayName, Class<? extends ExtendableObject> listItemClass) {
+	   this.propertySet = propertySet;
+	   this.localName = localName;
+	   this.displayName = displayName;
+   }
 
    /**
     * Returns the property set which contains this property.
@@ -203,15 +200,5 @@ public abstract class PropertyAccessor {
 	// TODO: This method should be accessible only from within the package. 
 	public void setIndexIntoConstructorParameters(int indexIntoConstructorParameters) {
 		this.indexIntoConstructorParameters = indexIntoConstructorParameters;
-	}
-
-	/**
-	 * Returns an object that indicates whether this property is applicable,
-	 * given the values of other properties on which this property depends.
-	 * 
-	 * @return
-	 */
-	public IPropertyDependency getDependency() {
-		return dependency;
 	}
 }

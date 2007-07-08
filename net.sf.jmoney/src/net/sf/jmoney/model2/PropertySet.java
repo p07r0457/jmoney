@@ -455,7 +455,7 @@ public abstract class PropertySet<E> {
 		return new ExtensionPropertySet<E>(classOfImplementationObject, extendablePropertySet, constructors);
 	}
 
-	public <V> ScalarPropertyAccessor<V> addProperty(String name, String displayName, Class<V> classOfValue, int weight, int minimumWidth, IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency propertyDependency) {
+	public <V> ScalarPropertyAccessor<V> addProperty(String name, String displayName, Class<V> classOfValue, int weight, int minimumWidth, IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency<E> propertyDependency) {
 		if (propertyControlFactory == null) {
 			throw new MalformedPluginException(
 					"No IPropertyControlFactory object has been specified for property " + name
@@ -468,8 +468,8 @@ public abstract class PropertySet<E> {
 		return accessor;
 	}
 
-	public <E2 extends ExtendableObject> ListPropertyAccessor<E2> addPropertyList(String name, String displayName, ExtendablePropertySet<E2> elementPropertySet, final IListGetter<E, E2> listGetter, IPropertyDependency propertyDependency) {
-		ListPropertyAccessor<E2> accessor = new ListPropertyAccessor<E2>(this, name, displayName, elementPropertySet, propertyDependency) {
+	public <E2 extends ExtendableObject> ListPropertyAccessor<E2> addPropertyList(String name, String displayName, ExtendablePropertySet<E2> elementPropertySet, final IListGetter<E, E2> listGetter) {
+		ListPropertyAccessor<E2> accessor = new ListPropertyAccessor<E2>(this, name, displayName, elementPropertySet) {
 			@Override
 			public ObjectCollection<E2> getElements(ExtendableObject extendableObject) {
 				return listGetter.getList(getImplementationObject(extendableObject));

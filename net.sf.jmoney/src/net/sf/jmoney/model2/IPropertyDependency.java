@@ -22,21 +22,28 @@
 package net.sf.jmoney.model2;
 
 /**
- * Some properties are only applicable if another property is set.
- * The other property may be a boolean property that must be set to
- * true or an enumerated type that must be set to a certain value.
- * For example, the 'credit card limit' property would only be
- * applicable if the 'account type' was set to 'credit card'.
- * For a property to depend on another property in this way, the other
- * property must be able to provide an implementation of this
- * IPropertyDependency interface.
+ * Some properties are only applicable if another property is set. The other
+ * property may be a boolean property that must be set to true or an enumerated
+ * type that must be set to a certain value. For example, the 'check number'
+ * property of an <code>Entry</code> object would only be applicable if the
+ * account of the <code>Entry</code> object is a <code>BankAccount</code>
+ * object.
  * <P>
- * @author  Nigel
+ * When the applicability of a property depends on the value of other
+ * properties, the property must provide an implementation of this
+ * IPropertyDependency interface.
+ * 
+ * @author Nigel Westbury
+ *
+ * @param <E> the class of the object that contains this property, which
+ * 				must be either ExtendableObject or ExtensionObject 
  */
-public interface IPropertyDependency {
+public interface IPropertyDependency<E extends Object> {
     /**
-     * @param object the object containing the property on which
-     * 		the applicability of a property depends.
-     */
-	boolean isSelected(ExtendableObject object);
+	 * @param object
+	 *            the object containing the property
+	 * @return true if, given the current state of the given object, the
+	 *         property is applicable, false if the property is not applicable
+	 */
+	boolean isApplicable(E extendableObject);
 }

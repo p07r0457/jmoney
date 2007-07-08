@@ -25,7 +25,7 @@ package net.sf.jmoney.model2;
 import java.util.Collection;
 import java.util.Iterator;
 
-import net.sf.jmoney.JMoneyPlugin;
+import org.eclipse.core.runtime.Assert;
 
 /**
  * This class is used to provide access to lists of objects
@@ -169,7 +169,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 			parent.getSession().getChangeManager().processObjectDeletion(parent, listPropertyAccessor, objectToRemove);
 			
 			boolean found = listManager.remove(object);
-			JMoneyPlugin.myAssert(found);
+			Assert.isTrue(found);
 			
 			return true;
 		}

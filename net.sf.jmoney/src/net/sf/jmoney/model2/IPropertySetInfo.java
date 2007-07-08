@@ -28,35 +28,13 @@ package net.sf.jmoney.model2;
  * extensions must implement this interface).
  * <P>
  * Implementations of this interface provide detailed information
- * about the property set, including details of the properties
- * and the implementation class that is to be used to contain
- * the property values.
+ * about the properties in the property set.
  * 
  * @author Nigel Westbury
  */
 public interface IPropertySetInfo {
 
-	/**
-	 * The registerExtensionProperties method provides information on
-	 * the additional properties added by this extension.  However, we
-	 * need a class into which we can store these properties.
-	 * This class must have both getter and setter methods with public
-	 * access for all the listed properties.  These getter and setter
-	 * methods will be used by the framework to store the extension
-	 * properties.
-	 * <P>
-	 * The extension class may have other methods which may be used
-	 * in plug-ins that depend on the plug-in defining the extension. 
-	 * <P>
-	 * Properties in the base object are also registered using this
-	 * interface.  However, there will be no extension class in such
-	 * circumstances so null will be returned.
-	 * 
-	 * @return The class that contains a storage implementation
-	 * 		for the properties listed.
-	 */
-//	Class getImplementationClass();
-    
+	// TODO: This comment is WAY out of date (written in early prototyping days) and needs updating....
     /**
      * This method is the first method called by the framework.
      * This method registers all the extension properties by calling
@@ -122,8 +100,6 @@ public interface IPropertySetInfo {
      * 		the property set object.  However, implementations of this method
      * 		are encouraged to save the reference in a static member in order to
      * 		provide quick reference to the PropertySet object.
-     * @param propertyRegistrar The interface to be used by this method
-     * 		to register the properties.
      */
-    PropertySet registerProperties(/*IPropertyRegistrar propertyRegistrar*/);
+    PropertySet registerProperties();
 }

@@ -56,13 +56,16 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 
 	private Comparator<ExtendableObject> parentComparator;
 
+	private IPropertyDependency dependency;
+
 	public ScalarPropertyAccessor(Class<V> classOfValueObject, PropertySet propertySet, String localName, String displayName, int weight, int minimumWidth, final IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency propertyDependency) {
-		super(propertySet, localName, displayName, propertyDependency);
+		super(propertySet, localName, displayName);
 
 		this.weight = weight;
 		this.minimumWidth = minimumWidth;
 		this.sortable = true;
 		this.propertyControlFactory = propertyControlFactory;
+		this.dependency = propertyDependency;
 
 		Class implementationClass = propertySet.getImplementationClass();
 
@@ -467,63 +470,6 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	}
 
 	/**
-	 * Create a dependency that can be used when the applicability of another
-	 * property depends on this property.
-	 * 
-	 * This method may only be called if this property is a boolean property.
-	 * 
-	 * @return
-	 */
-	// TODO: Should this be a member of PropertyAssessor, or should it
-	// be outside?????
-	// TODO: must also check that boolean property is not allowed
-	// to be null.
-	public IPropertyDependency getTrueValueDependency() {
-		if (classOfValueObject != Boolean.class) {
-			throw new MalformedPluginException("getTrueValueDependency called on property that is not a boolean.");
-		}
-
-		return new IPropertyDependency() {
-			public boolean isSelected(ExtendableObject object) {
-				// TODO: How do we ensure this method is defined only for
-				// PropertyAccessor_Scalar<Boolean> objects?
-				// We should remove from this class altogether and move outside.
-				return (Boolean)object.getPropertyValue(ScalarPropertyAccessor.this);
-			}
-		};
-	}
-
-	/**
-	 * Create a dependency that can be used when the applicability of another
-	 * property depends on this property.
-	 * 
-	 * This method may only be called if this property is a boolean property.
-	 * 
-	 * @return
-	 */
-	// TODO: must also check that boolean property is not allowed
-	// to be null.
-	public IPropertyDependency getFalseValueDependency() {
-		if (classOfValueObject != Boolean.class) {
-			throw new MalformedPluginException(
-					"getTrueValueDependency called on property that is not a boolean.");
-		}
-
-		return new IPropertyDependency() {
-			public boolean isSelected(ExtendableObject object) {
-				if (object == null) {
-					return false;
-				}
-
-				// TODO: How do we ensure this method is defined only for
-				// PropertyAccessor_Scalar<Boolean> objects?
-				// We should remove from this class altogether and move outside.
-				return !(Boolean)object.getPropertyValue(ScalarPropertyAccessor.this);
-			}
-		};
-	}
-
-	/**
 	 * It is often useful to have an array of property values
 	 * of an extendable object.  This array contains all scalar
 	 * properties in the extendable object, including extension
@@ -554,4 +500,21 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 		this.indexIntoScalarProperties = indexIntoScalarProperties;
 	}
 
+	/**
+	 * Indicates if this property is applicable.  An instance of an object
+	 * containing this property is passed.  This method should look to the values
+	 * of the other properties in the object to determine if this property is applicable.
+	 * 
+	 * If the property is not applicable then the UI should not show a value for this
+	 * property nor allow it to be updated.
+	 * 
+	 * @return
+	 */
+	public boolean isPropertyApplicable(ExtendableObject containingObject) {
+		if (dependency == null) {
+			return true;
+		} else {
+			return dependency.isApplicable(containingObject);
+		}
+	}
 }

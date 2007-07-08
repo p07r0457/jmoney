@@ -27,8 +27,10 @@ import java.util.Date;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
@@ -36,8 +38,10 @@ import net.sf.jmoney.model2.IExtendableObjectConstructors;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
+import net.sf.jmoney.model2.IPropertyDependency;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IValues;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
@@ -70,7 +74,7 @@ public class EntryInfo implements IPropertySetInfo {
 	/**
 	 * Date format used for the creation timestamp.
 	 */
-    private VerySimpleDateFormat dateFormat = new VerySimpleDateFormat(
+	private VerySimpleDateFormat dateFormat = new VerySimpleDateFormat(
             JMoneyPlugin.getDefault().getDateFormat());
 
     // Listen to date format changes so we keep up to date
@@ -155,22 +159,17 @@ public class EntryInfo implements IPropertySetInfo {
 		        			}
 		        			// Has the account property changed?
 		        			if (changedObject.equals(entry) && changedProperty == EntryInfo.getAccountAccessor()) {
-		        				// FIXME I don't know how to get the commodity for an
-		        				// income and expense account.
-		        				//editor.updateCommodity(entry.getCommodity());	
+		        				editor.updateCommodity(entry.getCommodity());	
 		        			}
-		        			// Has the commodity property of the account changed?
+		        			// Has the currency property of the account changed?
 		        			if (changedObject ==  entry.getAccount() && changedProperty == CurrencyAccountInfo.getCurrencyAccessor()) {
 		        				editor.updateCommodity(entry.getCommodity());	
 		        			}
 		        			// If any property in the commodity object changed then
 		        			// the format of the amount might also change.
-
-	        				// FIXME I don't know how to get the commodity for an
-	        				// income and expense account.
-		        			//if (changedObject ==  entry.getCommodity()) {
-		        			//	  editor.updateCommodity(entry.getCommodity());	
-		        			//}
+		        			if (changedObject ==  entry.getCommodity()) {
+		        				editor.updateCommodity(entry.getCommodity());	
+		        			}
 		        			
 		        			// TODO: All the above tests are still not complete.
 		        			// If the account for the entry can contain multiple
@@ -228,13 +227,31 @@ public class EntryInfo implements IPropertySetInfo {
 			}
 		};
 
-		checkAccessor       = propertySet.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),       String.class, 2, 50,  textControlFactory, null);
+		IPropertyDependency<Entry> onlyIfIncomeExpenseAccount = new IPropertyDependency<Entry>() {
+			public boolean isApplicable(Entry entry) {
+				return entry.getAccount() instanceof IncomeExpenseAccount;
+			}
+		};
+		
+		IPropertyDependency<Entry> onlyIfCurrencyAccount = new IPropertyDependency<Entry>() {
+			public boolean isApplicable(Entry entry) {
+				return entry.getAccount() instanceof CurrencyAccount;
+			}
+		};
+		
+		IPropertyDependency<Entry> onlyIfBankAccount = new IPropertyDependency<Entry>() {
+			public boolean isApplicable(Entry entry) {
+				return entry.getAccount() instanceof BankAccount;
+			}
+		};
+		
+		checkAccessor       = propertySet.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),       String.class, 2, 50,  textControlFactory, onlyIfBankAccount);
 		accountAccessor     = propertySet.addProperty("account",     JMoneyPlugin.getResourceString("Entry.category"),    Account.class, 2, 70,  accountControlFactory, null);
-		valutaAccessor      = propertySet.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      Date.class, 0, 74,  dateControlFactory, null);
+		valutaAccessor      = propertySet.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      Date.class, 0, 74,  dateControlFactory, onlyIfCurrencyAccount);
 		memoAccessor        = propertySet.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        String.class, 5, 100, textControlFactory, null);
 		amountAccessor      = propertySet.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      Long.class, 2, 70,  amountControlFactory, null);
 		creationAccessor    = propertySet.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    Long.class, 0, 70,  creationControlFactory, null);
-		incomeExpenseCurrencyAccessor = propertySet.addProperty("incomeExpenseCurrency",    JMoneyPlugin.getResourceString("Entry.currency"),    Currency.class, 2, 70, new CurrencyControlFactory(), null);
+		incomeExpenseCurrencyAccessor = propertySet.addProperty("incomeExpenseCurrency",    JMoneyPlugin.getResourceString("Entry.currency"),    Currency.class, 2, 70, new CurrencyControlFactory(), onlyIfIncomeExpenseAccount);
 		
 		return propertySet;
 	}

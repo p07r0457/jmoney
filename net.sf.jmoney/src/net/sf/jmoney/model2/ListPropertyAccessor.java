@@ -11,8 +11,8 @@ public abstract class ListPropertyAccessor<E extends ExtendableObject> extends P
 	 */
 	private ExtendablePropertySet<E> elementPropertySet;
 
-	public ListPropertyAccessor(PropertySet parentPropertySet, String localName, String displayName, ExtendablePropertySet<E> elementPropertySet, IPropertyDependency propertyDependency) {
-		super(parentPropertySet, localName, displayName, elementPropertySet.classOfObject, propertyDependency);
+	public ListPropertyAccessor(PropertySet parentPropertySet, String localName, String displayName, ExtendablePropertySet<E> elementPropertySet) {
+		super(parentPropertySet, localName, displayName, elementPropertySet.classOfObject);
 
 		this.elementPropertySet = elementPropertySet;
 	}

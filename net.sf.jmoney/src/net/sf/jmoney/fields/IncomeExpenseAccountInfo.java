@@ -24,10 +24,12 @@ package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IExtendableObjectConstructors;
 import net.sf.jmoney.model2.IListGetter;
 import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.IPropertyDependency;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
@@ -86,11 +88,16 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 				return parentObject.getSubAccountCollection();
 			}
 		};
-		
-		subAccountAccessor = propertySet.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccountInfo.getPropertySet(), accountGetter, null);
 
+		IPropertyDependency<IncomeExpenseAccount> onlyIfSingleCurrency = new IPropertyDependency<IncomeExpenseAccount>() {
+			public boolean isApplicable(IncomeExpenseAccount account) {
+				return !account.isMultiCurrency();
+			}
+		};
+		
+		subAccountAccessor = propertySet.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccountInfo.getPropertySet(), accountGetter);
 		multiCurrencyAccessor = propertySet.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.multiCurrency"), Boolean.class, 0, 10, new CheckBoxControlFactory(), null); 
-		currencyAccessor = propertySet.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), Currency.class, 2, 20, new CurrencyControlFactory(), multiCurrencyAccessor.getFalseValueDependency());
+		currencyAccessor = propertySet.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), Currency.class, 2, 20, new CurrencyControlFactory(), onlyIfSingleCurrency);
 		
 		// We should define something for the implied enumerated value
 		// that is controlled by the derived class type.  This has not
