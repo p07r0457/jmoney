@@ -64,9 +64,11 @@ public class EntriesFilter implements Constants {
      * @param aPattern Filter pattern
      */
     public void setPattern(String aPattern) {
-        if (aPattern == null) aPattern = "";
-        aPattern = aPattern.toLowerCase();
-        if (!aPattern.equals(pattern)) {
+        String normalizedPattern = 
+        	(aPattern == null)
+        	? ""
+        			: aPattern.toLowerCase();
+        if (!normalizedPattern.equals(pattern)) {
             pattern = aPattern;
             changeSupport.firePropertyChange("pattern", null, null);
         }

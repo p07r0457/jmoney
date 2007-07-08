@@ -37,14 +37,13 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.views.NodeEditor;
 
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.forms.IManagedForm;
 import org.eclipse.ui.forms.editor.FormPage;
@@ -64,8 +63,6 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 	protected Vector<IndividualBlock> allEntryDataObjects = new Vector<IndividualBlock>();
 
     protected EntriesFilterSection fEntriesFilterSection;
-//    protected EntriesSection fEntriesSection;
-//    protected IEntriesContent fEntriesSection;
 
 	final EntriesFilter filter = new EntriesFilter();
 
@@ -130,29 +127,9 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
          * I don't know what to do if there are other capital accounts
          * (a transfer or a purchase with money coming from more than one account).
          */
-   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAccountAccessor()) {
-   			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
-   				IPropertyControl control = EntryInfo.getAccountAccessor().createPropertyControl(parent);
-   				control.load(otherEntry);
-   				return control;
-   			}
-   		});
-   		
-   		// TODO: override "memo" with "description", but this code is probably going away anyway.
-   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getMemoAccessor()) {
-   			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
-   				IPropertyControl control = EntryInfo.getMemoAccessor().createPropertyControl(parent);
-   				control.load(otherEntry);
-   				return control;
-   			}
-   		});
-   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAmountAccessor()) {
-   			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
-   				IPropertyControl control = EntryInfo.getAmountAccessor().createPropertyControl(parent);
-   				control.load(otherEntry);
-   				return control;
-   			}
-   		});
+   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAccountAccessor()));
+   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getMemoAccessor(), "description"));
+   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAmountAccessor()));
 
         /*
 		 * Add the currency column. This is placed just before the amount, which
