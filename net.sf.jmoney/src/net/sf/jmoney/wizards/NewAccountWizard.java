@@ -22,7 +22,8 @@
 
 package net.sf.jmoney.wizards;
 
-import java.util.Vector;
+import java.util.HashMap;
+import java.util.Map;
 
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
@@ -30,11 +31,13 @@ import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.SessionChangeAdapter;
 
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.jface.wizard.WizardPage;
@@ -141,7 +144,7 @@ public class NewAccountWizard extends Wizard {
 		 * List of the IPropertyControl objects for the
 		 * properties that can be edited in this panel.
 		 */
-		private Vector<IPropertyControl> propertyControlList = new Vector<IPropertyControl>();
+		private Map<ScalarPropertyAccessor, IPropertyControl> propertyControlList = new HashMap<ScalarPropertyAccessor, IPropertyControl>();
 	
 		Text accountNameTextbox;
 		
@@ -205,16 +208,27 @@ public class NewAccountWizard extends Wizard {
 						});
 
 				// Add to our list of controls.
-				propertyControlList.add(propertyControl);
+				propertyControlList.put(propertyAccessor, propertyControl);
 			}
 			
 			// Set the values from the account object into the control fields.
-			for (IPropertyControl propertyControl: propertyControlList) {
+			for (IPropertyControl propertyControl: propertyControlList.values()) {
 				propertyControl.load(newUncommittedAccount);
 			}
 			
+			setApplicability();
+			
+			// This listener code assumes that the applicability of account properties depends only
+			// on property changes???????
+			transactionManager.addChangeListener(new SessionChangeAdapter() {
+				@Override
+				public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
+					setApplicability();
+				}
+			}, parent);
+			
 			setPageComplete(false);
-			accountNameTextbox.addModifyListener(new ModifyListener(){
+			accountNameTextbox.addModifyListener(new ModifyListener() {
 				public void modifyText(ModifyEvent e) {
 					setPageComplete(accountNameTextbox.getText().length() != 0);
 				}
@@ -222,9 +236,16 @@ public class NewAccountWizard extends Wizard {
 			
 			accountNameTextbox.setFocus();
 			
-			setControl(container);			
+			setControl(container);		
 		}
 		
+		private void setApplicability() {
+			for (ScalarPropertyAccessor propertyAccessor: propertyControlList.keySet()) {
+				IPropertyControl propertyControl = propertyControlList.get(propertyAccessor);
+				propertyControl.getControl().setEnabled(propertyAccessor.isPropertyApplicable(newUncommittedAccount));
+			}
+		}
+
 		@Override
 		public boolean canFlipToNextPage() {
 			/*

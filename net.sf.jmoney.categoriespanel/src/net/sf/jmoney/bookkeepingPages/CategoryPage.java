@@ -50,6 +50,7 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.AbstractOperation;
 import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.IUndoableOperation;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -136,11 +137,11 @@ public class CategoryPage implements IBookkeepingPageFactory {
 		
 		private class PropertyControls {
 			
-			private PropertyAccessor propertyAccessor;
+			private ScalarPropertyAccessor propertyAccessor;
 			private Label propertyLabel;
 			private IPropertyControl propertyControl;
 			
-			PropertyControls(PropertyAccessor propertyAccessor, 
+			PropertyControls(ScalarPropertyAccessor propertyAccessor, 
 					Label propertyLabel,
 					IPropertyControl propertyControl) {
 				this.propertyAccessor = propertyAccessor;
@@ -149,37 +150,18 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			}
 			
 			void load(ExtendableObject object) {
-				IPropertyDependency dependency = propertyAccessor.getDependency();
-				if (dependency != null) {
-					boolean isApplicable = dependency.isSelected(selectedAccount);
-					if (isApplicable) {
-						propertyControl.load(object);
-					}
-					propertyLabel.setVisible(isApplicable);
-					propertyControl.getControl().setVisible(isApplicable);
-				} else {
-					propertyControl.load(object);
-				}
+				propertyControl.load(object);
+				setVisibility();
 			}
 			
 			/**
 			 * Called whenever a property changes.
-			 * The visability of all property controls with dependencies are updated. 
+			 * The visibility of all property controls with dependencies are updated. 
 			 */
 			public void setVisibility() {
-				IPropertyDependency dependency = propertyAccessor.getDependency();
-				if (dependency != null) {
-					boolean isApplicable = dependency.isSelected(selectedAccount);
-					propertyLabel.setVisible(isApplicable);
-					propertyControl.getControl().setVisible(isApplicable);
-					
-					// We don't load controls if the property does not apply.
-					// That is probably not the correct thing to do, but until
-					// it is designed better, that means we must load now.
-					if (isApplicable) {
-						propertyControl.load(selectedAccount);
-					}
-				}
+				boolean isApplicable = propertyAccessor.isPropertyApplicable(selectedAccount);
+				propertyLabel.setVisible(isApplicable);
+				propertyControl.getControl().setVisible(isApplicable);
 			}
 		}
 		
@@ -305,15 +287,14 @@ public class CategoryPage implements IBookkeepingPageFactory {
 
 				createAndAddFocusListener(propertyControl, propertyAccessor);
 
-				// No account is initially set.  It is not really
-				// obvious in what state the controls should be when no
-				// account is set, so let's leave any that could be
-				// inapplicable as invisible, and the others visible
-				// but disabled.
-				if (propertyAccessor.getDependency() != null) {
-					propertyLabel.setVisible(false);
-					propertyControl.getControl().setVisible(false);
-				}
+				/*
+				 * No account is initially set. It is not really obvious in what
+				 * state the controls should be when no account is set, so let's
+				 * set them invisible (the same state as inapplicable properties
+				 * would be set to).
+				 */
+				propertyLabel.setVisible(false);
+				propertyControl.getControl().setVisible(false);
 
 				// Add to our list of controls.
 				propertyList.add(
@@ -492,9 +473,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 					public void run() {
 						IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
 						for (Object selectedObject: selection.toList()) {
-//						for (Iterator iterator = selection.iterator(); iterator.hasNext();) {
-//							Object selectedObject = iterator.next();
-							JMoneyPlugin.myAssert(selectedObject instanceof ExtendableObject); 
+							Assert.isTrue(selectedObject instanceof ExtendableObject); 
 							NodeEditor.openEditor(
 									getSite().getWorkbenchWindow(),
 									(ExtendableObject)selectedObject);
