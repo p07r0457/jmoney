@@ -68,7 +68,7 @@ public class CapitalAccountInfo implements IPropertySetInfo {
 			}
 		};
 		
-		subAccountAccessor = propertySet.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), CapitalAccountInfo.getPropertySet(), accountGetter, null);
+		subAccountAccessor = propertySet.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), CapitalAccountInfo.getPropertySet(), accountGetter);
 		abbreviationAccessor = propertySet.addProperty("abbreviation", JMoneyPlugin.getResourceString("AccountPropertiesPanel.abbrevation"), String.class, 5, 70, textControlFactory, null);
 		commentAccessor      = propertySet.addProperty("comment", JMoneyPlugin.getResourceString("AccountPropertiesPanel.comment"), String.class, 5, 150, commentControlFactory, null);
 		

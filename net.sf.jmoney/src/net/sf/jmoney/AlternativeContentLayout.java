@@ -22,6 +22,7 @@
 
 package net.sf.jmoney;
 
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
@@ -82,7 +83,7 @@ public class AlternativeContentLayout extends Layout {
 	}
 	
 	public void show(Control childControl) {
-		JMoneyPlugin.myAssert(childControl.getParent().getLayout() == this);
+		Assert.isTrue(childControl.getParent().getLayout() == this);
 		
 		if (currentlyShowing != null) {
 			currentlyShowing.setSize(0, 0);

@@ -25,9 +25,10 @@ package net.sf.jmoney.entrytable;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
+
+import org.eclipse.core.runtime.Assert;
 
 /**
  * Class representing a top level entry in the list.
@@ -80,7 +81,7 @@ public class EntryData {
 	 * @return
 	 */
 	public Entry getOtherEntry() {
-		JMoneyPlugin.myAssert(!hasSplitEntries());
+		Assert.isTrue(!hasSplitEntries());
 		return buildOtherEntriesList().get(0);
 	}
 

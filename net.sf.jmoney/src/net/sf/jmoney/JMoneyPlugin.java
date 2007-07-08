@@ -92,8 +92,8 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     	        	// allow listeners to safely add or remove listeners.
     	        	SessionChangeListener listenerArray[] = new SessionChangeListener[sessionChangeListeners.size()];
     	        	sessionChangeListeners.copyInto(listenerArray);
-    	        	for (int i = 0; i < listenerArray.length; i++) {
-    	        		firer.fire(listenerArray[i]);
+    	        	for (SessionChangeListener listener: listenerArray) {
+    	        		firer.fire(listener);
     	        	}
     	        }
     			
@@ -207,14 +207,6 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         return sessionManager;
     }
    
-    // TODO: remove this method when Java 1.4 becomes a requirement
-    public static void myAssert(boolean assertion) {
-    	if (!assertion) {
-    		IStatus status = new Status(IStatus.ERROR, JMoneyPlugin.PLUGIN_ID, IStatus.ERROR, "assert failure", null);
-    		JMoneyPlugin.log(status);
-    	}
-    }
-    
     /**
 	 * Saves the old session.
 	 * Returns false if canceled by user or the save fails.

@@ -82,9 +82,10 @@ public class VerticalBlock<T> extends Block<T> {
 	}
 
 	@Override
-	void positionControls(int x, int y, int verticalSpacing, Control[] controls, boolean flushCache) {
+	void positionControls(int left, int top, int verticalSpacing, Control[] controls, boolean flushCache) {
+		int y = top;
 		for (Block<T> child: children) {
-			child.positionControls(x, y, verticalSpacing, controls, flushCache);
+			child.positionControls(left, y, verticalSpacing, controls, flushCache);
 			y += child.getHeight(verticalSpacing, controls) + verticalSpacing;
 		}
 	}
@@ -100,19 +101,20 @@ public class VerticalBlock<T> extends Block<T> {
 	}
 
 	@Override
-	void paintRowLines(GC gc, int x, int y, int verticalSpacing, Control[] controls) {
+	void paintRowLines(GC gc, int left, int top, int verticalSpacing, Control[] controls) {
 		/* Paint the horizontal lines between the controls.
 		 * 
 		 * We need to make nested calls in case there are nested blocks that
 		 * need separator lines within them.
 		 */
+		int y = top;
 		for (int i = 0; i < children.length; i++) {
-			children[i].paintRowLines(gc, x, y, verticalSpacing, controls);
+			children[i].paintRowLines(gc, left, y, verticalSpacing, controls);
 			
 			// Draw a horizontal separator line only if this is not the last control.
 			if (i != children.length - 1) {
 				y += children[i].getHeight(verticalSpacing, controls);
-				gc.fillRectangle(x, y, width, verticalSpacing);
+				gc.fillRectangle(left, y, width, verticalSpacing);
 				y += verticalSpacing;
 			}
 		}

@@ -60,7 +60,7 @@ import org.eclipse.swt.widgets.Text;
  */
 public class AmountEditor implements IPropertyControl {
 
-    private ExtendableObject fObject;
+	private ExtendableObject fObject;
 
     private Commodity fCommodity;
     
@@ -124,7 +124,7 @@ public class AmountEditor implements IPropertyControl {
 	 * Puts the current value of this property (taken from the model)
 	 * into the control.
 	 */
-	private void setControlContent() {
+    protected void setControlContent() {
 		fCommodity = factory.getCommodity(fObject);
 		
 		// Some amounts may be of type Long, not long, so that 
@@ -139,22 +139,20 @@ public class AmountEditor implements IPropertyControl {
 	}
     
     /**
-     * Set a listener that listens for changes to properties
-     * that affect the display of the amount.
-     * <P>
-     * The format of amounts depends on the currency being
-     * represented by the amount.  If it is possible that the
-     * commodity may change while this control exists then a
-     * listener must be set using this method.  The listener
-     * must call the updateCommodity method in this amount editor
-     * whenever the commodity changes.
-     * <P>
-     * This method must not be called more than once.
-     * This class takes responsibility for adding and
-     * removing the listener to/from the session.
-     *  
-     * @param commodityChangeListener
-     */
+	 * Set a listener that listens for changes to properties that affect the
+	 * display of the amount.
+	 * <P>
+	 * The format of amounts depends on the currency being represented by the
+	 * amount. If it is possible that the commodity may change while this
+	 * control exists then a listener must be set using this method. The
+	 * listener must call the updateCommodity method in this amount editor
+	 * whenever the commodity changes.
+	 * <P>
+	 * This method must not be called more than once. This class takes
+	 * responsibility for adding and removing the listener to/from the session.
+	 * 
+	 * @param commodityChangeListener
+	 */
     public void setListener(final SessionChangeListener commodityChangeListener) {
 		// We must listen for changes to the currency so that
 		// we can change the format of the amount.
@@ -165,24 +163,31 @@ public class AmountEditor implements IPropertyControl {
     }
     
     public void updateCommodity(Commodity newCommodity) {
-    	// Get the current text from the control and try to re-format
-    	// it for the new currency.
-    	// However, if the property can take null values and the control
-    	// contains the empty string then set the amount to null.
-    	// (The currency amount parser returns a zero amount for the
-    	// empty string).
-    	// Amounts can be represented by 'Long' or by 'long'.
-    	// 'Long' values can be null, 'long' values cannot be null.
-    	// If the text in the control now translates to a different long
-    	// value as a result of the new currency, update the new long value
-    	// in the datastore.
+    	/*
+    	 * If the commodity represented by the amount can't be determined then
+    	 * we simply don't update the format of the amount.
+    	 */
+    	if (newCommodity == null) {
+    		return;
+    	}
     	
-    	// It is probably not necessary for us to set the control text here,
-    	// because this will be done by our listener if we are changing
-    	// the amount.  However, to protect against a future possibility
-    	// that a currency change may change the format without changing the amount,
-    	// we set the control text ourselves first.
-    	
+    	/*
+		 * Get the current text from the control and try to re-format it for the
+		 * new currency. However, if the property can take null values and the
+		 * control contains the empty string then set the amount to null. (The
+		 * currency amount parser returns a zero amount for the empty string).
+		 * 
+		 * Amounts can be represented by 'Long' or by 'long'. 'Long' values can
+		 * be null, 'long' values cannot be null. If the text in the control now
+		 * translates to a different long value as a result of the new currency,
+		 * update the new long value in the datastore.
+		 * 
+		 * It is probably not necessary for us to set the control text here,
+		 * because this will be done by our listener if we are changing the
+		 * amount. However, to protect against a future possibility that a
+		 * currency change may change the format without changing the amount, we
+		 * set the control text ourselves first.
+		 */
     	String amountString = propertyControl.getText();
     	if (!amountString.equals("")) {
     		long amount = newCommodity.parse(amountString);

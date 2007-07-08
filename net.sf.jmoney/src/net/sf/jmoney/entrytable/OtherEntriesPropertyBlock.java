@@ -59,6 +59,23 @@ public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData> {
 		this.id = "other." + accessor.getName();
 	}
 
+	/**
+	 * This version of the constructor allows the display name to be overwritten.
+	 *
+	 * @param accessor
+	 * @param displayName
+	 */
+	public OtherEntriesPropertyBlock(ScalarPropertyAccessor accessor, String displayName) {
+		super(
+				displayName,
+				accessor.getMinimumWidth(),
+				accessor.getWeight()
+		);
+
+		this.accessor = accessor;
+		this.id = "other." + accessor.getName();
+	}
+
 	public String getId() {
 		return id;
 	}

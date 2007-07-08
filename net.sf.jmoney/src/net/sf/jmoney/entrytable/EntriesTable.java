@@ -617,8 +617,9 @@ public class EntriesTable extends Composite {
 	 * @param index the index of the first entry that needs updating
 	 * @param balance the balance prior to the given start index
 	 */
-	private void updateFollowingValues(int index, long balance) {
-		for (; index < sortedEntries.size(); index++) {
+	private void updateFollowingValues(int startIndex, long startBalance) {
+		long balance = startBalance;
+		for (int index = startIndex; index < sortedEntries.size(); index++) {
 			EntryData data = sortedEntries.get(index);
 			
 				data.setIndex(index);
