@@ -27,6 +27,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.eclipse.core.runtime.Assert;
+
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
 
@@ -153,7 +155,7 @@ public class BankStatement implements Comparable<BankStatement> {
 	 * @return
 	 */
 	public int getNumber() {
-		JMoneyPlugin.myAssert(isNumber());
+		Assert.isTrue(isNumber());
 		return statementNumber;
 	}
 
@@ -161,7 +163,7 @@ public class BankStatement implements Comparable<BankStatement> {
 	 * @return
 	 */
 	public Date getStatementDate() {
-		JMoneyPlugin.myAssert(!isNumber());
+		Assert.isTrue(!isNumber());
 		return statementDate;
 	}
 	

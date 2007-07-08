@@ -76,7 +76,7 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 		};
 	
 		reconcilableAccessor = propertySet.addProperty("reconcilable", ReconciliationPlugin.getResourceString("Account.isReconcilable"), Boolean.class, 1, 5, new CheckBoxControlFactory(), null);
-		patternsAccessor = propertySet.addPropertyList("patterns", JMoneyPlugin.getResourceString("<not used???>"), MemoPatternInfo.getPropertySet(), patternListGetter, null);
+		patternsAccessor = propertySet.addPropertyList("patterns", JMoneyPlugin.getResourceString("<not used???>"), MemoPatternInfo.getPropertySet(), patternListGetter);
 		defaultCategoryAccessor = propertySet.addProperty("defaultCategory", ReconciliationPlugin.getResourceString("Account.defaultCategory"), IncomeExpenseAccount.class, 1, 20, accountControlFactory, null);
 		
 		return propertySet;

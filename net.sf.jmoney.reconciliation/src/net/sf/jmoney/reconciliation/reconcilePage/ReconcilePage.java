@@ -37,7 +37,6 @@ import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
@@ -183,22 +182,8 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
          * I don't know what to do if there are other capital accounts
          * (a transfer or a purchase with money coming from more than one account).
          */
-   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAccountAccessor()) {
-   			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
-   				IPropertyControl control = EntryInfo.getAccountAccessor().createPropertyControl(parent);
-   				control.load(otherEntry);
-   				return control;
-   			}
-   		});
-   		
-   		// TODO: Override "memo" to "description" 
-   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getMemoAccessor()) {
-   			public IPropertyControl createPropertyControl(Composite parent, Entry otherEntry) {
-   				IPropertyControl control = EntryInfo.getMemoAccessor().createPropertyControl(parent);
-   				control.load(otherEntry);
-   				return control;
-   			}
-   		});
+   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAccountAccessor()));
+   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getMemoAccessor(), "description"));
         
     	ScrolledForm form = managedForm.getForm();
         GridLayout layout = new GridLayout();
