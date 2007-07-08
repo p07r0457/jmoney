@@ -40,6 +40,7 @@ import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -78,7 +79,7 @@ public class CategoryEntriesSection extends SectionPart implements IEntriesConte
     	tableSelectionListener = new EntryRowSelectionAdapter() {
 			@Override
     		public void widgetSelected(EntryData selectedObject) {
-    			JMoneyPlugin.myAssert(selectedObject != null);
+    			Assert.isNotNull(selectedObject);
     			
     			// Do we want to keep the entry section at the bottom?
     			// Do we need this listener at all?

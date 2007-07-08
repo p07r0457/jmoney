@@ -58,6 +58,7 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.IUndoableOperation;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
@@ -790,7 +791,7 @@ public class TransactionManager extends DataManager {
 			IObjectKey committedAccountKey = ((UncommittedObjectKey)account.getObjectKey()).getCommittedObjectKey();
 			if (committedAccountKey == null) {
 				// This is a new account created in this transaction
-				JMoneyPlugin.myAssert(removedEntries.isEmpty());
+				Assert.isTrue(removedEntries.isEmpty());
 				return addedEntries.size();
 			} else {
 				Account committedAccount = (Account)committedAccountKey.getObject();
@@ -813,7 +814,7 @@ public class TransactionManager extends DataManager {
 			IObjectKey committedAccountKey = ((UncommittedObjectKey)account.getObjectKey()).getCommittedObjectKey();
 			if (committedAccountKey == null) {
 				// This is a new account created in this transaction
-				JMoneyPlugin.myAssert(removedEntries.isEmpty());
+				Assert.isTrue(removedEntries.isEmpty());
 				return addedEntries.iterator();
 			} else {
 				Account committedAccount = (Account)committedAccountKey.getObject();

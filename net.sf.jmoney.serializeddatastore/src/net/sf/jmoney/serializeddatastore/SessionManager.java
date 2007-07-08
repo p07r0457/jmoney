@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
@@ -325,7 +324,7 @@ public class SessionManager extends DatastoreManager {
 	 * @param account
 	 */
 	public void addAccountList(Account account) {
-		JMoneyPlugin.myAssert(!accountEntriesListsMap.containsKey(account));
+		Assert.isTrue(!accountEntriesListsMap.containsKey(account));
 		accountEntriesListsMap.put(account, new Vector<Entry>());
 	}
 
@@ -333,7 +332,7 @@ public class SessionManager extends DatastoreManager {
 	 * @param account
 	 */
 	public void removeAccountList(Account account) {
-		JMoneyPlugin.myAssert(accountEntriesListsMap.containsKey(account));
+		Assert.isTrue(accountEntriesListsMap.containsKey(account));
 		accountEntriesListsMap.remove(account);
 	}
 
@@ -347,7 +346,7 @@ public class SessionManager extends DatastoreManager {
 	@Override
 	public Collection<Entry> getEntries(Account account) {
 		Collection<Entry> entriesList = accountEntriesListsMap.get(account);
-		JMoneyPlugin.myAssert(entriesList != null);
+		Assert.isNotNull(entriesList);
 		return Collections.unmodifiableCollection(entriesList);
 	}
 

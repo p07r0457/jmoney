@@ -16,6 +16,7 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IEntryQueries;
 import net.sf.jmoney.model2.Session;
 
+import org.eclipse.core.runtime.Assert;
 import org.jfree.data.time.RegularTimePeriod;
 
 /**
@@ -253,8 +254,8 @@ public class Util {
     		
             Collections.sort(entriesList, new Comparator() {
                 public int compare(Object a, Object b) {
-                	JMoneyPlugin.myAssert(a instanceof Entry);
-                	JMoneyPlugin.myAssert(b instanceof Entry);
+                	Assert.isTrue(a instanceof Entry);
+                	Assert.isTrue(b instanceof Entry);
                     return ((Entry) a).getTransaction().getDate().compareTo(
                             ((Entry) b).getTransaction().getDate());
                 }

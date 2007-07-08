@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Account;
@@ -21,6 +20,7 @@ import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -199,7 +199,7 @@ public class CopierPlugin extends AbstractUIPlugin {
     		V newValue;
     		if (oldValue instanceof ExtendableObject) {
     			newValue = propertyAccessor.getClassOfValueObject().cast(objectMap.get(oldValue));
-    			JMoneyPlugin.myAssert(newValue != null);
+    			Assert.isNotNull(newValue);
     		} else {
     			newValue = oldValue;
     		}

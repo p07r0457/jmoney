@@ -8,8 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
-
+import org.eclipse.core.runtime.Assert;
 import org.jfree.data.time.RegularTimePeriod;
 
 /**
@@ -102,7 +101,7 @@ public class StackedChartParameters {
 	        	    stringFormat = "yyyy";
 	        	    periodClass = Class.forName("org.jfree.data.time.Year");
 	        	    break;
-	        	default: JMoneyPlugin.myAssert(false);
+	        	default: Assert.isTrue(false);
 	        }
 	        dateformat = new SimpleDateFormat(stringFormat);
 	        regularPeriodConstructor = periodClass.getConstructor(new Class [] { Class.forName("java.util.Date") });

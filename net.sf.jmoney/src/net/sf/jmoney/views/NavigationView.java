@@ -46,6 +46,7 @@ import net.sf.jmoney.wizards.NewAccountWizard;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.IUndoableOperation;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.action.Action;
@@ -211,7 +212,7 @@ public class NavigationView extends ViewPart {
 			if (obj instanceof TreeNode) {
 				return ((TreeNode)obj).getPosition();
 			} else {
-				JMoneyPlugin.myAssert (obj instanceof ExtendableObject);
+				Assert.isTrue(obj instanceof ExtendableObject);
 				return 0;
 			}
 		}
@@ -594,7 +595,7 @@ public class NavigationView extends ViewPart {
 				}
 				
 	   			Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
-	   			JMoneyPlugin.myAssert (!pageFactories.isEmpty());
+	   			Assert.isTrue(!pageFactories.isEmpty());
 	   			
 	   			// Create an editor for this node (or active if an editor
 	   			// is already open).

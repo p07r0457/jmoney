@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.isolation;
 
+import org.eclipse.core.runtime.Assert;
+
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -101,7 +103,7 @@ public class UncommittedObjectKey implements IObjectKey {
 	 * @param committedObjectKey
 	 */
 	public UncommittedObjectKey(TransactionManager transactionManager, IObjectKey committedObjectKey) {
-		JMoneyPlugin.myAssert(committedObjectKey != null);
+		Assert.isNotNull(committedObjectKey);
 		this.transactionManager = transactionManager;
 		this.committedObjectKey = committedObjectKey;
 	}
@@ -109,7 +111,7 @@ public class UncommittedObjectKey implements IObjectKey {
 	// TODO: make this default protection
 	// Called only when this object constructed with the single parameter constructor.
 	public void setObject(ExtendableObject extendableObject) {
-		JMoneyPlugin.myAssert(extendableObject != null);
+		Assert.isNotNull(extendableObject);
 		this.extendableObject = extendableObject;
 	}
 
@@ -244,7 +246,7 @@ public class UncommittedObjectKey implements IObjectKey {
 			// This is a new object created in this transaction
 			return null;
 		} else {
-			JMoneyPlugin.myAssert(committedObjectKey != null);
+			Assert.isNotNull(committedObjectKey);
 			return committedObjectKey;
 		}
 	}
@@ -260,8 +262,8 @@ public class UncommittedObjectKey implements IObjectKey {
 	 * @param committedObject
 	 */
 	public void setCommittedObject(ExtendableObject committedObject) {
-		JMoneyPlugin.myAssert(committedObjectKey == null);
-		JMoneyPlugin.myAssert(extendableObject != null);
+		Assert.isTrue(committedObjectKey == null);
+		Assert.isNotNull(extendableObject);
 		
 		committedObjectKey = committedObject.getObjectKey();
 		
