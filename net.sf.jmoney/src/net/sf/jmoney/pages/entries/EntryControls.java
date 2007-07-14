@@ -70,8 +70,9 @@ class EntryControls {
 	private Composite composite5;
 	
 	private Label debitLabel;
-	private Text debitText;
 	private Label creditLabel;
+
+	private Text debitText;
 	private Text creditText;
 	
 	Vector<LabelAndEditControlPair> entryPropertyControls = new Vector<LabelAndEditControlPair>();
@@ -129,7 +130,7 @@ class EntryControls {
 			Account account = entry.getAccount();
 			boolean isApplicable = isApplicable(account);
 			
-			// Controls with the visability set to false still
+			// Controls with the visibility set to false still
 			// take up space in the grid.  We must dispose controls
 			// if they do not apply.
 			if (isApplicable) {
@@ -155,7 +156,7 @@ class EntryControls {
 					propertyControl.getControl().setLayoutData(controlLayoutData);
 					
 					propertyControl.getControl().addFocusListener(
-							new PropertyControlFocusListener(propertyAccessor, propertyControl) {
+							new PropertyControlFocusListener(propertyControl) {
 							    @Override	
 								ExtendableObject getExtendableObject() {
 									return entry;
@@ -184,17 +185,9 @@ class EntryControls {
 			}
 		}
 		abstract class PropertyControlFocusListener extends FocusAdapter {
-			
-			private ScalarPropertyAccessor propertyAccessor;
 			private IPropertyControl propertyControl;
 			
-			// When a control gets the focus, save the old value here.
-			// This value is used in the change message.
-			private String oldValueText;
-			
-			
-			PropertyControlFocusListener(ScalarPropertyAccessor propertyAccessor, IPropertyControl propertyControl) {
-				this.propertyAccessor = propertyAccessor;
+			PropertyControlFocusListener(IPropertyControl propertyControl) {
 				this.propertyControl = propertyControl;
 			}
 			
@@ -207,26 +200,6 @@ class EntryControls {
 				}
 				
 				propertyControl.save();
-				
-/* We need to decide at what granularity we want to support undo/redo.
- * Every individual property change may be too small, so remove this.
-
-				String newValueText = propertyAccessor.formatValueForMessage(object);
-				
-				String description = 
-					"change " + propertyAccessor.getDisplayName() + " property"
-					+ " from " + oldValueText
-					+ " to " + newValueText;
-				
-				object.getSession().registerUndoableChange(description);
-*/				
-			}
-
-		    @Override	
-			public void focusGained(FocusEvent e) {
-				// Save the old value of this property for use in our 'undo' message.
-				ExtendableObject object = getExtendableObject();
-				oldValueText = propertyAccessor.formatValueForMessage(object);
 			}
 			
 			abstract ExtendableObject getExtendableObject();
