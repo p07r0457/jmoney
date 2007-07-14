@@ -28,11 +28,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Vector;
 
+import net.sf.jmoney.jdbcdatastore.SessionManager.DatabaseListKey;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IValues;
-import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ListKey;
 
 /**
  * Every datastore implementation must provide an implementation
@@ -46,33 +47,36 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 	private static final long serialVersionUID = 867883048050895954L;
 
 	private SessionManager sessionManager;
-	private IDatabaseRowKey parentKey;
-	private ListPropertyAccessor<E> listProperty;
+	private DatabaseListKey<E> listKey;
 	
+	/**
+	 * the elements in this list if known, or null if the set of
+	 * elements is not yet known because they have not yet been read
+	 * from the database (an empty list indicates that we know there
+	 * are no elements in this list)
+	 */
 	private Vector<E> elements = null;
 	
 	/**
 	 * 
 	 * @param sessionManager
-	 * @param parentKey
-	 * @param listProperty
+	 * @param listKey
 	 * @param isEmpty
 	 *            true if the list is known to be empty (this is the case if the
 	 *            parent object has been newly created), false if the list is
 	 *            unknown (may or may not be empty, this is the case if the
 	 *            parent object is being materialized from the database)
 	 */
-	public ListManagerCached(SessionManager sessionManager, IDatabaseRowKey parentKey, ListPropertyAccessor<E> listProperty, boolean isEmpty) {
+	public ListManagerCached(SessionManager sessionManager, DatabaseListKey<E> listKey, boolean isEmpty) {
 		this.sessionManager = sessionManager;
-		this.parentKey = parentKey;
-		this.listProperty = listProperty;
+		this.listKey = listKey;
 		
 		if (isEmpty) {
 			this.elements = new Vector<E>();
 		}
 	}
 
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
+	public <F extends E> F createNewElement(ExtendablePropertySet<F> propertySet) {
 		// We must create the object before we persist it to the database.
 		// The reason why we must do this, and not simply write the
 		// default values, is that the constructor only uses the
@@ -86,7 +90,7 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 		
 		ObjectKey objectKey = new ObjectKey(sessionManager);
 		
-		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent);
+		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, sessionManager.constructListKey(listKey));
 
 		objectKey.setObject(extendableObject);
 
@@ -101,13 +105,13 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 		
 		// Now we insert the new row into the tables.
 
-		int rowId = sessionManager.insertIntoDatabase(propertySet, extendableObject, listProperty, parent);
+		int rowId = sessionManager.insertIntoDatabase(propertySet, extendableObject, listKey);
 		objectKey.setRowId(rowId);
 
 		return extendableObject;
 	}
 
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, IValues values) {
+	public <F extends E> F createNewElement(ExtendablePropertySet<F> propertySet, IValues values) {
 		// We must create the object before we persist it to the database.
 		// The reason why we must do this, and not simply write the
 		// default values, is that the constructor only uses the
@@ -121,7 +125,7 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 		
 		ObjectKey objectKey = new ObjectKey(sessionManager);
 		
-		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent, values);
+		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, listKey, values);
 
 		objectKey.setObject(extendableObject);
 		
@@ -136,22 +140,21 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 		
 		// Now we insert the new row into the tables.
 
-		int rowId = sessionManager.insertIntoDatabase(propertySet, extendableObject, listProperty, parent);
+		int rowId = sessionManager.insertIntoDatabase(propertySet, extendableObject, listKey);
 		objectKey.setRowId(rowId);
 
 		return extendableObject;
 	}
-	
-	public boolean remove(Object o) {
+
+	public boolean deleteElement(E extendableObject) {
 		if (elements == null) {
 			buildCachedList();
 		}
 
-		boolean found = elements.remove(o);
+		boolean found = elements.remove(extendableObject);
 		
 		// Delete this object from the database.
 		if (found) {
-			ExtendableObject extendableObject = (ExtendableObject)o;
 			IDatabaseRowKey key = (IDatabaseRowKey)extendableObject.getObjectKey();
 			boolean foundInDatabase = sessionManager.deleteFromDatabase(key);
 			if (!foundInDatabase) {
@@ -162,8 +165,36 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 		return found;
 	}
 
-	public boolean add(E arg0) {
-		throw new RuntimeException("Method not supported");
+	public void moveElement(E extendableObject, IListManager originalListManager) {
+		sessionManager.reparentInDatabase(extendableObject, listKey);
+	}
+
+	public boolean add(E extendableObject) {
+		if (elements != null) {
+			elements.add(extendableObject);
+		} else {
+			/*
+			 * The list has not been fetched, so there is nothing to do. The
+			 * object has already been added to the database so the list will be
+			 * correct if it is fetched.
+			 */
+		}
+		return true;
+	}
+
+	public boolean remove(Object o) {
+		if (elements != null) {
+			return elements.remove(o);
+		} else {
+			/*
+			 * The list has not been fetched, so there is nothing to do. The
+			 * object has already been removed from the database so the list
+			 * will be correct if it is fetched. It's not worth the cost of
+			 * checking if the object exists in this list. Assume that the
+			 * object is in the list.
+			 */
+			return true;
+		}
 	}
 
 	public boolean addAll(Collection<? extends E> arg0) {
@@ -242,10 +273,10 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 		 * depending on the actual property set.
 		 */		
 		try {
-			for (ExtendablePropertySet<? extends E> finalPropertySet: listProperty.getElementPropertySet().getDerivedPropertySets()) {
-				ResultSet resultSet = sessionManager.executeListQuery(parentKey, listProperty, finalPropertySet);
+			for (ExtendablePropertySet<? extends E> finalPropertySet: listKey.listPropertyAccessor.getElementPropertySet().getDerivedPropertySets()) {
+				ResultSet resultSet = sessionManager.executeListQuery(listKey, finalPropertySet);
 				while (resultSet.next()) {
-					ObjectKey key = new ObjectKey(resultSet, finalPropertySet, parentKey, sessionManager);
+					ObjectKey key = new ObjectKey(resultSet, finalPropertySet, listKey, sessionManager);
 					E extendableObject = finalPropertySet.getImplementationClass().cast(key.getObject());
 					elements.add(extendableObject);
 				}

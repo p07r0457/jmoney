@@ -24,7 +24,6 @@ package net.sf.jmoney.fields;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IExtendableObjectConstructors;
 import net.sf.jmoney.model2.IListGetter;
@@ -33,6 +32,7 @@ import net.sf.jmoney.model2.IPropertyDependency;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
@@ -59,12 +59,12 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 	private static ExtendablePropertySet<IncomeExpenseAccount> propertySet = PropertySet.addDerivedFinalPropertySet(IncomeExpenseAccount.class, "Income or Expense Category", AccountInfo.getPropertySet(), new IExtendableObjectConstructors<IncomeExpenseAccount>() {
 
 		public IncomeExpenseAccount construct(IObjectKey objectKey,
-				IObjectKey parentKey) {
+				ListKey parentKey) {
 			return new IncomeExpenseAccount(objectKey, parentKey);
 		}
 
 		public IncomeExpenseAccount construct(IObjectKey objectKey,
-				IObjectKey parentKey, IValues values) {
+				ListKey parentKey, IValues values) {
 			return new IncomeExpenseAccount(
 					objectKey, 
 					parentKey, 

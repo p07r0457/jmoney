@@ -31,6 +31,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IValues;
+import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
@@ -58,7 +59,7 @@ public class CurrencyInfo implements IPropertySetInfo {
 
 	private static ExtendablePropertySet<Currency> propertySet = PropertySet.addDerivedFinalPropertySet(Currency.class, "Currency", CommodityInfo.getPropertySet(), new IExtendableObjectConstructors<Currency>() {
 
-		public Currency construct(IObjectKey objectKey, IObjectKey parentKey) {
+		public Currency construct(IObjectKey objectKey, ListKey parentKey) {
 			return new Currency(
 					objectKey, 
 					parentKey
@@ -66,7 +67,7 @@ public class CurrencyInfo implements IPropertySetInfo {
 		}
 
 		public Currency construct(IObjectKey objectKey,
-				IObjectKey parentKey, IValues values) {
+				ListKey parentKey, IValues values) {
 			return new Currency(
 					objectKey, 
 					parentKey, 

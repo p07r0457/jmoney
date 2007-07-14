@@ -33,6 +33,7 @@ import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IValues;
+import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
@@ -60,12 +61,12 @@ public class TransactionInfo implements IPropertySetInfo {
 
 	private static ExtendablePropertySet<Transaction> propertySet = PropertySet.addBaseFinalPropertySet(Transaction.class, "Financial Transaction", new IExtendableObjectConstructors<Transaction>() {
 
-		public Transaction construct(IObjectKey objectKey, IObjectKey parentKey) {
+		public Transaction construct(IObjectKey objectKey, ListKey parentKey) {
 			return new Transaction(objectKey, parentKey);
 		}
 
 		public Transaction construct(IObjectKey objectKey,
-				IObjectKey parentKey, IValues values) {
+				ListKey parentKey, IValues values) {
 			return new Transaction(
 					objectKey, 
 					parentKey, 

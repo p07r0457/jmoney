@@ -67,7 +67,7 @@ public abstract class ExtendableObject {
 	 * The key from which this object's parent can be fetched from
 	 * the datastore and a reference to the parent obtained.
 	 */
-	protected IObjectKey parentKey;
+	protected ListKey parentKey;
 	
 	protected abstract String getExtendablePropertySetId();
 
@@ -79,7 +79,7 @@ public abstract class ExtendableObject {
 	 * but this method is responsible for ensuring the appropriate extensions
 	 * are created and passes on the IValues interface to the extension constructors.
 	 */
-	protected ExtendableObject(IObjectKey objectKey, IObjectKey parentKey,	IValues extensionValues) { 
+	protected ExtendableObject(IObjectKey objectKey, ListKey parentKey,	IValues extensionValues) { 
 		this.objectKey = objectKey;
 		this.parentKey = parentKey;
 
@@ -92,7 +92,7 @@ public abstract class ExtendableObject {
 	/**
 	 * Constructs a new object with default property values.
 	 */
-	protected ExtendableObject(IObjectKey objectKey, IObjectKey parentKey) { 
+	protected ExtendableObject(IObjectKey objectKey, ListKey parentKey) { 
 		this.objectKey = objectKey;
 		this.parentKey = parentKey;
 	}
@@ -107,7 +107,12 @@ public abstract class ExtendableObject {
 	/**
 	 * @return
 	 */
+	// TODO: do we need this as well as the method below?
 	public IObjectKey getParentKey() {
+		return parentKey == null ? null : parentKey.getParentKey();
+	}
+	
+	public ListKey getParentListKey() {
 		return parentKey;
 	}
 	
@@ -128,7 +133,7 @@ public abstract class ExtendableObject {
 		// The key must contain the data manager and so there is no reason
 		// for the extendable objects to also contain a data manager field.
 		// Get the data manager from the key.
-		return objectKey.getSessionManager();
+		return objectKey.getDataManager();
 	}
 	
 	/**
@@ -616,5 +621,18 @@ remove this...
     		// TODO: check the protection earlier and raise MalformedPlugin
     		throw new RuntimeException("internal error - field protection problem");
     	}
+	}
+	
+	/**
+	 * This method allows datastore implementations to re-parent an
+	 * object (move it from one list to another).
+	 * <P>
+	 * This method is to be used by datastore implementations only.
+	 * Other plug-ins should not be calling this method.
+	 * 
+	 * @param listKey
+	 */
+	void replaceParentListKey(ListKey listKey) {
+		this.parentKey = listKey;
 	}
 }

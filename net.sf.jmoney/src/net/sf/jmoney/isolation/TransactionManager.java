@@ -46,6 +46,7 @@ import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.ISessionChangeFirer;
 import net.sf.jmoney.model2.IValues;
+import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
@@ -228,18 +229,6 @@ public class TransactionManager extends DataManager {
     		throw new RuntimeException("Invalid call to getCopyInTransaction.  The object passed must belong to the data manager that is the base data manager of this transaction manager.");
     	}
     	
-		ExtendableObject objectInTransaction = allObjects.get(committedObject.getObjectKey());
-		if (objectInTransaction != null) {
-			// TODO: decide if and how we check for deleted objects.
-//			if (objectInTransaction.isDeleted()) {
-//				throw new RuntimeException("Attempt to get copy of object, but that object has been deleted in the transaction");
-//			}
-			return (E)committedObject.getClass().cast(objectInTransaction);
-		}
-			
-    	
-    	
-    	
     	// First look in our map to see if this object has already been
     	// modified within the context of this transaction manager.
     	// If it has, return the modified version.
@@ -252,11 +241,29 @@ public class TransactionManager extends DataManager {
     	// manager and all other objects are obtained by traversing
     	// from that object.  However, it is good to check.
 
-		ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(committedObject.getClass());
-		IObjectKey committedParentKey = committedObject.getParentKey();
-		UncommittedObjectKey key = new UncommittedObjectKey(this, committedObject.getObjectKey());
-		UncommittedObjectKey parentKey = (committedParentKey==null)?null:new UncommittedObjectKey(this, committedParentKey);
+		ExtendableObject objectInTransaction = allObjects.get(committedObject.getObjectKey());
+		if (objectInTransaction != null) {
+			// TODO: decide if and how we check for deleted objects.
+//			if (objectInTransaction.isDeleted()) {
+//				throw new RuntimeException("Attempt to get copy of object, but that object has been deleted in the transaction");
+//			}
+			return (E)committedObject.getClass().cast(objectInTransaction);
+		}
+    	
+		ExtendablePropertySet<? extends E> propertySet = PropertySet.getPropertySet((Class<? extends E>)committedObject.getClass());
+		
+		ListKey<? super E> committedListKey = committedObject.getParentListKey();
+		ListKey<? super E> listKey;
+		if (committedListKey == null) {
+			listKey = null;
+		} else {
+			IObjectKey committedParentKey = committedListKey.getParentKey();
+			UncommittedObjectKey parentKey = new UncommittedObjectKey(this, committedParentKey);
+			listKey = new ListKey(parentKey, committedListKey.getListPropertyAccessor());
+		}
 
+		final UncommittedObjectKey key = new UncommittedObjectKey(this, committedObject.getObjectKey());
+		
 		/*
 		 * If the object has been modified by this transaction, it will be in
 		 * the allObjects map (which contains all objects ever returned by this
@@ -266,6 +273,10 @@ public class TransactionManager extends DataManager {
 		IValues values = new IValues() {
 
 			public Collection<ExtensionPropertySet<?>> getNonDefaultExtensions() {
+				// TODO: This is not correct.  Extensions may contain properties
+				// that are references to other extendable objects.
+				// These need to be converted to versions in this transaction,
+				// as is done in the getReferencedObjectKey below.
 				return committedObject.getExtensions();
 			}
 
@@ -281,14 +292,12 @@ public class TransactionManager extends DataManager {
 			}
 
 			public <E2 extends ExtendableObject> IListManager<E2> getListManager(IObjectKey listOwnerKey, ListPropertyAccessor<E2> listAccessor) {
-				return new DeltaListManager<E2>(TransactionManager.this, committedObject, listAccessor);
+				return new DeltaListManager<E2>(TransactionManager.this, committedObject, key, listAccessor);
 			}
 		};
 		
-		
-		
 		// We can now create the object.
-    	E copyInTransaction = (E)committedObject.getClass().cast(propertySet.constructImplementationObject(key, parentKey, values));
+    	E copyInTransaction = (E)committedObject.getClass().cast(propertySet.constructImplementationObject(key, listKey, values));
 
     	/*
     	 * Now we have created a version of this object that is valid in this datastore,
@@ -499,7 +508,7 @@ public class TransactionManager extends DataManager {
 		 */
 		for (DeltaListManager<?> modifiedList: modifiedLists) {
 
-			ExtendableObject parent = modifiedList.parentKey.getObject();
+			ExtendableObject parent = modifiedList.committedParent;
 			
 			for (IObjectKey objectToDelete: modifiedList.getDeletedObjects()) {
 				parent.getListPropertyValue(modifiedList.listAccessor).remove(objectToDelete.getObject());
@@ -664,9 +673,7 @@ public class TransactionManager extends DataManager {
 	}
 
 	private <E extends ExtendableObject> void commitObjectsInList(DeltaListManager<E> modifiedList) {
-//		ModifiedList<E> modifiedList = (ModifiedList<E>)untypedModifiedList;
-		
-		ExtendableObject parent = modifiedList.parentKey.getObject();
+		ExtendableObject parent = modifiedList.committedParent;
 		
 		for (ExtendableObject newUntypedObject: modifiedList.getAddedObjects()) {
 			E newObject = modifiedList.listAccessor.getElementPropertySet().getImplementationClass().cast(newUntypedObject);
@@ -707,65 +714,6 @@ public class TransactionManager extends DataManager {
 		}
 	}
 
-	/**
-	 * Given a list property in an object, create an object that maintains the
-	 * changes that have been made to that list within a transaction, or return
-	 * the object if one already exists. The modified list objects are not
-	 * created unless a change is made to the list (objects added or objects
-	 * removed).
-	 * <P>
-	 * It is important that callers do not keep a copy of the modified list
-	 * across method calls. This is because it may have changed from null to
-	 * non-null if someone else added to or deleted from the list, and it may
-	 * have changed from non-null to null if someone else committed the
-	 * transaction.
-	 * 
-	 * @param parentKey
-	 *            the object key (in the committed datastore) for the object
-	 *            containing the list property
-	 * @param listProperty
-	 * @return an object containing the changes to the given list. This object
-	 *         may be empty but is never null
-	 */
-/*	
-	public <E extends ExtendableObject> ModifiedList<E> createModifiedList(ModifiedListKey<E> key) {
-		ModifiedList<E> modifiedList = modifiedLists.get(key);
-		if (modifiedList == null) {
-			modifiedList = new ModifiedList<E>();
-			modifiedLists.put(key, modifiedList);
-		}
-		return modifiedList;
-	}
-*/
-/*	
-	public <E extends ExtendableObject> void putModifiedList(ModifiedListKey<E> key, DeltaListManager<E> list) {
-		modifiedLists.put(key, list);
-	}
-*/
-	/**
-	 * Given a list property in an object, get the object that maintains the
-	 * changes that have been made to that list within a transaction. The
-	 * modified list objects are not created unless a change is made to the list
-	 * (objects added or objects removed).
-	 * <P>
-	 * It is important that callers do not keep a copy of the modified list
-	 * across method calls. This is because it may have changed from null to
-	 * non-null if someone else added to or deleted from the list, and it may
-	 * have changed from non-null to null if someone else committed the
-	 * transaction.
-	 * 
-	 * @param parentKey
-	 *            the object key (in the committed datastore) for the object
-	 *            containing the list property
-	 * @param listProperty
-	 * @return an object containing the changes to the given list, or null if no
-	 *         changes have been made to the given list
-	 */
-/*	
-	public <E extends ExtendableObject> ModifiedList<E> getModifiedList(ModifiedListKey<E> key) {
-		return modifiedLists.get(key);
-	}
-*/
 	public Object getAdapter(Class adapter) {
 		// It is possible to implement query interfaces that execute
 		// an optimized query against the committed datastore and then
@@ -1026,6 +974,20 @@ public class TransactionManager extends DataManager {
 			// TODO This method is not applicable here.
 			// Do we need a version of this listener that does
 			// not have this method???
+		}
+
+		public void objectMoved(ExtendableObject movedObject,
+				ExtendableObject originalParent, ExtendableObject newParent,
+				ListPropertyAccessor originalParentListProperty,
+				ListPropertyAccessor newParentListProperty) {
+			/*
+			 * If an object was moved and the move conflicts with outstanding changes
+			 * held by this transaction then we have problems.
+			 * However, with the current JMoney feature set, this is unlikely
+			 * to happen, so just ignore.  Views working off transactions will not
+			 * see the move.  When the transaction commits, the changes should
+			 * not conflict with the move.
+			 */
 		}
 	}
 }

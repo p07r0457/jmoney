@@ -35,6 +35,7 @@ import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IValues;
+import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
@@ -53,12 +54,12 @@ public class MemoPatternInfo implements IPropertySetInfo {
 	
 	private static ExtendablePropertySet<MemoPattern> propertySet = PropertySet.addBaseFinalPropertySet(MemoPattern.class, "Account Import Entry Pattern", new IExtendableObjectConstructors<MemoPattern>() {
 
-		public MemoPattern construct(IObjectKey objectKey, IObjectKey parentKey) {
+		public MemoPattern construct(IObjectKey objectKey, ListKey parentKey) {
 			return new MemoPattern(objectKey, parentKey);
 		}
 
 		public MemoPattern construct(IObjectKey objectKey,
-				IObjectKey parentKey, IValues values) {
+				ListKey parentKey, IValues values) {
 			return new MemoPattern(
 					objectKey, 
 					parentKey, 

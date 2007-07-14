@@ -24,15 +24,19 @@ package net.sf.jmoney.isolation;
 
 import java.util.Vector;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IValues;
+import net.sf.jmoney.model2.ListKey;
 
 /**
- * This is a special implementation of the IListManager interface.
- * It is used only in objects that have not yet been committed to the datastore.
- * This implementation uses the Vector class to keep the list of objects.
+ * This is a special implementation of the IListManager interface. It is used
+ * only in objects that have never been committed to the datastore (objects that
+ * were created in this transaction). This implementation uses the Vector class
+ * to keep the list of objects.
  * 
  * @author Nigel Westbury
  */
@@ -40,27 +44,21 @@ public class UncommittedListManager<E extends ExtendableObject> extends Vector<E
 
 	private static final long serialVersionUID = 196103020038035348L;
 
-	private TransactionManager transactionManager = null;
+	private ListKey listKey;
+	private TransactionManager transactionManager;
 	
-	public UncommittedListManager(TransactionManager transactionManager) {
+	public UncommittedListManager(ListKey listKey, TransactionManager transactionManager) {
+		this.listKey = listKey;
 	 	this.transactionManager = transactionManager;
 	 }
 
 	/**
 	 * Create a new extendable object in the list represented by this object.
-	 * <P>
-	 * This method does not create the object in the underlying committed list,
-	 * because if it did that then other views would see the object before it is
-	 * committed. Instead this method adds the object to a list maintained by
-	 * this object. When the consumer iterates over the list, the objects in the
-	 * 'added' list are appended to the items returned by the underlying
-	 * committed list.
 	 */
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
+	public <F extends E> F createNewElement(ExtendablePropertySet<F> propertySet) {
 		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
-		F extendableObject = propertySet.constructDefaultImplementationObject(objectKey, parent.getObjectKey());
+		F extendableObject = propertySet.constructDefaultImplementationObject(objectKey, listKey);
 
-		
 		objectKey.setObject(extendableObject);
 
 		add(extendableObject);
@@ -68,17 +66,34 @@ public class UncommittedListManager<E extends ExtendableObject> extends Vector<E
 		return extendableObject;
 	}
 
-	// This method is never used, because new objects are only created
-	// with non-default values when objects are being committed.
-	// If we support nested transactions then this method will be required.
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, IValues values) {
+	/*
+	 * This method is used only if a nested transaction manager is commitinsg
+	 * its changes into this transaction manager.
+	 */
+	public <F extends E> F createNewElement(ExtendablePropertySet<F> propertySet, IValues values) {
 		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
-		F extendableObject = propertySet.constructImplementationObject(objectKey, parent.getObjectKey(), values);
+		F extendableObject = propertySet.constructImplementationObject(objectKey, listKey, values);
 
 		objectKey.setObject(extendableObject);
 
 		add(extendableObject);
 		
 		return extendableObject;
+	}
+
+	/*
+	 * This method is used only if a nested transaction manager is commitinsg
+	 * its changes into this transaction manager.
+	 */
+	public boolean deleteElement(E extendableObject) {
+		return remove(extendableObject);
+	}
+
+	public void moveElement(E extendableObject, IListManager originalListManager) {
+		/*
+		 * It is fairly complex to implement this inside a transaction.
+		 * Therefore we do not support this.
+		 */ 
+		throw new NotImplementedException();
 	}
 }

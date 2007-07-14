@@ -56,16 +56,39 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 
 	private Comparator<ExtendableObject> parentComparator;
 
-	private IPropertyDependency dependency;
+	/*
+	 * Helper class to tie types together in a type safe manner.
+	 */
+	// TODO: If we added the type of the containing object as a type parameter
+	// of this ScalarPropertyAccessor class then this class would no longer
+	// be necessary.
+	private class TypesafePropertyDependency<E> {
+		Class<E> classOfContainingObject;
+		IPropertyDependency<E> dependency;
 
-	public ScalarPropertyAccessor(Class<V> classOfValueObject, PropertySet propertySet, String localName, String displayName, int weight, int minimumWidth, final IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency propertyDependency) {
+		TypesafePropertyDependency (Class<E> classOfContainingObject, IPropertyDependency<E> dependency) {
+			this.classOfContainingObject = classOfContainingObject;
+			this.dependency = dependency;
+		}
+
+		public boolean isApplicable(ExtendableObject containingObject) {
+			return dependency.isApplicable(classOfContainingObject.cast(containingObject));
+		}
+	}
+	private TypesafePropertyDependency<?> typesafeDependency;
+	
+	public <E> ScalarPropertyAccessor(Class<V> classOfValueObject, PropertySet<E> propertySet, String localName, String displayName, int weight, int minimumWidth, final IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency<E> propertyDependency) {
 		super(propertySet, localName, displayName);
 
 		this.weight = weight;
 		this.minimumWidth = minimumWidth;
 		this.sortable = true;
 		this.propertyControlFactory = propertyControlFactory;
-		this.dependency = propertyDependency;
+		
+		this.typesafeDependency = 
+			(propertyDependency == null)
+			? null
+					: new TypesafePropertyDependency<E>(propertySet.getImplementationClass(), propertyDependency);
 
 		Class implementationClass = propertySet.getImplementationClass();
 
@@ -511,10 +534,10 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	 * @return
 	 */
 	public boolean isPropertyApplicable(ExtendableObject containingObject) {
-		if (dependency == null) {
+		if (typesafeDependency == null) {
 			return true;
 		} else {
-			return dependency.isApplicable(containingObject);
+			return typesafeDependency.isApplicable(containingObject);
 		}
 	}
 }

@@ -52,7 +52,7 @@ public abstract class CurrencyAccount extends CapitalAccount {
 	 */
 	public CurrencyAccount(
 			IObjectKey objectKey, 
-			IObjectKey parent,
+			ListKey parent,
 			String name,
 			IListManager<CapitalAccount> subAccounts,
 			String abbreviation,
@@ -92,7 +92,7 @@ public abstract class CurrencyAccount extends CapitalAccount {
 	 */
 	public CurrencyAccount(
 			IObjectKey objectKey, 
-			IObjectKey parent) { 
+			ListKey parent) { 
 		super(objectKey, parent);
 		
 		// Set a default name.

@@ -76,7 +76,7 @@ public final class Entry extends ExtendableObject {
      */
 	public Entry(
 			IObjectKey objectKey,
-			IObjectKey parentKey,
+			ListKey parentKey,
     		String     check,
     		IObjectKey accountKey,
     		Date       valuta,
@@ -119,7 +119,7 @@ public final class Entry extends ExtendableObject {
      */
 	public Entry(
 			IObjectKey objectKey,
-			IObjectKey parentKey) {
+			ListKey parentKey) {
 		super(objectKey, parentKey);
 		
 		this.creation = Calendar.getInstance().getTime().getTime();
@@ -140,7 +140,7 @@ public final class Entry extends ExtendableObject {
 	 * Returns the transaction.
 	 */
 	public Transaction getTransaction() {
-		return (Transaction)parentKey.getObject();
+		return (Transaction)parentKey.getParentKey().getObject();
 	}
 
 	/**

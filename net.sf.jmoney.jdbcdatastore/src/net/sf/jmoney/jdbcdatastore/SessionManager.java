@@ -44,6 +44,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
@@ -54,11 +55,13 @@ import net.sf.jmoney.model2.IEntryQueries;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IValues;
+import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.Transaction;
 
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPersistableElement;
@@ -102,13 +105,17 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	private Map<ExtendablePropertySet<?>, Map<Integer, WeakReference<ExtendableObject>>> objectMaps = new HashMap<ExtendablePropertySet<?>, Map<Integer, WeakReference<ExtendableObject>>>();
 	
 	private class ParentList {
-		ParentList(ExtendablePropertySet<?> parentPropertySet, PropertyAccessor listProperty) {
+		ExtendablePropertySet<?> parentPropertySet;
+		ListPropertyAccessor listProperty;
+
+		ParentList(ExtendablePropertySet<?> parentPropertySet, ListPropertyAccessor listProperty) {
 			this.parentPropertySet = parentPropertySet;
-			this.columnName = listProperty.getName().replace('.', '_');
+			this.listProperty = listProperty;
 		}
 		
-		ExtendablePropertySet<?> parentPropertySet;
-		String columnName;
+		public String getColumnName() {
+			return listProperty.getName().replace('.', '_');
+		}
 	}
 	
 	/**
@@ -393,7 +400,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @return
 	 * @throws SQLException
 	 */
-	ResultSet executeListQuery(IDatabaseRowKey parentKey, ListPropertyAccessor<?> listProperty, ExtendablePropertySet<?> finalPropertySet) throws SQLException {
+	ResultSet executeListQuery(DatabaseListKey<?> listKey, ExtendablePropertySet<?> finalPropertySet) throws SQLException {
 		String sql = buildJoins(finalPropertySet);
 		
 		/*
@@ -406,13 +413,13 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		 * session object then no such column will exist. We instead check that
 		 * all the other parent columns (if any) are null.
 		 */
-		if (listProperty.getPropertySet() == SessionInfo.getPropertySet()) {
+		if (listKey.listPropertyAccessor.getPropertySet() == SessionInfo.getPropertySet()) {
 			String whereClause = "";
 			String separator = "";
 			for (ExtendablePropertySet<?> propertySet = finalPropertySet; propertySet != null; propertySet = propertySet.getBasePropertySet()) {
 				Vector<ParentList> possibleContainingLists = tablesMap.get(propertySet);
 				for (ParentList parentList: possibleContainingLists) {
-					whereClause += separator + "\"" + parentList.columnName + "\" IS NULL";
+					whereClause += separator + "\"" + parentList.getColumnName() + "\" IS NULL";
 					separator = " AND";
 				}
 			}
@@ -428,11 +435,11 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			 * Add a WHERE clause that limits the result set to those rows
 			 * that are in the appropriate list in the appropriate parent object.
 			 */
-			sql += " WHERE \"" + listProperty.getName().replace('.', '_') + "\" = ?";
+			sql += " WHERE \"" + listKey.listPropertyAccessor.getName().replace('.', '_') + "\" = ?";
 
-			System.out.println(sql + " : " + parentKey.getRowId());
+			System.out.println(sql + " : " + listKey.parentKey.getRowId());
 			PreparedStatement stmt = connection.prepareStatement(sql);
-			stmt.setInt(1, parentKey.getRowId());
+			stmt.setInt(1, listKey.parentKey.getRowId());
 			return stmt.executeQuery();
 		}
 	}
@@ -446,7 +453,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * 
 	 * @return The id of the inserted row
 	 */
-	public int insertIntoDatabase(ExtendablePropertySet<?> propertySet, ExtendableObject newObject, ListPropertyAccessor<?> listProperty, ExtendableObject parent) {
+	public int insertIntoDatabase(ExtendablePropertySet<?> propertySet, ExtendableObject newObject, DatabaseListKey<?> listKey) {
 		int rowId = -1;
 
 		// We must insert into the base table first, then the table for the objects
@@ -503,11 +510,10 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			 * lists in the session object
 			 * then, as an optimization, there is no parent column.
 			 */
-			if (listProperty.getElementPropertySet() == propertySet2
-					&& listProperty.getPropertySet() != SessionInfo.getPropertySet()) {
-				IDatabaseRowKey parentKey = (IDatabaseRowKey)parent.getObjectKey();
-				String valueString = Integer.toString(parentKey.getRowId());
-				String parentColumnName = listProperty.getName().replace('.', '_');
+			if (listKey.listPropertyAccessor.getElementPropertySet() == propertySet2
+					&& listKey.listPropertyAccessor.getPropertySet() != SessionInfo.getPropertySet()) {
+				String valueString = Integer.toString(listKey.parentKey.getRowId());
+				String parentColumnName = listKey.listPropertyAccessor.getName().replace('.', '_');
 				columnNames += separator + "\"" + parentColumnName + "\"";
 				columnValues += separator + valueString;
 				separator = ", ";
@@ -565,6 +571,75 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		return rowId;
 	}
 
+	public <E extends ExtendableObject> void reparentInDatabase(E extendableObject, DatabaseListKey<E> newListKey) {
+		IDatabaseRowKey objectKey = (IDatabaseRowKey)extendableObject.getObjectKey();
+		ListKey originalListKey = extendableObject.getParentListKey();
+		IDatabaseRowKey originalParentKey = (IDatabaseRowKey)originalListKey.getParentKey();
+		
+		try {
+			boolean priorAutocommitState = connection.getAutoCommit();
+			connection.setAutoCommit(false);
+
+			/*
+			 * We may need one or two updates, depending on whether the column containing
+			 * the original parent and the column containing the new parent are in the same
+			 * table.
+			 */
+			try {
+
+				/*
+				 * If the containing list property is a property in one of the three
+				 * lists in the session object then, as an optimization, there is no
+				 * parent column.
+				 * 
+				 * Clear out the original parent id (unless the containing list is one
+				 * of the three lists in the extendable session object).
+				 */
+				if (originalListKey.getListPropertyAccessor().getPropertySet() != SessionInfo.getPropertySet()) {
+					String parentColumnName = originalListKey.getListPropertyAccessor().getName().replace('.', '_');
+					String sql = "UPDATE "
+						+ originalListKey.getListPropertyAccessor().getElementPropertySet().getId().replace('.', '_')
+						+ " SET " + parentColumnName + "=NULL"
+						+ " WHERE _ID=" + objectKey.getRowId()
+						+ " AND " + parentColumnName + "=" + originalParentKey.getRowId();
+
+					System.out.println(sql);
+					int numberUpdated = reusableStatement.executeUpdate(sql);
+					if (numberUpdated != 1) {
+						throw new RuntimeException("internal error");
+					}
+
+					connection.commit();
+				}
+
+				/*
+				 * Set the new parent id (unless the containing list is one of the three
+				 * lists in the extendable session object).
+				 */
+				if (newListKey.listPropertyAccessor.getPropertySet() != SessionInfo.getPropertySet()) {
+					String parentColumnName = newListKey.listPropertyAccessor.getName().replace('.', '_');
+					String sql = "UPDATE "
+						+ newListKey.listPropertyAccessor.getElementPropertySet().getId().replace('.', '_')
+						+ " SET " + parentColumnName + "=" + newListKey.parentKey.getRowId()
+						+ " WHERE _ID=" + objectKey.getRowId()
+						+ " AND " + parentColumnName + " IS NULL";
+
+					System.out.println(sql);
+					int numberUpdated = reusableStatement.executeUpdate(sql);
+					if (numberUpdated != 1) {
+						throw new RuntimeException("internal error");
+					}
+				}
+			} finally {
+				connection.setAutoCommit(priorAutocommitState);
+			}
+		} catch (SQLException e) {
+			// TODO Handle this properly
+			e.printStackTrace();
+			throw new RuntimeException("internal error");
+		}
+	}
+	
 	/**
 	 * Execute SQL UPDATE statements to update the database with
 	 * the new values of the properties of an object.
@@ -829,16 +904,16 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @param parent
 	 * @return
 	 */
-	public <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, ExtendableObject parent) {
-		E extendableObject = propertySet.constructDefaultImplementationObject(objectKey, parent.getObjectKey());
+	public <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, ListKey<? super E> listKey) {
+		E extendableObject = propertySet.constructDefaultImplementationObject(objectKey, listKey);
 		
 		setMaterializedObject(getBasemostPropertySet(propertySet), objectKey.getRowId(), extendableObject);
 		
 		return extendableObject;
 	}
 
-	private <E2 extends ExtendableObject> IListManager<E2> createListManager(IDatabaseRowKey objectKey, ListPropertyAccessor<E2> listAccessor) {
-		return new ListManagerCached<E2>(this, objectKey, listAccessor, true);
+	private <E2 extends ExtendableObject> IListManager<E2> createListManager(DatabaseListKey<E2> listKey) {
+		return new ListManagerCached<E2>(this, listKey, true);
 	}
 
 	/**
@@ -855,8 +930,8 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * 			with ExtendableObject properties having the object key in this array 
 	 * @return
 	 */
-	public <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, ExtendableObject parent, IValues values) {
-		E extendableObject = propertySet.constructImplementationObject(objectKey, parent.getObjectKey(), values);
+	public <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, DatabaseListKey<? super E> listKey, IValues values) {
+		E extendableObject = propertySet.constructImplementationObject(objectKey, constructListKey(listKey), values);
 
 		setMaterializedObject(getBasemostPropertySet(propertySet), objectKey.getRowId(), extendableObject);
 		
@@ -880,7 +955,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @return
 	 * @throws SQLException
 	 */ 
-	<E extends ExtendableObject> E materializeObject(final ResultSet rs, final ExtendablePropertySet<E> propertySet, final IDatabaseRowKey objectKey, IObjectKey parentKey) throws SQLException {
+	<E extends ExtendableObject> E materializeObject(final ResultSet rs, final ExtendablePropertySet<E> propertySet, final IDatabaseRowKey objectKey, ListKey<? super E> listKey) throws SQLException {
 		/**
 		 * The list of parameters to be passed to the constructor
 		 * of this object.
@@ -999,7 +1074,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 
 		};
 		
-		E extendableObject = propertySet.constructImplementationObject(objectKey, parentKey, values);
+		E extendableObject = propertySet.constructImplementationObject(objectKey, listKey, values);
 		
 		setMaterializedObject(getBasemostPropertySet(propertySet), objectKey.getRowId(), extendableObject);
 		
@@ -1050,16 +1125,43 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 */
 	<E extends ExtendableObject> E materializeObject(ResultSet rs, ExtendablePropertySet<E> propertySet, IDatabaseRowKey key) throws SQLException {
 		/*
-		 * We need to obtain the key for the parent object.  We do this by
+		 * We need to obtain the key for the containing list.  We do this by
 		 * creating one from the data in the result set.
 		 */ 
-		IObjectKey parentKey = buildParentKey(rs, propertySet);
+		DatabaseListKey<? super E> parentListKey = buildParentKey(rs, propertySet);
 		
-		E extendableObject = materializeObject(rs, propertySet, key, parentKey);
+		ListKey<? super E> listKey = constructListKey(parentListKey);
+		
+		E extendableObject = materializeObject(rs, propertySet, key, listKey);
 		
 		return extendableObject;
 	}
 
+	/**
+	 * Helper method.
+	 */
+	<E extends ExtendableObject> ListKey<E> constructListKey(DatabaseListKey<E> parentListKey) {
+		return new ListKey<E>(parentListKey.parentKey, parentListKey.listPropertyAccessor);
+	}
+	
+	/**
+	 * Used for returning result from following method, as Java does not allow methods to
+	 * return more than a single value.
+	 */
+	static class DatabaseListKey<E extends ExtendableObject> {
+		IDatabaseRowKey parentKey;
+		ListPropertyAccessor<E> listPropertyAccessor;
+		
+		public static <E extends ExtendableObject> DatabaseListKey<E> construct(IDatabaseRowKey parentKey, ListPropertyAccessor<E> listProperty) {
+			return new DatabaseListKey<E>(parentKey, listProperty);
+		}
+
+		public DatabaseListKey(IDatabaseRowKey parentKey, ListPropertyAccessor<E> listPropertyAccessor) {
+			this.parentKey = parentKey;
+			this.listPropertyAccessor = listPropertyAccessor;
+		}
+	}
+	
 	/*
 	 * We need to obtain the key for the parent object.  We do this by
 	 * creating one from the data in the result set.
@@ -1069,26 +1171,26 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * another account (if the account is a sub-account) or may be the
 	 * session.
 	 */
-	IDatabaseRowKey buildParentKey(ResultSet rs, ExtendablePropertySet<?> propertySet) throws SQLException {
+	<E extends ExtendableObject> DatabaseListKey<? super E> buildParentKey(ResultSet rs, ExtendablePropertySet<E> propertySet) throws SQLException {
 		/* 
 		 * A column exists in this table for each list which can contain objects
 		 * of this type. Only one of these columns can be non-null so we must
 		 * find that column. The value of that column will be the integer id of
 		 * the parent.
 		 * 
-		 * An optimization would allow the column to be absent when the parent
+		 * An optimization allows the column to be absent when the parent
 		 * object is the session object (as only one session object may exist).
 		 * 
 		 * For each list that may contain this object, see if the appropriate
 		 * column is non-null.
 		 */
-		ExtendablePropertySet<?> parentPropertySet = null;
+		ParentList matchingParentList = null;
 		int parentId = -1;
 		boolean nonNullValueFound = false;
 		
-		ExtendablePropertySet<?> propertySet2 = propertySet;
+		ExtendablePropertySet<? super E> propertySet2 = propertySet;
 		do {
-			Vector<ParentList> list = tablesMap.get(propertySet);
+			Vector<ParentList> list = tablesMap.get(propertySet2);
 
 			/*
 			 * Find all properties in any property set that are a list of objects
@@ -1096,9 +1198,9 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			 * for each such property that exists in another property set.
 			 */
 			for (ParentList parentList: list) {
-				parentId = rs.getInt(parentList.columnName);
+				parentId = rs.getInt(parentList.getColumnName());
 				if (!rs.wasNull()) {		
-					parentPropertySet = parentList.parentPropertySet;
+					matchingParentList = parentList;
 					nonNullValueFound = true;
 					break;
 				}
@@ -1106,19 +1208,31 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			propertySet2 = propertySet2.getBasePropertySet();
 		} while (propertySet2 != null);	
 			
-		IDatabaseRowKey parentKey;
+		DatabaseListKey<? super E> listKey;
 
 		if (!nonNullValueFound) {
 			/*
 			 * A database optimization causes no parent column to exist for the
 			 * case where the parent object is the session.
 			 */
-			parentKey = sessionKey;
+			ListPropertyAccessor<? super E> listProperty;
+			if (Commodity.class.isAssignableFrom(propertySet.getImplementationClass())) {
+				listProperty = (ListPropertyAccessor<? super E>)SessionInfo.getCommoditiesAccessor();
+			} else if (Account.class.isAssignableFrom(propertySet.getImplementationClass())) {
+				listProperty = (ListPropertyAccessor<? super E>)SessionInfo.getAccountsAccessor();
+			} else if (Transaction.class.isAssignableFrom(propertySet.getImplementationClass())) {
+				listProperty = (ListPropertyAccessor<? super E>)SessionInfo.getTransactionsAccessor();
+			} else {
+				throw new RuntimeException("bad case");
+			}
+			listKey = DatabaseListKey.construct(sessionKey, listProperty);
 		} else {
-			parentKey = new ObjectKey(parentId, parentPropertySet, this);
+			IDatabaseRowKey parentKey = new ObjectKey(parentId, matchingParentList.parentPropertySet, this);
+			ListPropertyAccessor<? super E> listProperty = matchingParentList.listProperty;
+			listKey = DatabaseListKey.construct(parentKey, listProperty);
 		}
 		
-		return parentKey;
+		return listKey;
 	}
 
 	class ColumnInfo {
@@ -1193,7 +1307,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		for (ParentList parentList: list) {
 			ColumnInfo info = new ColumnInfo();
 			info.nature = ColumnNature.PARENT;
-			info.columnName = parentList.columnName;
+			info.columnName = parentList.getColumnName();
 			info.columnDefinition = "INT DEFAULT NULL NULL";
 			info.foreignKeyPropertySet = parentList.parentPropertySet;
 			result.add(info);

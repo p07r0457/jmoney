@@ -40,7 +40,7 @@ public class Transaction extends ExtendableObject {
     
 	public Transaction(
 			IObjectKey objectKey,
-			IObjectKey parentKey,
+			ListKey parentKey,
     		IListManager<Entry> entries,
     		Date date,
 			IValues extensionValues) {
@@ -52,7 +52,7 @@ public class Transaction extends ExtendableObject {
 	
 	public Transaction(
 			IObjectKey objectKey,
-			IObjectKey parentKey) {
+			ListKey parentKey) {
 		super(objectKey, parentKey);
 
 		this.entries = objectKey.constructListManager(TransactionInfo.getEntriesAccessor());

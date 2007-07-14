@@ -31,6 +31,7 @@ import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IValues;
+import net.sf.jmoney.model2.ListKey;
 
 /**
  * The data model for an entry.
@@ -82,7 +83,7 @@ public final class MemoPattern extends ExtendableObject {
      */
 	public MemoPattern(
 			IObjectKey objectKey,
-			IObjectKey parentKey,
+			ListKey    parentKey,
 			int        orderingIndex,
 			String     pattern,
     		String     check,
@@ -123,7 +124,7 @@ public final class MemoPattern extends ExtendableObject {
      */
 	public MemoPattern(
 			IObjectKey objectKey,
-    		IObjectKey parentKey) {
+    		ListKey    parentKey) {
 		super(objectKey, parentKey);
 
 		this.orderingIndex = 0;

@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Iterator;
 
+import net.sf.jmoney.jdbcdatastore.SessionManager.DatabaseListKey;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 
@@ -49,7 +50,7 @@ import net.sf.jmoney.model2.ExtendablePropertySet;
 class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> {
 	private ResultSet resultSet;
 	private ExtendablePropertySet<E> propertySet;
-	private IDatabaseRowKey parentKey;
+	private DatabaseListKey<? super E> listKey;
 	private SessionManager sessionManager;
 	private boolean isAnother;
 
@@ -67,18 +68,18 @@ class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> 
 	 * @param propertySet
 	 *            The property set for the objects in this list, which must be
 	 *            final (cannot be a derivable property set)
-	 * @param parentKey
-	 *            The caller may pass a null parent key. In that case, a new
-	 *            parent key will be generated for each object in the list. If
+	 * @param listKey
+	 *            The caller may pass a null list key. In that case, a new
+	 *            list key will be generated for each object in the list. If
 	 *            all the objects in the list have the same parent then pass
 	 *            this parent. If the objects in the list have different parents
 	 *            then pass null.
 	 * @param sessionManager
 	 */
-	UncachedObjectIterator(ResultSet resultSet, ExtendablePropertySet<E> propertySet, IDatabaseRowKey parentKey, SessionManager sessionManager) {
+	UncachedObjectIterator(ResultSet resultSet, ExtendablePropertySet<E> propertySet, DatabaseListKey<? super E> listKey, SessionManager sessionManager) {
 		this.resultSet = resultSet;
 		this.propertySet = propertySet;
-		this.parentKey = parentKey;
+		this.listKey = listKey;
 		this.sessionManager = sessionManager;
 		
 		// Position on first row.
@@ -103,14 +104,14 @@ class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> 
 			 * this because the foreign keys to the parent rows will be in the
 			 * result set.
 			 */
-			IDatabaseRowKey parentKey2;
-			if (parentKey == null) {
-				parentKey2 = sessionManager.buildParentKey(resultSet, propertySet);
+			DatabaseListKey<? super E> listKey2;
+			if (listKey == null) {
+				listKey2 = sessionManager.buildParentKey(resultSet, propertySet);
 			} else {
-				parentKey2 = parentKey;
+				listKey2 = listKey;
 			}
 			
-			ObjectKey key = new ObjectKey(resultSet, propertySet, parentKey2, sessionManager);
+			ObjectKey key = new ObjectKey(resultSet, propertySet, listKey2, sessionManager);
 			E extendableObject = propertySet.getImplementationClass().cast(key.getObject());
 			
 			// Rowset must be left positioned on the following row.

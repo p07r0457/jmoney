@@ -597,7 +597,7 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	 * 		parameters.  This object may be an ExtendableObject or
 	 * 		may be an ExtensionObject.
 	 */
-	public E constructImplementationObject(IObjectKey objectKey, IObjectKey parentKey, IValues values) {
+	public E constructImplementationObject(IObjectKey objectKey, ListKey<? super E> parentKey, IValues values) {
 		return constructors.construct(objectKey, parentKey, values);
 	}
 
@@ -609,7 +609,7 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	 * 		parameters.  This object may be an ExtendableObject or
 	 * 		may be an ExtensionObject.
 	 */
-	public E constructDefaultImplementationObject(IObjectKey objectKey, IObjectKey parentKey) {
+	public E constructDefaultImplementationObject(IObjectKey objectKey, ListKey<? super E> parentKey) {
 		return constructors.construct(objectKey, parentKey);
 	}
 	

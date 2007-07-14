@@ -27,11 +27,14 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IValues;
+import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
 
@@ -57,10 +60,9 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 
 	private TransactionManager transactionManager;
 	
-	/**
-	 * The key for the committed parent object
-	 */
-	IObjectKey parentKey;
+	ExtendableObject committedParent;
+
+	IObjectKey uncommittedParentKey;
 
 	ListPropertyAccessor<E> listAccessor;
 
@@ -87,11 +89,16 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	/**
 	 * @param committedParent the object containing the list property.  This
 	 * 			object must be an uncommitted object 
+	 * @param uncommittedParentKey the key to the object that contains this list
+	 * 			delta.  This object may not yet have been constructed, so this
+	 * 			key is for reference and not for instantiating the object.  However,
+	 * 			the committed object may be obtained from it.
 	 * @param propertyAccessor the list property
 	 */
-	public DeltaListManager(TransactionManager transactionManager, ExtendableObject committedParent, ListPropertyAccessor<E> listProperty) {
+	public DeltaListManager(TransactionManager transactionManager, ExtendableObject committedParent, UncommittedObjectKey uncommittedParentKey, ListPropertyAccessor<E> listProperty) {
 		this.transactionManager = transactionManager;
-		this.parentKey = committedParent.getObjectKey();
+		this.committedParent = committedParent;
+		this.uncommittedParentKey = uncommittedParentKey;
 		this.listAccessor = listProperty;
 		this.committedList = committedParent.getListPropertyValue(listProperty);
 	}
@@ -106,9 +113,9 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	 * 'added' list are appended to the items returned by the underlying
 	 * committed list.
 	 */
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
+	public <F extends E> F createNewElement(ExtendablePropertySet<F> propertySet) {
 		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
-		F extendableObject = propertySet.constructDefaultImplementationObject(objectKey, parent.getObjectKey());
+		F extendableObject = propertySet.constructDefaultImplementationObject(objectKey, new ListKey<E>(uncommittedParentKey, listAccessor));
 		
 		objectKey.setObject(extendableObject);
 		
@@ -140,11 +147,11 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 	 * object and setting the property values in a single call. That can only be
 	 * done when using a transaction manager.
 	 */
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, IValues values) {
+	public <F extends E> F createNewElement(ExtendablePropertySet<F> propertySet, IValues values) {
 		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
 
 		// We can now create the object.
-		F extendableObject = propertySet.constructImplementationObject(objectKey, parent.getObjectKey(), values);
+		F extendableObject = propertySet.constructImplementationObject(objectKey, new ListKey<E>(uncommittedParentKey, listAccessor), values);
 		
 		objectKey.setObject(extendableObject);
 
@@ -158,49 +165,8 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		
 		return extendableObject;
 	}
-	
-    @Override	
-	public int size() {
-		// This method is called, for example when getting the number of entries
-		// in a transaction.
-		
-		return committedList.size()
-			+ addedObjects.size() 
-			- deletedObjects.size(); 
-	}
 
-    @Override	
-	public Iterator<E> iterator() {
-		Iterator<E> committedListIterator = committedList.iterator();
-
-		/*
-		 * Even if there were no changes to the list, we cannot simply return
-		 * committedListIterator because that returns materializations of the
-		 * objects that are outside of the transaction. We must return objects
-		 * that are versions inside the transaction.
-		 */
-		return new DeltaListIterator<E>(transactionManager, committedListIterator, addedObjects, deletedObjects);
-	}
-
-    @Override	
-	public boolean contains(Object object) {
-		IObjectKey committedObjectKey = ((UncommittedObjectKey)((ExtendableObject)object).getObjectKey()).getCommittedObjectKey();
-
-		if (addedObjects.contains(object)) {
-				return true; 
-			} else if (deletedObjects.contains(committedObjectKey)) {
-				return false;
-			}
-		
-		// The object has neither been added or removed by us, so
-		// pass the request on the the underlying datastore.
-		return committedList.contains(committedObjectKey.getObject());
-	}
-
-    @Override	
-	public boolean remove(Object object) {
-		ExtendableObject extendableObject = (ExtendableObject)object;
-
+	public boolean deleteElement(E extendableObject) {
 		boolean isRemoved;
 		
 		UncommittedObjectKey uncommittedKey = (UncommittedObjectKey)extendableObject.getObjectKey();
@@ -247,6 +213,72 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		}
 		
 		return isRemoved;
+	}
+
+	public void moveElement(E extendableObject, IListManager originalListManager) {
+		/*
+		 * It is fairly complex to implement this inside a transaction.
+		 * Therefore we do not support this.
+		 */ 
+		throw new NotImplementedException();
+	}
+	
+    @Override	
+	public int size() {
+		// This method is called, for example when getting the number of entries
+		// in a transaction.
+		
+		return committedList.size()
+			+ addedObjects.size() 
+			- deletedObjects.size(); 
+	}
+
+    @Override	
+	public Iterator<E> iterator() {
+		Iterator<E> committedListIterator = committedList.iterator();
+
+		/*
+		 * Even if there were no changes to the list, we cannot simply return
+		 * committedListIterator because that returns materializations of the
+		 * objects that are outside of the transaction. We must return objects
+		 * that are versions inside the transaction.
+		 */
+		return new DeltaListIterator<E>(transactionManager, committedListIterator, addedObjects, deletedObjects);
+	}
+
+    @Override	
+	public boolean contains(Object object) {
+		IObjectKey committedObjectKey = ((UncommittedObjectKey)((ExtendableObject)object).getObjectKey()).getCommittedObjectKey();
+
+		if (addedObjects.contains(object)) {
+				return true; 
+			} else if (deletedObjects.contains(committedObjectKey)) {
+				return false;
+			}
+
+		// The object has neither been added or removed by us, so
+		// pass the request on the the underlying datastore.
+		return committedList.contains(committedObjectKey.getObject());
+	}
+
+    @Override	
+	public boolean add(E object) {
+    	/*
+    	 * This method is used only when an object is moved from one list
+    	 * to another.  Moving an object is not supported when inside a
+    	 * transaction because it is too complicated.
+    	 */
+    	throw new NotImplementedException();
+	}
+
+    @Override	
+	public boolean remove(Object object) {
+    	/*
+    	 * This method is used only when an object is moved from one list
+    	 * to another.  Moving an object is not supported when inside a
+    	 * transaction because it is too complicated.
+    	 */
+    	throw new NotImplementedException();
 	}
 
 	/**

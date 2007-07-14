@@ -27,10 +27,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import net.sf.jmoney.fields.SessionInfo;
+import net.sf.jmoney.jdbcdatastore.SessionManager.DatabaseListKey;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
+import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
@@ -91,6 +93,12 @@ public class ObjectKey implements IDatabaseRowKey {
 
 	private SessionManager sessionManager;
 	
+	// TODO: Should this be a weak reference?
+	// Or perhaps we should not have this field at all and always look it
+	// up in the weak reference map.
+	// Currently the code assumes that once we have the object, we don't need
+	// the information needed to obtain the object, so this would need a little
+	// work.
 	private ExtendableObject extendableObject = null;
 
 	/**
@@ -121,12 +129,12 @@ public class ObjectKey implements IDatabaseRowKey {
 	/**
 	 * @param resultSet
 	 * @param finalPropertySet
-	 * @param parentKey the key of the parent, never null unless this is the
+	 * @param listKey the key of the containing list, never null unless this is the
 	 * 			key to the session object
 	 * @param sessionManager
 	 * @throws SQLException
 	 */
-	ObjectKey(ResultSet resultSet, ExtendablePropertySet<?> finalPropertySet, IDatabaseRowKey parentKey, SessionManager sessionManager) throws SQLException {
+	<E extends ExtendableObject> ObjectKey(ResultSet resultSet, ExtendablePropertySet<E> finalPropertySet, DatabaseListKey<? super E> databaseListKey, SessionManager sessionManager) throws SQLException {
 		this.sessionManager = sessionManager;
 		rowId = resultSet.getInt("_ID");
 
@@ -140,7 +148,8 @@ public class ObjectKey implements IDatabaseRowKey {
 		// TODO: Should materializeObject do this???
 		extendableObject = sessionManager.getObjectIfMaterialized(basemostPropertySet, rowId);
 		if (extendableObject == null) {
-			extendableObject = sessionManager.materializeObject(resultSet, finalPropertySet, this, parentKey);
+			ListKey<? super E> listKey = (databaseListKey == null) ? null : sessionManager.constructListKey(databaseListKey);
+			extendableObject = sessionManager.materializeObject(resultSet, finalPropertySet, this, listKey);
 		}
 	}
 	
@@ -309,15 +318,16 @@ public class ObjectKey implements IDatabaseRowKey {
 		return sessionManager.getSession();
 	}
 
-	public DataManager getSessionManager() {
+	public DataManager getDataManager() {
 		return sessionManager;
 	}
 
 	public <E extends ExtendableObject> IListManager<E> constructListManager(ListPropertyAccessor<E> listAccessor) {
+		DatabaseListKey<E> listKey = new SessionManager.DatabaseListKey<E>(this, listAccessor);
 		if (listAccessor == SessionInfo.getTransactionsAccessor()) {
-			return new ListManagerUncached<E>(sessionManager, this, listAccessor);
+			return new ListManagerUncached<E>(sessionManager, listKey);
 		} else {
-			return new ListManagerCached<E>(sessionManager, this, listAccessor, false);
+			return new ListManagerCached<E>(sessionManager, listKey, false);
 		}
 	}
 

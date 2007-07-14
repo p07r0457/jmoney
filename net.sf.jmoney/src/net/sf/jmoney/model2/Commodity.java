@@ -34,7 +34,7 @@ public abstract class Commodity extends ExtendableObject implements Comparable<C
 	
 	protected Commodity(
 			IObjectKey objectKey, 
-			IObjectKey parentKey,
+			ListKey parentKey,
 			String name,
 			IValues extensionValues) { 
 		super(objectKey, parentKey, extensionValues);
@@ -43,7 +43,7 @@ public abstract class Commodity extends ExtendableObject implements Comparable<C
 	
 protected Commodity(
 		IObjectKey objectKey, 
-		IObjectKey parentKey) { 
+		ListKey parentKey) { 
 	super(objectKey, parentKey);
 	this.name = null;
 }

@@ -1,27 +1,31 @@
 /*
-*
-*  JMoney - A Personal Finance Manager
-*  Copyright (c) 2004 Nigel Westbury <westbury@users.sourceforge.net>
-*
-*
-*  This program is free software; you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation; either version 2 of the License, or
-*  (at your option) any later version.
-*
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-*
-*  You should have received a copy of the GNU General Public License
-*  along with this program; if not, write to the Free Software
-*  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-*
-*/
+ *
+ *  JMoney - A Personal Finance Manager
+ *  Copyright (c) 2004 Nigel Westbury <westbury@users.sourceforge.net>
+ *
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ */
 
 package net.sf.jmoney.views;
 
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -36,6 +40,8 @@ import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PageEntry;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
@@ -55,9 +61,11 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ILabelProvider;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -70,13 +78,24 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.dnd.DND;
+import org.eclipse.swt.dnd.DragSource;
+import org.eclipse.swt.dnd.DragSourceEvent;
+import org.eclipse.swt.dnd.DragSourceListener;
+import org.eclipse.swt.dnd.DropTarget;
+import org.eclipse.swt.dnd.DropTargetAdapter;
+import org.eclipse.swt.dnd.DropTargetEvent;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IMemento;
@@ -100,15 +119,15 @@ import org.eclipse.ui.part.ViewPart;
  */
 
 public class NavigationView extends ViewPart {
-    public static final String ID_VIEW =
-        "net.sf.jmoney.views.NavigationView"; //$NON-NLS-1$
+	public static final String ID_VIEW =
+		"net.sf.jmoney.views.NavigationView"; //$NON-NLS-1$
 
-    /**
-     * Control for the text that is displayed when no session
-     * is open.
-     */
-    private Label noSessionMessage;
-    
+	/**
+	 * Control for the text that is displayed when no session
+	 * is open.
+	 */
+	private Label noSessionMessage;
+
 	private TreeViewer viewer;
 	private DrillDownAdapter drillDownAdapter;
 	private ViewContentProvider contentProvider;
@@ -120,9 +139,9 @@ public class NavigationView extends ViewPart {
 	private Action deleteAccountAction;
 
 	private Session session;
-	
+
 	class ViewContentProvider implements IStructuredContentProvider, 
-										   ITreeContentProvider {
+	ITreeContentProvider {
 		/**
 		 * In fact the input does not change because we create our own node object
 		 * that acts as the root node.  Certain nodes below the root may get
@@ -131,14 +150,14 @@ public class NavigationView extends ViewPart {
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 			// The input never changes so we don't do anything here.
 		}
-		
+
 		public void dispose() {
 		}
-		
+
 		public Object[] getElements(Object parent) {
 			return getChildren(parent);
 		}
-		
+
 		public Object getParent(Object child) {
 			if (child instanceof TreeNode) {
 				return ((TreeNode)child).getParent();
@@ -159,7 +178,7 @@ public class NavigationView extends ViewPart {
 			}
 			return null;
 		}
-		
+
 		public Object [] getChildren(Object parent) {
 			if (parent instanceof TreeNode) {
 				return ((TreeNode)parent).getChildren();
@@ -172,7 +191,7 @@ public class NavigationView extends ViewPart {
 			}
 			return new Object[0];
 		}
-		
+
 		public boolean hasChildren(Object parent) {
 			if (parent instanceof TreeNode) {
 				return ((TreeNode)parent).hasChildren();
@@ -188,12 +207,12 @@ public class NavigationView extends ViewPart {
 	}
 
 	class ViewLabelProvider extends LabelProvider {
-	    @Override	
+		@Override	
 		public String getText(Object obj) {
 			return obj.toString();
 		}
-		
-	    @Override	
+
+		@Override	
 		public Image getImage(Object obj) {
 			if (obj instanceof TreeNode) {
 				return ((TreeNode)obj).getImage();
@@ -207,7 +226,7 @@ public class NavigationView extends ViewPart {
 	}
 
 	class NameSorter extends ViewerSorter {
-	    @Override	
+		@Override	
 		public int category(Object obj) {
 			if (obj instanceof TreeNode) {
 				return ((TreeNode)obj).getPosition();
@@ -219,7 +238,7 @@ public class NavigationView extends ViewPart {
 	}
 
 	private class MyCurrentSessionChangeListener extends SessionChangeAdapter implements CurrentSessionChangeListener {
-	    @Override	
+		@Override	
 		public void sessionReplaced(Session oldSession, Session newSession) {
 			// Close all editors
 			IWorkbenchWindow window = getSite().getWorkbenchWindow();
@@ -232,7 +251,7 @@ public class NavigationView extends ViewPart {
 				// This is not an immediate problem but may become
 				// a problem as JMoney is further developed.
 			}
-		
+
 			// Make either the label or the tree control visible, depending
 			// on whether the new session is null or not.
 			if (JMoneyPlugin.getDefault().getSession() == null) {
@@ -244,23 +263,23 @@ public class NavigationView extends ViewPart {
 			}
 
 			NavigationView.this.session = newSession;
-			
+
 			// Update the viewer (if new session is null then the
 			// viewer will not be visible but it is good to release the
 			// references to the account objects in the dead session).
-            viewer.refresh(TreeNode.getTreeNode(AccountsNode.ID), false);
-            viewer.refresh(TreeNode.getTreeNode(CategoriesNode.ID), false);
+			viewer.refresh(TreeNode.getTreeNode(AccountsNode.ID), false);
+			viewer.refresh(TreeNode.getTreeNode(CategoriesNode.ID), false);
 		}
-		
-	    @Override	
+
+		@Override	
 		public void objectInserted(ExtendableObject newObject) {
 			if (newObject instanceof Account) {
 				Object parentElement = contentProvider.getParent(newObject);
-                viewer.insert(parentElement, newObject, 0);
+				viewer.insert(parentElement, newObject, 0);
 			}
 		}
 
-	    @Override	
+		@Override	
 		public void objectRemoved(final ExtendableObject deletedObject) {
 			if (deletedObject instanceof Account) {
 				/*
@@ -272,65 +291,85 @@ public class NavigationView extends ViewPart {
 				 */
 				getSite().getShell().getDisplay().asyncExec(new Runnable() {
 					public void run() {
-		                viewer.remove(deletedObject);
+						viewer.remove(deletedObject);
 					}
 				});
 			}
 		}
-		
-	    @Override	
+
+		@Override	
 		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
 			if (changedObject instanceof Account
 					&& propertyAccessor == AccountInfo.getNameAccessor()) {
 				viewer.update(changedObject, null);
 			}
 		}
+
+		@Override	
+		public void objectMoved(ExtendableObject movedObject,
+				ExtendableObject originalParent, ExtendableObject newParent,
+				ListPropertyAccessor originalParentListProperty,
+				ListPropertyAccessor newParentListProperty) {
+			if (originalParent == session || newParent == session) {
+				if (movedObject instanceof CapitalAccount) {
+					viewer.refresh(TreeNode.getTreeNode(AccountsNode.ID), false);
+				} else if (movedObject instanceof IncomeExpenseAccount) {
+					viewer.refresh(TreeNode.getTreeNode(CategoriesNode.ID), false);
+				}
+			}
+			if (originalParent instanceof Account) {
+				viewer.refresh(originalParent, false);
+			}
+			if (newParent instanceof Account) {
+				viewer.refresh(newParent, false);
+			}
+		}
 	}
-	
+
 	/**
 	 * The constructor.
 	 */
 	public NavigationView() {
 	}
 
-    @Override	
-    public void init(IViewSite site, IMemento memento) throws PartInitException {
-        init(site);
+	@Override	
+	public void init(IViewSite site, IMemento memento) throws PartInitException {
+		init(site);
 
-        if (memento != null) {
-        	// Restore any session that was open when the workbench
-        	// was last closed.
-    		session = JMoneyPlugin.openSession(memento.getChild("session"));
-        } else {
-        	session = null;
-        }
+		if (memento != null) {
+			// Restore any session that was open when the workbench
+			// was last closed.
+			session = JMoneyPlugin.openSession(memento.getChild("session"));
+		} else {
+			session = null;
+		}
 
-        // init is called before createPartControl,
-        // and the objects that need the memento are not
-        // created until createPartControl is called so we save
-        // the memento now for later use.
-        // this.memento = memento; 
-    }
-    
-    @Override	
-    public void saveState(IMemento memento) {
-    	// Save the information required to re-create this navigation view.
-    	
-    	// Save the details of the session.
-    	DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		// init is called before createPartControl,
+		// and the objects that need the memento are not
+		// created until createPartControl is called so we save
+		// the memento now for later use.
+		// this.memento = memento; 
+	}
+
+	@Override	
+	public void saveState(IMemento memento) {
+		// Save the information required to re-create this navigation view.
+
+		// Save the details of the session.
+		DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		if (sessionManager != null) {
 			IMemento sessionMemento = memento.createChild("session");
 			IPersistableElement pe = (IPersistableElement)sessionManager.getAdapter(IPersistableElement.class);
 			sessionMemento.putString("currentSessionFactoryId", pe.getFactoryId());
 			pe.saveState(sessionMemento.createChild("currentSession"));
 		}
-    }
-    
+	}
+
 	/**
 	 * This is a callback that will allow us
 	 * to create the viewer and initialize it.
 	 */
-    @Override	
+	@Override	
 	public void createPartControl(final Composite parent) {
 		// The parent will have fill layout set by default.
 		// We manage the layout ourselves because we want either
@@ -343,9 +382,9 @@ public class NavigationView extends ViewPart {
 		noSessionMessage = new Label(parent, SWT.WRAP);
 		noSessionMessage.setText(JMoneyPlugin.getResourceString("NavigationView.noSessionMessage"));
 		noSessionMessage.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED));
-		
+
 		// Create the tree viewer
-		viewer = new TreeViewer(parent, SWT.H_SCROLL | SWT.V_SCROLL);
+		viewer = new TreeViewer(parent, SWT.H_SCROLL | SWT.V_SCROLL | SWT.MULTI);
 		drillDownAdapter = new DrillDownAdapter(viewer);
 		labelProvider = new ViewLabelProvider();
 		contentProvider = new ViewContentProvider();
@@ -363,19 +402,19 @@ public class NavigationView extends ViewPart {
 		 * on this view.
 		 */
 		getSite().setSelectionProvider(viewer);
-		
+
 		/*
 		 * Listen for changes to the model that may affect the tree view.
 		 * Changes that affect this view include changes to account names and
 		 * new or deleted accounts.
 		 */
 		JMoneyPlugin.getDefault().addSessionChangeListener(new MyCurrentSessionChangeListener(), viewer.getControl());
-		
+
 //		viewer.expandAll();
 		makeActions();
 		hookContextMenu();
 		contributeToActionBars();
-		
+
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			/**
 			 * When an element is selected and the editor for that element is
@@ -384,29 +423,29 @@ public class NavigationView extends ViewPart {
 			 * the user must double click.
 			 */
 			public void selectionChanged(SelectionChangedEvent event) {
-			   	if (event.getSelection().isEmpty()) {
-			   		// I don't see how this can happen.
-			   	} else if (event.getSelection() instanceof IStructuredSelection) {
-			   		IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-			   		for (Object selectedObject: selection.toList()) {
-			   			
-			   			// Find and activate the editor for this node (if any)
-			   			Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
-			   			if (!pageFactories.isEmpty()) {
-			   					IWorkbenchWindow window = getSite().getWorkbenchWindow();
-			   					IEditorInput editorInput = new NodeEditorInput(selectedObject,
-			   							labelProvider.getText(selectedObject),
-										labelProvider.getImage(selectedObject),
-										pageFactories,
-										null);
-			   					IWorkbenchPart editor = window.getActivePage().findEditor(editorInput);
-			   					window.getActivePage().activate(editor);
-			   			}
-			   			
-			   			break;
-			   		}
-			   	}
-		   }
+				if (event.getSelection().isEmpty()) {
+					// I don't see how this can happen.
+				} else if (event.getSelection() instanceof IStructuredSelection) {
+					IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+					for (Object selectedObject: selection.toList()) {
+
+						// Find and activate the editor for this node (if any)
+						Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
+						if (!pageFactories.isEmpty()) {
+							IWorkbenchWindow window = getSite().getWorkbenchWindow();
+							IEditorInput editorInput = new NodeEditorInput(selectedObject,
+									labelProvider.getText(selectedObject),
+									labelProvider.getImage(selectedObject),
+									pageFactories,
+									null);
+							IWorkbenchPart editor = window.getActivePage().findEditor(editorInput);
+							window.getActivePage().activate(editor);
+						}
+
+						break;
+					}
+				}
+			}
 		});
 
 		/**
@@ -414,38 +453,331 @@ public class NavigationView extends ViewPart {
 		 * for this element.
 		 */
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
-			   public void doubleClick(DoubleClickEvent event) {
-				   	if (event.getSelection().isEmpty()) {
-				   		// I don't see how this can happen.
-				   	} else if (event.getSelection() instanceof IStructuredSelection) {
-				   		IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-				   		for (Object selectedObject: selection.toList()) {
-				   			
-				   			Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
-				   			
-				   			// Create an editor for this node (or active if an editor
-				   			// is already open).  However, if no pages are registered for this
-				   			// node then do nothing.
-				   			if (!pageFactories.isEmpty()) {
-				   				try {
-				   					IWorkbenchWindow window = getSite().getWorkbenchWindow();
-				   					IEditorInput editorInput = new NodeEditorInput(selectedObject,
-				   							labelProvider.getText(selectedObject),
-											labelProvider.getImage(selectedObject),
-											pageFactories,
-											null);
-				   					window.getActivePage().openEditor(editorInput,
-				   					"net.sf.jmoney.genericEditor");
-				   				} catch (PartInitException e) {
-				   					JMoneyPlugin.log(e);
-				   				}
-				   			}
-				   			
-				   			break;
-				   		}
-				   	}
-			   }
-			});
+			public void doubleClick(DoubleClickEvent event) {
+				if (event.getSelection().isEmpty()) {
+					// I don't see how this can happen.
+				} else if (event.getSelection() instanceof IStructuredSelection) {
+					IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+					for (Object selectedObject: selection.toList()) {
+
+						Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
+
+						// Create an editor for this node (or active if an editor
+						// is already open).  However, if no pages are registered for this
+						// node then do nothing.
+						if (!pageFactories.isEmpty()) {
+							try {
+								IWorkbenchWindow window = getSite().getWorkbenchWindow();
+								IEditorInput editorInput = new NodeEditorInput(selectedObject,
+										labelProvider.getText(selectedObject),
+										labelProvider.getImage(selectedObject),
+										pageFactories,
+										null);
+								window.getActivePage().openEditor(editorInput,
+										"net.sf.jmoney.genericEditor");
+							} catch (PartInitException e) {
+								JMoneyPlugin.log(e);
+							}
+						}
+
+						break;
+					}
+				}
+			}
+		});
+
+		/*
+		 * Add drag and drop support to the tree.  This allows objects such as accounts to
+		 * be moved.
+		 */
+
+		final DragSource dragSource = new DragSource(viewer.getControl(), DND.DROP_MOVE);
+
+		// Provide data using a local reference only (can only drag and drop
+		// within the Java VM)
+		Transfer[] types = new Transfer[] { LocalSelectionTransfer.getTransfer() };
+		dragSource.setTransfer(types);
+
+		dragSource.addDragListener(new DragSourceListener() {
+			public void dragStart(DragSourceEvent event) {
+				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
+				for (Object draggedObject: selection.toArray()) {
+					/*
+					 * Only the model objects can be dragged.  We do not allow the fixed nodes (TreeNode objects)
+					 * to be moved.
+					 */
+					if (!(draggedObject instanceof ExtendableObject)) {
+						// we don't want to accept drag
+						event.doit = false;
+						return;
+					}
+				}
+			}
+			
+			public void dragSetData(DragSourceEvent event) {
+				// The current selection in the tree is the dragged selection.
+				if (LocalSelectionTransfer.getTransfer().isSupportedType(event.dataType)) {
+					LocalSelectionTransfer.getTransfer().setSelection(viewer.getSelection());
+				}
+			}
+			
+			public void dragFinished(DragSourceEvent event) {
+					/*
+					 * Normally the object would be deleted from its original
+					 * position here. However, the underlying datastore does a
+					 * move (it does not support copy) so the delete must be
+					 * done concurrently with the insert and is done by the drop
+					 * target.
+					 */
+			}
+		});
+
+		viewer.getControl().addDisposeListener(new DisposeListener() {
+			public void widgetDisposed(DisposeEvent e) {
+				dragSource.dispose();
+			}
+		});
+
+		/*
+		 * Add the drop support.
+		 */
+		final DropTarget dropTarget = new DropTarget(viewer.getControl(), DND.DROP_MOVE);
+
+		// Data is provided using a local reference only (can only drag and drop
+		// within the Java VM)
+		Transfer[] types2 = new Transfer[] { LocalSelectionTransfer.getTransfer() };
+		dropTarget.setTransfer(types2);
+
+		dropTarget.addDropListener(new DropTargetAdapter() {
+
+			private List draggedObjects;
+			private TreeItem previousTreeItem = null;
+			private boolean canDrop;
+
+			@Override
+			public void dragEnter(DropTargetEvent event) {
+				/*
+				 * We fetch the set of dragged objects, because the set of nodes
+				 * onto which an object can be dropped depends on the class of
+				 * the objects to be dropped. Unfortunately this is not
+				 * available on all platforms, only on Windows. The following
+				 * call to the nativeToJava method will return the ISelection
+				 * object on Windows but null on other platforms. If we get null
+				 * back, we assume the drop is valid.
+				 */
+				ISelection selection = (ISelection)LocalSelectionTransfer.getTransfer().nativeToJava(event.currentDataType);
+				if (selection == null) {
+					// The selection cannot be determined on this platform - accept the drag
+					draggedObjects = null;
+					return;
+				}
+
+				if (selection instanceof StructuredSelection) {
+					draggedObjects = ((StructuredSelection)selection).toList();
+				} else {
+					event.detail = DND.DROP_NONE;
+				}
+			}
+
+			@Override
+			public void dragLeave(DropTargetEvent event) {
+			}
+
+			@Override
+			public void dragOperationChanged(DropTargetEvent event) {
+			}
+
+			@Override
+			public void dragOver(DropTargetEvent event) {
+				/*
+				 * On non-Windows platforms we do not get back the list of dragged
+				 * objects, this information not being made available by the OS until
+				 * they are dropped.  In this case, the list is null and we give
+				 * feedback to the user that the drop will be accepted (even though
+				 * it may not result in a successful drop).
+				 */
+				if (draggedObjects == null || canDrop(draggedObjects, (TreeItem)event.item)) {
+					event.detail = DND.DROP_MOVE;
+				} else {
+					event.detail = DND.DROP_NONE;
+				}
+
+				event.feedback = DND.FEEDBACK_SELECT | DND.FEEDBACK_EXPAND | DND.FEEDBACK_SCROLL;
+			}
+
+			private boolean canDrop(List draggedObjects, TreeItem item) {
+				if (previousTreeItem != item) {
+					canDrop = true;
+					for (Object object: draggedObjects) {
+						if (!canDrop(object, item.getData())) {
+							canDrop = false;
+							break;
+						}
+					}
+
+					previousTreeItem = item;
+				}
+
+				return canDrop;
+			}
+			
+			private boolean canDrop(Object draggedObject, Object targetObject) {
+				boolean success = false;
+
+				if (targetObject == TreeNode.getTreeNode(AccountsNode.ID)) {
+					if (draggedObject instanceof CapitalAccount) {
+						success = true;
+					}
+				} else if (targetObject == TreeNode.getTreeNode(CategoriesNode.ID)) {
+					if (draggedObject instanceof IncomeExpenseAccount) {
+						success = true;
+					}
+				} else if (targetObject instanceof CapitalAccount) {
+					if (draggedObject instanceof CapitalAccount && !isDescendentOf(targetObject, draggedObject)) {
+						success = true;
+					}
+				} else if (targetObject instanceof IncomeExpenseAccount) {
+					if (draggedObject instanceof IncomeExpenseAccount && !isDescendentOf(targetObject, draggedObject)) {
+						success = true;
+					}
+				}
+
+				return success;
+			}
+
+			/**
+			 * 
+			 * @param object1
+			 * @param object2
+			 * @return true if object1 is a descendant of object2, false otherwise
+			 */
+			private boolean isDescendentOf(Object object1, Object object2) {
+				if (object1 instanceof Account) {
+					Account ancestorOfObject1 = (Account)object1;
+					do {
+						if (ancestorOfObject1 == object2) {
+							return true;
+						}
+						ancestorOfObject1 = ancestorOfObject1.getParent();
+					} while (ancestorOfObject1 != null);
+				}
+				
+				return false;
+			}
+
+			@Override
+			public void drop(DropTargetEvent event) {
+				if (event.data == null) {
+					event.detail = DND.DROP_NONE;
+					return;
+				}
+
+				// event.data contains a StructuredSelection with a single
+				// element being the object being dragged.
+
+				boolean success = false;
+
+				TreeItem item = (TreeItem)event.item;
+				Object targetObject = item.getData();
+
+				if (LocalSelectionTransfer.getTransfer().isSupportedType(event.currentDataType)) {
+					ISelection selection = LocalSelectionTransfer.getTransfer().getSelection();
+					if (selection instanceof StructuredSelection) {
+						StructuredSelection structured = (StructuredSelection)selection;
+						List draggedObjects = structured.toList();
+
+						if (!canDrop(draggedObjects, item)) {
+							event.detail = DND.DROP_NONE;
+							return;
+						}
+						
+						if (targetObject == TreeNode.getTreeNode(AccountsNode.ID)) {
+							success = moveCapitalAccounts(session.getAccountCollection(), draggedObjects);
+						} else if (targetObject == TreeNode.getTreeNode(CategoriesNode.ID)) {
+							success = moveCategoryAccounts(session.getAccountCollection(), draggedObjects);
+						} else if (targetObject instanceof CapitalAccount) {
+							success = moveCapitalAccounts(((CapitalAccount)targetObject).getSubAccountCollection(), draggedObjects);
+						} else if (targetObject instanceof IncomeExpenseAccount) {
+							success = moveCategoryAccounts(((IncomeExpenseAccount)targetObject).getSubAccountCollection(), draggedObjects);
+						}
+					}
+				}
+
+				if (!success) {
+					event.detail = DND.DROP_NONE;
+				}
+			}
+
+			private boolean moveCapitalAccounts(ObjectCollection<? super CapitalAccount> accountCollection, List draggedObjects) {
+				ArrayList<CapitalAccount> draggedAccounts = new ArrayList<CapitalAccount>();
+				for (Object draggedObject: draggedObjects) {
+					if (!(draggedObject instanceof CapitalAccount)) {
+						return false;
+					}
+					draggedAccounts.add((CapitalAccount)draggedObject);
+				}
+				moveElements(accountCollection, draggedAccounts);
+				return true;
+			}
+
+			private boolean moveCategoryAccounts(ObjectCollection<? super IncomeExpenseAccount> accountCollection, List draggedObjects) {
+				ArrayList<IncomeExpenseAccount> draggedAccounts = new ArrayList<IncomeExpenseAccount>();
+				for (Object draggedObject: draggedObjects) {
+					if (!(draggedObject instanceof IncomeExpenseAccount)) {
+						return false;
+					}
+					draggedAccounts.add((IncomeExpenseAccount)draggedObject);
+				}
+				moveElements(accountCollection, draggedAccounts);
+				return true;
+			}
+
+			private <E extends ExtendableObject> void moveElements(final ObjectCollection<? super E> targetCollection, final Collection<E> objectsToMove) {
+				IOperationHistory history = NavigationView.this.getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getOperationHistory();
+
+				String description;
+				if (objectsToMove.size() == 1) {
+					Object[] messageArgs = new Object[] {
+							objectsToMove.iterator().next().toString() 
+					};
+					description = new MessageFormat("Move {0}", java.util.Locale.US).format(messageArgs); 
+				} else {
+					Object[] messageArgs = new Object[] {
+							Integer.toString(objectsToMove.size())
+					};
+					description = new MessageFormat("Move {0} Accounts", java.util.Locale.US).format(messageArgs); 
+				}
+
+				IUndoableOperation operation = new AbstractDataOperation(session, description) {
+					@Override
+					public IStatus execute() throws ExecutionException {
+						for (E objectToMove: objectsToMove) {
+							targetCollection.moveElement(objectToMove);
+						}
+						return Status.OK_STATUS;
+					}
+				};
+				operation.addContext(session.getUndoContext());
+				try {
+					history.execute(operation, null, null);
+				} catch (ExecutionException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+
+			@Override
+			public void dropAccept(DropTargetEvent event) {
+				// TODO Should the check code in 'drop' be moved here?
+			}
+		});
+
+		viewer.getControl().addDisposeListener(new DisposeListener() {
+			public void widgetDisposed(DisposeEvent e) {
+				dropTarget.dispose();
+			}
+		});
+
 
 		/*
 		 * There is no layout set on the navigation view. Therefore we must
@@ -453,7 +785,7 @@ public class NavigationView extends ViewPart {
 		 * size of the visible control to match.
 		 */
 		parent.addControlListener(new ControlAdapter() {
-		    @Override	
+			@Override	
 			public void controlResized(ControlEvent e) {
 				if (JMoneyPlugin.getDefault().getSession() == null) {
 					noSessionMessage.setSize(parent.getSize());
@@ -466,7 +798,7 @@ public class NavigationView extends ViewPart {
 		});
 	}
 
-	
+
 	/**
 	 * Given a node in the navigation view, returns an array
 	 * containing the page factories that create each tabbed
@@ -508,7 +840,7 @@ public class NavigationView extends ViewPart {
 		IActionBars bars = getViewSite().getActionBars();
 		fillLocalPullDown(bars.getMenuManager());
 		fillLocalToolBar(bars.getToolBarManager());
-		
+
 		ActionGroup undoRedoActionGroup = new UndoRedoActionGroup(
 				getSite(), 
 				getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
@@ -524,28 +856,28 @@ public class NavigationView extends ViewPart {
 		manager.add(new Separator());
 		manager.add(deleteAccountAction);
 
-		
+
 		ActionGroup undoRedoActionGroup = new UndoRedoActionGroup(
 				getSite(), 
 				getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
 				true);
 		undoRedoActionGroup.fillContextMenu(manager);
-		
+
 	}
 
 	private void fillContextMenu(IMenuManager manager) {
 		// Get the current node
 		Object selectedObject = null;
 		IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-   		for (Object selectedObject2: selection.toList()) {
+		for (Object selectedObject2: selection.toList()) {
 			selectedObject = selectedObject2;
 			break;
 		}
-		
+
 		if (!getPageFactories(selectedObject).isEmpty()) {
 			manager.add(openEditorAction);
 		}
-		
+
 		manager.add(new Separator());
 
 		if (selectedObject == TreeNode.getTreeNode(AccountsNode.ID) 
@@ -563,78 +895,78 @@ public class NavigationView extends ViewPart {
 		if (selectedObject instanceof Account) {
 			manager.add(deleteAccountAction);
 		}
-		
+
 		manager.add(new Separator());
 
-		
+
 		ActionGroup ag = new UndoRedoActionGroup(
 				getSite(), 
 				getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
 				true);
 		ag.fillContextMenu(manager);
-		
-		
+
+
 		drillDownAdapter.addNavigationActions(manager);
 		// Other plug-ins can contribute there actions here
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
-	
+
 	private void fillLocalToolBar(IToolBarManager manager) {
 		drillDownAdapter.addNavigationActions(manager);
 	}
 
 	private void makeActions() {
 		openEditorAction = new Action() {
-		    @Override	
+			@Override	
 			public void run() {
 				Object selectedObject = null;
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		   		for (Object selectedObject2: selection.toList()) {
+				for (Object selectedObject2: selection.toList()) {
 					selectedObject = selectedObject2;
 					break;
 				}
-				
-	   			Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
-	   			Assert.isTrue(!pageFactories.isEmpty());
-	   			
-	   			// Create an editor for this node (or active if an editor
-	   			// is already open).
-	   			try {
-	   				IWorkbenchWindow window = getSite().getWorkbenchWindow();
-	   				IEditorInput editorInput = new NodeEditorInput(selectedObject,
-	   						labelProvider.getText(selectedObject),
+
+				Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
+				Assert.isTrue(!pageFactories.isEmpty());
+
+				// Create an editor for this node (or active if an editor
+				// is already open).
+				try {
+					IWorkbenchWindow window = getSite().getWorkbenchWindow();
+					IEditorInput editorInput = new NodeEditorInput(selectedObject,
+							labelProvider.getText(selectedObject),
 							labelProvider.getImage(selectedObject),
 							pageFactories,
 							null);
-	   				window.getActivePage().openEditor(editorInput,
-	   				"net.sf.jmoney.genericEditor");
-	   			} catch (PartInitException e) {
-	   				JMoneyPlugin.log(e);
-	   			}
+					window.getActivePage().openEditor(editorInput,
+							"net.sf.jmoney.genericEditor");
+				} catch (PartInitException e) {
+					JMoneyPlugin.log(e);
+				}
 			}
 		};
 		openEditorAction.setText(JMoneyPlugin.getResourceString("MainFrame.openEditor"));
 		openEditorAction.setToolTipText(JMoneyPlugin.getResourceString("MainFrame.openEditor"));
-		
+
 		/*
 		 * For each class of object derived (directly or indirectly) from the
 		 * capital account class, and that is not itself derivable, add a menu
 		 * item to create a new account of that type.
 		 */
 		for (final ExtendablePropertySet<? extends CapitalAccount> derivedPropertySet: CapitalAccountInfo.getPropertySet().getDerivedPropertySets()) {
-			
+
 			Action newAccountAction = new Action() {
-			    @Override	
+				@Override	
 				public void run() {
 					CapitalAccount account = null;
 					IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-			   		for (Object selectedObject: selection.toList()) {
+					for (Object selectedObject: selection.toList()) {
 						if (selectedObject instanceof CapitalAccount) {
 							account = (CapitalAccount)selectedObject;
 							break;
 						}
 					}
-					
+
 					NewAccountWizard wizard = new NewAccountWizard(session, account, derivedPropertySet);
 					WizardDialog dialog = new WizardDialog(getSite().getShell(), wizard);
 					dialog.setPageSize(600, 300);
@@ -646,41 +978,41 @@ public class NavigationView extends ViewPart {
 					}
 				}
 			};
-			
+
 			Object [] messageArgs = new Object[] {
 					derivedPropertySet.getObjectDescription()
 			};
-			
+
 			newAccountAction.setText(
 					new java.text.MessageFormat(
 							JMoneyPlugin.getResourceString("MainFrame.newAccount"), 
 							java.util.Locale.US)
-							.format(messageArgs));
-			
+					.format(messageArgs));
+
 			newAccountAction.setToolTipText(
 					new java.text.MessageFormat(
 							"Create a New {0}", 
 							java.util.Locale.US)
-							.format(messageArgs));
-			
+					.format(messageArgs));
+
 			newAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
 					getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
-			
+
 			newAccountActions.add(newAccountAction);
 		}
 
 		newCategoryAction = new Action() {
-		    @Override	
+			@Override	
 			public void run() {
 				IncomeExpenseAccount account = null;
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		   		for (Object selectedObject: selection.toList()) {
+				for (Object selectedObject: selection.toList()) {
 					if (selectedObject instanceof IncomeExpenseAccount) {
 						account = (IncomeExpenseAccount)selectedObject;
 						break;
 					}
 				}
-				
+
 				NewAccountWizard wizard = new NewAccountWizard(session, account);
 				WizardDialog dialog = new WizardDialog(getSite().getShell(), wizard);
 				dialog.setPageSize(600, 300);
@@ -692,33 +1024,33 @@ public class NavigationView extends ViewPart {
 				}
 			}
 		};
-		
+
 		Object [] messageArgs = new Object[] {
 				IncomeExpenseAccountInfo.getPropertySet().getObjectDescription()
 		};
-		
+
 		newCategoryAction.setText(
 				new java.text.MessageFormat(
 						JMoneyPlugin.getResourceString("MainFrame.newAccount"), 
 						java.util.Locale.US)
-						.format(messageArgs));
-		
+				.format(messageArgs));
+
 		newCategoryAction.setToolTipText(
 				new java.text.MessageFormat(
 						"Create a New {0}", 
 						java.util.Locale.US)
-						.format(messageArgs));
-		
+				.format(messageArgs));
+
 		newCategoryAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
 				getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
-		
+
 		deleteAccountAction = new Action() {
-		    @Override	
+			@Override	
 			public void run() {
 				final Session session = JMoneyPlugin.getDefault().getSession();
 				Account account = null;
 				IStructuredSelection selection = (IStructuredSelection)viewer.getSelection();
-		   		for (Object selectedObject: selection.toList()) {
+				for (Object selectedObject: selection.toList()) {
 					account = (Account)selectedObject;
 					break;
 				}
@@ -726,7 +1058,7 @@ public class NavigationView extends ViewPart {
 					final Account account2 = account;
 
 					IOperationHistory history = NavigationView.this.getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getOperationHistory();
-					
+
 					IUndoableOperation operation = new AbstractDataOperation(session, "delete account") {
 						@Override
 						public IStatus execute() throws ExecutionException {
@@ -738,11 +1070,11 @@ public class NavigationView extends ViewPart {
 								}
 							} else {
 								session.deleteAccount(account2);
-						}
+							}
 							return Status.OK_STATUS;
 						}
 					};
-					
+
 					operation.addContext(session.getUndoContext());
 					try {
 						history.execute(operation, null, null);
@@ -750,16 +1082,16 @@ public class NavigationView extends ViewPart {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					
+
 				}
 			}
 		};
 		deleteAccountAction.setText(JMoneyPlugin.getResourceString("MainFrame.deleteAccount"));
 		deleteAccountAction.setToolTipText("Delete an account");
 		deleteAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-			getImageDescriptor(ISharedImages.IMG_TOOL_DELETE));
+				getImageDescriptor(ISharedImages.IMG_TOOL_DELETE));
 	}
-	
+
 	/**
 	 * Passing the focus request to the viewer's control.
 	 */

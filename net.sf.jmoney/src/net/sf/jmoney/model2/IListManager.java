@@ -43,7 +43,7 @@ public interface IListManager<E extends ExtendableObject> extends Collection<E> 
 	 * 			the exact type of the object to create must be given).
 	 * @return the newly created object.
 	 */
-	<F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet);
+	<F extends E> F createNewElement(ExtendablePropertySet<F> propertySet);
 
 	/**
 	 * This method creates a new object in this collection
@@ -53,5 +53,29 @@ public interface IListManager<E extends ExtendableObject> extends Collection<E> 
 	 * @param values values to be set in the properties of the new object 
 	 * @return the newly created object.
 	 */
-	<F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, IValues values);
+	<F extends E> F createNewElement(ExtendablePropertySet<F> propertySet, IValues values);
+	
+	/**
+	 * Deletes the given object from this list.  Because objects are 'owned' by the
+	 * lists, removing it from the list means deleting the object altogether from
+	 * the datastore.
+	 *
+	 * This method should fail if there are references to the object.  However,
+	 * this is expensive to enforce, so it may not fail.  If the underlying datastore
+	 * is a relational database and foreign key constraints have been defined
+	 * then teh database will cause a failure.
+	 * 
+	 * @param extendableObject
+	 * @return true if the element was in the list, false if it was not
+	 */
+	boolean deleteElement(E extendableObject);
+	
+	/**
+	 * Moves the given object into this list, removing it from its
+	 * original list.
+	 * 
+	 * @param extendableObject
+	 * @param originalList 
+	 */
+	void moveElement(E extendableObject, IListManager originalList);
 }

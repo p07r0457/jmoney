@@ -68,7 +68,7 @@ public class Session extends ExtendableObject implements IAdaptable {
      */
     public Session(
     		IObjectKey objectKey,
-			IObjectKey parentKey,
+			ListKey parentKey,
     		IListManager<Commodity> commodities,
 			IListManager<Account> accounts,
 			IListManager<Transaction> transactions,
@@ -100,7 +100,7 @@ public class Session extends ExtendableObject implements IAdaptable {
      */
     public Session(
     		IObjectKey objectKey,
-			IObjectKey parentKey) {
+			ListKey parentKey) {
     	super(objectKey, parentKey);
 
     	this.commodities = objectKey.constructListManager(SessionInfo.getCommoditiesAccessor());

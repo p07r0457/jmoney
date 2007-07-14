@@ -22,17 +22,18 @@
 
 package net.sf.jmoney.isolation;
 
-import org.eclipse.core.runtime.Assert;
-
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
+
+import org.eclipse.core.runtime.Assert;
 
 /**
  * This class provides the IObjectKey implementation for objects
@@ -207,7 +208,7 @@ public class UncommittedObjectKey implements IObjectKey {
 		return transactionManager.getSession();
 	}
 
-	public DataManager getSessionManager() {
+	public DataManager getDataManager() {
 		// This method is only called to get optimized datastore interfaces
 		// from the session manager adapter, and the transaction manager provides
 		// the implementation for this when the data is uncommitted.
@@ -275,6 +276,6 @@ public class UncommittedObjectKey implements IObjectKey {
 	}
 
 	public <E extends ExtendableObject> IListManager<E> constructListManager(ListPropertyAccessor<E> listAccessor) {
-		return new UncommittedListManager<E>(transactionManager);
+		return new UncommittedListManager<E>(new ListKey<E>(this, listAccessor), transactionManager);
 	}
 }

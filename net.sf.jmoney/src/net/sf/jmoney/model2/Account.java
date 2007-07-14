@@ -39,7 +39,7 @@ public abstract class Account extends ExtendableObject implements Comparable<Acc
 
 	protected Account(
 			IObjectKey objectKey, 
-			IObjectKey parentKey,
+			ListKey parentKey,
 			String name,
 			IValues extensionValues) { 
 		super(objectKey, parentKey, extensionValues);
@@ -48,7 +48,7 @@ public abstract class Account extends ExtendableObject implements Comparable<Acc
 	
 	protected Account(
 			IObjectKey objectKey, 
-			IObjectKey parentKey) { 
+			ListKey parentKey) { 
 		super(objectKey, parentKey);
 		this.name = null;
 	}
@@ -77,7 +77,7 @@ public abstract class Account extends ExtendableObject implements Comparable<Acc
 	}
 	
 	public Account getParent() {
-		ExtendableObject parent = parentKey.getObject();
+		ExtendableObject parent = parentKey.getParentKey().getObject();
 		if (parent instanceof Account) {
 			return (Account)parent;
 		} else {

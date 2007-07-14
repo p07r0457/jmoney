@@ -27,11 +27,11 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Iterator;
 
+import net.sf.jmoney.jdbcdatastore.SessionManager.DatabaseListKey;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IValues;
-import net.sf.jmoney.model2.ListPropertyAccessor;
 
 /**
  * Every datastore implementation must provide an implementation
@@ -42,17 +42,15 @@ import net.sf.jmoney.model2.ListPropertyAccessor;
  * @author Nigel Westbury
  */
 public class ListManagerUncached<E extends ExtendableObject> implements IListManager<E> {
-	private IDatabaseRowKey parentKey;
 	private SessionManager sessionManager;
-	private ListPropertyAccessor<E> listProperty;
+	private DatabaseListKey<E> listKey;
 	
-	public ListManagerUncached(SessionManager sessionManager, IDatabaseRowKey parentKey, ListPropertyAccessor<E> listProperty) {
-		this.parentKey = parentKey;
+	public ListManagerUncached(SessionManager sessionManager, DatabaseListKey<E> listKey) {
 		this.sessionManager = sessionManager;
-		this.listProperty = listProperty;
+		this.listKey = listKey;
 	}
 	
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
+	public <F extends E> F createNewElement(ExtendablePropertySet<F> propertySet) {
  		/*
 		 * First build the in-memory object. Even though the object is not
 		 * cached in the parent list property, the object must be constructed to
@@ -66,18 +64,18 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		 * contain a reference to the other, so they have the same lifetime.
 		 */
 		// TODO: remove constructWithCachedList parameter
-		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent);
+		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, sessionManager.constructListKey(listKey));
 		objectKey.setObject(extendableObject);
 		
 		// Insert the new object into the tables.
 		
-		int rowId = sessionManager.insertIntoDatabase(propertySet, extendableObject, listProperty, parent);
+		int rowId = sessionManager.insertIntoDatabase(propertySet, extendableObject, listKey);
 		objectKey.setRowId(rowId);
 		
 		return extendableObject;
 	}
 	
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, IValues values) {
+	public <F extends E> F createNewElement(ExtendablePropertySet<F> propertySet, IValues values) {
  		/*
 		 * First build the in-memory object. Even though the object is not
 		 * cached in the parent list property, the object must be constructed to
@@ -90,23 +88,33 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		 * Constructing the object means constructing the object key. Both
 		 * contain a reference to the other, so they have the same lifetime.
 		 */
-		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, parent, values);
+		F extendableObject = sessionManager.constructExtendableObject(propertySet, objectKey, listKey, values);
 		objectKey.setObject(extendableObject);
 		
 		// Insert the new object into the tables.
 		
-		int rowId = sessionManager.insertIntoDatabase(propertySet, extendableObject, listProperty, parent);
+		int rowId = sessionManager.insertIntoDatabase(propertySet, extendableObject, listKey);
 		objectKey.setRowId(rowId);
 		
 		return extendableObject;
 	}
 
+	public boolean deleteElement(E extendableObject) {
+		// Delete this object from the database.
+		IDatabaseRowKey key = (IDatabaseRowKey)extendableObject.getObjectKey();
+		return sessionManager.deleteFromDatabase(key);
+	}
+
+	public void moveElement(E extendableObject, IListManager originalListManager) {
+		sessionManager.reparentInDatabase(extendableObject, listKey);
+	}
+
 	public int size() {
 		try {
-			String tableName = listProperty.getElementPropertySet().getId().replace('.', '_');
-			String columnName = listProperty.getName().replace('.', '_');
+			String tableName = listKey.listPropertyAccessor.getElementPropertySet().getId().replace('.', '_');
+			String columnName = listKey.listPropertyAccessor.getName().replace('.', '_');
 			String sql = "SELECT COUNT(*) FROM " + tableName
-			+ " WHERE \"" + columnName + "\" = " + parentKey.getRowId();
+			+ " WHERE \"" + columnName + "\" = " + listKey.parentKey.getRowId();
 			System.out.println(sql);
 			ResultSet resultSet = sessionManager.getReusableStatement().executeQuery(sql);
 			resultSet.next();
@@ -140,12 +148,12 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		 * iterate over the final property sets (like the ListManagerCached
 		 * object has to).
 		 * 
-		 * The UnchachedObjectIterator is reponsible for closing the result set
+		 * The UnchachedObjectIterator is responsible for closing the result set
 		 * and the associated statement.
 		 */		
 		try {
-			ResultSet resultSet = sessionManager.executeListQuery(parentKey, listProperty, listProperty.getElementPropertySet());
-			return new UncachedObjectIterator<E>(resultSet, listProperty.getElementPropertySet(), parentKey, sessionManager);
+			ResultSet resultSet = sessionManager.executeListQuery(listKey, listKey.listPropertyAccessor.getElementPropertySet());
+			return new UncachedObjectIterator<E>(resultSet, listKey.listPropertyAccessor.getElementPropertySet(), listKey, sessionManager);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException("internal error");
@@ -161,14 +169,21 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 	}
 
 	public boolean add(E extendableObject) {
-		throw new RuntimeException("method not implemented");
+		/*
+		 * This list is not cached so there is nothing to do. The object has
+		 * already been added to the database so the list will be
+		 * correct if it is fetched.
+		 */
+		return true;
 	}
 
 	public boolean remove(Object o) {
-		// Delete this object from the database.
-		ExtendableObject extendableObject = (ExtendableObject)o;
-		IDatabaseRowKey key = (IDatabaseRowKey)extendableObject.getObjectKey();
-		return sessionManager.deleteFromDatabase(key);
+		/*
+		 * This list is not cached so there is nothing to do. The object has
+		 * already been removed from the database so the list will be
+		 * correct if it is fetched.
+		 */
+		return true;
 	}
 
 	public boolean containsAll(Collection<?> arg0) {

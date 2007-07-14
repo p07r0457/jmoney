@@ -42,6 +42,7 @@ import net.sf.jmoney.model2.IPropertyDependency;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
@@ -96,12 +97,12 @@ public class EntryInfo implements IPropertySetInfo {
 	
 	private static ExtendablePropertySet<Entry> propertySet = PropertySet.addBaseFinalPropertySet(Entry.class, "Accounting Entry", new IExtendableObjectConstructors<Entry>() {
 
-		public Entry construct(IObjectKey objectKey, IObjectKey parentKey) {
+		public Entry construct(IObjectKey objectKey, ListKey parentKey) {
 			return new Entry(objectKey, parentKey);
 		}
 
 		public Entry construct(IObjectKey objectKey,
-				IObjectKey parentKey, IValues values) {
+				ListKey parentKey, IValues values) {
 			return new Entry(
 					objectKey, 
 					parentKey, 

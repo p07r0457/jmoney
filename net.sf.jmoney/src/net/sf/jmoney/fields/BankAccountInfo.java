@@ -30,6 +30,7 @@ import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IValues;
+import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
@@ -54,7 +55,7 @@ public class BankAccountInfo implements IPropertySetInfo {
 
 	private static ExtendablePropertySet<BankAccount> propertySet = PropertySet.addDerivedFinalPropertySet(BankAccount.class, JMoneyPlugin.getResourceString("AccountPropertiesPanel.ObjectDescription"), CurrencyAccountInfo.getPropertySet(), new IExtendableObjectConstructors<BankAccount>() { //$NON-NLS-1$
 
-		public BankAccount construct(IObjectKey objectKey, IObjectKey parentKey) {
+		public BankAccount construct(IObjectKey objectKey, ListKey parentKey) {
 			return new BankAccount(
 					objectKey, 
 					parentKey
@@ -62,7 +63,7 @@ public class BankAccountInfo implements IPropertySetInfo {
 		}
 
 		public BankAccount construct(IObjectKey objectKey,
-				IObjectKey parentKey, IValues values) {
+				ListKey parentKey, IValues values) {
 			return new BankAccount(
 					objectKey, 
 					parentKey, 

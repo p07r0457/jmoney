@@ -60,7 +60,7 @@ public abstract class CapitalAccount extends Account {
 	 */
 	public CapitalAccount(
 			IObjectKey objectKey, 
-			IObjectKey parent,
+			ListKey parent,
 			String name,
 			IListManager<CapitalAccount> subAccounts,
 			String abbreviation,
@@ -82,7 +82,7 @@ public abstract class CapitalAccount extends Account {
 	 */
 	public CapitalAccount(
 			IObjectKey objectKey, 
-			IObjectKey parent) { 
+			ListKey parent) { 
 		super(objectKey, parent);
 
 		this.name = JMoneyPlugin.getResourceString("Account.newAccount");

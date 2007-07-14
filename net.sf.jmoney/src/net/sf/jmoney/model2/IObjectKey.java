@@ -135,7 +135,7 @@ public interface IObjectKey {
 	/**
 	 * @return
 	 */
-	DataManager getSessionManager();
+	DataManager getDataManager();
 
 	/**
 	 * Constructs a list manager that is suitable for managing a list

@@ -320,7 +320,7 @@ public abstract class PropertySet<E> {
 	 * is a bank account, credit card account properties if the
 	 * object is a credit card account and so on).
 	 */
-	static public <E extends ExtendableObject> ExtendablePropertySet<?> getPropertySet(Class<E> propertySetClass) {
+	static public <E extends ExtendableObject> ExtendablePropertySet<? extends E> getPropertySet(Class<E> propertySetClass) {
 		return classToPropertySetMap.get(propertySetClass);
 	}
 

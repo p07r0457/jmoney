@@ -302,6 +302,29 @@ public class ChangeManager {
 		}
 	}
 
+	/**
+	 * A ChangeEntry object for a move of an object from one list to another.
+	 */
+	class ChangeEntry_Move<E extends ExtendableObject> extends ChangeEntry {
+		private E movedObject;
+		private KeyProxy originalParentKeyProxy;
+		private ListPropertyAccessor<? super E> originalListProperty;
+
+		ChangeEntry_Move(E movedObject,
+				KeyProxy originalParentKeyProxy,
+				ListPropertyAccessor<? super E> originalListProperty) {
+			this.movedObject = movedObject;
+			this.originalParentKeyProxy = originalParentKeyProxy;
+			this.originalListProperty = originalListProperty;
+		}
+
+		@Override
+		void undo() {
+			ExtendableObject originalParent = originalParentKeyProxy.key.getObject(); // efficient???
+			originalParent.getListPropertyValue(originalListProperty).moveElement(movedObject);
+		}
+	}
+
 	private KeyProxy getKeyProxy(IObjectKey objectKey) {
 		if (objectKey != null) {
 			KeyProxy keyProxy = keyProxyMap.get(objectKey);
@@ -357,12 +380,12 @@ public class ChangeManager {
 		}
 	}
 
-	public void processObjectCreation(ExtendableObject parent,
-			ListPropertyAccessor<?> owningListProperty, ExtendableObject newObject) {
+	public void processObjectCreation(ListKey<?> owningListKey, ExtendableObject newObject) {
 
-		ChangeEntry newChangeEntry = new ChangeEntry_Insert(getKeyProxy(parent
-				.getObjectKey()), owningListProperty, getKeyProxy(newObject
-				.getObjectKey()));
+		ChangeEntry newChangeEntry = new ChangeEntry_Insert(
+				getKeyProxy(owningListKey.getParentKey()),
+				owningListKey.getListPropertyAccessor(), 
+				getKeyProxy(newObject.getObjectKey()));
 
 		addUndoableChangeEntry(newChangeEntry);
 	}
@@ -418,6 +441,32 @@ public class ChangeManager {
 		// does not exist in the datastore.  This line is here for
 		// safety only.
 		newChangeEntry.objectKeyProxy.key = null;
+
+		addUndoableChangeEntry(newChangeEntry);
+	}
+
+	/**
+	 * Processes the deletion of an object. This involves adding the property
+	 * values to the change list so that the deletion can be undone.
+	 * <P>
+	 * Also we must call this method recursively on any objects contained in any
+	 * list properties in the object. This is because this object 'owns' such
+	 * objects, and so those objects will also be deleted and must be restored
+	 * if this operation is undone.
+	 * 
+	 * @param <E>
+	 * @param parent
+	 * @param owningListProperty
+	 * @param oldObject
+	 */
+	public <E extends ExtendableObject> void processObjectMove(
+			E movedObject,
+			ListKey<? super E> originalParentListKey) {
+
+		ChangeEntry_Move<E> newChangeEntry = new ChangeEntry_Move<E>(
+				movedObject,
+				getKeyProxy(originalParentListKey.getParentKey()), 
+				originalParentListKey.getListPropertyAccessor());
 
 		addUndoableChangeEntry(newChangeEntry);
 	}

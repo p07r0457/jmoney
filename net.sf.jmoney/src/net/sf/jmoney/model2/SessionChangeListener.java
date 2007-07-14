@@ -116,6 +116,13 @@ public interface SessionChangeListener extends EventListener {
 	 */
     void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue);
 
+    /**
+	 * An extendable object has been moved from one list property to another list property.
+	 * The contents of the object, including the contents of any list properties in it, remain
+	 * intact.  References to the object also remain intact.
+	 */
+    void objectMoved(ExtendableObject movedObject, ExtendableObject originalParent, ExtendableObject newParent, ListPropertyAccessor originalParentListProperty, ListPropertyAccessor newParentListProperty);
+
 	/**
 	 * This method is called after a transaction has completed firing notifications
 	 * during the committing of a transaction.  

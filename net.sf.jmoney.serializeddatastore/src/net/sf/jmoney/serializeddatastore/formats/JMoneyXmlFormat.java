@@ -60,6 +60,7 @@ import javax.xml.transform.stream.StreamResult;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.BankAccountInfo;
 import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
+import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.CapitalAccount;
@@ -73,6 +74,7 @@ import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertyNotFoundException;
@@ -87,6 +89,7 @@ import net.sf.jmoney.serializeddatastore.SessionManager;
 import net.sf.jmoney.serializeddatastore.SimpleListManager;
 import net.sf.jmoney.serializeddatastore.SimpleObjectKey;
 
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Status;
@@ -427,7 +430,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					}
 				}
 				
-				currentSAXEventProcessor = new ObjectProcessor(sessionManager, null, "net.sf.jmoney.session");
+				currentSAXEventProcessor = new ObjectProcessor(sessionManager, null, SessionInfo.getPropertySet(), null);
 			} else {
 				currentSAXEventProcessor.startElement(uri, localName, attributes);
 			}
@@ -587,10 +590,10 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		SimpleObjectKey objectKey;
 		
 		/**
-		 * Key to the parent of the object being parsed.  This is saved
+		 * Key to the list that contains the object being parsed.  This is saved
 		 * because we will need it when the object is constructed.
 		 */
-		IObjectKey parentKey;
+		ListKey listKey;
 		
 		/**
 		 * The list of parameters to be passed to the constructor
@@ -618,20 +621,14 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *        found then this original event processor must be restored as
 		 *        the active event processor.
 		 */
-		ObjectProcessor(SessionManager sessionManager, ObjectProcessor parent, String propertySetId) {
+		ObjectProcessor(SessionManager sessionManager, ObjectProcessor parent, ExtendablePropertySet<?> propertySet, ListKey<?> listKey) {
 			super(sessionManager, parent);
+			this.propertySet = propertySet;
 			
 			objectKey = new SimpleObjectKey(sessionManager);
-			parentKey = (parent == null) ? null : parent.objectKey;
 			
-			try {
-				this.propertySet = PropertySet.getExtendablePropertySet(propertySetId);
-			} catch (PropertySetNotFoundException e) {
-				throw new RuntimeException("internal error");
-			}
-
-			for (PropertyAccessor propertyAccessor: propertySet.getListProperties3()) {
-				propertyValueMap.put(propertyAccessor, new SimpleListManager(sessionManager));
+			for (ListPropertyAccessor propertyAccessor: propertySet.getListProperties3()) {
+				propertyValueMap.put(propertyAccessor, new SimpleListManager(sessionManager, listKey));
 			}
 		}
 		
@@ -708,68 +705,76 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					return;
 			}
 			
-			Class propertyClass;
-			if (propertyAccessor.isScalar()) {
-				propertyClass = ((ScalarPropertyAccessor<?>)propertyAccessor).getClassOfValueObject();
-			} else {
-				propertyClass = ((ListPropertyAccessor<?>)propertyAccessor).getElementPropertySet().getImplementationClass();
-			}
-			
 			map = null;
 			id = null;
 			
-			// See if the 'idref' attribute is specified.
-			String idref = atts.getValue("idref");
-			if (idref != null) {
-				Object value;
-				
-				if (propertyClass == Currency.class) {
-					value = idToCommodityMap.get(idref);
-				} else if (propertyClass == Account.class) {
-					value = idToAccountMap.get(idref);
-				} else {
-					throw new RuntimeException("bad XML file");
-				}
+			if (propertyAccessor.isScalar()) {
+				Class propertyClass = ((ScalarPropertyAccessor<?>)propertyAccessor).getClassOfValueObject();
 
-				// Process this element.
-				// Although we already have all the data we need
-				// from the start element, we still need a processor
-				// to process it.
-				// Ideally we should create another processor which
-				// gives errors if there is any additional data.
+				// See if the 'idref' attribute is specified.
+				String idref = atts.getValue("idref");
+				if (idref != null) {
+					Object value;
+					
+					if (propertyClass == Currency.class) {
+						value = idToCommodityMap.get(idref);
+					} else if (propertyClass == Account.class) {
+						value = idToAccountMap.get(idref);
+					} else {
+						throw new RuntimeException("bad XML file");
+					}
 
-				// We pass the value to the processor so that it can pass the value
-				// back to us!  (That is the design - it is up to the inner processor
-				// to supply the value.  It just so happens in the case of an idref
-				// that we know the value before we even create the inner processor
-				// to process the content).
-				
-				currentSAXEventProcessor = new IgnoreElementProcessor(sessionManager, this, value);
-			} else {
-				if (ExtendableObject.class.isAssignableFrom(propertyClass)) {
-					String propertySetId = atts.getValue("propertySet");
-					if (propertySetId == null) {
-						// TODO: following call is overkill, because
-						// the class should be an exact match, not derived
-						// or anything.
-						propertySetId = PropertySet.getPropertySet(propertyClass).getId();
-					}
+					// Process this element.
+					// Although we already have all the data we need
+					// from the start element, we still need a processor
+					// to process it.
+					// Ideally we should create another processor which
+					// gives errors if there is any additional data.
+
+					// We pass the value to the processor so that it can pass the value
+					// back to us!  (That is the design - it is up to the inner processor
+					// to supply the value.  It just so happens in the case of an idref
+					// that we know the value before we even create the inner processor).
 					
-					// Save the id and appropriate map for this object so that the 
-					// object can be added to the map later when the object is created.
-					if (Commodity.class.isAssignableFrom(propertyClass)) {
-						map = idToCommodityMap;
-						id = atts.getValue("id");
-					} else if (Account.class.isAssignableFrom(propertyClass)) {
-						map = idToAccountMap;
-						id = atts.getValue("id");
-					}
-					
-					currentSAXEventProcessor = new ObjectProcessor(sessionManager, this, propertySetId);
+					currentSAXEventProcessor = new IgnoreElementProcessor(sessionManager, this, value);
 				} else {
-					// Property class is primative or primative class
+					Assert.isTrue(!ExtendableObject.class.isAssignableFrom(propertyClass));
+
+					// Property class is primitive or primitive class
 					currentSAXEventProcessor = new PropertyProcessor(sessionManager, this, propertyClass);
 				}
+			} else {
+				ListPropertyAccessor<?> listProperty = (ListPropertyAccessor<?>)propertyAccessor;
+				ExtendablePropertySet<?> typedPropertySet = listProperty.getElementPropertySet();
+				Class propertyClass = typedPropertySet.getImplementationClass();
+
+				ExtendablePropertySet<?> actualPropertySet;
+				
+				if (typedPropertySet.isDerivable()) {
+					String propertySetId = atts.getValue("propertySet");
+					if (propertySetId == null) {
+						throw new RuntimeException("No 'propertySet' attribute specified when required.");
+					}
+					try {
+						actualPropertySet = PropertySet.getExtendablePropertySet(propertySetId);
+					} catch (PropertySetNotFoundException e) {
+						throw new RuntimeException("Invalid 'propertySet' attribute specified.");
+					}
+				} else {
+					actualPropertySet = typedPropertySet;
+				}
+				
+				// Save the id and appropriate map for this object so that the 
+				// object can be added to the map later when the object is created.
+				if (Commodity.class.isAssignableFrom(propertyClass)) {
+					map = idToCommodityMap;
+					id = atts.getValue("id");
+				} else if (Account.class.isAssignableFrom(propertyClass)) {
+					map = idToAccountMap;
+					id = atts.getValue("id");
+				}
+				
+				currentSAXEventProcessor = new ObjectProcessor(sessionManager, this, actualPropertySet, new ListKey(objectKey, listProperty));
 			}
 		}
 			
@@ -822,7 +827,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			};
 			
 			// We can now create the object.
-			ExtendableObject extendableObject = propertySet.constructImplementationObject(objectKey, parentKey, values);
+			ExtendableObject extendableObject = propertySet.constructImplementationObject(objectKey, listKey, values);
 			
 			objectKey.setObject(extendableObject);
 			

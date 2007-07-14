@@ -56,7 +56,7 @@ public class Currency extends Commodity {
      */
 	public Currency(
 				IObjectKey objectKey,
-				IObjectKey parentKey,
+				ListKey parentKey,
 				String name,
 				String code,
 				int decimals,
@@ -76,7 +76,7 @@ public class Currency extends Commodity {
      */
 	public Currency(
 				IObjectKey objectKey,
-				IObjectKey parentKey) {
+				ListKey parentKey) {
 		super(objectKey, parentKey);
 		this.code = null;
 		this.decimals = 2;

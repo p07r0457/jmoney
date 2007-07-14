@@ -36,13 +36,11 @@ import org.eclipse.core.runtime.Assert;
 public class ObjectCollection<E extends ExtendableObject> implements Collection<E> {
 	
 	private IListManager<E> listManager;
-	ExtendableObject parent;
-	ListPropertyAccessor<E> listPropertyAccessor;
+	ListKey<E> listKey;
 	
 	public ObjectCollection(IListManager<E> listManager, ExtendableObject parent, ListPropertyAccessor<E> listPropertyAccessor) {
 		this.listManager = listManager;
-		this.parent = parent;
-		this.listPropertyAccessor = listPropertyAccessor;
+		this.listKey = new ListKey<E>(parent.getObjectKey(), listPropertyAccessor);
 	}
 
 	/**
@@ -55,12 +53,12 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	 * @return
 	 */
 	public <F extends E> F createNewElement(ExtendablePropertySet<F> actualPropertySet) {
-		final F newObject = listManager.createNewElement(parent, actualPropertySet);
+		final F newObject = listManager.createNewElement(actualPropertySet);
 		
-		parent.getSession().getChangeManager().processObjectCreation(parent, listPropertyAccessor, newObject);
+		listKey.getParentKey().getSession().getChangeManager().processObjectCreation(listKey, newObject);
 		
 		// Fire the event.
-		parent.getDataManager().fireEvent(
+		listKey.getParentKey().getDataManager().fireEvent(
 				new ISessionChangeFirer() {
 					public void fire(SessionChangeListener listener) {
 						listener.objectInserted(newObject);
@@ -82,7 +80,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	 *   rather than sending out an object with default values and then a property change
 	 *   notification for each property.
 	 *   
-	 * This may be a top level insert or a descendent of an object that was inserted in
+	 * This may be a top level insert or a descendant of an object that was inserted in
 	 * the same transaction.  We must know the difference so we can fire the objectInserted
 	 * event methods correctly. We therefore need a flag to indicate this.
 	 * 
@@ -91,11 +89,53 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	 *          into a list that existed prior to this transaction
 	 */
 	public <F extends E> F createNewElement(ExtendablePropertySet<F> actualPropertySet, IValues values, final boolean isDescendentInsert) {
-		final F newObject = listManager.createNewElement(parent, actualPropertySet, values);
+		final F newObject = listManager.createNewElement(actualPropertySet, values);
 		
-		parent.getSession().getChangeManager().processObjectCreation(parent, listPropertyAccessor, newObject);
+		listKey.getParentKey().getSession().getChangeManager().processObjectCreation(listKey, newObject);
 		
 		return newObject;
+	}
+	
+	/**
+	 * Moves the given object into this collection, removing it from its
+	 * current parent.
+	 */
+	public void moveElement(final E extendableObject) {
+		Assert.isTrue(listKey.getParentKey().getDataManager() == extendableObject.getDataManager());
+		
+		final ListKey originalListKey = extendableObject.getParentListKey();
+		
+		/*
+		 * Note that if the parent object is not materialized (meaning that the
+		 * getObject method in the following line needs to materialize the
+		 * parent) then we really don't need to do anything to remove the object
+		 * from the parent's list. However, there is no API for this, and the
+		 * extra code for such a small optimization is not worth it.
+		 */
+		ObjectCollection originalCollection = originalListKey.getParentKey().getObject().getListPropertyValue(originalListKey.getListPropertyAccessor());
+		IListManager originalListManager = originalCollection.listManager;
+
+		// Move in the underlying datastore.
+		listManager.moveElement(extendableObject, originalListManager);
+
+		listManager.add(extendableObject);
+		originalListManager.remove(extendableObject);
+		extendableObject.parentKey = listKey;
+
+		listKey.getParentKey().getDataManager().fireEvent(
+				new ISessionChangeFirer() {
+					public void fire(SessionChangeListener listener) {
+						listener.objectMoved(
+								extendableObject, 
+								originalListKey.getParentKey().getObject(),
+								listKey.getParentKey().getObject(),
+								originalListKey.getListPropertyAccessor(),
+								listKey.getListPropertyAccessor()
+						);
+					}
+				});
+		
+		listKey.getParentKey().getSession().getChangeManager().processObjectMove(extendableObject, originalListKey);
 	}
 	
 	public int size() {
@@ -123,6 +163,10 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	}
 	
 	public boolean add(E arg0) {
+		/*
+		 * The Collection methods that mutate the collection should not be
+		 * used.  Use instead createNewElement, deleteElement, and moveElement.
+		 */
 		throw new UnsupportedOperationException();
 	}
 	
@@ -133,6 +177,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	 * @return true if the object existed in this collection,
 	 * 			false if the object was not in the collection
 	 */
+	// TODO: rename to DeleteElement.
 	public boolean remove(Object object) {
 		if (!(object instanceof ExtendableObject)) {
 			return false;
@@ -140,17 +185,16 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 		
 		ExtendableObject extendableObject = (ExtendableObject)object;
 		
-		if (extendableObject.getDataManager() != parent.getDataManager()) {
+		if (extendableObject.getDataManager() != listKey.getParentKey().getDataManager()) {
     		throw new RuntimeException("Invalid call to remove.  The object passed does not belong to the data manager that is the base data manager of this collection.");
 		}
 		
-		// TODO: We should check the containing list property too, as it
-		// is possible that there is more than one list in a given parent
-		// that is able to contain the object (though this is not possible
-		// in the core JMoney schema).
-		
-		if (extendableObject.parentKey.equals(parent.objectKey)) {
-			final E objectToRemove = listPropertyAccessor.getElementPropertySet().getImplementationClass().cast(extendableObject);
+		/*
+		 * Check that the object is in the list.  It is in this list if the parent
+		 * object is the same and the list property is the same.
+		 */
+		if (extendableObject.parentKey.equals(listKey)) {
+			final E objectToRemove = listKey.getListPropertyAccessor().getElementPropertySet().getImplementationClass().cast(extendableObject);
 
 			/*
 			 * Deletion events are fired before the object is removed from the
@@ -158,7 +202,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 			 * object deletion may need to fetch information about the object
 			 * from the datastore.
 			 */
-			parent.getDataManager().fireEvent(
+			listKey.getParentKey().getDataManager().fireEvent(
 					new ISessionChangeFirer() {
 						public void fire(SessionChangeListener listener) {
 							listener.objectRemoved(objectToRemove);
@@ -166,9 +210,9 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 					});
 			
 			// Notify the change manager.
-			parent.getSession().getChangeManager().processObjectDeletion(parent, listPropertyAccessor, objectToRemove);
+			listKey.getParentKey().getSession().getChangeManager().processObjectDeletion(listKey.getParentKey().getObject(), listKey.getListPropertyAccessor(), objectToRemove);
 			
-			boolean found = listManager.remove(object);
+			boolean found = listManager.deleteElement(objectToRemove);
 			Assert.isTrue(found);
 			
 			return true;
@@ -183,21 +227,34 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	}
 	
 	public boolean addAll(Collection<? extends E> arg0) {
+		/*
+		 * The Collection methods that mutate the collection should not be
+		 * used.  Use instead createNewElement, deleteElement, and moveElement.
+		 */
 		throw new UnsupportedOperationException();
 	}
 	
 	public boolean removeAll(Collection<?> arg0) {
-		// TODO: implement this
-		throw new RuntimeException("not yet implemented");
+		/*
+		 * The Collection methods that mutate the collection should not be
+		 * used.  Use instead createNewElement, deleteElement, and moveElement.
+		 */
+		throw new UnsupportedOperationException();
 	}
 	
 	public boolean retainAll(Collection<?> arg0) {
-		// TODO: implement this
-		throw new RuntimeException("not yet implemented");
+		/*
+		 * The Collection methods that mutate the collection should not be
+		 * used.  Use instead createNewElement, deleteElement, and moveElement.
+		 */
+		throw new UnsupportedOperationException();
 	}
 	
 	public void clear() {
-		// TODO: implement this
-		throw new RuntimeException("not yet implemented");
+		/*
+		 * The Collection methods that mutate the collection should not be
+		 * used.  Use instead createNewElement, deleteElement, and moveElement.
+		 */
+		throw new UnsupportedOperationException();
 	}
 }

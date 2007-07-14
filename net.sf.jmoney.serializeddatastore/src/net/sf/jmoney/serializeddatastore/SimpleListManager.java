@@ -30,6 +30,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IValues;
+import net.sf.jmoney.model2.ListKey;
 
 /**
  * Every datastore implementation must provide an implementation
@@ -43,14 +44,16 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 	private static final long serialVersionUID = 2090027937924066725L;
 
 	private SessionManager sessionManager;
+	private ListKey<E> listKey;
 
-	public SimpleListManager(SessionManager sessionManager) {
+	public SimpleListManager(SessionManager sessionManager, ListKey<E> listKey) {
 	 	this.sessionManager = sessionManager;
+	 	this.listKey = listKey;
 	 }
 
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet) {
+	public <F extends E> F createNewElement(ExtendablePropertySet<F> propertySet) {
 		SimpleObjectKey objectKey = new SimpleObjectKey(sessionManager);
-		F extendableObject = propertySet.constructDefaultImplementationObject(objectKey, parent.getObjectKey());
+		F extendableObject = propertySet.constructDefaultImplementationObject(objectKey, listKey);
 		
 		objectKey.setObject(extendableObject);
 
@@ -80,9 +83,9 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 		return extendableObject;
 	}
 
-	public <F extends E> F createNewElement(ExtendableObject parent, ExtendablePropertySet<F> propertySet, IValues values) {
+	public <F extends E> F createNewElement(ExtendablePropertySet<F> propertySet, IValues values) {
 		SimpleObjectKey objectKey = new SimpleObjectKey(sessionManager);
-		F extendableObject = propertySet.constructImplementationObject(objectKey, parent.getObjectKey(), values);
+		F extendableObject = propertySet.constructImplementationObject(objectKey, listKey, values);
 		
 		objectKey.setObject(extendableObject);
 
@@ -111,20 +114,26 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 		
 		return extendableObject;
 	}
-	
-	@Override
-	public boolean remove(Object object) {
+
+	public void moveElement(E extendableObject, IListManager originalList) {
+		/*
+		 * This method moves the object in the underlying datastore.  However, the datastore
+		 * is a serialized datastore, so changes are not made to the datastore at this time.
+		 */
+	}
+
+	public boolean deleteElement(E extendableObject) {
 		// If an account is removed then we
 		// clear out the list.
-		if (object instanceof Account) {
-			Account account = (Account)object;
+		if (extendableObject instanceof Account) {
+			Account account = (Account)extendableObject;
 			sessionManager.removeAccountList(account);
 		}
 		
 		// If an entry is removed then we
 		// must update the lists of entries in each account.
-		if (object instanceof Entry) {
-			Entry entry = (Entry)object;
+		if (extendableObject instanceof Entry) {
+			Entry entry = (Entry)extendableObject;
 			if (entry.getAccount() != null) {
 				sessionManager.removeEntryFromList(entry.getAccount(), entry);
 			}
@@ -135,6 +144,6 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 		// be saved.  Mark the session as modified now.
 		sessionManager.setModified();
 		
-		return super.remove(object);
+		return remove(extendableObject);
 	}
 }

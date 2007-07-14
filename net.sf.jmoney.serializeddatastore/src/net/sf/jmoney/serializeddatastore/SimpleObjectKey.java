@@ -31,6 +31,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
@@ -82,8 +83,10 @@ public class SimpleObjectKey implements IObjectKey {
 			}
 		}
 		
-		// There is no backend datastore that needs updating, so we
-		// have nothing more to do except to mark the session as modified.
+		/*
+		 * There is no back-end datastore that needs updating, so we have
+		 * nothing more to do except to mark the session as modified.
+		 */
 		
 		sessionManager.setModified();
 	}
@@ -92,11 +95,11 @@ public class SimpleObjectKey implements IObjectKey {
 		return sessionManager.getSession();
 	}
 
-	public DataManager getSessionManager() {
+	public DataManager getDataManager() {
 		return sessionManager;
 	}
 
 	public <E extends ExtendableObject> IListManager<E> constructListManager(ListPropertyAccessor<E> listAccessor) {
-		return new SimpleListManager<E>(sessionManager);
+		return new SimpleListManager<E>(sessionManager, new ListKey<E>(this, listAccessor));
 	}
 }

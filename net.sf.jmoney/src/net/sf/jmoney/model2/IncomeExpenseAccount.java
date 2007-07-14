@@ -50,7 +50,7 @@ public class IncomeExpenseAccount extends Account {
 
 	public IncomeExpenseAccount(
 			IObjectKey objectKey, 
-			IObjectKey parent,
+			ListKey parent,
 			String name,
 			IListManager<IncomeExpenseAccount> subAccounts,
 			boolean multiCurrency,
@@ -63,7 +63,9 @@ public class IncomeExpenseAccount extends Account {
 		this.currencyKey = currencyKey;
 	}
 
-	public IncomeExpenseAccount(IObjectKey objectKey, IObjectKey parentKey) { 
+	public IncomeExpenseAccount(
+			IObjectKey objectKey, 
+			ListKey parentKey) { 
 		super(objectKey, parentKey);
 		this.name = JMoneyPlugin.getResourceString("Account.newAccount");
 		this.subAccounts = objectKey.constructListManager(IncomeExpenseAccountInfo.getSubAccountAccessor());
