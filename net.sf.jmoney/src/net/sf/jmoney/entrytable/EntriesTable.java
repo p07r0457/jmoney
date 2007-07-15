@@ -31,18 +31,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CommodityInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.pages.entries.EntryRowSelectionListener;
 import net.sf.jmoney.pages.entries.TransactionDialog;
+import net.sf.jmoney.views.NodeEditorInput;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
@@ -54,6 +58,9 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 
 /**
@@ -231,8 +238,38 @@ public class EntriesTable extends Composite {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
 				/*
-				 * This method scrolls the 'new entry' row into view
-				 * and selects it. 
+				 * This action is not absolutely necessary because there is
+				 * always an empty row at the end of the table that can be used
+				 * to add a new transaction.
+				 * 
+				 * This action is helpful, though, because it does one of two
+				 * things:
+				 * 
+				 * 1. If the 'new entry' row is not the currently selected row
+				 * then it sets the 'new entry' row to be the selected row,
+				 * scrolling if necessary.
+				 * 
+				 * 2. If the 'new entry' row is the currently selected row then
+				 * the entry is committed and, if the commit succeeded, the
+				 * newly created 'new entry' row is selected.
+				 */
+				EntryRowControl selectedRowControl = (EntryRowControl)rowTracker.getSelectedRow();
+				if (selectedRowControl != null) {
+					Entry selectedEntry = selectedRowControl.committedEntryData.getEntry();
+					if (selectedEntry == null) {
+						/*
+						 * The 'new entry' row is currently selected.  We attempt to
+						 * commit it first.
+						 */
+						selectedRowControl.commitChanges();
+					}
+				}
+				
+				/*
+				 * Regardless of whether the 'new entry' row was previously
+				 * selected or not, and regardless of whether any attempt to
+				 * commit the row failed, we select what is now the 'new entry'
+				 * row.
 				 */
 				// TODO: Is this method name confusing?
 				table.getRowControl(newEntryRow);

@@ -313,7 +313,10 @@ public class EntryRowControl extends RowControl<EntryData> {
 
 	@Override
 	protected boolean commitChanges() {
-		return commitChanges("Transaction Changes");
+		return commitChanges(
+				(committedEntryData.getEntry() == null)
+				? "New Transaction"
+				: "Transaction Changes");
 	}
 
 	/**
