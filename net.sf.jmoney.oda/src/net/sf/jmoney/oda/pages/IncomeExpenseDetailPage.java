@@ -258,9 +258,12 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 						memento.putString("toDate", dateFormat.format(toField.getDate()));
 					}
 				}
-				memento.putString(
-						"account",
-						accountField.getAccount().getFullAccountName());
+				
+				if (accountField.getAccount() != null) {
+					memento.putString(
+							"account",
+							accountField.getAccount().getFullAccountName());
+				}
 			}
 		};
 
