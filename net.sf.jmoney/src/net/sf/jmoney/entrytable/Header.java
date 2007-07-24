@@ -55,13 +55,13 @@ public class Header extends Composite {
 		setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GRAY));
 		
 		// KLUDGE: These next two lines are just so the indexes are set.
-		ArrayList<CellBlock<EntryData>> cellList = new ArrayList<CellBlock<EntryData>>();
+		ArrayList<CellBlock<EntryData, EntryRowControl>> cellList = new ArrayList<CellBlock<EntryData, EntryRowControl>>();
 		entriesTable.rootBlock.buildCellList(cellList);
 		
 		entriesTable.rootBlock.createHeaderControls(this);
 	}
 	
-	protected boolean sortOnColumn(IndividualBlock<EntryData> sortProperty, int sortDirection) {
+	protected boolean sortOnColumn(IndividualBlock<EntryData, EntryRowControl> sortProperty, int sortDirection) {
 		entriesTable.sort(sortProperty, sortDirection == SWT.UP);
 
 		// TODO: Is there a better way of getting the table?
@@ -83,7 +83,7 @@ public class Header extends Composite {
 		private Comparator<EntryData> cellComparator;
 		private boolean ascending;
 		
-		RowComparator(IndividualBlock<EntryData> sortProperty, boolean ascending) {
+		RowComparator(IndividualBlock<EntryData, EntryRowControl> sortProperty, boolean ascending) {
 			this.cellComparator = sortProperty.getComparator();
 			this.ascending = ascending;
 		}

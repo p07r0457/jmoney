@@ -33,7 +33,7 @@ import org.eclipse.swt.widgets.Layout;
 
 public class BlockLayout extends Layout {
 
-	private Block<?> block;
+	private Block<?,?> block;
 	private boolean linkedToHeader;
 
 	/**
@@ -69,7 +69,7 @@ public class BlockLayout extends Layout {
  	 * 			If true then the hints are ignored and the widths are always taken from
  	 * 			the blocks.
  	 */
-	public BlockLayout(Block<?> block, boolean linkedToHeader) {
+	public BlockLayout(Block<?,?> block, boolean linkedToHeader) {
 		this.block = block;
 		this.linkedToHeader = linkedToHeader;
 	}

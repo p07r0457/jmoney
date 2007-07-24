@@ -24,7 +24,7 @@ import org.eclipse.swt.widgets.Layout;
 
 public class OtherEntriesControl extends Composite {
 
-	private Block<Entry> rootBlock;
+	private Block<Entry, SplitEntryRowControl> rootBlock;
 	private RowSelectionTracker selectionTracker;
 	private FocusCellTracker focusCellTracker;
 	
@@ -87,7 +87,7 @@ public class OtherEntriesControl extends Composite {
 	
 	static private Image downArrowImage = null;
 
-	public OtherEntriesControl(Composite parent, Block<Entry> rootBlock, RowSelectionTracker selectionTracker, FocusCellTracker focusCellTracker) {
+	public OtherEntriesControl(EntryRowControl parent, Block<Entry, SplitEntryRowControl> rootBlock, RowSelectionTracker selectionTracker, FocusCellTracker focusCellTracker) {
 		super(parent, SWT.NONE);
 		this.rootBlock = rootBlock;
 		this.selectionTracker = selectionTracker;

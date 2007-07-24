@@ -30,7 +30,42 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
-public class BalanceColumn extends IndividualBlock<EntryData> {
+public class BalanceColumn extends IndividualBlock<EntryData, EntryRowControl> {
+
+	private class BalanceCellControl implements ICellControl<EntryData>, IBalanceChangeListener {
+		private final Label balanceLabel;
+		private EntryData entyData = null;
+		
+		private BalanceCellControl(Label balanceLabel) {
+			this.balanceLabel = balanceLabel;
+		}
+
+		public Control getControl() {
+			return balanceLabel;
+		}
+
+		public void load(EntryData entryData) {
+			this.entyData = entryData;
+			balanceLabel.setText(commodityForFormatting.format(entryData.getBalance() + entryData.getEntry().getAmount()));
+		}
+
+		public void save() {
+			// Not editable so nothing to do
+		}
+
+		public void setFocusListener(FocusListener controlFocusListener) {
+			// Nothing to do
+		}
+
+		public void balanceChanged() {
+			/*
+			 * The balance in the EntryData object has changed. This happens if
+			 * the amount in a previous entry changes, or a previous entry is
+			 * inserted or removed.
+			 */
+			balanceLabel.setText(commodityForFormatting.format(entyData.getBalance() + entyData.getEntry().getAmount()));
+		}
+	}
 
 	private Commodity commodityForFormatting;
 
@@ -46,27 +81,14 @@ public class BalanceColumn extends IndividualBlock<EntryData> {
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(Composite parent) {
+	public ICellControl<EntryData> createCellControl(EntryRowControl parent) {
 		final Label balanceLabel = new Label(parent, SWT.TRAIL);
 		
-		return new ICellControl<EntryData>() {
-
-			public Control getControl() {
-				return balanceLabel;
-			}
-
-			public void load(EntryData data) {
-				balanceLabel.setText(commodityForFormatting.format(data.getBalance()));
-			}
-
-			public void save() {
-				// Not editable so nothing to do
-			}
-
-			public void setFocusListener(FocusListener controlFocusListener) {
-				// Nothing to do
-			}
-		};
+		BalanceCellControl cellControl = new BalanceCellControl(balanceLabel);
+		
+		parent.addBalanceChangeListener(cellControl);
+		
+		return cellControl;
 	}
 
 	public String getId() {

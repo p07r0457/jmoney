@@ -128,7 +128,7 @@ public class EntriesTable extends Composite {
 	
 	protected IEntriesContent entriesContent;
 
-	public Block<EntryData> rootBlock;
+	public Block<EntryData, EntryRowControl> rootBlock;
 	
 	public VirtualRowTable table;
 	
@@ -162,7 +162,7 @@ public class EntriesTable extends Composite {
 	private Vector<EntryRowSelectionListener> selectionListeners = new Vector<EntryRowSelectionListener>();
 
 	public EntriesTable(Composite parent, FormToolkit toolkit,
-			Block<EntryData> rootBlock, final IEntriesContent entriesContent, final Session session, IndividualBlock defaultSortColumn, final RowSelectionTracker rowTracker) {
+			Block<EntryData, EntryRowControl> rootBlock, final IEntriesContent entriesContent, final Session session, IndividualBlock defaultSortColumn, final RowSelectionTracker rowTracker) {
 		super(parent, SWT.NONE);
 		
 		this.session = session;
@@ -545,7 +545,7 @@ public class EntriesTable extends Composite {
 				 * entries in the sorted list.
 				 */
 				EntryData data = entries.get(entry);
-				updateFollowingValues(sortedEntries.indexOf(data), data.getBalance() - data.getEntry().getAmount());
+				updateFollowingValues(sortedEntries.indexOf(data), data.getBalance());
 
 				// TODO: Test to see if the amount has changed, and update the following
 				// rows only if so (as the balances will have changed).
@@ -578,22 +578,23 @@ public class EntriesTable extends Composite {
 				 * Because rows are likely to be inserted near the bottom of the
 				 * table, we scan backwards.
 				 * 
-				 * Note that we stop the seach if we reach an entry in the table
-				 * that has not yet been committed.  We cannot compare against such
-				 * entries as we don't have a committed entry available, and also
-				 * we want to be sure that all new entry rows remain at the end.
+				 * We start the search at the penultimate entry. The last entry
+				 * is the uncommitted 'new entry' row. We cannot compare against
+				 * such entries as we don't have a committed entry available,
+				 * and also we want to be sure that the 'new entry' row remains
+				 * at the end.
 				 */
-				int insertIndex = 0;
-				long balance = entriesContent.getStartBalance();
-				for (int i = sortedEntries.size()-1; i >= 0; i--) {
-					EntryData data = sortedEntries.get(i);
-					if (data.getEntry() == null
-							|| rowComparator.compare(newData, data) >= 0) {
-						insertIndex = i;
-						balance = data.getBalance();
+				int i = sortedEntries.size()-1;
+				while (i > 0) {
+					EntryData previousData = sortedEntries.get(i - 1);
+					if (rowComparator.compare(newData, previousData) >= 0) {
 						break;
 					}
+					i--;
 				}
+				
+				int insertIndex = i;
+				long balance = sortedEntries.get(i).getBalance();
 				
 				// Insert the entry at the appropriate place in the sorted list.
 				sortedEntries.add(insertIndex, newData);
@@ -606,8 +607,8 @@ public class EntriesTable extends Composite {
 
 	}
 
-	public Collection<CellBlock<EntryData>> getCellList() {
-		ArrayList<CellBlock<EntryData>> cellList = new ArrayList<CellBlock<EntryData>>();
+	public Collection<CellBlock<EntryData, EntryRowControl>> getCellList() {
+		ArrayList<CellBlock<EntryData, EntryRowControl>> cellList = new ArrayList<CellBlock<EntryData, EntryRowControl>>();
 		rootBlock.buildCellList(cellList);
 		return cellList;
 	}
@@ -651,27 +652,27 @@ public class EntriesTable extends Composite {
 	 * committed then the Entry value will be null.  In that case the balance
 	 * is not changed by the entry.
 	 *  
-	 * @param index the index of the first entry that needs updating
-	 * @param balance the balance prior to the given start index
+	 * @param startIndex the index of the first entry that needs updating
+	 * @param startBalance the balance prior to the given start index
 	 */
 	private void updateFollowingValues(int startIndex, long startBalance) {
 		long balance = startBalance;
 		for (int index = startIndex; index < sortedEntries.size(); index++) {
 			EntryData data = sortedEntries.get(index);
 			
-				data.setIndex(index);
+			data.setIndex(index);
+			data.setBalance(balance);
 
-				if (data.getEntry() != null) {
-					balance += data.getEntry().getAmount();
-				}
-				data.setBalance(balance);
+			if (data.getEntry() != null) {
+				balance += data.getEntry().getAmount();
+			}
 		}
 	}
 
 	/**
 	 * Change the sort according to the given parameters.
 	 */
-	public void sort(IndividualBlock<EntryData> sortProperty, boolean sortAscending) {
+	public void sort(IndividualBlock<EntryData, EntryRowControl> sortProperty, boolean sortAscending) {
 		rowComparator = new RowComparator(sortProperty, sortAscending);
 		sort();
 	}
@@ -1139,7 +1140,7 @@ public class EntriesTable extends Composite {
 		private Comparator<EntryData> cellComparator;
 		private boolean ascending;
 		
-		RowComparator(IndividualBlock<EntryData> sortProperty, boolean ascending) {
+		RowComparator(IndividualBlock<EntryData, EntryRowControl> sortProperty, boolean ascending) {
 			this.cellComparator = sortProperty.getComparator();
 			this.ascending = ascending;
 		}

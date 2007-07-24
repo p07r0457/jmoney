@@ -28,10 +28,10 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-public class HorizontalBlock<T> extends Block<T> {
-	private Block<T> [] children;
+public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
+	private Block<T,R> [] children;
 	
-	public HorizontalBlock(Block<T>... children) {
+	public HorizontalBlock(Block<T,R>... children) {
 		this.children = children;
 
 		/*
@@ -41,7 +41,7 @@ public class HorizontalBlock<T> extends Block<T> {
 		 */
 		minimumWidth = 0;
 		weight = 0;
-		for (Block<T> child: children) {
+		for (Block<T,R> child: children) {
 			minimumWidth += child.minimumWidth;
 			weight += child.weight;
 		}
@@ -52,15 +52,15 @@ public class HorizontalBlock<T> extends Block<T> {
 	}
 
 	@Override
-	public void buildCellList(ArrayList<CellBlock<T>> cellList) {
-		for (Block<T> child: children) {
+	public void buildCellList(ArrayList<CellBlock<T,R>> cellList) {
+		for (Block<T,R> child: children) {
 			child.buildCellList(cellList);
 		}
 	}
 
 	@Override
 	public void createHeaderControls(Composite parent) {
-		for (Block<T> child: children) {
+		for (Block<T,R> child: children) {
 			child.createHeaderControls(parent);
 		}
 	}
@@ -117,7 +117,7 @@ public class HorizontalBlock<T> extends Block<T> {
 	@Override
 	void positionControls(int left, int top, int verticalSpacing, Control[] controls, boolean flushCache) {
 		int x = left;
-		for (Block<T> child: children) {
+		for (Block<T,R> child: children) {
 			child.positionControls(x, top, verticalSpacing, controls, flushCache);
 			x += child.width + Block.horizontalSpacing;
 		}
@@ -126,7 +126,7 @@ public class HorizontalBlock<T> extends Block<T> {
 	@Override
 	int getHeight(int verticalSpacing, Control[] controls) {
 		int height = 0; 
-		for (Block<T> child: children) {
+		for (Block<T,R> child: children) {
 			height = Math.max(height, child.getHeight(verticalSpacing, controls));
 		}
 		return height;

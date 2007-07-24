@@ -42,7 +42,13 @@ public class EntryData {
 	private Entry entry;
 	private DataManager dataManager;
 
+	/**
+	 * The balance before this entry is added in, so the balance shown to the
+	 * user for this line is calculated by adding this balance property to the
+	 * amount of this entry.
+	 */
 	private long balance;
+	
 	private int index;
 
 	/**
@@ -92,12 +98,21 @@ public class EntryData {
 		return buildOtherEntriesList();
 	}
 
+	/**
+	 * @return the balance before this entry is added in, so
+	 * 		the balance show to the user for this line is calculated
+	 * 		by adding this balance property to the amount of this
+	 * 		entry
+	 */
 	public long getBalance() {
 		return balance;
 	}
 
 	/**
-	 * @param balance
+	 * @param balance the balance before this entry is added in, so
+	 * 		the balance show to the user for this line is calculated
+	 * 		by adding this balance property to the amount of this
+	 * 		entry
 	 */
 	public void setBalance(long balance) {
 		this.balance = balance;

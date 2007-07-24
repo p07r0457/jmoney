@@ -46,7 +46,7 @@ import org.eclipse.swt.widgets.Text;
  * above <code>EntriesSectionProperty</code> class if you want the amount to be
  * displayed in separate debit and credit columns.
  */
-public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
+public class DebitAndCreditColumns extends IndividualBlock<EntryData, EntryRowControl> {
 
 	private class DebitAndCreditCellControl implements ICellControl<EntryData> {
 		private Text textControl;
@@ -211,7 +211,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData> {
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(Composite parent) {
+	public ICellControl<EntryData> createCellControl(EntryRowControl parent) {
 		final Text textControl = new Text(parent, SWT.TRAIL);
 		textControl.addTraverseListener(new TraverseListener() {
 			public void keyTraversed(TraverseEvent e) {

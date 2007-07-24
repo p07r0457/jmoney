@@ -43,21 +43,21 @@ import org.eclipse.swt.widgets.Label;
  * 
  * @author Nigel Westbury
  */
-public class OtherEntriesButton extends CellBlock<EntryData> {
+public class OtherEntriesButton extends CellBlock<EntryData, EntryRowControl> {
 
 	private final static int DROPDOWN_BUTTON_WIDTH = 15;
 	
 	static private Image downArrowImage = null;
 
-	private Block<Entry> otherEntriesRootBlock;
+	private Block<Entry, SplitEntryRowControl> otherEntriesRootBlock;
 	
-	public OtherEntriesButton(Block<Entry> otherEntriesRootBlock) {
+	public OtherEntriesButton(Block<Entry, SplitEntryRowControl> otherEntriesRootBlock) {
 		super(DROPDOWN_BUTTON_WIDTH, 0);
 		this.otherEntriesRootBlock = otherEntriesRootBlock;
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(final Composite parent) {
+	public ICellControl<EntryData> createCellControl(final EntryRowControl parent) {
 		
 	    /*
 	     * Use a single row tracker and cell focus tracker for this

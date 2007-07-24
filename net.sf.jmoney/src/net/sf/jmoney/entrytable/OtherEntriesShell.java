@@ -41,7 +41,7 @@ public class OtherEntriesShell {
 		
 		private EntryData entryData;
 
-		private Block<Entry> rootBlock;
+		private Block<Entry, SplitEntryRowControl> rootBlock;
 		
 		private Shell shell;
 		
@@ -49,7 +49,7 @@ public class OtherEntriesShell {
 
 	    private Map<Entry, SplitEntryRowControl> rowControls = new HashMap<Entry, SplitEntryRowControl>();
 
-		public OtherEntriesShell(Shell parent, int style, EntryData entryData, Block<Entry> rootBlock, boolean isLinked) {
+		public OtherEntriesShell(Shell parent, int style, EntryData entryData, Block<Entry, SplitEntryRowControl> rootBlock, boolean isLinked) {
 			shell = new Shell(parent, style | SWT.MODELESS);
 		
 			this.parentShell = parent;

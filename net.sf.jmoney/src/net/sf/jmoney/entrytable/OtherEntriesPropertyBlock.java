@@ -44,7 +44,7 @@ import org.eclipse.swt.widgets.Control;
  * 
  * @author Nigel Westbury
  */
-public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData> {
+public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData, EntryRowControl> {
 	protected ScalarPropertyAccessor<?> accessor;
 	private String id;
 	
@@ -81,7 +81,7 @@ public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData> {
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(Composite parent) {
+	public ICellControl<EntryData> createCellControl(EntryRowControl parent) {
 		// Because this may be multi-valued, setup the container only.
 		final Composite composite = new Composite(parent, SWT.NONE);
 		

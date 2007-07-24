@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.entrytable;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import net.sf.jmoney.isolation.TransactionManager;
@@ -90,11 +91,6 @@ public class EntryRowControl extends RowControl<EntryData> {
 	EntryData uncommittedEntryData = null;
 
 	/**
-	 * The color of this row when this row is not selected.  Set only when content is set.
-	 */
-	private Color rowColor;
-
-	/**
 	 * true if this row is the current selection, false otherwise
 	 */
 	private boolean isSelected = false;
@@ -134,6 +130,8 @@ public class EntryRowControl extends RowControl<EntryData> {
 		}
 	};
 
+	private ArrayList<IBalanceChangeListener> balanceChangeListeners = new ArrayList<IBalanceChangeListener>();
+
 	public EntryRowControl(final Composite parent, int style, final EntriesTable entriesTable, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style);
 		this.entriesTable = entriesTable;
@@ -159,7 +157,7 @@ public class EntryRowControl extends RowControl<EntryData> {
 		 */
 		setBackgroundMode(SWT.INHERIT_FORCE);
 
-		for (final CellBlock<EntryData> cell: entriesTable.getCellList()) {
+		for (final CellBlock<EntryData, EntryRowControl> cell: entriesTable.getCellList()) {
 			// Create the control with no content set.
 			final ICellControl<EntryData> cellControl = cell.createCellControl(this);
 			controls.add(cellControl);
@@ -263,8 +261,7 @@ public class EntryRowControl extends RowControl<EntryData> {
 	public void setContent(EntryData committedEntryData) {
 		this.committedEntryData = committedEntryData;
 
-		rowColor = (committedEntryData.getIndex()%2 == 0)  ? alternateTransactionColor : transactionColor;
-		setBackground(rowColor);
+		setAppropriateBackgroundColor();
 
 		/*
 		 * Every row gets its own transaction.  This ensures that edits can be
@@ -298,8 +295,7 @@ public class EntryRowControl extends RowControl<EntryData> {
 	@Override
 	protected void setSelected(boolean isSelected) {
 		this.isSelected = isSelected;
-		Color backgroundColor = (isSelected ? selectedRowColor : rowColor); 
-		setBackground(backgroundColor);
+		setAppropriateBackgroundColor();
 		
 		/*
 		 * We need to tell the table that contains this row. This allows the
@@ -631,5 +627,41 @@ public class EntryRowControl extends RowControl<EntryData> {
 	@Override
 	protected void scrollToShowRow() {
 		entriesTable.table.scrollToShowRow(this);
+	}
+
+	/*
+	 * Refreshes the balance and other properties of the row control that
+	 * may be affected when other rows change.
+	 */
+	public void refreshBalance() {
+		// The new balance will have been updated in the committed entry data object,
+		// but not in the uncommitted entry data object.
+		// As the balances are based on the committed data, this is a little funny.
+		// This must be done before balanceChanged is fired below, because that
+		// looks at the uncommitted entry data.
+		uncommittedEntryData.setIndex(committedEntryData.getIndex());
+		uncommittedEntryData.setBalance(committedEntryData.getBalance());
+		
+		setAppropriateBackgroundColor();
+		
+		for (IBalanceChangeListener listener: balanceChangeListeners) {
+			listener.balanceChanged();
+		}
+	}
+	
+	private void setAppropriateBackgroundColor() {
+		if (isSelected) {
+			setBackground(selectedRowColor);
+		} else {
+			if (committedEntryData.getIndex()%2 == 0) {
+				setBackground(alternateTransactionColor);
+			} else {
+				setBackground(transactionColor);
+			}
+		}
+	}
+
+	public void addBalanceChangeListener(IBalanceChangeListener listener) {
+		balanceChangeListeners.add(listener);
 	}
 }

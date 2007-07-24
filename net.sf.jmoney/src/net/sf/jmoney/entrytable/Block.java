@@ -28,7 +28,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-public abstract class Block<T> {
+public abstract class Block<T, R extends RowControl<T>> {
  	/**
 	 * marginLeft specifies the number of pixels of horizontal margin
 	 * that will be placed along the left edge of the layout.
@@ -61,7 +61,7 @@ public abstract class Block<T> {
 
 	public abstract void createHeaderControls(Composite parent);
 
-	public abstract void buildCellList(ArrayList<CellBlock<T>> cellList);
+	public abstract void buildCellList(ArrayList<CellBlock<T,R>> cellList);
 	
 	abstract void layout(int width);
 

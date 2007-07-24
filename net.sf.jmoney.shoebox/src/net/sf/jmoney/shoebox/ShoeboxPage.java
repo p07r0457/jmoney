@@ -37,6 +37,7 @@ import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.DebitAndCreditColumns;
 import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
+import net.sf.jmoney.entrytable.EntryRowControl;
 import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IndividualBlock;
@@ -44,6 +45,7 @@ import net.sf.jmoney.entrytable.OtherEntriesBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
+import net.sf.jmoney.entrytable.SplitEntryRowControl;
 import net.sf.jmoney.entrytable.VerticalBlock;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
@@ -93,7 +95,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 	 */
 	TransactionManager transactionManager = null;
 
-    private Block<EntryData> rootBlock;
+    private Block<EntryData, EntryRowControl> rootBlock;
     
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.IBookkeepingPageListener#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
@@ -259,21 +261,21 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			/*
 			 * Setup the layout structure of the header and rows.
 			 */
-			IndividualBlock<EntryData> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
-			CellBlock<EntryData> debitColumnManager = DebitAndCreditColumns.createDebitColumn(session.getDefaultCurrency());
-			CellBlock<EntryData> creditColumnManager = DebitAndCreditColumns.createCreditColumn(session.getDefaultCurrency());
+			IndividualBlock<EntryData, EntryRowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+			CellBlock<EntryData, EntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(session.getDefaultCurrency());
+			CellBlock<EntryData, EntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(session.getDefaultCurrency());
 			
-			rootBlock = new HorizontalBlock<EntryData>(
+			rootBlock = new HorizontalBlock<EntryData, EntryRowControl>(
 					transactionDateColumn,
-					new VerticalBlock<EntryData>(
-							new HorizontalBlock<EntryData>(
+					new VerticalBlock<EntryData, EntryRowControl>(
+							new HorizontalBlock<EntryData, EntryRowControl>(
 									PropertyBlock.createEntryColumn(EntryInfo.getAccountAccessor()),
 									PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor())
 							),
 							PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor())
 					),
 					new OtherEntriesBlock(
-							new HorizontalBlock<Entry>(
+							new HorizontalBlock<Entry, SplitEntryRowControl>(
 									new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
 									new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), JMoneyPlugin.getResourceString("Entry.description")),
 									new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())

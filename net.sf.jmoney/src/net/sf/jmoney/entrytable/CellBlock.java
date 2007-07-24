@@ -35,14 +35,14 @@ import org.eclipse.swt.widgets.Control;
  * single piece of data with header text(e.g. the IndividualBlock derived class) or
  * it may represent a composite column (e.g. the OtherEntriesBlock).
  */
-public abstract class CellBlock<T> extends Block<T> {
+public abstract class CellBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	/**
 	 * The index of this cell in the list returned by buildCellList.
 	 * This is not set until buildCellList is called.
 	 */
 	private int index;
 	
-	public abstract ICellControl<T> createCellControl(Composite parent);
+	public abstract ICellControl<T> createCellControl(R parent);
 	
 	public CellBlock(int minimumWidth, int weight) {
 		this.minimumWidth = minimumWidth;
@@ -50,7 +50,7 @@ public abstract class CellBlock<T> extends Block<T> {
 	}
 
 	@Override
-	public void buildCellList(ArrayList<CellBlock<T>> cellList) {
+	public void buildCellList(ArrayList<CellBlock<T,R>> cellList) {
 		this.index = cellList.size();
 		cellList.add(this);
 	}

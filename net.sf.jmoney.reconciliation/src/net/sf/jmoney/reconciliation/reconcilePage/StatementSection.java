@@ -44,6 +44,7 @@ import net.sf.jmoney.entrytable.OtherEntriesButton;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
+import net.sf.jmoney.entrytable.SplitEntryRowControl;
 import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
@@ -107,7 +108,7 @@ public class StatementSection extends SectionPart {
     
     IEntriesContent reconciledTableContents = null;
 
-    ArrayList<CellBlock<EntryData>> cellList;
+    ArrayList<CellBlock<EntryData, EntryRowControl>> cellList;
     
     long openingBalance = 0;
     
@@ -209,18 +210,16 @@ public class StatementSection extends SectionPart {
 			}
 		});
 		
-		CellBlock<EntryData> unreconcileButton = new CellBlock<EntryData>(20, 0) {
+		CellBlock<EntryData, EntryRowControl> unreconcileButton = new CellBlock<EntryData, EntryRowControl>(20, 0) {
 
 			@Override
-			public ICellControl<EntryData> createCellControl(final Composite parent) {
-				// TODO: remove cast in following line.  There is a risk of a cast exception.
-				ButtonCellControl cellControl = new ButtonCellControl((EntryRowControl)parent, unreconcileImage, "Remove Entry from this Statement") {
+			public ICellControl<EntryData> createCellControl(final EntryRowControl parent) {
+				ButtonCellControl cellControl = new ButtonCellControl(parent, unreconcileImage, "Remove Entry from this Statement") {
 					@Override
 					protected void run(EntryRowControl rowControl) {
 						unreconcileEntry(rowControl);
 					}
 				};
-
 
 				// Allow entries to be dropped in the statement table in the account to be moved from the unreconciled list
 				final DropTarget dropTarget = new DropTarget(cellControl.getControl(), DND.DROP_MOVE);
@@ -328,22 +327,22 @@ public class StatementSection extends SectionPart {
 			}
 		};
 		
-		IndividualBlock<EntryData> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
-		CellBlock<EntryData> debitColumnManager = DebitAndCreditColumns.createDebitColumn(fPage.getAccount().getCurrency());
-		CellBlock<EntryData> creditColumnManager = DebitAndCreditColumns.createCreditColumn(fPage.getAccount().getCurrency());
-		CellBlock<EntryData> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
+		IndividualBlock<EntryData, EntryRowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		CellBlock<EntryData, EntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(fPage.getAccount().getCurrency());
+		CellBlock<EntryData, EntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(fPage.getAccount().getCurrency());
+		CellBlock<EntryData, EntryRowControl> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
 
 		/*
 		 * Setup the layout structure of the header and rows.
 		 */
-		Block<EntryData> rootBlock = new HorizontalBlock<EntryData>(
+		Block<EntryData, EntryRowControl> rootBlock = new HorizontalBlock<EntryData, EntryRowControl>(
 				unreconcileButton,
 				transactionDateColumn,
 				PropertyBlock.createEntryColumn(EntryInfo.getValutaAccessor()),
 				PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
 				PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
 				new OtherEntriesButton(
-						new HorizontalBlock<Entry>(
+						new HorizontalBlock<Entry, SplitEntryRowControl>(
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
 								new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), JMoneyPlugin.getResourceString("Entry.description")),
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
@@ -354,7 +353,7 @@ public class StatementSection extends SectionPart {
 				balanceColumnManager
 		);
 		
-		cellList = new ArrayList<CellBlock<EntryData>>();
+		cellList = new ArrayList<CellBlock<EntryData, EntryRowControl>>();
 		rootBlock.buildCellList(cellList);
 
 		// Create the table control.

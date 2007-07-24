@@ -129,7 +129,7 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 						}
  */
 	
-	public SplitEntryRowControl(final Composite parent, int style, Block<Entry> rootBlock, boolean isLinked, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
+	public SplitEntryRowControl(final Composite parent, int style, Block<Entry, SplitEntryRowControl> rootBlock, boolean isLinked, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style);
 
 		/*
@@ -150,10 +150,10 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 		setBackgroundMode(SWT.INHERIT_FORCE);
 		setBackground(normalColor);
 
-		ArrayList<CellBlock<Entry>> cellList = new ArrayList<CellBlock<Entry>>();
+		ArrayList<CellBlock<Entry, SplitEntryRowControl>> cellList = new ArrayList<CellBlock<Entry, SplitEntryRowControl>>();
 		rootBlock.buildCellList(cellList);
 		
-		for (final CellBlock<Entry> entriesSectionProperty: cellList) {
+		for (final CellBlock<Entry, SplitEntryRowControl> entriesSectionProperty: cellList) {
 			// Create the control with no content set.
 			final ICellControl<Entry> cellControl = entriesSectionProperty.createCellControl(this);
 			controls.add(cellControl);

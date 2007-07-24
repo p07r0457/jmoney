@@ -46,13 +46,13 @@ import org.eclipse.swt.widgets.Control;
  * 
  * @author Nigel Westbury
  */
-public class OtherEntriesBlock extends CellBlock<EntryData> {
+public class OtherEntriesBlock extends CellBlock<EntryData, EntryRowControl> {
 
 	final static int DROPDOWN_BUTTON_WIDTH = 15;
 	
-	private Block<Entry> otherEntriesRootBlock;
+	private Block<Entry, SplitEntryRowControl> otherEntriesRootBlock;
 	
-	public OtherEntriesBlock(Block<Entry> otherEntriesRootBlock) {
+	public OtherEntriesBlock(Block<Entry, SplitEntryRowControl> otherEntriesRootBlock) {
 		super(
 				otherEntriesRootBlock.minimumWidth + DROPDOWN_BUTTON_WIDTH,
 				otherEntriesRootBlock.weight
@@ -62,7 +62,7 @@ public class OtherEntriesBlock extends CellBlock<EntryData> {
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(Composite parent) {
+	public ICellControl<EntryData> createCellControl(EntryRowControl parent) {
 		
 	    /*
 	     * Use a single row tracker and cell focus tracker for this
@@ -96,7 +96,7 @@ public class OtherEntriesBlock extends CellBlock<EntryData> {
 		Composite composite = new Composite(parent, SWT.NONE);
 		
 		// KLUDGE: These next two lines are just so the indexes are set.
-		ArrayList<CellBlock<Entry>> cellList = new ArrayList<CellBlock<Entry>>();
+		ArrayList<CellBlock<Entry, SplitEntryRowControl>> cellList = new ArrayList<CellBlock<Entry, SplitEntryRowControl>>();
 		otherEntriesRootBlock.buildCellList(cellList);
 
 		BlockLayout layout = new BlockLayout(otherEntriesRootBlock, true);

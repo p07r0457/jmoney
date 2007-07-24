@@ -177,6 +177,9 @@ public class VirtualRowTable extends Composite {
 	 * but updates the balances only.
 	 */
 	public void refreshBalancesOfAllRows() {
+		for (EntryData entryData: rows.keySet()) {
+			rows.get(entryData).refreshBalance();
+		}
 		// TODO Auto-generated method stub
 		
 	}
