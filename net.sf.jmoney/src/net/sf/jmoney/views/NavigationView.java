@@ -454,33 +454,27 @@ public class NavigationView extends ViewPart {
 		 */
 		viewer.addDoubleClickListener(new IDoubleClickListener() {
 			public void doubleClick(DoubleClickEvent event) {
-				if (event.getSelection().isEmpty()) {
-					// I don't see how this can happen.
-				} else if (event.getSelection() instanceof IStructuredSelection) {
-					IStructuredSelection selection = (IStructuredSelection)event.getSelection();
-					for (Object selectedObject: selection.toList()) {
+				IStructuredSelection selection = (IStructuredSelection)event.getSelection();
+				for (Object selectedObject: selection.toList()) {
 
-						Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
+					Vector<PageEntry> pageFactories = getPageFactories(selectedObject);
 
-						// Create an editor for this node (or active if an editor
-						// is already open).  However, if no pages are registered for this
-						// node then do nothing.
-						if (!pageFactories.isEmpty()) {
-							try {
-								IWorkbenchWindow window = getSite().getWorkbenchWindow();
-								IEditorInput editorInput = new NodeEditorInput(selectedObject,
-										labelProvider.getText(selectedObject),
-										labelProvider.getImage(selectedObject),
-										pageFactories,
-										null);
-								window.getActivePage().openEditor(editorInput,
-										"net.sf.jmoney.genericEditor");
-							} catch (PartInitException e) {
-								JMoneyPlugin.log(e);
-							}
+					// Create an editor for this node (or active if an editor
+					// is already open).  However, if no pages are registered for this
+					// node then do nothing.
+					if (!pageFactories.isEmpty()) {
+						try {
+							IWorkbenchWindow window = getSite().getWorkbenchWindow();
+							IEditorInput editorInput = new NodeEditorInput(selectedObject,
+									labelProvider.getText(selectedObject),
+									labelProvider.getImage(selectedObject),
+									pageFactories,
+									null);
+							window.getActivePage().openEditor(editorInput,
+									"net.sf.jmoney.genericEditor");
+						} catch (PartInitException e) {
+							JMoneyPlugin.log(e);
 						}
-
-						break;
 					}
 				}
 			}
