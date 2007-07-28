@@ -99,6 +99,7 @@ Eclipse Foundation http://www.eclipse.org/
       <plugin id="org.eclipse.core.resources.compatibility" fragment="true"/>
       <plugin id="org.eclipse.core.resources.win32" fragment="true"/>
       <plugin id="org.eclipse.core.runtime"/>
+      <plugin id="org.eclipse.core.runtime.compatibility.auth"/>
       <plugin id="org.eclipse.core.runtime.compatibility.registry" fragment="true"/>
       <plugin id="org.eclipse.datatools.connectivity"/>
       <plugin id="org.eclipse.datatools.connectivity.oda"/>
