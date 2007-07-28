@@ -102,6 +102,7 @@
                   name="group1">
             </separator>
          </menu>
+<!--
          <action
                class="net.sf.jmoney.actions.ConfigurationManagerAction"
                definitionId="org.eclipse.ui.update.manageConfiguration"
@@ -110,10 +111,9 @@
                id="net.sf.jmoney.configManager"
                label="%UpdateActionSet.configManager.label"
                menubarPath="help/net.sf.jmoney.updateMenu/group0">
-         </action>
-<!--               definitionId="org.eclipse.ui.update.findAndInstallUpdates"
+               definitionId="org.eclipse.ui.update.findAndInstallUpdates"
                helpContextId="org.eclipse.update.ui.newUpdates"
-    -->           
+         </action>
          <action
                class="net.sf.jmoney.actions.InstallWizardAction"
                icon="$nl$/icons/full/elcl16/usearch_obj.gif"
@@ -121,6 +121,7 @@
                label="%UpdateActionSet.updates.label"
                menubarPath="help/net.sf.jmoney.updateMenu/group0">
          </action>
+-->           
       </actionSet>
    </extension>
 
