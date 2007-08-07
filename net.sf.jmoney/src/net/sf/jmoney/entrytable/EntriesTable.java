@@ -48,6 +48,7 @@ import net.sf.jmoney.pages.entries.EntryRowSelectionListener;
 import net.sf.jmoney.pages.entries.TransactionDialog;
 import net.sf.jmoney.views.NodeEditorInput;
 
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -539,17 +540,59 @@ public class EntriesTable extends Composite {
 			}
 
 			private void updateEntryInTable(Entry entry) {
+				EntryData data = entries.get(entry);
+
+				/*
+				 * This change may result in the entry moving in the sort order.
+				 * We can efficiently check for this by comparing the entry
+				 * against its neighbors and moving it as appropriate. 
+				 */
+				int originalIndex = data.getIndex();
+				int index = originalIndex;
+				Assert.isTrue(index == sortedEntries.indexOf(data));
+				
+				// Bubble to up the screen (down the sort order)
+				while (index > 0) {
+					EntryData data2 = sortedEntries.get(index-1); 
+					if (rowComparator.compare(data2, data) < 0) {
+						break;
+					}
+					sortedEntries.set(index, data2);
+					index--;
+				}
+				
+				// The current value if the index is the point from which we
+				// need to refresh the balances.
+				int balanceRefreshStartPoint = index;
+				
+				// Bubble down the screen (up the sort order)
+				while (index < entries.size() - 1) {
+					EntryData data2 = sortedEntries.get(index+1); 
+					
+					if (rowComparator.compare(data, data2) < 0) {
+						break;
+					}
+					
+					sortedEntries.set(index, data2);
+					index++;
+				}
+
+				sortedEntries.set(index, data);
+				
 				/*
 				 * It is possible that the amount of this entry changed.
 				 * Therefore we must refresh the balances of all later
 				 * entries in the sorted list.
 				 */
-				EntryData data = entries.get(entry);
-				updateFollowingValues(sortedEntries.indexOf(data), data.getBalance());
+				updateFollowingValues(balanceRefreshStartPoint, data.getBalance());
 
-				// TODO: Test to see if the amount has changed, and update the following
-				// rows only if so (as the balances will have changed).
-				table.refreshBalancesOfAllRows();
+				if (index != originalIndex) {
+					table.refreshContent();
+				} else {
+					// TODO: Test to see if the amount has changed, and update the following
+					// rows only if so (as the balances will have changed).
+					table.refreshBalancesOfAllRows();
+				}
 			}
 
 			private void removeEntryFromTable(Entry entry) {
