@@ -67,12 +67,8 @@ public abstract class CurrencyAccount extends CapitalAccount {
 		 * users of this class may assume it to be non-null and would not know
 		 * how to handle this account if it were null.
 		 * 
-		 * A null currency might be passed if the datastore implementation
-		 * decides to use this method instead of the 'default' constructor to
-		 * construct an initial object. The datastore implementation will pass
-		 * the values from the array of default property values. If the currency
-		 * passed to this constructor is null then we use the session default
-		 * currency, which should never be null.
+		 * If null is passed, set to the default currency for the session.
+		 * This is guaranteed to be never null.
 		 */
 		if (currencyKey != null) {
 			this.currencyKey = currencyKey;
