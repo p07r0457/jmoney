@@ -75,8 +75,8 @@ public class Currency extends Commodity {
      * a currency object.
      */
 	public Currency(
-				IObjectKey objectKey,
-				ListKey parentKey) {
+			IObjectKey objectKey,
+			ListKey parentKey) {
 		super(objectKey, parentKey);
 		this.code = null;
 		this.decimals = 2;

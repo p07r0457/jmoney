@@ -73,8 +73,7 @@ public class OtherEntriesButton extends CellBlock<EntryData, EntryRowControl> {
 			downArrowImage = descriptor.createImage();
 		}
 
-		// TODO: remove cast in following line.  There is a risk of a cast exception.
-		return new ButtonCellControl((EntryRowControl)parent, downArrowImage, "Show the other entries in this transaction.") {
+		return new ButtonCellControl(parent, downArrowImage, "Show the other entries in this transaction.") {
 			@Override
 			protected void run(EntryRowControl rowControl) {
 				final OtherEntriesShell shell = new OtherEntriesShell(parent.getShell(), SWT.ON_TOP, rowControl.getUncommittedEntryData(), otherEntriesRootBlock, false);

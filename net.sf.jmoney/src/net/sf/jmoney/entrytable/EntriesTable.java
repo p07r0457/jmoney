@@ -31,22 +31,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.fields.CommodityInfo;
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.pages.entries.EntryRowSelectionListener;
 import net.sf.jmoney.pages.entries.TransactionDialog;
-import net.sf.jmoney.views.NodeEditorInput;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -59,9 +54,6 @@ import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.IEditorInput;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 
 /**
@@ -163,7 +155,7 @@ public class EntriesTable extends Composite {
 	private Vector<EntryRowSelectionListener> selectionListeners = new Vector<EntryRowSelectionListener>();
 
 	public EntriesTable(Composite parent, FormToolkit toolkit,
-			Block<EntryData, EntryRowControl> rootBlock, final IEntriesContent entriesContent, final Session session, IndividualBlock defaultSortColumn, final RowSelectionTracker rowTracker) {
+			Block<EntryData, EntryRowControl> rootBlock, final IEntriesContent entriesContent, final Session session, IndividualBlock<EntryData, EntryRowControl> defaultSortColumn, final RowSelectionTracker rowTracker) {
 		super(parent, SWT.NONE);
 		
 		this.session = session;
@@ -654,35 +646,6 @@ public class EntriesTable extends Composite {
 		ArrayList<CellBlock<EntryData, EntryRowControl>> cellList = new ArrayList<CellBlock<EntryData, EntryRowControl>>();
 		rootBlock.buildCellList(cellList);
 		return cellList;
-	}
-
-	private void insertNewEntry() {
-		Transaction transaction = session.createTransaction();
-		Entry entry1 = transaction.createEntry();
-		Entry entry2 = transaction.createEntry();
-		entriesContent.setNewEntryProperties(entry1);
-		
-		/*
-		 * We set the currency by default to be the currency of the
-		 * top-level entry.
-		 * 
-		 * The currency of an entry is not applicable if the entry is an
-		 * entry in a currency account or an income and expense account
-		 * that is restricted to a single currency.
-		 * However, we set it anyway so the value is there if the entry
-		 * is set to an account which allows entries in multiple currencies.
-		 * 
-		 * It may be that the currency of the top-level entry is not
-		 * known. This is not possible if entries in a currency account
-		 * are being listed, but may be possible if this entries list
-		 * control is used for more general purposes. In this case, the
-		 * currency is not set and so the user must enter it.
-		 */
-		if (entry1.getCommodity() instanceof Currency) {
-			entry2.setIncomeExpenseCurrency((Currency)entry1.getCommodity());
-		}
-
-		table.setSelection(0, entries.get(entry1).getIndex());
 	}
 
 	/**

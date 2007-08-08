@@ -27,6 +27,7 @@ import java.util.Iterator;
 
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Transaction;
@@ -276,10 +277,32 @@ public class EntryRowControl extends RowControl<EntryData> {
 		if (committedEntryData.getEntry() == null) {
 			Transaction newTransaction = transactionManager.getSession().createTransaction();
 			entryInTransaction = newTransaction.createEntry();
-			newTransaction.createEntry();
+			Entry otherEntry = newTransaction.createEntry();
 
 			// TODO: Kludge here
 			((EntriesTable)getParent().getParent().getParent()).entriesContent.setNewEntryProperties(entryInTransaction);
+
+			// TODO: See if this code has any effect, and
+			// should this be here at all?
+			/*
+			 * We set the currency by default to be the currency of the
+			 * top-level entry.
+			 * 
+			 * The currency of an entry is not applicable if the entry is an
+			 * entry in a currency account or an income and expense account
+			 * that is restricted to a single currency.
+			 * However, we set it anyway so the value is there if the entry
+			 * is set to an account which allows entries in multiple currencies.
+			 * 
+			 * It may be that the currency of the top-level entry is not
+			 * known. This is not possible if entries in a currency account
+			 * are being listed, but may be possible if this entries list
+			 * control is used for more general purposes. In this case, the
+			 * currency is not set and so the user must enter it.
+			 */
+			if (entryInTransaction.getCommodity() instanceof Currency) {
+				otherEntry.setIncomeExpenseCurrency((Currency)entryInTransaction.getCommodity());
+			}
 		} else {
 			entryInTransaction = transactionManager.getCopyInTransaction(committedEntryData.getEntry());
 		}

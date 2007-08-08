@@ -29,9 +29,24 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 public class VerticalBlock<T, R extends RowControl<T>> extends Block<T,R> {
-	private Block<T,R> [] children;
+	private ArrayList<Block<T,R>> children;
+
+	public VerticalBlock(Block<T,R> child1, Block<T,R> child2) {
+		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>();
+		children.add(child1);
+		children.add(child2);
+		init(children);
+	}
 	
-	public VerticalBlock(Block<T,R>... children) {
+	public VerticalBlock(Block<T,R> child1, Block<T,R> child2, Block<T,R> child3) {
+		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>();
+		children.add(child1);
+		children.add(child2);
+		children.add(child3);
+		init(children);
+	}
+	
+	private void init(ArrayList<Block<T,R>> children) {
 		this.children = children;
 
 		/*
@@ -67,7 +82,7 @@ public class VerticalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 		for (Block<T,R> child: children) {
 			height += child.getHeightForGivenWidth(width, verticalSpacing, controls, changed);
 		}
-		height += (children.length - 1) * verticalSpacing;
+		height += (children.size() - 1) * verticalSpacing;
 		return height;
 	}
 
@@ -96,7 +111,7 @@ public class VerticalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 		for (Block<T,R> child: children) {
 			height += child.getHeight(verticalSpacing, controls);
 		}
-		height += (children.length - 1) * verticalSpacing;
+		height += (children.size() - 1) * verticalSpacing;
 		return height;
 	}
 
@@ -108,12 +123,12 @@ public class VerticalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 		 * need separator lines within them.
 		 */
 		int y = top;
-		for (int i = 0; i < children.length; i++) {
-			children[i].paintRowLines(gc, left, y, verticalSpacing, controls);
+		for (int i = 0; i < children.size(); i++) {
+			children.get(i).paintRowLines(gc, left, y, verticalSpacing, controls);
 			
 			// Draw a horizontal separator line only if this is not the last control.
-			if (i != children.length - 1) {
-				y += children[i].getHeight(verticalSpacing, controls);
+			if (i != children.size() - 1) {
+				y += children.get(i).getHeight(verticalSpacing, controls);
 				gc.fillRectangle(left, y, width, verticalSpacing);
 				y += verticalSpacing;
 			}

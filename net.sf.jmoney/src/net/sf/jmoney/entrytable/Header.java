@@ -24,25 +24,14 @@ package net.sf.jmoney.entrytable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Vector;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 
-/**
- * by extending AbstractNativeHeader, we get a native header control which
- * allows the user to resize the columns by dragging and also allows the columns
- * to be sorted.
- * 
- * @author Administrator
- *
- */
 public class Header extends Composite {
 
 	private EntriesTable entriesTable;
-
-	private Vector<CellBlock> properties = new Vector<CellBlock>();
 
 	public Header(Composite parent, int style, EntriesTable entriesTable) {
 		super(parent, style);

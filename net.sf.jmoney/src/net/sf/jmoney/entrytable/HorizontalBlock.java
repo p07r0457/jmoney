@@ -29,9 +29,58 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
-	private Block<T,R> [] children;
+	private ArrayList<Block<T,R>> children;
+
+	public HorizontalBlock(Block<T,R> child1, Block<T,R> child2) {
+		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>();
+		children.add(child1);
+		children.add(child2);
+		init(children);
+	}
 	
-	public HorizontalBlock(Block<T,R>... children) {
+	public HorizontalBlock(Block<T,R> child1, Block<T,R> child2, Block<T,R> child3) {
+		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>();
+		children.add(child1);
+		children.add(child2);
+		children.add(child3);
+		init(children);
+	}
+	
+	public HorizontalBlock(Block<T,R> child1, Block<T,R> child2, Block<T,R> child3, Block<T,R> child4) {
+		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>();
+		children.add(child1);
+		children.add(child2);
+		children.add(child3);
+		children.add(child4);
+		init(children);
+	}
+	
+	public HorizontalBlock(Block<T,R> child1, Block<T,R> child2, Block<T,R> child3, Block<T,R> child4, Block<T,R> child5) {
+		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>();
+		children.add(child1);
+		children.add(child2);
+		children.add(child3);
+		children.add(child4);
+		children.add(child5);
+		init(children);
+	}
+	
+	public HorizontalBlock(Block<T,R> child1, Block<T,R> child2, Block<T,R> child3, Block<T,R> child4, Block<T,R> child5, Block<T,R> child6) {
+		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>();
+		children.add(child1);
+		children.add(child2);
+		children.add(child3);
+		children.add(child4);
+		children.add(child5);
+		children.add(child6);
+		init(children);
+	}
+	
+//	public HorizontalBlock(Block<T,R>... children) {
+//		init(new ArrayList<Block<T,R>>(children));
+//	}
+	
+	private void init(ArrayList<Block<T,R>> children) {
 		this.children = children;
 
 		/*
@@ -48,7 +97,7 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 		
 		// Add spacing for each gap between child blocks (the number of gaps
 		// will be one less than the number of child blocks).
-		minimumWidth += (children.length - 1) * Block.horizontalSpacing;
+		minimumWidth += (children.size() - 1) * Block.horizontalSpacing;
 	}
 
 	@Override
@@ -72,16 +121,16 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 
 			int[] widths = distributeWidth(width);
 
-			for (int i = 0; i < children.length; i++) {
-				children[i].layout(widths[i]);
+			for (int i = 0; i < children.size(); i++) {
+				children.get(i).layout(widths[i]);
 			}
 		}
 	}
 
 	private int[] distributeWidth(int width) {
-		int [] widths = new int[children.length];
-		for (int i = 0; i < children.length; i++) {
-			widths[i] = children[i].minimumWidth;
+		int [] widths = new int[children.size()];
+		for (int i = 0; i < children.size(); i++) {
+			widths[i] = children.get(i).minimumWidth;
 		}
 
 		// Do we have extra width and columns with expansion weight?
@@ -89,8 +138,8 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 			// Now distribute the rest to the columns with weight.
 			int rest = width - minimumWidth;
 			int totalDistributed = 0;
-			for (int i = 0; i < children.length; i++) {
-				int pixels = children[i].weight * rest / weight;
+			for (int i = 0; i < children.size(); i++) {
+				int pixels = children.get(i).weight * rest / weight;
 				totalDistributed += pixels;
 				widths[i] += pixels;
 			}
@@ -104,8 +153,8 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 			 * weights.
 			 */
 			int diff = rest - totalDistributed;
-			for (int i = 0; i < children.length && diff > 0; i++) {
-				if (children[i].weight > 0) {
+			for (int i = 0; i < children.size() && diff > 0; i++) {
+				if (children.get(i).weight > 0) {
 					++widths[i];
 					--diff;
 				}
@@ -140,12 +189,12 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 		 * need separator lines within them.
 		 */
 		int x = left;
-		for (int i = 0; i < children.length; i++) {
-			children[i].paintRowLines(gc, x, top, verticalSpacing, controls);
+		for (int i = 0; i < children.size(); i++) {
+			children.get(i).paintRowLines(gc, x, top, verticalSpacing, controls);
 			
 			// Draw a vertical separator line only if this is not the last control.
-			if (i != children.length - 1) {
-				x += children[i].width;
+			if (i != children.size() - 1) {
+				x += children.get(i).width;
 				gc.fillRectangle(x, top, Block.horizontalSpacing, getHeight(verticalSpacing, controls));
 				x += Block.horizontalSpacing;
 			}
@@ -156,8 +205,8 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	int getHeightForGivenWidth(int width, int verticalSpacing, Control[] controls, boolean changed) {
 		int[] widths = distributeWidth(width);
 		int height = 0; 
-		for (int i = 0; i < children.length; i++) {
-			height = Math.max(height, children[i].getHeightForGivenWidth(widths[i], verticalSpacing, controls, changed));
+		for (int i = 0; i < children.size(); i++) {
+			height = Math.max(height, children.get(i).getHeightForGivenWidth(widths[i], verticalSpacing, controls, changed));
 		}
 		return height;
 	}
