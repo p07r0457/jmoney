@@ -75,10 +75,19 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 		children.add(child6);
 		init(children);
 	}
-	
-//	public HorizontalBlock(Block<T,R>... children) {
-//		init(new ArrayList<Block<T,R>>(children));
-//	}
+
+	/**
+	 * This form of the constructor is not type safe because
+	 * arrays are not compatible with generics and unfortunately
+	 * Java uses arrays for variable parameters.
+	 */
+	public HorizontalBlock(Block<T,R>... childrenArray) {
+		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>(); 
+		for (Block<T,R> child: childrenArray) {
+			children.add(child);
+		}
+		init (children);
+	}
 	
 	private void init(ArrayList<Block<T,R>> children) {
 		this.children = children;
