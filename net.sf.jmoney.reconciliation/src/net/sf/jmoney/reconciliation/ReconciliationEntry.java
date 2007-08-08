@@ -57,6 +57,7 @@ public class ReconciliationEntry extends EntryExtension {
 	 * A default constructor is mandatory for all extension objects.
 	 * The default constructor sets the extension properties to
 	 * appropriate default values.
+	 * 
 	 * @param extendedObject 
 	 */
 	public ReconciliationEntry(ExtendableObject extendedObject) {
