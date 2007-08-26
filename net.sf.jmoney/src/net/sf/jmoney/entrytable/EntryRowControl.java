@@ -388,32 +388,32 @@ public class EntryRowControl extends RowControl<EntryData> {
 					throw new InvalidUserEntryException(
 							"The date cannot be blank.",
 							null);
-				} else {
-					for (Entry entry: uncommittedEntryData.getEntry().getTransaction().getEntryCollection()) {
-						if (entry.getAccount() == null) {
+				}
+
+				for (Entry entry: uncommittedEntryData.getEntry().getTransaction().getEntryCollection()) {
+					if (entry.getAccount() == null) {
+						throw new InvalidUserEntryException(
+								"A category must be selected.",
+								null);
+					}
+
+					if (entry.getAccount() instanceof IncomeExpenseAccount) {
+						IncomeExpenseAccount incomeExpenseAccount = (IncomeExpenseAccount)entry.getAccount();
+						if (incomeExpenseAccount.isMultiCurrency()
+								&& entry.getIncomeExpenseCurrency() == null) {
 							throw new InvalidUserEntryException(
-									"A category must be selected.",
+									"A currency must be selected (" + incomeExpenseAccount.getName() + " is a multi-currency category).",
 									null);
 						}
-
-						if (entry.getAccount() instanceof IncomeExpenseAccount) {
-							IncomeExpenseAccount incomeExpenseAccount = (IncomeExpenseAccount)entry.getAccount();
-							if (incomeExpenseAccount.isMultiCurrency()
-									&& entry.getIncomeExpenseCurrency() == null) {
-								throw new InvalidUserEntryException(
-										"A currency must be selected (" + incomeExpenseAccount.getName() + " is a multi-currency category).",
-										null);
-							}
-						}
-
-						if (commodity == null) {
-							commodity = entry.getCommodity();
-						} else if (!commodity.equals(entry.getCommodity())) {
-							mixedCommodities = true;
-						}
-
-						totalAmount += entry.getAmount();
 					}
+
+					if (commodity == null) {
+						commodity = entry.getCommodity();
+					} else if (!commodity.equals(entry.getCommodity())) {
+						mixedCommodities = true;
+					}
+
+					totalAmount += entry.getAmount();
 				}
 
 				/*
