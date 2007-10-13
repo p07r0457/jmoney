@@ -63,7 +63,7 @@ public interface IListManager<E extends ExtendableObject> extends Collection<E> 
 	 * This method should fail if there are references to the object.  However,
 	 * this is expensive to enforce, so it may not fail.  If the underlying datastore
 	 * is a relational database and foreign key constraints have been defined
-	 * then teh database will cause a failure.
+	 * then the database will cause a failure.
 	 * 
 	 * @param extendableObject
 	 * @return true if the element was deleted, false if it could not be deleted because
