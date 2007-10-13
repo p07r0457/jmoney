@@ -4,7 +4,7 @@ import java.util.Collection;
 
 public interface IValues {
 	<V> V getScalarValue(ScalarPropertyAccessor<V> propertyAccessor);
-	IObjectKey getReferencedObjectKey(ScalarPropertyAccessor<? extends ExtendableObject> propertyAccessor);
+	IObjectKey getReferencedObjectKey(ReferencePropertyAccessor<? extends ExtendableObject> propertyAccessor);
 	<E extends ExtendableObject> IListManager<E> getListManager(IObjectKey listOwnerKey, ListPropertyAccessor<E> listAccessor);
 
 	/**

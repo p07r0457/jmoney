@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.fields.CommodityInfo;
 
 /**
  *

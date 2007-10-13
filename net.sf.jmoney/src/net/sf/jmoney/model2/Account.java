@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.AccountInfo;
 
 /**
  * An implementation of the Account interface

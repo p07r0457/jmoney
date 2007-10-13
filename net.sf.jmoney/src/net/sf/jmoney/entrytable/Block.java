@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.entrytable;
 
-import java.util.ArrayList;
+import java.util.Collection;
 
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
@@ -47,7 +47,7 @@ public abstract class Block<T, R extends RowControl<T>> {
 
 	/**
 	 * horizontalSpacing specifies the number of pixels between the right
-	 * edge of one cell and the left edge of its neighbouring cell to
+	 * edge of one cell and the left edge of its neighboring cell to
 	 * the right.
 	 *
 	 * The default value is 1.
@@ -61,8 +61,8 @@ public abstract class Block<T, R extends RowControl<T>> {
 
 	public abstract void createHeaderControls(Composite parent);
 
-	public abstract void buildCellList(ArrayList<CellBlock<T,R>> cellList);
-	
+	public abstract Collection<CellBlock<T,? super R>> buildCellList();
+		
 	abstract void layout(int width);
 
 	abstract void positionControls(int x, int y, int verticalSpacing, Control [] controls, boolean flushCache);
@@ -108,4 +108,17 @@ public abstract class Block<T, R extends RowControl<T>> {
 	 * @return the preferred height
 	 */
 	abstract int getHeightForGivenWidth(int width, int verticalSpacing, Control[] controls, boolean changed);
+
+	/**
+	 * This method must be called after construction of the root block.
+	 * It traverses over the sub-blocks and sets the indexes of any
+	 * cell blocks it finds.  These indexes will match the index of the
+	 * cell block in the array returned by <code>buildCellList</code>.
+	 *  
+	 * @param startIndex 0 if the root block, appropriate value for sub-blocks
+	 * @return the number of cell blocks in this block, this value being the
+	 * 		amount by which the caller must increment startIndex before passing
+	 * 		it on to the next child block
+	 */
+	abstract public int initIndexes(int startIndex);
 }

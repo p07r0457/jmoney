@@ -36,8 +36,8 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.BankAccountInfo;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.BankAccountInfo;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Session;

@@ -24,12 +24,12 @@ package net.sf.jmoney.pages.entries;
 
 import java.util.Vector;
 
-import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;

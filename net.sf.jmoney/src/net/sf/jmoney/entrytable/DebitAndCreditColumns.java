@@ -22,9 +22,9 @@
 
 package net.sf.jmoney.entrytable;
 
-import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
@@ -45,7 +45,7 @@ import org.eclipse.swt.widgets.Text;
  * above <code>EntriesSectionProperty</code> class if you want the amount to be
  * displayed in separate debit and credit columns.
  */
-public class DebitAndCreditColumns extends IndividualBlock<EntryData, EntryRowControl> {
+public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryRowControl> {
 
 	private class DebitAndCreditCellControl implements ICellControl<EntryData> {
 		private Text textControl;
@@ -210,7 +210,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, EntryRowCo
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(EntryRowControl parent) {
+	public ICellControl<EntryData> createCellControl(BaseEntryRowControl parent) {
 		final Text textControl = new Text(parent, SWT.TRAIL);
 		textControl.addTraverseListener(new TraverseListener() {
 			public void keyTraversed(TraverseEvent e) {

@@ -160,7 +160,7 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
     						int match = -1;
     						int i = startIndex;
     						do {
-    							if (((Account)allAccounts.get(i)).getName().toUpperCase().startsWith(pattern)) {
+    							if (allAccounts.get(i).getName().toUpperCase().startsWith(pattern)) {
     								match = i;
     								break;
     							}
@@ -263,7 +263,7 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
 }
 
 	/**
-	 * @return the date, or null if a valid date is not set in
+	 * @return the account, or null if no account has been set in
 	 * 				the control
 	 */
     @Override	

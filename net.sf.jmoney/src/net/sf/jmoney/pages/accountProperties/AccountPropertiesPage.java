@@ -27,8 +27,8 @@ import java.util.Vector;
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.AccountInfo;
 import net.sf.jmoney.model2.AbstractDataOperation;
+import net.sf.jmoney.model2.AccountInfo;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
@@ -49,9 +49,10 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.PartInitException;
@@ -73,11 +74,28 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 		Session session;
 
 		/**
-		 * List of the IPropertyControl objects for the
-		 * properties that can be edited in this panel.
+		 * List of the IPropertyControl objects for the properties that can be
+		 * edited in this panel.
 		 */
 		Vector<IPropertyControl> propertyControlList = new Vector<IPropertyControl>();
 	
+		/**
+		 * The property control that previously had the focus. This is used so
+		 * that we know if the focus has changed from one property control to
+		 * another. We cannot simply rely on focusLost because focus may change
+		 * between child controls of a composite property control.
+		 */
+		class Pair { 
+			public Pair(ScalarPropertyAccessor<?> propertyAccessor,
+					IPropertyControl propertyControl) {
+				this.propertyAccessor = propertyAccessor;
+				this.propertyControl = propertyControl;
+			}
+			ScalarPropertyAccessor propertyAccessor;
+			IPropertyControl propertyControl;
+		}
+		private Pair previousPropertyControl = null;
+		
 		// Listen for changes to the account properties.
 		// If anyone else changes any of the account properties
 		// then we update the values in the edit controls.
@@ -103,14 +121,11 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 		 * @param parent
 		 */
 		public AccountPropertiesControl(Composite parent, CapitalAccount account, FormToolkit toolkit) {
-			super(parent, SWT.NULL);
+			super(parent, SWT.NONE);
 
 			GridLayout layout = new GridLayout();
 			layout.numColumns = 2;
 			setLayout(layout);
-			
-			// TODO: what is this?
-			pack();
 			
 			this.account = account;
 			
@@ -127,24 +142,25 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 				final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(this);
 
 				/*
-				 * If the control factory set up grid data then leave it
-				 * alone. Otherwise set up the grid data based on the
-				 * properties minimum sizes and expansion weights. <P> The
-				 * control widths are set to the minimum width plus 10 times
-				 * the expansion weight. (As we are not short of space, we
-				 * make them a little bigger than their minimum sizes). A
-				 * minimum of 100 pixels is then applied because this makes
-				 * the right sides of the smaller controls line up, which
-				 * looks a little more tidy.
+				 * If the control factory set up grid data then leave it alone.
+				 * Otherwise set up the grid data based on the properties
+				 * minimum sizes and expansion weights.
+				 * 
+				 * The control widths are set to the minimum width plus 10 times
+				 * the expansion weight. (As we are not short of space, we make
+				 * them a little bigger than their minimum sizes). A minimum of
+				 * 100 pixels is then applied because this makes the right sides
+				 * of the smaller controls line up, which looks a little more
+				 * tidy.
 				 */  
-				if (propertyControl.getControl().getLayoutData() == null) {
-					GridData gridData = new GridData();
-					gridData.minimumWidth = propertyAccessor.getMinimumWidth();
-					gridData.widthHint = Math.max(propertyAccessor.getMinimumWidth() + 10 * propertyAccessor.getWeight(), 100);
-					propertyControl.getControl().setLayoutData(gridData);
-				}
+//				if (propertyControl.getControl().getLayoutData() == null) {
+//					GridData gridData = new GridData();
+//					gridData.minimumWidth = propertyAccessor.getMinimumWidth();
+//					gridData.widthHint = Math.max(propertyAccessor.getMinimumWidth() + 10 * propertyAccessor.getWeight(), 100);
+//					propertyControl.getControl().setLayoutData(gridData);
+//				}
 
-				propertyControl.getControl().addFocusListener(
+				addFocusListenerRecursively(propertyControl.getControl(), 
 						new FocusAdapter() {
 
 							// When a control gets the focus, save the old value here.
@@ -157,6 +173,14 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 									return;
 								}
 
+//								savePropertyValue(propertyAccessor,	propertyControl);
+							}
+
+						    private void savePropertyValue(Pair pair) {
+
+								final ScalarPropertyAccessor<?> propertyAccessor = pair.propertyAccessor;
+								final IPropertyControl propertyControl = pair.propertyControl;
+						    	
 								String newValueText = propertyAccessor.formatValueForMessage(
 										AccountPropertiesControl.this.account);
 
@@ -172,9 +196,9 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 										+ " from " + oldValueText
 										+ " to " + newValueText;
 								}
-								
+
 								IOperationHistory history = JMoneyPlugin.getDefault().getWorkbench().getOperationSupport().getOperationHistory();
-								
+
 								IUndoableOperation operation = new AbstractDataOperation(session, description) {
 									@Override
 									public IStatus execute() throws ExecutionException {
@@ -182,7 +206,7 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 										return Status.OK_STATUS;
 									}
 								};
-								
+
 								operation.addContext(session.getUndoContext());
 								try {
 									history.execute(operation, null, null);
@@ -190,14 +214,24 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 									// TODO Auto-generated catch block
 									e2.printStackTrace();
 								}
-							}
+						    }
+
 						    @Override	
-							public void focusGained(FocusEvent e) {
-								// Save the old value of this property for use in our 'undo' message.
-								oldValueText = propertyAccessor.formatValueForMessage(
-										AccountPropertiesControl.this.account);
-							}
-						});
+						    public void focusGained(FocusEvent e) {
+						    	if (previousPropertyControl != propertyControl) {
+
+						    		// Save the old value of this property for use in our 'undo' message.
+						    		oldValueText = propertyAccessor.formatValueForMessage(
+						    				AccountPropertiesControl.this.account);
+
+						    		if (previousPropertyControl != null) {
+						    			savePropertyValue(previousPropertyControl);
+						    		}
+						    		previousPropertyControl = new Pair(propertyAccessor, propertyControl);
+						    	}
+						    }
+						}
+					);
 
 				// Add to our list of controls.
 				propertyControlList.add(propertyControl);
@@ -212,6 +246,17 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 			}
 
 			session.getDataManager().addChangeListener(listener, this);
+		}
+
+		private void addFocusListenerRecursively(Control control, FocusListener listener) {
+			control.addFocusListener(listener);
+			
+			if (control instanceof Composite) {
+				Composite composite = (Composite)control;
+				for (Control child: composite.getChildren()) {
+					addFocusListenerRecursively(child, listener);
+				}
+			}
 		}
 	}
 

@@ -26,7 +26,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.jdbcdatastore.SessionManager.DatabaseListKey;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -37,6 +36,7 @@ import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.SessionInfo;
 
 /**
  * This class provides an IObjectKey implementation for objects

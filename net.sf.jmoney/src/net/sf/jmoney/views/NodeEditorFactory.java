@@ -31,23 +31,8 @@ import net.sf.jmoney.model2.Session;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.ui.IElementFactory;
 import org.eclipse.ui.IMemento;
-import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
-/**
- * Our sample action implements workbench action delegate.
- * The action proxy will be created by the workbench and
- * shown in the UI. When the user tries to use the action,
- * this delegate will be created and execution will be 
- * delegated to it.
- * @see IWorkbenchWindowActionDelegate
- */
 public class NodeEditorFactory implements IElementFactory {
-//	private IWorkbenchWindow window;
-	/**
-	 * The constructor.
-	 */
-	public NodeEditorFactory() {
-	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IElementFactory#createElement(org.eclipse.ui.IMemento)
@@ -67,7 +52,9 @@ public class NodeEditorFactory implements IElementFactory {
 		String nodeId = memento.getString("treeNode");
 		if (nodeId != null) {
 			TreeNode node = TreeNode.getTreeNode(nodeId);
-			return new NodeEditorInput(node, node.getLabel(), node.getImage(), node.getPageFactories(), memento);
+			if (node != null) {
+				return new NodeEditorInput(node, node.getLabel(), node.getImage(), node.getPageFactories(), memento);
+			}
 		}
 		
 		// See if the node is an account.

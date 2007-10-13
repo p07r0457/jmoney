@@ -33,10 +33,6 @@ import java.util.List;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.AccountInfo;
-import net.sf.jmoney.fields.CapitalAccountInfo;
-import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.TransactionInfo;
 
 /**
  * The data model for an account.

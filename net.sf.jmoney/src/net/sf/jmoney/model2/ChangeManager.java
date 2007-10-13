@@ -267,7 +267,7 @@ public class ChangeManager {
 				}
 
 				public IObjectKey getReferencedObjectKey(
-						ScalarPropertyAccessor<? extends ExtendableObject> propertyAccessor) {
+						ReferencePropertyAccessor<? extends ExtendableObject> propertyAccessor) {
 					KeyProxy keyProxy = (KeyProxy)oldValues[propertyAccessor.getIndexIntoScalarProperties()];
 					return keyProxy == null ? null : keyProxy.key;
 				}

@@ -34,8 +34,8 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Vector;
 
-import net.sf.jmoney.fields.CurrencyInfo;
 import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.CurrencyInfo;
 import net.sf.jmoney.model2.CurrentSessionChangeListener;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ISessionChangeFirer;

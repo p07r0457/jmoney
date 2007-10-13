@@ -29,7 +29,7 @@ import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
-public class BalanceColumn extends IndividualBlock<EntryData, EntryRowControl> {
+public class BalanceColumn extends IndividualBlock<EntryData, BaseEntryRowControl> {
 
 	private class BalanceCellControl implements ICellControl<EntryData>, IBalanceChangeListener {
 		private final Label balanceLabel;
@@ -80,7 +80,7 @@ public class BalanceColumn extends IndividualBlock<EntryData, EntryRowControl> {
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(EntryRowControl parent) {
+	public ICellControl<EntryData> createCellControl(BaseEntryRowControl parent) {
 		final Label balanceLabel = new Label(parent, SWT.TRAIL);
 		
 		BalanceCellControl cellControl = new BalanceCellControl(balanceLabel);

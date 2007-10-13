@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
-import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
@@ -19,6 +18,7 @@ import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.SessionInfo;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.ui.plugin.AbstractUIPlugin;

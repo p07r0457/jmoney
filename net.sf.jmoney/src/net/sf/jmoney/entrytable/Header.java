@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.entrytable;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 
 import org.eclipse.swt.SWT;
@@ -31,39 +30,31 @@ import org.eclipse.swt.widgets.Display;
 
 public class Header extends Composite {
 
-	private EntriesTable entriesTable;
-
-	public Header(Composite parent, int style, EntriesTable entriesTable) {
+	public Header(Composite parent, int style, Block rootBlock) {
 		super(parent, style);
 
-		this.entriesTable = entriesTable;
-
-		BlockLayout layout = new BlockLayout(entriesTable.rootBlock, false);
+		BlockLayout layout = new BlockLayout(rootBlock, false);
 		setLayout(layout);
 
 		setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GRAY));
 		
-		// KLUDGE: These next two lines are just so the indexes are set.
-		ArrayList<CellBlock<EntryData, EntryRowControl>> cellList = new ArrayList<CellBlock<EntryData, EntryRowControl>>();
-		entriesTable.rootBlock.buildCellList(cellList);
+		// TODO: This is not needed anymore.  It was called to set indexes but
+		// those are not done by this method.
+//		rootBlock.buildCellList();
 		
-		entriesTable.rootBlock.createHeaderControls(this);
+		rootBlock.createHeaderControls(this);
 	}
 	
 	protected boolean sortOnColumn(IndividualBlock<EntryData, EntryRowControl> sortProperty, int sortDirection) {
-		entriesTable.sort(sortProperty, sortDirection == SWT.UP);
-
-		// TODO: Is there a better way of getting the table?
-		entriesTable.table.refreshContent();
+		// TODO: Get this working.  This method is not even called
+		// currently.
+		
+//		entriesTable.sort(sortProperty, sortDirection == SWT.UP);
+//
+//		// TODO: Is there a better way of getting the table?
+//		entriesTable.table.refreshContent();
         
         return true;
-	}
-	
-	public void setEntriesTable(EntriesTable entriesTable) {
-		this.entriesTable = entriesTable;
-
-		/*		
-*/		
 	}
 
 	// TODO: This class is duplicated in EntriesTable.

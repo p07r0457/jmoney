@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.entrytable;
 
-import java.util.ArrayList;
+import java.util.Collection;
 
 import net.sf.jmoney.model2.Entry;
 
@@ -150,13 +150,12 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 		setBackgroundMode(SWT.INHERIT_FORCE);
 		setBackground(normalColor);
 
-		ArrayList<CellBlock<Entry, SplitEntryRowControl>> cellList = new ArrayList<CellBlock<Entry, SplitEntryRowControl>>();
-		rootBlock.buildCellList(cellList);
+		Collection<CellBlock<Entry, ? super SplitEntryRowControl>> cellList = rootBlock.buildCellList();
 		
-		for (final CellBlock<Entry, SplitEntryRowControl> entriesSectionProperty: cellList) {
+		for (final CellBlock<Entry, ? super SplitEntryRowControl> cellBlock: cellList) {
 			// Create the control with no content set.
-			final ICellControl<Entry> cellControl = entriesSectionProperty.createCellControl(this);
-			controls.add(cellControl);
+			final ICellControl<Entry> cellControl = cellBlock.createCellControl(this);
+			controls.put(cellBlock, cellControl);
 
 			FocusListener controlFocusListener = new CellFocusListener(cellControl, selectionTracker, focusCellTracker);
 
@@ -194,7 +193,7 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 	public void setContent(final Entry entry) {
 		this.entry = entry;
 		
-		for (final ICellControl<Entry> control: controls) {
+		for (final ICellControl<Entry> control: controls.values()) {
 			control.load(entry);
 		}
 	}

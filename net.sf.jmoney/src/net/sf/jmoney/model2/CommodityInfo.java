@@ -20,21 +20,16 @@
  *
  */
 
-package net.sf.jmoney.fields;
+package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.fields.TextControlFactory;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
  * extension point.  It implements an extension.
  * <P>
- * This extension registers the CapitalAccount properties.  By registering
+ * This extension registers the Entry properties.  By registering
  * the properties, every one can know how to display, edit, and store
  * the properties.
  * <P>
@@ -47,33 +42,24 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class AccountInfo implements IPropertySetInfo {
+public class CommodityInfo implements IPropertySetInfo {
 
-	/**
-	 * An instance of this object is created initially for all property sets.
-	 * Other property sets reference this to indicate base or extendable
-	 * property sets, and also the property sets used in lists.
-	 * This enables type safety and also avoids the need to worry about
-	 * the order in which 
-	 */
-	private static ExtendablePropertySet<Account> propertySet = PropertySet.addBaseAbstractPropertySet(Account.class, "Account");
+	private static ExtendablePropertySet<Commodity> propertySet = PropertySet.addBaseAbstractPropertySet(Commodity.class, "Base Commodity (includes currencies)");
 
 	private static ScalarPropertyAccessor<String> nameAccessor = null;
 
 	public PropertySet registerProperties() {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		
-		nameAccessor = propertySet.addProperty("name", JMoneyPlugin.getResourceString("AccountPropertiesPanel.name"), String.class, 5, 100, textControlFactory, null);
-		
-		propertySet.setDerivable();
-		
+		nameAccessor = propertySet.addProperty("name", JMoneyPlugin.getResourceString("Commodity.name"), String.class, 3, 20, textControlFactory, null);
+
 		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static ExtendablePropertySet<Account> getPropertySet() {
+	public static ExtendablePropertySet<Commodity> getPropertySet() {
 		return propertySet;
 	}
 

@@ -25,7 +25,6 @@ package net.sf.jmoney.pages.entries;
 import java.util.Iterator;
 import java.util.Vector;
 
-import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
@@ -34,6 +33,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.model2.TransactionInfo;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;

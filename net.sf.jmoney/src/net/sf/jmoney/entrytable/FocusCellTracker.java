@@ -3,7 +3,7 @@
  */
 package net.sf.jmoney.entrytable;
 
-class FocusCellTracker {
+public class FocusCellTracker {
 	/**
 	 * The control that is currently set up as the control
 	 * with the focus.

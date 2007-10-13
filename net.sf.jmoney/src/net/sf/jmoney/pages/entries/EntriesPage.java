@@ -31,14 +31,14 @@ import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
-import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.views.NodeEditor;
 
 import org.eclipse.swt.layout.GridData;

@@ -28,8 +28,8 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.Iterator;
 
-import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
 
 /**
  * This class is used to get the list of entries in a given account. Entries are
@@ -93,7 +93,7 @@ public class AccountEntriesList implements Collection<Entry> {
 	public Iterator<Entry> iterator() {
 		try {
 			// TODO: This code will not work if the index is indexing
-			// objects of a derivible property set.  Table joins would
+			// objects of a derivable property set.  Table joins would
 			// be required in such a situation.
 			Statement stmt = sessionManager.getConnection().createStatement();
 			String sql = 

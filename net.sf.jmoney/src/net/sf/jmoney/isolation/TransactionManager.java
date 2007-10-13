@@ -32,13 +32,11 @@ import java.util.Set;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.SessionInfo;
-import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.model2.AbstractDataOperation;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.ExtensionPropertySet;
@@ -50,10 +48,13 @@ import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.ReferencePropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeListener;
+import net.sf.jmoney.model2.SessionInfo;
 import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.model2.TransactionInfo;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IOperationHistory;
@@ -280,7 +281,7 @@ public class TransactionManager extends DataManager {
 				return committedObject.getExtensions();
 			}
 
-			public IObjectKey getReferencedObjectKey(ScalarPropertyAccessor<? extends ExtendableObject> propertyAccessor) {
+			public IObjectKey getReferencedObjectKey(ReferencePropertyAccessor propertyAccessor) {
 				IObjectKey committedObjectKey = propertyAccessor.invokeObjectKeyField(committedObject);
 				return (committedObjectKey == null)
 				? null
@@ -592,7 +593,7 @@ public class TransactionManager extends DataManager {
 				return newObject.getExtensions();
 			}
 
-			public IObjectKey getReferencedObjectKey(ScalarPropertyAccessor<? extends ExtendableObject> propertyAccessor) {
+			public IObjectKey getReferencedObjectKey(ReferencePropertyAccessor<? extends ExtendableObject> propertyAccessor) {
 				ExtendableObject referencedObject = newObject.getPropertyValue(propertyAccessor);
 				if (referencedObject == null) {
 					return null;

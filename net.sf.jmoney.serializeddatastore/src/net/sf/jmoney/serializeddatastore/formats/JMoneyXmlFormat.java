@@ -58,11 +58,9 @@ import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.BankAccountInfo;
-import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
-import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.BankAccount;
+import net.sf.jmoney.model2.BankAccountInfo;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
@@ -74,14 +72,17 @@ import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertyNotFoundException;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.PropertySetNotFoundException;
+import net.sf.jmoney.model2.ReferencePropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.SessionInfo;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.serializeddatastore.IFileDatastore;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
@@ -809,7 +810,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					}
 				}
 
-				public IObjectKey getReferencedObjectKey(ScalarPropertyAccessor<? extends ExtendableObject> propertyAccessor) {
+				public IObjectKey getReferencedObjectKey(ReferencePropertyAccessor<?> propertyAccessor) {
 					if (propertyValueMap.containsKey(propertyAccessor)) {
 						return ((ExtendableObject)propertyValueMap.get(propertyAccessor)).getObjectKey();
 					} else {

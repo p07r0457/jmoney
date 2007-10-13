@@ -248,48 +248,48 @@
          point="net.sf.jmoney.fields">
       <extendable-property-set
       	id="session"
-          info-class="net.sf.jmoney.fields.SessionInfo">
+          info-class="net.sf.jmoney.model2.SessionInfo">
       </extendable-property-set>
       <extendable-property-set
       	id="commodity"
-          info-class="net.sf.jmoney.fields.CommodityInfo">
+          info-class="net.sf.jmoney.model2.CommodityInfo">
       </extendable-property-set>
       <extendable-property-set
       	id="currency"
-          info-class="net.sf.jmoney.fields.CurrencyInfo"
+          info-class="net.sf.jmoney.model2.CurrencyInfo"
           base-property-set="net.sf.jmoney.commodity">
       </extendable-property-set>
       <extendable-property-set
       	id="account"
-          info-class="net.sf.jmoney.fields.AccountInfo">
+          info-class="net.sf.jmoney.model2.AccountInfo">
       </extendable-property-set>
       <extendable-property-set
       	id="categoryAccount"
-          info-class="net.sf.jmoney.fields.IncomeExpenseAccountInfo"
+          info-class="net.sf.jmoney.model2.IncomeExpenseAccountInfo"
           base-property-set="net.sf.jmoney.account">
       </extendable-property-set>
       <extendable-property-set
       	id="capitalAccount"
-          info-class="net.sf.jmoney.fields.CapitalAccountInfo"
+          info-class="net.sf.jmoney.model2.CapitalAccountInfo"
           base-property-set="net.sf.jmoney.account">
       </extendable-property-set>
       <extendable-property-set
       	id="currencyAccount"
-          info-class="net.sf.jmoney.fields.CurrencyAccountInfo"
+          info-class="net.sf.jmoney.model2.CurrencyAccountInfo"
           base-property-set="net.sf.jmoney.capitalAccount">
       </extendable-property-set>
       <extendable-property-set
       	id="bankAccount"
-          info-class="net.sf.jmoney.fields.BankAccountInfo"
+          info-class="net.sf.jmoney.model2.BankAccountInfo"
           base-property-set="net.sf.jmoney.currencyAccount">
       </extendable-property-set>
       <extendable-property-set
       	id="transaction"
-          info-class="net.sf.jmoney.fields.TransactionInfo">
+          info-class="net.sf.jmoney.model2.TransactionInfo">
       </extendable-property-set>
       <extendable-property-set
       	id="entry"
-          info-class="net.sf.jmoney.fields.EntryInfo">
+          info-class="net.sf.jmoney.model2.EntryInfo">
       </extendable-property-set>
    </extension>
 

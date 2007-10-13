@@ -24,7 +24,6 @@
 package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.BankAccountInfo;
 
 /**
  * The data model for an bank account.

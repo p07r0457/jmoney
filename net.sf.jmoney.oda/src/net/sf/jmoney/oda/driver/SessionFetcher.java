@@ -25,10 +25,10 @@ package net.sf.jmoney.oda.driver;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.model2.SessionInfo;
 
 /**
  * This class implements a fetcher that fetches the session

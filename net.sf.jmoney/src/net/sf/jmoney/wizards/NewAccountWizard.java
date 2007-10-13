@@ -22,37 +22,25 @@
 
 package net.sf.jmoney.wizards;
 
-import java.util.HashMap;
-import java.util.Map;
 
-import net.sf.jmoney.fields.AccountInfo;
-import net.sf.jmoney.fields.IncomeExpenseAccountInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.AccountInfo;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.SessionChangeAdapter;
 
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
-import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.PlatformUI;
 
 public class NewAccountWizard extends Wizard {
 	
@@ -89,7 +77,6 @@ public class NewAccountWizard extends Wizard {
 		} else {
 			newUncommittedAccount = parentAccount2.createSubAccount();
 		}
-//		PlatformUI.getWorkbench().getHelpSystem().setHelp(this.getContainer(), "com.toutvirtual.help.locationDialogId");
 	}
 	
 	/**
@@ -121,7 +108,7 @@ public class NewAccountWizard extends Wizard {
 	public void addPages()
 	{
 		// Show the page that prompts for all the property values.
-		WizardPage propertyPage = new PropertyPage("propertyPage");
+		WizardPage propertyPage = new WizardPropertyPage("propertyPage", "Account Properties", "Enter values for the account properties", newUncommittedAccount, accountPropertySet, AccountInfo.getNameAccessor());
 		addPage(propertyPage);
 
 		WizardPage summaryPage = new SummaryPage("summaryPage");
@@ -138,128 +125,6 @@ public class NewAccountWizard extends Wizard {
 		
 		return true;
 	}
-	
-	class PropertyPage extends WizardPage {
-		/**
-		 * List of the IPropertyControl objects for the
-		 * properties that can be edited in this panel.
-		 */
-		private Map<ScalarPropertyAccessor, IPropertyControl> propertyControlList = new HashMap<ScalarPropertyAccessor, IPropertyControl>();
-	
-		Text accountNameTextbox;
-		
-		PropertyPage(String pageName) {
-			super(pageName);
-			setTitle("Account Properties");
-			setMessage("Enter values for the account properties");
-		}
-		
-		public void createControl(Composite parent) {
-			Composite container = new Composite(parent, SWT.NONE);
-			
-			GridLayout layout = new GridLayout();
-			layout.numColumns = 2;
-			container.setLayout(layout);
-			
-			// Create the controls to edit the properties.
-			
-			// Add the properties for the Account objects.
-			for (final ScalarPropertyAccessor<?> propertyAccessor: accountPropertySet.getScalarProperties3()) {
-
-				Label propertyLabel = new Label(container, SWT.NONE);
-				propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
-				final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(container);
-
-				// Bit of a kludge.  We have special processing for the account
-				// name, so save this one.
-				if (propertyAccessor == AccountInfo.getNameAccessor()) {
-					accountNameTextbox = (Text)propertyControl.getControl();
-				}
-				
-				/*
-				 * If the control factory set up grid data then leave it
-				 * alone. Otherwise set up the grid data based on the
-				 * properties minimum sizes and expansion weights. <P> The
-				 * control widths are set to the minimum width plus 10 times
-				 * the expansion weight. (As we are not short of space, we
-				 * make them a little bigger than their minimum sizes). A
-				 * minimum of 100 pixels is then applied because this makes
-				 * the right sides of the smaller controls line up, which
-				 * looks a little more tidy.
-				 */  
-				if (propertyControl.getControl().getLayoutData() == null) {
-					GridData gridData = new GridData();
-					gridData.minimumWidth = propertyAccessor.getMinimumWidth();
-					gridData.widthHint = Math.max(propertyAccessor.getMinimumWidth() + 10 * propertyAccessor.getWeight(), 100);
-					propertyControl.getControl().setLayoutData(gridData);
-				}
-
-				propertyControl.getControl().addFocusListener(
-						new FocusAdapter() {
-						    @Override	
-							public void focusLost(FocusEvent e) {
-								// TODO: Verify this is needed.  Clean it up?
-								if (NewAccountWizard.this.newUncommittedAccount.getDataManager().isSessionFiring()) {
-									return;
-								}
-
-								propertyControl.save();
-							}
-						});
-
-				// Add to our list of controls.
-				propertyControlList.put(propertyAccessor, propertyControl);
-			}
-			
-			// Set the values from the account object into the control fields.
-			for (IPropertyControl propertyControl: propertyControlList.values()) {
-				propertyControl.load(newUncommittedAccount);
-			}
-			
-			setApplicability();
-			
-			// This listener code assumes that the applicability of account properties depends only
-			// on property changes???????
-			transactionManager.addChangeListener(new SessionChangeAdapter() {
-				@Override
-				public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
-					setApplicability();
-				}
-			}, parent);
-			
-			setPageComplete(false);
-			accountNameTextbox.addModifyListener(new ModifyListener() {
-				public void modifyText(ModifyEvent e) {
-					setPageComplete(accountNameTextbox.getText().length() != 0);
-				}
-			});
-			
-			accountNameTextbox.setFocus();
-			
-			setControl(container);		
-		}
-		
-		private void setApplicability() {
-			for (ScalarPropertyAccessor propertyAccessor: propertyControlList.keySet()) {
-				IPropertyControl propertyControl = propertyControlList.get(propertyAccessor);
-				propertyControl.getControl().setEnabled(propertyAccessor.isPropertyApplicable(newUncommittedAccount));
-			}
-		}
-
-		@Override
-		public boolean canFlipToNextPage() {
-			/*
-			 * This method controls whether the 'Next' button is enabled.
-			 */
-			return accountNameTextbox.getText().length() != 0;
-		}
-		
-		@Override
-		public void performHelp() {
-			PlatformUI.getWorkbench().getHelpSystem().displayHelp("com.toutvirtual.help.serverConnectionDialogId");
-		}
-	}
-	
 	
 	class SummaryPage extends WizardPage {
 		

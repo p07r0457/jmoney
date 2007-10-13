@@ -23,6 +23,7 @@
 package net.sf.jmoney.entrytable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
@@ -49,9 +50,16 @@ public abstract class CellBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	}
 
 	@Override
-	public void buildCellList(ArrayList<CellBlock<T,R>> cellList) {
-		this.index = cellList.size();
+	public int initIndexes(int startIndex) {
+		index = startIndex;
+		return 1;
+	}
+	
+	@Override
+	public Collection<CellBlock<T,? super R>> buildCellList() {
+		ArrayList<CellBlock<T,? super R>> cellList = new ArrayList<CellBlock<T,? super R>>();
 		cellList.add(this);
+		return cellList;
 	}
 
 	@Override

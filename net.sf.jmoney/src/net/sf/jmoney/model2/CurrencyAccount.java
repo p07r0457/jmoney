@@ -26,7 +26,6 @@ package net.sf.jmoney.model2;
 import java.util.Date;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.CurrencyAccountInfo;
 
 /**
  * The data model for an account.

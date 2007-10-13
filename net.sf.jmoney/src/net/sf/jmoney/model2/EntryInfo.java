@@ -20,33 +20,18 @@
  *
  */
 
-package net.sf.jmoney.fields;
+package net.sf.jmoney.model2;
 
 import java.util.Date;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
-import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.BankAccount;
-import net.sf.jmoney.model2.Commodity;
-import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.CurrencyAccount;
-import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.IExtendableObjectConstructors;
-import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.IPropertyDependency;
-import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.IValues;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.ListKey;
-import net.sf.jmoney.model2.PropertyControlFactory;
-import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.fields.AccountControlFactory;
+import net.sf.jmoney.fields.AmountControlFactory;
+import net.sf.jmoney.fields.AmountEditor;
+import net.sf.jmoney.fields.CurrencyControlFactory;
+import net.sf.jmoney.fields.DateControlFactory;
+import net.sf.jmoney.fields.TextControlFactory;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -120,17 +105,21 @@ public class EntryInfo implements IPropertySetInfo {
 
 	
 	private static ScalarPropertyAccessor<String> checkAccessor = null;
-	private static ScalarPropertyAccessor<Account> accountAccessor = null;
+	private static ReferencePropertyAccessor<Account> accountAccessor = null;
 	private static ScalarPropertyAccessor<Date> valutaAccessor = null;
 	private static ScalarPropertyAccessor<String> memoAccessor = null;
 	private static ScalarPropertyAccessor<Long> amountAccessor = null;
 	private static ScalarPropertyAccessor<Long> creationAccessor = null;
-	private static ScalarPropertyAccessor<Currency> incomeExpenseCurrencyAccessor = null;
+	private static ReferencePropertyAccessor<Currency> incomeExpenseCurrencyAccessor = null;
 
 	public PropertySet registerProperties() {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
         IPropertyControlFactory<Date> dateControlFactory = new DateControlFactory();
-        IPropertyControlFactory<Account> accountControlFactory = new AccountControlFactory<Account>();
+        IReferenceControlFactory<Entry,Account> accountControlFactory = new AccountControlFactory<Entry,Account>() {
+			public IObjectKey getObjectKey(Entry parentObject) {
+				return parentObject.accountKey;
+			}
+		};
 
         IPropertyControlFactory<Long> amountControlFactory = new AmountControlFactory() {
 		    @Override	
@@ -228,6 +217,12 @@ public class EntryInfo implements IPropertySetInfo {
 			}
 		};
 
+		IReferenceControlFactory<Entry,Currency> currencyControlFactory = new CurrencyControlFactory<Entry>() {
+			public IObjectKey getObjectKey(Entry parentObject) {
+				return parentObject.incomeExpenseCurrencyKey;
+			}
+		};
+		
 		IPropertyDependency<Entry> onlyIfIncomeExpenseAccount = new IPropertyDependency<Entry>() {
 			public boolean isApplicable(Entry entry) {
 				return entry.getAccount() instanceof IncomeExpenseAccount;
@@ -252,7 +247,7 @@ public class EntryInfo implements IPropertySetInfo {
 		memoAccessor        = propertySet.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        String.class, 5, 100, textControlFactory, null);
 		amountAccessor      = propertySet.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      Long.class, 2, 70,  amountControlFactory, null);
 		creationAccessor    = propertySet.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    Long.class, 0, 70,  creationControlFactory, null);
-		incomeExpenseCurrencyAccessor = propertySet.addProperty("incomeExpenseCurrency",    JMoneyPlugin.getResourceString("Entry.currency"),    Currency.class, 2, 70, new CurrencyControlFactory(), onlyIfIncomeExpenseAccount);
+		incomeExpenseCurrencyAccessor = propertySet.addProperty("incomeExpenseCurrency",    JMoneyPlugin.getResourceString("Entry.currency"),    Currency.class, 2, 70, currencyControlFactory, onlyIfIncomeExpenseAccount);
 		
 		return propertySet;
 	}
@@ -274,7 +269,7 @@ public class EntryInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static ScalarPropertyAccessor<Account> getAccountAccessor() {
+	public static ReferencePropertyAccessor<Account> getAccountAccessor() {
 		return accountAccessor;
 	}	
 
@@ -309,7 +304,7 @@ public class EntryInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static ScalarPropertyAccessor<Currency> getIncomeExpenseCurrencyAccessor() {
+	public static ReferencePropertyAccessor<Currency> getIncomeExpenseCurrencyAccessor() {
 		return incomeExpenseCurrencyAccessor;
 	}	
 }

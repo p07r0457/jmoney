@@ -27,7 +27,11 @@ import java.util.Date;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.model2.SessionChangeListener;
 
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -44,6 +48,16 @@ public class DateEditor implements IPropertyControl {
     protected DateControl propertyControl;
     protected ExtendableObject extendableObject;
 
+    private SessionChangeListener dateChangeListener = new SessionChangeAdapter() {
+		@Override
+		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
+			if (changedObject.equals(extendableObject) && changedProperty == propertyAccessor) {
+	            Date date = extendableObject.getPropertyValue(propertyAccessor);
+	            propertyControl.setDate(date);
+			}
+		}
+	};
+	
 	/**
      * Create a new date editor.
      */
@@ -54,19 +68,35 @@ public class DateEditor implements IPropertyControl {
 
 		propertyControl = new DateControl(parent);
 		propertyControl.setFont(font);
-    }
+		
+		propertyControl.addDisposeListener(new DisposeListener() {
+			public void widgetDisposed(DisposeEvent e) {
+		    	if (extendableObject != null) {
+		    		extendableObject.getDataManager().removeChangeListener(dateChangeListener);
+		    	}
+			}
+		});
+	}
 
     /* (non-Javadoc)
      * @see net.sf.jmoney.model2.IPropertyControl#load(net.sf.jmoney.model2.ExtendableObject)
      */
     public void load(ExtendableObject object) {
+    	if (extendableObject != null) {
+    		extendableObject.getDataManager().removeChangeListener(dateChangeListener);
+    	}
+    		
     	this.extendableObject = object;
     	if (object == null) {
     		propertyControl.setDate(null);
     	} else {
             Date d = object.getPropertyValue(propertyAccessor);
     		propertyControl.setDate(d);
+
+    		// Listen for changes to the session data.
+    		extendableObject.getDataManager().addChangeListener(dateChangeListener);
     	}
+    	
     	propertyControl.setEnabled(object != null);
     }
 

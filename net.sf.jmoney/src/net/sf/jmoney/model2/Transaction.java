@@ -25,8 +25,6 @@ package net.sf.jmoney.model2;
 
 import java.util.Date;
 
-import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.TransactionInfo;
 
 /**
  *

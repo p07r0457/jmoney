@@ -25,7 +25,6 @@ package net.sf.jmoney.model2;
 import java.text.NumberFormat;
 import java.text.ParseException;
 
-import net.sf.jmoney.fields.CurrencyInfo;
 
 /**
  * This class was created because the currency support wich comes with the Java

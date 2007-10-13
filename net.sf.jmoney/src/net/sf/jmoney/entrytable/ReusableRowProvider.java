@@ -29,7 +29,9 @@ import org.eclipse.swt.widgets.Composite;
 
 public class ReusableRowProvider implements IRowProvider {
 
-	private EntriesTable entriesTable;
+	private Block<EntryData, ? super EntryRowControl> rootBlock;
+
+	private VirtualRowTable rowTable;
 	
 	private RowSelectionTracker rowSelectionTracker;
 	
@@ -40,22 +42,26 @@ public class ReusableRowProvider implements IRowProvider {
 	 * visible. These a free for re-use, thus avoiding the need to create new
 	 * controls.
 	 */
-	private LinkedList<EntryRowControl> spareRows = new LinkedList<EntryRowControl>();
+	private LinkedList<BaseEntryRowControl> spareRows = new LinkedList<BaseEntryRowControl>();
 
-	public ReusableRowProvider(EntriesTable entriesTable, RowSelectionTracker rowSelectionTracker, FocusCellTracker focusCellTracker) {
-		this.entriesTable = entriesTable;
+	public ReusableRowProvider(Block<EntryData, ? super EntryRowControl> rootBlock) {
+		this.rootBlock = rootBlock;
+	}
+	
+	public void init(VirtualRowTable rowTable, RowSelectionTracker rowSelectionTracker, FocusCellTracker focusCellTracker) {
+		this.rowTable = rowTable;
 		this.rowSelectionTracker = rowSelectionTracker;
 		this.focusCellTracker = focusCellTracker;
 	}
 	
-	public EntryRowControl getNewRow(Composite parent, EntryData entryData) {
-		EntryRowControl rowControl;
+	public BaseEntryRowControl getNewRow(Composite parent, EntryData entryData) {
+		BaseEntryRowControl rowControl;
 		
 		if (spareRows.size() > 0) {
 			rowControl = spareRows.removeFirst();
 			rowControl.setVisible(true);
 		} else {
-			rowControl = new EntryRowControl(parent, SWT.NONE, entriesTable, rowSelectionTracker, focusCellTracker);
+			rowControl = new EntryRowControl(parent, SWT.NONE, rowTable, rootBlock, rowSelectionTracker, focusCellTracker);
 		}
 		
 		rowControl.setContent(entryData);
@@ -63,7 +69,7 @@ public class ReusableRowProvider implements IRowProvider {
 		return rowControl;
 	}
 	
-	public void releaseRow(EntryRowControl rowControl) {
+	public void releaseRow(BaseEntryRowControl rowControl) {
 		rowControl.setVisible(false);
 		spareRows.add(rowControl);
 	}

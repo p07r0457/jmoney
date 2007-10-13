@@ -20,23 +20,11 @@
  *
  */
 
-package net.sf.jmoney.fields;
+package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.IExtendableObjectConstructors;
-import net.sf.jmoney.model2.IListGetter;
-import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.IPropertyDependency;
-import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.IValues;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.ListKey;
-import net.sf.jmoney.model2.ListPropertyAccessor;
-import net.sf.jmoney.model2.ObjectCollection;
-import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.fields.CheckBoxControlFactory;
+import net.sf.jmoney.fields.CurrencyControlFactory;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -80,7 +68,7 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
 	private static ListPropertyAccessor<IncomeExpenseAccount> subAccountAccessor = null;
 	private static ScalarPropertyAccessor<Boolean> multiCurrencyAccessor = null;
-	private static ScalarPropertyAccessor<Currency> currencyAccessor = null;
+	private static ReferencePropertyAccessor<Currency> currencyAccessor = null;
 	
     public PropertySet registerProperties() {
 		IListGetter<IncomeExpenseAccount, IncomeExpenseAccount> accountGetter = new IListGetter<IncomeExpenseAccount, IncomeExpenseAccount>() {
@@ -89,6 +77,12 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 			}
 		};
 
+		IReferenceControlFactory<IncomeExpenseAccount,Currency> currencyControlFactory = new CurrencyControlFactory<IncomeExpenseAccount>() {
+			public IObjectKey getObjectKey(IncomeExpenseAccount parentObject) {
+				return parentObject.currencyKey;
+			}
+		};
+		
 		IPropertyDependency<IncomeExpenseAccount> onlyIfSingleCurrency = new IPropertyDependency<IncomeExpenseAccount>() {
 			public boolean isApplicable(IncomeExpenseAccount account) {
 				return !account.isMultiCurrency();
@@ -97,7 +91,7 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 		
 		subAccountAccessor = propertySet.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccountInfo.getPropertySet(), accountGetter);
 		multiCurrencyAccessor = propertySet.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.multiCurrency"), Boolean.class, 0, 10, new CheckBoxControlFactory(), null); 
-		currencyAccessor = propertySet.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), Currency.class, 2, 20, new CurrencyControlFactory(), onlyIfSingleCurrency);
+		currencyAccessor = propertySet.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), Currency.class, 2, 20, currencyControlFactory, onlyIfSingleCurrency);
 		
 		// We should define something for the implied enumerated value
 		// that is controlled by the derived class type.  This has not
@@ -132,7 +126,7 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
     /**
 	 * @return
 	 */
-	public static ScalarPropertyAccessor<Currency> getCurrencyAccessor() {
+	public static ReferencePropertyAccessor<Currency> getCurrencyAccessor() {
 		return currencyAccessor;
 	}	
 }

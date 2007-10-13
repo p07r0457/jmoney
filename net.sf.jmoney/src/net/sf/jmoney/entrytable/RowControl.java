@@ -1,6 +1,7 @@
 package net.sf.jmoney.entrytable;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
@@ -17,7 +18,11 @@ public abstract class RowControl<T> extends Composite {
 	
 	protected abstract void setSelected(boolean isSelected);
 	
-	protected ArrayList<ICellControl<T>> controls = new ArrayList<ICellControl<T>>();
+	// Although currently the keys of this map are never used
+	// (and it may as well be a list of the values only), a map
+	// allows us to do stuff like move the focus to the control
+	// in error during transaction validation.
+	protected Map<CellBlock, ICellControl<T>> controls = new HashMap<CellBlock, ICellControl<T>>();
 
 	public RowControl(Composite parent, int style) {
 		super(parent, style);

@@ -20,25 +20,12 @@
  *
  */
 
-package net.sf.jmoney.fields;
+package net.sf.jmoney.model2;
 
 import java.util.Date;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.IExtendableObjectConstructors;
-import net.sf.jmoney.model2.IListGetter;
-import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.IValues;
-import net.sf.jmoney.model2.ListKey;
-import net.sf.jmoney.model2.ListPropertyAccessor;
-import net.sf.jmoney.model2.ObjectCollection;
-import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.fields.DateControlFactory;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields

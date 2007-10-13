@@ -25,8 +25,8 @@ package net.sf.jmoney.pages.entries;
 import java.text.MessageFormat;
 
 import net.sf.jmoney.entrytable.EntryData;
-import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.IPropertyControl;
 
 import org.eclipse.swt.SWT;

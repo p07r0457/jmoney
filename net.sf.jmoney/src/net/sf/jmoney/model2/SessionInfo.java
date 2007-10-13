@@ -20,26 +20,10 @@
  *
  */
 
-package net.sf.jmoney.fields;
+package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.Commodity;
-import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.IExtendableObjectConstructors;
-import net.sf.jmoney.model2.IListGetter;
-import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.IValues;
-import net.sf.jmoney.model2.ListKey;
-import net.sf.jmoney.model2.ListPropertyAccessor;
-import net.sf.jmoney.model2.ObjectCollection;
-import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.fields.CurrencyControlFactory;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -84,7 +68,7 @@ public class SessionInfo implements IPropertySetInfo {
 	private static ListPropertyAccessor<Commodity> commoditiesAccessor = null;
 	private static ListPropertyAccessor<Account> accountsAccessor = null;
 	private static ListPropertyAccessor<Transaction> transactionsAccessor = null;
-	private static ScalarPropertyAccessor<Currency> defaultCurrencyAccessor = null;
+	private static ReferencePropertyAccessor<Currency> defaultCurrencyAccessor = null;
 
 	public PropertySet registerProperties() {
 		IListGetter<Session, Commodity> commodityGetter = new IListGetter<Session, Commodity>() {
@@ -105,7 +89,11 @@ public class SessionInfo implements IPropertySetInfo {
 			}
 		};
 		
-		IPropertyControlFactory<Currency> currencyControlFactory = new CurrencyControlFactory();
+		IReferenceControlFactory<Session,Currency> currencyControlFactory = new CurrencyControlFactory<Session>() {
+			public IObjectKey getObjectKey(Session parentObject) {
+				return parentObject.defaultCurrencyKey;
+			}
+		};
 
 		commoditiesAccessor = propertySet.addPropertyList("commodity", JMoneyPlugin.getResourceString("<not used???>"), CommodityInfo.getPropertySet(), commodityGetter);
 		accountsAccessor = propertySet.addPropertyList("account", JMoneyPlugin.getResourceString("<not used???>"), AccountInfo.getPropertySet(), accountGetter);
@@ -147,7 +135,7 @@ public class SessionInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static ScalarPropertyAccessor<Currency> getDefaultCurrencyAccessor() {
+	public static ReferencePropertyAccessor<Currency> getDefaultCurrencyAccessor() {
 		return defaultCurrencyAccessor;
 	}	
 }

@@ -1,6 +1,5 @@
 package net.sf.jmoney.model2;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Comparator;
@@ -29,9 +28,6 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	 * never null
 	 */
 	private Method theSetMethod;
-
-	// Applies only if this property is of type ExtendableObject
-	private Field theObjectKeyField;
 
 	/**
 	 * The class of the property values (if the method signatures show int,
@@ -92,6 +88,10 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 
 		Class implementationClass = propertySet.getImplementationClass();
 
+		if (classOfValueObject.isPrimitive()) {		
+			throw new MalformedPluginException("Property '" + localName + "' in '" + implementationClass.getName() + "' has been parameterized by a primitive type (" + classOfValueObject.getName() + ").  Although primitive types may be used by the getters and setters, the equivalent object classes must be used for parameterization.");
+		}
+		
 		// Use introspection on the interface to find the getter method.
 		// Following the Java beans pattern, we allow the getter for a
 		// boolean property to have a prefix of either "get" or "is".
@@ -148,36 +148,6 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 
 		if (theSetMethod.getReturnType() != void.class) {
 			throw new MalformedPluginException("Method '" + theSetMethod.getName() + "' in '" + implementationClass.getName() + "' must return void type .");
-		}
-
-		// If the property value is an extendable object, use introspection on
-		// the implementation class to find the field containing
-		// the object key for the object referenced by this property.
-		if (ExtendableObject.class.isAssignableFrom(classOfValueObject)) { 		
-			String fieldName = localName + "Key";
-
-			Class classToTry = propertySet.getImplementationClass();
-			do {
-				try {
-					theObjectKeyField = classToTry.getDeclaredField(fieldName);
-					break;
-				} catch (NoSuchFieldException e) {
-					classToTry = classToTry.getSuperclass();
-				}
-			} while (classToTry != null);
-
-			if (theObjectKeyField == null) {
-				throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a field called " + fieldName + ".");
-			}
-
-			if (!IObjectKey.class.isAssignableFrom(theObjectKeyField.getType())) {
-				throw new MalformedPluginException("Field '" + fieldName + "' in '" + implementationClass.getName() + "' must reference an object type that implements IObjectKey.");
-			}
-
-			// (1 is public,  2 is private, 4 is protected, 1,2 & 4 bits off is default).
-			if ((theObjectKeyField.getModifiers() & 5) == 0) {
-				throw new MalformedPluginException("Field '" + fieldName + "' in '" + implementationClass.getName() + "' must be protected (or public if you insist).");
-			}
 		}
 
 		/*
@@ -470,26 +440,6 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	 */
 	public Class<?> getClassOfValueType() {
 		return classOfValueType;
-	}
-
-	/**
-	 * Given an object (which must be of a class that contains this
-	 * property), return the object key to this property.
-	 *   
-	 * @param object
-	 * @return
-	 */
-	public IObjectKey invokeObjectKeyField(ExtendableObject object) {
-		if (getPropertySet().isExtension()) {
-			ExtensionObject extension = object.getExtension((ExtensionPropertySet<?>)getPropertySet(), false);
-			if (extension == null) {
-				return null;
-			} else {
-				return (IObjectKey)extension.getProtectedFieldValue(theObjectKeyField);
-			}
-		} else {
-			return (IObjectKey)object.getProtectedFieldValue(theObjectKeyField);
-		}
 	}
 
 	/**

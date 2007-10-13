@@ -43,7 +43,7 @@ import org.eclipse.swt.widgets.Control;
  * 
  * @author Nigel Westbury
  */
-abstract public class PropertyBlock extends IndividualBlock<EntryData, EntryRowControl> {
+abstract public class PropertyBlock extends IndividualBlock<EntryData, BaseEntryRowControl> {
 	private ScalarPropertyAccessor<?> accessor;
 	private String id;
 	
@@ -76,7 +76,7 @@ abstract public class PropertyBlock extends IndividualBlock<EntryData, EntryRowC
 	public abstract ExtendableObject getObjectContainingProperty(EntryData data);
 
     @Override	
-	public ICellControl<EntryData> createCellControl(EntryRowControl parent) {
+	public ICellControl<EntryData> createCellControl(BaseEntryRowControl parent) {
 		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		
 		return new ICellControl<EntryData>() {

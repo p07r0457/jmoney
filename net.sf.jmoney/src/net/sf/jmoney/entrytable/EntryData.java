@@ -33,13 +33,20 @@ import org.eclipse.core.runtime.Assert;
 /**
  * Class representing a top level entry in the list.
  * <P>
- * Note that, despite the name of this class, it is entries and
- * not transactions that are listed.  For example, if a transaction
- * has two entries in the account then that transaction will appear
- * twice in the list.
+ * Note that it is entries and not transactions that are listed. For example, if
+ * a transaction has two entries in the account then that transaction will
+ * appear twice in the list.
  */
 public class EntryData {
+	/**
+	 * The entry represented by this row.  This entry will be null if the row
+	 * represents a new entry that has never been committed to the datastore.
+	 * Row controls will generally create a datastore transaction in which to
+	 * edit this entry.  However, this entry will be the committed version of
+	 * the entry.
+	 */
 	private Entry entry;
+	
 	private DataManager dataManager;
 
 	/**

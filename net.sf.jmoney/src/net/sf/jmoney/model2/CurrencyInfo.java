@@ -20,21 +20,10 @@
  *
  */
 
-package net.sf.jmoney.fields;
+package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.IExtendableObjectConstructors;
-import net.sf.jmoney.model2.IObjectKey;
-import net.sf.jmoney.model2.IPropertyControl;
-import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.IValues;
-import net.sf.jmoney.model2.ListKey;
-import net.sf.jmoney.model2.PropertyControlFactory;
-import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.fields.TextControlFactory;
 
 import org.eclipse.swt.widgets.Composite;
 

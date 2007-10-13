@@ -23,31 +23,32 @@
 package net.sf.jmoney.entrytable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
-	private ArrayList<Block<T,R>> children;
+	private ArrayList<Block<T,? super R>> children;
 
-	public HorizontalBlock(Block<T,R> child1, Block<T,R> child2) {
-		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>();
+	public HorizontalBlock(Block<T,? super R> child1, Block<T,? super R> child2) {
+		ArrayList<Block<T,? super R>> children = new ArrayList<Block<T,? super R>>();
 		children.add(child1);
 		children.add(child2);
 		init(children);
 	}
 	
-	public HorizontalBlock(Block<T,R> child1, Block<T,R> child2, Block<T,R> child3) {
-		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>();
+	public HorizontalBlock(Block<T,? super R> child1, Block<T,? super R> child2, Block<T,? super R> child3) {
+		ArrayList<Block<T,? super R>> children = new ArrayList<Block<T,? super R>>();
 		children.add(child1);
 		children.add(child2);
 		children.add(child3);
 		init(children);
 	}
 	
-	public HorizontalBlock(Block<T,R> child1, Block<T,R> child2, Block<T,R> child3, Block<T,R> child4) {
-		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>();
+	public HorizontalBlock(Block<T,? super R> child1, Block<T,? super R> child2, Block<T,? super R> child3, Block<T,? super R> child4) {
+		ArrayList<Block<T,? super R>> children = new ArrayList<Block<T,? super R>>();
 		children.add(child1);
 		children.add(child2);
 		children.add(child3);
@@ -55,8 +56,8 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 		init(children);
 	}
 	
-	public HorizontalBlock(Block<T,R> child1, Block<T,R> child2, Block<T,R> child3, Block<T,R> child4, Block<T,R> child5) {
-		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>();
+	public HorizontalBlock(Block<T,? super R> child1, Block<T,? super R> child2, Block<T,? super R> child3, Block<T,? super R> child4, Block<T,? super R> child5) {
+		ArrayList<Block<T,? super R>> children = new ArrayList<Block<T,? super R>>();
 		children.add(child1);
 		children.add(child2);
 		children.add(child3);
@@ -65,8 +66,8 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 		init(children);
 	}
 	
-	public HorizontalBlock(Block<T,R> child1, Block<T,R> child2, Block<T,R> child3, Block<T,R> child4, Block<T,R> child5, Block<T,R> child6) {
-		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>();
+	public HorizontalBlock(Block<T,? super R> child1, Block<T,? super R> child2, Block<T,? super R> child3, Block<T,? super R> child4, Block<T,? super R> child5, Block<T,? super R> child6) {
+		ArrayList<Block<T,? super R>> children = new ArrayList<Block<T,? super R>>();
 		children.add(child1);
 		children.add(child2);
 		children.add(child3);
@@ -81,25 +82,29 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	 * arrays are not compatible with generics and unfortunately
 	 * Java uses arrays for variable parameters.
 	 */
-	public HorizontalBlock(Block<T,R>... childrenArray) {
-		ArrayList<Block<T,R>> children = new ArrayList<Block<T,R>>(); 
-		for (Block<T,R> child: childrenArray) {
+	public HorizontalBlock(Block<T,? super R>... childrenArray) {
+		ArrayList<Block<T,? super R>> children = new ArrayList<Block<T,? super R>>(); 
+		for (Block<T,? super R> child: childrenArray) {
 			children.add(child);
 		}
 		init (children);
 	}
 	
-	private void init(ArrayList<Block<T,R>> children) {
+	public HorizontalBlock(ArrayList<Block<T,? super R>> children) {
+		init(children);
+	}
+
+	private void init(ArrayList<Block<T,? super R>> children) {
 		this.children = children;
 
 		/*
 		 * The minimumWidth, weight, and height are set in the
-		 * constructor These values can all be calculated from the list
+		 * constructor. These values can all be calculated from the list
 		 * of child blocks.
 		 */
 		minimumWidth = 0;
 		weight = 0;
-		for (Block<T,R> child: children) {
+		for (Block<T,? super R> child: children) {
 			minimumWidth += child.minimumWidth;
 			weight += child.weight;
 		}
@@ -110,15 +115,27 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	}
 
 	@Override
-	public void buildCellList(ArrayList<CellBlock<T,R>> cellList) {
-		for (Block<T,R> child: children) {
-			child.buildCellList(cellList);
+	public int initIndexes(int startIndex) {
+		int totalCount = 0;
+		for (Block<T,? super R> child: children) {
+			int count = child.initIndexes(startIndex + totalCount);
+			totalCount += count;
 		}
+		return totalCount;
+	}
+
+	@Override
+	public Collection<CellBlock<T,? super R>> buildCellList() {
+		ArrayList<CellBlock<T,? super R>> cellList = new ArrayList<CellBlock<T,? super R>>();
+		for (Block<T,? super R> child: children) {
+			cellList.addAll(child.buildCellList());
+		}
+		return cellList;
 	}
 
 	@Override
 	public void createHeaderControls(Composite parent) {
-		for (Block<T,R> child: children) {
+		for (Block<T,? super R> child: children) {
 			child.createHeaderControls(parent);
 		}
 	}
@@ -175,7 +192,7 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	@Override
 	void positionControls(int left, int top, int verticalSpacing, Control[] controls, boolean flushCache) {
 		int x = left;
-		for (Block<T,R> child: children) {
+		for (Block<T,? super R> child: children) {
 			child.positionControls(x, top, verticalSpacing, controls, flushCache);
 			x += child.width + Block.horizontalSpacing;
 		}
@@ -184,7 +201,7 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	@Override
 	int getHeight(int verticalSpacing, Control[] controls) {
 		int height = 0; 
-		for (Block<T,R> child: children) {
+		for (Block<T,? super R> child: children) {
 			height = Math.max(height, child.getHeight(verticalSpacing, controls));
 		}
 		return height;

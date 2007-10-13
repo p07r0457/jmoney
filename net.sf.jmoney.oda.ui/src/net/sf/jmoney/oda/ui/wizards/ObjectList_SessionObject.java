@@ -22,9 +22,9 @@
 
 package net.sf.jmoney.oda.ui.wizards;
 
-import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.SessionInfo;
 
 import org.eclipse.ui.IMemento;
 

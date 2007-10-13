@@ -23,7 +23,6 @@
 package net.sf.jmoney.entrytable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,9 +30,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import net.sf.jmoney.fields.AccountInfo;
-import net.sf.jmoney.fields.CommodityInfo;
 import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.AccountInfo;
+import net.sf.jmoney.model2.CommodityInfo;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
@@ -120,8 +119,6 @@ public class EntriesTable extends Composite {
 	protected Session session;
 	
 	protected IEntriesContent entriesContent;
-
-	public Block<EntryData, EntryRowControl> rootBlock;
 	
 	public VirtualRowTable table;
 	
@@ -154,13 +151,11 @@ public class EntriesTable extends Composite {
 	 */
 	private Vector<EntryRowSelectionListener> selectionListeners = new Vector<EntryRowSelectionListener>();
 
-	public EntriesTable(Composite parent, FormToolkit toolkit,
-			Block<EntryData, EntryRowControl> rootBlock, final IEntriesContent entriesContent, final Session session, IndividualBlock<EntryData, EntryRowControl> defaultSortColumn, final RowSelectionTracker rowTracker) {
+	public EntriesTable(Composite parent, FormToolkit toolkit, Block rootBlock, 
+			final IEntriesContent entriesContent, IRowProvider rowProvider, final Session session, IndividualBlock<EntryData, ?> defaultSortColumn, final RowSelectionTracker rowTracker) {
 		super(parent, SWT.NONE);
 		
 		this.session = session;
-
-		this.rootBlock = rootBlock;
 
 		toolkit.adapt(this, true, false);
 
@@ -168,6 +163,11 @@ public class EntriesTable extends Composite {
 		layout.marginWidth = 0;
 		layout.marginHeight = 0;
 		setLayout(layout);
+		
+		/*
+		 * Ensure indexes are set.
+		 */
+		rootBlock.initIndexes(0);
 		
 		this.entriesContent = entriesContent;
 
@@ -199,13 +199,16 @@ public class EntriesTable extends Composite {
 			}
 	    };
 	    
-	    /*
+		table = new VirtualRowTable(this, rootBlock, this, contentProvider, rowProvider, rowTracker);
+		
+		/*
 		 * Use a single cell focus tracker for this table. The row focus tracker
 		 * is passed to this object because it may be shared with other tables
 		 * (thus forcing a single row selection for two or more tables).
 		 */
 	    FocusCellTracker cellTracker = new FocusCellTracker();
-		table = new VirtualRowTable(this, rootBlock, this, contentProvider, new ReusableRowProvider(this, rowTracker, cellTracker), rowTracker);
+
+	    rowProvider.init(table, rowTracker, cellTracker);
 		
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gridData.heightHint = 100;
@@ -293,7 +296,7 @@ public class EntriesTable extends Composite {
 						 * 'new entry' row.
 						 */
 
-        				EntryRowControl newEntryRowControl = table.getRowControl(newEntryRow);
+        				BaseEntryRowControl newEntryRowControl = table.getRowControl(newEntryRow);
         				Entry newEntry = newEntryRowControl.uncommittedEntryData.getEntry();
         				TransactionManager transactionManager = (TransactionManager)newEntry.getDataManager();
         				
@@ -639,13 +642,6 @@ public class EntriesTable extends Composite {
 				table.insertRow(insertIndex);
 			}
 		}, this);
-
-	}
-
-	public Collection<CellBlock<EntryData, EntryRowControl>> getCellList() {
-		ArrayList<CellBlock<EntryData, EntryRowControl>> cellList = new ArrayList<CellBlock<EntryData, EntryRowControl>>();
-		rootBlock.buildCellList(cellList);
-		return cellList;
 	}
 
 	/**
@@ -1146,7 +1142,7 @@ public class EntriesTable extends Composite {
 		private Comparator<EntryData> cellComparator;
 		private boolean ascending;
 		
-		RowComparator(IndividualBlock<EntryData, EntryRowControl> sortProperty, boolean ascending) {
+		RowComparator(IndividualBlock<EntryData, ?> sortProperty, boolean ascending) {
 			this.cellComparator = sortProperty.getComparator();
 			this.ascending = ascending;
 		}

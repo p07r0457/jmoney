@@ -323,18 +323,6 @@ public abstract class ExtendableObject {
 	 * 			must be a list property (and not a scalar property).
 	 */
 	public <E2 extends ExtendableObject> ObjectCollection<E2> getListPropertyValue(ListPropertyAccessor<E2> owningListProperty) {
-/*		
-		Object objectWithProperties = getMutablePropertySetInterface(owningListProperty.getPropertySet());
-		
-		// If no extension exists then return the empty collection.
-		// This is not technically correct.  The user should be able
-		// to create items in this collection, in which case the
-		// extension containing the list should be created.
-		if (objectWithProperties == null) {
-			// TODO: implement this.
-			throw new RuntimeException("list properties in extension not yet fully implemented");
-		}
-*/
 		return owningListProperty.getElements(this);
 	}
 	

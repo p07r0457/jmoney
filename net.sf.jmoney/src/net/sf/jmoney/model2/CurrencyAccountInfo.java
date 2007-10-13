@@ -20,16 +20,11 @@
  *
  */
 
-package net.sf.jmoney.fields;
+package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.CurrencyAccount;
-import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.fields.AmountInCurrencyAccountControlFactory;
+import net.sf.jmoney.fields.CurrencyControlFactory;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -52,17 +47,19 @@ public class CurrencyAccountInfo implements IPropertySetInfo {
 
 	private static ExtendablePropertySet<CurrencyAccount> propertySet = PropertySet.addDerivedAbstractPropertySet(CurrencyAccount.class, "Account containing a single currency", CapitalAccountInfo.getPropertySet());
 
-	private static ScalarPropertyAccessor<Currency> currencyAccessor = null;
+	private static ReferencePropertyAccessor<Currency> currencyAccessor = null;
 	private static ScalarPropertyAccessor<Long> startBalanceAccessor = null;
 
     public PropertySet registerProperties() {
 		IPropertyControlFactory<Long> amountControlFactory = new AmountInCurrencyAccountControlFactory();
-		IPropertyControlFactory<Currency> currencyControlFactory = new CurrencyControlFactory();
+		IReferenceControlFactory<CurrencyAccount,Currency> currencyControlFactory = new CurrencyControlFactory<CurrencyAccount>() {
+			public IObjectKey getObjectKey(CurrencyAccount parentObject) {
+				return parentObject.currencyKey;
+			}
+		};
 		
 		currencyAccessor = propertySet.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), Currency.class, 3, 30, currencyControlFactory, null);
 		startBalanceAccessor = propertySet.addProperty("startBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.startBalance"), Long.class, 2, 40, amountControlFactory, null);
-		
-		propertySet.setDerivable();
 		
 		return propertySet;
 	}
@@ -77,7 +74,7 @@ public class CurrencyAccountInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static ScalarPropertyAccessor<Currency> getCurrencyAccessor() {
+	public static ReferencePropertyAccessor<Currency> getCurrencyAccessor() {
 		return currencyAccessor;
 	}	
 

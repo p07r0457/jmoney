@@ -54,7 +54,7 @@ public class VirtualRowTable extends Composite {
 	/**
 	 * the list of row objects for all the rows that are currently visible
 	 */
-	Map<EntryData, EntryRowControl> rows = new HashMap<EntryData, EntryRowControl>();
+	Map<EntryData, BaseEntryRowControl> rows = new HashMap<EntryData, BaseEntryRowControl>();
 
 	/**
 	 * the list of row objects for all the rows that used to be visible and may be re-used,
@@ -63,7 +63,7 @@ public class VirtualRowTable extends Composite {
 	 * scroll position (which moves the row control back from this field to the rows field),
 	 * then releases any rows left in this field.
 	 */
-	Map<EntryData, EntryRowControl> previousRows = new HashMap<EntryData, EntryRowControl>();
+	Map<EntryData, BaseEntryRowControl> previousRows = new HashMap<EntryData, BaseEntryRowControl>();
 	
 	/**
 	 * the currently selected row, as a 0-based index into the underlying rows,
@@ -147,7 +147,7 @@ public class VirtualRowTable extends Composite {
 		layout.verticalSpacing = 0;
 		setLayout(layout);
 	
-		Header header = new Header(this, SWT.NONE, entriesTable);
+		Header header = new Header(this, SWT.NONE, rootBlock);
 		Composite blankPane = new Composite(this, SWT.NONE);
 		contentPane = createContentPane(this);
 		vSlider = new Slider(this, SWT.VERTICAL);
@@ -209,7 +209,7 @@ public class VirtualRowTable extends Composite {
 //			// nothing to do in this case
 //		} else {
 //			EntryData entryData
-//			EntryRowControl removedRow = rows.remove(index - topVisibleRow);
+//			BaseEntryRowControl removedRow = rows.remove(index - topVisibleRow);
 //			rowProvider.releaseRow(removedRow);
 //		}
 		
@@ -241,7 +241,7 @@ public class VirtualRowTable extends Composite {
 //		} else if (index >= topVisibleRow + rows.size()) {
 //			// nothing to do in this case
 //		} else {
-//			EntryRowControl newRow = rowProvider.getNewRow(contentPane, index);
+//			BaseEntryRowControl newRow = rowProvider.getNewRow(contentPane, index);
 //			rows.add(this.index - topVisibleRow, newRow);
 //		}
 		
@@ -285,7 +285,7 @@ public class VirtualRowTable extends Composite {
 
 				if (newSize.x != clientAreaSize.x) {
 					// Width has changed.  Update the sizes of the row controls.
-					for (EntryRowControl rowControl: rows.values()) {
+					for (BaseEntryRowControl rowControl: rows.values()) {
 						int rowHeight = rowControl.computeSize(newSize.x, SWT.DEFAULT).y;
 						rowControl.setSize(newSize.x, rowHeight);
 					}
@@ -454,7 +454,7 @@ public class VirtualRowTable extends Composite {
 		 * that were previously visible will remain visible, so we keep these controls.
 		 */
 		previousRows = rows;
-		rows = new HashMap<EntryData, EntryRowControl>();
+		rows = new HashMap<EntryData, BaseEntryRowControl>();
 		
 		/*
 		 * The <code>rows</code> field contains a list of consecutive rows
@@ -542,7 +542,7 @@ public class VirtualRowTable extends Composite {
 		rowIndex = topVisibleRow;
 		
 		while (topPosition < clientAreaSize.y && rowIndex < rowCount) {
-			EntryRowControl rowControl = getRowControl(rowIndex);
+			BaseEntryRowControl rowControl = getRowControl(rowIndex);
 			int rowHeight = rowControl.getSize().y;
 			if (rowControl.getBounds().y >= topPosition) {
 				rowControl.setBounds(0, topPosition, clientAreaSize.x, rowHeight);
@@ -553,7 +553,7 @@ public class VirtualRowTable extends Composite {
 
 		while (topPosition > 0) {
 			rowIndex--;
-			EntryRowControl rowControl = getRowControl(rowIndex);
+			BaseEntryRowControl rowControl = getRowControl(rowIndex);
 			int rowHeight = rowControl.getSize().y;
 			topPosition -= rowHeight;
 			if (rowControl.getBounds().y < topPosition) {
@@ -573,7 +573,7 @@ public class VirtualRowTable extends Composite {
 		 * ensures it remains not visible even if the client area is re-sized.
 		 */
 		// TODO: parameterize row tracker?
-		EntryRowControl selectedRow = (EntryRowControl)rowTracker.getSelectedRow();
+		BaseEntryRowControl selectedRow = (BaseEntryRowControl)rowTracker.getSelectedRow();
 		if (selectedRow != null) {
 			EntryData selectedEntryData = selectedRow.committedEntryData;
 			if (previousRows.containsKey(selectedEntryData)) {
@@ -592,7 +592,7 @@ public class VirtualRowTable extends Composite {
 		 * outside this method that attempts to get a row control may end up with a
 		 * row control that has already been released.
 		 */
-		for (EntryRowControl rowControl: previousRows.values()) {
+		for (BaseEntryRowControl rowControl: previousRows.values()) {
 			rowProvider.releaseRow(rowControl);
 		}
 		previousRows.clear();
@@ -619,10 +619,10 @@ public class VirtualRowTable extends Composite {
 	 * 			on the rows in the underlying model
 	 * @return
 	 */
-	private EntryRowControl getRowControl(int rowIndex) {
+	private BaseEntryRowControl getRowControl(int rowIndex) {
 		EntryData entryData = contentProvider.getElement(rowIndex);
 
-		EntryRowControl rowControl = rows.get(entryData);
+		BaseEntryRowControl rowControl = rows.get(entryData);
 		if (rowControl == null) {
 			rowControl = previousRows.remove(entryData);
 			if (rowControl == null) {
@@ -653,7 +653,7 @@ public class VirtualRowTable extends Composite {
 		}
 
 		if (currentRow > 0) {
-			EntryRowControl selectedRow = getSelectedRow();
+			BaseEntryRowControl selectedRow = getSelectedRow();
 
 			if (!selectedRow.canDepart()) {
 				return;
@@ -687,7 +687,7 @@ public class VirtualRowTable extends Composite {
 		}
 
 		if (currentRow < rowCount - 1) {
-			EntryRowControl selectedRow = getSelectedRow();
+			BaseEntryRowControl selectedRow = getSelectedRow();
 
 			if (!selectedRow.canDepart()) {
 				return;
@@ -721,7 +721,7 @@ public class VirtualRowTable extends Composite {
 		}
 
 		if (currentRow > 0) {
-			EntryRowControl selectedRow = getSelectedRow();
+			BaseEntryRowControl selectedRow = getSelectedRow();
 
 			if (!selectedRow.canDepart()) {
 				return;
@@ -741,7 +741,7 @@ public class VirtualRowTable extends Composite {
 		}
 
 		if (currentRow < rowCount - 1) {
-			EntryRowControl selectedRow = getSelectedRow();
+			BaseEntryRowControl selectedRow = getSelectedRow();
 
 			if (!selectedRow.canDepart()) {
 				return;
@@ -755,7 +755,7 @@ public class VirtualRowTable extends Composite {
 		}
 	}
 
-	private EntryRowControl getSelectedRow() {
+	private BaseEntryRowControl getSelectedRow() {
 		if (currentRow == -1) {
 			return null;
 		} else {
@@ -782,7 +782,7 @@ public class VirtualRowTable extends Composite {
 		if (anchorRowNumber == rowCount) {
 			scrollViewToGivenFix(anchorRowNumber, clientAreaSize.y);
 		} else {
-			EntryRowControl anchorRowControl = getRowControl(anchorRowNumber);
+			BaseEntryRowControl anchorRowControl = getRowControl(anchorRowNumber);
 			int anchorRowHeight = anchorRowControl.getSize().y;
 			int anchorRowPosition = (int)(portion * clientAreaSize.y - anchorRowHeight * rowRemainder);
 			anchorRowControl.setSize(clientAreaSize.x, anchorRowHeight);
@@ -799,9 +799,9 @@ public class VirtualRowTable extends Composite {
 	 * 		are issues with a previously selected row that prevent the change
 	 * 		in selection from being made
 	 */
-//	public boolean setSelection(EntryRowControl row,
+//	public boolean setSelection(BaseEntryRowControl row,
 //			CellBlock column) {
-//		EntryRowControl currentRowControl = getSelectedRow();
+//		BaseEntryRowControl currentRowControl = getSelectedRow();
 //		if (row != currentRowControl) {
 //			if (currentRowControl != null) {
 //				if (!currentRowControl.canDepart()) {
@@ -948,7 +948,7 @@ public class VirtualRowTable extends Composite {
 	 * We want to be sure that the selected row becomes visible because
 	 * the user needs to correct the errors in the row.
 	 */
-	public void scrollToShowRow(EntryRowControl rowControl) {
+	public void scrollToShowRow(BaseEntryRowControl rowControl) {
 		int rowIndex = contentProvider.indexOf(rowControl.committedEntryData);
 		scrollToShowRow(rowIndex);
 	}
@@ -957,7 +957,7 @@ public class VirtualRowTable extends Composite {
 	 * This method is called whenever a row in this table ceases to be a selected row,
 	 * regardless of whether the row is currently visible or not.
 	 */
-	public void rowDeselected(EntryRowControl rowControl) {
+	public void rowDeselected(BaseEntryRowControl rowControl) {
 		/*
 		 * If the row is not visible then we can release it.
 		 */
@@ -980,10 +980,10 @@ public class VirtualRowTable extends Composite {
 	 * @param newEntryRow
 	 * @return
 	 */
-	public EntryRowControl getRowControl(EntryData entryData) {
+	public BaseEntryRowControl getRowControl(EntryData entryData) {
 		// Crappy code...
 		scrollToShowRow(contentProvider.indexOf(entryData));
-		EntryRowControl rowControl = rows.get(entryData);
+		BaseEntryRowControl rowControl = rows.get(entryData);
 		rowControl.getChildren()[0].setFocus();
 		return rowControl;
 	}

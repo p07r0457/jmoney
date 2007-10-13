@@ -27,8 +27,10 @@ import org.eclipse.swt.widgets.Composite;
 
 public interface IRowProvider {
 
-	EntryRowControl getNewRow(Composite parent, EntryData entryData);
+	void init(VirtualRowTable rowTable, RowSelectionTracker rowSelectionTracker, FocusCellTracker focusCellTracker);
 
-	void releaseRow(EntryRowControl rowControl);
+	BaseEntryRowControl getNewRow(Composite parent, EntryData entryData);
+
+	void releaseRow(BaseEntryRowControl rowControl);
 
 }

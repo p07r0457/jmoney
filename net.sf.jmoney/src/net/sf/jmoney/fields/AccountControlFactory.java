@@ -25,6 +25,7 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.IReferenceControlFactory;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
@@ -36,7 +37,7 @@ import org.eclipse.swt.widgets.Composite;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class AccountControlFactory<A extends Account> extends PropertyControlFactory<A> {
+public abstract class AccountControlFactory<P, A extends Account> extends PropertyControlFactory<A> implements IReferenceControlFactory<P,A> {
     
     public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<A> propertyAccessor) {
         return new AccountEditor<A>(parent, propertyAccessor);

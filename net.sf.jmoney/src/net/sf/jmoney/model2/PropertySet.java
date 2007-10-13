@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -468,11 +469,30 @@ public abstract class PropertySet<E> {
 		return accessor;
 	}
 
+	public <V extends ExtendableObject> ReferencePropertyAccessor<V> addProperty(String name, String displayName, Class<V> classOfValue, int weight, int minimumWidth, final IReferenceControlFactory<E,V> propertyControlFactory, IPropertyDependency<E> propertyDependency) {
+		if (propertyControlFactory == null) {
+			throw new MalformedPluginException(
+					"No IPropertyControlFactory object has been specified for property " + name
+					+ ".  This is needed even if the property is not editable.  (Though the method that gets the" +
+			" control may return null if the property is not editable).");
+		}
+
+		ReferencePropertyAccessor<V> accessor = new ReferencePropertyAccessor<V>(classOfValue, this, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency) {
+			@Override
+			public IObjectKey invokeObjectKeyField(ExtendableObject parentObject) {
+				return propertyControlFactory.getObjectKey(getImplementationObject(parentObject));
+			}
+		};
+
+		properties.add(accessor);
+		return accessor;
+	}
+
 	public <E2 extends ExtendableObject> ListPropertyAccessor<E2> addPropertyList(String name, String displayName, ExtendablePropertySet<E2> elementPropertySet, final IListGetter<E, E2> listGetter) {
 		ListPropertyAccessor<E2> accessor = new ListPropertyAccessor<E2>(this, name, displayName, elementPropertySet) {
 			@Override
-			public ObjectCollection<E2> getElements(ExtendableObject extendableObject) {
-				return listGetter.getList(getImplementationObject(extendableObject));
+			public ObjectCollection<E2> getElements(ExtendableObject parentObject) {
+				return listGetter.getList(getImplementationObject(parentObject));
 			}
 		};
 		

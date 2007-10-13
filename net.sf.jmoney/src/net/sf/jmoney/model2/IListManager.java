@@ -66,7 +66,8 @@ public interface IListManager<E extends ExtendableObject> extends Collection<E> 
 	 * then teh database will cause a failure.
 	 * 
 	 * @param extendableObject
-	 * @return true if the element was in the list, false if it was not
+	 * @return true if the element was deleted, false if it could not be deleted because
+	 * 			there were references to it
 	 */
 	boolean deleteElement(E extendableObject);
 	

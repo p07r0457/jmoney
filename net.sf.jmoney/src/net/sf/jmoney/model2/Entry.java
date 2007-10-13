@@ -27,7 +27,6 @@ import java.util.Calendar;
 import java.util.Date;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.EntryInfo;
 
 /**
  * The data model for an entry.

@@ -32,6 +32,7 @@ import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.ITransactionTemplate;
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.DebitAndCreditColumns;
@@ -40,21 +41,23 @@ import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.EntryRowControl;
 import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.IEntriesContent;
+import net.sf.jmoney.entrytable.IRowProvider;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.ReusableRowProvider;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.entrytable.SplitEntryRowControl;
 import net.sf.jmoney.entrytable.VerticalBlock;
-import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.views.NodeEditor;
 import net.sf.jmoney.views.SectionlessPage;
 
@@ -261,9 +264,9 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			/*
 			 * Setup the layout structure of the header and rows.
 			 */
-			IndividualBlock<EntryData, EntryRowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
-			CellBlock<EntryData, EntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(session.getDefaultCurrency());
-			CellBlock<EntryData, EntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(session.getDefaultCurrency());
+			IndividualBlock<EntryData, BaseEntryRowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+			CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(session.getDefaultCurrency());
+			CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(session.getDefaultCurrency());
 			
 			rootBlock = new HorizontalBlock<EntryData, EntryRowControl>(
 					transactionDateColumn,
@@ -286,7 +289,8 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			);
 			
 	        // Create the table control.
-	        recentlyAddedEntriesControl = new EntriesTable(topLevelControl, toolkit, rootBlock, recentEntriesTableContents, this.session, transactionDateColumn, new RowSelectionTracker()); 
+		    IRowProvider rowProvider = new ReusableRowProvider(rootBlock);
+	        recentlyAddedEntriesControl = new EntriesTable(topLevelControl, toolkit, rootBlock, recentEntriesTableContents, rowProvider, this.session, transactionDateColumn, new RowSelectionTracker()); 
 			
 			recentlyAddedEntriesControl.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
 

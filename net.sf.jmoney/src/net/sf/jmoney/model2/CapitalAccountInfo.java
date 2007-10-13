@@ -20,18 +20,11 @@
  *
  */
 
-package net.sf.jmoney.fields;
+package net.sf.jmoney.model2;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.IListGetter;
-import net.sf.jmoney.model2.IPropertyControlFactory;
-import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.ListPropertyAccessor;
-import net.sf.jmoney.model2.ObjectCollection;
-import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.fields.MultiTextControlFactory;
+import net.sf.jmoney.fields.TextControlFactory;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -73,7 +66,6 @@ public class CapitalAccountInfo implements IPropertySetInfo {
 		commentAccessor      = propertySet.addProperty("comment", JMoneyPlugin.getResourceString("AccountPropertiesPanel.comment"), String.class, 5, 150, commentControlFactory, null);
 		
 		propertySet.setIcon("icons/account.gif");
-		propertySet.setDerivable();
 		
 		return propertySet;
 	}

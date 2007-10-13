@@ -111,7 +111,7 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 		this.basePropertySet = basePropertySet;
 		this.constructors = constructors;
 		
-		this.derivable = false;
+		this.derivable = (constructors == null);
 		this.objectDescription = objectDescription;
 		this.iconFileName = null;
 
@@ -315,14 +315,13 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	}
 
 	/**
-	 * This method should be called to indicate that the property set is
-	 * an abstract property set and that other property sets should be
-	 * derived from this property set.
+	 * Set an icon that is to be shown for objects of this class.
+	 * If no icon is set then the icon for the base class will be
+	 * used or, if there is no base class, no icon will be shown
+	 * for objects of this class.
+	 *   
+	 * @param iconFileName
 	 */
-	public void setDerivable() {
-		derivable = true;
-	}
-
 	public void setIcon(String iconFileName) {
 		this.iconFileName = iconFileName;
 	}

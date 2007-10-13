@@ -273,7 +273,7 @@ public class OtherEntriesShell {
 	         * may be child controls which create child shells (third level shells).
 	         * We do not want this shell to close if a child shell has been created
 	         * and activated.  We want to close this shell only if the parent shell
-	         * have been activated.  Note that is a grandparent shell is activated then
+	         * have been activated.  Note that if a grandparent shell is activated then
 	         * we do not want to close this shell.  The parent will be closed anyway
 	         * which would automatically close this one.
 	         */

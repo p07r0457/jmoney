@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.BalanceColumn;
+import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.DebitAndCreditColumns;
@@ -30,17 +31,19 @@ import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.EntryRowControl;
 import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.IEntriesContent;
+import net.sf.jmoney.entrytable.IRowProvider;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.ReusableRowProvider;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.entrytable.SplitEntryRowControl;
-import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.TransactionInfo;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.swt.widgets.Composite;
@@ -103,11 +106,11 @@ public class CategoryEntriesSection extends SectionPart implements IEntriesConte
 		/*
 		 * Setup the layout structure of the header and rows.
 		 */
-		IndividualBlock<EntryData, EntryRowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		IndividualBlock<EntryData, BaseEntryRowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
 
-		CellBlock<EntryData, EntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(account.getCurrency());
-		CellBlock<EntryData, EntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(account.getCurrency());
-    	CellBlock<EntryData, EntryRowControl> balanceColumnManager = new BalanceColumn(account.getCurrency());
+		CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(account.getCurrency());
+		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(account.getCurrency());
+    	CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(account.getCurrency());
 		
 		rootBlock = new HorizontalBlock<EntryData, EntryRowControl>(
 				transactionDateColumn,
@@ -125,7 +128,8 @@ public class CategoryEntriesSection extends SectionPart implements IEntriesConte
 		);
 
 		// Create the table control.
-		fEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, this, account.getSession(), transactionDateColumn, new RowSelectionTracker()); 
+	    IRowProvider rowProvider = new ReusableRowProvider(rootBlock);
+		fEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, this, rowProvider, account.getSession(), transactionDateColumn, new RowSelectionTracker()); 
 		fEntriesControl.addSelectionListener(tableSelectionListener);
 			
         getSection().setClient(fEntriesControl);

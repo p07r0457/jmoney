@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.oda.ui.wizards;
 
-import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 

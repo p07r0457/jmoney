@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.entrytable;
 
-import java.util.ArrayList;
+import java.util.Collection;
 
 import net.sf.jmoney.model2.Entry;
 
@@ -95,9 +95,8 @@ public class OtherEntriesBlock extends CellBlock<EntryData, EntryRowControl> {
 	public void createHeaderControls(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		
-		// KLUDGE: These next two lines are just so the indexes are set.
-		ArrayList<CellBlock<Entry, SplitEntryRowControl>> cellList = new ArrayList<CellBlock<Entry, SplitEntryRowControl>>();
-		otherEntriesRootBlock.buildCellList(cellList);
+		// TODO: remove this..
+//		otherEntriesRootBlock.buildCellList();
 
 		BlockLayout layout = new BlockLayout(otherEntriesRootBlock, true);
 		composite.setLayout(layout);

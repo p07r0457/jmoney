@@ -30,8 +30,6 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.SessionInfo;
-import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 
 import org.eclipse.core.commands.operations.IUndoContext;
@@ -43,7 +41,7 @@ import org.eclipse.core.runtime.IAdaptable;
  */
 public class Session extends ExtendableObject implements IAdaptable {
 
-    protected IObjectKey defaultCurrencyKey;
+    IObjectKey defaultCurrencyKey;
     
     private IListManager<Commodity> commodities;
     

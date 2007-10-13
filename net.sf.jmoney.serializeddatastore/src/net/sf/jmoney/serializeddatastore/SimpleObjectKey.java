@@ -23,10 +23,10 @@
 package net.sf.jmoney.serializeddatastore;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.EntryInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
