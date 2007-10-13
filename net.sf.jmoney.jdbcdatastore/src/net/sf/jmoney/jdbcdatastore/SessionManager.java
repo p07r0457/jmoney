@@ -23,6 +23,7 @@
 package net.sf.jmoney.jdbcdatastore;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -41,7 +42,6 @@ import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.fields.SessionInfo;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
@@ -59,8 +59,10 @@ import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.ReferencePropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.SessionInfo;
 import net.sf.jmoney.model2.Transaction;
 
 import org.eclipse.ui.IMemento;
@@ -714,7 +716,11 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 					System.out.println(sql);
 					int numberUpdated = stmt.executeUpdate(sql);
 					if (numberUpdated != 1) {
-						throw new RuntimeException("internal error");
+						// This could happen if a column in the table contains a string
+						// serialization of a custom object, and the column contained a string
+						// that failed to construct a value.  In that case, the prior property value will
+						// be null be the value in the database will be non-null.
+						throw new RuntimeException("Update failed.  Row with expected data was not found.");
 					}
 				} catch (SQLException e) {
 					// TODO Handle this properly
@@ -771,16 +777,17 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	}
 
 	/**
-	 * Execute SQL DELETE statements to remove the given object, if present,
+	 * Execute SQL DELETE statements to remove the given object
 	 * from the database.
 	 * 
-	 * @param rowId
-	 * @param extendableObject
-	 * @param sessionManager
-     * @return true if the object was present, false if the object
-     * 				was not present in the database.
+	 * @param objectKey
+     * @return true if the object was deleted, false if the object
+     * 				was not not deleted because there are references to it
+     * 				in the database
+     * @throws RuntimeException if either an SQLException occurs or if
+     * 				the object did not exist in the database or if some
+     * 				other integrity violation was found in the database
 	 */
-// TODO: throw error if object is referenced.
 	public boolean deleteFromDatabase(IDatabaseRowKey objectKey) {
 		ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(objectKey.getObject().getClass()); 
 		
@@ -815,13 +822,28 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				if (rowCount != 1) {
 					if (rowCount == 0
 							&& propertySet2 == propertySet) {
-						// The object does not exist in the database.
-						// This is not an error, but we do return 'false'.
-						return false;
+						/*
+						 * The object does not exist in the database. It is
+						 * possible that another process deleted it so we ignore
+						 * this condition.
+						 */
+					} else {
+						throw new RuntimeException("database is inconsistent");
 					}
-					throw new RuntimeException("database is inconsistent");
 				}
 			} catch (SQLException e) {
+				if (e.getSQLState().equals("23000")) {
+					/*
+					 * An attempt has been made to delete an object that has
+					 * references to it. This particular error, unlike all other
+					 * SQL errors, is treated as a valid result, not an error.
+					 * This is because the caller may legitimately attempt to
+					 * delete such rows because this saves the caller from
+					 * having to check for references itself (not a trivial
+					 * task, so why not let the database do the check).
+					 */
+					return false;
+				}
 				// TODO Handle this properly
 				e.printStackTrace();
 				throw new RuntimeException("internal error");
@@ -997,6 +1019,21 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 							return valueClass
 							.getConstructor( new Class [] { String.class } )
 							.newInstance(new Object [] { text });
+						} catch (InvocationTargetException e) {
+							/*
+							 * An exception was thrown in the constructor. Log
+							 * the original exception. We then set the value to
+							 * null and continue on the basis that it is better
+							 * for the user to lose the value (which was
+							 * probably corrupted anyway) than to have the
+							 * entire accounting datastore unreadable.
+							 */ 
+							 // TODO: There is a problem with this.  Optimistic locking
+							 // fails.  Any attempt to update this row in the database
+							 // will generate an update that tests for the value being
+							 // null.  However, the value was in actual fact not null.
+							e.getCause().printStackTrace();
+							return null;
 						} catch (Exception e) {
 							/*
 							 * The classes used in the data model should be
@@ -1018,7 +1055,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				}
 			}
 			
-			public IObjectKey getReferencedObjectKey(ScalarPropertyAccessor<? extends ExtendableObject> propertyAccessor) {
+			public IObjectKey getReferencedObjectKey(ReferencePropertyAccessor<?> propertyAccessor) {
 				String columnName = getColumnName(propertyAccessor);
 				try {
 					int rowIdOfProperty = rs.getInt(columnName);
@@ -1525,6 +1562,12 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	}
 
 	/**
+	 * Checks that the given foreign key exists.  If it does not, it is
+	 * added.
+	 * <P>
+	 * There may be other foreign keys between the two tables.  That is
+	 * ok.
+	 * 
 	 * @param stmt
 	 * @param dmd
 	 * @param tableName
@@ -1534,43 +1577,43 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	private void checkForeignKey(DatabaseMetaData dmd, Statement stmt, String tableName, String columnName, String primaryTableName, boolean onDeleteCascade) throws SQLException {
 		ResultSet columnResultSet2 = dmd.getCrossReference(null, null, primaryTableName.toUpperCase(), null, null, tableName.toUpperCase());
 		traceResultSet(columnResultSet2);
-		
+		columnResultSet2.close();
+
 		ResultSet columnResultSet = dmd.getCrossReference(null, null, primaryTableName.toUpperCase(), null, null, tableName.toUpperCase());
-		if (columnResultSet.next()) {
-			// A foreign key constraint already exists.
-			// Check that it is the correct constraint.
-			System.out.println(primaryTableName + " to " + tableName);
-			System.out.println("-------------");
-			for (int i = 0; i < columnResultSet.getMetaData().getColumnCount(); i++) {
-				System.out.println(i + ": " + columnResultSet.getMetaData().getColumnName(i+1) + ", " + columnResultSet.getString(i+1));
+		try {
+			while (columnResultSet.next()) {
+
+				if (columnResultSet.getString("FKCOLUMN_NAME").equalsIgnoreCase(columnName)) {
+
+					// TODO: There seems to be a mixture of _id and _ID.  SQL is not case sensitive
+					// so do a case insensitive comparison.
+					if (columnResultSet.getString("PKCOLUMN_NAME").equalsIgnoreCase("_ID")) {
+						// Foreign key found, so we are done.
+						return;
+					} else {
+						throw new RuntimeException("The database schema is invalid.  "
+								+ "Table " + tableName.toUpperCase() + " contains a foreign key column called " + columnName
+								+ " but it is not constrained to primary key _ID in table " + primaryTableName.toUpperCase() 
+								+ " as it should be.");
+					}
+				}
 			}
-			System.out.println();
-			
-			// TODO: There seems to be a mixture of _id and _ID.  SQL is not case sensitive
-			// so do a case insensive comparison.
-			if (!columnResultSet.getString("PKCOLUMN_NAME").equalsIgnoreCase("_ID")
-			 || !columnResultSet.getString("FKCOLUMN_NAME").equalsIgnoreCase(columnName)
-			 || columnResultSet.next()) {
-				throw new RuntimeException("The database schema is invalid.  "
-						+ "Table " + tableName.toUpperCase() + " must contain a foreign key column called " + columnName
-						+ " constrained to primary key _ID in table " + primaryTableName.toUpperCase() 
-						+ ".  No other foreign key/primary key mappings may exist between these two tables.");
-			}
-		} else {
+
 			// The foreign key constraint does not exist so we add it.
 			String sql = 
 				"ALTER TABLE " + tableName
 				+ " ADD FOREIGN KEY (\"" + columnName
 				+ "\") REFERENCES " + primaryTableName + "(_ID)";
-			
+
 			if (onDeleteCascade) {
 				sql += " ON DELETE CASCADE";
 			}
-			
+
 			System.out.println(sql);
 			stmt.execute(sql);	
+		} finally {
+			columnResultSet.close();
 		}
-		columnResultSet.close();
 	}
 
 	/**

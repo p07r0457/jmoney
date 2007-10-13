@@ -152,17 +152,13 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 		}
 
 		boolean found = elements.remove(extendableObject);
-		
-		// Delete this object from the database.
-		if (found) {
-			IDatabaseRowKey key = (IDatabaseRowKey)extendableObject.getObjectKey();
-			boolean foundInDatabase = sessionManager.deleteFromDatabase(key);
-			if (!foundInDatabase) {
-				throw new RuntimeException("database inconsistent");
-			}
+		if (!found) {
+			throw new RuntimeException("attempt to delete an element that did not exist");
 		}
 		
-		return found;
+		// Delete this object from the database.
+		IDatabaseRowKey key = (IDatabaseRowKey)extendableObject.getObjectKey();
+		return sessionManager.deleteFromDatabase(key);
 	}
 
 	public void moveElement(E extendableObject, IListManager originalListManager) {
