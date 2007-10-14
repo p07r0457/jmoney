@@ -24,6 +24,7 @@ package net.sf.jmoney.entrytable;
 
 import net.sf.jmoney.model2.Commodity;
 
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.widgets.Control;
@@ -70,6 +71,7 @@ public class BalanceColumn extends IndividualBlock<EntryData, BaseEntryRowContro
 
 	public BalanceColumn(Commodity commodityForFormatting) {
 		super("Balance", 70, 2);
+		Assert.isNotNull(commodityForFormatting);
 		this.commodityForFormatting = commodityForFormatting;
 	}
 	
