@@ -28,8 +28,8 @@ import java.net.URL;
 import javax.xml.transform.TransformerConfigurationException;
 
 import junit.framework.TestCase;
-import net.sf.jmoney.fields.BankAccountInfo;
-import net.sf.jmoney.fields.TransactionInfo;
+import net.sf.jmoney.model2.BankAccountInfo;
+import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Session;
