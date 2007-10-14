@@ -249,6 +249,11 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 			}
 
 			public void saveState(IMemento memento) {
+				// TODO: This code might cause an exception.  If the editor was opened
+				// but the user never switched to this page in
+				// the multi-page editor then the controls will never
+				// have been initialized.  When the editor is closed, this
+				// method throws an exception.
 				VerySimpleDateFormat dateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
 				int period = periodBox.getSelectionIndex();
 				if (period != -1) {
