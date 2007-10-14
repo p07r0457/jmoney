@@ -40,7 +40,9 @@ import java.util.Vector;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
+import net.sf.jmoney.reconciliation.reconcilePage.ImportStatementDialog;
 
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 
@@ -87,6 +89,13 @@ public class QifImport implements IBankStatementSource {
 		File qifFile = new File(fileName);
 		Vector<EntryData> entries = new Vector<EntryData>();
 		
+		ImportStatementDialog dialog2 = new ImportStatementDialog(shell, null, null, null);
+		if (dialog2.open() != Dialog.OK) {
+			return null;
+		}
+		Date startDate = dialog2.getStartDate();
+		Date endDate = dialog2.getEndDate();
+		
 		Reader reader = null;
 		BufferedReader buffer = null;
 		try {
@@ -101,7 +110,9 @@ public class QifImport implements IBankStatementSource {
 					&& !line.startsWith("!Type:Invst")) {
 				JMoneyPlugin.log(new RuntimeException("Cannot import " + line.substring(0)));
 			}
-			
+
+			Date entryDate = null;
+
 			line = buffer.readLine();
 			while (line != null) {
 				EntryData entryData = new EntryData();
@@ -112,7 +123,8 @@ public class QifImport implements IBankStatementSource {
 						entryData.setAmount(parseAmount(line, account.getCurrency()));
 						break;
 					case 'D':
-						entryData.setClearedDate(parseDate(line));
+						entryDate = parseDate(line);
+						entryData.setClearedDate(entryDate);
 						break;
 					case 'N':
 						entryData.setCheck(line.substring(1));
@@ -129,8 +141,15 @@ public class QifImport implements IBankStatementSource {
 					
 					line = buffer.readLine();
 				} while (line.charAt(0) != '^');
+
 				
-				entries.add(entryData);
+				if (entryDate != null
+				 && (startDate == null
+			  	   || entryDate.compareTo(startDate) > 0)
+				  && (endDate == null
+				   || entryDate.compareTo(endDate) < 0)) {
+					entries.add(entryData);
+				}
 				
 				line = buffer.readLine();
 			}
@@ -175,7 +194,7 @@ public class QifImport implements IBankStatementSource {
 	 */
 	private Date parseDate(String line) {
 		try {
-			StringTokenizer st = new StringTokenizer(line, "D/\'");
+			StringTokenizer st = new StringTokenizer(line, "D/\'-");
 			int day, month, year;
 			if (usesUSDates) {
 				month = Integer.parseInt(st.nextToken().trim());
@@ -238,7 +257,7 @@ public class QifImport implements IBankStatementSource {
 			line = buffer.readLine();
 			while (line != null) {
 				if (line.charAt(0) == 'D') {
-					StringTokenizer st = new StringTokenizer(line, "D/\'");
+					StringTokenizer st = new StringTokenizer(line, "D/\'-");
 					int number1 = Integer.parseInt(st.nextToken().trim());
 					if (number1 > 12) {
 						return false;

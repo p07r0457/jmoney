@@ -25,10 +25,12 @@ package net.sf.jmoney.reconciliation.reconcilePage;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.BalanceColumn;
+import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.ButtonCellControl;
 import net.sf.jmoney.entrytable.CellBlock;
@@ -39,18 +41,20 @@ import net.sf.jmoney.entrytable.EntryRowControl;
 import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
+import net.sf.jmoney.entrytable.IRowProvider;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesButton;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.ReusableRowProvider;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.entrytable.SplitEntryRowControl;
-import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
@@ -249,7 +253,7 @@ public class StatementSection extends SectionPart {
 						if (selection instanceof StructuredSelection) {
 							StructuredSelection structured = (StructuredSelection)selection;
 							if (structured.size() == 1
-									&& structured.getFirstElement() instanceof EntryData) {
+									&& structured.getFirstElement() instanceof Entry) {
 								// We do want to accept the drop
 								return;
 							}
@@ -281,19 +285,20 @@ public class StatementSection extends SectionPart {
 					public void drop(DropTargetEvent event) {
 						if (LocalSelectionTransfer.getTransfer().isSupportedType(event.currentDataType)) {
 							ISelection selection = LocalSelectionTransfer.getTransfer().getSelection();
-							EntryData unrecEntryInAccount = (EntryData)((StructuredSelection)selection).getFirstElement();
-							EntryRowControl dropRow = (EntryRowControl)parent;
+							Entry sourceEntry = (Entry)((StructuredSelection)selection).getFirstElement();
+							EntryRowControl dropRow = parent;
 
 							/*
 							 * Merge data from dragged transaction into the target transaction
 							 * and delete the dragged transaction.
 							 */
-							boolean success = mergeTransaction(unrecEntryInAccount, dropRow);
+							boolean success = mergeTransaction(sourceEntry, dropRow);
 							if (!success) {
 								event.detail = DND.DROP_NONE;
+							} else {
+								dropRow.commitChanges("Merge Entries");
 							}
 						}
-
 					}
 
 					@Override
@@ -327,10 +332,10 @@ public class StatementSection extends SectionPart {
 			}
 		};
 		
-		IndividualBlock<EntryData, EntryRowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
-		CellBlock<EntryData, EntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(fPage.getAccount().getCurrency());
-		CellBlock<EntryData, EntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(fPage.getAccount().getCurrency());
-		CellBlock<EntryData, EntryRowControl> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
+		IndividualBlock<EntryData, BaseEntryRowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(fPage.getAccount().getCurrency());
+		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(fPage.getAccount().getCurrency());
+		CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
 
 		/*
 		 * Setup the layout structure of the header and rows.
@@ -353,11 +358,9 @@ public class StatementSection extends SectionPart {
 				balanceColumnManager
 		);
 		
-		cellList = new ArrayList<CellBlock<EntryData, EntryRowControl>>();
-		rootBlock.buildCellList(cellList);
-
 		// Create the table control.
-        fReconciledEntriesControl = new EntriesTable(container, toolkit, rootBlock, reconciledTableContents, fPage.getAccount().getSession(), transactionDateColumn, rowTracker); 
+	    IRowProvider rowProvider = new ReusableRowProvider(rootBlock);
+        fReconciledEntriesControl = new EntriesTable(container, toolkit, rootBlock, reconciledTableContents, rowProvider, fPage.getAccount().getSession(), transactionDateColumn, rowTracker); 
         
 		// TODO: do not duplicate this.
 		if (fPage.getStatement() == null) {
@@ -434,7 +437,13 @@ public class StatementSection extends SectionPart {
 	 * The normal case is that the reconciled transaction was imported from the
 	 * bank and the statement being merged into this transaction has been
 	 * manually edited. We therefore take the following properties from the
-	 * reconciled transaction: - the valuta date - the amount - the check number
+	 * reconciled transaction:
+	 * 
+	 * <UL>
+	 * <LI>the valuta date</LI>
+	 * <LI>the amount</LI>
+	 * <LI>the check number</LI>
+	 * </UL>
 	 * 
 	 * And we take all other properties and all the other entries from the
 	 * source transaction.
@@ -446,33 +455,38 @@ public class StatementSection extends SectionPart {
 	 * we give a warning to the user. These conditions indicate that there is
 	 * data in the target transaction that will be lost and that information was
 	 * probably manually entered.
-	 *  - the transaction has split entries - there are properties set in the
-	 * other entry other that the required account, or the account in the other
-	 * entry is not the default account
+	 * 
+	 * <UL>
+	 * <LI>the transaction has split entries</LI>
+	 * <LI>there are properties set in the other entry other that the required
+	 * account, or the account in the other entry is not the default account</LI>
+	 * </UL>
 	 * 
 	 * The source and targets will be in different transaction managers. We want
 	 * to take the properties from the source transaction and move them into the
-	 * target transaction without committing the target transaction. The taret
+	 * target transaction without committing the target transaction. The target
 	 * row control should update itself automatically because the controls
 	 * always listen for property changes in the model.
 	 * 
-	 * The source is deleted, with any uncommitted changes being dropped, but
-	 * this is done by the drop source.
+	 * The source is deleted, with any uncommitted changes being dropped.
 	 * 
 	 * The merge constitutes a single undoable action.
 	 * 
 	 * @return true if the merge succeeded, false if it failed (in which case
 	 *         the user is notified by this method of the failure)
 	 */
-	boolean mergeTransaction(EntryData unrecEntryData, EntryRowControl recRowControl) {
+	boolean mergeTransaction(Entry committedSourceEntry, EntryRowControl recRowControl) {
+
+		// The target entry, which is in the transaction manager for the target row.
+		Entry targetEntry = recRowControl.getUncommittedTopEntry();
 		
-		Entry unrecEntryInAccount = unrecEntryData.getEntry();
-		Entry recEntryInAccount = recRowControl.getUncommittedTopEntry();
+		TransactionManager transactionManager = (TransactionManager)targetEntry.getDataManager();
+		Entry sourceEntry = transactionManager.getCopyInTransaction(committedSourceEntry); 
+		Transaction sourceTransaction = sourceEntry.getTransaction();
+		Transaction targetTransaction = targetEntry.getTransaction();
 		
-		Entry recOther = recEntryInAccount.getTransaction().getOther(recEntryInAccount);
-		Entry unrecOther = unrecEntryInAccount.getTransaction().getOther(unrecEntryInAccount);
-		
-		if (recOther == null) {
+		Entry targetOther = targetTransaction.getOther(targetEntry);
+		if (targetOther == null) {
 	        MessageBox diag = new MessageBox(this.getSection().getShell(), SWT.YES | SWT.NO);
 	        diag.setText("Warning");
 	        diag.setMessage("The target entry has split entries.  These entries will be replaced by the data from the transaction for the dragged entry.  The split entries will be lost.  Are you sure you want to do this?");
@@ -480,37 +494,42 @@ public class StatementSection extends SectionPart {
 	        	return false;
 	        }
 		}
-		
-		if (recEntryInAccount.getCheck() != null) {
-			unrecEntryInAccount.setCheck(recEntryInAccount.getCheck());
+
+		// Delete all entries in the target except the entry in the account.
+		for (Entry entry: targetTransaction.getEntryCollection()) {
+			if (entry != targetEntry) {
+				targetTransaction.getEntryCollection().deleteEntry(entry);
+			}
 		}
 		
-		if (recEntryInAccount.getValuta() != null) {
-			unrecEntryInAccount.setValuta(recEntryInAccount.getValuta());
-		} else {
-			/*
-			 * If no value date in the entry from the bank then use the transaction
-			 * date as the value date.  The transaction date will be taken from
-			 * the manually entered transaction.
-			 */
-			unrecEntryInAccount.setValuta(recEntryInAccount.getTransaction().getDate());
+		/*
+		 * Set the transaction date to be the earlier of the two dates. If the
+		 * unreconciled entry was manually entered then that date is likely to
+		 * be the correct date of the transaction. However, it is possible that
+		 * this transaction involves more than one account that can be imported
+		 * (such as a transfer). In such a situation, the transaction date
+		 * should be set to the earliest date.
+		 */
+		Date sourceDate = sourceTransaction.getDate();
+		Date targetDate = targetTransaction.getDate();
+		System.out.println("source date: " + sourceDate.toLocaleString() + ", target date: " + targetDate.toLocaleString());
+		if (sourceDate.compareTo(targetDate) < 0) {
+			targetTransaction.setDate(sourceDate);
 		}
 		
-		if (recEntryInAccount.getAmount() != unrecEntryInAccount.getAmount()) {
+		if (targetEntry.getAmount() != sourceEntry.getAmount()) {
 	        MessageBox diag = new MessageBox(this.getSection().getShell(), SWT.YES | SWT.NO);
 	        diag.setText("Warning");
 	        diag.setMessage(
 	        		"The target entry has an amount of " 
-	        		+ EntryInfo.getAmountAccessor().formatValueForMessage(recEntryInAccount) 
+	        		+ EntryInfo.getAmountAccessor().formatValueForMessage(targetEntry) 
 	        		+ " and the dragged entry has an amount of " 
-	        		+ EntryInfo.getAmountAccessor().formatValueForMessage(unrecEntryInAccount) 
+	        		+ EntryInfo.getAmountAccessor().formatValueForMessage(sourceEntry) 
 	        		+ "."
 	        		+ "These amounts should normally be equal.  It may be that the incorrect amount was originally entered for the dragged entry and you want the amount corrected to the amount given by the import.  If so, continue and the amount will be corrected.  Do you want to continue?");
 	        if (diag.open() != SWT.YES) {
 	        	return false;
 	        }
-
-	        unrecEntryInAccount.setAmount(recEntryInAccount.getAmount());
 		}
 
 		/*
@@ -518,8 +537,54 @@ public class StatementSection extends SectionPart {
 		 * the property is null in the source transaction.
 		 */
 		for (ScalarPropertyAccessor<?> propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
-			copyProperty(propertyAccessor, unrecEntryInAccount, recEntryInAccount);
+			copyPropertyConditionally(propertyAccessor, sourceEntry, targetEntry);
 		}
+		
+		/*
+		 * Re-parent all the other entries from the source to the target.
+		 */
+		for (Entry entry: sourceTransaction.getEntryCollection()) {
+			if (entry != sourceEntry) {
+				// Cannot currently move within a transaction, so copy for time being.
+//				targetTransaction.getEntryCollection().moveElement(entry);
+				
+				Entry targetOtherEntry = targetTransaction.createEntry();
+				for (ScalarPropertyAccessor<?> propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
+					copyPropertyForcibly(propertyAccessor, entry, targetOtherEntry);
+				}
+			}
+		}
+		
+		/*
+		 * Having copied the relevant properties from the source entry, we now
+		 * delete the source entry. with normal drag-and-drop design, it is the
+		 * responsibility of the drag source listener to delete the source
+		 * object. However, we want to do this as part of this transaction. This
+		 * ensures that:
+		 * 
+		 * 1. The entire merge process is performed as a single undoable
+		 * operation.
+		 * 
+		 * 2. The target entry will become the selected entry and may not
+		 * necessarily be valid. The user may attempt to leave the entry while
+		 * it is invalid, and then press 'cancel' to back out the changes. It
+		 * such a case, the source entry should re-appear. If the source entry
+		 * was deleted as a part of this transaction then it will automatically
+		 * re-appear when the transaction is rolled back.
+		 * 
+		 * It may be that the source entry may have uncommitted changes, or even
+		 * was a new entry (one that had just been entered and has never been
+		 * committed to the datastore). Such uncommitted changes are considered
+		 * part of the same operation as far as undo or cancel support is
+		 * concerned.
+		 * 
+		 * The drag source does, however, have the responsibility of some UI cleanup.
+		 * If the source was a new uncommitted entry then it should be cleared to
+		 * become an empty 'new entry' row.  If the source entry has uncommitted changes,
+		 * these should be reversed in the UI so that the user does not get warnings
+		 * when the committed entry is deleted.
+		 */
+		sourceTransaction.getSession().deleteTransaction(sourceTransaction);
 		
 		return true;
 	}
@@ -528,24 +593,34 @@ public class StatementSection extends SectionPart {
 	 * Helper method to copy a property from the target entry to the source entry if the
 	 * property is null in the source entry but not null in the target entry.
 	 */
-	private <V> void copyProperty(ScalarPropertyAccessor<V> propertyAccessor, Entry sourceAccount, Entry targetAccount) {
-		V sourceValue = sourceAccount.getPropertyValue(propertyAccessor);
+	private <V> void copyPropertyConditionally(ScalarPropertyAccessor<V> propertyAccessor, Entry sourceAccount, Entry targetAccount) {
 		V targetValue = targetAccount.getPropertyValue(propertyAccessor);
-		if (sourceValue != null && targetValue == null) {
-			if (sourceValue instanceof ExtendableObject) {
-				/*
-				 * We need to get a copy in the correct data manager.
-				 */
-// TODO: sort this out.				
-//				UncommittedObjectKey uncommittedObjectKey = (UncommittedObjectKey)((ExtendableObject)sourceValue).getObjectKey();
-//				V committedObject = propertyAccessor.getClassOfValueObject().cast(uncommittedObjectKey.getCommittedObjectKey().getObject());
-//				targetValue = ((TransactionManager)targetAccount.getDataManager()).getCopyInTransaction(committedObject);
-			} else {
+		V sourceValue = sourceAccount.getPropertyValue(propertyAccessor);
+		if (sourceValue != null) {
+			if (targetValue == null
+					|| !doesImportedValueHavePriority(propertyAccessor)) {
 				targetAccount.setPropertyValue(propertyAccessor, sourceValue);
 			}
 		}
 	}
 
+	private <V> void copyPropertyForcibly(ScalarPropertyAccessor<V> propertyAccessor, Entry sourceEntry, Entry targetEntry) {
+		V sourceValue = sourceEntry.getPropertyValue(propertyAccessor);
+		targetEntry.setPropertyValue(propertyAccessor, sourceValue);
+	}
+
+	/**
+	 * Properties for which the values from the bank are used in preference to
+	 * values manually entered.  For all other properties, manually entered values
+	 * take precedence.  This is used when merging transactions.
+	 */
+	static private boolean doesImportedValueHavePriority(ScalarPropertyAccessor propertyAccessor) {
+		return propertyAccessor == EntryInfo.getValutaAccessor()
+		|| propertyAccessor == EntryInfo.getAmountAccessor()
+		|| propertyAccessor == EntryInfo.getCheckAccessor();
+	}
+	
+	
 	/**
 	 * @param statement
 	 * @param openingBalance
@@ -568,8 +643,8 @@ public class StatementSection extends SectionPart {
 	        noStatementMessage.setSize(container.getSize());
 	        fReconciledEntriesControl.setSize(0, 0);
 		} else {
-	        getSection().setText("Entries Shown on Statement " + statement.toLocalizedString());
-	        getSection().layout(false);  // Required to get the new section title to show
+			getSection().setText("Entries Shown on Statement " + statement.toLocalizedString());
+	        getSection().layout(true);  // Required to get the new section title to show
 
 	        noStatementMessage.setSize(0, 0);
 	        fReconciledEntriesControl.setSize(container.getSize());

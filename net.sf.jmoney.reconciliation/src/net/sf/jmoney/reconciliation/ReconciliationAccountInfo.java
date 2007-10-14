@@ -25,17 +25,19 @@ package net.sf.jmoney.reconciliation;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountControlFactory;
 import net.sf.jmoney.fields.CheckBoxControlFactory;
-import net.sf.jmoney.fields.CurrencyAccountInfo;
+import net.sf.jmoney.model2.CurrencyAccountInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionPropertySet;
 import net.sf.jmoney.model2.IExtensionObjectConstructors;
 import net.sf.jmoney.model2.IListGetter;
+import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.model2.ReferencePropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 /**
@@ -63,11 +65,15 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 	});
 	
 	private static ScalarPropertyAccessor<Boolean> reconcilableAccessor = null;
-	private static ScalarPropertyAccessor<IncomeExpenseAccount> defaultCategoryAccessor = null;
+	private static ReferencePropertyAccessor<IncomeExpenseAccount> defaultCategoryAccessor = null;
 	private static ListPropertyAccessor<MemoPattern> patternsAccessor = null;
 	
 	public PropertySet registerProperties() {
-		AccountControlFactory<IncomeExpenseAccount> accountControlFactory = new AccountControlFactory<IncomeExpenseAccount>();
+		AccountControlFactory<ReconciliationAccount,IncomeExpenseAccount> accountControlFactory = new AccountControlFactory<ReconciliationAccount,IncomeExpenseAccount>() {
+			public IObjectKey getObjectKey(ReconciliationAccount parentObject) {
+				return parentObject.defaultCategoryKey;
+			}
+		};
 
 		IListGetter<ReconciliationAccount, MemoPattern> patternListGetter = new IListGetter<ReconciliationAccount, MemoPattern>() {
 			public ObjectCollection<MemoPattern> getList(ReconciliationAccount parentObject) {
@@ -106,7 +112,7 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static ScalarPropertyAccessor<IncomeExpenseAccount> getDefaultCategoryAccessor() {
+	public static ReferencePropertyAccessor<IncomeExpenseAccount> getDefaultCategoryAccessor() {
 		return defaultCategoryAccessor;
 	}	
 }

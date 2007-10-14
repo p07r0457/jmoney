@@ -42,10 +42,7 @@ public class ReconciliationAccount extends CurrencyAccountExtension {
 	
 	protected IListManager<MemoPattern> patterns;
 	
-	// This is public so the transaction manager can key the object key.
-	// TODO: try to think of a way we can make this something other
-	// than public, or some better way of doing this.
-	public IObjectKey defaultCategoryKey = null;
+	IObjectKey defaultCategoryKey = null;
 	
 	/**
 	 * A default constructor is mandatory for all extension objects.

@@ -26,30 +26,29 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
-import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.IReconciliationQueries;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 
-import org.eclipse.jface.viewers.ILabelProviderListener;
+import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
@@ -63,22 +62,23 @@ import org.eclipse.ui.forms.widgets.Section;
  */
 public class StatementsSection extends SectionPart {
 	
-	Table statementTable;
+	protected Table statementTable;
 	
-	StatementContentProvider contentProvider;
+	protected StatementContentProvider contentProvider;
 	
-	private TableColumn balanceColumn;
+	private TableViewerColumn balanceColumn;
 	
 	public StatementsSection(Composite parent, FormToolkit toolkit, CurrencyAccount account) {
-		super(parent, toolkit, 
-				Section.DESCRIPTION | Section.TITLE_BAR);		
+		super(parent, toolkit, Section.DESCRIPTION | Section.TITLE_BAR);		
 		getSection().setText("Statements");
 		getSection().setDescription("Double click a statement to show that statement.");
 
-		Composite c = new Composite(getSection(), SWT.NONE);
-		c.setLayout(new GridLayout());
+		final Currency currencyForFormatting = account.getCurrency();
+
+		Composite composite = new Composite(getSection(), SWT.NONE);
+		composite.setLayout(new GridLayout());
 		
-		statementTable = new Table(c, SWT.FULL_SELECTION | SWT.SINGLE | SWT.V_SCROLL);
+		statementTable = new Table(composite, SWT.FULL_SELECTION | SWT.SINGLE | SWT.V_SCROLL);
 		GridData gdTable = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gdTable.heightHint = 100;
 		statementTable.setLayoutData(gdTable);
@@ -86,98 +86,49 @@ public class StatementsSection extends SectionPart {
 		statementTable.setHeaderVisible(true);
 		statementTable.setLinesVisible(true);
 		
-		// 1st column contains the statement number/date
-		TableColumn statementColumn = new TableColumn(statementTable, SWT.LEFT, 0);
-		statementColumn.setText("Statement");
-		statementColumn.setWidth(50);
-		
-		// 2nd column contains the statement balance
-		balanceColumn = new TableColumn(statementTable, SWT.RIGHT, 1);
-		balanceColumn.setText("Balance");
-		balanceColumn.setWidth(70);
-		
 		// Create and setup the TableViewer
 		TableViewer tableViewer = new TableViewer(statementTable);   
-		
 		tableViewer.setUseHashlookup(true);
-		//	       tableViewer.setColumnProperties(columnNames);
-	
+		
+		// Add the columns
+		TableViewerColumn statementColumn = new TableViewerColumn(tableViewer, SWT.LEFT);
+		statementColumn.getColumn().setWidth(65);
+		statementColumn.getColumn().setText("Statement");
+		statementColumn.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+				StatementDetails statementDetails = (StatementDetails)element;
+				return statementDetails.statement.toLocalizedString();  
+			}
+		});
+
+		balanceColumn = new TableViewerColumn(tableViewer, SWT.RIGHT);
+		balanceColumn.getColumn().setWidth(70);
+		balanceColumn.getColumn().setText("Balance");
+		balanceColumn.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+				StatementDetails statementDetails = (StatementDetails)element;
+				return currencyForFormatting.format(statementDetails.getClosingBalance());
+			}
+		});
+		
 		contentProvider = new StatementContentProvider(tableViewer);
 		
 		tableViewer.setContentProvider(contentProvider);
-		tableViewer.setLabelProvider(new StatementLabelProvider());
-		// The input for the table viewer is the instance of ExampleTaskList
+		tableViewer.setComparator(new StatementViewerComparator());
 		tableViewer.setInput(account);
-		
+
 		/*
 		 * Scroll the statement list to the bottom so that the most recent
-		 * statements are shown. This is done by selecting the last item (and
-		 * then clearing the selection).
+		 * statements are shown.
 		 */
-		statementTable.setSelection(statementTable.getItemCount() - 1);
-		statementTable.setSelection(-1);
+		tableViewer.reveal(contentProvider.getLastStatement());
 		
-		getSection().setClient(c);
-		toolkit.paintBordersFor(c);
+		getSection().setClient(composite);
+		toolkit.paintBordersFor(composite);
 		refresh();
 	}
-	
-	class StatementLabelProvider
-	implements ITableLabelProvider {
-		public String getColumnText(Object element, int columnIndex) {
-			String result = "";
-			StatementDetails statementDetails = (StatementDetails)element;
-			switch (columnIndex) {
-			case 0:  // statement number
-				// TODO: We need another method to get the string in
-				// a user friendly format.  Something similar to the
-				// table and message formats in the editor factories.
-				result = statementDetails.statement.toString();  
-				break;
-			case 1 :
-				// TODO: format this correctly for the currency
-				result = Float.toString(((float)statementDetails.getClosingBalance())/100);
-				break;
-			}
-			return result;
-		}	
-		
-		public Image getColumnImage(Object element, int columnIndex) {
-			return null;
-		}
-		
-		/* (non-Javadoc)
-		 * @see org.eclipse.jface.viewers.IBaseLabelProvider#addListener(org.eclipse.jface.viewers.ILabelProviderListener)
-		 */
-		public void addListener(ILabelProviderListener listener) {
-			// TODO Auto-generated method stub
-			
-		}
-		
-		/* (non-Javadoc)
-		 * @see org.eclipse.jface.viewers.IBaseLabelProvider#dispose()
-		 */
-		public void dispose() {
-			// TODO Auto-generated method stub
-			
-		}
-		
-		/* (non-Javadoc)
-		 * @see org.eclipse.jface.viewers.IBaseLabelProvider#isLabelProperty(java.lang.Object, java.lang.String)
-		 */
-		public boolean isLabelProperty(Object element, String property) {
-			// TODO Auto-generated method stub
-			return false;
-		}
-		
-		/* (non-Javadoc)
-		 * @see org.eclipse.jface.viewers.IBaseLabelProvider#removeListener(org.eclipse.jface.viewers.ILabelProviderListener)
-		 */
-		public void removeListener(ILabelProviderListener listener) {
-			// TODO Auto-generated method stub
-			
-		}
-	} 
 	
 	class StatementContentProvider implements IStructuredContentProvider {
 		/**
@@ -248,10 +199,10 @@ public class StatementsSection extends SectionPart {
 				}
 			}
 
-			// Listen for changes so we can keep the tree map upto date.
+			// Listen for changes so we can keep the tree map up to date.
 			account.getDataManager().addChangeListener(new SessionChangeAdapter() {
 				@Override
-				public void objectInserted(ExtendableObject newObject) {
+				public void objectCreated(ExtendableObject newObject) {
 					if (newObject instanceof Entry) {
 						Entry newEntry = (Entry)newObject;
 						if (account.equals(newEntry.getAccount())) {
@@ -262,20 +213,12 @@ public class StatementsSection extends SectionPart {
 				}
 				
 				@Override
-				public void objectRemoved(ExtendableObject deletedObject) {
+				public void objectDestroyed(ExtendableObject deletedObject) {
 					if (deletedObject instanceof Entry) {
 						Entry deletedEntry = (Entry)deletedObject;
 						if (account.equals(deletedEntry.getAccount())) {
 							BankStatement statement = deletedEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
 							adjustStatement(statement, -deletedEntry.getAmount());
-						}
-					} else if (deletedObject instanceof Transaction) {
-						Transaction deletedTransaction = (Transaction)deletedObject;
-						for (Entry deletedEntry: deletedTransaction.getEntryCollection()) {
-							if (account.equals(deletedEntry.getAccount())) {
-								BankStatement statement = deletedEntry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
-								adjustStatement(statement, -deletedEntry.getAmount());
-							}
 						}
 					}
 				}
@@ -367,28 +310,10 @@ public class StatementsSection extends SectionPart {
 		}
 		
 		public void dispose() {
-			//       statementList.removeChangeListener(this);
 		}
 		
-		// Return the statements as an array of Objects
 		public Object[] getElements(Object parent) {
-			// Build the array of statements and balances
-/*
-			statementsAndBalances = new Vector();
-			
-			long balance = account.getStartBalance();
-			for (Iterator iter = statementTotals.entrySet().iterator(); iter.hasNext(); ) {
-				Map.Entry mapEntry = (Map.Entry)iter.next();
-				long totalEntriesOnThisStatement = ((Long)mapEntry.getValue()).longValue();
-				statementsAndBalances.add( 
-					new StatementDetails(
-							(BankStatement)mapEntry.getKey(),
-							balance,
-							totalEntriesOnThisStatement)
-				);
-				balance += totalEntriesOnThisStatement;
-			}
-			*/
+			// Return an array of the statements.  These are already ordered.
 			return statementDetailsMap.values().toArray();
 		}
 
@@ -405,13 +330,28 @@ public class StatementsSection extends SectionPart {
 	}
 	
 	/**
+	 * Even though the content provider supplies the statements in order, we
+	 * still need to set a sorter into the table. The reason is that new
+	 * statements will otherwise always be added at the end and it is possible,
+	 * though unlikely, that a user will go back and add earlier statements.
+	 */
+	class StatementViewerComparator extends ViewerComparator {
+		@Override
+	    public int compare(Viewer viewer, Object element1, Object element2) {
+	        StatementDetails statementDetails1 = (StatementDetails)element1;
+	        StatementDetails statementDetails2 = (StatementDetails)element2;
+	        return statementDetails1.compareTo(statementDetails2);
+	    }
+	}
+	
+	/**
 	 * @param show
 	 */
 	public void showBalance(boolean show) {
 		if (show) {
-			balanceColumn.setWidth(SWT.DEFAULT);
+			balanceColumn.getColumn().setWidth(70);
 		} else {
-			balanceColumn.setWidth(0);
+			balanceColumn.getColumn().setWidth(0);
 		}
 	}
 	

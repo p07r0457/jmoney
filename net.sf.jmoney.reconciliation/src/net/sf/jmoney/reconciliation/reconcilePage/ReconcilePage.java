@@ -31,16 +31,16 @@ import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
-import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.IBankStatementSource;
 import net.sf.jmoney.reconciliation.MemoPattern;
@@ -329,9 +329,13 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 						           			Matcher m = pattern.getCompiledPattern().matcher(text);
 						           			System.out.println(pattern.getPattern() + ", " + text);
 						           			if (m.matches()) {
-						           				System.out.println("matches!!!!!");
-						           				Object [] args = new Object[m.groupCount()];
-						           				for (int i = 0; i < m.groupCount(); i++) {
+						           				/*
+						           				 * Group zero is the entire string and the groupCount method
+						           				 * does not include that group, so there is really one more group
+						           				 * than the number given by groupCount.
+						           				 */
+						           				Object [] args = new Object[m.groupCount()+1];
+						           				for (int i = 0; i <= m.groupCount(); i++) {
 						           					args[i] = m.group(i);
 						           				}
 						           				

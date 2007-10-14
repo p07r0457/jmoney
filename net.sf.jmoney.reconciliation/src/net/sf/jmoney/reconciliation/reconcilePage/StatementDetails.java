@@ -35,26 +35,31 @@ import net.sf.jmoney.reconciliation.BankStatement;
  * 
  * @author Nigel Westbury
  */
-class StatementDetails implements Comparable {
+class StatementDetails implements Comparable<StatementDetails> {
 	BankStatement statement;
 	long openingBalance;
 	long totalEntriesOnStatement;
+	
 	StatementDetails(BankStatement statement, long openingBalance, long totalEntriesOnStatement) {
 		this.statement = statement;
 		this.openingBalance = openingBalance;
 		this.totalEntriesOnStatement = totalEntriesOnStatement;
 	}
+	
 	long getClosingBalance() {
 		return openingBalance + totalEntriesOnStatement;
 	}
+	
 	public void adjustOpeningBalance(long amount) {
 		openingBalance += amount;
 	}
+	
 	public void adjustEntriesTotal(long amount) {
 		totalEntriesOnStatement += amount;
 	}
-	public int compareTo(Object other) {
-		return statement.compareTo(((StatementDetails)other).statement);
+	
+	public int compareTo(StatementDetails other) {
+		return statement.compareTo(other.statement);
 	}
 }
 

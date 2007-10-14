@@ -29,6 +29,7 @@ import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.BalanceColumn;
+import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.ButtonCellControl;
 import net.sf.jmoney.entrytable.CellBlock;
@@ -39,17 +40,19 @@ import net.sf.jmoney.entrytable.EntryRowControl;
 import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
+import net.sf.jmoney.entrytable.IRowProvider;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesButton;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.ReusableRowProvider;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.entrytable.SplitEntryRowControl;
-import net.sf.jmoney.fields.EntryInfo;
-import net.sf.jmoney.fields.TransactionInfo;
 import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.isolation.UncommittedObjectKey;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.EntryInfo;
+import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
@@ -179,25 +182,35 @@ public class UnreconciledSection extends SectionPart {
 
 				dragSource.addDragListener(new DragSourceListener() {
 					public void dragStart(DragSourceEvent event) {
-						// Always allow a drag (i.e. we leave event.doit set to true)
+						Entry uncommittedEntry = rowControl.getUncommittedEntryData().getEntry();
+						UncommittedObjectKey uncommittedKey = (UncommittedObjectKey)uncommittedEntry.getObjectKey();
+						
+						// Allow a drag in all cases except where this entry is a new uncommitted entry.
+						// TODO: What if there are uncommitted changes????
+						// We should probably commit changes first.
+						// We can't drag these because the merge is done by re-parenting.
+						if (uncommittedKey.getCommittedObjectKey() == null) {
+							event.doit = false;
+						}
 					}
 					public void dragSetData(DragSourceEvent event) {
 						// Provide the data of the requested type.
 						if (LocalSelectionTransfer.getTransfer().isSupportedType(event.dataType)) {
-							EntryData entryData = rowControl.getUncommittedEntryData();
-							LocalSelectionTransfer.getTransfer().setSelection(new StructuredSelection(entryData));
+							Entry uncommittedEntry = rowControl.getUncommittedEntryData().getEntry();
+							UncommittedObjectKey uncommittedKey = (UncommittedObjectKey)uncommittedEntry.getObjectKey();
+							Object sourceEntry = uncommittedKey.getCommittedObjectKey().getObject();
+							LocalSelectionTransfer.getTransfer().setSelection(new StructuredSelection(sourceEntry));
 						}
 					}
 					public void dragFinished(DragSourceEvent event) {
 						if (event.detail == DND.DROP_MOVE) {
 							/*
-							 * Having moved the entry, we must delete this one. This is
-							 * done through the row control so that the row control does
-							 * not think the entry got deleted by someone else.
+							 * Having moved the entry, we must delete this one.
+							 * However, this is done as a single operation with
+							 * the merge process (so it all appears as a single
+							 * undoable/redoable operation). Thus we have
+							 * nothing to do here.
 							 */
-							Session session = rowControl.getUncommittedTopEntry().getSession();
-							session.getTransactionCollection().remove(rowControl.getUncommittedTopEntry().getTransaction());
-							rowControl.commitChanges("Delete Merged Entry");
 						}
 					}
 				});
@@ -224,10 +237,10 @@ public class UnreconciledSection extends SectionPart {
 			}
 		};
 
-		IndividualBlock<EntryData, EntryRowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
-		CellBlock<EntryData, EntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(fPage.getAccount().getCurrency());
-		CellBlock<EntryData, EntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(fPage.getAccount().getCurrency());
-		CellBlock<EntryData, EntryRowControl> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
+		IndividualBlock<EntryData, BaseEntryRowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(fPage.getAccount().getCurrency());
+		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(fPage.getAccount().getCurrency());
+		CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
 
 		/*
 		 * Setup the layout structure of the header and rows.
@@ -250,11 +263,9 @@ public class UnreconciledSection extends SectionPart {
 				balanceColumnManager
 		);
 
-		cellList = new ArrayList<CellBlock<EntryData, EntryRowControl>>();
-		rootBlock.buildCellList(cellList);
-
 		// Create the table control.
-		fUnreconciledEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, unreconciledTableContents, fPage.getAccount().getSession(), transactionDateColumn, rowTracker); 
+	    IRowProvider rowProvider = new ReusableRowProvider(rootBlock);
+		fUnreconciledEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, unreconciledTableContents, rowProvider, fPage.getAccount().getSession(), transactionDateColumn, rowTracker); 
 
 		getSection().setClient(fUnreconciledEntriesControl);
 		toolkit.paintBordersFor(fUnreconciledEntriesControl);

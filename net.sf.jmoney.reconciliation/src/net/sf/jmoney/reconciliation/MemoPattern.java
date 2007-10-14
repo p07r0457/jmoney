@@ -49,9 +49,7 @@ public final class MemoPattern extends ExtendableObject {
 	/**
 	 * Element: Account
 	 */
-	// TODO: public so framework can access.  We need to think about
-	// how this can be cleaned up.
-	public IObjectKey accountKey = null;
+	IObjectKey accountKey = null;
 	
 	protected String memo = null;
 

@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.reconciliation;
 
-import net.sf.jmoney.fields.EntryInfo;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionPropertySet;
 import net.sf.jmoney.model2.IExtensionObjectConstructors;
