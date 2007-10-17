@@ -48,10 +48,10 @@ public abstract class RowControl<T> extends Composite {
 	
 	protected class CellFocusListener extends FocusAdapter {
 		private ICellControl<T> cellControl;
-		private RowSelectionTracker selectionTracker;
+		private RowSelectionTracker<?> selectionTracker;
 		private FocusCellTracker focusCellTracker;
 		
-		public CellFocusListener(ICellControl<T> cellControl, RowSelectionTracker selectionTracker, FocusCellTracker focusCellTracker) {
+		public CellFocusListener(ICellControl<T> cellControl, RowSelectionTracker<?> selectionTracker, FocusCellTracker focusCellTracker) {
 			this.cellControl = cellControl;
 			this.selectionTracker = selectionTracker;
 			this.focusCellTracker = focusCellTracker;

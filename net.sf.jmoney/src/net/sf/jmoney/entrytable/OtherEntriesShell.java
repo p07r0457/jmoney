@@ -45,7 +45,7 @@ public class OtherEntriesShell {
 		
 		private Shell shell;
 		
-		private RowSelectionTracker rowTracker = new RowSelectionTracker();
+		private RowSelectionTracker<SplitEntryRowControl> rowTracker = new RowSelectionTracker<SplitEntryRowControl>();
 
 	    private Map<Entry, SplitEntryRowControl> rowControls = new HashMap<Entry, SplitEntryRowControl>();
 
@@ -91,7 +91,7 @@ public class OtherEntriesShell {
 				rowControls.put(entry, row);
 			}
 			
-			((TransactionManager)entryData.getEntry().getDataManager()).addChangeListener(new SessionChangeAdapter() {
+			entryData.getEntry().getDataManager().addChangeListener(new SessionChangeAdapter() {
 				@Override
 				public void objectInserted(ExtendableObject newObject) {
 					if (newObject instanceof Entry) {
@@ -215,21 +215,19 @@ public class OtherEntriesShell {
 		}
 
 		private void deleteSplit() {
-			RowControl rowControl = rowTracker.getSelectedRow();
+			SplitEntryRowControl rowControl = rowTracker.getSelectedRow();
 			// TODO: Is a row ever not selected?
-			// TODO: Use generics in rowTracker so we avoid this cast
 			if (rowControl != null) {
-				Entry entry = ((SplitEntryRowControl)rowControl).getContent();
+				Entry entry = rowControl.getContent();
 				entryData.getEntry().getTransaction().deleteEntry(entry);
 			}
 		}
 		
 		private void adjustAmount() {
-			RowControl rowControl = rowTracker.getSelectedRow();
+			SplitEntryRowControl rowControl = rowTracker.getSelectedRow();
 			// TODO: Is a row ever not selected?
-			// TODO: Use generics in rowTracker so we avoid this cast
 			if (rowControl != null) {
-				Entry entry = ((SplitEntryRowControl)rowControl).getContent();
+				Entry entry = rowControl.getContent();
 				
 				long totalAmount = 0;
 				for (Entry eachEntry: entryData.getEntry().getTransaction().getEntryCollection()) {

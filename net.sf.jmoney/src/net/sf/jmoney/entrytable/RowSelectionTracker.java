@@ -1,10 +1,10 @@
 package net.sf.jmoney.entrytable;
 
-public class RowSelectionTracker {
+public class RowSelectionTracker<R extends RowControl> {
 
-	private RowControl currentRowControl = null;
+	private R currentRowControl = null;
 	
-	public RowControl getSelectedRow() {
+	public R getSelectedRow() {
 		return currentRowControl;
 	}
 
@@ -17,7 +17,7 @@ public class RowSelectionTracker {
 	 * 		are issues with a previously selected row that prevent the change
 	 * 		in selection from being made
 	 */
-	public boolean setSelection(RowControl row,	CellBlock column) {
+	public boolean setSelection(R row,	CellBlock column) {
 		if (row != currentRowControl) {
 			if (currentRowControl != null) {
 				if (!currentRowControl.canDepart()) {

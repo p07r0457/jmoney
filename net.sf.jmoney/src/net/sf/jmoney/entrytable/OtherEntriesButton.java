@@ -65,7 +65,7 @@ public class OtherEntriesButton extends CellBlock<EntryData, EntryRowControl> {
 	     * editor if there is to be a single row selection for both tables.
 	     */
 		// TODO: This is not right - should not be created here.
-	    RowSelectionTracker rowTracker = new RowSelectionTracker();
+	    RowSelectionTracker<SplitEntryRowControl> rowTracker = new RowSelectionTracker<SplitEntryRowControl>();
 	    FocusCellTracker cellTracker = new FocusCellTracker();
 
 		if (downArrowImage == null) {
