@@ -22,9 +22,13 @@
 
 package net.sf.jmoney.entrytable;
 
+import java.applet.Applet;
+import java.applet.AudioClip;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
@@ -33,6 +37,10 @@ import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.pages.entries.ForeignCurrencyDialog;
 
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
@@ -67,6 +75,13 @@ public abstract class BaseEntryRowControl extends RowControl<EntryData> {
 			.getCurrent(), 245, 255, 255);
 
 	protected static final Color selectedRowColor = new Color(Display.getCurrent(), 215, 215, 255);
+
+	private static AudioClip clip;
+	static {
+		IPath path = new Path("icons").append("ding.au");
+		URL url = FileLocator.find(Platform.getBundle(JMoneyPlugin.PLUGIN_ID), path, null);
+		clip = Applet.newAudioClip(url);
+	}
 
 	private VirtualRowTable rowTable;
 	
@@ -530,6 +545,9 @@ public abstract class BaseEntryRowControl extends RowControl<EntryData> {
 			// Commit the changes to the transaction
 			transactionManager.commit(transactionLabel);
 			
+			// Sound the tone
+	        clip.play();
+	 			
 			/*
 			 * It may be that this was a new entry not previously committed. If
 			 * so, the committed entry in the EntryData object will be null. In
