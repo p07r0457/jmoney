@@ -7,15 +7,15 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.VerySimpleDateFormat;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Text;
-import org.vafada.swtcalendar.SWTCalendar;
-import org.vafada.swtcalendar.SWTCalendarEvent;
-import org.vafada.swtcalendar.SWTCalendarListener;
 
 public class DateControlAlwaysExpanded extends DateComposite {
-	protected SWTCalendar swtcal;
+	protected DateTime swtcal;
 	protected Text textControl;
 	
     // TODO Listen to date format changes.
@@ -26,15 +26,36 @@ public class DateControlAlwaysExpanded extends DateComposite {
 		
 		setLayout(new GridLayout(1, false));
 		
-		swtcal = new SWTCalendar(this);
+        swtcal = new DateTime(this, SWT.CALENDAR);
 		textControl = new Text(this, SWT.NONE);
 		
-        swtcal.addSWTCalendarListener(
-        		new SWTCalendarListener() {
-        			public void dateChanged(SWTCalendarEvent calendarEvent) {
-        				Date date = calendarEvent.getCalendar().getTime();
+        swtcal.addSelectionListener(
+        		new SelectionListener() {
+					public void widgetDefaultSelected(SelectionEvent e) {
+						// TODO Auto-generated method stub
+						
+					}
+
+					public void widgetSelected(SelectionEvent e) {
+		                Calendar cal = Calendar.getInstance();
+		                
+		                /*
+						 * First reset all fields. Otherwise differences in the time
+						 * part, even if the difference is only milliseconds, will cause
+						 * the date comparisons to fail.
+						 * 
+						 * Note also it is critical that whatever is done here is exactly the
+						 * same as that done in VerySimpleDateFormat, otherwise dates will not
+						 * match.  For example, if you replace clear() here with setTimeInMillis(0)
+						 * then we get a different object (because data other than the date and time
+						 * such as time zone information will be different).
+						 */ 
+		                cal.clear();
+		                
+		                cal.set(swtcal.getYear(), swtcal.getMonth(), swtcal.getDay());
+        				Date date = cal.getTime();
         				textControl.setText(fDateFormat.format(date));
-        			}
+					}
         		});
 
 	}
@@ -48,7 +69,9 @@ public class DateControlAlwaysExpanded extends DateComposite {
 			
    	        Calendar calendar = Calendar.getInstance();
 	        calendar.setTime(date);
-   	        swtcal.setCalendar(calendar);
+   	        swtcal.setYear(calendar.get(Calendar.YEAR));
+   	        swtcal.setMonth(calendar.get(Calendar.MONTH));
+   	        swtcal.setDay(calendar.get(Calendar.DAY_OF_MONTH));
 		}
 	}
 

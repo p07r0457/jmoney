@@ -35,6 +35,7 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Image;
@@ -43,13 +44,11 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Layout;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.vafada.swtcalendar.SWTCalendar;
-import org.vafada.swtcalendar.SWTCalendarEvent;
-import org.vafada.swtcalendar.SWTCalendarListener;
 
 
 /**
@@ -78,7 +77,7 @@ public class DateControl extends DateComposite {
 
 	static private Image threeDotsImage = null;
 
-	private SWTCalendar swtcal = null;
+	private DateTime swtcal = null;
 	
 	/**
 	 * @param parent
@@ -139,8 +138,8 @@ public class DateControl extends DateComposite {
 			public void widgetSelected(SelectionEvent event) {
 				final Shell shell = new Shell(parent.getShell(), SWT.ON_TOP);
 		        shell.setLayout(new RowLayout());
-    	        swtcal = new SWTCalendar(shell);
-                
+    	        swtcal = new DateTime(shell, SWT.CALENDAR);
+    	        
                 // Set the currently set date into the calendar control
                 // (If the parse method returned null then the text control did not
                 // contain a valid date.  In this case no date is set into the
@@ -150,19 +149,42 @@ public class DateControl extends DateComposite {
     	        	Date date = fDateFormat.parse(t);
            	        Calendar calendar = Calendar.getInstance();
         	        calendar.setTime(date);
-           	        swtcal.setCalendar(calendar);
+           	        swtcal.setYear(calendar.get(Calendar.YEAR));
+           	        swtcal.setMonth(calendar.get(Calendar.MONTH));
+           	        swtcal.setDay(calendar.get(Calendar.DAY_OF_MONTH));
     	        } catch (IllegalArgumentException e) {
     	        	// The date format was invalid.
     	        	// Ignore this error (the calendar control
     	        	// does not require a date to be set).
     	        }
                 
-                swtcal.addSWTCalendarListener(
-                		new SWTCalendarListener() {
-                			public void dateChanged(SWTCalendarEvent calendarEvent) {
-                				Date date = calendarEvent.getCalendar().getTime();
+                swtcal.addSelectionListener(
+                		new SelectionListener() {
+							public void widgetDefaultSelected(SelectionEvent e) {
+								// TODO Auto-generated method stub
+								
+							}
+
+							public void widgetSelected(SelectionEvent e) {
+				                Calendar cal = Calendar.getInstance();
+				                
+				                /*
+								 * First reset all fields. Otherwise differences in the time
+								 * part, even if the difference is only milliseconds, will cause
+								 * the date comparisons to fail.
+								 * 
+								 * Note also it is critical that whatever is done here is exactly the
+								 * same as that done in VerySimpleDateFormat, otherwise dates will not
+								 * match.  For example, if you replace clear() here with setTimeInMillis(0)
+								 * then we get a different object (because data other than the date and time
+								 * such as time zone information will be different).
+								 */ 
+				                cal.clear();
+				                
+				                cal.set(swtcal.getYear(), swtcal.getMonth(), swtcal.getDay());
+                				Date date = cal.getTime();
                 				textControl.setText(fDateFormat.format(date));
-                			}
+							}
                 		});
 
     	        shell.pack();
