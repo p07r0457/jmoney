@@ -129,7 +129,7 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 						}
  */
 	
-	public SplitEntryRowControl(final Composite parent, int style, Block<Entry, SplitEntryRowControl> rootBlock, boolean isLinked, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
+	public SplitEntryRowControl(final Composite parent, int style, Block<Entry, SplitEntryRowControl> rootBlock, boolean isLinked, final RowSelectionTracker<SplitEntryRowControl> selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style);
 
 		/*
@@ -157,7 +157,7 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 			final ICellControl<Entry> cellControl = cellBlock.createCellControl(this);
 			controls.put(cellBlock, cellControl);
 
-			FocusListener controlFocusListener = new CellFocusListener(cellControl, selectionTracker, focusCellTracker);
+			FocusListener controlFocusListener = new CellFocusListener<SplitEntryRowControl>(this, cellControl, selectionTracker, focusCellTracker);
 
 			Control control = cellControl.getControl();
 //			control.addKeyListener(keyListener);

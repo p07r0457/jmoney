@@ -196,14 +196,14 @@ public abstract class BaseEntryRowControl extends RowControl<EntryData> {
 	 * @param focusCellTracker
 	 */
 	protected <R extends BaseEntryRowControl> void init(R thisRowControl, Block<EntryData, ? super R> rootBlock,
-			RowSelectionTracker selectionTracker,
+			RowSelectionTracker<R> selectionTracker,
 			FocusCellTracker focusCellTracker) {
 		for (CellBlock<EntryData, ? super R> cellBlock: rootBlock.buildCellList()) {
 			// Create the control with no content set.
 			final ICellControl<EntryData> cellControl = cellBlock.createCellControl(thisRowControl);
 			controls.put(cellBlock, cellControl);
 
-			FocusListener controlFocusListener = new CellFocusListener(cellControl, selectionTracker, focusCellTracker);
+			FocusListener controlFocusListener = new CellFocusListener<R>(thisRowControl, cellControl, selectionTracker, focusCellTracker);
 			
 			Control control = cellControl.getControl();
 //			control.addKeyListener(keyListener);

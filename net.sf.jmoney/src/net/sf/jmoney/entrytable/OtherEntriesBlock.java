@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.entrytable;
 
-import java.util.Collection;
-
 import net.sf.jmoney.model2.Entry;
 
 import org.eclipse.swt.SWT;

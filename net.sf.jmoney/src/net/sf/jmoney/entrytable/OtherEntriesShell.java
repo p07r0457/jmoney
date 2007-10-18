@@ -6,7 +6,6 @@ package net.sf.jmoney.entrytable;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
