@@ -431,7 +431,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					}
 				}
 				
-				currentSAXEventProcessor = new ObjectProcessor(sessionManager, null, SessionInfo.getPropertySet(), null);
+				currentSAXEventProcessor = new ObjectProcessor(sessionManager, null, SessionInfo.getPropertySet());
 			} else {
 				currentSAXEventProcessor.startElement(uri, localName, attributes);
 			}
@@ -622,14 +622,14 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *        found then this original event processor must be restored as
 		 *        the active event processor.
 		 */
-		ObjectProcessor(SessionManager sessionManager, ObjectProcessor parent, ExtendablePropertySet<?> propertySet, ListKey<?> listKey) {
+		ObjectProcessor(SessionManager sessionManager, ObjectProcessor parent, ExtendablePropertySet<?> propertySet) {
 			super(sessionManager, parent);
 			this.propertySet = propertySet;
 			
 			objectKey = new SimpleObjectKey(sessionManager);
 			
 			for (ListPropertyAccessor propertyAccessor: propertySet.getListProperties3()) {
-				propertyValueMap.put(propertyAccessor, new SimpleListManager(sessionManager, listKey));
+				propertyValueMap.put(propertyAccessor, new SimpleListManager(sessionManager, new ListKey(objectKey, propertyAccessor)));
 			}
 		}
 		
@@ -775,7 +775,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					id = atts.getValue("id");
 				}
 				
-				currentSAXEventProcessor = new ObjectProcessor(sessionManager, this, actualPropertySet, new ListKey(objectKey, listProperty));
+				currentSAXEventProcessor = new ObjectProcessor(sessionManager, this, actualPropertySet);
 			}
 		}
 			
@@ -884,11 +884,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			// is a list property then the object is added to
 			// the list.
 			if (propertyAccessor.isScalar()) {
-				if (value instanceof ExtendableObject) {
-					propertyValueMap.put(propertyAccessor, ((ExtendableObject)value).getObjectKey());
-				} else {
-					propertyValueMap.put(propertyAccessor, value);
-				}
+				propertyValueMap.put(propertyAccessor, value);
 			} else {
 				// Must be an element in an array.
 				SimpleListManager list = (SimpleListManager)propertyValueMap.get(propertyAccessor);

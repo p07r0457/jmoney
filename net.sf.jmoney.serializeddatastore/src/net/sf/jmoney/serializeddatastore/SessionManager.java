@@ -42,6 +42,7 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPersistableElement;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -184,6 +185,14 @@ public class SessionManager extends DatastoreManager {
     	if (newSessionFile != null) {
     		String fileName = newSessionFile.getName();
             IConfigurationElement elements[] = SerializedDatastorePlugin.getElements(fileName);
+            
+            if (elements.length == 0) {
+            	/*
+            	 * The user has entered an extension that is not recognized.
+            	 */
+            	MessageDialog.openError(window.getShell(), "Invalid Filename", "You have entered a file name with an unrecognized extension.  The supported extensions can be found by using the 'Save as type' drop-down in the 'Save As' dialog.");
+            	return;
+            }
             
             // TODO: It is possible that multiple plug-ins may
             // use the same file extension.  The only solution to

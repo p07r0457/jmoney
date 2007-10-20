@@ -32,6 +32,7 @@ import net.sf.jmoney.serializeddatastore.SessionManager;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -71,6 +72,14 @@ public class OpenSessionAction implements IWorkbenchWindowActionDelegate {
                 File sessionFile = new File(fileName);
                 
                 IConfigurationElement elements[] = SerializedDatastorePlugin.getElements(fileName);
+                
+                if (elements.length == 0) {
+                	/*
+                	 * The user has entered an extension that is not recognized.
+                	 */
+                	MessageDialog.openError(window.getShell(), "Invalid Filename", "You have entered a file name with an unrecognized extension.  The supported extensions can be found by using the 'Files of type' drop-down in the 'Open' dialog.");
+                	return;
+                }
                 
                 // TODO: It is possible that multiple plug-ins may
                 // use the same file extension.  There are two possible

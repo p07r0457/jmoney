@@ -44,6 +44,11 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 	private static final long serialVersionUID = 2090027937924066725L;
 
 	private SessionManager sessionManager;
+	
+	/**
+	 * The parent object and list property accessor for this list. This field is
+	 * never null.
+	 */
 	private ListKey<E> listKey;
 
 	public SimpleListManager(SessionManager sessionManager, ListKey<E> listKey) {
