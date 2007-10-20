@@ -63,8 +63,6 @@ import net.sf.jmoney.views.SectionlessPage;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.SWT;
@@ -314,37 +312,31 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			
 			// Load the extensions
 			IExtensionRegistry registry = Platform.getExtensionRegistry();
-			IExtensionPoint extensionPoint = registry.getExtensionPoint("net.sf.jmoney.shoebox.templates");
-			IExtension[] extensions = extensionPoint.getExtensions();
-			for (int i = 0; i < extensions.length; i++) {
-				IConfigurationElement[] elements =
-					extensions[i].getConfigurationElements();
-				for (int j = 0; j < elements.length; j++) {
-					if (elements[j].getName().equals("template")) {
-						
-						String label = elements[j].getAttribute("label");
-						String id = elements[j].getAttribute("id");
-						String position = elements[j].getAttribute("position");
-						String fullId = extensions[i].getUniqueIdentifier() + "." + id;
-						
-						try {
-							ITransactionTemplate transactionType = (ITransactionTemplate)elements[j].createExecutableExtension("class");
-							
-				    		TabItem tabItem = new TabItem(tabFolder, SWT.NULL);
-				    		tabItem.setText(transactionType.getDescription());
-				    		tabItem.setControl(transactionType.createControl(tabFolder, true, null, ourEntryList));
-								
-				    		int positionNumber = 800;
-				    		if (position != null) {
-				    			positionNumber = Integer.parseInt(position);
-				    		}
-		
-							transactionTypes.put(fullId, transactionType);
-							
-						} catch (CoreException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+			for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.shoebox.templates")) {
+				if (element.getName().equals("template")) {
+
+					String label = element.getAttribute("label");
+					String id = element.getAttribute("id");
+					String position = element.getAttribute("position");
+					String fullId = element.getNamespaceIdentifier() + "." + id;
+
+					try {
+						ITransactionTemplate transactionType = (ITransactionTemplate)element.createExecutableExtension("class");
+
+						TabItem tabItem = new TabItem(tabFolder, SWT.NULL);
+						tabItem.setText(transactionType.getDescription());
+						tabItem.setControl(transactionType.createControl(tabFolder, true, null, ourEntryList));
+
+						int positionNumber = 800;
+						if (position != null) {
+							positionNumber = Integer.parseInt(position);
 						}
+
+						transactionTypes.put(fullId, transactionType);
+
+					} catch (CoreException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}
 			}

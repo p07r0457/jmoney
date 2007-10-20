@@ -49,8 +49,6 @@ import net.sf.jmoney.views.TreeNode;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -459,28 +457,22 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 			if (factoryId != null && factoryId.length() != 0) {
 				// Search for the factory.
 				IExtensionRegistry registry = Platform.getExtensionRegistry();
-				IExtensionPoint extensionPoint = registry.getExtensionPoint("org.eclipse.ui.elementFactories");
-				IExtension[] extensions = extensionPoint.getExtensions();
-				for (int i = 0; i < extensions.length; i++) {
-					IConfigurationElement[] elements =
-						extensions[i].getConfigurationElements();
-					for (int j = 0; j < elements.length; j++) {
-						if (elements[j].getName().equals("factory")) {
-							if (elements[j].getAttribute("id").equals(factoryId)) {
-								try {
-									ISessionFactory listener = (ISessionFactory)elements[j].createExecutableExtension("class");
-									
-									// Create and initialize the session object from 
-									// the data stored in the memento.
-									listener.openSession(memento.getChild("currentSession"));
-									return getDefault().getSession();
-								} catch (CoreException e) {
-									// Could not create the factory given by the 'class' attribute
-									// Log the error and start JMoney with no open session.
-									e.printStackTrace();
-								}
-								break;
+				for (IConfigurationElement element: registry.getConfigurationElementsFor("org.eclipse.ui.elementFactories")) {
+					if (element.getName().equals("factory")) {
+						if (element.getAttribute("id").equals(factoryId)) {
+							try {
+								ISessionFactory listener = (ISessionFactory)element.createExecutableExtension("class");
+
+								// Create and initialize the session object from 
+								// the data stored in the memento.
+								listener.openSession(memento.getChild("currentSession"));
+								return getDefault().getSession();
+							} catch (CoreException e) {
+								// Could not create the factory given by the 'class' attribute
+								// Log the error and start JMoney with no open session.
+								e.printStackTrace();
 							}
+							break;
 						}
 					}
 				}

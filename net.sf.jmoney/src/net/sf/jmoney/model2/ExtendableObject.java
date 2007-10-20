@@ -64,8 +64,8 @@ public abstract class ExtendableObject {
 	protected Map<ExtensionPropertySet<?>, ExtensionObject> extensions = new HashMap<ExtensionPropertySet<?>, ExtensionObject>();
 	
 	/**
-	 * The key from which this object's parent can be fetched from
-	 * the datastore and a reference to the parent obtained.
+	 * The key which contains this object's parent and also the list property
+	 * which contains this object.
 	 */
 	protected ListKey parentKey;
 	

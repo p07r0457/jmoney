@@ -37,8 +37,6 @@ import net.sf.jmoney.model2.PropertySetNotFoundException;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -84,79 +82,73 @@ public class TreeNode implements IAdaptable {
 	public static void init() {
 		// Load the extensions
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
-		IExtensionPoint extensionPoint = registry.getExtensionPoint("net.sf.jmoney.pages");
-		IExtension[] extensions = extensionPoint.getExtensions();
-		for (int i = extensions.length-1; i>=0; i--) {
-			IConfigurationElement[] elements =
-				extensions[i].getConfigurationElements();
-			for (int j = 0; j < elements.length; j++) {
-				if (elements[j].getName().equals("node")) {
-					
-					String label = elements[j].getAttribute("label");
-					String icon = elements[j].getAttribute("icon");
-					String id = elements[j].getAttribute("id");
-					String parentNodeId = elements[j].getAttribute("parent");
-					String position = elements[j].getAttribute("position");
-					
-					if (id != null && id.length() != 0) {
-						String fullNodeId = extensions[i].getNamespaceIdentifier() + '.' + id;
-						ImageDescriptor descriptor = null;
-						if (icon != null) {
-							// Try getting the image from this plug-in.
-							descriptor = JMoneyPlugin.imageDescriptorFromPlugin(extensions[i].getNamespaceIdentifier(), icon); 
-							if (descriptor == null) {
-								// try getting the image from the JMoney plug-in. 
-								descriptor = JMoneyPlugin.imageDescriptorFromPlugin("net.sf.jmoney", icon);
-							}
+		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.pages")) {
+			if (element.getName().equals("node")) {
+
+				String label = element.getAttribute("label");
+				String icon = element.getAttribute("icon");
+				String id = element.getAttribute("id");
+				String parentNodeId = element.getAttribute("parent");
+				String position = element.getAttribute("position");
+
+				if (id != null && id.length() != 0) {
+					String fullNodeId = element.getNamespaceIdentifier() + '.' + id;
+					ImageDescriptor descriptor = null;
+					if (icon != null) {
+						// Try getting the image from this plug-in.
+						descriptor = JMoneyPlugin.imageDescriptorFromPlugin(element.getContributor().getName(), icon); 
+						if (descriptor == null) {
+							// try getting the image from the JMoney plug-in. 
+							descriptor = JMoneyPlugin.imageDescriptorFromPlugin("net.sf.jmoney", icon);
 						}
-						
-						int positionNumber = 800;
-						if (position != null) {
-							positionNumber = Integer.parseInt(position);
+					}
+
+					int positionNumber = 800;
+					if (position != null) {
+						positionNumber = Integer.parseInt(position);
+					}
+
+					IDynamicTreeNode dynamicTreeNode = null;
+					try {
+						Object listener = element.createExecutableExtension("class");
+						if (!(listener instanceof IDynamicTreeNode)) {
+							throw new MalformedPluginException(
+									"Plug-in " + element.getContributor().getName()
+									+ " extends the net.sf.jmoney.pages extension point. "
+									+ "However, the class specified by the class attribute in the node element "
+									+ "(" + listener.getClass().getName() + ") "
+									+ "does not implement the IDynamicTreeNode interface. "
+									+ "This interface must be implemented by all classes referenced "
+									+ "by the class attribute.");
 						}
 
-						IDynamicTreeNode dynamicTreeNode = null;
-						try {
-							Object listener = elements[j].createExecutableExtension("class");
-							if (!(listener instanceof IDynamicTreeNode)) {
+						dynamicTreeNode = (IDynamicTreeNode)listener;
+					} catch (CoreException e) {
+						if (e.getStatus().getException() == null) {
+							/*
+							 * The most likely situation is that no class is specified.
+							 * This is valid because the class attribute is optional.
+							 * It this situation we contruct a TreeNode.
+							 */
+						} else {
+							if (e.getStatus().getException() instanceof ClassNotFoundException) {
+								ClassNotFoundException e2 = (ClassNotFoundException)e.getStatus().getException();
 								throw new MalformedPluginException(
-										"Plug-in " + extensions[i].getNamespaceIdentifier()
+										"Plug-in " + element.getContributor().getName()
 										+ " extends the net.sf.jmoney.pages extension point. "
 										+ "However, the class specified by the class attribute in the node element "
-										+ "(" + listener.getClass().getName() + ") "
-										+ "does not implement the IDynamicTreeNode interface. "
-										+ "This interface must be implemented by all classes referenced "
-										+ "by the class attribute.");
+										+ "(" + e2.getMessage() + ") "
+										+ "could not be found. "
+										+ "The class attribute must specify a class that implements the "
+										+ "IDynamicTreeNode interface.");
 							}
-
-							dynamicTreeNode = (IDynamicTreeNode)listener;
-						} catch (CoreException e) {
-							if (e.getStatus().getException() == null) {
-								/*
-								 * The most likely situation is that no class is specified.
-								 * This is valid because the class attribute is optional.
-								 * It this situation we contruct a TreeNode.
-								 */
-							} else {
-								if (e.getStatus().getException() instanceof ClassNotFoundException) {
-									ClassNotFoundException e2 = (ClassNotFoundException)e.getStatus().getException();
-									throw new MalformedPluginException(
-											"Plug-in " + extensions[i].getNamespaceIdentifier()
-											+ " extends the net.sf.jmoney.pages extension point. "
-											+ "However, the class specified by the class attribute in the node element "
-											+ "(" + e2.getMessage() + ") "
-											+ "could not be found. "
-											+ "The class attribute must specify a class that implements the "
-											+ "IDynamicTreeNode interface.");
-								}
-								e.printStackTrace();
-								continue;
-							}
+							e.printStackTrace();
+							continue;
 						}
-
-						TreeNode node = new TreeNode(fullNodeId, label, descriptor, parentNodeId, positionNumber, dynamicTreeNode);
-						idToNodeMap.put(fullNodeId, node);
 					}
+
+					TreeNode node = new TreeNode(fullNodeId, label, descriptor, parentNodeId, positionNumber, dynamicTreeNode);
+					idToNodeMap.put(fullNodeId, node);
 				}
 			}
 		}
@@ -182,51 +174,47 @@ public class TreeNode implements IAdaptable {
 		}	
 		
 		// Set the list of pages for each node.
-		for (int i = extensions.length-1; i>=0; i--) {
-			IConfigurationElement[] elements =
-				extensions[i].getConfigurationElements();
-			for (int j = 0; j < elements.length; j++) {
-				if (elements[j].getName().equals("pages")) {
-					// TODO: remove plug-in as bad if the id is not unique.
-					String id = elements[j].getAttribute("id");
-					String pageId = extensions[i].getNamespaceIdentifier() + '.' + id;
-					String nodeId = elements[j].getAttribute("node");
+		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.pages")) {
+			if (element.getName().equals("pages")) {
+				// TODO: remove plug-in as bad if the id is not unique.
+				String id = element.getAttribute("id");
+				String pageId = element.getNamespaceIdentifier() + '.' + id;
+				String nodeId = element.getAttribute("node");
 
-					String position = elements[j].getAttribute("position");
-					int pos = 5;
-					if (position != null) {
-						pos = Integer.parseInt(position);
-					}
+				String position = element.getAttribute("position");
+				int pos = 5;
+				if (position != null) {
+					pos = Integer.parseInt(position);
+				}
 
-					if (nodeId != null && nodeId.length() != 0) {
-						TreeNode node = idToNodeMap.get(nodeId);
-						if (node != null) {
-							node.addPage(pageId, elements[j], pos);
-						} else {
-							// No node found with given id, so the
-							// page listener is dropped.
-							// TODO Log missing node.
-						}
+				if (nodeId != null && nodeId.length() != 0) {
+					TreeNode node = idToNodeMap.get(nodeId);
+					if (node != null) {
+						node.addPage(pageId, element, pos);
 					} else {
-						// No 'node' attribute so see if we have
-						// an 'extendable-property-set' attribute.
-						// (This means the page should be supplied if
-						// the node represents an object that contains
-						// the given property set).
-						String propertySetId = elements[j].getAttribute("extendable-property-set");
-						if (propertySetId != null) {
-							try {
-								ExtendablePropertySet<?> pagePropertySet = PropertySet.getExtendablePropertySet(propertySetId);
-								PageEntry pageEntry = new PageEntry(pageId, elements[j], pos);  
-								
-								for (ExtendablePropertySet<?> derivedPropertySet: pagePropertySet.getDerivedPropertySets()) {
-									derivedPropertySet.addPage(pageEntry);
-								}
-							} catch (PropertySetNotFoundException e1) {
-								// This is a plug-in error.
-								// TODO implement properly.
-								e1.printStackTrace();
+						// No node found with given id, so the
+						// page listener is dropped.
+						// TODO Log missing node.
+					}
+				} else {
+					// No 'node' attribute so see if we have
+					// an 'extendable-property-set' attribute.
+					// (This means the page should be supplied if
+					// the node represents an object that contains
+					// the given property set).
+					String propertySetId = element.getAttribute("extendable-property-set");
+					if (propertySetId != null) {
+						try {
+							ExtendablePropertySet<?> pagePropertySet = PropertySet.getExtendablePropertySet(propertySetId);
+							PageEntry pageEntry = new PageEntry(pageId, element, pos);  
+
+							for (ExtendablePropertySet<?> derivedPropertySet: pagePropertySet.getDerivedPropertySets()) {
+								derivedPropertySet.addPage(pageEntry);
 							}
+						} catch (PropertySetNotFoundException e1) {
+							// This is a plug-in error.
+							// TODO implement properly.
+							e1.printStackTrace();
 						}
 					}
 				}

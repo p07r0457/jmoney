@@ -32,8 +32,6 @@ import java.util.Vector;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 
@@ -77,19 +75,13 @@ public class Propagator {
 		
 		// Load the list of available propagators.
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
-		IExtensionPoint extensionPoint = registry.getExtensionPoint("net.sf.jmoney.propagators");
-		IExtension[] extensions = extensionPoint.getExtensions();
-		for (int i = 0; i < extensions.length; i++) {
-			IConfigurationElement[] elements =
-				extensions[i].getConfigurationElements();
-			for (int j = 0; j < elements.length; j++) {
-				if (elements[j].getName().equals("propagator")) {
-					try {
-						Object listener = elements[j].createExecutableExtension("class");
-						propagators.add(listener);
-					} catch (CoreException e) {
-						e.printStackTrace();
-					}
+		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.propagators")) {
+			if (element.getName().equals("propagator")) {
+				try {
+					Object listener = element.createExecutableExtension("class");
+					propagators.add(listener);
+				} catch (CoreException e) {
+					e.printStackTrace();
 				}
 			}
 		}

@@ -29,11 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 
@@ -128,8 +125,6 @@ public abstract class PropertySet<E> {
 	public static void init() {
 		// Load the property set extensions.
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
-		IExtensionPoint extensionPoint = registry.getExtensionPoint("net.sf.jmoney.fields");
-		IExtension[] extensions = extensionPoint.getExtensions();
 		
 		// TODO: They may be not much point in processing extendable classes before extension
 		// classes.  Eclipse, I believe, will always iterate extension info from a plug-in
@@ -138,81 +133,73 @@ public abstract class PropertySet<E> {
 		// We do have other problems, however, which have required a second pass thru
 		// the property sets.
 		
-		for (int i = 0; i < extensions.length; i++) {
-			IConfigurationElement[] elements =
-				extensions[i].getConfigurationElements();
-			for (int j = 0; j < elements.length; j++) {
-				if (elements[j].getName().equals("extendable-property-set")) {
-					try {
-						Object listener = elements[j].createExecutableExtension("info-class");
-						if (!(listener instanceof IPropertySetInfo)) {
-							throw new MalformedPluginException(
-									"Plug-in " + extensions[i].getNamespaceIdentifier()
-									+ " extends the net.sf.jmoney.fields extension point. "
-									+ "However, the class specified by the info-class attribute "
-									+ "(" + listener.getClass().getName() + ") "
-									+ "does not implement the IPropertySetInfo interface. "
-									+ "This interface must be implemented by all classes referenced "
-									+ "by the info-class attribute.");
-						}
-
-						IPropertySetInfo pageListener = (IPropertySetInfo)listener;
-						
-						String fullPropertySetId = extensions[i].getNamespaceIdentifier();
-						String id = elements[j].getAttribute("id");
-						if (id != null && id.length() != 0) {
-							fullPropertySetId = fullPropertySetId + '.' + id;
-						}
-						
-						String basePropertySetId = elements[j].getAttribute("base-property-set");
-						if (basePropertySetId != null && basePropertySetId.length() == 0) {
-							basePropertySetId = null;
-						}
-						registerExtendablePropertySet(fullPropertySetId, basePropertySetId, pageListener);
-					} catch (CoreException e) {
-						if (e.getStatus().getException() instanceof ClassNotFoundException) {
-							ClassNotFoundException e2 = (ClassNotFoundException)e.getStatus().getException();
-							throw new MalformedPluginException(
-									"Plug-in " + extensions[i].getNamespaceIdentifier()
-									+ " extends the net.sf.jmoney.fields extension point. "
-									+ "However, the class specified by the info-class attribute "
-									+ "(" + e2.getMessage() + ") "
-									+ "could not be found. "
-									+ "The info-class attribute must specify a class that implements the "
-									+ "IPropertySetInfo interface.");
-						}
-						e.printStackTrace();
+		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.fields")) {
+			if (element.getName().equals("extendable-property-set")) {
+				try {
+					Object listener = element.createExecutableExtension("info-class");
+					if (!(listener instanceof IPropertySetInfo)) {
+						throw new MalformedPluginException(
+								"Plug-in " + element.getContributor().getName()
+								+ " extends the net.sf.jmoney.fields extension point. "
+								+ "However, the class specified by the info-class attribute "
+								+ "(" + listener.getClass().getName() + ") "
+								+ "does not implement the IPropertySetInfo interface. "
+								+ "This interface must be implemented by all classes referenced "
+								+ "by the info-class attribute.");
 					}
+
+					IPropertySetInfo pageListener = (IPropertySetInfo)listener;
+
+					String fullPropertySetId = element.getNamespaceIdentifier();
+					String id = element.getAttribute("id");
+					if (id != null && id.length() != 0) {
+						fullPropertySetId = fullPropertySetId + '.' + id;
+					}
+
+					String basePropertySetId = element.getAttribute("base-property-set");
+					if (basePropertySetId != null && basePropertySetId.length() == 0) {
+						basePropertySetId = null;
+					}
+					registerExtendablePropertySet(fullPropertySetId, basePropertySetId, pageListener);
+				} catch (CoreException e) {
+					if (e.getStatus().getException() instanceof ClassNotFoundException) {
+						ClassNotFoundException e2 = (ClassNotFoundException)e.getStatus().getException();
+						throw new MalformedPluginException(
+								"Plug-in " + element.getContributor().getName()
+								+ " extends the net.sf.jmoney.fields extension point. "
+								+ "However, the class specified by the info-class attribute "
+								+ "(" + e2.getMessage() + ") "
+								+ "could not be found. "
+								+ "The info-class attribute must specify a class that implements the "
+								+ "IPropertySetInfo interface.");
+					}
+					e.printStackTrace();
 				}
 			}
 		}
-		
-		for (int i = 0; i < extensions.length; i++) {
-			IConfigurationElement[] elements =
-				extensions[i].getConfigurationElements();
-			for (int j = 0; j < elements.length; j++) {
-				if (elements[j].getName().equals("extension-property-set")) {
-					try {
-						Object listener = elements[j].createExecutableExtension("info-class");
-						if (listener instanceof IPropertySetInfo) {
-							IPropertySetInfo pageListener = (IPropertySetInfo)listener;
-							
-							String fullPropertySetId = extensions[i].getNamespaceIdentifier();
-							String id = elements[j].getAttribute("id");
-							if (id != null && id.length() != 0) {
-								fullPropertySetId = fullPropertySetId + '.' + id;
-							}
-							
-							String extendablePropertySetId = elements[j].getAttribute("extendable-property-set");
-							if (extendablePropertySetId != null) {
-								registerExtensionPropertySet(fullPropertySetId, extendablePropertySetId, pageListener);
-							} else {
-								// TODO plug-in error
-							}
+
+		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.fields")) {
+			if (element.getName().equals("extension-property-set")) {
+				try {
+					Object listener = element.createExecutableExtension("info-class");
+					if (listener instanceof IPropertySetInfo) {
+						IPropertySetInfo pageListener = (IPropertySetInfo)listener;
+
+						String fullPropertySetId = element.getNamespaceIdentifier();
+						String id = element.getAttribute("id");
+						if (id != null && id.length() != 0) {
+							fullPropertySetId = fullPropertySetId + '.' + id;
 						}
-					} catch (CoreException e) {
-						e.printStackTrace();
+
+						String extendablePropertySetId = element.getAttribute("extendable-property-set");
+						if (extendablePropertySetId != null) {
+							registerExtensionPropertySet(fullPropertySetId, extendablePropertySetId, pageListener);
+						} else {
+							// TODO plug-in error
+						}
 					}
+				} catch (CoreException e) {
+					e.printStackTrace();
 				}
 			}
 		}
