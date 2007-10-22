@@ -56,6 +56,10 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 	 	this.listKey = listKey;
 	 }
 
+	public ListKey<E> getListKey() {
+		return listKey;
+	}
+
 	public <F extends E> F createNewElement(ExtendablePropertySet<F> propertySet) {
 		SimpleObjectKey objectKey = new SimpleObjectKey(sessionManager);
 		F extendableObject = propertySet.constructDefaultImplementationObject(objectKey, listKey);

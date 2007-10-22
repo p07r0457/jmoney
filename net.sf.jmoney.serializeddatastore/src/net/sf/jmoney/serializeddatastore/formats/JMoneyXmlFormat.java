@@ -431,7 +431,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					}
 				}
 				
-				currentSAXEventProcessor = new ObjectProcessor(sessionManager, null, SessionInfo.getPropertySet());
+				currentSAXEventProcessor = new ObjectProcessor(sessionManager, null, null, SessionInfo.getPropertySet());
 			} else {
 				currentSAXEventProcessor.startElement(uri, localName, attributes);
 			}
@@ -622,8 +622,9 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *        found then this original event processor must be restored as
 		 *        the active event processor.
 		 */
-		ObjectProcessor(SessionManager sessionManager, ObjectProcessor parent, ExtendablePropertySet<?> propertySet) {
+		ObjectProcessor(SessionManager sessionManager, ObjectProcessor parent, ListKey listKey, ExtendablePropertySet<?> propertySet) {
 			super(sessionManager, parent);
+			this.listKey = listKey;
 			this.propertySet = propertySet;
 			
 			objectKey = new SimpleObjectKey(sessionManager);
@@ -759,6 +760,12 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					try {
 						actualPropertySet = PropertySet.getExtendablePropertySet(propertySetId);
 					} catch (PropertySetNotFoundException e) {
+						// TODO: The plug-in which defined the property set may have been uninstalled.
+						// Therefore it is incorrect to throw a runtime exception.  We must handle
+						// this situation by ignoring this element.  The specifics of this process
+						// are not simple and need some thinking.  We probably need a view in which unknown
+						// data is shown together with the contributing plug-in's symbolic name 
+						// and the user has the option of purging.
 						throw new RuntimeException("Invalid 'propertySet' attribute specified.");
 					}
 				} else {
@@ -775,7 +782,8 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					id = atts.getValue("id");
 				}
 				
-				currentSAXEventProcessor = new ObjectProcessor(sessionManager, this, actualPropertySet);
+				SimpleListManager list = (SimpleListManager)propertyValueMap.get(propertyAccessor);
+				currentSAXEventProcessor = new ObjectProcessor(sessionManager, this, list.getListKey(), actualPropertySet);
 			}
 		}
 			
@@ -860,7 +868,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 
 		/**
 		 * The inner element processor has returned a value to us.
-		 * We now set the value into the apppropriate property or
+		 * We now set the value into the appropriate property or
 		 * add it to the appropriate list.
 		 */
 		@Override
