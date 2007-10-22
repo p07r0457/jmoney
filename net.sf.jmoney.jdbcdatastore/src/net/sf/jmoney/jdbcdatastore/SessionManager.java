@@ -856,7 +856,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	/**
 	 * This method deletes the child elements of a given object (objects
 	 * contained in list properties of the given object). This method is
-	 * recursive, so all descendent objects are deleted.
+	 * recursive, so all descendant objects are deleted.
 	 * 
 	 * We could have used ON DELETE CASCADE to delete these objects. However,
 	 * not all databases fully support this. For example, Microsoft SQL Server
@@ -881,35 +881,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			 * result in any queries being sent to the database.
 			 */
 			for (ExtendableObject child: extendableObject.getListPropertyValue(listProperty)) {
-				deleteListElements((IDatabaseRowKey)child.getObjectKey());
-			}
-			
-			/*
-			 * Delete the list elements.  We can delete all the elements
-			 * in the list property with one statement.
-			 * 
-			 * If the parent is the session object then there will not be
-			 * a parent column.  However the parent will never be the session
-			 * object here because this method is called only when an object
-			 * is being removed from a list and the session object can never
-			 * be removed from a list. 
-			 */
-			Statement stmt = this.reusableStatement;
-			
-			ExtendablePropertySet<?> propertySet2 = listProperty.getElementPropertySet();
-			String sql = "DELETE FROM " 
-				+ propertySet2.getId().replace('.', '_')
-				+ " WHERE " 
-				+ "\"" + listProperty.getName().replace('.', '_') + "\""
-				+ "=" + objectKey.getRowId();
-
-			try {
-				System.out.println(sql);
-				stmt.executeUpdate(sql);
-			} catch (SQLException e) {
-				// TODO Handle this properly
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
+				deleteFromDatabase((IDatabaseRowKey)child.getObjectKey());
 			}
 		}
 	}
