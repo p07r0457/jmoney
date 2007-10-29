@@ -57,6 +57,8 @@ public class OtherEntriesBlock extends CellBlock<EntryData, EntryRowControl> {
 		);
 		
 		this.otherEntriesRootBlock = otherEntriesRootBlock;
+
+		otherEntriesRootBlock.initIndexes(0);
 	}
 
     @Override	
@@ -93,9 +95,6 @@ public class OtherEntriesBlock extends CellBlock<EntryData, EntryRowControl> {
 	public void createHeaderControls(Composite parent) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		
-		// TODO: remove this..
-//		otherEntriesRootBlock.buildCellList();
-
 		BlockLayout layout = new BlockLayout(otherEntriesRootBlock, true);
 		composite.setLayout(layout);
 
