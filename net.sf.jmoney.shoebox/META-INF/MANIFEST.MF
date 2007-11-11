@@ -9,6 +9,5 @@ Bundle-Localization: plugin
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  net.sf.jmoney,
- org.eclipse.ui.forms,
- org.vafada.swtcalendar
+ org.eclipse.ui.forms
 Eclipse-LazyStart: true
