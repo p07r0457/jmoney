@@ -200,7 +200,6 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 				parent.addTransactionTypeChangeListener(new ITransactionTypeChangeListener() {
 
-					@Override
 					public void transactionTypeChanged() {
 						/*
 						 * If the user changes the transaction type, the stock control remains

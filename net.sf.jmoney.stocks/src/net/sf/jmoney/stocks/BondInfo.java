@@ -96,7 +96,6 @@ public class BondInfo implements IPropertySetInfo {
 				return ((Bond)extendableObject).getCurrency();
 			}
 
-			@Override
 			public IPropertyControl createPropertyControl(Composite parent,
 					ScalarPropertyAccessor<Long> propertyAccessor) {
 				final AmountEditor editor = new AmountEditor(parent, propertyAccessor, this);
