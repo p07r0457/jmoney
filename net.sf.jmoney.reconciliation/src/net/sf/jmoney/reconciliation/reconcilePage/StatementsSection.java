@@ -121,9 +121,12 @@ public class StatementsSection extends SectionPart {
 
 		/*
 		 * Scroll the statement list to the bottom so that the most recent
-		 * statements are shown.
+		 * statements are shown (if there are any statements).
 		 */
-		tableViewer.reveal(contentProvider.getLastStatement());
+		StatementDetails lastStatementDetails = contentProvider.getLastStatement();
+		if (lastStatementDetails != null) {
+			tableViewer.reveal(lastStatementDetails);
+		}
 		
 		getSection().setClient(composite);
 		toolkit.paintBordersFor(composite);
