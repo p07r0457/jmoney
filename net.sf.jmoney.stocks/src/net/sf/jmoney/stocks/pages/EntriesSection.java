@@ -41,6 +41,7 @@ import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.stocks.Stock;
 import net.sf.jmoney.stocks.StockAccount;
@@ -70,7 +71,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
     private EntriesTable fEntriesControl;
     
-    private Block<EntryData, ? super StockEntryRowControl> rootBlock;
+    private Block<StockEntryData, StockEntryRowControl> rootBlock;
     
     public EntriesSection(Composite parent, StockAccount account, FormToolkit toolkit) {
         super(parent, toolkit, Section.TITLE_BAR);
@@ -88,12 +89,12 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		/*
 		 * Setup the layout structure of the header and rows.
 		 */
-		IndividualBlock<EntryData, BaseEntryRowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		IndividualBlock<EntryData, Composite> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
 
-		IndividualBlock<EntryData, StockEntryRowControl> actionColumn = new IndividualBlock<EntryData, StockEntryRowControl>("Action", 50, 1) {
+		IndividualBlock<StockEntryData, StockEntryRowControl> actionColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Action", 50, 1) {
 
 			@Override
-			public ICellControl<EntryData> createCellControl(final StockEntryRowControl parent) {
+			public ICellControl<StockEntryData> createCellControl(final StockEntryRowControl parent) {
 				final CCombo control = new CCombo(parent, SWT.NONE);
 				control.add("buy");
 				control.add("sell");
@@ -107,16 +108,16 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						int index = control.getSelectionIndex();
 						switch (index) {
 						case 0:
-							parent.forceTransactionToBuy();
+							parent.getUncommittedEntryData().forceTransactionToBuy();
 							break;
 						case 1:
-							parent.forceTransactionToSell();
+							parent.getUncommittedEntryData().forceTransactionToSell();
 							break;
 						case 2:
-							parent.forceTransactionToDividend();
+							parent.getUncommittedEntryData().forceTransactionToDividend();
 							break;
 						case 3:
-							parent.forceTransactionToTransfer();
+							parent.getUncommittedEntryData().forceTransactionToTransfer();
 							break;
 						}
 						
@@ -124,14 +125,31 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					}
 				});
 				
-				return new ICellControl<EntryData>() {
+				return new ICellControl<StockEntryData>() {
 
 					public Control getControl() {
 						return control;
 					}
 
-					public void load(EntryData data) {
-						control.select(0);
+					public void load(StockEntryData data) {
+						switch (data.getTransactionType()) {
+						case Buy:
+							control.select(0);
+							break;
+						case Sell:
+							control.select(1);
+							break;
+						case Dividend:
+							control.select(2);
+							break;
+						case Transfer:
+							control.select(3);
+							break;
+						case Other:
+							control.deselectAll();
+							control.setText("");
+							break;
+						}
 						
 					}
 
@@ -148,19 +166,19 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 			}
 		};  
 
-		IndividualBlock<EntryData, StockEntryRowControl> shareNameColumn = new IndividualBlock<EntryData, StockEntryRowControl>("Stock", 50, 1) {
+		IndividualBlock<StockEntryData, StockEntryRowControl> shareNameColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Stock", 50, 1) {
 
 			@Override
-			public ICellControl<EntryData> createCellControl(final StockEntryRowControl parent) {
+			public ICellControl<StockEntryData> createCellControl(final StockEntryRowControl parent) {
 				final StockControl<Stock> control = new StockControl<Stock>(parent, null, Stock.class);
 				
-				ICellControl<EntryData> cellControl = new ICellControl<EntryData>() {
+				ICellControl<StockEntryData> cellControl = new ICellControl<StockEntryData>() {
 
 					public Control getControl() {
 						return control;
 					}
 
-					public void load(EntryData data) {
+					public void load(StockEntryData data) {
 						/*
 						 * We have to find the appropriate entry in the transaction that contains
 						 * the stock.
@@ -171,11 +189,11 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						 * field in the dividend category. 
 						 */
 						Stock stock;
-						if (parent.isPurchaseOrSale()) {
-							Entry entry = parent.getPurchaseOrSaleEntry();
+						if (data.isPurchaseOrSale()) {
+							Entry entry = data.getPurchaseOrSaleEntry();
 							stock = (Stock)entry.getCommodity();
-						} else if (parent.isDividend()) {
-							Entry entry = parent.getDividendEntry();
+						} else if (data.isDividend()) {
+							Entry entry = data.getDividendEntry();
 							stock = entry.getPropertyValue(StockEntryInfo.getStockAccessor());
 						} else {
 							stock = null;
@@ -213,12 +231,12 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						 * company.
 						 */
 						Stock stock = control.getStock();
-						if (parent.isPurchaseOrSale()) {
-							Entry entry = parent.getPurchaseOrSaleEntry();
+						if (parent.getUncommittedEntryData().isPurchaseOrSale()) {
+							Entry entry = parent.getUncommittedEntryData().getPurchaseOrSaleEntry();
 							entry.setPropertyValue(StockEntryInfo.getStockAccessor(), stock);
 							control.setEnabled(true);
-						} else if (parent.isDividend()) {
-							Entry entry = parent.getDividendEntry();
+						} else if (parent.getUncommittedEntryData().isDividend()) {
+							Entry entry = parent.getUncommittedEntryData().getDividendEntry();
 							entry.setPropertyValue(StockEntryInfo.getStockAccessor(), stock);
 							control.setEnabled(true);
 						} else {
@@ -232,19 +250,19 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 			}
 		};  
 
-		IndividualBlock<EntryData, StockEntryRowControl> priceColumn = new IndividualBlock<EntryData, StockEntryRowControl>("Price", 60, 1) {
+		IndividualBlock<StockEntryData, StockEntryRowControl> priceColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Price", 60, 1) {
 
 			@Override
-			public ICellControl<EntryData> createCellControl(StockEntryRowControl parent) {
+			public ICellControl<StockEntryData> createCellControl(StockEntryRowControl parent) {
 				final Text control = new Text(parent, SWT.NONE);
 				
-				return new ICellControl<EntryData>() {
+				return new ICellControl<StockEntryData>() {
 
 					public Control getControl() {
 						return control;
 					}
 
-					public void load(EntryData data) {
+					public void load(StockEntryData data) {
 						// The price is calculated.
 						long totalCash = 0;
 						long totalShares = 0;
@@ -276,62 +294,37 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		};  
 
 		
-		IndividualBlock<EntryData, BaseEntryRowControl> shareNumberColumn = new PropertyBlock(EntryInfo.getAmountAccessor(), "shareNumber", "Quantity") {
+		IndividualBlock<StockEntryData, Composite> shareNumberColumn = new PropertyBlock<StockEntryData>(EntryInfo.getAmountAccessor(), "shareNumber", "Quantity") {
 			@Override
-			public ExtendableObject getObjectContainingProperty(EntryData data) {
-				// TODO: Kludgy
-				for (Entry entry: data.getSplitEntries()) {
-					if (entry.getCommodity() instanceof Stock) {
-						return entry;
-					}
-				}
-				return null;
+			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
+				return data.getPurchaseOrSaleEntry();
 			}
 		};		
 
-		ArrayList<Block<EntryData, ? super StockEntryRowControl>> expenseColumns = new ArrayList<Block<EntryData, ? super StockEntryRowControl>>();
+		ArrayList<Block<? super StockEntryData, ? super StockEntryRowControl>> expenseColumns = new ArrayList<Block<? super StockEntryData, ? super StockEntryRowControl>>();
 		
-		IndividualBlock<EntryData, BaseEntryRowControl> commissionColumn = new PropertyBlock(EntryInfo.getAmountAccessor(), "commission", "Commission") {
-			@Override
-			public ExtendableObject getObjectContainingProperty(EntryData data) {
-				// TODO: Do we want to cache the entries in the EntryData object?
-				for (Entry entry: data.getSplitEntries()) {
-					if (entry.getAccount() == account.getCommissionAccount()) {
-						return entry;
-					}
-				}
-				return null;
+		IndividualBlock<StockEntryData, Composite> commissionColumn = new PropertyBlock<StockEntryData>(EntryInfo.getAmountAccessor(), "commission", "Commission") {		@Override
+			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
+				return data.getCommissionEntry();
 			}
 		};		
 		expenseColumns.add(commissionColumn);
 		
 		if (account.getTax1Name() != null) {
-			IndividualBlock<EntryData, BaseEntryRowControl> tax1Column = new PropertyBlock(EntryInfo.getAmountAccessor(), "tax1", account.getTax1Name()) {
+			IndividualBlock<StockEntryData, Composite> tax1Column = new PropertyBlock<StockEntryData>(EntryInfo.getAmountAccessor(), "tax1", account.getTax1Name()) {
 				@Override
-				public ExtendableObject getObjectContainingProperty(EntryData data) {
-					// TODO: Do we want to cache the entries in the EntryData object?
-					for (Entry entry: data.getSplitEntries()) {
-						if (entry.getAccount() == account.getTax1Account()) {
-							return entry;
-						}
-					}
-					return null;
+				public ExtendableObject getObjectContainingProperty(StockEntryData data) {
+					return data.getTax1Entry();
 				}
 			};
 			expenseColumns.add(tax1Column);
 		}
 		
 		if (account.getTax2Name() != null) {
-			IndividualBlock<EntryData, BaseEntryRowControl> tax2Column = new PropertyBlock(EntryInfo.getAmountAccessor(), "tax2", account.getTax2Name()) {
+			IndividualBlock<StockEntryData, Composite> tax2Column = new PropertyBlock<StockEntryData>(EntryInfo.getAmountAccessor(), "tax2", account.getTax2Name()) {
 				@Override
-				public ExtendableObject getObjectContainingProperty(EntryData data) {
-					// TODO: Do we want to cache the entries in the EntryData object?
-					for (Entry entry: data.getSplitEntries()) {
-						if (entry.getAccount() == account.getTax2Account()) {
-							return entry;
-						}
-					}
-					return null;
+				public ExtendableObject getObjectContainingProperty(StockEntryData data) {
+					return data.getTax2Entry();
 				}
 			};
 			expenseColumns.add(tax2Column);
@@ -341,21 +334,21 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(account.getCurrency());
     	CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(account.getCurrency());
 		
-		rootBlock = new HorizontalBlock<EntryData, StockEntryRowControl>(
+		rootBlock = new HorizontalBlock<StockEntryData, StockEntryRowControl>(
 				transactionDateColumn,
-				new VerticalBlock<EntryData, StockEntryRowControl>(
-						new HorizontalBlock<EntryData, StockEntryRowControl>(
+				new VerticalBlock<StockEntryData, StockEntryRowControl>(
+						new HorizontalBlock<StockEntryData, StockEntryRowControl>(
 								actionColumn,
 								shareNameColumn
 						),
 						PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor())
 				),
-				new VerticalBlock<EntryData, StockEntryRowControl>(
-						new HorizontalBlock<EntryData, StockEntryRowControl>(
+				new VerticalBlock<StockEntryData, StockEntryRowControl>(
+						new HorizontalBlock<StockEntryData, StockEntryRowControl>(
 								priceColumn,
 								shareNumberColumn
 						),
-						new HorizontalBlock<EntryData, StockEntryRowControl>(
+						new HorizontalBlock<StockEntryData, StockEntryRowControl>(
 								expenseColumns
 						)
 				),
@@ -408,10 +401,19 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
         // ???? account.getStartBalance();
 	}
 
-	public void setNewEntryProperties(Entry newEntry) {
+	public Entry createNewEntry(Transaction newTransaction) {
+		/*
+		 * For stock entries, we create a single entry only.
+		 * The other entries are created as appropriate when a
+		 * transaction type is selected.
+		 */
+		Entry entryInTransaction = newTransaction.createEntry();
+
 		// It is assumed that the entry is in a data manager that is a direct
 		// child of the data manager that contains the account.
-		TransactionManager tm = (TransactionManager)newEntry.getDataManager();
-		newEntry.setAccount(tm.getCopyInTransaction(account));
+		TransactionManager tm = (TransactionManager)entryInTransaction.getDataManager();
+		entryInTransaction.setAccount(tm.getCopyInTransaction(account));
+
+		return entryInTransaction;
 	}
 }

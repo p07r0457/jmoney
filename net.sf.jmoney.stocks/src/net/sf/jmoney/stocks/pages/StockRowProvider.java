@@ -37,7 +37,7 @@ import org.eclipse.swt.widgets.Composite;
 
 public class StockRowProvider implements IRowProvider {
 
-	private Block<EntryData, ? super StockEntryRowControl> rootBlock;
+	private Block<StockEntryData, StockEntryRowControl> rootBlock;
 
 	private VirtualRowTable rowTable;
 	
@@ -52,7 +52,7 @@ public class StockRowProvider implements IRowProvider {
 	 */
 	private LinkedList<BaseEntryRowControl> spareRows = new LinkedList<BaseEntryRowControl>();
 
-	public StockRowProvider(Block<EntryData, ? super StockEntryRowControl> rootBlock) {
+	public StockRowProvider(Block<StockEntryData, StockEntryRowControl> rootBlock) {
 		this.rootBlock = rootBlock;
 	}
 	
