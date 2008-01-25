@@ -22,13 +22,23 @@
 
 package net.sf.jmoney.entrytable;
 
+import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.Entry;
+
 import org.eclipse.swt.widgets.Composite;
 
-public class EntryRowControl extends BaseEntryRowControl {
+public class EntryRowControl extends BaseEntryRowControl<EntryData> {
 
 	public EntryRowControl(final Composite parent, int style, VirtualRowTable rowTable, Block<EntryData, ? super EntryRowControl> rootBlock, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style, rowTable, rootBlock);
 		init(this, rootBlock, selectionTracker, focusCellTracker);
+	}
+
+	@Override
+	protected EntryData createUncommittedEntryData(Entry entryInTransaction,
+			TransactionManager transactionManager) {
+		EntryData entryData = new EntryData(entryInTransaction, transactionManager);
+		return entryData;
 	}
 }
 	

@@ -59,7 +59,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
-public abstract class BaseEntryRowControl extends RowControl<EntryData> {
+public abstract class BaseEntryRowControl<T extends EntryData> extends RowControl<T> {
 	// The darker blue and green lines for the listed entry in each transaction
 	protected static final Color transactionColor = new Color(Display
 			.getCurrent(), 235, 235, 255);
@@ -98,13 +98,13 @@ public abstract class BaseEntryRowControl extends RowControl<EntryData> {
 	 * the committed version of the entry, or a null Entry object if this row
 	 * represents the 'new entry' row.
 	 */
-	protected EntryData committedEntryData = null;
+	protected T committedEntryData = null;
 
 	/**
 	 * The EntryData object currently set into this object, or null
 	 * if this object does not represent a currently visible row
 	 */
-	protected EntryData uncommittedEntryData = null;
+	protected T uncommittedEntryData = null;
 
 	/**
 	 * true if this row is the current selection, false otherwise
@@ -148,7 +148,7 @@ public abstract class BaseEntryRowControl extends RowControl<EntryData> {
 
 	private ArrayList<IBalanceChangeListener> balanceChangeListeners = new ArrayList<IBalanceChangeListener>();
 
-	public BaseEntryRowControl(final Composite parent, int style, VirtualRowTable rowTable, Block<EntryData, ?> rootBlock) {
+	public BaseEntryRowControl(final Composite parent, int style, VirtualRowTable rowTable, Block<T, ?> rootBlock) {
 		super(parent, style);
 		this.rowTable = rowTable;
 		
@@ -195,12 +195,12 @@ public abstract class BaseEntryRowControl extends RowControl<EntryData> {
 	 * @param selectionTracker
 	 * @param focusCellTracker
 	 */
-	protected <R extends BaseEntryRowControl> void init(R thisRowControl, Block<EntryData, ? super R> rootBlock,
+	protected <R extends BaseEntryRowControl<T>> void init(R thisRowControl, Block<T, ? super R> rootBlock,
 			RowSelectionTracker<R> selectionTracker,
 			FocusCellTracker focusCellTracker) {
-		for (CellBlock<EntryData, ? super R> cellBlock: rootBlock.buildCellList()) {
+		for (CellBlock<? super T, ? super R> cellBlock: rootBlock.buildCellList()) {
 			// Create the control with no content set.
-			final ICellControl<EntryData> cellControl = cellBlock.createCellControl(thisRowControl);
+			final ICellControl<? super T> cellControl = cellBlock.createCellControl(thisRowControl);
 			controls.put(cellBlock, cellControl);
 
 			FocusListener controlFocusListener = new CellFocusListener<R>(thisRowControl, cellControl, selectionTracker, focusCellTracker);
@@ -296,7 +296,7 @@ public abstract class BaseEntryRowControl extends RowControl<EntryData> {
 		}
 	}
 
-	public void setContent(EntryData committedEntryData) {
+	public void setContent(T committedEntryData) {
 		this.committedEntryData = committedEntryData;
 
 		setAppropriateBackgroundColor();
@@ -313,44 +313,21 @@ public abstract class BaseEntryRowControl extends RowControl<EntryData> {
 		Entry entryInTransaction;
 		if (committedEntryData.getEntry() == null) {
 			Transaction newTransaction = transactionManager.getSession().createTransaction();
-			entryInTransaction = newTransaction.createEntry();
-			Entry otherEntry = newTransaction.createEntry();
-
-			// TODO: Kludge here
-			((EntriesTable)getParent().getParent().getParent()).entriesContent.setNewEntryProperties(entryInTransaction);
-
-			// TODO: See if this code has any effect, and
-			// should this be here at all?
-			/*
-			 * We set the currency by default to be the currency of the
-			 * top-level entry.
-			 * 
-			 * The currency of an entry is not applicable if the entry is an
-			 * entry in a currency account or an income and expense account
-			 * that is restricted to a single currency.
-			 * However, we set it anyway so the value is there if the entry
-			 * is set to an account which allows entries in multiple currencies.
-			 * 
-			 * It may be that the currency of the top-level entry is not
-			 * known. This is not possible if entries in a currency account
-			 * are being listed, but may be possible if this entries list
-			 * control is used for more general purposes. In this case, the
-			 * currency is not set and so the user must enter it.
-			 */
-			if (entryInTransaction.getCommodity() instanceof Currency) {
-				otherEntry.setIncomeExpenseCurrency((Currency)entryInTransaction.getCommodity());
-			}
+			entryInTransaction = createNewEntry(newTransaction);
 		} else {
 			entryInTransaction = transactionManager.getCopyInTransaction(committedEntryData.getEntry());
 		}
-		uncommittedEntryData = new EntryData(entryInTransaction, transactionManager);
+		uncommittedEntryData = createUncommittedEntryData(entryInTransaction, transactionManager);
 		uncommittedEntryData.setIndex(committedEntryData.getIndex());
 		uncommittedEntryData.setBalance(committedEntryData.getBalance());
 		
-		for (final ICellControl<EntryData> control: controls.values()) {
+		for (final ICellControl<? super T> control: controls.values()) {
 			control.load(uncommittedEntryData);
 		}
 	}
+
+	protected abstract T createUncommittedEntryData(Entry entryInTransaction,
+			TransactionManager transactionManager);
 
 	@Override
 	protected void setSelected(boolean isSelected) {
@@ -513,22 +490,18 @@ public abstract class BaseEntryRowControl extends RowControl<EntryData> {
 					Entry entryInTransaction;
 					if (committedEntryData.getEntry() == null) {
 						Transaction newTransaction = transactionManager.getSession().createTransaction();
-						entryInTransaction = newTransaction.createEntry();
-						newTransaction.createEntry();
-
-						// TODO: Kludge here
-						((EntriesTable)getParent().getParent().getParent()).entriesContent.setNewEntryProperties(entryInTransaction);
+						entryInTransaction = createNewEntry(newTransaction);
 					} else {
 						entryInTransaction = transactionManager.getCopyInTransaction(committedEntryData.getEntry());
 					}
 					
 					// Update the controls.
 
-					uncommittedEntryData = new EntryData(entryInTransaction, transactionManager);
+					uncommittedEntryData = createUncommittedEntryData(entryInTransaction, transactionManager);
 					uncommittedEntryData.setIndex(committedEntryData.getIndex());
 					uncommittedEntryData.setBalance(committedEntryData.getBalance());
 
-					for (final ICellControl<EntryData> control: controls.values()) {
+					for (final ICellControl<? super T> control: controls.values()) {
 						control.load(uncommittedEntryData);
 					}
 					
@@ -561,25 +534,38 @@ public abstract class BaseEntryRowControl extends RowControl<EntryData> {
 			 */
 			if (committedEntryData.getEntry() == null) {
 				Transaction newTransaction = transactionManager.getSession().createTransaction();
-				Entry entryInTransaction = newTransaction.createEntry();
-				newTransaction.createEntry();
-
-				// TODO: Kludge here
-				((EntriesTable)getParent().getParent().getParent()).entriesContent.setNewEntryProperties(entryInTransaction);
+				Entry entryInTransaction = createNewEntry(newTransaction);
 
 				// Update the controls.
 				
-				uncommittedEntryData = new EntryData(entryInTransaction, transactionManager);
+				uncommittedEntryData = createUncommittedEntryData(entryInTransaction, transactionManager);
 				uncommittedEntryData.setIndex(committedEntryData.getIndex());
 				uncommittedEntryData.setBalance(committedEntryData.getBalance());
 				
-				for (final ICellControl<EntryData> control: controls.values()) {
+				for (final ICellControl<? super T> control: controls.values()) {
 					control.load(uncommittedEntryData);
 				}
 			}
 		}
 
 		return true;
+	}
+
+	/**
+	 * Given an accounting transaction, which must be empty (no properties
+	 * set or entries created), create entries and set properties as appropriate
+	 * for a new entry.
+	 * 
+	 * Because the appropriate initialization of a new entry is dependent on what
+	 * is being shown in the table, this initialization is passed on to the context
+	 * provider.
+	 * 
+	 * @param newTransaction
+	 * @return
+	 */
+	private Entry createNewEntry(Transaction newTransaction) {
+		// TODO: Kludge here
+		return ((EntriesTable)getParent().getParent().getParent()).entriesContent.createNewEntry(newTransaction);
 	}
 
 	/**
@@ -668,7 +654,7 @@ public abstract class BaseEntryRowControl extends RowControl<EntryData> {
 		return uncommittedEntryData.getEntry();
 	}
 
-	public EntryData getUncommittedEntryData() {
+	public T getUncommittedEntryData() {
 		return uncommittedEntryData;
 	}
 

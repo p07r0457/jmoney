@@ -20,7 +20,7 @@ public abstract class RowControl<T> extends Composite {
 	// (and it may as well be a list of the values only), a map
 	// allows us to do stuff like move the focus to the control
 	// in error during transaction validation.
-	protected Map<CellBlock, ICellControl<T>> controls = new HashMap<CellBlock, ICellControl<T>>();
+	protected Map<CellBlock, ICellControl<? super T>> controls = new HashMap<CellBlock, ICellControl<? super T>>();
 
 	public RowControl(Composite parent, int style) {
 		super(parent, style);

@@ -25,6 +25,7 @@ package net.sf.jmoney.entrytable;
 import java.util.Collection;
 
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.Transaction;
 
 /**
  * Provides content to the entries table control.
@@ -78,5 +79,5 @@ public interface IEntriesContent {
 	 *
 	 * @param newEntry
 	 */
-	void setNewEntryProperties(Entry newEntry);
+	Entry createNewEntry(Transaction newTransaction);
 }

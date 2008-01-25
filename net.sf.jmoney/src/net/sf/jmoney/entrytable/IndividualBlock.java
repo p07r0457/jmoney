@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Shell;
  * implementations exist for the credit, debit, and balance columns.
  * More generic implementations exist for the other properties.
  */
-public abstract class IndividualBlock<T, R extends RowControl<T>> extends CellBlock<T,R> {
+public abstract class IndividualBlock<T, R> extends CellBlock<T,R> {
 	
 	/**
 	 * The localized text to be shown in the header.

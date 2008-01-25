@@ -35,7 +35,7 @@ import org.eclipse.swt.widgets.Control;
  * single piece of data with header text(e.g. the IndividualBlock derived class) or
  * it may represent a composite column (e.g. the OtherEntriesBlock).
  */
-public abstract class CellBlock<T, R extends RowControl<T>> extends Block<T,R> {
+public abstract class CellBlock<T,R> extends Block<T,R> {
 	/**
 	 * The index of this cell in the list returned by buildCellList.
 	 * This is not set until buildCellList is called.
@@ -56,8 +56,8 @@ public abstract class CellBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	}
 	
 	@Override
-	public Collection<CellBlock<T,? super R>> buildCellList() {
-		ArrayList<CellBlock<T,? super R>> cellList = new ArrayList<CellBlock<T,? super R>>();
+	public Collection<CellBlock<? super T,? super R>> buildCellList() {
+		ArrayList<CellBlock<? super T,? super R>> cellList = new ArrayList<CellBlock<? super T,? super R>>();
 		cellList.add(this);
 		return cellList;
 	}

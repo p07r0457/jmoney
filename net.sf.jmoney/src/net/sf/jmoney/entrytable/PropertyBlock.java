@@ -29,6 +29,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 import org.eclipse.swt.events.FocusListener;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 /**
@@ -43,7 +44,7 @@ import org.eclipse.swt.widgets.Control;
  * 
  * @author Nigel Westbury
  */
-abstract public class PropertyBlock extends IndividualBlock<EntryData, BaseEntryRowControl> {
+abstract public class PropertyBlock<T extends EntryData> extends IndividualBlock<T, Composite> {
 	private ScalarPropertyAccessor<?> accessor;
 	private String id;
 	
@@ -73,19 +74,19 @@ abstract public class PropertyBlock extends IndividualBlock<EntryData, BaseEntry
 		return id;
 	}
 
-	public abstract ExtendableObject getObjectContainingProperty(EntryData data);
+	public abstract ExtendableObject getObjectContainingProperty(T data);
 
     @Override	
-	public ICellControl<EntryData> createCellControl(BaseEntryRowControl parent) {
+	public ICellControl<T> createCellControl(Composite parent) {
 		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		
-		return new ICellControl<EntryData>() {
+		return new ICellControl<T>() {
 
 			public Control getControl() {
 				return propertyControl.getControl();
 			}
 
-			public void load(EntryData data) {
+			public void load(T data) {
 				propertyControl.load(getObjectContainingProperty(data));
 			}
 
@@ -100,13 +101,13 @@ abstract public class PropertyBlock extends IndividualBlock<EntryData, BaseEntry
 	}
 
     @Override	
-	public Comparator<EntryData> getComparator() {
+	public Comparator<T> getComparator() {
 		final Comparator<ExtendableObject> subComparator = accessor.getComparator();
 		if (subComparator == null) {
 			return null;
 		} else {
-			return new Comparator<EntryData>() {
-				public int compare(EntryData entryData1, EntryData entryData2) {
+			return new Comparator<T>() {
+				public int compare(T entryData1, T entryData2) {
 					ExtendableObject extendableObject1 = getObjectContainingProperty(entryData1);
 					ExtendableObject extendableObject2 = getObjectContainingProperty(entryData2);
 					if (extendableObject1 == null && extendableObject2 == null) return 0;
@@ -118,9 +119,9 @@ abstract public class PropertyBlock extends IndividualBlock<EntryData, BaseEntry
 		}
 	}
 
-	public static PropertyBlock createTransactionColumn(
+	public static PropertyBlock<EntryData> createTransactionColumn(
 			ScalarPropertyAccessor<?> propertyAccessor) {
-		return new PropertyBlock(propertyAccessor, "transaction") {
+		return new PropertyBlock<EntryData>(propertyAccessor, "transaction") {
 			@Override
 			public ExtendableObject getObjectContainingProperty(EntryData data) {
 				return data.getEntry().getTransaction();
@@ -128,9 +129,9 @@ abstract public class PropertyBlock extends IndividualBlock<EntryData, BaseEntry
 		};
 	}
 
-	public static PropertyBlock createEntryColumn(
+	public static PropertyBlock<EntryData> createEntryColumn(
 			ScalarPropertyAccessor<?> propertyAccessor) {
-		return new PropertyBlock(propertyAccessor, "entry") {
+		return new PropertyBlock<EntryData>(propertyAccessor, "entry") {
 			@Override
 			public ExtendableObject getObjectContainingProperty(EntryData data) {
 				return data.getEntry();
@@ -144,8 +145,8 @@ abstract public class PropertyBlock extends IndividualBlock<EntryData, BaseEntry
 	 * @param displayName the text to use in the header
 	 * @return
 	 */
-	public static PropertyBlock createEntryColumn(ScalarPropertyAccessor<?> propertyAccessor, String displayName) {
-		return new PropertyBlock(propertyAccessor, "entry", displayName) {
+	public static PropertyBlock<EntryData> createEntryColumn(ScalarPropertyAccessor<?> propertyAccessor, String displayName) {
+		return new PropertyBlock<EntryData>(propertyAccessor, "entry", displayName) {
 			@Override
 			public ExtendableObject getObjectContainingProperty(EntryData data) {
 				return data.getEntry();

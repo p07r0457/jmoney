@@ -30,24 +30,24 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 public class VerticalBlock<T, R extends RowControl<T>> extends Block<T,R> {
-	private ArrayList<Block<T,? super R>> children;
+	private ArrayList<Block<? super T,? super R>> children;
 
-	public VerticalBlock(Block<T,? super R> child1, Block<T,? super R> child2) {
-		ArrayList<Block<T,? super R>> children = new ArrayList<Block<T,? super R>>();
+	public VerticalBlock(Block<? super T,? super R> child1, Block<? super T,? super R> child2) {
+		ArrayList<Block<? super T,? super R>> children = new ArrayList<Block<? super T,? super R>>();
 		children.add(child1);
 		children.add(child2);
 		init(children);
 	}
 	
-	public VerticalBlock(Block<T,? super R> child1, Block<T,? super R> child2, Block<T,? super R> child3) {
-		ArrayList<Block<T,? super R>> children = new ArrayList<Block<T,? super R>>();
+	public VerticalBlock(Block<? super T,? super R> child1, Block<? super T,? super R> child2, Block<? super T,? super R> child3) {
+		ArrayList<Block<? super T,? super R>> children = new ArrayList<Block<? super T,? super R>>();
 		children.add(child1);
 		children.add(child2);
 		children.add(child3);
 		init(children);
 	}
 	
-	private void init(ArrayList<Block<T,? super R>> children) {
+	private void init(ArrayList<Block<? super T,? super R>> children) {
 		this.children = children;
 
 		/*
@@ -57,7 +57,7 @@ public class VerticalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 		 */
 		minimumWidth = 0;
 		weight = 0;
-		for (Block<T,? super R> child: children) {
+		for (Block<? super T,? super R> child: children) {
 			minimumWidth = Math.max(minimumWidth, child.minimumWidth);
 			weight = Math.max(weight, child.weight);
 		}
@@ -66,7 +66,7 @@ public class VerticalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	@Override
 	public int initIndexes(int startIndex) {
 		int totalCount = 0;
-		for (Block<T,? super R> child: children) {
+		for (Block<? super T,? super R> child: children) {
 			int count = child.initIndexes(startIndex + totalCount);
 			totalCount += count;
 		}
@@ -74,9 +74,9 @@ public class VerticalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	}
 
 	@Override
-	public Collection<CellBlock<T,? super R>> buildCellList() {
-		ArrayList<CellBlock<T,? super R>> cellList = new ArrayList<CellBlock<T,? super R>>();
-		for (Block<T,? super R> child: children) {
+	public Collection<CellBlock<? super T,? super R>> buildCellList() {
+		ArrayList<CellBlock<? super T,? super R>> cellList = new ArrayList<CellBlock<? super T,? super R>>();
+		for (Block<? super T,? super R> child: children) {
 			cellList.addAll(child.buildCellList());
 		}
 		return cellList;
@@ -84,7 +84,7 @@ public class VerticalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 
 	@Override
 	public void createHeaderControls(Composite parent) {
-		for (Block<T,? super R> child: children) {
+		for (Block<? super T,? super R> child: children) {
 			child.createHeaderControls(parent);
 		}
 	}
@@ -92,7 +92,7 @@ public class VerticalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	@Override
 	int getHeightForGivenWidth(int width, int verticalSpacing, Control[] controls, boolean changed) {
 		int height = 0; 
-		for (Block<T,? super R> child: children) {
+		for (Block<? super T,? super R> child: children) {
 			height += child.getHeightForGivenWidth(width, verticalSpacing, controls, changed);
 		}
 		height += (children.size() - 1) * verticalSpacing;
@@ -103,7 +103,7 @@ public class VerticalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	void layout(int width) {
 		if (this.width != width) {
 			this.width = width;
-			for (Block<T,? super R> child: children) {
+			for (Block<? super T,? super R> child: children) {
 				child.layout(width);
 			}
 		}
@@ -112,7 +112,7 @@ public class VerticalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	@Override
 	void positionControls(int left, int top, int verticalSpacing, Control[] controls, boolean flushCache) {
 		int y = top;
-		for (Block<T,? super R> child: children) {
+		for (Block<? super T,? super R> child: children) {
 			child.positionControls(left, y, verticalSpacing, controls, flushCache);
 			y += child.getHeight(verticalSpacing, controls) + verticalSpacing;
 		}
@@ -121,7 +121,7 @@ public class VerticalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	@Override
 	int getHeight(int verticalSpacing, Control[] controls) {
 		int height = 0; 
-		for (Block<T,? super R> child: children) {
+		for (Block<? super T,? super R> child: children) {
 			height += child.getHeight(verticalSpacing, controls);
 		}
 		height += (children.size() - 1) * verticalSpacing;

@@ -93,7 +93,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         
         // Add properties from the transaction.
         for (ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
-        	allEntryDataObjects.add(new PropertyBlock(propertyAccessor, "transaction") {
+        	allEntryDataObjects.add(new PropertyBlock<EntryData>(propertyAccessor, "transaction") {
     		    @Override	
         		public ExtendableObject getObjectContainingProperty(EntryData data) {
         			return data.getEntry().getTransaction();
@@ -110,7 +110,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
            		&& propertyAccessor != EntryInfo.getIncomeExpenseCurrencyAccessor()
         		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
             	if (propertyAccessor.isScalar() && propertyAccessor.isEditable()) {
-            		allEntryDataObjects.add(new PropertyBlock(propertyAccessor, "this") {
+            		allEntryDataObjects.add(new PropertyBlock<EntryData>(propertyAccessor, "this") {
             		    @Override	
     					public ExtendableObject getObjectContainingProperty(EntryData data) {
     						return data.getEntry();
@@ -141,7 +141,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		 * account object.
 		 */
    		// TODO: This is not correct at all...
-        allEntryDataObjects.add(new PropertyBlock(EntryInfo.getIncomeExpenseCurrencyAccessor(), "common2") {
+        allEntryDataObjects.add(new PropertyBlock<EntryData>(EntryInfo.getIncomeExpenseCurrencyAccessor(), "common2") {
 		    @Override	
         	public ExtendableObject getObjectContainingProperty(EntryData data) {
         		Entry entry = data.getEntry();
@@ -174,7 +174,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		 * the credit or debit column).
 		 */
         if (account instanceof CurrencyAccount) {
-        	allEntryDataObjects.add(new PropertyBlock(EntryInfo.getAmountAccessor(), "other") {
+        	allEntryDataObjects.add(new PropertyBlock<EntryData>(EntryInfo.getAmountAccessor(), "other") {
     		    @Override	
         		public ExtendableObject getObjectContainingProperty(EntryData data) {
         			if (!data.hasSplitEntries()) {

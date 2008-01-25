@@ -150,11 +150,11 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 		setBackgroundMode(SWT.INHERIT_FORCE);
 		setBackground(normalColor);
 
-		Collection<CellBlock<Entry, ? super SplitEntryRowControl>> cellList = rootBlock.buildCellList();
+		Collection<CellBlock<? super Entry, ? super SplitEntryRowControl>> cellList = rootBlock.buildCellList();
 		
-		for (final CellBlock<Entry, ? super SplitEntryRowControl> cellBlock: cellList) {
+		for (final CellBlock<? super Entry, ? super SplitEntryRowControl> cellBlock: cellList) {
 			// Create the control with no content set.
-			final ICellControl<Entry> cellControl = cellBlock.createCellControl(this);
+			final ICellControl<? super Entry> cellControl = cellBlock.createCellControl(this);
 			controls.put(cellBlock, cellControl);
 
 			FocusListener controlFocusListener = new CellFocusListener<SplitEntryRowControl>(this, cellControl, selectionTracker, focusCellTracker);
@@ -193,7 +193,7 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 	public void setContent(final Entry entry) {
 		this.entry = entry;
 		
-		for (final ICellControl<Entry> control: controls.values()) {
+		for (final ICellControl<? super Entry> control: controls.values()) {
 			control.load(entry);
 		}
 	}
