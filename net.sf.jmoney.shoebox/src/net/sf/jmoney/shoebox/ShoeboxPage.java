@@ -52,11 +52,13 @@ import net.sf.jmoney.entrytable.SplitEntryRowControl;
 import net.sf.jmoney.entrytable.VerticalBlock;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.views.NodeEditor;
 import net.sf.jmoney.views.SectionlessPage;
@@ -242,7 +244,38 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 					return 0;
 				}
 
-				public void setNewEntryProperties(Entry newEntry) {
+				public Entry createNewEntry(Transaction newTransaction) {
+					Entry entryInTransaction = newTransaction.createEntry();
+					Entry otherEntry = newTransaction.createEntry();
+
+					setNewEntryProperties(entryInTransaction);
+
+					// TODO: See if this code has any effect, and
+					// should this be here at all?
+					/*
+					 * We set the currency by default to be the currency of the
+					 * top-level entry.
+					 * 
+					 * The currency of an entry is not applicable if the entry is an
+					 * entry in a currency account or an income and expense account
+					 * that is restricted to a single currency.
+					 * However, we set it anyway so the value is there if the entry
+					 * is set to an account which allows entries in multiple currencies.
+					 * 
+					 * It may be that the currency of the top-level entry is not
+					 * known. This is not possible if entries in a currency account
+					 * are being listed, but may be possible if this entries list
+					 * control is used for more general purposes. In this case, the
+					 * currency is not set and so the user must enter it.
+					 */
+					if (entryInTransaction.getCommodity() instanceof Currency) {
+						otherEntry.setIncomeExpenseCurrency((Currency)entryInTransaction.getCommodity());
+					}
+					
+					return entryInTransaction;
+				}
+				
+				private void setNewEntryProperties(Entry newEntry) {
 					/*
 					 * There are no properties we must set when an entry is
 					 * added to this table.
@@ -262,7 +295,7 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			/*
 			 * Setup the layout structure of the header and rows.
 			 */
-			IndividualBlock<EntryData, BaseEntryRowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+			IndividualBlock<EntryData, Composite> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
 			CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(session.getDefaultCurrency());
 			CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(session.getDefaultCurrency());
 			
