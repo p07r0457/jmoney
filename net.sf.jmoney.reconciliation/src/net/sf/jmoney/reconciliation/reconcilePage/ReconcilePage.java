@@ -152,7 +152,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         
         // Add properties from the transaction.
    		for (final ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
-        	allEntryDataObjects.add(new PropertyBlock(propertyAccessor, "transaction") {
+        	allEntryDataObjects.add(new PropertyBlock<EntryData>(propertyAccessor, "transaction") {
     			@Override
         		public ExtendableObject getObjectContainingProperty(EntryData data) {
         			return data.getEntry().getTransaction();
@@ -167,7 +167,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
    		for (ScalarPropertyAccessor<?> propertyAccessor: EntryInfo.getPropertySet().getScalarProperties3()) {
             if (propertyAccessor != EntryInfo.getAccountAccessor() 
            		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
-            	allEntryDataObjects.add(new PropertyBlock(propertyAccessor, "this") {
+            	allEntryDataObjects.add(new PropertyBlock<EntryData>(propertyAccessor, "this") {
         			@Override
             		public ExtendableObject getObjectContainingProperty(EntryData data) {
             			return data.getEntry();

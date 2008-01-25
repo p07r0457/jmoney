@@ -50,6 +50,7 @@ import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.entrytable.SplitEntryRowControl;
 import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
@@ -184,7 +185,38 @@ public class StatementSection extends SectionPart {
 				return openingBalance;
 			}
 
-			public void setNewEntryProperties(Entry newEntry) {
+			public Entry createNewEntry(Transaction newTransaction) {
+				Entry entryInTransaction = newTransaction.createEntry();
+				Entry otherEntry = newTransaction.createEntry();
+
+				setNewEntryProperties(entryInTransaction);
+
+				// TODO: See if this code has any effect, and
+				// should this be here at all?
+				/*
+				 * We set the currency by default to be the currency of the
+				 * top-level entry.
+				 * 
+				 * The currency of an entry is not applicable if the entry is an
+				 * entry in a currency account or an income and expense account
+				 * that is restricted to a single currency.
+				 * However, we set it anyway so the value is there if the entry
+				 * is set to an account which allows entries in multiple currencies.
+				 * 
+				 * It may be that the currency of the top-level entry is not
+				 * known. This is not possible if entries in a currency account
+				 * are being listed, but may be possible if this entries list
+				 * control is used for more general purposes. In this case, the
+				 * currency is not set and so the user must enter it.
+				 */
+				if (entryInTransaction.getCommodity() instanceof Currency) {
+					otherEntry.setIncomeExpenseCurrency((Currency)entryInTransaction.getCommodity());
+				}
+				
+				return entryInTransaction;
+			}
+			
+			private void setNewEntryProperties(Entry newEntry) {
 				// It is assumed that the entry is in a data manager that is a direct
 				// child of the data manager that contains the account.
 				TransactionManager tm = (TransactionManager)newEntry.getDataManager();
@@ -331,8 +363,8 @@ public class StatementSection extends SectionPart {
 				new Label(parent, SWT.NONE);
 			}
 		};
-		
-		IndividualBlock<EntryData, BaseEntryRowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		 
+		IndividualBlock<EntryData, Composite> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
 		CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(fPage.getAccount().getCurrency());
 		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(fPage.getAccount().getCurrency());
 		CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
