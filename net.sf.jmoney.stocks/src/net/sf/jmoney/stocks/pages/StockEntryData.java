@@ -126,10 +126,11 @@ public class StockEntryData extends EntryData {
 		transactionType = TransactionType.Transfer;
 
 		EntryCollection entries = getEntry().getTransaction().getEntryCollection();
-		for (Entry entry: entries) {
+		for (Iterator<Entry> iter = entries.iterator(); iter.hasNext(); ) {
+			Entry entry = iter.next();
 			if (entry != mainEntry
 					&& entry != transferEntry) {
-				entries.deleteEntry(entry);
+				iter.remove();
 			}
 		}
 		
@@ -153,11 +154,12 @@ public class StockEntryData extends EntryData {
 		StockAccount account = (StockAccount)getEntry().getAccount();
 
 		EntryCollection entries = getEntry().getTransaction().getEntryCollection();
-		for (Entry entry: entries) {
+		for (Iterator<Entry> iter = entries.iterator(); iter.hasNext(); ) {
+			Entry entry = iter.next();
 			if (entry != mainEntry
 					&& entry != dividendEntry
 				&& entry != withholdingTaxEntry) {
-				entries.deleteEntry(entry);
+				iter.remove();
 			}
 		}
 		
@@ -280,5 +282,14 @@ public class StockEntryData extends EntryData {
 	 */
 	public ExtendableObject getTax2Entry() {
 		return tax2Entry;
+	}
+
+	/**
+	 * @return the entry in the transaction that is the other entry
+	 * 		in a transfer transaction, or null if this is not a transfer
+	 * 		transaction
+	 */
+	public ExtendableObject getTransferEntry() {
+		return transferEntry;
 	}
 }
