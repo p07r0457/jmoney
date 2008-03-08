@@ -197,7 +197,7 @@ public class UnreconciledSection extends SectionPart {
 		
 		CellBlock<EntryData, EntryRowControl> reconcileButton = new CellBlock<EntryData, EntryRowControl>(20, 0) {
 			@Override
-			public ICellControl<EntryData> createCellControl(final EntryRowControl rowControl) {
+			public ICellControl<EntryData> createCellControl(Composite parent, final EntryRowControl rowControl) {
 				ButtonCellControl cellControl = new ButtonCellControl(rowControl, reconcileImage, "Reconcile this Entry to the above Statement") {
 					@Override
 					protected void run(EntryRowControl rowControl) {
@@ -258,7 +258,7 @@ public class UnreconciledSection extends SectionPart {
 			}
 
 			@Override
-			public void createHeaderControls(Composite parent) {
+			public void createHeaderControls(Composite parent, EntryData entryData) {
 				// All CellBlock implementations must create a control because
 				// the header and rows must match.
 				// Maybe these objects could just point to the header

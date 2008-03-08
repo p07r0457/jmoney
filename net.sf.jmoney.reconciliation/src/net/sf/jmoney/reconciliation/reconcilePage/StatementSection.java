@@ -249,8 +249,8 @@ public class StatementSection extends SectionPart {
 		CellBlock<EntryData, EntryRowControl> unreconcileButton = new CellBlock<EntryData, EntryRowControl>(20, 0) {
 
 			@Override
-			public ICellControl<EntryData> createCellControl(final EntryRowControl parent) {
-				ButtonCellControl cellControl = new ButtonCellControl(parent, unreconcileImage, "Remove Entry from this Statement") {
+			public ICellControl<EntryData> createCellControl(Composite parent, final EntryRowControl rowControl) {
+				ButtonCellControl cellControl = new ButtonCellControl(rowControl, unreconcileImage, "Remove Entry from this Statement") {
 					@Override
 					protected void run(EntryRowControl rowControl) {
 						unreconcileEntry(rowControl);
@@ -318,7 +318,7 @@ public class StatementSection extends SectionPart {
 						if (LocalSelectionTransfer.getTransfer().isSupportedType(event.currentDataType)) {
 							ISelection selection = LocalSelectionTransfer.getTransfer().getSelection();
 							Entry sourceEntry = (Entry)((StructuredSelection)selection).getFirstElement();
-							EntryRowControl dropRow = parent;
+							EntryRowControl dropRow = rowControl;
 
 							/*
 							 * Merge data from dragged transaction into the target transaction
@@ -350,7 +350,7 @@ public class StatementSection extends SectionPart {
 			}
 
 			@Override
-			public void createHeaderControls(Composite parent) {
+			public void createHeaderControls(Composite parent, EntryData entryData) {
 				/*
 				 * All CellBlock implementations must create a control because
 				 * the header and rows must match. Maybe these objects could
