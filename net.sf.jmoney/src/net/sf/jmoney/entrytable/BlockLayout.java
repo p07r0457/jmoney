@@ -31,11 +31,14 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Layout;
 
 
-public class BlockLayout extends Layout {
+public class BlockLayout<T> extends Layout {
 
-	private Block<?,?> block;
+	private Block<? super T,?> block;
+
 	private boolean linkedToHeader;
-
+	
+	private T entryData;
+	
 	/**
 	 * marginTop specifies the number of pixels of vertical margin
 	 * that will be placed along the top edge of the layout.
@@ -69,9 +72,14 @@ public class BlockLayout extends Layout {
  	 * 			If true then the hints are ignored and the widths are always taken from
  	 * 			the blocks.
  	 */
-	public BlockLayout(Block<?,?> block, boolean linkedToHeader) {
+	public BlockLayout(Block<? super T,?> block, boolean linkedToHeader) {
 		this.block = block;
 		this.linkedToHeader = linkedToHeader;
+		this.entryData = null;
+	}
+
+	public void setInput(T entryData) {
+		this.entryData = entryData;
 	}
 	
 	@Override
@@ -108,10 +116,10 @@ public class BlockLayout extends Layout {
 		}
 		
 		Control [] children = composite.getChildren();
-		block.positionControls(Block.marginLeft, marginTop, verticalSpacing, children, flushCache);
+		block.positionControls(Block.marginLeft, marginTop, verticalSpacing, children, entryData, flushCache);
 	}
 
 	public void paintRowLines(GC gc, Composite composite) {
-		block.paintRowLines(gc, Block.marginLeft, marginTop, verticalSpacing, composite.getChildren());
+		block.paintRowLines(gc, Block.marginLeft, marginTop, verticalSpacing, composite.getChildren(), entryData);
 	}
 }

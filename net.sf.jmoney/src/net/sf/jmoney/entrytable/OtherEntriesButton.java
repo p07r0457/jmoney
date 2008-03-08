@@ -57,7 +57,7 @@ public class OtherEntriesButton extends CellBlock<EntryData, EntryRowControl> {
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(final EntryRowControl parent) {
+	public ICellControl<EntryData> createCellControl(Composite parent, final EntryRowControl rowControl) {
 		
 	    /*
 	     * Use a single row tracker and cell focus tracker for this
@@ -73,19 +73,19 @@ public class OtherEntriesButton extends CellBlock<EntryData, EntryRowControl> {
 			downArrowImage = descriptor.createImage();
 		}
 
-		return new ButtonCellControl(parent, downArrowImage, "Show the other entries in this transaction.") {
+		return new ButtonCellControl(rowControl, downArrowImage, "Show the other entries in this transaction.") {
 			@Override
 			protected void run(EntryRowControl rowControl) {
-				final OtherEntriesShell shell = new OtherEntriesShell(parent.getShell(), SWT.ON_TOP, rowControl.getUncommittedEntryData(), otherEntriesRootBlock, false);
-    	        Display display = parent.getDisplay();
-    	        Rectangle rect = display.map(parent, null, this.getControl().getBounds());
+				final OtherEntriesShell shell = new OtherEntriesShell(rowControl.getShell(), SWT.ON_TOP, rowControl.getUncommittedEntryData(), otherEntriesRootBlock, false);
+    	        Display display = rowControl.getDisplay();
+    	        Rectangle rect = display.map(rowControl, null, this.getControl().getBounds());
     	        shell.open(rect);
 			}
 		};
 	}
 
 	@Override
-	public void createHeaderControls(Composite parent) {
+	public void createHeaderControls(Composite parent, EntryData entryData) {
 		/*
 		 * All CellBlock implementations must create a control because
 		 * the header and rows must match. Maybe these objects could

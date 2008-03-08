@@ -27,6 +27,7 @@ import java.util.Collection;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 /**
@@ -42,8 +43,8 @@ public abstract class CellBlock<T,R> extends Block<T,R> {
 	 */
 	private int index;
 	
-	public abstract ICellControl<T> createCellControl(R parent);
-	
+	public abstract ICellControl<T> createCellControl(Composite parent, R rowControl);
+
 	public CellBlock(int minimumWidth, int weight) {
 		this.minimumWidth = minimumWidth;
 		this.weight = weight;
@@ -74,7 +75,7 @@ public abstract class CellBlock<T,R> extends Block<T,R> {
 	}
 
 	@Override
-	void positionControls(int x, int y, int verticalSpacing, Control[] controls, boolean changed) {
+	void positionControls(int x, int y, int verticalSpacing, Control[] controls, T entryData, boolean changed) {
 		Control control = controls[index];
 		int height = control.computeSize(width, SWT.DEFAULT, changed).y;
 		control.setBounds(x, y, width, height);
@@ -87,7 +88,7 @@ public abstract class CellBlock<T,R> extends Block<T,R> {
 	}
 
 	@Override
-	void paintRowLines(GC gc, int x, int y, int verticalSpacing, Control[] controls) {
+	void paintRowLines(GC gc, int x, int y, int verticalSpacing, Control[] controls, T entryData) {
 		// Nothing to do.
 	}
 }

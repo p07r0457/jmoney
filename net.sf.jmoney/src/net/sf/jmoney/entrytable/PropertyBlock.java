@@ -77,7 +77,7 @@ abstract public class PropertyBlock<T extends EntryData> extends IndividualBlock
 	public abstract ExtendableObject getObjectContainingProperty(T data);
 
     @Override	
-	public ICellControl<T> createCellControl(Composite parent) {
+	public ICellControl<T> createCellControl(Composite parent, Composite rowControl) {
 		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		
 		return new ICellControl<T>() {

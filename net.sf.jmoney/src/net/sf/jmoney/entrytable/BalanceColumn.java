@@ -27,6 +27,7 @@ import net.sf.jmoney.model2.Commodity;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
@@ -82,12 +83,12 @@ public class BalanceColumn extends IndividualBlock<EntryData, BaseEntryRowContro
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(BaseEntryRowControl parent) {
+	public ICellControl<EntryData> createCellControl(Composite parent, BaseEntryRowControl rowControl) {
 		final Label balanceLabel = new Label(parent, SWT.TRAIL);
 		
 		BalanceCellControl cellControl = new BalanceCellControl(balanceLabel);
 		
-		parent.addBalanceChangeListener(cellControl);
+		rowControl.addBalanceChangeListener(cellControl);
 		
 		return cellControl;
 	}

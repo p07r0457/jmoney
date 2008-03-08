@@ -27,6 +27,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 import org.eclipse.swt.events.FocusListener;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 /**
@@ -69,7 +70,7 @@ public class SingleOtherEntryPropertyBlock extends IndividualBlock<Entry, SplitE
 	}
 
     @Override	
-	public ICellControl<Entry> createCellControl(SplitEntryRowControl parent) {
+	public ICellControl<Entry> createCellControl(Composite parent, SplitEntryRowControl rowControl) {
 		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		
 		return new ICellControl<Entry>() {

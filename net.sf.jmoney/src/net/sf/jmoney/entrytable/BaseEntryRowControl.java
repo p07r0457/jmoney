@@ -200,21 +200,44 @@ public abstract class BaseEntryRowControl<T extends EntryData> extends RowContro
 			FocusCellTracker focusCellTracker) {
 		for (CellBlock<? super T, ? super R> cellBlock: rootBlock.buildCellList()) {
 			// Create the control with no content set.
-			final ICellControl<? super T> cellControl = cellBlock.createCellControl(thisRowControl);
-			controls.put(cellBlock, cellControl);
-
-			FocusListener controlFocusListener = new CellFocusListener<R>(thisRowControl, cellControl, selectionTracker, focusCellTracker);
-			
-			Control control = cellControl.getControl();
-//			control.addKeyListener(keyListener);
-			addFocusListenerRecursively(control, controlFocusListener);
-//			control.addTraverseListener(traverseListener);
-			
-			// This is needed in case more child controls are created at a
-			// later time.  This is not the cleanest code, but the UI for  these
-			// split entries may be changed at a later time anyway.
-			cellControl.setFocusListener(controlFocusListener);
+			createCellControl(thisRowControl, thisRowControl, selectionTracker,
+					focusCellTracker, cellBlock);
 		}
+	}
+
+	/**
+	 * This method creates the controls.
+	 * 
+	 * This method is usually called from init to create the controls.  However, in the
+	 * case of the StackBlock, controls are created for the top block only which means if
+	 * the top block changes then controls may need to be created at a later time.  This method
+	 * should be called to create the controls in order to ensure that the controls are properly
+	 * adapted with the correct listeners and so on.
+	 * @param <R>
+	 * @param parent
+	 * @param thisRowControl
+	 * @param selectionTracker
+	 * @param focusCellTracker
+	 * @param cellBlock
+	 */
+	public <R extends BaseEntryRowControl<T>> void createCellControl(Composite parent, R thisRowControl,
+			RowSelectionTracker<R> selectionTracker,
+			FocusCellTracker focusCellTracker,
+			CellBlock<? super T, ? super R> cellBlock) {
+		final ICellControl<? super T> cellControl = cellBlock.createCellControl(parent, thisRowControl);
+		controls.put(cellBlock, cellControl);
+
+		FocusListener controlFocusListener = new CellFocusListener<R>(thisRowControl, cellControl, selectionTracker, focusCellTracker);
+		
+		Control control = cellControl.getControl();
+//			control.addKeyListener(keyListener);
+		addFocusListenerRecursively(control, controlFocusListener);
+//			control.addTraverseListener(traverseListener);
+		
+		// This is needed in case more child controls are created at a
+		// later time.  This is not the cleanest code, but the UI for  these
+		// split entries may be changed at a later time anyway.
+		cellControl.setFocusListener(controlFocusListener);
 	}
 
 	/**
@@ -278,16 +301,17 @@ public abstract class BaseEntryRowControl<T extends EntryData> extends RowContro
 				gc.fillRectangle(0, controlSize.y - 1, controlSize.x, 1);
 			}
 
-			/* Now draw lines between the child controls.  This involves calling
-			 * into the the block tree.  The reason for this is that if we
-			 * draw lines to the left and right of each control then we are drawing
-			 * twice as many lines as necessary, if we draw just on the left or just
-			 * on the right then we would not get every case, and the end conditions
-			 * would not be handled correctly.  Using the tree structure just gives
-			 * us better control over the drawing.
+			/*
+			 * Now draw lines between the child controls. This involves calling
+			 * into the the block tree. The reason for this is that if we draw
+			 * lines to the left and right of each control then we are drawing
+			 * twice as many lines as necessary, if we draw just on the left or
+			 * just on the right then we would not get every case, and the end
+			 * conditions would not be handled correctly. Using the tree
+			 * structure just gives us better control over the drawing.
 			 * 
-			 * This method is called on the layout because it uses the cached positions
-			 * of the controls.
+			 * This method is called on the layout because it uses the cached
+			 * positions of the controls.
 			 */
 			gc.setBackground(secondaryColor);
 			((BlockLayout)getLayout()).paintRowLines(gc, this);
@@ -342,6 +366,10 @@ public abstract class BaseEntryRowControl<T extends EntryData> extends RowContro
 		if (!isSelected) {
 			rowTable.rowDeselected(this);
 		}
+	}
+
+	public boolean isSelected() {
+		return isSelected;
 	}
 
 	@Override

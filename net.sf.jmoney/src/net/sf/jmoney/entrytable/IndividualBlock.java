@@ -55,7 +55,7 @@ public abstract class IndividualBlock<T, R> extends CellBlock<T,R> {
 	}
 
 	@Override
-	public void createHeaderControls(Composite parent) {
+	public void createHeaderControls(Composite parent, T entryData) {
 		Label label = new Label(parent, SWT.NULL);
 		label.setText(text);
 		label.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_GRAY));

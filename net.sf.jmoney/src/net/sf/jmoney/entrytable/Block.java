@@ -59,13 +59,13 @@ public abstract class Block<T, R> {
 
 	protected int width;
 
-	public abstract void createHeaderControls(Composite parent);
+	public abstract void createHeaderControls(Composite parent, T entryData);
 
 	public abstract Collection<CellBlock<? super T,? super R>> buildCellList();
 		
 	abstract void layout(int width);
 
-	abstract void positionControls(int x, int y, int verticalSpacing, Control [] controls, boolean flushCache);
+	abstract void positionControls(int x, int y, int verticalSpacing, Control [] controls, T entryData, boolean flushCache);
 
 	/**
 	 * Calculate the height of this block. Because variable height rows are
@@ -93,7 +93,7 @@ public abstract class Block<T, R> {
 	 * @param controls
 	 *            a list of controls in a row
 	 */
-	abstract void paintRowLines(GC gc, int x, int y, int verticalSpacing, Control[] controls);
+	abstract void paintRowLines(GC gc, int x, int y, int verticalSpacing, Control[] controls, T entryData);
 
 	/**
 	 * Given a width, calculate the preferred height.

@@ -28,12 +28,12 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 
-public class Header extends Composite {
+public class Header<T> extends Composite {
 
-	public Header(Composite parent, int style, Block rootBlock) {
+	public Header(Composite parent, int style, Block<? super T,?> rootBlock) {
 		super(parent, style);
 
-		BlockLayout layout = new BlockLayout(rootBlock, false);
+		BlockLayout layout = new BlockLayout<T>(rootBlock, false);
 		setLayout(layout);
 
 		setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GRAY));
@@ -42,7 +42,7 @@ public class Header extends Composite {
 		// those are not done by this method.
 //		rootBlock.buildCellList();
 		
-		rootBlock.createHeaderControls(this);
+		rootBlock.createHeaderControls(this, null);
 	}
 	
 	protected boolean sortOnColumn(IndividualBlock<EntryData, EntryRowControl> sortProperty, int sortDirection) {

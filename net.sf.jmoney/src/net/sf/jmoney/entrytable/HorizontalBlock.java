@@ -134,9 +134,9 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	}
 
 	@Override
-	public void createHeaderControls(Composite parent) {
+	public void createHeaderControls(Composite parent, T entryData) {
 		for (Block<? super T,? super R> child: children) {
-			child.createHeaderControls(parent);
+			child.createHeaderControls(parent, entryData);
 		}
 	}
 
@@ -190,10 +190,10 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	}
 
 	@Override
-	void positionControls(int left, int top, int verticalSpacing, Control[] controls, boolean flushCache) {
+	void positionControls(int left, int top, int verticalSpacing, Control[] controls, T entryData, boolean flushCache) {
 		int x = left;
 		for (Block<? super T,? super R> child: children) {
-			child.positionControls(x, top, verticalSpacing, controls, flushCache);
+			child.positionControls(x, top, verticalSpacing, controls, entryData, flushCache);
 			x += child.width + Block.horizontalSpacing;
 		}
 	}
@@ -208,7 +208,7 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 	}
 
 	@Override
-	void paintRowLines(GC gc, int left, int top, int verticalSpacing, Control[] controls) {
+	void paintRowLines(GC gc, int left, int top, int verticalSpacing, Control[] controls, T entryData) {
 		/* Paint the vertical lines between the controls.
 		 * 
 		 * We need to make nested calls in case there are nested blocks that
@@ -216,7 +216,7 @@ public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
 		 */
 		int x = left;
 		for (int i = 0; i < children.size(); i++) {
-			children.get(i).paintRowLines(gc, x, top, verticalSpacing, controls);
+			children.get(i).paintRowLines(gc, x, top, verticalSpacing, controls, entryData);
 			
 			// Draw a vertical separator line only if this is not the last control.
 			if (i != children.size() - 1) {

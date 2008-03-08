@@ -211,7 +211,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(BaseEntryRowControl parent) {
+	public ICellControl<EntryData> createCellControl(Composite parent, BaseEntryRowControl rowControl) {
 		final Text textControl = new Text(parent, SWT.TRAIL);
 		textControl.addTraverseListener(new TraverseListener() {
 			public void keyTraversed(TraverseEvent e) {

@@ -62,7 +62,7 @@ public class OtherEntriesBlock extends CellBlock<EntryData, EntryRowControl> {
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(EntryRowControl parent) {
+	public ICellControl<EntryData> createCellControl(Composite parent, EntryRowControl rowControl) {
 		
 	    /*
 	     * Use a single row tracker and cell focus tracker for this
@@ -73,7 +73,7 @@ public class OtherEntriesBlock extends CellBlock<EntryData, EntryRowControl> {
 	    RowSelectionTracker<SplitEntryRowControl> rowTracker = new RowSelectionTracker<SplitEntryRowControl>();
 	    FocusCellTracker cellTracker = new FocusCellTracker();
 
-		final OtherEntriesControl control = new OtherEntriesControl(parent, otherEntriesRootBlock, rowTracker, cellTracker);
+		final OtherEntriesControl control = new OtherEntriesControl(rowControl, otherEntriesRootBlock, rowTracker, cellTracker);
 		
 		return new ICellControl<EntryData>() {
 			public Control getControl() {
@@ -92,13 +92,13 @@ public class OtherEntriesBlock extends CellBlock<EntryData, EntryRowControl> {
 	}
 
 	@Override
-	public void createHeaderControls(Composite parent) {
+	public void createHeaderControls(Composite parent, EntryData entryData) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		
 		BlockLayout layout = new BlockLayout(otherEntriesRootBlock, true);
 		composite.setLayout(layout);
 
-		otherEntriesRootBlock.createHeaderControls(composite);
+		otherEntriesRootBlock.createHeaderControls(composite, null);
 	}
 	
 	@Override

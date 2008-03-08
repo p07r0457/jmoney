@@ -383,13 +383,11 @@ public class VirtualRowTable extends Composite {
 	}
 
 	/**
-	 * Scroll the view to the given fix and update the scrollbar
+	 * Scroll the view to the given fix and update the scroll-bar
 	 * to reflect the new position of the visible area.
 	 * 
 	 * @param anchorRowNumber
 	 * @param anchorRowPosition
-	 * @return the position at which any attached vertical scrollbar should
-	 *     be positioned if it is to match the position of the contents
 	 */
 	void scrollToGivenFix(int anchorRowNumber, int anchorRowPosition) {
 		scrollViewToGivenFix(anchorRowNumber, anchorRowPosition);
@@ -987,4 +985,29 @@ public class VirtualRowTable extends Composite {
 		rowControl.getChildren()[0].setFocus();
 		return rowControl;
 	}
+
+	/**
+	 * This method should be called when the height of a row may have changed.
+	 * <P>
+	 * The changed row will most likely also be the selected row. However, it is
+	 * possible that it is not. We keep the top of the selected row at the same
+	 * position, moving all rows below it up or down. However, if the table is
+	 * scrolled to the bottom or near the bottom and the row height is being
+	 * reduced then this may result in a blank space at the bottom of the table.
+	 * In that case we re-adjust the rows so the table is fully scrolled to the
+	 * bottom (which would result in the top of the changed row being moved
+	 * down).
+	 * 
+	 * @param rowControl
+	 */
+	public void refreshSize(BaseEntryRowControl rowControl) {
+		int rowTop = rowControl.getLocation().y;
+		
+		int rowHeight = rowControl.computeSize(clientAreaSize.x, SWT.DEFAULT).y;
+		rowControl.setSize(clientAreaSize.x, rowHeight);
+
+		int rowIndex = contentProvider.indexOf(rowControl.committedEntryData);
+		scrollToGivenFix(rowIndex, rowTop);
+	}
 }
+

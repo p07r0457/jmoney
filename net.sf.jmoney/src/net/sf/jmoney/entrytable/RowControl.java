@@ -50,4 +50,6 @@ public abstract class RowControl<T> extends Composite {
 	 * was an error in it and we were unable to move the selection off the row.
 	 */
 	protected abstract void scrollToShowRow();
+	
+	
 }
