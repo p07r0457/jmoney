@@ -38,10 +38,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
 /**
- * This is used is rows only, not for headers.
+ * This is used in rows only, not for headers.
  * (anything to be gained by using it in headers too????)
  */
-public class StackControl<T extends EntryData, R extends RowControl<T>> extends Composite implements ICellControl<T> {
+public class StackControl<T extends EntryData, R extends RowControl<T,R>> extends Composite implements ICellControl<T> {
 
 	private R rowControl;
 	
@@ -66,7 +66,8 @@ public class StackControl<T extends EntryData, R extends RowControl<T>> extends 
 	// (and it may as well be a list of the values only), a map
 	// allows us to do stuff like move the focus to the control
 	// in error during transaction validation.
-	protected Map<CellBlock, ICellControl<? super T>> controls = new HashMap<CellBlock, ICellControl<? super T>>();
+// This map is in RowControl - don't need another	
+//	protected Map<CellBlock, ICellControl<? super T>> controls = new HashMap<CellBlock, ICellControl<? super T>>();
 
 	/* Listen for changes that might affect the top block.
 	 * Changes may originate from within this row control, or the
@@ -120,8 +121,8 @@ public class StackControl<T extends EntryData, R extends RowControl<T>> extends 
 				topControl.setLayout(childLayout);
 				
 				for (CellBlock<? super T, ? super R> cellBlock: topBlock.buildCellList()) {
-//					rowControl.createCellControl(topControl, cellBlock);
-					
+					rowControl.createCellControl(topControl, cellBlock);
+/*					
 					// Create the control with no content set.
 					final ICellControl<? super T> cellControl = cellBlock.createCellControl(topControl, rowControl);
 					controls.put(cellBlock, cellControl);
@@ -137,6 +138,8 @@ public class StackControl<T extends EntryData, R extends RowControl<T>> extends 
 					// later time.  This is not the cleanest code, but the UI for  these
 					// split entries may be changed at a later time anyway.
 // need this back, I think					cellControl.setFocusListener(controlFocusListener);
+ * 
+ */
 				}
 		
 				final Composite finalTopControl = topControl;

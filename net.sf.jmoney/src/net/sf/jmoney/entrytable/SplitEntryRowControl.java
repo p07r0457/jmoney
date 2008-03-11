@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
-public class SplitEntryRowControl extends RowControl<Entry> {
+public class SplitEntryRowControl extends RowControl<Entry, SplitEntryRowControl> {
 
 	// The lighter colors for the sub-entry lines
 	protected static final Color normalColor = new Color(Display.getCurrent(),
@@ -143,13 +143,10 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 		layout.verticalSpacing = 1;
 		setLayout(layout);
 
-		/*
-		 * By default the child controls get the same background as
-		 * this composite.
-		 */
-		setBackgroundMode(SWT.INHERIT_FORCE);
 		setBackground(normalColor);
 
+		init(this, rootBlock, selectionTracker, focusCellTracker);
+/*		
 		Collection<CellBlock<? super Entry, ? super SplitEntryRowControl>> cellList = rootBlock.buildCellList();
 		
 		for (final CellBlock<? super Entry, ? super SplitEntryRowControl> cellBlock: cellList) {
@@ -169,7 +166,7 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 			// split entries may be changed at a later time anyway.
 			cellControl.setFocusListener(controlFocusListener);
 		}
-
+*/
 		addPaintListener(paintListener);
 	}
 
@@ -337,5 +334,10 @@ public class SplitEntryRowControl extends RowControl<Entry> {
 		 * There is no scrolling of these rows so the row is always visible and
 		 * there is nothing to do.
 		 */
+	}
+
+	@Override
+	protected SplitEntryRowControl getThis() {
+		return this;
 	}
 }

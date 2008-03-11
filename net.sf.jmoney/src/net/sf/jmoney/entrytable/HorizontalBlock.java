@@ -29,7 +29,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-public class HorizontalBlock<T, R extends RowControl<T>> extends Block<T,R> {
+public class HorizontalBlock<T, R extends RowControl<T,R>> extends Block<T,R> {
 	private ArrayList<Block<? super T,? super R>> children;
 
 	public HorizontalBlock(Block<? super T, ? super R> child1, Block<? super T,? super R> child2) {

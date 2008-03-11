@@ -152,7 +152,7 @@ public class EntriesTable extends Composite {
 	private Vector<EntryRowSelectionListener> selectionListeners = new Vector<EntryRowSelectionListener>();
 
 	public EntriesTable(Composite parent, FormToolkit toolkit, Block rootBlock, 
-			final IEntriesContent entriesContent, IRowProvider rowProvider, final Session session, IndividualBlock<EntryData, ?> defaultSortColumn, final RowSelectionTracker rowTracker) {
+			final IEntriesContent entriesContent, IRowProvider rowProvider, final Session session, IndividualBlock<EntryData, ?> defaultSortColumn, final RowSelectionTracker<EntryRowControl> rowTracker) {
 		super(parent, SWT.NONE);
 		
 		this.session = session;
@@ -360,8 +360,7 @@ public class EntriesTable extends Composite {
         detailsButton.addSelectionListener(new SelectionAdapter() {
 			@Override
         	public void widgetSelected(SelectionEvent event) {
-        		// TODO: Parameterize the row tracker?
-        		EntryRowControl selectedRowControl = (EntryRowControl)rowTracker.getSelectedRow();
+        		EntryRowControl selectedRowControl = rowTracker.getSelectedRow();
         		
         		if (selectedRowControl != null) {
         			Entry selectedEntry = selectedRowControl.uncommittedEntryData.getEntry();

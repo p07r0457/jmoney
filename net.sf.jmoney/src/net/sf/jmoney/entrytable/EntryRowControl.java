@@ -27,7 +27,7 @@ import net.sf.jmoney.model2.Entry;
 
 import org.eclipse.swt.widgets.Composite;
 
-public class EntryRowControl extends BaseEntryRowControl<EntryData> {
+public class EntryRowControl extends BaseEntryRowControl<EntryData, EntryRowControl> {
 
 	public EntryRowControl(final Composite parent, int style, VirtualRowTable rowTable, Block<EntryData, ? super EntryRowControl> rootBlock, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style, rowTable, rootBlock);
@@ -39,6 +39,11 @@ public class EntryRowControl extends BaseEntryRowControl<EntryData> {
 			TransactionManager transactionManager) {
 		EntryData entryData = new EntryData(entryInTransaction, transactionManager);
 		return entryData;
+	}
+
+	@Override
+	protected EntryRowControl getThis() {
+		return this;
 	}
 }
 	

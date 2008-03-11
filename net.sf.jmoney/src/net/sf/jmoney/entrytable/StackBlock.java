@@ -53,7 +53,7 @@ import org.eclipse.swt.widgets.Control;
  * @param <T>
  * @param <R>
  */
-public abstract class StackBlock<T extends EntryData, R extends RowControl<T>> extends CellBlock<T,R> {
+public abstract class StackBlock<T extends EntryData, R extends RowControl<T,R>> extends CellBlock<T,R> {
 	private ArrayList<Block<? super T,? super R>> children;
 
 	/**

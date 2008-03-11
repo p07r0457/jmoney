@@ -59,7 +59,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
-public abstract class BaseEntryRowControl<T extends EntryData> extends RowControl<T> {
+public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEntryRowControl<T,R>> extends RowControl<T,R> {
 	// The darker blue and green lines for the listed entry in each transaction
 	protected static final Color transactionColor = new Color(Display
 			.getCurrent(), 235, 235, 255);
@@ -167,96 +167,9 @@ public abstract class BaseEntryRowControl<T extends EntryData> extends RowContro
 		layout.verticalSpacing = 1;
 		setLayout(layout);
 
-		/*
-		 * By default the child controls get the same background as
-		 * this composite.
-		 */
-		setBackgroundMode(SWT.INHERIT_FORCE);
-
 		addPaintListener(paintListener);
 	}
 
-	/**
-	 * This method must always be called by the constructor of the final derived
-	 * classes of this class.  Why do we not just call it from the constructor
-	 * of this class?  The reason is two fold:
-	 * 
-	 * 1. The controls that are created by this method have a back reference to
-	 * this object.  These back references are typed (using generics) to the
-	 * final derived type.  These controls will expect field initializers and
-	 * possibly constructor initialization to have been done on the final derived type.
-	 * However, at the time the base constructor is called, neither will have
-	 * been initialized.
-	 * 
-	 * 2. (A lesser reason).  We need parameterize just this method.  If this were
-	 * done in the constructor, the entire class would need to be parameterized.
-	 *  
-	 * @param rootBlock
-	 * @param selectionTracker
-	 * @param focusCellTracker
-	 */
-	protected <R extends BaseEntryRowControl<T>> void init(R thisRowControl, Block<T, ? super R> rootBlock,
-			RowSelectionTracker<R> selectionTracker,
-			FocusCellTracker focusCellTracker) {
-		for (CellBlock<? super T, ? super R> cellBlock: rootBlock.buildCellList()) {
-			// Create the control with no content set.
-			createCellControl(thisRowControl, thisRowControl, selectionTracker,
-					focusCellTracker, cellBlock);
-		}
-	}
-
-	/**
-	 * This method creates the controls.
-	 * 
-	 * This method is usually called from init to create the controls.  However, in the
-	 * case of the StackBlock, controls are created for the top block only which means if
-	 * the top block changes then controls may need to be created at a later time.  This method
-	 * should be called to create the controls in order to ensure that the controls are properly
-	 * adapted with the correct listeners and so on.
-	 * @param <R>
-	 * @param parent
-	 * @param thisRowControl
-	 * @param selectionTracker
-	 * @param focusCellTracker
-	 * @param cellBlock
-	 */
-	public <R extends BaseEntryRowControl<T>> void createCellControl(Composite parent, R thisRowControl,
-			RowSelectionTracker<R> selectionTracker,
-			FocusCellTracker focusCellTracker,
-			CellBlock<? super T, ? super R> cellBlock) {
-		final ICellControl<? super T> cellControl = cellBlock.createCellControl(parent, thisRowControl);
-		controls.put(cellBlock, cellControl);
-
-		FocusListener controlFocusListener = new CellFocusListener<R>(thisRowControl, cellControl, selectionTracker, focusCellTracker);
-		
-		Control control = cellControl.getControl();
-//			control.addKeyListener(keyListener);
-		addFocusListenerRecursively(control, controlFocusListener);
-//			control.addTraverseListener(traverseListener);
-		
-		// This is needed in case more child controls are created at a
-		// later time.  This is not the cleanest code, but the UI for  these
-		// split entries may be changed at a later time anyway.
-		cellControl.setFocusListener(controlFocusListener);
-	}
-
-	/**
-	 * Add listeners to each control.
-	 * 
-	 * @param control The control to listen to.
-	 */
-	private void addFocusListenerRecursively(Control control, FocusListener listener) {
-		control.addFocusListener(listener);
-		
-		if (control instanceof Composite) {
-			Composite composite = (Composite) control;
-			for (int i = 0; i < composite.getChildren().length; i++) {
-				Control childControl = composite.getChildren()[i];
-				addFocusListenerRecursively(childControl, listener);
-			}
-		}
-	}
-	
 	/**
 	 * Draws a border around the row.  A light gray single line is
 	 * drawn at the bottom if the row is not selected.  A black double
