@@ -6,6 +6,7 @@ import java.util.Iterator;
 import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.EntryData;
+import net.sf.jmoney.entrytable.EntryRowControl;
 import net.sf.jmoney.entrytable.FocusCellTracker;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.VirtualRowTable;
@@ -20,7 +21,7 @@ import net.sf.jmoney.stocks.StockAccount;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.swt.widgets.Composite;
 
-public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData> {
+public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, StockEntryRowControl> {
 
 	public enum TransactionType {
 		Buy,
@@ -58,4 +59,8 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData> {
 		return entryData;
 	}
 
+	@Override
+	protected StockEntryRowControl getThis() {
+		return this;
+	}
 }
