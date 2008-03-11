@@ -59,16 +59,6 @@ public class StackControl<T extends EntryData, R extends RowControl<T,R>> extend
 	
 	private T entryData;
 
-	// This is a copy of a field in RowControl.
-	// Not sure if we need this.  Or should it go at a higher level??
-	
-	// Although currently the keys of this map are never used
-	// (and it may as well be a list of the values only), a map
-	// allows us to do stuff like move the focus to the control
-	// in error during transaction validation.
-// This map is in RowControl - don't need another	
-//	protected Map<CellBlock, ICellControl<? super T>> controls = new HashMap<CellBlock, ICellControl<? super T>>();
-
 	/* Listen for changes that might affect the top block.
 	 * Changes may originate from within this row control, or the
 	 * changes may come from other parts that have committed changes
@@ -104,6 +94,13 @@ public class StackControl<T extends EntryData, R extends RowControl<T,R>> extend
 		// TODO Do we need to pass this on to the child controls?
 	}
 
+	/**
+	 * This method may change the preferred height of the row.  It is
+	 * the caller's responsibility to resize the row to its preferred
+	 * height after calling this method.
+	 * 
+	 * @param topBlock
+	 */
 	public void setTopBlock(Block<? super T, ? super R> topBlock) {
 		// First set the top control in this row
 		Composite topControl;
@@ -122,24 +119,6 @@ public class StackControl<T extends EntryData, R extends RowControl<T,R>> extend
 				
 				for (CellBlock<? super T, ? super R> cellBlock: topBlock.buildCellList()) {
 					rowControl.createCellControl(topControl, cellBlock);
-/*					
-					// Create the control with no content set.
-					final ICellControl<? super T> cellControl = cellBlock.createCellControl(topControl, rowControl);
-					controls.put(cellBlock, cellControl);
-
-// need this back, I think					FocusListener controlFocusListener = new CellFocusListener<R>(thisRowControl, cellControl, selectionTracker, focusCellTracker);
-					
-					Control control = cellControl.getControl();
-//					control.addKeyListener(keyListener);
-// need this back, I think					addFocusListenerRecursively(control, controlFocusListener);
-//					control.addTraverseListener(traverseListener);
-					
-					// This is needed in case more child controls are created at a
-					// later time.  This is not the cleanest code, but the UI for  these
-					// split entries may be changed at a later time anyway.
-// need this back, I think					cellControl.setFocusListener(controlFocusListener);
- * 
- */
 				}
 		
 				final Composite finalTopControl = topControl;
@@ -149,39 +128,20 @@ public class StackControl<T extends EntryData, R extends RowControl<T,R>> extend
 						// TODO: move colors to single location
 						Color secondaryColor = Display.getDefault()
 						.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
-						
+
 						try {
 							e.gc.setBackground(secondaryColor);
 							childLayout.paintRowLines(e.gc, finalTopControl);
-					} finally {
-						e.gc.setBackground(oldColor);
-					}
+						} finally {
+							e.gc.setBackground(oldColor);
+						}
 					}
 				});
-				
-//				topBlock.createHeaderControls(topControl, entryData);  // Why here?????
+
 				childControls.put(topBlock, topControl);
-
-				// TODO: is this code optimal?
-				
-				// First get this control to correct size
-				stackLayout.topControl = topControl;
-
-				// The preferred height of the stack control may have changed.
-				// Re-size this stack control before laying out the children.
-				int width = getSize().x;
-				int height = computeSize(width, SWT.DEFAULT).y;
-				setSize(width, height);
-				
-				layout(true);   // Do we need this to the true?????
-				
-				// Now lay it out.
-				topControl.layout(true);  // Is this necessary????
 			}
 		}
 		stackLayout.topControl = topControl;
-		layout(true);
-		
 		
 		// Fire event that tells header to change
 		if (rowControl instanceof BaseEntryRowControl
