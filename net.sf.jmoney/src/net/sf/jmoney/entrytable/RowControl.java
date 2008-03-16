@@ -28,6 +28,12 @@ public abstract class RowControl<T, R extends RowControl<T,R>> extends Composite
 	protected RowSelectionTracker<R> selectionTracker;
 	protected FocusCellTracker focusCellTracker;
 	
+	/**
+	 * the current input, being always a non-null value if this row
+	 * is active and undefined if this row is inactive 
+	 */
+	protected T input;
+	
 	public RowControl(Composite parent, int style) {
 		super(parent, style);
 
@@ -83,6 +89,10 @@ public abstract class RowControl<T, R extends RowControl<T,R>> extends Composite
 		final ICellControl<? super T> cellControl = cellBlock.createCellControl(parent, getThis());
 		controls.put(cellBlock, cellControl);
 
+		if (input != null) {
+			cellControl.load(input);
+		}
+		
 		FocusListener controlFocusListener = new CellFocusListener<R>(getThis(), cellControl, selectionTracker, focusCellTracker);
 		
 		Control control = cellControl.getControl();
@@ -103,7 +113,7 @@ public abstract class RowControl<T, R extends RowControl<T,R>> extends Composite
 	 * 
 	 * @param control The control to listen to.
 	 */
-	private void addFocusListenerRecursively(Control control, FocusListener listener) {
+	protected void addFocusListenerRecursively(Control control, FocusListener listener) {
 		control.addFocusListener(listener);
 		
 		if (control instanceof Composite) {

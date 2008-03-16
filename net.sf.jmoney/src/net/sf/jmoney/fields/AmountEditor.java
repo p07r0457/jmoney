@@ -62,7 +62,7 @@ public class AmountEditor implements IPropertyControl {
 
 	private ExtendableObject fObject;
 
-    private Commodity fCommodity;
+    private IAmountFormatter fCommodity;
     
     private ScalarPropertyAccessor<Long> amountPropertyAccessor;
     

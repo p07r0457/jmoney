@@ -22,12 +22,14 @@
 
 package net.sf.jmoney.model2;
 
+import net.sf.jmoney.fields.IAmountFormatter;
+
 
 /**
  *
  * @author  Nigel
  */
-public abstract class Commodity extends ExtendableObject implements Comparable<Commodity> {
+public abstract class Commodity extends ExtendableObject implements Comparable<Commodity>, IAmountFormatter {
 
 	private String name;
 	

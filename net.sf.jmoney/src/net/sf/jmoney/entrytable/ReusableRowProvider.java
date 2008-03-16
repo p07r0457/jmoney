@@ -27,7 +27,7 @@ import java.util.LinkedList;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
-public class ReusableRowProvider implements IRowProvider {
+public class ReusableRowProvider implements IRowProvider<EntryData> {
 
 	private Block<EntryData, ? super EntryRowControl> rootBlock;
 
@@ -42,7 +42,7 @@ public class ReusableRowProvider implements IRowProvider {
 	 * visible. These a free for re-use, thus avoiding the need to create new
 	 * controls.
 	 */
-	private LinkedList<BaseEntryRowControl> spareRows = new LinkedList<BaseEntryRowControl>();
+	private LinkedList<BaseEntryRowControl<EntryData, ?>> spareRows = new LinkedList<BaseEntryRowControl<EntryData, ?>>();
 
 	public ReusableRowProvider(Block<EntryData, ? super EntryRowControl> rootBlock) {
 		this.rootBlock = rootBlock;
@@ -55,7 +55,7 @@ public class ReusableRowProvider implements IRowProvider {
 	}
 	
 	public BaseEntryRowControl getNewRow(Composite parent, EntryData entryData) {
-		BaseEntryRowControl rowControl;
+		BaseEntryRowControl<EntryData, ?> rowControl;
 		
 		if (spareRows.size() > 0) {
 			rowControl = spareRows.removeFirst();
@@ -69,7 +69,7 @@ public class ReusableRowProvider implements IRowProvider {
 		return rowControl;
 	}
 	
-	public void releaseRow(BaseEntryRowControl rowControl) {
+	public void releaseRow(BaseEntryRowControl<EntryData, ?> rowControl) {
 		rowControl.setVisible(false);
 		spareRows.add(rowControl);
 	}

@@ -114,26 +114,28 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
  * the cell. As the IEntriesTableProperty object has the property accessor,
  * the property value associated with the cell can be got and set.
  */
-public class EntriesTable extends Composite {
+// TODO: make this not abstract but instead move the abstract methods into the
+// content providers?????
+public abstract class EntriesTable<T extends EntryData> extends Composite {
 
 	protected Session session;
 	
 	protected IEntriesContent entriesContent;
 	
-	public VirtualRowTable table;
+	public VirtualRowTable<T> table;
 	
 	/**
 	 * List of entries to show in the table. Only the top level entries are
 	 * included, the other entries in the transactions, which are shown as child
 	 * items, are not in this list. The elements are not sorted.
 	 */
-	Map<Entry, EntryData> entries;
+	Map<Entry, T> entries;
 
 	/**
 	 * The 'new entry' row, being an extra blank row at the bottom of the table that
 	 * the user can use to enter new entries.
 	 */
-	EntryData newEntryRow;
+	T newEntryRow;
 	
 	/**
 	 * The comparator that sorts entries according to the current sort order.
@@ -144,7 +146,7 @@ public class EntriesTable extends Composite {
 	 * The entries in sorted order.  This list contains the same
 	 * items that are in the entries map.
 	 */
-	List<EntryData> sortedEntries;
+	List<T> sortedEntries;
 	
 	/**
 	 * Set of listeners for selection changes
@@ -152,7 +154,7 @@ public class EntriesTable extends Composite {
 	private Vector<EntryRowSelectionListener> selectionListeners = new Vector<EntryRowSelectionListener>();
 
 	public EntriesTable(Composite parent, FormToolkit toolkit, Block rootBlock, 
-			final IEntriesContent entriesContent, IRowProvider rowProvider, final Session session, IndividualBlock<EntryData, ?> defaultSortColumn, final RowSelectionTracker<EntryRowControl> rowTracker) {
+			final IEntriesContent entriesContent, IRowProvider<T> rowProvider, final Session session, IndividualBlock<EntryData, ?> defaultSortColumn, final RowSelectionTracker<EntryRowControl> rowTracker) {
 		super(parent, SWT.NONE);
 		
 		this.session = session;
@@ -174,7 +176,7 @@ public class EntriesTable extends Composite {
 		// Fetch and sort the list of top level entries to display.
 		buildEntryList();
 
-		newEntryRow = new EntryData(null, session.getDataManager());
+		newEntryRow = createNewEntryRowInput();
 		
 	    /*
 		 * Build the initial sort order. This must be done before we can create
@@ -184,13 +186,13 @@ public class EntriesTable extends Composite {
 		rowComparator = new RowComparator(defaultSortColumn, true);
 	    sort();
 
-	    IContentProvider contentProvider = new IContentProvider() {
+	    IContentProvider<T> contentProvider = new IContentProvider<T>() {
 
 			public int getRowCount() {
 				return sortedEntries.size();
 			}
 
-			public EntryData getElement(int rowNumber) {
+			public T getElement(int rowNumber) {
 				return sortedEntries.get(rowNumber); 
 			}
 
@@ -199,7 +201,7 @@ public class EntriesTable extends Composite {
 			}
 	    };
 	    
-		table = new VirtualRowTable(this, rootBlock, this, contentProvider, rowProvider, rowTracker);
+		table = new VirtualRowTable<T>(this, rootBlock, this, contentProvider, rowProvider, rowTracker);
 		
 		/*
 		 * Use a single cell focus tracker for this table. The row focus tracker
@@ -249,7 +251,7 @@ public class EntriesTable extends Composite {
 				 * the entry is committed and, if the commit succeeded, the
 				 * newly created 'new entry' row is selected.
 				 */
-				EntryRowControl selectedRowControl = (EntryRowControl)rowTracker.getSelectedRow();
+				EntryRowControl selectedRowControl = rowTracker.getSelectedRow();
 				if (selectedRowControl != null) {
 					Entry selectedEntry = selectedRowControl.committedEntryData.getEntry();
 					if (selectedEntry == null) {
@@ -277,8 +279,7 @@ public class EntriesTable extends Composite {
         duplicateButton.addSelectionListener(new SelectionAdapter() {
 			@Override
         	public void widgetSelected(SelectionEvent event) {
-        		// TODO: Parameterize the row tracker?
-        		EntryRowControl selectedRowControl = (EntryRowControl)rowTracker.getSelectedRow();
+        		EntryRowControl selectedRowControl = rowTracker.getSelectedRow();
         		
         		if (selectedRowControl != null) {
         			Entry selectedEntry = selectedRowControl.committedEntryData.getEntry();
@@ -328,8 +329,7 @@ public class EntriesTable extends Composite {
         deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
         	public void widgetSelected(SelectionEvent event) {
-        		// TODO: Parameterize the row tracker?
-        		EntryRowControl selectedRowControl = (EntryRowControl)rowTracker.getSelectedRow();
+        		EntryRowControl selectedRowControl = rowTracker.getSelectedRow();
         		
         		if (selectedRowControl != null) {
             		Entry selectedEntry = selectedRowControl.committedEntryData.getEntry();
@@ -534,7 +534,7 @@ public class EntriesTable extends Composite {
 			}
 
 			private void updateEntryInTable(Entry entry) {
-				EntryData data = entries.get(entry);
+				T data = entries.get(entry);
 
 				/*
 				 * This change may result in the entry moving in the sort order.
@@ -547,7 +547,7 @@ public class EntriesTable extends Composite {
 				
 				// Bubble to up the screen (down the sort order)
 				while (index > 0) {
-					EntryData data2 = sortedEntries.get(index-1); 
+					T data2 = sortedEntries.get(index-1); 
 					if (rowComparator.compare(data2, data) < 0) {
 						break;
 					}
@@ -561,7 +561,7 @@ public class EntriesTable extends Composite {
 				
 				// Bubble down the screen (up the sort order)
 				while (index < entries.size() - 1) {
-					EntryData data2 = sortedEntries.get(index+1); 
+					T data2 = sortedEntries.get(index+1); 
 					
 					if (rowComparator.compare(data, data2) < 0) {
 						break;
@@ -604,7 +604,7 @@ public class EntriesTable extends Composite {
 			}
 
 			private void addEntryToTable(Entry entry) {
-				EntryData newData = new EntryData(entry, session.getDataManager());
+				T newData = createEntryRowInput(entry);
 				
 				entries.put(entry, newData);
 				
@@ -642,6 +642,8 @@ public class EntriesTable extends Composite {
 			}
 		}, this);
 	}
+
+	protected abstract T createNewEntryRowInput();
 
 	/**
 	 * Adjust the indexes and balances of all entries that follow the given
@@ -697,7 +699,7 @@ public class EntriesTable extends Composite {
 		 * 
 		 * We therefore copy the entries into a list and then sort that.
 		 */
-		sortedEntries = new ArrayList<EntryData>();
+		sortedEntries = new ArrayList<T>();
 		sortedEntries.addAll(entries.values());
 		Collections.sort(sortedEntries, rowComparator);
 		
@@ -720,9 +722,9 @@ public class EntriesTable extends Composite {
     private void buildEntryList() {
         // Note that the balances are not set at this time. This is done
         // when the data is sorted.
-        entries = new HashMap<Entry, EntryData>();
+        entries = new HashMap<Entry, T>();
         for (Entry accountEntry: entriesContent.getEntries()) {
-        	EntryData data = new EntryData(accountEntry, session.getDataManager());
+        	T data = createEntryRowInput(accountEntry);
             if (matchesFilter(data)) {
                 entries.put(accountEntry, data);
             }
@@ -1155,4 +1157,6 @@ public class EntriesTable extends Composite {
 	public Session getSession() {
 		return session;
 	}
+
+	protected abstract T createEntryRowInput(Entry entry);
 }

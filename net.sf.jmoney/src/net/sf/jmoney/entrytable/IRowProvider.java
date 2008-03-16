@@ -25,12 +25,12 @@ package net.sf.jmoney.entrytable;
 import org.eclipse.swt.widgets.Composite;
 
 
-public interface IRowProvider {
+public interface IRowProvider<T extends EntryData> {
 
 	void init(VirtualRowTable rowTable, RowSelectionTracker rowSelectionTracker, FocusCellTracker focusCellTracker);
 
-	BaseEntryRowControl getNewRow(Composite parent, EntryData entryData);
+	BaseEntryRowControl getNewRow(Composite parent, T entryData);
 
-	void releaseRow(BaseEntryRowControl rowControl);
+	void releaseRow(BaseEntryRowControl<T, ?> rowControl);
 
 }

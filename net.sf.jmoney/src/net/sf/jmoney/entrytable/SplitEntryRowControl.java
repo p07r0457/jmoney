@@ -56,6 +56,8 @@ public class SplitEntryRowControl extends RowControl<Entry, SplitEntryRowControl
 	/**
 	 * The current content of this row control, or null if no
 	 * content has yet been set.
+	 * 
+	 * This field is a duplicate of the <code>input</code> field.
 	 */
 	private Entry entry = null;
 	
@@ -170,24 +172,8 @@ public class SplitEntryRowControl extends RowControl<Entry, SplitEntryRowControl
 		addPaintListener(paintListener);
 	}
 
-	/**
-	 * Add listeners to each control.
-	 * 
-	 * @param control The control to listen to.
-	 */
-	private void addFocusListenerRecursively(Control control, FocusListener listener) {
-		control.addFocusListener(listener);
-		
-		if (control instanceof Composite) {
-			Composite composite = (Composite) control;
-			for (int i = 0; i < composite.getChildren().length; i++) {
-				Control childControl = composite.getChildren()[i];
-				addFocusListenerRecursively(childControl, listener);
-			}
-		}
-	}
-	
 	public void setContent(final Entry entry) {
+		this.input = entry;
 		this.entry = entry;
 		
 		for (final ICellControl<? super Entry> control: controls.values()) {

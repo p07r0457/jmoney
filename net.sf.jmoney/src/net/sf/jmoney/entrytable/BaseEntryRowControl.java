@@ -97,6 +97,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	 * The EntryData object on which this row is based.  This will contain
 	 * the committed version of the entry, or a null Entry object if this row
 	 * represents the 'new entry' row.
+	 * 
+	 * This field is a duplicate of the <code>input</code> field.
 	 */
 	protected T committedEntryData = null;
 
@@ -234,6 +236,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	}
 
 	public void setContent(T committedEntryData) {
+		this.input = committedEntryData;
 		this.committedEntryData = committedEntryData;
 
 		setAppropriateBackgroundColor();
@@ -261,6 +264,30 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		for (final ICellControl<? super T> control: controls.values()) {
 			control.load(uncommittedEntryData);
 		}
+	}
+
+	// TODO: figure out how to remove this override.  It is almost identical to the 
+	// base except it does not use input but instead an uncommitted version.
+	@Override
+	public void createCellControl(Composite parent,	CellBlock<? super T, ? super R> cellBlock) {
+		final ICellControl<? super T> cellControl = cellBlock.createCellControl(parent, getThis());
+		controls.put(cellBlock, cellControl);
+
+		if (uncommittedEntryData != null) {
+			cellControl.load(uncommittedEntryData);
+		}
+		
+		FocusListener controlFocusListener = new CellFocusListener<R>(getThis(), cellControl, selectionTracker, focusCellTracker);
+		
+		Control control = cellControl.getControl();
+//			control.addKeyListener(keyListener);
+		addFocusListenerRecursively(control, controlFocusListener);
+//			control.addTraverseListener(traverseListener);
+		
+		// This is needed in case more child controls are created at a
+		// later time.  This is not the cleanest code, but the UI for  these
+		// split entries may be changed at a later time anyway.
+		cellControl.setFocusListener(controlFocusListener);
 	}
 
 	protected abstract T createUncommittedEntryData(Entry entryInTransaction,
@@ -638,6 +665,10 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 
 	public void addBalanceChangeListener(IBalanceChangeListener listener) {
 		balanceChangeListeners.add(listener);
+	}
+
+	public T getInput() {
+		return input;
 	}
 }
 

@@ -1,10 +1,10 @@
 package net.sf.jmoney.entrytable;
 
-public interface IContentProvider {
+public interface IContentProvider<T extends EntryData> {
 
 	int getRowCount();
 
-	EntryData getElement(int rowNumber);
+	T getElement(int rowNumber);
 
-	int indexOf(EntryData entryData);
+	int indexOf(T entryData);
 }

@@ -40,7 +40,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Slider;
 
-public class VirtualRowTable extends Composite {
+public class VirtualRowTable<T extends EntryData> extends Composite {
 
 	/** the number of rows in the data structure */
 	int rowCount;
@@ -86,9 +86,9 @@ public class VirtualRowTable extends Composite {
 	 */
 	RowSelectionTracker rowTracker;
 	
-	IContentProvider contentProvider;
+	IContentProvider<T> contentProvider;
 
-	IRowProvider rowProvider;
+	IRowProvider<T> rowProvider;
 
 	private Composite contentPane;
 	
@@ -134,7 +134,7 @@ public class VirtualRowTable extends Composite {
 	 * @param rowTracker 
 	 */
 	// TODO: tidy up EntriesTable parameter.  Perhaps we need to remove EntriesTable altogether?
-	public VirtualRowTable(Composite parent, Block rootBlock, EntriesTable entriesTable, IContentProvider contentProvider, IRowProvider rowProvider, RowSelectionTracker rowTracker) {
+	public VirtualRowTable(Composite parent, Block rootBlock, EntriesTable entriesTable, IContentProvider<T> contentProvider, IRowProvider<T> rowProvider, RowSelectionTracker rowTracker) {
 		super(parent, SWT.NONE);
 		this.contentProvider = contentProvider;
 		this.rowProvider = rowProvider;
@@ -570,7 +570,6 @@ public class VirtualRowTable extends Composite {
 		 * so we move it off just before the top of the visible area. This
 		 * ensures it remains not visible even if the client area is re-sized.
 		 */
-		// TODO: parameterize row tracker?
 		BaseEntryRowControl selectedRow = (BaseEntryRowControl)rowTracker.getSelectedRow();
 		if (selectedRow != null) {
 			EntryData selectedEntryData = selectedRow.committedEntryData;
@@ -590,7 +589,7 @@ public class VirtualRowTable extends Composite {
 		 * outside this method that attempts to get a row control may end up with a
 		 * row control that has already been released.
 		 */
-		for (BaseEntryRowControl rowControl: previousRows.values()) {
+		for (BaseEntryRowControl<T, ?> rowControl: previousRows.values()) {
 			rowProvider.releaseRow(rowControl);
 		}
 		previousRows.clear();
@@ -618,7 +617,7 @@ public class VirtualRowTable extends Composite {
 	 * @return
 	 */
 	private BaseEntryRowControl getRowControl(int rowIndex) {
-		EntryData entryData = contentProvider.getElement(rowIndex);
+		T entryData = contentProvider.getElement(rowIndex);
 
 		BaseEntryRowControl rowControl = rows.get(entryData);
 		if (rowControl == null) {
@@ -946,8 +945,8 @@ public class VirtualRowTable extends Composite {
 	 * We want to be sure that the selected row becomes visible because
 	 * the user needs to correct the errors in the row.
 	 */
-	public void scrollToShowRow(BaseEntryRowControl rowControl) {
-		int rowIndex = contentProvider.indexOf(rowControl.committedEntryData);
+	public void scrollToShowRow(BaseEntryRowControl<T, ?> rowControl) {
+		int rowIndex = contentProvider.indexOf(rowControl.getInput());
 		scrollToShowRow(rowIndex);
 	}
 
@@ -955,7 +954,7 @@ public class VirtualRowTable extends Composite {
 	 * This method is called whenever a row in this table ceases to be a selected row,
 	 * regardless of whether the row is currently visible or not.
 	 */
-	public void rowDeselected(BaseEntryRowControl rowControl) {
+	public void rowDeselected(BaseEntryRowControl<T, ?> rowControl) {
 		/*
 		 * If the row is not visible then we can release it.
 		 */
@@ -978,7 +977,7 @@ public class VirtualRowTable extends Composite {
 	 * @param newEntryRow
 	 * @return
 	 */
-	public BaseEntryRowControl getRowControl(EntryData entryData) {
+	public BaseEntryRowControl getRowControl(T entryData) {
 		// Crappy code...
 		scrollToShowRow(contentProvider.indexOf(entryData));
 		BaseEntryRowControl rowControl = rows.get(entryData);
@@ -1000,13 +999,13 @@ public class VirtualRowTable extends Composite {
 	 * 
 	 * @param rowControl
 	 */
-	public void refreshSize(BaseEntryRowControl rowControl) {
+	public void refreshSize(BaseEntryRowControl<T, ?> rowControl) {
 		int rowTop = rowControl.getLocation().y;
 		
 		int rowHeight = rowControl.computeSize(clientAreaSize.x, SWT.DEFAULT).y;
 		rowControl.setSize(clientAreaSize.x, rowHeight);
 
-		int rowIndex = contentProvider.indexOf(rowControl.committedEntryData);
+		int rowIndex = contentProvider.indexOf(rowControl.getInput());
 		scrollToGivenFix(rowIndex, rowTop);
 	}
 }
