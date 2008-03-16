@@ -298,7 +298,17 @@ public class UnreconciledSection extends SectionPart {
 
 		// Create the table control.
 	    IRowProvider rowProvider = new ReusableRowProvider(rootBlock);
-		fUnreconciledEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, unreconciledTableContents, rowProvider, fPage.getAccount().getSession(), transactionDateColumn, rowTracker); 
+		fUnreconciledEntriesControl = new EntriesTable<EntryData>(getSection(), toolkit, rootBlock, unreconciledTableContents, rowProvider, fPage.getAccount().getSession(), transactionDateColumn, rowTracker) {
+			@Override
+			protected EntryData createEntryRowInput(Entry entry) {
+				return new EntryData(entry, session.getDataManager());
+			}
+
+			@Override
+			protected EntryData createNewEntryRowInput() {
+				return new EntryData(null, session.getDataManager());
+			}
+		}; 
 
 		getSection().setClient(fUnreconciledEntriesControl);
 		toolkit.paintBordersFor(fUnreconciledEntriesControl);

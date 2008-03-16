@@ -117,7 +117,7 @@ public class StatementSection extends SectionPart {
     
     long openingBalance = 0;
     
-    public StatementSection(ReconcilePage page, Composite parent, RowSelectionTracker rowTracker) {
+    public StatementSection(ReconcilePage page, Composite parent, RowSelectionTracker<EntryRowControl> rowTracker) {
         super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
         getSection().setText("Entries Shown on Statement");
         fPage = page;
@@ -392,7 +392,17 @@ public class StatementSection extends SectionPart {
 		
 		// Create the table control.
 	    IRowProvider rowProvider = new ReusableRowProvider(rootBlock);
-        fReconciledEntriesControl = new EntriesTable(container, toolkit, rootBlock, reconciledTableContents, rowProvider, fPage.getAccount().getSession(), transactionDateColumn, rowTracker); 
+        fReconciledEntriesControl = new EntriesTable<EntryData>(container, toolkit, rootBlock, reconciledTableContents, rowProvider, fPage.getAccount().getSession(), transactionDateColumn, rowTracker) {
+			@Override
+			protected EntryData createEntryRowInput(Entry entry) {
+				return new EntryData(entry, session.getDataManager());
+			}
+
+			@Override
+			protected EntryData createNewEntryRowInput() {
+				return new EntryData(null, session.getDataManager());
+			}
+        }; 
         
 		// TODO: do not duplicate this.
 		if (fPage.getStatement() == null) {
