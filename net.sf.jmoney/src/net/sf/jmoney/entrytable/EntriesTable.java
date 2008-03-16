@@ -251,15 +251,10 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 				 * the entry is committed and, if the commit succeeded, the
 				 * newly created 'new entry' row is selected.
 				 */
-				EntryRowControl selectedRowControl = rowTracker.getSelectedRow();
+				RowControl selectedRowControl = rowTracker.getSelectedRow();
 				if (selectedRowControl != null) {
-					Entry selectedEntry = selectedRowControl.committedEntryData.getEntry();
-					if (selectedEntry == null) {
-						/*
-						 * The 'new entry' row is currently selected.  We attempt to
-						 * commit it first.
-						 */
-						selectedRowControl.commitChanges();
+					if (!selectedRowControl.canDepart()) {
+						return;
 					}
 				}
 				

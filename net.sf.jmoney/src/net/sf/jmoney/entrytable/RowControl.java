@@ -134,6 +134,18 @@ public abstract class RowControl<T, R extends RowControl<T,R>> extends Composite
 		setSelected(true);
 	}
 
+	/**
+	 * This method should be called whenever a row is to lose selection.
+	 * It makes whatever changes are necessary to the display of the row
+	 * and saves if necessary the data in the row.
+	 * 
+	 * @return true if this method succeeded (or failed in some way that
+	 * 		is not the user's fault and that the user cannot correct), 
+	 * 		false if this method could not save the data because the user
+	 * 		has not properly entered the data and so selection should remain
+	 * 		on the row (in which case this method will display an appropriate
+	 * 		message to the user)
+	 */
 	public boolean canDepart() {
 		if (!commitChanges()) {
 			return false;
