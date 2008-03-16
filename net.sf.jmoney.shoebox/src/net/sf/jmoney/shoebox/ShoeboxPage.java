@@ -320,8 +320,18 @@ public class ShoeboxPage implements IBookkeepingPageFactory {
 			);
 			
 	        // Create the table control.
-		    IRowProvider rowProvider = new ReusableRowProvider(rootBlock);
-	        recentlyAddedEntriesControl = new EntriesTable(topLevelControl, toolkit, rootBlock, recentEntriesTableContents, rowProvider, this.session, transactionDateColumn, new RowSelectionTracker()); 
+		    IRowProvider<EntryData> rowProvider = new ReusableRowProvider(rootBlock);
+	        recentlyAddedEntriesControl = new EntriesTable<EntryData>(topLevelControl, toolkit, rootBlock, recentEntriesTableContents, rowProvider, this.session, transactionDateColumn, new RowSelectionTracker()) {
+				@Override
+				protected EntryData createEntryRowInput(Entry entry) {
+					return new EntryData(entry, session.getDataManager());
+				}
+
+				@Override
+				protected EntryData createNewEntryRowInput() {
+					return new EntryData(null, session.getDataManager());
+				}
+	        }; 
 			
 			recentlyAddedEntriesControl.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, true));
 
