@@ -345,7 +345,8 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		}
 		
 		final Block<StockEntryData, StockEntryRowControl> purchaseOrSaleInfoColumn = new VerticalBlock<StockEntryData, StockEntryRowControl>(
-				new HorizontalBlock<StockEntryData, StockEntryRowControl>(
+				// TEMP
+				new VerticalBlock<StockEntryData, StockEntryRowControl>(
 						priceColumn,
 						shareNumberColumn
 				),
@@ -480,7 +481,17 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 		// Create the table control.
 	    IRowProvider rowProvider = new StockRowProvider(rootBlock);
-		fEntriesControl = new EntriesTable(getSection(), toolkit, rootBlock, this, rowProvider, account.getSession(), transactionDateColumn, rowSelectionTracker); 
+		fEntriesControl = new EntriesTable<StockEntryData>(getSection(), toolkit, rootBlock, this, rowProvider, account.getSession(), transactionDateColumn, rowSelectionTracker) {
+			@Override
+			protected StockEntryData createEntryRowInput(Entry entry) {
+				return new StockEntryData(entry, session.getDataManager());
+			}
+
+			@Override
+			protected StockEntryData createNewEntryRowInput() {
+				return new StockEntryData(null, session.getDataManager());
+			}
+		}; 
 			
         getSection().setClient(fEntriesControl);
         toolkit.paintBordersFor(fEntriesControl);

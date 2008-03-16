@@ -26,7 +26,6 @@ import java.util.LinkedList;
 
 import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
-import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.FocusCellTracker;
 import net.sf.jmoney.entrytable.IRowProvider;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
@@ -35,7 +34,7 @@ import net.sf.jmoney.entrytable.VirtualRowTable;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
-public class StockRowProvider implements IRowProvider {
+public class StockRowProvider implements IRowProvider<StockEntryData> {
 
 	private Block<StockEntryData, StockEntryRowControl> rootBlock;
 
@@ -50,7 +49,7 @@ public class StockRowProvider implements IRowProvider {
 	 * visible. These a free for re-use, thus avoiding the need to create new
 	 * controls.
 	 */
-	private LinkedList<BaseEntryRowControl> spareRows = new LinkedList<BaseEntryRowControl>();
+	private LinkedList<BaseEntryRowControl<StockEntryData, ?>> spareRows = new LinkedList<BaseEntryRowControl<StockEntryData, ?>>();
 
 	public StockRowProvider(Block<StockEntryData, StockEntryRowControl> rootBlock) {
 		this.rootBlock = rootBlock;
@@ -62,8 +61,8 @@ public class StockRowProvider implements IRowProvider {
 		this.focusCellTracker = focusCellTracker;
 	}
 	
-	public BaseEntryRowControl getNewRow(Composite parent, EntryData entryData) {
-		BaseEntryRowControl rowControl;
+	public BaseEntryRowControl getNewRow(Composite parent, StockEntryData entryData) {
+		BaseEntryRowControl<StockEntryData, ?> rowControl;
 		
 		if (spareRows.size() > 0) {
 			rowControl = spareRows.removeFirst();
@@ -77,7 +76,7 @@ public class StockRowProvider implements IRowProvider {
 		return rowControl;
 	}
 	
-	public void releaseRow(BaseEntryRowControl rowControl) {
+	public void releaseRow(BaseEntryRowControl<StockEntryData, ?> rowControl) {
 		rowControl.setVisible(false);
 		spareRows.add(rowControl);
 	}

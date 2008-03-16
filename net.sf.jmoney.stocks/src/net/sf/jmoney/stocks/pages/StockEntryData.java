@@ -32,9 +32,19 @@ public class StockEntryData extends EntryData {
 
 	public StockEntryData(Entry entry, DataManager dataManager) {
 		super(entry, dataManager);
+
+		// Note that there are two versions of this object for every row.
+		// One contains the committed entry and the other contains the entry
+		// being edited inside a transaction.  If this is the new entry row
+		// and is the committed version then entry will be null, so we can't
+		// analyze it.
+		
+		// TODO We should consider merging the two instances into one.
 		
 		// TODO Call this on-demand.
-		analyzeTransaction();
+		if (entry != null) {
+			analyzeTransaction();
+		}
 	}
 
 	private void analyzeTransaction() {
