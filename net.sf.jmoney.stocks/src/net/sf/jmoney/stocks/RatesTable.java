@@ -91,7 +91,7 @@ public class RatesTable {
 	}
 	
 	public long calculateRate(long amount) {
-		double total = 0;
+		double total = fixedAmount;
 		int i = 1;
 		while (i < bands.size() && amount > bands.get(i).getBandStart()) {
 			total += (bands.get(i).getBandStart() - bands.get(i-1).getBandStart()) * bands.get(i-1).getPercentage();

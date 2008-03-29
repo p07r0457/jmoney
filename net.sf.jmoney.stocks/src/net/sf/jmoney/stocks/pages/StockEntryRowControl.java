@@ -81,7 +81,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	@Override
 	public void amountChanged() {
 		
-		StockAccount account = (StockAccount)input.getEntry().getAccount();
+		StockAccount account = (StockAccount)getUncommittedEntryData().getEntry().getAccount();
 		
 		
 		Entry entry = uncommittedEntryData.getEntry();
@@ -179,7 +179,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 		long quantity = uncommittedEntryData.getPurchaseOrSaleEntry().getAmount();
 		long grossAmount = sharePrice * quantity;
 
-		StockAccount account = (StockAccount)input.getEntry().getAccount();
+		StockAccount account = (StockAccount)getUncommittedEntryData().getEntry().getAccount();
 		
 		RatesTable commissionRates = 
 			(uncommittedEntryData.getTransactionType() == TransactionType.Buy)
