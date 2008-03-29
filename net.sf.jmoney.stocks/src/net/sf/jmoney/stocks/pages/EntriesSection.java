@@ -543,20 +543,24 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
         refresh();
     }
 
+    /**
+     * @return the entries to be shown in the table, unsorted
+     */
 	public Collection<Entry> getEntries() {
-/* The caller always sorts, so there is no point in us returning
- * sorted results.  It may be at some point we decide it is more
- * efficient to get the database to sort for us, but that would
- * only help the first time the results are fetched, it would not
- * help on a re-sort.  It also only helps if the database indexes
- * on the date.		
-        CurrencyAccount account = fPage.getAccount();
-        Collection accountEntries = 
-        	account
-				.getSortedEntries(TransactionInfo.getDateAccessor(), false);
-        return accountEntries;
-*/
-		return account.getEntries();
+		/*
+		 * We want only cash entries, not stock entries.  This is providing
+		 * content for a table of entries that show the running balance.
+		 * A stock entry or an entry in a currency other than the currency
+		 * of the account should not be returned.
+		 */
+		Collection<Entry> entries = new ArrayList<Entry>();
+		for (Entry entry : account.getEntries()) {
+			if (entry.getCommodity() == account.getCurrency()) {
+				entries.add(entry);
+			}
+		}
+		
+		return entries;
 	}
 
 	public boolean isEntryInTable(Entry entry) {
