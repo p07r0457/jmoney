@@ -236,4 +236,11 @@ public class HorizontalBlock<T, R extends RowControl<T,R>> extends Block<T,R> {
 		}
 		return height;
 	}
+
+	@Override
+	void setInput(T input) {
+		for (Block<? super T,? super R> child: children) {
+			child.setInput(input);
+		}
+	}
 }

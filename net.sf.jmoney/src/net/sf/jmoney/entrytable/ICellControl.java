@@ -55,22 +55,21 @@ public interface ICellControl<T> {
     void load(T data);
 
     /**
-     * This method takes the data in the control and sets it
-     * into the datastore.  This method must be called before 
-     * a control is destroyed, otherwise data entered by the user
-     * may not be saved.
-     * <P>
-     * Some controls will save data in response to user edits.
-     * Combo boxes typically do this.  Other controls, such as
-     * text boxes, do not.
-     */
+	 * This method takes the data in the control and sets it into the datastore.
+	 * This method must be called before a control is destroyed or before new
+	 * input is set into the control with another call to <code>load</code>,
+	 * otherwise data entered by the user may not be saved.
+	 * <P>
+	 * Some controls will save data in response to user edits. Combo boxes
+	 * typically do this. Other controls, such as text boxes, do not.
+	 */
     void save();
 
     /**
-     * Needed only when child controls may be created later.
-     * This method should be removed at some point.
-     * 
-     * @param controlFocusListener
-     */
+	 * Needed only when child controls may be created later. This method should
+	 * be removed at some point.
+	 * 
+	 * @param controlFocusListener
+	 */
 	void setFocusListener(FocusListener controlFocusListener);
 }

@@ -41,6 +41,7 @@ import org.eclipse.swt.widgets.Display;
  * This is used in rows only, not for headers.
  * (anything to be gained by using it in headers too????)
  */
+// TODO: T should be anything, should not have to extend EntryData
 public class StackControl<T extends EntryData, R extends RowControl<T,R>> extends Composite implements ICellControl<T> {
 
 	private R rowControl;
@@ -55,6 +56,8 @@ public class StackControl<T extends EntryData, R extends RowControl<T,R>> extend
 
 	private CompressedStackLayout stackLayout;
 	
+	// TODO decide if the stack control can take null, causing it to be
+	// blank.
 //	private Composite blankControl = null;
 	
 	private T entryData;
@@ -120,7 +123,7 @@ public class StackControl<T extends EntryData, R extends RowControl<T,R>> extend
 				for (CellBlock<? super T, ? super R> cellBlock: topBlock.buildCellList()) {
 					rowControl.createCellControl(topControl, cellBlock);
 				}
-		
+				
 				final Composite finalTopControl = topControl;
 				topControl.addPaintListener(new PaintListener() {
 					public void paintControl(PaintEvent e) {

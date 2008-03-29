@@ -135,6 +135,9 @@ public abstract class StackBlock<T extends EntryData, R extends RowControl<T,R>>
 	/**
 	 * Sets the top block in the header.
 	 */
+	// TODO: we need entryData so that we can determine the top block for any
+	// stack controls nested inside this stack control.  That implies that we
+	// don't need topBlock for this stack control.  Remove topBlock parameter.
 	void setTopHeaderBlock(Block<? super T,? super R> topBlock, T entryData) {
 		Composite topControl = childControls.get(topBlock);
 		// now done in init....
@@ -145,7 +148,14 @@ public abstract class StackBlock<T extends EntryData, R extends RowControl<T,R>>
 //			childControls.put(topBlock, topControl);
 //		}
 		stackLayout.topControl = topControl;
-		stackComposite.layout(false);
+		
+		// Pass down because nested blocks may also be affected by the input.
+		if (topBlock != null) {
+			topBlock.setInput(entryData);
+		}
+
+		stackComposite.layout(true);  //????
+		
 	}
 
 	// TODO: Remove this.....debugging only
@@ -232,4 +242,10 @@ public abstract class StackBlock<T extends EntryData, R extends RowControl<T,R>>
 	}
 	
 	protected abstract Block<? super T, ? super R> getTopBlock(T data);
+
+	@Override
+	void setInput(T input) {
+		Block<? super T, ? super R> topBlock = getTopBlock(input);
+		setTopHeaderBlock(topBlock, input);
+	}
 }

@@ -30,9 +30,12 @@ import org.eclipse.swt.widgets.Display;
 
 public class Header<T> extends Composite {
 
+	private Block<? super T,?> rootBlock;
+	
 	public Header(Composite parent, int style, Block<? super T,?> rootBlock) {
 		super(parent, style);
-
+		this.rootBlock = rootBlock;
+		
 		BlockLayout layout = new BlockLayout<T>(rootBlock, false);
 		setLayout(layout);
 
@@ -43,6 +46,16 @@ public class Header<T> extends Composite {
 //		rootBlock.buildCellList();
 		
 		rootBlock.createHeaderControls(this, null);
+	}
+
+	/**
+	 * The header rows may depend on the row selection.
+	 * This method adjusts the headers to match a row with the given input.
+	 * 
+	 * @param input
+	 */
+	public void setInput(T input) {
+		rootBlock.setInput(input);
 	}
 	
 	protected boolean sortOnColumn(IndividualBlock<EntryData, EntryRowControl> sortProperty, int sortDirection) {

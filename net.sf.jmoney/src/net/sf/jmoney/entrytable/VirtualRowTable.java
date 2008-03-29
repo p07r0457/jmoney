@@ -70,9 +70,6 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 	 * or -1 if no row is selected. To get the selected row as an index into the
 	 * <code>rows</code> list, you must subtract currentVisibleTopRow from
 	 * this value.
-	 * <P>
-	 * This field always represents the same row as
-	 * <code>currentRowControl</code>.
 	 */
 	int currentRow = -1;
 
@@ -90,6 +87,8 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 
 	IRowProvider<T> rowProvider;
 
+	private Header header;
+	
 	private Composite contentPane;
 	
 	/**
@@ -134,7 +133,7 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 	 * @param rowTracker 
 	 */
 	// TODO: tidy up EntriesTable parameter.  Perhaps we need to remove EntriesTable altogether?
-	public VirtualRowTable(Composite parent, Block rootBlock, EntriesTable entriesTable, IContentProvider<T> contentProvider, IRowProvider<T> rowProvider, RowSelectionTracker rowTracker) {
+	public VirtualRowTable(Composite parent, Block<? super T, ?> rootBlock, EntriesTable entriesTable, IContentProvider<T> contentProvider, IRowProvider<T> rowProvider, RowSelectionTracker rowTracker) {
 		super(parent, SWT.NONE);
 		this.contentProvider = contentProvider;
 		this.rowProvider = rowProvider;
@@ -147,7 +146,7 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 		layout.verticalSpacing = 0;
 		setLayout(layout);
 	
-		Header header = new Header(this, SWT.NONE, rootBlock);
+		header = new Header<T>(this, SWT.NONE, rootBlock);
 		Composite blankPane = new Composite(this, SWT.NONE);
 		contentPane = createContentPane(this);
 		vSlider = new Slider(this, SWT.VERTICAL);
@@ -184,6 +183,13 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 		
 	}
 
+	public void setCurrentRow(T entryData) {
+		currentRow = contentProvider.indexOf(entryData);
+		
+		header.setInput(entryData);
+
+	}
+	
 	/**
 	 * Deletes the given row.
 	 * 

@@ -44,7 +44,7 @@ import org.eclipse.swt.widgets.Control;
  * 
  * @author Nigel Westbury
  */
-abstract public class PropertyBlock<T extends EntryData> extends IndividualBlock<T, Composite> {
+abstract public class PropertyBlock<T extends EntryData, R extends Composite> extends IndividualBlock<T, R> {
 	private ScalarPropertyAccessor<?> accessor;
 	private String id;
 	
@@ -74,10 +74,34 @@ abstract public class PropertyBlock<T extends EntryData> extends IndividualBlock
 		return id;
 	}
 
+	/**
+	 * Given the input data, returns the ExtendableObject that contains
+	 * the property whose value is being shown in this column.
+	 * 
+	 * @param data
+	 * @return the object containing the property being show, or null if
+	 * 		this column is not applicable to the given input
+	 */
 	public abstract ExtendableObject getObjectContainingProperty(T data);
 
+	/**
+	 * This method is called whenever the user makes a change to this value.
+	 * 
+	 * This method is used by the RowControl objects to update other contents
+	 * that may be affected by this control. The normal session change listener
+	 * is not used because the RowControl wants to be notified only when the
+	 * user makes changes from within this row control, not when a change has
+	 * been made elsewhere.
+	 * 
+	 * As most controls do not affect other controls, an empty default implementation
+	 * is provided.
+	 */
+	public void fireUserChange(R rowControl) {
+		// Default implementation does nothing.
+	}
+	
     @Override	
-	public ICellControl<T> createCellControl(Composite parent, Composite rowControl) {
+	public ICellControl<T> createCellControl(Composite parent, final R rowControl) {
 		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		
 		return new ICellControl<T>() {
@@ -92,6 +116,7 @@ abstract public class PropertyBlock<T extends EntryData> extends IndividualBlock
 
 			public void save() {
 				propertyControl.save();
+				fireUserChange(rowControl);
 			}
 
 			public void setFocusListener(FocusListener controlFocusListener) {
@@ -119,9 +144,9 @@ abstract public class PropertyBlock<T extends EntryData> extends IndividualBlock
 		}
 	}
 
-	public static PropertyBlock<EntryData> createTransactionColumn(
+	public static PropertyBlock<EntryData, Composite> createTransactionColumn(
 			ScalarPropertyAccessor<?> propertyAccessor) {
-		return new PropertyBlock<EntryData>(propertyAccessor, "transaction") {
+		return new PropertyBlock<EntryData, Composite>(propertyAccessor, "transaction") {
 			@Override
 			public ExtendableObject getObjectContainingProperty(EntryData data) {
 				return data.getEntry().getTransaction();
@@ -129,9 +154,9 @@ abstract public class PropertyBlock<T extends EntryData> extends IndividualBlock
 		};
 	}
 
-	public static PropertyBlock<EntryData> createEntryColumn(
+	public static PropertyBlock<EntryData, Composite> createEntryColumn(
 			ScalarPropertyAccessor<?> propertyAccessor) {
-		return new PropertyBlock<EntryData>(propertyAccessor, "entry") {
+		return new PropertyBlock<EntryData, Composite>(propertyAccessor, "entry") {
 			@Override
 			public ExtendableObject getObjectContainingProperty(EntryData data) {
 				return data.getEntry();
@@ -145,8 +170,8 @@ abstract public class PropertyBlock<T extends EntryData> extends IndividualBlock
 	 * @param displayName the text to use in the header
 	 * @return
 	 */
-	public static PropertyBlock<EntryData> createEntryColumn(ScalarPropertyAccessor<?> propertyAccessor, String displayName) {
-		return new PropertyBlock<EntryData>(propertyAccessor, "entry", displayName) {
+	public static PropertyBlock<EntryData, Composite> createEntryColumn(ScalarPropertyAccessor<?> propertyAccessor, String displayName) {
+		return new PropertyBlock<EntryData, Composite>(propertyAccessor, "entry", displayName) {
 			@Override
 			public ExtendableObject getObjectContainingProperty(EntryData data) {
 				return data.getEntry();

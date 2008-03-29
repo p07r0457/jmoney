@@ -64,6 +64,13 @@ class DeltaListIterator<E extends ExtendableObject> implements Iterator<E> {
 	E nextObject;
 	
 	/**
+	 * The last object returned by this iterator if the last such
+	 * object has a committed version, or null if the last such object
+	 * is a new object added in this delta
+	 */
+	E lastObject;
+	
+	/**
 	 * Construct an iterator that iterates the given iterator,
 	 * but adjusting the elements by adding and removing elements
 	 * in the given lists.
@@ -110,14 +117,24 @@ class DeltaListIterator<E extends ExtendableObject> implements Iterator<E> {
 		if (processingCommittedObjects) {
 			E objectToReturn = nextObject;
 			setNextObject();
+			lastObject = objectToReturn;
 			return objectToReturn;
 		} else {
+			lastObject = null;
 			return subIterator.next();
 		}
 	}
 	
 	public void remove() {
-		throw new RuntimeException("not implemented");
+		if (lastObject != null) {
+			// Add to the deleted list
+			deletedObjects.add(lastObject.getObjectKey());
+		} else {
+			// The last object returned was not a committed object but was
+			// added in this delta.
+			// Remove it from the added list.
+			subIterator.remove();
+		}
 	}
 
 	/**

@@ -26,12 +26,12 @@ import java.applet.Applet;
 import java.applet.AudioClip;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Commodity;
-import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Transaction;
@@ -83,7 +83,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		clip = Applet.newAudioClip(url);
 	}
 
-	private VirtualRowTable rowTable;
+	private VirtualRowTable<T> rowTable;
 	
 	/**
 	 * The transaction manager used for all changes made in
@@ -163,7 +163,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		 * the selected row.  The top and bottom margins are there only
 		 * so we can draw these lines.
 		 */
-		BlockLayout layout = new BlockLayout(rootBlock, false);
+		BlockLayout<T> layout = new BlockLayout<T>(rootBlock, false);
 		layout.marginTop = 1;
 		layout.marginBottom = 2;
 		layout.verticalSpacing = 1;
@@ -261,7 +261,13 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		uncommittedEntryData.setIndex(committedEntryData.getIndex());
 		uncommittedEntryData.setBalance(committedEntryData.getBalance());
 		
-		for (final ICellControl<? super T> control: controls.values()) {
+		// TEMP: Loading a control may potentially create more controls because of the
+		// lazy creation of controls inside a stack control.  Because of this we take a
+		// copy of the list before iterating so we don't process new entries or get
+		// concurrency exceptions.  New entries will be loaded when created anyway because 
+		// the input is set by the time we get here.
+		Collection<ICellControl<? super T>> x = new ArrayList<ICellControl<? super T>>(controls.values());
+		for (final ICellControl<? super T> control: x) {
 			control.load(uncommittedEntryData);
 		}
 	}
@@ -305,6 +311,11 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		 */
 		if (!isSelected) {
 			rowTable.rowDeselected(this);
+		}
+		
+		if (isSelected) {
+			// This call may be needed only to update the header
+			rowTable.setCurrentRow(input);
 		}
 	}
 
@@ -670,6 +681,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	public T getInput() {
 		return input;
 	}
+
+	public abstract void amountChanged();
 }
 
 class InvalidUserEntryException extends Exception {

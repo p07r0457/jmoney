@@ -41,10 +41,10 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 
 /**
- * Represents a table column that is either the debit or the credit column.
- * Use two instances of this class instead of a single instance of the
- * above <code>EntriesSectionProperty</code> class if you want the amount to be
- * displayed in separate debit and credit columns.
+ * Represents a table column that is either the debit or the credit column. Use
+ * two instances of this class instead of a single instance of the
+ * <code>PropertyBlock</code> class if you want the amount to be displayed in
+ * separate debit and credit columns.
  */
 public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryRowControl> {
 
@@ -166,20 +166,16 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 
 			entry.setAmount(newEntryAmount);
 
-			// If there are two entries in the transaction and
-			// if both entries have accounts in the same currency or
-			// one or other account is not known or one or other account
-			// is a multi-currency account then we set the amount in
-			// the other entry to be the same but opposite signed amount.
-
-			if (entry.getTransaction().hasTwoEntries()) {
-				Entry otherEntry = entry.getTransaction().getOther(entry);
-				Commodity commodity1 = entry.getCommodity();
-				Commodity commodity2 = otherEntry.getCommodity();
-				if (commodity1 == null || commodity2 == null || commodity1.equals(commodity2)) {
-					otherEntry.setAmount(-newEntryAmount);
-				}
-			}
+			/* Tell the row control about this change. This enables
+			 * the row control to update other controls based on this
+			 * change.
+			 * 
+			 * Note that the row control cannot get these changes by listening
+			 * to model changes because it needs to do processing only
+			 * when the user changed the properties, and it would then
+			 * have no way of knowing where the change came from.
+			 */
+			rowControl.amountChanged();
 		}
 
 		public void setFocusListener(FocusListener controlFocusListener) {
@@ -190,6 +186,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 	private String id;
 	private Commodity commodity;
 	private boolean isDebit;
+	private BaseEntryRowControl rowControl;
 
 	public static DebitAndCreditColumns createCreditColumn(Commodity commodityForFormatting) {
     	return new DebitAndCreditColumns("credit", "Credit", commodityForFormatting, false); //$NON-NLS-2$
@@ -212,6 +209,8 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 
     @Override	
 	public ICellControl<EntryData> createCellControl(Composite parent, BaseEntryRowControl rowControl) {
+    	this.rowControl = rowControl;
+    	
 		final Text textControl = new Text(parent, SWT.TRAIL);
 		textControl.addTraverseListener(new TraverseListener() {
 			public void keyTraversed(TraverseEvent e) {

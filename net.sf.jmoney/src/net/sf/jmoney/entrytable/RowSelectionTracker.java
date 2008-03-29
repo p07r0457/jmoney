@@ -1,8 +1,5 @@
 package net.sf.jmoney.entrytable;
 
-// TODO: This tracker should not, I think, need to be parameterized.
-// After all, why does it need to know?  It should just tell each row
-// whether it is selected or not and let the row handle it.
 public class RowSelectionTracker<R extends RowControl> {
 
 	private R currentRowControl = null;

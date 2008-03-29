@@ -154,7 +154,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 	private Vector<EntryRowSelectionListener> selectionListeners = new Vector<EntryRowSelectionListener>();
 
 	public EntriesTable(Composite parent, FormToolkit toolkit, Block rootBlock, 
-			final IEntriesContent entriesContent, IRowProvider<T> rowProvider, final Session session, IndividualBlock<EntryData, ?> defaultSortColumn, final RowSelectionTracker<EntryRowControl> rowTracker) {
+			final IEntriesContent entriesContent, IRowProvider<T> rowProvider, final Session session, IndividualBlock<EntryData, ?> defaultSortColumn, final RowSelectionTracker<? extends BaseEntryRowControl> rowTracker) {
 		super(parent, SWT.NONE);
 		
 		this.session = session;
@@ -274,7 +274,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
         duplicateButton.addSelectionListener(new SelectionAdapter() {
 			@Override
         	public void widgetSelected(SelectionEvent event) {
-        		EntryRowControl selectedRowControl = rowTracker.getSelectedRow();
+        		BaseEntryRowControl selectedRowControl = rowTracker.getSelectedRow();
         		
         		if (selectedRowControl != null) {
         			Entry selectedEntry = selectedRowControl.committedEntryData.getEntry();
@@ -324,7 +324,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
         deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
         	public void widgetSelected(SelectionEvent event) {
-        		EntryRowControl selectedRowControl = rowTracker.getSelectedRow();
+        		BaseEntryRowControl selectedRowControl = rowTracker.getSelectedRow();
         		
         		if (selectedRowControl != null) {
             		Entry selectedEntry = selectedRowControl.committedEntryData.getEntry();
@@ -355,7 +355,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
         detailsButton.addSelectionListener(new SelectionAdapter() {
 			@Override
         	public void widgetSelected(SelectionEvent event) {
-        		EntryRowControl selectedRowControl = rowTracker.getSelectedRow();
+        		BaseEntryRowControl selectedRowControl = rowTracker.getSelectedRow();
         		
         		if (selectedRowControl != null) {
         			Entry selectedEntry = selectedRowControl.uncommittedEntryData.getEntry();
@@ -670,7 +670,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 	/**
 	 * Change the sort according to the given parameters.
 	 */
-	public void sort(IndividualBlock<EntryData, EntryRowControl> sortProperty, boolean sortAscending) {
+	public void sort(IndividualBlock<EntryData, BaseEntryRowControl> sortProperty, boolean sortAscending) {
 		rowComparator = new RowComparator(sortProperty, sortAscending);
 		sort();
 	}

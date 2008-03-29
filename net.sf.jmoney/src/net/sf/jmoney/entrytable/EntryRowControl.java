@@ -23,6 +23,7 @@
 package net.sf.jmoney.entrytable;
 
 import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
 
 import org.eclipse.swt.widgets.Composite;
@@ -44,6 +45,25 @@ public class EntryRowControl extends BaseEntryRowControl<EntryData, EntryRowCont
 	@Override
 	protected EntryRowControl getThis() {
 		return this;
+	}
+
+	@Override
+	public void amountChanged() {
+		
+		// If there are two entries in the transaction and
+		// if both entries have accounts in the same currency or
+		// one or other account is not known or one or other account
+		// is a multi-currency account then we set the amount in
+		// the other entry to be the same but opposite signed amount.
+		Entry entry = uncommittedEntryData.getEntry();
+		if (entry.getTransaction().hasTwoEntries()) {
+			Entry otherEntry = entry.getTransaction().getOther(entry);
+			Commodity commodity1 = entry.getCommodity();
+			Commodity commodity2 = otherEntry.getCommodity();
+			if (commodity1 == null || commodity2 == null || commodity1.equals(commodity2)) {
+				otherEntry.setAmount(-entry.getAmount());
+			}
+		}
 	}
 }
 	

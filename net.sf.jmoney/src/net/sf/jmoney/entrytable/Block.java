@@ -67,6 +67,8 @@ public abstract class Block<T, R> {
 
 	abstract void positionControls(int x, int y, int verticalSpacing, Control [] controls, T entryData, boolean flushCache);
 
+	abstract void setInput(T input);
+	
 	/**
 	 * Calculate the height of this block. Because variable height rows are
 	 * supported, the height may vary from row to row and thus depends on the

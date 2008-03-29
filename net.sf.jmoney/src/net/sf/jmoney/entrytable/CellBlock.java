@@ -91,4 +91,11 @@ public abstract class CellBlock<T,R> extends Block<T,R> {
 	void paintRowLines(GC gc, int x, int y, int verticalSpacing, Control[] controls, T entryData) {
 		// Nothing to do.
 	}
+
+	@Override
+	void setInput(T input) {
+		// By default, do nothing.
+		// If, in a derived class, the header is affected by the input then this
+		// method should be overridden.
+	}
 }
