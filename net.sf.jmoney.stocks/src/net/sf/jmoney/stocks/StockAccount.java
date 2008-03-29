@@ -149,6 +149,8 @@ public class StockAccount extends CapitalAccount {
 			IObjectKey currencyKey,
 			String brokerageFirm,
 			String accountNumber,
+			IObjectKey dividendAccountKey,
+			IObjectKey withholdingTaxAccountKey,
 			String tax1Name,
 			String tax2Name,
 			IObjectKey commissionAccountKey,
@@ -179,6 +181,8 @@ public class StockAccount extends CapitalAccount {
 		
         this.brokerageFirm = brokerageFirm;
         this.accountNumber = accountNumber;
+        this.dividendAccountKey = dividendAccountKey;
+        this.withholdingTaxAccountKey = withholdingTaxAccountKey;
         this.tax1Name = tax1Name;
         this.tax2Name = tax2Name;
         this.commissionAccountKey = commissionAccountKey;
@@ -226,7 +230,7 @@ public class StockAccount extends CapitalAccount {
 	 */
 	@Override
 	public Commodity getCommodity(Entry entry) {
-		StockEntry stockEntry = entry.getExtension(StockEntryInfo.getPropertySet(), true);
+		StockEntry stockEntry = entry.getExtension(StockEntryInfo.getPropertySet(), false);
 		if (stockEntry != null && stockEntry.isStockChange()) {
 			return stockEntry.getStock();
 		} else {

@@ -86,6 +86,8 @@ public class StockAccountInfo implements IPropertySetInfo {
 					values.getReferencedObjectKey(StockAccountInfo.getCurrencyAccessor()),
 					values.getScalarValue(StockAccountInfo.getBrokerageFirmAccessor()),
 					values.getScalarValue(StockAccountInfo.getAccountNumberAccessor()),
+					values.getReferencedObjectKey(StockAccountInfo.getDividendAccountAccessor()),
+					values.getReferencedObjectKey(StockAccountInfo.getWithholdingTaxAccountAccessor()),
 					values.getScalarValue(StockAccountInfo.getTax1NameAccessor()),
 					values.getScalarValue(StockAccountInfo.getTax2NameAccessor()),
 					values.getReferencedObjectKey(StockAccountInfo.getCommissionAccountAccessor()),
@@ -254,7 +256,7 @@ public class StockAccountInfo implements IPropertySetInfo {
 		return dividendAccountAccessor;
 	}	
 
-	public static ScalarPropertyAccessor<IncomeExpenseAccount> getWithholdingTaxAccountAccessor() {
+	public static ReferencePropertyAccessor<IncomeExpenseAccount> getWithholdingTaxAccountAccessor() {
 		return withholdingTaxAccountAccessor;
 	}	
 

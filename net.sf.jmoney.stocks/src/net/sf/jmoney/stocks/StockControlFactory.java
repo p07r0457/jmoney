@@ -9,6 +9,10 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
+/**
+ * @param <P>
+ * 		the class of objects that contain this property
+ */
 public abstract class StockControlFactory<P> extends PropertyControlFactory<Stock> implements IReferenceControlFactory<P, Stock> {
 
 	public IPropertyControl createPropertyControl(Composite parent, final ScalarPropertyAccessor<Stock> propertyAccessor) {
@@ -25,7 +29,7 @@ public abstract class StockControlFactory<P> extends PropertyControlFactory<Stoc
 				// TODO Auto-generated method stub
 
 		        control.setSession(object.getSession(), propertyAccessor.getClassOfValueObject());
-		        control.setStock((Stock)object);
+		        control.setStock(object.getPropertyValue(propertyAccessor));
 	}
 
 			public void save() {

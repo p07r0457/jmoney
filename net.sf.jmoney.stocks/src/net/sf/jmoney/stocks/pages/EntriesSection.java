@@ -28,6 +28,7 @@ import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.DebitAndCreditColumns;
 import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
+import net.sf.jmoney.entrytable.EntryRowControl;
 import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
@@ -52,6 +53,7 @@ import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.stocks.Stock;
 import net.sf.jmoney.stocks.StockAccount;
 import net.sf.jmoney.stocks.StockControl;
+import net.sf.jmoney.stocks.StockEntry;
 import net.sf.jmoney.stocks.StockEntryInfo;
 
 import org.eclipse.swt.SWT;
@@ -75,7 +77,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 	private StockAccount account;
 
-    private EntriesTable fEntriesControl;
+    private EntriesTable<StockEntryData> fEntriesControl;
     
     private Block<StockEntryData, StockEntryRowControl> rootBlock;
     
@@ -179,12 +181,15 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 				final StockControl<Stock> control = new StockControl<Stock>(parent, null, Stock.class);
 				
 				ICellControl<StockEntryData> cellControl = new ICellControl<StockEntryData>() {
-
+					private StockEntryData data;
+					
 					public Control getControl() {
 						return control;
 					}
 
 					public void load(StockEntryData data) {
+						this.data = data;
+						
 						/*
 						 * We have to find the appropriate entry in the transaction that contains
 						 * the stock.
@@ -212,8 +217,17 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					}
 
 					public void save() {
-						// TODO Auto-generated method stub
-						
+						Stock stock = control.getStock();
+					
+						if (data.isPurchaseOrSale()) {
+							Entry entry = data.getPurchaseOrSaleEntry();
+							StockEntry stockEntry = entry.getExtension(StockEntryInfo.getPropertySet(), true);
+							stockEntry.setStockChange(true);
+							stockEntry.setStock(stock);
+						} else if (data.isDividend()) {
+							Entry entry = data.getDividendEntry();
+							entry.setPropertyValue(StockEntryInfo.getStockAccessor(), stock);
+						}
 					}
 
 					public void setFocusListener(FocusListener controlFocusListener) {
@@ -259,7 +273,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		IndividualBlock<StockEntryData, StockEntryRowControl> priceColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Price", 60, 1) {
 
 			@Override
-			public ICellControl<StockEntryData> createCellControl(Composite parent, StockEntryRowControl rowControl) {
+			public ICellControl<StockEntryData> createCellControl(Composite parent, final StockEntryRowControl rowControl) {
 				final Text control = new Text(parent, SWT.NONE);
 				
 				return new ICellControl<StockEntryData>() {
@@ -270,44 +284,60 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 					public void load(StockEntryData data) {
 						// The price is calculated.
+						assert(data.isPurchaseOrSale());
+						long totalShares = data.getPurchaseOrSaleEntry().getAmount();
 						long totalCash = 0;
-						long totalShares = 0;
 						for (Entry entry: data.getEntry().getTransaction().getEntryCollection()) {
 							if (entry.getCommodity() instanceof Currency) {
 								totalCash += entry.getAmount();
-							} else if (entry.getCommodity() instanceof Stock) {
-								totalShares += entry.getAmount();
 							}
 						}
 						if (totalCash != 0 && totalShares != 0) {
-							control.setText(Double.toString(((double)totalCash)/((double)totalShares)));
+							// Either we gain cash and lose stock, or we lose cash
+							// and gain stock.  Hence we need to negate to get a
+							// positive value.
+							double price = -((double)totalCash)/totalShares;
+							control.setText(Double.toString(price));
 						} else {
 							control.setText("");
 						}
 					}
 
 					public void save() {
-						// TODO Auto-generated method stub
+						// TODO: use proper amount parser
+						long amount = Long.parseLong(control.getText());
 						
+						/*
+						 * The share price is a calculated amount so is not
+						 * stored in any property. However, we do tell the row
+						 * control because it needs to save the value so it can
+						 * be checked for consistency when the transaction is
+						 * saved and also because other values may need to be
+						 * adjusted as a result of the new share price.
+						 */
+						rowControl.sharePriceChanged(amount);
 					}
 
 					public void setFocusListener(FocusListener controlFocusListener) {
-						// TODO Auto-generated method stub
-						
+						control.addFocusListener(controlFocusListener);
 					}
 				};
 			}
 		};  
 
 		
-		IndividualBlock<StockEntryData, Composite> shareNumberColumn = new PropertyBlock<StockEntryData>(EntryInfo.getAmountAccessor(), "shareNumber", "Quantity") {
+		IndividualBlock<StockEntryData, StockEntryRowControl> shareNumberColumn = new PropertyBlock<StockEntryData, StockEntryRowControl>(EntryInfo.getAmountAccessor(), "shareNumber", "Quantity") {
 			@Override
 			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
 				return data.getPurchaseOrSaleEntry();
 			}
+			@Override
+			public void fireUserChange(StockEntryRowControl rowControl) {
+				rowControl.quantityChanged();
+			}
 		};		
 		
-		final IndividualBlock<StockEntryData, Composite> withholdingTaxColumn = new PropertyBlock<StockEntryData>(EntryInfo.getAmountAccessor(), "withholdingTax", "Withholding Tax") {
+		final IndividualBlock<StockEntryData, Composite> withholdingTaxColumn = new PropertyBlock<StockEntryData, Composite>(EntryInfo.getAmountAccessor(), "withholdingTax", "Withholding Tax") {
 			@Override
 			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
 				return data.getWithholdingTaxEntry();
@@ -316,7 +346,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 		ArrayList<Block<? super StockEntryData, ? super StockEntryRowControl>> expenseColumns = new ArrayList<Block<? super StockEntryData, ? super StockEntryRowControl>>();
 		
-		IndividualBlock<StockEntryData, Composite> commissionColumn = new PropertyBlock<StockEntryData>(EntryInfo.getAmountAccessor(), "commission", "Commission") {
+		IndividualBlock<StockEntryData, Composite> commissionColumn = new PropertyBlock<StockEntryData, Composite>(EntryInfo.getAmountAccessor(), "commission", "Commission") {
 			@Override
 			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
 				return data.getCommissionEntry();
@@ -325,7 +355,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		expenseColumns.add(commissionColumn);
 		
 		if (account.getTax1Name() != null) {
-			IndividualBlock<StockEntryData, Composite> tax1Column = new PropertyBlock<StockEntryData>(EntryInfo.getAmountAccessor(), "tax1", account.getTax1Name()) {
+			IndividualBlock<StockEntryData, Composite> tax1Column = new PropertyBlock<StockEntryData, Composite>(EntryInfo.getAmountAccessor(), "tax1", account.getTax1Name()) {
 				@Override
 				public ExtendableObject getObjectContainingProperty(StockEntryData data) {
 					return data.getTax1Entry();
@@ -335,7 +365,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		}
 		
 		if (account.getTax2Name() != null) {
-			IndividualBlock<StockEntryData, Composite> tax2Column = new PropertyBlock<StockEntryData>(EntryInfo.getAmountAccessor(), "tax2", account.getTax2Name()) {
+			IndividualBlock<StockEntryData, Composite> tax2Column = new PropertyBlock<StockEntryData, Composite>(EntryInfo.getAmountAccessor(), "tax2", account.getTax2Name()) {
 				@Override
 				public ExtendableObject getObjectContainingProperty(StockEntryData data) {
 					return data.getTax2Entry();
@@ -355,7 +385,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 				)
 		);
 
-		final IndividualBlock<StockEntryData, Composite> transferAccountColumn = new PropertyBlock<StockEntryData>(EntryInfo.getAccountAccessor(), "transferAccount", "Transfer Account") {
+		final IndividualBlock<StockEntryData, Composite> transferAccountColumn = new PropertyBlock<StockEntryData, Composite>(EntryInfo.getAccountAccessor(), "transferAccount", "Transfer Account") {
 			@Override
 			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
 				return data.getTransferEntry();
@@ -366,7 +396,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(account.getCurrency());
     	CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(account.getCurrency());
 		
-		RowSelectionTracker rowSelectionTracker = new RowSelectionTracker();
+		RowSelectionTracker<EntryRowControl> rowSelectionTracker = new RowSelectionTracker<EntryRowControl>();
 
 		rootBlock = new HorizontalBlock<StockEntryData, StockEntryRowControl>(
 				transactionDateColumn,
@@ -419,6 +449,15 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 								 * row.
 								 */
 								fEntriesControl.table.refreshSize(rowControl);
+								
+								/*
+								 * The above method will re-size the height of the row
+								 * to its preferred height, but it won't layout the child
+								 * controls if the preferred height did not change.
+								 * We therefore force a layout in order to bring the new
+								 * top control to the top and layout its child controls.
+								 */
+								rowControl.layout(true);
 							}
 						});
 						
@@ -430,7 +469,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 							final StockEntryData entryData,
 							final StackControl<StockEntryData, StockEntryRowControl> stackControl) {
 						return 	new SessionChangeAdapter() {
-
+							@Override
 							public void objectChanged(ExtendableObject changedObject,
 									ScalarPropertyAccessor changedProperty, Object oldValue,
 									Object newValue) {
@@ -438,21 +477,25 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 								
 							}
 
+							@Override
 							public void objectCreated(ExtendableObject newObject) {
 								// TODO Auto-generated method stub
 								
 							}
 
+							@Override
 							public void objectDestroyed(ExtendableObject deletedObject) {
 								// TODO Auto-generated method stub
 								
 							}
 
+							@Override
 							public void objectInserted(ExtendableObject newObject) {
 								// TODO Auto-generated method stub
 								
 							}
 
+							@Override
 							public void objectMoved(ExtendableObject movedObject,
 									ExtendableObject originalParent, ExtendableObject newParent,
 									ListPropertyAccessor originalParentListProperty,
@@ -461,11 +504,13 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 								
 							}
 
+							@Override
 							public void objectRemoved(ExtendableObject deletedObject) {
 								// TODO Auto-generated method stub
 								
 							}
 
+							@Override
 							public void performRefresh() {
 								// TODO Auto-generated method stub
 								
@@ -480,7 +525,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		);
 
 		// Create the table control.
-	    IRowProvider rowProvider = new StockRowProvider(rootBlock);
+	    IRowProvider<StockEntryData> rowProvider = new StockRowProvider(rootBlock);
 		fEntriesControl = new EntriesTable<StockEntryData>(getSection(), toolkit, rootBlock, this, rowProvider, account.getSession(), transactionDateColumn, rowSelectionTracker) {
 			@Override
 			protected StockEntryData createEntryRowInput(Entry entry) {

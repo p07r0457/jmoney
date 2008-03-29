@@ -227,6 +227,21 @@ public class StockEntryData extends EntryData {
 			purchaseOrSaleEntry.setAccount(account);
 		}
 
+		if (commissionEntry == null && account.getCommissionAccount() != null) {
+			commissionEntry = entries.createEntry();
+			commissionEntry.setAccount(account.getCommissionAccount());
+		}
+
+		if (tax1Entry == null && account.getTax1Account() != null) {
+			tax1Entry = entries.createEntry();
+			tax1Entry.setAccount(account.getTax1Account());
+		}
+
+		if (tax2Entry == null && account.getTax2Account() != null) {
+			tax2Entry = entries.createEntry();
+			tax2Entry.setAccount(account.getTax2Account());
+		}
+
 		// TODO: What is our strategy on changing values to keep
 		// the transaction balanced.  Quicken has a dialog box that
 		// asks the user what to adjust (with a 'recommended' choice
@@ -253,8 +268,15 @@ public class StockEntryData extends EntryData {
 		return dividendEntry;
 	}
 
+	/**
+	 * 
+	 * @return the entry that represents the withholding tax, or null if the
+	 *         withholding tax is not applicable to this transaction
+	 *         (transaction is a transfer or some other type that does not
+	 *         represent a transaction type which may potentially include a
+	 *         withholding tax)
+	 */
 	public Entry getWithholdingTaxEntry() {
-		Assert.isTrue(isDividend());
 		return withholdingTaxEntry;
 	}
 
@@ -272,7 +294,7 @@ public class StockEntryData extends EntryData {
 	 * 		commission, or null if this is not a purchase or sale
 	 * 		transaction
 	 */
-	public ExtendableObject getCommissionEntry() {
+	public Entry getCommissionEntry() {
 		return commissionEntry;
 	}
 
@@ -281,7 +303,7 @@ public class StockEntryData extends EntryData {
 	 * 		tax 1 amount, or null if this is not a purchase or sale
 	 * 		transaction
 	 */
-	public ExtendableObject getTax1Entry() {
+	public Entry getTax1Entry() {
 		return tax1Entry;
 	}
 
@@ -290,7 +312,7 @@ public class StockEntryData extends EntryData {
 	 * 		tax 2 amount, or null if this is not a purchase or sale
 	 * 		transaction
 	 */
-	public ExtendableObject getTax2Entry() {
+	public Entry getTax2Entry() {
 		return tax2Entry;
 	}
 
@@ -299,7 +321,7 @@ public class StockEntryData extends EntryData {
 	 * 		in a transfer transaction, or null if this is not a transfer
 	 * 		transaction
 	 */
-	public ExtendableObject getTransferEntry() {
+	public Entry getTransferEntry() {
 		return transferEntry;
 	}
 }
