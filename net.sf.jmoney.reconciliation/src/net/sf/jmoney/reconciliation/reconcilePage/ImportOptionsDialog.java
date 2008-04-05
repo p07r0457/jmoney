@@ -79,7 +79,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.Text;
 
 /**
  * An input dialog that allows the user to configure the methods for importing statement data
@@ -100,20 +99,11 @@ class ImportOptionsDialog extends Dialog {
 
 	Button reconcilableButton;
 
-	// The table viewer
 	TableViewer viewer;
 
 	private AccountControl<IncomeExpenseAccount> defaultAccountControl;
 
-	/**
-	 * Ok button widget.
-	 */
 	private Button okButton;
-
-	/**
-	 * Error message label widget.
-	 */
-	private Text errorMessageText;
 
 	Image errorImage;
 	
@@ -237,9 +227,9 @@ class ImportOptionsDialog extends Dialog {
 		
 		Label label = new Label(composite, SWT.WRAP);
 		label.setText("JMoney allows you to import bank account statements from the bank's servers. " +
-				"Before these records can be imported into JMoney, categories must be assigned to each entry " +
+				"Before these records can be imported into JMoney, you must specify categories that are to be assigned to each entry " +
 				"because a requirement of JMoney is that all entries have an account or category assigned. " +
-		"Select here the category that is to be initially assigned to each imported entry.");
+				"Categories can be assigned based on regex pattern matching.");
 
 		GridData messageData = new GridData();
 		Rectangle rect = getShell().getMonitor().getClientArea();
@@ -651,14 +641,11 @@ class ImportOptionsDialog extends Dialog {
 			messageArea.updateText(errorMessage, IMessageProvider.ERROR);
 		}
 		
-//		errorMessageText.setText(errorMessage == null ? "" : errorMessage); //$NON-NLS-1$
-
 		// If called during createDialogArea, the okButton
 		// will not have been created yet.
 		if (okButton != null) {
 			okButton.setEnabled(errorMessage == null);
 		}
-//		errorMessageText.getParent().update();
 	}
 
 	void swapOrderOfPatterns(MemoPattern thisPattern,
