@@ -47,10 +47,12 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ColumnViewerEditor;
 import org.eclipse.jface.viewers.ColumnViewerEditorActivationEvent;
 import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.FocusCellOwnerDrawHighlighter;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
@@ -61,6 +63,7 @@ import org.eclipse.jface.viewers.TableViewerEditor;
 import org.eclipse.jface.viewers.TableViewerFocusCellManager;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
@@ -220,10 +223,18 @@ class ImportOptionsDialog extends Dialog {
 		messageArea = new DialogMessageArea();
 		messageArea.createContents(composite);
 		
-		// What are these for?
-//		messageArea.setTitleLayoutData(createMessageAreaData());
-//		messageArea.setMessageLayoutData(createMessageAreaData());
+		// Ensure the message area is shown and fills the space
+		messageArea.setTitleLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		messageArea.setMessageLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 
+		messageArea.showTitle("Options for Statement Import", null);
+		/*
+		 * It should not be possible for there to be errors when the dialog box is first
+		 * opened, because we don't allow the user to save the data when there are errors.
+		 * However, just in case, we ensure that any errors are shown. 
+		 */
+		updateErrorMessage();
+		
 		Label label = new Label(composite, SWT.WRAP);
 		label.setText("JMoney allows you to import bank account statements from the bank's servers. " +
 				"Before these records can be imported into JMoney, categories must be assigned to each entry " +
@@ -288,7 +299,7 @@ class ImportOptionsDialog extends Dialog {
 		GridData tableData = new GridData(GridData.FILL_BOTH);
 		tableData.horizontalSpan = 2;
 		tableData.grabExcessHorizontalSpace = true;
-		tableData.grabExcessVerticalSpace = true;
+		tableData.grabExcessVerticalSpace = false;  //?????
 		patternMatchingTableControl.setLayoutData(tableData);
 
 		// The default category, if no rule matches
@@ -334,20 +345,27 @@ class ImportOptionsDialog extends Dialog {
 		viewer.setContentProvider(new PatternContentProvider());
 		viewer.setSorter(new PatternSorter());
 
+		ColumnViewerToolTipSupport.enableFor(viewer);
+
 		// Add the columns
 		TableViewerColumn column1 = new TableViewerColumn(viewer, SWT.LEFT);
 		column1.getColumn().setWidth(40);
 		column1.getColumn().setText("");
-		column1.setLabelProvider(new ColumnLabelProvider() {
+		column1.setLabelProvider(new CellLabelProvider() {
 			@Override
-			public Image getImage(Object element) {
-				MemoPattern pattern = (MemoPattern)element;
-				return isMemoPatternValid(pattern) ? null : errorImage;
+			public void update(ViewerCell cell) {
+				MemoPattern pattern = (MemoPattern)cell.getElement();
+				if (isMemoPatternValid(pattern) != null) {
+					cell.setImage(errorImage);
+				} else {
+					cell.setImage(null);
+				}
 			}
 
 			@Override
-			public String getText(Object element) {
-				return null;
+			public String getToolTipText(Object element) {
+				MemoPattern pattern = (MemoPattern)element;
+				return isMemoPatternValid(pattern);
 			}
 		});
 
@@ -400,18 +418,28 @@ class ImportOptionsDialog extends Dialog {
 		return composite;
 	}
 
-	protected boolean isMemoPatternValid(MemoPattern pattern) {
-		String patternString = pattern.getPattern();
-		if (patternString != null) {
-			try {
-				Pattern.compile(patternString);
-				return true;
-			} catch (PatternSyntaxException e) {
-				return false;
-			}
-		} else {
-			return true;
+	/**
+	 * 
+	 * @param pattern
+	 * @return null if the pattern is valid, or a string describing the error
+	 * 		if the pattern is not valid 
+	 */
+	protected String isMemoPatternValid(MemoPattern pattern) {
+		if (pattern.getPattern() == null) {
+			return "No regex pattern has been entered"; 
+		} 
+
+		try {
+			Pattern.compile(pattern.getPattern());
+		} catch (PatternSyntaxException e) {
+			return "The regex pattern is not valid: " + e.getDescription();
 		}
+		
+		if (pattern.getAccount() == null) {
+			return "No account has been entered";
+		}
+
+		return null;
 	}
 
 	private void addColumn(final ScalarPropertyAccessor<?> propertyAccessor, String tooltip) {
@@ -460,6 +488,7 @@ class ImportOptionsDialog extends Dialog {
 				MemoPattern pattern = (MemoPattern)element;
 				setValue(pattern, propertyAccessor, value);
 				viewer.update(element, null);
+				updateErrorMessage();
 			}
 
 			private <V> void setValue(MemoPattern pattern, ScalarPropertyAccessor<V> property, Object value) {
@@ -479,7 +508,7 @@ class ImportOptionsDialog extends Dialog {
 		Button button;
 
 		button = new Button(container, SWT.PUSH);
-		button.setText("Add...");
+		button.setText("Add Row");
 		button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		button.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -497,7 +526,7 @@ class ImportOptionsDialog extends Dialog {
 		});
 
 		button = new Button(container, SWT.PUSH);
-		button.setText("Remove");
+		button.setText("Remove Row");
 		button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		button.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -601,14 +630,14 @@ class ImportOptionsDialog extends Dialog {
 	public void updateErrorMessage() {
 		String errorMessage = null;
 
-		if (reconcilableButton.getSelection()) {
-			if (defaultAccountControl.getAccount() == null) {
+		if (account.isReconcilable()) {
+			if (account.getDefaultCategory() == null) {
 				errorMessage = "All reconcilable accounts must have a default category set.";
 			} else {
 				// Check the patterns
 				for (MemoPattern pattern: account.getPatternCollection()) {
-					if (!isMemoPatternValid(pattern)) {
-						errorMessage = "There are errors in the patterns below.  Hover over the error image to see details.";
+					if (isMemoPatternValid(pattern) != null) {
+						errorMessage = "There are errors in the patterns table.  Hover over the error image to the left of the row to see details.";
 						break;
 					}
 				}
@@ -616,7 +645,8 @@ class ImportOptionsDialog extends Dialog {
 		}
 	
 		if (errorMessage == null) {
-			messageArea.clearErrorMessage();
+//			messageArea.clearErrorMessage();    ?????
+			messageArea.restoreTitle();
 		} else {
 			messageArea.updateText(errorMessage, IMessageProvider.ERROR);
 		}
