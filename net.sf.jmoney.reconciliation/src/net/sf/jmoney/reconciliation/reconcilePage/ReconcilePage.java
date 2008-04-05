@@ -121,6 +121,12 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 	 */
 	protected Transaction currentTransaction = null;
 
+	/**
+	 * The import implementation (which implements an import such as QFX, OFX etc.)
+	 * for the last statement import, or null if the user has not yet done a statement import
+	 */
+	protected IBankStatementSource statementSource = null;
+	
     /**
      * Create a new page to edit entries.
      * 
@@ -300,95 +306,8 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 						public void widgetSelected(SelectionEvent event) {
 							try {
 								// Load the extension point listener for the selected source
-								IBankStatementSource statementSource = (IBankStatementSource)thisElement.createExecutableExtension("class");
-								Collection<IBankStatementSource.EntryData> importedEntries = statementSource.importEntries(getSite().getShell(), getAccount());
-								if (importedEntries != null) {
-							    	/*
-							    	 * Create a transaction to be used to import the entries.  This allows the entries to
-							    	 * be more efficiently written to the back-end datastore and it also groups
-							    	 * the entire import as a single change for undo/redo purposes.
-							    	 */
-									TransactionManager transactionManager = new TransactionManager(account.getDataManager());
-							    	CurrencyAccount accountInTransaction = transactionManager.getCopyInTransaction(account.getBaseObject());
-							    	IncomeExpenseAccount defaultCategoryInTransaction = accountInTransaction.getPropertyValue(ReconciliationAccountInfo.getDefaultCategoryAccessor());
-					           		Session sessionInTransaction = accountInTransaction.getSession();
-							  
-									for (IBankStatementSource.EntryData entryData: importedEntries) {
-						           		Transaction transaction = sessionInTransaction.createTransaction();
-						           		Entry entry1 = transaction.createEntry();
-						           		Entry entry2 = transaction.createEntry();
-						           		entry1.setAccount(accountInTransaction);
-						           		entry1.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), getStatement());
-						           		
-						           		/*
-						           		 * Scan for a match in the patterns.  If a match is found,
-						           		 * use the values for memo, description etc. from the pattern.
-						           		 */
-					           			String text = entryData.getTextToMatch();
-						           		for (MemoPattern pattern: account.getPatternCollection()) {
-						           			Matcher m = pattern.getCompiledPattern().matcher(text);
-						           			System.out.println(pattern.getPattern() + ", " + text);
-						           			if (m.matches()) {
-						           				/*
-						           				 * Group zero is the entire string and the groupCount method
-						           				 * does not include that group, so there is really one more group
-						           				 * than the number given by groupCount.
-						           				 */
-						           				Object [] args = new Object[m.groupCount()+1];
-						           				for (int i = 0; i <= m.groupCount(); i++) {
-						           					args[i] = m.group(i);
-						           				}
-						           				
-						           				// TODO: What effect does the locale have in the following?
-						           				if (pattern.getCheck() != null) {
-						           					entry1.setCheck(
-						           							new java.text.MessageFormat(
-						           									pattern.getCheck(), 
-						           									java.util.Locale.US)
-						           							.format(args));
-						           				}
-						           				
-						           				if (pattern.getMemo() != null) {
-						           					entry1.setMemo(
-						           							new java.text.MessageFormat(
-						           									pattern.getMemo(), 
-						           									java.util.Locale.US)
-						           							.format(args));
-						           				}
-						           				
-						           				if (pattern.getDescription() != null) {
-							           				entry2.setMemo(
-							           						new java.text.MessageFormat(
-							           								pattern.getDescription(), 
-							           								java.util.Locale.US)
-							           								.format(args));
-						           				}
-						           				
-								           		entry2.setAccount(transactionManager.getCopyInTransaction(pattern.getAccount()));
-								           		
-								           		break;
-						           			}
-						           		}
-						           		
-						           		// If nothing matched, set the default account but no 
-						           		// other property.
-						           		if (entry2.getAccount() == null) {
-						           			entry2.setAccount(defaultCategoryInTransaction);
-						        			entry1.setMemo(entryData.getDefaultMemo());
-						        			entry2.setMemo(entryData.getDefaultDescription());
-						        			
-						           		}
-						           		
-						           		entryData.assignPropertyValues(transaction, entry1, entry2);
-									}
-									
-									/*
-									 * All entries have been imported and all the properties
-									 * have been set and should be in a valid state, so we
-									 * can now commit the imported entries to the datastore.
-									 */
-									transactionManager.commit("Import Entries");									
-								}
+								statementSource = (IBankStatementSource)thisElement.createExecutableExtension("class");
+								importStatement();
 							} catch (CoreException e) {
 								// TODO Auto-generated catch block
 								e.printStackTrace();
@@ -418,7 +337,17 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 			        return;
 				}
 				
-				if (event.detail == SWT.ARROW) {
+				if (event.detail == SWT.NONE) {
+					/*
+					 * The user pressed the import button, but not on the down-arrow that
+					 * is positioned at the right side of the import button.  In this case,
+					 * we import using the format that was last used, or we ignore the click
+					 * if the user has not yet done an import using this button.
+					 */
+					if (statementSource != null) {
+						importStatement();
+					}
+				} else if (event.detail == SWT.ARROW) {
 					Rectangle rect = importButton.getBounds();
 					Point pt = new Point(rect.x, rect.y + rect.height);
 					menu.setLocation(toolBar.toDisplay(pt));
@@ -434,12 +363,9 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 			public void widgetSelected(SelectionEvent e) {
 				ImportOptionsDialog messageBox = 
 					new ImportOptionsDialog(getSite().getShell(), account);
-				if (messageBox.open() == Dialog.OK) {
-					// TODO: update the list in the 'import...' dropdown
-				}				
+				messageBox.open();
 			}
 		});
-
 		
         Composite containerOfSash = new Composite(form.getBody(), 0);
         containerOfSash.setLayout(new FormLayout());
@@ -498,8 +424,6 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         formData.left = new FormAttachment(0, 0);
         formData.right = new FormAttachment(100, 0);
         fStatementSection.getSection().setLayoutData(formData);
-
-        
         
         fUnreconciledSection = new UnreconciledSection(this, containerOfSash, rowTracker);
         managedForm.addPart(fUnreconciledSection);
@@ -513,26 +437,6 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         fUnreconciledSection.getSection().setLayoutData(formData);
 
         form.setText("Reconcile Entries against Bank Statement/Bank's Records");
-/* probably no longer needed
-        IToolBarManager toolBarManager = form.getToolBarManager();
-        toolBarManager.add(
-        		new Action("tree", JMoneyPlugin.createImageDescriptor("icons/TreeView.gif")) {
-        			public void run() {
-       					fStatementSection.setTreeView();
-        			}
-        		}
-        );
-
-        toolBarManager.add(
-        		new Action("table", JMoneyPlugin.createImageDescriptor("icons/TableView.gif")) {
-        			public void run() {
-       					fStatementSection.setTableView();
-        			}
-        		}
-        );
-
-        toolBarManager.update(false);
-*/        
     }
     
     public CurrencyAccount getAccount() {
@@ -556,5 +460,105 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 	public boolean isDeleteTransactionApplicable() {
 		// TODO Auto-generated method stub
 		return true;
+	}
+
+	/**
+	 * Imports data from an external source (usually the Bank's server or a file downloaded
+	 * from the Bank's server) into this bank statement.
+	 * 
+	 * Before this method can be called, the following must be set:
+	 * 
+	 * 1. statementSource must be set to an implementation of the IBankStatementSource interface.
+	 * 2. A statement must be open in the editor 
+	 */
+	void importStatement() {
+		Collection<IBankStatementSource.EntryData> importedEntries = statementSource.importEntries(getSite().getShell(), getAccount());
+		if (importedEntries != null) {
+			/*
+			 * Create a transaction to be used to import the entries.  This allows the entries to
+			 * be more efficiently written to the back-end datastore and it also groups
+			 * the entire import as a single change for undo/redo purposes.
+			 */
+			TransactionManager transactionManager = new TransactionManager(account.getDataManager());
+			CurrencyAccount accountInTransaction = transactionManager.getCopyInTransaction(account.getBaseObject());
+			IncomeExpenseAccount defaultCategoryInTransaction = accountInTransaction.getPropertyValue(ReconciliationAccountInfo.getDefaultCategoryAccessor());
+			Session sessionInTransaction = accountInTransaction.getSession();
+  
+			for (IBankStatementSource.EntryData entryData: importedEntries) {
+		   		Transaction transaction = sessionInTransaction.createTransaction();
+		   		Entry entry1 = transaction.createEntry();
+		   		Entry entry2 = transaction.createEntry();
+		   		entry1.setAccount(accountInTransaction);
+		   		entry1.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), getStatement());
+		   		
+		   		/*
+		   		 * Scan for a match in the patterns.  If a match is found,
+		   		 * use the values for memo, description etc. from the pattern.
+		   		 */
+				String text = entryData.getTextToMatch();
+		   		for (MemoPattern pattern: account.getPatternCollection()) {
+		   			Matcher m = pattern.getCompiledPattern().matcher(text);
+		   			System.out.println(pattern.getPattern() + ", " + text);
+		   			if (m.matches()) {
+		   				/*
+		   				 * Group zero is the entire string and the groupCount method
+		   				 * does not include that group, so there is really one more group
+		   				 * than the number given by groupCount.
+		   				 */
+		   				Object [] args = new Object[m.groupCount()+1];
+		   				for (int i = 0; i <= m.groupCount(); i++) {
+		   					args[i] = m.group(i);
+		   				}
+		   				
+		   				// TODO: What effect does the locale have in the following?
+		   				if (pattern.getCheck() != null) {
+		   					entry1.setCheck(
+		   							new java.text.MessageFormat(
+		   									pattern.getCheck(), 
+		   									java.util.Locale.US)
+		   							.format(args));
+		   				}
+		   				
+		   				if (pattern.getMemo() != null) {
+		   					entry1.setMemo(
+		   							new java.text.MessageFormat(
+		   									pattern.getMemo(), 
+		   									java.util.Locale.US)
+		   							.format(args));
+		   				}
+		   				
+		   				if (pattern.getDescription() != null) {
+		       				entry2.setMemo(
+		       						new java.text.MessageFormat(
+		       								pattern.getDescription(), 
+		       								java.util.Locale.US)
+		       								.format(args));
+		   				}
+		   				
+		           		entry2.setAccount(transactionManager.getCopyInTransaction(pattern.getAccount()));
+		           		
+		           		break;
+		   			}
+		   		}
+		   		
+		   		// If nothing matched, set the default account but no 
+		   		// other property.
+		   		if (entry2.getAccount() == null) {
+		   			entry2.setAccount(defaultCategoryInTransaction);
+					entry1.setMemo(entryData.getDefaultMemo());
+					entry2.setMemo(entryData.getDefaultDescription());
+					
+		   		}
+		   		
+		   		entryData.assignPropertyValues(transaction, entry1, entry2);
+			}
+			
+			/*
+			 * All entries have been imported and all the properties
+			 * have been set and should be in a valid state, so we
+			 * can now commit the imported entries to the datastore.
+			 */
+			transactionManager.commit("Import Entries");									
+		}
 	}
 }
