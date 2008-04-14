@@ -315,7 +315,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		
 		if (isSelected) {
 			// This call may be needed only to update the header
-			rowTable.setCurrentRow(input);
+			rowTable.setCurrentRow(input, uncommittedEntryData);
 		}
 	}
 

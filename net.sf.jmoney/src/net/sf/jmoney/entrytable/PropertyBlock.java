@@ -111,7 +111,8 @@ abstract public class PropertyBlock<T extends EntryData, R extends Composite> ex
 			}
 
 			public void load(T data) {
-				propertyControl.load(getObjectContainingProperty(data));
+				ExtendableObject entryContainingProperty = getObjectContainingProperty(data);
+				propertyControl.load(entryContainingProperty);
 			}
 
 			public void save() {

@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Slider;
 
 public class VirtualRowTable<T extends EntryData> extends Composite {
 
-	/** the number of rows in the data structure */
+	/** the number of rows in the underlying model */
 	int rowCount;
 
 	/**
@@ -52,7 +52,10 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 	int topVisibleRow = 0;
 
 	/**
-	 * the list of row objects for all the rows that are currently visible
+	 * the set of row objects for all the rows that are either currently visible or
+	 * is the selected row (control for the selected row is maintained even when scrolled
+	 * out of view because it may contain unsaved data or may have data that cannot be saved
+	 * because it is not valid) 
 	 */
 	Map<EntryData, BaseEntryRowControl> rows = new HashMap<EntryData, BaseEntryRowControl>();
 
@@ -87,7 +90,7 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 
 	IRowProvider<T> rowProvider;
 
-	private Header header;
+	private Header<T> header;
 	
 	private Composite contentPane;
 	
@@ -183,13 +186,14 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 		
 	}
 
-	public void setCurrentRow(T entryData) {
-		currentRow = contentProvider.indexOf(entryData);
+	// TODO: Verify first parameter needed.
+	// Can we clean this up?
+	public void setCurrentRow(T committedEntryData, T uncommittedEntryData) {
+		currentRow = contentProvider.indexOf(committedEntryData);
 		
-		header.setInput(entryData);
+		header.setInput(uncommittedEntryData);
+	}	
 
-	}
-	
 	/**
 	 * Deletes the given row.
 	 * 
@@ -962,11 +966,11 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 	 */
 	public void rowDeselected(BaseEntryRowControl<T, ?> rowControl) {
 		/*
-		 * If the row is not visible then we can release it.
+		 * If the row is not visible then we can release it.  However,
+		 * there is no easy way of knowing whether it is visible. (We know
+		 * it will be in the rows map because the selected row is always
+		 * in that map whether visible or not).
 		 */
-		if (!rows.containsKey(rowControl.committedEntryData)) {
-			rowProvider.releaseRow(rowControl);
-		}
 	}
 
 	/**

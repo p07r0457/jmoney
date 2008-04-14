@@ -123,16 +123,21 @@ public class AccountEditor<A extends Account> implements IPropertyControl {
     	
     	extendableObject = object;
 
-    	/*
-    	 * We must listen to the model for changes in the value
-    	 * of this property.
-    	 */
-        object.getDataManager().addChangeListener(amountChangeListener);
+    	if (object != null) {
+    		/*
+    		 * We must listen to the model for changes in the value
+    		 * of this property.
+    		 */
+    		object.getDataManager().addChangeListener(amountChangeListener);
 
-        propertyControl.setSession(object.getSession(), accountPropertyAccessor.getClassOfValueObject());
+    		propertyControl.setSession(object.getSession(), accountPropertyAccessor.getClassOfValueObject());
 
-    	A account = object.getPropertyValue(accountPropertyAccessor);
-        propertyControl.setAccount(account);
+    		A account = object.getPropertyValue(accountPropertyAccessor);
+    		propertyControl.setAccount(account);
+    	} else {
+    		// Disable the control.  How this is done exactly depends on where the
+    		// control is located.  So we leave it to the caller.
+    	}
     }
 
     /**

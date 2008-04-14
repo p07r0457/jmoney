@@ -56,12 +56,21 @@ public interface IPropertyControl {
     Control getControl();
 
     /**
-     * Load the value into the control.  If the
-     * object is null then the control must both have its
-     * value blanked out and be disabled.
+     * Bind the control to the given object.
      * 
-     * @param object The object that contains the value of
-     * the property.
+     * All property controls are constructed for a particular property,
+     * so only the extendable object can be changed once the control has
+     * been created.
+     * 
+     * Null values can be passed to this method, in which case the control
+     * is disabled.  The exact way of disabling the control depends on where
+     * this control is used.  In some places it may just need to be disabled.
+     * In the entries tables, the control should be made invisible so the user
+     * sees only the background color.  Therefore it is up to the caller to take
+     * appropriate action on the control when null is passed.
+     * 
+     * @param object the object that contains the value of
+     * the property, or null if the control in not to be bound
      */
     void load(ExtendableObject object);
 
