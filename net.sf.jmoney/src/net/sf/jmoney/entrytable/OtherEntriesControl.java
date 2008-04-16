@@ -155,7 +155,16 @@ public class OtherEntriesControl extends Composite {
 	}
 
 	public void save() {
-		// TODO Do we need to pass this on to the child controls?
+		/*
+		 * The focus cell in our child table may not have been saved. Data in
+		 * each cell is normally saved when another cell gets focus. However,
+		 * there is a separate focus cell tracker for the cells inside this
+		 * control and the cells outside.
+		 */
+		ICellControl cell = focusCellTracker.getFocusCell();
+		if (cell != null) {
+			cell.save();
+		}
 	}
 
 	/**
