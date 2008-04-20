@@ -21,6 +21,7 @@ package net.sf.jmoney.stocks.pages;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.BalanceColumn;
 import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
@@ -34,8 +35,11 @@ import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IRowProvider;
 import net.sf.jmoney.entrytable.IndividualBlock;
+import net.sf.jmoney.entrytable.OtherEntriesBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
+import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
+import net.sf.jmoney.entrytable.SplitEntryRowControl;
 import net.sf.jmoney.entrytable.StackBlock;
 import net.sf.jmoney.entrytable.StackControl;
 import net.sf.jmoney.entrytable.VerticalBlock;
@@ -108,7 +112,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 				control.add("sell");
 				control.add("dividend");
 				control.add("transfer");
-//				control.add("split");
+				control.add("custom");
 				
 				control.addSelectionListener(new SelectionAdapter(){
 					@Override
@@ -126,6 +130,9 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 							break;
 						case 3:
 							rowControl.getUncommittedEntryData().forceTransactionToTransfer();
+							break;
+						case 4:
+							rowControl.getUncommittedEntryData().forceTransactionToCustom();
 							break;
 						}
 						
@@ -154,6 +161,9 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 							control.select(3);
 							break;
 						case Other:
+							control.select(4);
+							break;
+						default:  // TODO does this pick up null?
 							control.deselectAll();
 							control.setText("");
 							break;
@@ -392,6 +402,14 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 			}
 		};		
 
+		final Block<EntryData, BaseEntryRowControl> customTransactionColumn = new OtherEntriesBlock(
+				new HorizontalBlock<Entry, SplitEntryRowControl>(
+						new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
+						new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), JMoneyPlugin.getResourceString("Entry.description")),
+						new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
+				)
+		);
+		
 		CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(account.getCurrency());
 		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(account.getCurrency());
     	CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(account.getCurrency());
@@ -410,11 +428,13 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 				new StackBlock<StockEntryData, StockEntryRowControl>(
 						withholdingTaxColumn,
 						purchaseOrSaleInfoColumn,
-						transferAccountColumn
+						transferAccountColumn,
+						customTransactionColumn
 				) {
 
 					@Override
 					protected Block<? super StockEntryData, ? super StockEntryRowControl> getTopBlock(StockEntryData data) {
+						// TODO: do we go to default if null?
 						switch (data.getTransactionType()) {
 						case Buy:
 						case Sell:
@@ -423,6 +443,8 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 							return withholdingTaxColumn;
 						case Transfer:
 							return transferAccountColumn;
+						case Other:
+							return customTransactionColumn;
 						default:
 							return null;
 						}

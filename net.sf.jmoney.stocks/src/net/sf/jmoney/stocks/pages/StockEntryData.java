@@ -132,31 +132,6 @@ public class StockEntryData extends EntryData {
 		}
 	}
 
-	public void forceTransactionToTransfer() {
-		transactionType = TransactionType.Transfer;
-
-		EntryCollection entries = getEntry().getTransaction().getEntryCollection();
-		for (Iterator<Entry> iter = entries.iterator(); iter.hasNext(); ) {
-			Entry entry = iter.next();
-			if (entry != mainEntry
-					&& entry != transferEntry) {
-				iter.remove();
-			}
-		}
-		
-		dividendEntry = null;
-		withholdingTaxEntry = null;
-		commissionEntry = null;
-		tax1Entry = null;
-		tax2Entry = null;
-		purchaseOrSaleEntry = null;
-		
-		if (transferEntry == null) {
-			transferEntry = entries.createEntry();
-		}
-		transferEntry.setAmount(-mainEntry.getAmount());
-	}
-
 	public void forceTransactionToDividend() {
 		transactionType = TransactionType.Dividend;
 
@@ -248,6 +223,68 @@ public class StockEntryData extends EntryData {
 		// that in my experience is never the correct choice!).
 		
 //		dividendEntry.setAmount(-mainEntry.getAmount());
+	}
+
+	public void forceTransactionToTransfer() {
+		transactionType = TransactionType.Transfer;
+
+		EntryCollection entries = getEntry().getTransaction().getEntryCollection();
+		for (Iterator<Entry> iter = entries.iterator(); iter.hasNext(); ) {
+			Entry entry = iter.next();
+			if (entry != mainEntry
+					&& entry != transferEntry) {
+				iter.remove();
+			}
+		}
+		
+		dividendEntry = null;
+		withholdingTaxEntry = null;
+		commissionEntry = null;
+		tax1Entry = null;
+		tax2Entry = null;
+		purchaseOrSaleEntry = null;
+		
+		if (transferEntry == null) {
+			transferEntry = entries.createEntry();
+		}
+		transferEntry.setAmount(-mainEntry.getAmount());
+	}
+
+	public void forceTransactionToCustom() {
+		transactionType = TransactionType.Other;
+
+		/*
+		 * This method is not so much a 'force' as a 'set'.  The other 'force' methods
+		 * have to modify the transaction, including the lose of information, in order
+		 * to transform the transaction to the required type.  This method does not need
+		 * to change the transaction data at all.  It does adjust the UI to give the user
+		 * full flexibility.
+		 * 
+		 * Note that the user may edit the transaction so that it matches one of the
+		 * types (buy, sell, dividend etc).  In that case, the transaction will appear
+		 * as that type, not as a custom type, if it is saved and re-loaded.
+		 */
+		
+		// Must be at least one entry
+		EntryCollection entries = getEntry().getTransaction().getEntryCollection();
+		if (entries.size() == 1) {
+			entries.createEntry();
+		}
+
+		/*
+		 * Forget the special entries. It may be that these would be useful to
+		 * keep in case the user decides to go back to one of the set
+		 * transaction types. However, the user may edit these entries, or
+		 * delete them, and it is too complicated to worry about the
+		 * consequences.
+		 */
+		dividendEntry = null;
+		withholdingTaxEntry = null;
+		commissionEntry = null;
+		tax1Entry = null;
+		tax2Entry = null;
+		purchaseOrSaleEntry = null;
+		transferEntry = null;
 	}
 
 	public TransactionType getTransactionType() {

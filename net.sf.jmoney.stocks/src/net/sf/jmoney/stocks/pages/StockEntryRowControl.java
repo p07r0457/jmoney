@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.FocusCellTracker;
+import net.sf.jmoney.entrytable.InvalidUserEntryException;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.VirtualRowTable;
 import net.sf.jmoney.isolation.TransactionManager;
@@ -218,6 +219,63 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 			}
 
 			uncommittedEntryData.getEntry().setAmount(-amount);
+		}
+	}
+
+	@Override
+	protected void specificValidation() throws InvalidUserEntryException {
+		/*
+		 * Check for zero amounts. Some fields may be zeroes (for example, commissions and
+		 * withheld taxes), others may not (for example, quantity of stock sold).
+		 * 
+		 * We do leave entries with zero amounts.  This makes the code simpler
+		 * because the transaction is already set up for the transaction type,
+		 * and it is easier to determine the transaction type.  
+		 * 
+		 * It is possible that the total proceeds of a sale are zero.  Anyone who
+		 * has disposed of shares in a sub-prime mortgage company in order to
+		 * claim the capital loss will know that the commission may equal the sale
+		 * price.  It is probably good that the transaction still shows up in
+		 * the cash entries list for the account.
+		 */
+		switch (uncommittedEntryData.getTransactionType()) {
+		case Buy:
+		case Sell:
+			if (uncommittedEntryData.getPurchaseOrSaleEntry().getAmount() == 0) {
+				throw new InvalidUserEntryException("The quantity of stock in a purchase or sale cannot be zero.", null);
+			}
+			break;
+		case Dividend:
+			if (uncommittedEntryData.getDividendEntry().getAmount() == 0) {
+				throw new InvalidUserEntryException("The amount of a dividend cannot be zero.", null);
+			}
+			break;
+		case Transfer:
+			if (uncommittedEntryData.getTransferEntry().getAmount() == 0) {
+				throw new InvalidUserEntryException("The amount of a transfer cannot be zero.", null);
+			}
+			break;
+		case Other:
+			// We don't allow any amounts to be zero except the listed entry
+			// (the listed entry is used to ensure a transaction appears in this
+			// list even if the transaction does not result in a change in the cash
+			// balance).
+			Entry mainEntry = uncommittedEntryData.getEntry();
+			if (mainEntry.getTransaction().getEntryCollection().size() == 1) {
+				// TODO: create another entry when 'other' selected and don't allow it to be
+				// deleted, thus this check is not necessary.
+				// TODO: should not be 'other' when no transaction has been selected
+				// (should be null)
+				throw new InvalidUserEntryException("Must have another entry.", null);
+			}
+			for (Entry entry : mainEntry.getTransaction().getEntryCollection()) {
+				if (entry != mainEntry) {
+					if (entry.getAmount() == 0) {
+						throw new InvalidUserEntryException("The amount of an entry in this transaction cannot be zero.", null);
+					}
+				}
+			}
+			break;
 		}
 	}
 }
