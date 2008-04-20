@@ -44,7 +44,7 @@ import org.eclipse.swt.widgets.Control;
  * 
  * @author Nigel Westbury
  */
-public class OtherEntriesBlock extends CellBlock<EntryData, EntryRowControl> {
+public class OtherEntriesBlock extends CellBlock<EntryData, BaseEntryRowControl> {
 
 	final static int DROPDOWN_BUTTON_WIDTH = 15;
 	
@@ -62,7 +62,7 @@ public class OtherEntriesBlock extends CellBlock<EntryData, EntryRowControl> {
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(Composite parent, EntryRowControl rowControl) {
+	public ICellControl<EntryData> createCellControl(Composite parent, BaseEntryRowControl rowControl) {
 		
 	    /*
 	     * Use a single row tracker and cell focus tracker for this
@@ -73,7 +73,7 @@ public class OtherEntriesBlock extends CellBlock<EntryData, EntryRowControl> {
 	    RowSelectionTracker<SplitEntryRowControl> rowTracker = new RowSelectionTracker<SplitEntryRowControl>();
 	    FocusCellTracker cellTracker = new FocusCellTracker();
 
-		final OtherEntriesControl control = new OtherEntriesControl(rowControl, otherEntriesRootBlock, rowTracker, cellTracker);
+		final OtherEntriesControl control = new OtherEntriesControl(parent, otherEntriesRootBlock, rowTracker, cellTracker);
 		
 		return new ICellControl<EntryData>() {
 			public Control getControl() {

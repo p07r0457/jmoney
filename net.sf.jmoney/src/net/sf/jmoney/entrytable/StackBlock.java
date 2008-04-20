@@ -89,6 +89,16 @@ public abstract class StackBlock<T extends EntryData, R extends RowControl<T,R>>
 		init(children);
 	}
 	
+	public StackBlock(Block<? super T,? super R> child1, Block<? super T,? super R> child2, Block<? super T,? super R> child3, Block<? super T,? super R> child4) {
+		super(0, 0);
+		ArrayList<Block<? super T,? super R>> children = new ArrayList<Block<? super T,? super R>>();
+		children.add(child1);
+		children.add(child2);
+		children.add(child3);
+		children.add(child4);
+		init(children);
+	}
+	
 	private void init(ArrayList<Block<? super T,? super R>> children) {
 		this.children = children;
 

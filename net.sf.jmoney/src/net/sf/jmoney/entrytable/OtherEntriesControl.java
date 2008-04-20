@@ -87,7 +87,7 @@ public class OtherEntriesControl extends Composite {
 	
 	static private Image downArrowImage = null;
 
-	public OtherEntriesControl(EntryRowControl parent, Block<Entry, SplitEntryRowControl> rootBlock, RowSelectionTracker selectionTracker, FocusCellTracker focusCellTracker) {
+	public OtherEntriesControl(Composite parent, Block<Entry, SplitEntryRowControl> rootBlock, RowSelectionTracker selectionTracker, FocusCellTracker focusCellTracker) {
 		super(parent, SWT.NONE);
 		this.rootBlock = rootBlock;
 		this.selectionTracker = selectionTracker;

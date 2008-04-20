@@ -25,6 +25,9 @@ package net.sf.jmoney.entrytable;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.model2.Transaction.EntryCollection;
+import net.sf.jmoney.pages.entries.ForeignCurrencyDialog;
 
 import org.eclipse.swt.widgets.Composite;
 
@@ -62,6 +65,41 @@ public class EntryRowControl extends BaseEntryRowControl<EntryData, EntryRowCont
 			Commodity commodity2 = otherEntry.getCommodity();
 			if (commodity1 == null || commodity2 == null || commodity1.equals(commodity2)) {
 				otherEntry.setAmount(-entry.getAmount());
+			}
+		}
+	}
+
+	@Override
+	protected void specificValidation() throws InvalidUserEntryException {
+		/*
+		 * Check for zero amounts. A zero amount is normally a user
+		 * error and will not be accepted. However, if this is not a
+		 * split transaction and the currencies are different then we
+		 * prompt the user for the amount of the other entry (the income
+		 * and expense entry). This is very desirable because the
+		 * foreign currency column (being used so little) is not
+		 * displayed by default.
+		 */
+		// TODO: We could drop down the shell as though this is a split
+		// entry whenever the currencies do not match.  This would expose
+		// the amount of the other entry.
+		if (!uncommittedEntryData.hasSplitEntries()
+				&& uncommittedEntryData.getEntry().getAmount() != 0
+				&& uncommittedEntryData.getOtherEntry().getAmount() == 0
+				&& uncommittedEntryData.getOtherEntry().getCommodity() != uncommittedEntryData.getEntry().getCommodity()) {
+			ForeignCurrencyDialog dialog = new ForeignCurrencyDialog(
+					getShell(),
+					uncommittedEntryData);
+			dialog.open();
+		} else {
+			Transaction y = uncommittedEntryData.getEntry().getTransaction();
+			EntryCollection x = uncommittedEntryData.getEntry().getTransaction().getEntryCollection();
+			for (Entry entry: uncommittedEntryData.getEntry().getTransaction().getEntryCollection()) {
+				if (entry.getAmount() == 0) {
+					throw new InvalidUserEntryException(
+							"A non-zero credit or debit amount must be entered.",
+							null);
+				}
 			}
 		}
 	}

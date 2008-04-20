@@ -35,6 +35,7 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.model2.Transaction.EntryCollection;
 import net.sf.jmoney.pages.entries.ForeignCurrencyDialog;
 
 import org.eclipse.core.runtime.FileLocator;
@@ -421,35 +422,9 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 					}
 				}
 
-				/*
-				 * Check for zero amounts. A zero amount is normally a user
-				 * error and will not be accepted. However, if this is not a
-				 * split transaction and the currencies are different then we
-				 * prompt the user for the amount of the other entry (the income
-				 * and expense entry). This is very desirable because the
-				 * foreign currency column (being used so little) is not
-				 * displayed by default.
-				 */
-				// TODO: We could drop down the shell as though this is a split
-				// entry whenever the currencies do not match.  This would expose
-				// the amount of the other entry.
-				if (!uncommittedEntryData.hasSplitEntries()
-						&& uncommittedEntryData.getEntry().getAmount() != 0
-						&& uncommittedEntryData.getOtherEntry().getAmount() == 0
-						&& uncommittedEntryData.getOtherEntry().getCommodity() != uncommittedEntryData.getEntry().getCommodity()) {
-					ForeignCurrencyDialog dialog = new ForeignCurrencyDialog(
-							getShell(),
-							uncommittedEntryData);
-					dialog.open();
-				} else {
-					for (Entry entry: uncommittedEntryData.getEntry().getTransaction().getEntryCollection()) {
-						if (entry.getAmount() == 0) {
-							throw new InvalidUserEntryException(
-									"A non-zero credit or debit amount must be entered.",
-									null);
-						}
-					}
-				}
+				// Do any specific processing in derived classes.
+				specificValidation();
+				
 			} catch (InvalidUserEntryException e) {
 		        MessageDialog dialog = new MessageDialog(
 						getShell(), 
@@ -529,6 +504,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 
 		return true;
 	}
+
+	protected abstract void specificValidation() throws InvalidUserEntryException;
 
 	/**
 	 * Given an accounting transaction, which must be empty (no properties
@@ -683,20 +660,5 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	}
 
 	public abstract void amountChanged();
-}
-
-class InvalidUserEntryException extends Exception {
-	private static final long serialVersionUID = -8693190447361905525L;
-
-	Control itemWithError = null;
-
-	public InvalidUserEntryException(String message, Control itemWithError) {
-		super(message);
-		this.itemWithError = itemWithError;
-	}
-
-	public Control getItemWithError() {
-		return itemWithError;
-	}
 }
 
