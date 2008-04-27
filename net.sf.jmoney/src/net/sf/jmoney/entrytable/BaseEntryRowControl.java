@@ -60,6 +60,13 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
+//TODO: Should RowControl wrap, rather than extend, CellContainer?
+//or should this class?  The problem is, input to cellContainer is
+//controlled by this class and so should not be publicly available.
+//Currently uncommittedEntryData and input are two copies of the same
+//thing.
+// Or should this wrap RowControl, as RowControl is also used for split
+// entries, and that does pass on the input as is.
 public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEntryRowControl<T,R>> extends RowControl<T,R> {
 	// The darker blue and green lines for the listed entry in each transaction
 	protected static final Color transactionColor = new Color(Display
@@ -99,13 +106,17 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	 * the committed version of the entry, or a null Entry object if this row
 	 * represents the 'new entry' row.
 	 * 
-	 * This field is a duplicate of the <code>input</code> field.
+	 * Note that this field should not be used as input to the cell controls.
+	 * This row implementation does its row editing inside a transaction and
+	 * will create an uncommitted version of the EntryData that is used as
+	 * input to the cell controls.
 	 */
 	protected T committedEntryData = null;
 
 	/**
 	 * The EntryData object currently set into this object, or null
 	 * if this object does not represent a currently visible row
+	 * (duplicate of base input field)
 	 */
 	protected T uncommittedEntryData = null;
 
@@ -236,8 +247,17 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		}
 	}
 
+	/**
+	 * Sets the content of this row.  This class does all row editing inside
+	 * a transaction, so the input to the contained controls is the uncommitted
+	 * version.  However, the committed version should be passed to this method.
+	 * This method will create the transaction to be used for editing this row.
+	 * 
+	 * @param committedEntryData the committed version of the EntryData that is
+	 * 		to provide the contents of this row, or null if this is the new
+	 * 		entry row.
+	 */
 	public void setContent(T committedEntryData) {
-		this.input = committedEntryData;
 		this.committedEntryData = committedEntryData;
 
 		setAppropriateBackgroundColor();
@@ -262,39 +282,9 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		uncommittedEntryData.setIndex(committedEntryData.getIndex());
 		uncommittedEntryData.setBalance(committedEntryData.getBalance());
 		
-		// TEMP: Loading a control may potentially create more controls because of the
-		// lazy creation of controls inside a stack control.  Because of this we take a
-		// copy of the list before iterating so we don't process new entries or get
-		// concurrency exceptions.  New entries will be loaded when created anyway because 
-		// the input is set by the time we get here.
-		Collection<ICellControl<? super T>> x = new ArrayList<ICellControl<? super T>>(controls.values());
-		for (final ICellControl<? super T> control: x) {
-			control.load(uncommittedEntryData);
-		}
-	}
-
-	// TODO: figure out how to remove this override.  It is almost identical to the 
-	// base except it does not use input but instead an uncommitted version.
-	@Override
-	public void createCellControl(Composite parent,	CellBlock<? super T, ? super R> cellBlock) {
-		final ICellControl<? super T> cellControl = cellBlock.createCellControl(parent, getThis());
-		controls.put(cellBlock, cellControl);
-
-		if (uncommittedEntryData != null) {
-			cellControl.load(uncommittedEntryData);
-		}
-		
-		FocusListener controlFocusListener = new CellFocusListener<R>(getThis(), cellControl, selectionTracker, focusCellTracker);
-		
-		Control control = cellControl.getControl();
-//			control.addKeyListener(keyListener);
-		addFocusListenerRecursively(control, controlFocusListener);
-//			control.addTraverseListener(traverseListener);
-		
-		// This is needed in case more child controls are created at a
-		// later time.  This is not the cleanest code, but the UI for  these
-		// split entries may be changed at a later time anyway.
-		cellControl.setFocusListener(controlFocusListener);
+		// The uncommitted version of the EntryData object forms the input to
+		// the cell controls.
+		setInput(uncommittedEntryData);
 	}
 
 	protected abstract T createUncommittedEntryData(Entry entryInTransaction,
@@ -496,6 +486,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 				uncommittedEntryData.setIndex(committedEntryData.getIndex());
 				uncommittedEntryData.setBalance(committedEntryData.getBalance());
 				
+				// Load all top level controls with this data.
 				for (final ICellControl<? super T> control: controls.values()) {
 					control.load(uncommittedEntryData);
 				}
@@ -655,8 +646,12 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		balanceChangeListeners.add(listener);
 	}
 
-	public T getInput() {
-		return input;
+	/**
+	 * @return the committed version of the EntryData object for this row,
+	 * 		or null if this row represents the new entry row
+	 */
+	public T getContent() {
+		return committedEntryData;
 	}
 
 	public abstract void amountChanged();

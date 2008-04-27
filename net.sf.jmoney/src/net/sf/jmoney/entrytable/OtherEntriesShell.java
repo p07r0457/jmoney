@@ -86,7 +86,7 @@ public class OtherEntriesShell {
 		    final FocusCellTracker cellTracker = new FocusCellTracker();
 			for (Entry entry: entryData.getSplitEntries()) {
 				SplitEntryRowControl row = new SplitEntryRowControl(composite, SWT.NONE, rootBlock, isLinked, rowTracker, cellTracker);
-				row.setContent(entry);
+				row.setInput(entry);
 				rowControls.put(entry, row);
 			}
 			
@@ -98,7 +98,7 @@ public class OtherEntriesShell {
 						if (newEntry.getTransaction() == entryData.getEntry().getTransaction()) {
 							entryData.getSplitEntries().add(newEntry);
 							SplitEntryRowControl row = new SplitEntryRowControl(composite, SWT.NONE, rootBlock, isLinked, rowTracker, cellTracker);
-							row.setContent(newEntry);
+							row.setInput(newEntry);
 							rowControls.put(newEntry, row);
 			    	        shell.pack();
 						}
@@ -217,7 +217,7 @@ public class OtherEntriesShell {
 			SplitEntryRowControl rowControl = rowTracker.getSelectedRow();
 			// TODO: Is a row ever not selected?
 			if (rowControl != null) {
-				Entry entry = rowControl.getContent();
+				Entry entry = rowControl.getInput();
 				entryData.getEntry().getTransaction().deleteEntry(entry);
 			}
 		}
@@ -226,7 +226,7 @@ public class OtherEntriesShell {
 			SplitEntryRowControl rowControl = rowTracker.getSelectedRow();
 			// TODO: Is a row ever not selected?
 			if (rowControl != null) {
-				Entry entry = rowControl.getContent();
+				Entry entry = rowControl.getInput();
 				
 				long totalAmount = 0;
 				for (Entry eachEntry: entryData.getEntry().getTransaction().getEntryCollection()) {

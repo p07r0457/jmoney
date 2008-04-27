@@ -54,14 +54,6 @@ public class SplitEntryRowControl extends RowControl<Entry, SplitEntryRowControl
 	.getCurrent(), 255, 255, 255);
 
 	/**
-	 * The current content of this row control, or null if no
-	 * content has yet been set.
-	 * 
-	 * This field is a duplicate of the <code>input</code> field.
-	 */
-	private Entry entry = null;
-	
-	/**
 	 * true if this row is the current selection, false otherwise
 	 */
 	private boolean isSelected = false;
@@ -170,19 +162,6 @@ public class SplitEntryRowControl extends RowControl<Entry, SplitEntryRowControl
 		}
 */
 		addPaintListener(paintListener);
-	}
-
-	public void setContent(final Entry entry) {
-		this.input = entry;
-		this.entry = entry;
-		
-		for (final ICellControl<? super Entry> control: controls.values()) {
-			control.load(entry);
-		}
-	}
-
-	public Entry getContent() {
-		return entry;
 	}
 
 	/**

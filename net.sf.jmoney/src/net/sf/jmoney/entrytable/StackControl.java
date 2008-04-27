@@ -52,7 +52,7 @@ public class StackControl<T extends EntryData, R extends RowControl<T,R>> extend
 	 * Maps each child block to the child control of the stack composite
 	 * that shows that block in the header.
 	 */
-	private Map<Block, Composite> childControls = new HashMap<Block, Composite>();
+	private Map<Block, CellContainer<T,R>> childControls = new HashMap<Block, CellContainer<T,R>>();
 
 	private CompressedStackLayout stackLayout;
 	
@@ -106,7 +106,7 @@ public class StackControl<T extends EntryData, R extends RowControl<T,R>> extend
 	 */
 	public void setTopBlock(Block<? super T, ? super R> topBlock) {
 		// First set the top control in this row
-		Composite topControl;
+		CellContainer<T,R> topControl;
 		if (topBlock == null) {
 //			if (blankControl == null) {
 //				blankControl = new Composite(this, SWT.NULL);
@@ -116,13 +116,12 @@ public class StackControl<T extends EntryData, R extends RowControl<T,R>> extend
 		} else {
 			topControl = childControls.get(topBlock); 
 			if (topControl == null) {
-				topControl = new Composite(this, SWT.NULL);
+				topControl = new CellContainer<T,R>(this, SWT.NULL);
 				final BlockLayout<T> childLayout = new BlockLayout<T>(topBlock, false);
 				topControl.setLayout(childLayout);
 				
-				for (CellBlock<? super T, ? super R> cellBlock: topBlock.buildCellList()) {
-					rowControl.createCellControl(topControl, cellBlock);
-				}
+				topControl.init(rowControl, topBlock, rowControl.selectionTracker, rowControl.focusCellTracker);
+				topControl.setInput(entryData);
 				
 				final Composite finalTopControl = topControl;
 				topControl.addPaintListener(new PaintListener() {

@@ -147,6 +147,7 @@ public class Currency extends Commodity {
 		try {
 			amount = getNumberFormat().parse(amountString);
 		} catch (ParseException pex) {
+			// If bad user entry, leave as zero
 		}
 		return Math.round(
 				amount.doubleValue() * getScaleFactor());

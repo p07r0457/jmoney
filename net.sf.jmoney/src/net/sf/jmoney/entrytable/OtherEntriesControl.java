@@ -76,9 +76,23 @@ public class OtherEntriesControl extends Composite {
 			if (deletedObject instanceof Entry
 					&& ((Entry)deletedObject).getTransaction() == entryData.getEntry().getTransaction()
 					&& deletedObject != entryData.getEntry()
-					&& entryData.getEntry().getTransaction().getEntryCollection().size() == 2) {
+					&& entryData.getEntry().getTransaction().getEntryCollection().size() == 3) {
 				// Is now not split but was split before
-				otherEntryControl.setContent(entryData.getOtherEntry());
+				
+				/*
+				 * This listener is called before the object is deleted, so there will
+				 * be three entries in the transaction.  We want to find the third (i.e.
+				 * not the main entry and not the one being deleted).
+				 */
+				Entry thirdEntry = null;
+				for (Entry entry : entryData.getEntry().getTransaction().getEntryCollection()) {
+					if (entry != entryData.getEntry()
+							&& entry != deletedObject) {
+						assert(thirdEntry == null);
+						thirdEntry = entry;
+					}
+				}
+				otherEntryControl.setInput(thirdEntry);
 				stackLayout.topControl = otherEntryControl;
 				childComposite.layout(false);
 			}
@@ -143,12 +157,12 @@ public class OtherEntriesControl extends Composite {
 		this.entryData = entryData;
 		
 		if (entryData.getSplitEntries().size() == 1) {
-			otherEntryControl.setContent(entryData.getOtherEntry());
+			otherEntryControl.setInput(entryData.getOtherEntry());
 			stackLayout.topControl = otherEntryControl;
 		} else {
 			stackLayout.topControl = splitLabel;
 		}
-		childComposite.layout(false);
+		childComposite.layout(true);
 
 		// Listen for changes so this control is kept up to date.
 		entryData.getEntry().getDataManager().addChangeListener(splitEntryListener);

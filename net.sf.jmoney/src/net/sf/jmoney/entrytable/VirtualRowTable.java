@@ -956,7 +956,7 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 	 * the user needs to correct the errors in the row.
 	 */
 	public void scrollToShowRow(BaseEntryRowControl<T, ?> rowControl) {
-		int rowIndex = contentProvider.indexOf(rowControl.getInput());
+		int rowIndex = contentProvider.indexOf(rowControl.getContent());
 		scrollToShowRow(rowIndex);
 	}
 
@@ -1015,7 +1015,7 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 		int rowHeight = rowControl.computeSize(clientAreaSize.x, SWT.DEFAULT).y;
 		rowControl.setSize(clientAreaSize.x, rowHeight);
 
-		int rowIndex = contentProvider.indexOf(rowControl.getInput());
+		int rowIndex = contentProvider.indexOf(rowControl.getContent());
 		scrollToGivenFix(rowIndex, rowTop);
 	}
 }
