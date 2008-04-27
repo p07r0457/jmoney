@@ -53,82 +53,92 @@ public class StockEntryData extends EntryData {
 		 */
 		StockAccount account = (StockAccount)getEntry().getAccount();
 
-		for (Entry entry: getEntry().getTransaction().getEntryCollection()) {
-			if (entry.getAccount() == account.getDividendAccount()) {
-				if (dividendEntry != null) {
-					unknownTransactionType = true;
-				}
-				dividendEntry = entry;
-			} else if (entry.getAccount() == account.getWithholdingTaxAccount()) {
-				if (withholdingTaxEntry != null) {
-					unknownTransactionType = true;
-				}
-				withholdingTaxEntry = entry;
-			} else if (entry.getAccount() == account.getCommissionAccount()) {
-				if (commissionEntry != null) {
-					unknownTransactionType = true;
-				}
-				commissionEntry = entry;
-			} else if (entry.getAccount() == account.getTax1Account()) {
-				if (tax1Entry != null) {
-					unknownTransactionType = true;
-				}
-				tax1Entry = entry;
-			} else if (entry.getAccount() == account.getTax2Account()) {
-				if (tax2Entry != null) {
-					unknownTransactionType = true;
-				}
-				tax2Entry = entry;
-			} else if (entry.getAccount() == account) {
-				if (entry.getCommodity() instanceof Stock) {
-					if (purchaseOrSaleEntry != null) {
-						unknownTransactionType = true;
-					}
-					purchaseOrSaleEntry = entry;
-				} else if (entry.getCommodity() instanceof Currency) {  //TODO: check for actual currency of account.
-					if (mainEntry != null) {
-						unknownTransactionType = true;
-					}
-					mainEntry = entry;
-				}
-			} else if (entry.getAccount() instanceof CurrencyAccount) {
-				if (transferEntry != null) {
-					unknownTransactionType = true;
-				}
-				transferEntry = entry;
-			} else {
-				unknownTransactionType = true;
-			}
-		}
-
-		if (unknownTransactionType) {
-			transactionType = TransactionType.Other;
-		} else if (dividendEntry != null
-				&& commissionEntry == null
-				&& tax1Entry == null
-				&& tax2Entry == null
-				&& purchaseOrSaleEntry == null
-				&& transferEntry == null) {
-			transactionType = TransactionType.Dividend;
-		} else if (dividendEntry == null
-				&& withholdingTaxEntry == null
-				&& purchaseOrSaleEntry != null
-				&& transferEntry == null) {
-			if (purchaseOrSaleEntry.getAmount() >= 0) {
-				transactionType = TransactionType.Buy;
-			} else {
-				transactionType = TransactionType.Sell;
-			}
-		} else if (dividendEntry == null
-				&& withholdingTaxEntry == null
-				&& commissionEntry == null
-				&& tax1Entry == null
-				&& tax2Entry == null
-				&& purchaseOrSaleEntry == null
-				&& transferEntry != null) {
-			transactionType = TransactionType.Transfer;
+		/*
+		 * If just one entry then this is not a valid transaction, so must be
+		 * a new transaction.  We set the transaction type to null which means
+		 * no selection will be set in the transaction type combo.
+		 */
+		if (getEntry().getTransaction().getEntryCollection().size() == 1) {
+			transactionType = null;
 		} else {
-			transactionType = TransactionType.Other;
+
+			for (Entry entry: getEntry().getTransaction().getEntryCollection()) {
+				if (entry.getAccount() == account.getDividendAccount()) {
+					if (dividendEntry != null) {
+						unknownTransactionType = true;
+					}
+					dividendEntry = entry;
+				} else if (entry.getAccount() == account.getWithholdingTaxAccount()) {
+					if (withholdingTaxEntry != null) {
+						unknownTransactionType = true;
+					}
+					withholdingTaxEntry = entry;
+				} else if (entry.getAccount() == account.getCommissionAccount()) {
+					if (commissionEntry != null) {
+						unknownTransactionType = true;
+					}
+					commissionEntry = entry;
+				} else if (entry.getAccount() == account.getTax1Account()) {
+					if (tax1Entry != null) {
+						unknownTransactionType = true;
+					}
+					tax1Entry = entry;
+				} else if (entry.getAccount() == account.getTax2Account()) {
+					if (tax2Entry != null) {
+						unknownTransactionType = true;
+					}
+					tax2Entry = entry;
+				} else if (entry.getAccount() == account) {
+					if (entry.getCommodity() instanceof Stock) {
+						if (purchaseOrSaleEntry != null) {
+							unknownTransactionType = true;
+						}
+						purchaseOrSaleEntry = entry;
+					} else if (entry.getCommodity() instanceof Currency) {  //TODO: check for actual currency of account.
+						if (mainEntry != null) {
+							unknownTransactionType = true;
+						}
+						mainEntry = entry;
+					}
+				} else if (entry.getAccount() instanceof CurrencyAccount) {
+					if (transferEntry != null) {
+						unknownTransactionType = true;
+					}
+					transferEntry = entry;
+				} else {
+					unknownTransactionType = true;
+				}
+			}
+
+			if (unknownTransactionType) {
+				transactionType = TransactionType.Other;
+			} else if (dividendEntry != null
+					&& commissionEntry == null
+					&& tax1Entry == null
+					&& tax2Entry == null
+					&& purchaseOrSaleEntry == null
+					&& transferEntry == null) {
+				transactionType = TransactionType.Dividend;
+			} else if (dividendEntry == null
+					&& withholdingTaxEntry == null
+					&& purchaseOrSaleEntry != null
+					&& transferEntry == null) {
+				if (purchaseOrSaleEntry.getAmount() >= 0) {
+					transactionType = TransactionType.Buy;
+				} else {
+					transactionType = TransactionType.Sell;
+				}
+			} else if (dividendEntry == null
+					&& withholdingTaxEntry == null
+					&& commissionEntry == null
+					&& tax1Entry == null
+					&& tax2Entry == null
+					&& purchaseOrSaleEntry == null
+					&& transferEntry != null) {
+				transactionType = TransactionType.Transfer;
+			} else {
+				transactionType = TransactionType.Other;
+			}
 		}
 	}
 

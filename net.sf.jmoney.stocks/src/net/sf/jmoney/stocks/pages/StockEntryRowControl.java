@@ -224,6 +224,10 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 
 	@Override
 	protected void specificValidation() throws InvalidUserEntryException {
+		if (uncommittedEntryData.getTransactionType() == null) {
+			throw new InvalidUserEntryException("No transaction type selected.", null);
+		}
+		
 		/*
 		 * Check for zero amounts. Some fields may be zeroes (for example, commissions and
 		 * withheld taxes), others may not (for example, quantity of stock sold).

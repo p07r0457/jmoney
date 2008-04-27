@@ -147,28 +147,30 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					}
 
 					public void load(StockEntryData data) {
-						switch (data.getTransactionType()) {
-						case Buy:
-							control.select(0);
-							break;
-						case Sell:
-							control.select(1);
-							break;
-						case Dividend:
-							control.select(2);
-							break;
-						case Transfer:
-							control.select(3);
-							break;
-						case Other:
-							control.select(4);
-							break;
-						default:  // TODO does this pick up null?
+						if (data.getTransactionType() == null) {
 							control.deselectAll();
 							control.setText("");
-							break;
+						} else {
+							switch (data.getTransactionType()) {
+							case Buy:
+								control.select(0);
+								break;
+							case Sell:
+								control.select(1);
+								break;
+							case Dividend:
+								control.select(2);
+								break;
+							case Transfer:
+								control.select(3);
+								break;
+							case Other:
+								control.select(4);
+								break;
+							default:
+								throw new RuntimeException("bad case");
+							}
 						}
-						
 					}
 
 					public void save() {
@@ -284,7 +286,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 			@Override
 			public ICellControl<StockEntryData> createCellControl(Composite parent, final StockEntryRowControl rowControl) {
-				final Text control = new Text(parent, SWT.NONE);
+				final Text control = new Text(parent, SWT.RIGHT);
 				
 				return new ICellControl<StockEntryData>() {
 
@@ -307,15 +309,14 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 							// and gain stock.  Hence we need to negate to get a
 							// positive value.
 							double price = -((double)totalCash)/totalShares;
-							control.setText(Double.toString(price));
+							control.setText(account.getPriceFormatter().format((long)price));
 						} else {
 							control.setText("");
 						}
 					}
 
 					public void save() {
-						// TODO: use proper amount parser
-						long amount = Long.parseLong(control.getText());
+						long amount = account.getPriceFormatter().parse(control.getText());
 						
 						/*
 						 * The share price is a calculated amount so is not
@@ -434,19 +435,22 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 					@Override
 					protected Block<? super StockEntryData, ? super StockEntryRowControl> getTopBlock(StockEntryData data) {
-						// TODO: do we go to default if null?
-						switch (data.getTransactionType()) {
-						case Buy:
-						case Sell:
-							return purchaseOrSaleInfoColumn;
-						case Dividend:
-							return withholdingTaxColumn;
-						case Transfer:
-							return transferAccountColumn;
-						case Other:
-							return customTransactionColumn;
-						default:
+						if (data.getTransactionType() == null) {
 							return null;
+						} else {
+							switch (data.getTransactionType()) {
+							case Buy:
+							case Sell:
+								return purchaseOrSaleInfoColumn;
+							case Dividend:
+								return withholdingTaxColumn;
+							case Transfer:
+								return transferAccountColumn;
+							case Other:
+								return customTransactionColumn;
+							default:
+								throw new RuntimeException("bad case");
+							}
 						}
 					}
 					

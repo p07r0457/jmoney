@@ -23,6 +23,10 @@
 
 package net.sf.jmoney.stocks;
 
+import java.text.NumberFormat;
+import java.text.ParseException;
+
+import net.sf.jmoney.fields.IAmountFormatter;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
@@ -425,5 +429,38 @@ public class StockAccount extends CapitalAccount {
 
 		// Notify the change manager.
 		processPropertyChange(StockAccountInfo.getTax2RatesAccessor(), oldTaxRates, newTaxRates);
+	}
+
+	/**
+	 * Returns an object that knows how to both format and parse stock prices.
+	 */
+	public IAmountFormatter getPriceFormatter() {
+		// There is currently only one implementation.  We may need to extend this
+		// if there is a requirement to have different formatters for stock depending
+		// on the currency/exchange of the stock.
+		
+		// This implementation formats all prices with two decimal places.
+		final int SCALE_FACTOR = 100;
+		final NumberFormat numberFormat = NumberFormat.getNumberInstance();
+		numberFormat.setMaximumFractionDigits(2);
+		numberFormat.setMinimumFractionDigits(2);
+		
+		return new IAmountFormatter() {
+			public String format(long amount) {
+				double a = ((double) amount) / SCALE_FACTOR;
+				return numberFormat.format(a);
+			}
+
+			public long parse(String amountString) {
+				Number amount = new Double(0);
+				try {
+					amount = numberFormat.parse(amountString);
+				} catch (ParseException pex) {
+					// If bad user entry, leave as zero
+				}
+				return Math.round(
+						amount.doubleValue() * SCALE_FACTOR);
+			}
+		};
 	}
 }
