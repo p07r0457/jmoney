@@ -25,7 +25,7 @@ import org.eclipse.swt.widgets.Layout;
 public class OtherEntriesControl extends Composite {
 
 	private Block<Entry, SplitEntryRowControl> rootBlock;
-	private RowSelectionTracker selectionTracker;
+	private RowSelectionTracker<SplitEntryRowControl> selectionTracker;
 	private FocusCellTracker focusCellTracker;
 	
 	/**
@@ -101,7 +101,7 @@ public class OtherEntriesControl extends Composite {
 	
 	static private Image downArrowImage = null;
 
-	public OtherEntriesControl(Composite parent, Block<Entry, SplitEntryRowControl> rootBlock, RowSelectionTracker selectionTracker, FocusCellTracker focusCellTracker) {
+	public OtherEntriesControl(Composite parent, Block<Entry, SplitEntryRowControl> rootBlock, RowSelectionTracker<SplitEntryRowControl> selectionTracker, FocusCellTracker focusCellTracker) {
 		super(parent, SWT.NONE);
 		this.rootBlock = rootBlock;
 		this.selectionTracker = selectionTracker;
@@ -109,8 +109,8 @@ public class OtherEntriesControl extends Composite {
 		
 		setLayout(new DropdownButtonLayout());
 		
-		Control childArea = createChildComposite();
-		Control dropDownButton = createDownArrowButton();
+		createChildComposite();
+		createDownArrowButton();
 	}
 
 	private Control createDownArrowButton() {
