@@ -458,7 +458,7 @@ public class TransactionManager extends DataManager {
 		 * the reference is set to null. The second step involves actually
 		 * deleting the objects. The reason why we must do this two-step process
 		 * is that there may be circular references between objects marked for
-		 * deletion, and the underlying database may raise a reference constaint
+		 * deletion, and the underlying database may raise a reference constraint
 		 * violation if an object is deleted while other objects contain
 		 * references to it.
 		 * 
@@ -511,8 +511,10 @@ public class TransactionManager extends DataManager {
 
 			ExtendableObject parent = modifiedList.committedParent;
 			
-			for (IObjectKey objectToDelete: modifiedList.getDeletedObjects()) {
-				parent.getListPropertyValue(modifiedList.listAccessor).remove(objectToDelete.getObject());
+			for (IObjectKey objectKeyToDelete: modifiedList.getDeletedObjects()) {
+				ExtendableObject objectToDelete = objectKeyToDelete.getObject();
+				fireDestroyEvents(objectToDelete);
+				parent.getListPropertyValue(modifiedList.listAccessor).remove(objectToDelete);
 			}
 		}
 		
@@ -528,6 +530,27 @@ public class TransactionManager extends DataManager {
 		}
 		modifiedLists.clear();
 		modifiedObjects.clear();
+	}
+
+	private void fireDestroyEvents(final ExtendableObject objectToDelete) {
+		ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet((Class<? extends ExtendableObject>)objectToDelete.getClass());
+
+		for (ListPropertyAccessor<?> accessor : propertySet.getListProperties3()) {
+			for (ExtendableObject childObject : objectToDelete.getListPropertyValue(accessor)) {
+				fireDestroyEvents(childObject);
+			}
+		}
+		
+		/*
+		 * Fire the event to indicate that an object has been destroyed.
+		 */
+		baseDataManager.fireEvent(
+				new ISessionChangeFirer() {
+					public void fire(SessionChangeListener listener) {
+						listener.objectDestroyed(objectToDelete);
+					}
+				}
+		);
 	}
 
 	/**
