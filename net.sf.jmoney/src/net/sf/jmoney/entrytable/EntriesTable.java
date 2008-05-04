@@ -461,7 +461,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 					 * once the changes are committed.
 					 * 
 					 * Note that the entry being changed may be the other entry
-					 * in the transaction, whose properties are also diplayed on
+					 * in the transaction, whose properties are also displayed on
 					 * the parent row. As long as properties from the 'other'
 					 * entry never affect whether an entry is listed then this
 					 * code is correct. If, however, properties from the other
@@ -585,15 +585,13 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 			}
 
 			private void removeEntryFromTable(Entry entry) {
-				EntryData data = entries.get(entry);
-				
-				entries.remove(entry);
+				EntryData data = entries.remove(entry);
 
 				int indexToRemove = sortedEntries.indexOf(data); 
 				sortedEntries.remove(indexToRemove);
 				
 				// Update all the later entries
-				updateFollowingValues(indexToRemove, data.getBalance() - data.getEntry().getAmount());
+				updateFollowingValues(indexToRemove, data.getBalance());
 
 				table.deleteRow(indexToRemove);
 			}
@@ -641,17 +639,20 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 	protected abstract T createNewEntryRowInput();
 
 	/**
-	 * Adjust the indexes and balances of all entries that follow the given
-	 * start position in the sorted list.
+	 * Adjust the indexes and balances of all entries in the table starting at
+	 * the given start index in the sorted list.
 	 * 
-	 * The EntryData objects hold the committed data, so changing an amount
-	 * in an entry will not update the balances until the entry is committed.
-	 * If an EntryData object represents a new entry that has never been
-	 * committed then the Entry value will be null.  In that case the balance
-	 * is not changed by the entry.
-	 *  
-	 * @param startIndex the index of the first entry that needs updating
-	 * @param startBalance the balance prior to the given start index
+	 * The EntryData objects hold the committed data, so changing an amount in
+	 * an entry will not update the balances until the entry is committed. If an
+	 * EntryData object represents a new entry that has never been committed
+	 * then the Entry value will be null. In that case the balance is not
+	 * changed by the entry.
+	 * 
+	 * @param startIndex
+	 *            the index of the first entry that needs updating
+	 * @param startBalance
+	 *            the balance for the entry at the given start index, which is
+	 *            the running balance BEFORE the entry has been added in
 	 */
 	private void updateFollowingValues(int startIndex, long startBalance) {
 		long balance = startBalance;
