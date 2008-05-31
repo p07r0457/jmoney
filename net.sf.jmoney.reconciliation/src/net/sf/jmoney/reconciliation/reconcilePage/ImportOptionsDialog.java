@@ -101,7 +101,7 @@ class ImportOptionsDialog extends Dialog {
 
 	TableViewer viewer;
 
-	private AccountControl<IncomeExpenseAccount> defaultAccountControl;
+	AccountControl<IncomeExpenseAccount> defaultAccountControl;
 
 	private Button okButton;
 
@@ -129,7 +129,7 @@ class ImportOptionsDialog extends Dialog {
 	public ImportOptionsDialog(Shell parentShell, ReconciliationAccount account) {
 		super(parentShell);
 		/*
-		 * All changes within this dialog are made within a transaction, so cancelling
+		 * All changes within this dialog are made within a transaction, so canceling
 		 * is trivial (the transaction is simply not committed).
 		 */
 		transactionManager = new TransactionManager(account.getDataManager());
@@ -153,25 +153,8 @@ class ImportOptionsDialog extends Dialog {
 	@Override
 	protected void buttonPressed(int buttonId) {
 		if (buttonId == IDialogConstants.OK_ID) {
-
-			boolean isReconcilable = reconcilableButton.getSelection();
-			account.setReconcilable(isReconcilable);
-
-			if (isReconcilable) {
-				// TODO: implement decorators etc. and stop OK being pressed if
-				// no account is selected.
-				IncomeExpenseAccount defaultCategory = defaultAccountControl.getAccount();
-
-				if (defaultCategory == null) {
-					// TODO: Set the error message.
-					return;
-				}
-
-				account.setDefaultCategory(defaultCategory);
-			} else {
-				account.setDefaultCategory(null);
-			}
-
+			// All edits are transferred to the model as they are made,
+			// so we just need to commit them.
 			transactionManager.commit("Change Import Options");
 		}
 		super.buttonPressed(buttonId);
@@ -255,12 +238,17 @@ class ImportOptionsDialog extends Dialog {
 		reconcilableButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				boolean isReconcilable = reconcilableButton.getSelection();
+				account.setReconcilable(isReconcilable);
+
 				if (reconcilableButton.getSelection()) {
 					stackLayout.topControl = whenIsReconcilableControl;
 				} else {
 					stackLayout.topControl = null;
 				}
 				stackContainer.layout(false);
+
+				updateErrorMessage();
 			}
 		});
 
@@ -273,6 +261,8 @@ class ImportOptionsDialog extends Dialog {
 		defaultAccountControl.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				IncomeExpenseAccount defaultCategory = defaultAccountControl.getAccount();
+				account.setDefaultCategory(defaultCategory);
 				updateErrorMessage();
 			}
 		});
