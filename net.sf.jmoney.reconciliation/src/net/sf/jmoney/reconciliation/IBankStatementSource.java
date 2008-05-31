@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.reconciliation;
 
+import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -153,6 +154,9 @@ public interface IBankStatementSource {
    			if (payee != null) {
    				text += "payee=" + payee;
    			}
+   			
+   			BigDecimal myAmount = new BigDecimal(amount).scaleByPowerOfTen(-2);
+   			text += "amount=" + myAmount;
    			return text;
 		}
 		
