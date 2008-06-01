@@ -139,7 +139,7 @@ public class OfxImport implements IBankStatementSource {
 		int day = Integer.parseInt(data.substring(6, 8));
 
 		Calendar cal = Calendar.getInstance();
-		cal.set(year, month, day);
+		cal.set(year, month-1, day);
 		entryData.setClearedDate(cal.getTime());
 
 		tmpElement = foundElement.findElement("TRNAMT");
