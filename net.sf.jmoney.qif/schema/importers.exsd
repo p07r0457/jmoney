@@ -63,7 +63,7 @@ which account types they are able to import.
                   
                </documentation>
                <appInfo>
-                  <meta.attribute kind="java" basedOn=":net.sf.jmoney.qif.IAccountType"/>
+                  <meta.attribute kind="java" basedOn=":net.sf.jmoney.qif.IQifImporter"/>
                </appInfo>
             </annotation>
          </attribute>
