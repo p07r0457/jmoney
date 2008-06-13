@@ -2,51 +2,38 @@
 <?eclipse version="3.0"?>
 <plugin>
 
-     <extension
-         point="org.eclipse.ui.newWizards">
-      <category
-            name="Import/Export Wizards"
-            id="net.sf.jmoney.qif">
-      </category>
-      <wizard
-            name="Quicken Interchange Format file"
-            icon="icons/sample.gif"
-            category="net.sf.jmoney.qif"
-            class="net.sf.jmoney.qif.wizards.QIFExportWizard"
-            id="net.sf.jmoney.qif.wizards.QIFExportWizard">
-      </wizard>
-   </extension>
-   
-   <extension
-         point="org.eclipse.ui.actionSets">
-      <actionSet
-            label="QIF Action Set"
-            visible="true"
-            id="net.sf.jmoney.qif.actionSet">
-         <action
-               label="QIF File..."
-               class="net.sf.jmoney.qif.actions.QIFImportAction"
-               tooltip="Import Data from QIF File"
-               menubarPath="file/import/"
-               id="net.sf.jmoney.qif.actions.QIFImport">
-         </action>
-         <action
-               label="QIF File..."
-               class="net.sf.jmoney.qif.actions.QIFExportAction"
-               tooltip="Export Data to a QIF File"
-               menubarPath="file/export/"
-               id="net.sf.jmoney.qif.actions.QIFExport">
-         </action>
-      </actionSet>
-   </extension>
+	<extension-point id="importers" name="QIF File Importers" schema="schema/importers.exsd"/>
 
-   <extension
-         point="net.sf.jmoney.fields">
-      <extension-property-set
-      	id="entryProperties"
-          info-class="net.sf.jmoney.qif.QIFEntryInfo"
-	      extendable-property-set="net.sf.jmoney.entry">
-      </extension-property-set>
-   </extension>
+    <extension point="net.sf.jmoney.qif.importers">
+    	<importer class="net.sf.jmoney.qif.BasicImporter"/>
+	</extension>
+   
+	<extension point="org.eclipse.ui.importWizards">
+		<wizard id="net.sf.jmoney.qif.ImportWizard"
+			name="QIF Import"
+			class="net.sf.jmoney.qif.wizards.QifImportWizard">
+			<description>
+				Import data from a QIF (Quicken Import) file. 
+			</description>
+		</wizard>
+	</extension>
+ 
+	<extension point="org.eclipse.ui.exportWizards">
+		<wizard id="net.sf.jmoney.qif.ExportWizard"
+			name="QIF Export"
+			class="net.sf.jmoney.qif.wizards.QifExportWizard">
+			<description>
+				Export data to a QIF (Quicken Import) file. 
+			</description>
+		</wizard>
+	</extension>
+ 
+	<extension point="net.sf.jmoney.fields">
+    	<extension-property-set
+      		id="entryProperties"
+          	info-class="net.sf.jmoney.qif.QIFEntryInfo"
+	      	extendable-property-set="net.sf.jmoney.entry">
+      	</extension-property-set>
+   	</extension>
 
 </plugin>
