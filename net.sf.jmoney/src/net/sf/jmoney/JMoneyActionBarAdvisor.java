@@ -25,9 +25,14 @@ package net.sf.jmoney;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IContributionItem;
+import org.eclipse.jface.action.ICoolBarManager;
 import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.action.ToolBarContributionItem;
+import org.eclipse.jface.action.ToolBarManager;
+import org.eclipse.swt.SWT;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.actions.ActionFactory;
@@ -41,6 +46,9 @@ import org.eclipse.ui.application.IActionBarConfigurer;
 public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
 
     private final IWorkbenchWindow window;
+    private IAction newAction;
+    private IAction importAction;
+    private IAction exportAction;
     private IAction quitAction;
     private IAction undoAction;
     private IAction redoAction;
@@ -58,6 +66,15 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
      */
     @Override	
     protected void makeActions(final IWorkbenchWindow window) {
+        newAction = ActionFactory.NEW_WIZARD_DROP_DOWN.create(window);
+        register(newAction);
+
+        importAction = ActionFactory.IMPORT.create(window);
+        register(importAction);
+
+        exportAction = ActionFactory.EXPORT.create(window);
+        register(exportAction);
+
         quitAction = ActionFactory.QUIT.create(window);
         register(quitAction);
 
@@ -91,20 +108,36 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
         menuBar.add(createHelpMenu());
     }
 
+    /* (non-Javadoc)
+     * @see org.eclipse.ui.application.ActionBarAdvisor#fillMenuBar(org.eclipse.jface.action.IMenuManager)
+     */
+    @Override	
+    protected void fillCoolBar(ICoolBarManager coolBar) {
+    	super.fillCoolBar(coolBar);
+    	
+    	IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
+    	coolBar.add(new ToolBarContributionItem(toolbar, "main"));
+    	toolbar.add(newAction);
+    	
+    	
+//        coolBar.add(newAction);
+//        coolBar.add(importAction);
+//        coolBar.add(exportAction);
+    }
+
     /**
      * Creates and returns the File menu.
      */
     private MenuManager createFileMenu() {
         MenuManager menu = new MenuManager("&File", IWorkbenchActionConstants.M_FILE);
 
-        // File
         menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_START));
+
         menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 
-        // TODO 2005-07-09/jgyger: Change to an import (export) wizard.
         menu.add(new Separator());
-        menu.add(new MenuManager("Import", "import"));
-        menu.add(new MenuManager("Export", "export"));
+        menu.add(importAction);
+        menu.add(exportAction);
 
         menu.add(new Separator());
         menu.add(quitAction);

@@ -50,7 +50,7 @@ public class JMoneyWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	@Override
 	public void preWindowOpen() {
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-		configurer.setShowCoolBar(false);
+		configurer.setShowCoolBar(true);
 		configurer.setShowStatusLine(false);
 	}
 

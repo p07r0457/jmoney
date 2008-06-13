@@ -23,16 +23,19 @@
 package net.sf.jmoney.wizards;
 
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.AccountInfo;
+import net.sf.jmoney.model2.BankAccountInfo;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.Session;
 
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -41,8 +44,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchWizard;
 
-public class NewAccountWizard extends Wizard {
+public class NewAccountWizard extends Wizard implements IWorkbenchWizard {
 	
 	private ExtendablePropertySet<? extends Account> accountPropertySet;
 
@@ -54,7 +59,16 @@ public class NewAccountWizard extends Wizard {
 	 * This is set when 'finish' is pressed and the new account is committed.
 	 */
 	private Account newCommittedAccount;
-	
+
+	/**
+	 * Default version used from plugin.xml.
+	 * TODO: Need to have a separate class for each type of account.
+	 * 
+	 */
+	public NewAccountWizard() {
+		this(JMoneyPlugin.getDefault().getSession(), null, BankAccountInfo.getPropertySet());
+	}
+
 	/**
 	 * 
 	 * @param finalPropertySet the property set object of the class
@@ -102,6 +116,11 @@ public class NewAccountWizard extends Wizard {
 			newUncommittedAccount = parentAccount2.createSubAccount(accountPropertySet);
 		}
 //		PlatformUI.getWorkbench().getHelpSystem().setHelp(this.getContainer(), "com.toutvirtual.help.locationDialogId");
+	}
+	
+
+	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		// TODO Auto-generated method stub
 	}
 	
 	@Override

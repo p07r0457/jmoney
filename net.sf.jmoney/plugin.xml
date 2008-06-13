@@ -84,6 +84,17 @@
       </actionSet>
    </extension>
 
+	<extension point="org.eclipse.ui.newWizards">
+		<wizard id="net.sf.jmoney.wizards.new.bankaccount"
+			name="Bank Account"
+			class="net.sf.jmoney.wizards.NewAccountWizard">
+			<description>
+				Create a new Bank Account. 
+			</description>
+		</wizard>
+	</extension>
+ 
+
 <!-- Update Actions -->
    <extension
          point="org.eclipse.ui.actionSets">
@@ -102,26 +113,6 @@
                   name="group1">
             </separator>
          </menu>
-<!--
-         <action
-               class="net.sf.jmoney.actions.ConfigurationManagerAction"
-               definitionId="org.eclipse.ui.update.manageConfiguration"
-               helpContextId="org.eclipse.update.ui.newUpdates"
-               icon="$nl$/icons/full/elcl16/configs.gif"
-               id="net.sf.jmoney.configManager"
-               label="%UpdateActionSet.configManager.label"
-               menubarPath="help/net.sf.jmoney.updateMenu/group0">
-               definitionId="org.eclipse.ui.update.findAndInstallUpdates"
-               helpContextId="org.eclipse.update.ui.newUpdates"
-         </action>
-         <action
-               class="net.sf.jmoney.actions.InstallWizardAction"
-               icon="$nl$/icons/full/elcl16/usearch_obj.gif"
-               id="net.sf.jmoney.newUpdates"
-               label="%UpdateActionSet.updates.label"
-               menubarPath="help/net.sf.jmoney.updateMenu/group0">
-         </action>
--->           
       </actionSet>
    </extension>
 

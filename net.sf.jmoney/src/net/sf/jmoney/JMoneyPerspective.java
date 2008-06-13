@@ -47,9 +47,10 @@ public class JMoneyPerspective implements IPerspectiveFactory {
         IFolderLayout bottom = layout.createFolder("bottom", IPageLayout.BOTTOM, 0.8f, layout.getEditorArea());
         bottom.addView(ERROR_LOG_VIEW_ID);
 
-        layout.addPerspectiveShortcut(JMoneyPerspective.ID_PERSPECTIVE);
         layout.addShowViewShortcut(NavigationView.ID_VIEW);
         layout.addShowViewShortcut(ERROR_LOG_VIEW_ID);
+
+        layout.addNewWizardShortcut("net.sf.jmoney.wizards.new.bankaccount");
     }
 
 }
