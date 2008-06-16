@@ -31,29 +31,63 @@ import java.util.List;
 public class QifMemorized {
 
 	public class QifAmortization {
+		public QifDate getFirstPaymentDate() {
+			return qifFile.parseDate(firstPaymentDate);
+		}
 
+		public int getTotalYears() {
+			return totalYears;
+		}
+
+		public int getNumberOfPaymentsMade() {
+			return numberOfPaymentsMade;
+		}
+
+		public int getPeriodsPerYear() {
+			return periodsPerYear;
+		}
+
+		public String getInterestRate() {
+			return interestRate;
+		}
+
+		public BigDecimal getCurrentLoanBalance() {
+			return currentLoanBalance;
+		}
+
+		public BigDecimal getOriginalLoanAmount() {
+			return originalLoanAmount;
+		}
 	}
+
 	private QifAmortization amortization;
+	
 	private String type;
-	private String U;
 	private String amount;
 	private String payee;
 	private String category;
 	private String memo;
+    private String U;
     private List<String> addressLines = new ArrayList<String>();
     private List<QifSplitTransaction> splits = new ArrayList<QifSplitTransaction>();
     
     // Amortization fields
-	private String firstPaymentDate;
-	private int totalYears;
-	private int numberOfPaymentsMade;
-	private int periodsPerYear;
-	private String interestRate;
-	private BigDecimal currentLoanBalance;
-	private BigDecimal originalLoanAmount;
+	String firstPaymentDate;
+	Integer totalYears;
+	Integer numberOfPaymentsMade;
+	Integer periodsPerYear;
+	String interestRate;
+	BigDecimal currentLoanBalance;
+	BigDecimal originalLoanAmount;
+
+    QifFile qifFile;
+    
+	public QifMemorized(QifFile qifFile) {
+		this.qifFile = qifFile;
+	}
 
 	public static QifMemorized parseMemorized(QifReader in, QifFile qifFile) throws IOException, InvalidQifFileException {
-		QifMemorized transaction = new QifMemorized();
+		QifMemorized transaction = new QifMemorized(qifFile);
 
 	    String splitCategory = null;
 	    String splitMemo = null;
@@ -75,9 +109,6 @@ public class QifMemorized {
 			case 'K':
 				transaction.type = value;
 				break;
-			case 'U':
-				transaction.U = value;
-				break;
 			case 'T':
 				transaction.amount = value;
 				break;
@@ -93,6 +124,9 @@ public class QifMemorized {
 			case 'M':
 				transaction.memo = value;
 				break;
+	    	case 'U':
+	    		transaction.U = value;
+	    		break;
 	    	case 'S':
 	    		if (splitCategory != null) {
 	    			transaction.splits.add(new QifSplitTransaction(splitCategory, splitMemo, splitAmount, splitPercentage));
@@ -162,28 +196,64 @@ public class QifMemorized {
 			}
 			line = in.readLine();
 		}
-		
+
+		if (transaction.firstPaymentDate == null
+				&& transaction.totalYears == null
+				&& transaction.numberOfPaymentsMade == null
+				&& transaction.periodsPerYear == null
+				&& transaction.interestRate == null
+				&& transaction.currentLoanBalance == null
+				&& transaction.originalLoanAmount == null) {
+			transaction.amortization = null;
+		} else if (transaction.firstPaymentDate != null
+				&& transaction.totalYears != null
+				&& transaction.numberOfPaymentsMade != null
+				&& transaction.periodsPerYear != null
+				&& transaction.interestRate != null
+				&& transaction.currentLoanBalance != null
+				&& transaction.originalLoanAmount != null) {
+			transaction.amortization = transaction.new QifAmortization();
+		} else {
+			throw new InvalidQifFileException("Either all amortization lines must be specified or none must be specified in memorized transactions: " + line, in);
+		}
+
 		return transaction;
 	}
 
 	public String getType() {
 		return type;
 	}
-	public String getU() {
-		return U;
-	}
+	
 	public String getAmount() {
 		return amount;
 	}
+	
 	public String getPayee() {
 		return payee;
 	}
+	
 	public String getCategory() {
 		return category;
 	}
+	
 	public String getMemo() {
 		return memo;
 	}
+	
+	public String getU() {
+		return U;
+	}
+
+	/**
+	 * 
+	 * @return the amortization details, in which none of the seven
+	 * 		fields will be null, or null if no amortization was
+	 * 		specified
+	 */
+	public QifAmortization getAmortization() {
+		return amortization;
+	}
+	
 	public List<QifSplitTransaction> getSplits() {
 		return Collections.unmodifiableList(splits);
 	}

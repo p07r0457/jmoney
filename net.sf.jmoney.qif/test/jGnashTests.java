@@ -10,9 +10,7 @@ import net.sf.jmoney.qif.parser.QifFile;
 import net.sf.jmoney.qif.parser.QifSecurity;
 import net.sf.jmoney.qif.parser.QifTransaction;
 
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -48,30 +46,30 @@ public class jGnashTests {
 	@Test
 	public void accountDetails() {
 	    QifAccount account1 = qifFile.accountList.get(0);
-	    assertEquals("Checking", account1.name); 
-	    assertEquals(null, account1.description); 
-	    assertEquals(0, account1.transactions.size()); 
+	    assertEquals("Checking", account1.getName()); 
+	    assertEquals(null, account1.getDescription()); 
+	    assertEquals(0, account1.getTransactions().size()); 
 
 	    QifAccount account2 = qifFile.accountList.get(1);
-	    assertEquals("Savings", account2.name); 
-	    assertEquals("3 Rivers Savings", account2.description); 
-	    assertEquals(0, account2.transactions.size()); 
+	    assertEquals("Savings", account2.getName()); 
+	    assertEquals("3 Rivers Savings", account2.getDescription()); 
+	    assertEquals(0, account2.getTransactions().size()); 
 
 	    QifAccount account3 = qifFile.accountList.get(2);
-	    assertEquals("Checking", account3.name); 
-	    assertEquals(1, account3.transactions.size()); 
+	    assertEquals("Checking", account3.getName()); 
+	    assertEquals(1, account3.getTransactions().size()); 
 
 	    QifAccount account4 = qifFile.accountList.get(3);
-	    assertEquals("Savings", account4.name); 
-	    assertEquals(3, account4.transactions.size()); 
+	    assertEquals("Savings", account4.getName()); 
+	    assertEquals(3, account4.getTransactions().size()); 
 
-	    QifTransaction trans = account3.transactions.get(0);
+	    QifTransaction trans = account3.getTransactions().get(0);
 	    assertEquals(0.00, trans.getAmount()); 
 	    assertEquals(26, trans.getDate().getDay()); 
 	    assertEquals(6, trans.getDate().getMonth()); 
 	    assertEquals(2001, trans.getDate().getYear()); 
 
-	    QifTransaction trans2 = account4.transactions.get(1);
+	    QifTransaction trans2 = account4.getTransactions().get(1);
 	    assertEquals(400.00, trans2.getAmount()); 
 	    assertEquals(26, trans2.getDate().getDay()); 
 	    assertEquals(6, trans2.getDate().getMonth()); 

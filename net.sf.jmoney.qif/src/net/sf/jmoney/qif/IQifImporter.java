@@ -1,7 +1,5 @@
 package net.sf.jmoney.qif;
 
-import java.io.File;
-
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.qif.parser.QifFile;
 

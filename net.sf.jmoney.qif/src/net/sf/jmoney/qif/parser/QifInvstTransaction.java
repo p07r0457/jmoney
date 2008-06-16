@@ -32,14 +32,10 @@ public class QifInvstTransaction {
 	private String date;
 	private String action;
 	private BigDecimal amount;
-	private String status = null;
-	private String text;
-
-	private String number;
-	private String payee = null;
+    private Character status = ' ';
+	private String text = null;
 	private String memo = "";
-	private String category = null;
-	private String U;
+	private String transferAccount = null;
 	private String security;
 	private String price;
 	private String quantity;
@@ -73,23 +69,23 @@ public class QifInvstTransaction {
 				tran.date = value;
 				qifFile.processDate(value, in);
 				break;
-			case 'U':
-				tran.U = value;
-				break;
 			case 'T':
 				tran.amount = QifFile.parseMoney(value);
 				break;
 			case 'C':
-				tran.status = value;
+	    		if (value.length() != 1) {
+	    			throw new InvalidQifFileException("Reconcile status must be one character", in);
+	    		}
+	    		tran.status = value.charAt(0);
 				break;
 			case 'P':
-				tran.payee = value;
+				tran.text = value;
 				break;
 			case 'L':
-				tran.category = value;
+				tran.transferAccount = value;
 				break;
-			case 'N': // trans type for inv accounts
-				tran.number = value;
+			case 'N':
+				tran.action = value;
 				break;
 			case 'M':
 				tran.memo = value;
@@ -175,11 +171,68 @@ public class QifInvstTransaction {
 		return qifFile.parseDate(date);
 	}
 
+	public String getAction() {
+		return action;
+	}
+
 	public String getSecurity() {
 		return security;
 	}
 
 	public String getQuantity() {
 		return quantity;
+	}
+
+	public String getPrice() {
+		return price;
+	}
+
+	public BigDecimal getAmount() {
+		return amount;
+	}
+
+	public char getStatus() {
+		if (status == 'x' || status == 'X') {
+			return 'X';
+		} else if (status == '*') {
+			return '*';
+		} else {
+			return ' ';
+		}
+	}
+
+	public String getMemo() {
+		return memo;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	/**
+	 * 
+	 * @return text in the first line for transfers and reminders,
+	 * 		or null if none specified
+	 */
+	public String getText() {
+		return text;
+	}
+
+	/**
+	 * 
+	 * @return account for the transfer
+	 * 		or null if none specified
+	 */
+	public String getTransferAccount() {
+		return transferAccount;
+	}
+
+
+	public BigDecimal getCommission() {
+		return commission;
+	}
+
+	public List<QifSplitTransaction> getSplits() {
+		return splits;
 	}
 }

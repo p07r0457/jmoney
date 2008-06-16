@@ -45,11 +45,11 @@ public class FinanceQIFTests {
 	    assertEquals(14, qifFile.accountList.size());
 	    
 	    QifAccount invstAccount = qifFile.accountList.get(12);
-	    assertEquals("Mutual Fund", invstAccount.name); 
-	    assertEquals(0, invstAccount.transactions.size()); 
-	    assertEquals(1, invstAccount.invstTransactions.size());
+	    assertEquals("Mutual Fund", invstAccount.getName()); 
+	    assertEquals(0, invstAccount.getTransactions().size()); 
+	    assertEquals(1, invstAccount.getInvstTransactions().size());
 	    
-	    QifInvstTransaction trans = invstAccount.invstTransactions.get(0);
+	    QifInvstTransaction trans = invstAccount.getInvstTransactions().get(0);
 	    assertEquals(2006, trans.getDate().getYear()); 
 	    assertEquals(1, trans.getDate().getMonth()); 
 	    assertEquals(10, trans.getDate().getDay()); 

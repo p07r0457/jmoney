@@ -75,7 +75,7 @@ public class BasicImporter implements IQifImporter {
 
 		for (QifAccount qifAccount : qifFile.accountList) {
 
-			CapitalAccount account = getAccount(qifAccount.name, session);
+			CapitalAccount account = getAccount(qifAccount.getName(), session);
 			if (!(account instanceof CurrencyAccount)) {
 				// TODO: process error properly
 				if (QIFPlugin.DEBUG) System.out.println("account is not a currency account");
@@ -85,7 +85,7 @@ public class BasicImporter implements IQifImporter {
 			CurrencyAccount currencyAccount = (CurrencyAccount)account;
 			currencyAccount.setStartBalance(qifAccount.startBalance);
 
-			importAccount(session, currencyAccount, qifAccount.transactions);
+			importAccount(session, currencyAccount, qifAccount.getTransactions());
 		}
 
 		return "some transactions";
@@ -121,6 +121,8 @@ public class BasicImporter implements IQifImporter {
 	 */
 	private void importAccount(Session session, CurrencyAccount account,
 			List<QifTransaction> transactions) {
+		
+		// TODO: This should come from the account????
 		Currency currency = session.getDefaultCurrency();
 
 		for (QifTransaction qifTransaction : transactions) {

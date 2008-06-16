@@ -171,24 +171,31 @@ public class QifTransaction {
 			return ' ';
 		}
 	}
+
 	public String getCheckNumber() {
 		return number;
 	}
+
 	public String getPayee() { 
 		return payee;
 	}
+
 	public String getMemo() {
 		return memo;
 	}
+
 	public QifCategoryLine getCategory() {
 		return new QifCategoryLine(category);
 	}
+
 	public String getU() {
 		return U;
 	}
+
 	public List<QifSplitTransaction> getSplits() {
 		return Collections.unmodifiableList(splits);
 	}
+
 	public List<String> getAddressLines() {
 		return Collections.unmodifiableList(addressLines);
 	}

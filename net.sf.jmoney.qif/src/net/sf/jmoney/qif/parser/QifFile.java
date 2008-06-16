@@ -28,7 +28,6 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
@@ -210,12 +209,17 @@ public class QifFile {
 		}
 	}
     
-	static QifType getType(String line, QifReader in) throws InvalidQifFileException {
-		assert(startsWith(line, "!Type:"));
-		String type = line.substring(6).trim();
-		if (type.equals("Cash")) {
-			return QifType.cash;
-		}
+    static String getTypeString(String line, QifReader in) {
+    	assert(startsWith(line, "!Type:"));
+    	return line.substring(6).trim();
+    }
+
+    static QifType getType(String line, QifReader in) throws InvalidQifFileException {
+    	assert(startsWith(line, "!Type:"));
+    	String type = line.substring(6).trim();
+    	if (type.equals("Cash")) {
+    		return QifType.cash;
+    	}
 		if (type.equals("Bank")) {
 			return QifType.bank;
 		}
@@ -240,9 +244,6 @@ public class QifFile {
     private void parseAccounts(QifReader in) throws IOException, InvalidQifFileException {
     	do {
     		QifAccount account = QifAccount.parseAccount(in, this);
-    		if (account == null) {
-    			throw new InvalidQifFileException("", in);
-    		}
     		accountList.add(account);
     	} while (in.peekLine() != null && !in.peekLine().startsWith("!"));
     }
@@ -251,9 +252,6 @@ public class QifFile {
     private void parseAccountTransactions(QifReader in) throws IOException, InvalidQifFileException {
     	do {
     		QifTransaction transaction = QifTransaction.parseTransaction(in, this);
-    		if (transaction == null) {
-    			throw new InvalidQifFileException("", in);
-    		}
     		transactions.add(transaction);
     	} while (in.peekLine() != null && !in.peekLine().startsWith("!"));
     }
@@ -261,9 +259,6 @@ public class QifFile {
     private void parseInvestmentAccountTransactions(QifReader in) throws IOException, InvalidQifFileException {
     	do {
     		QifInvstTransaction transaction = QifInvstTransaction.parseTransaction(in, this);
-    		if (transaction == null) {
-    			throw new InvalidQifFileException("", in);
-    		}
     		invstTransactions.add(transaction);
     	} while (in.peekLine() != null && !in.peekLine().startsWith("!"));
     }
@@ -276,9 +271,6 @@ public class QifFile {
     private void parseMemorizedTransactions(QifReader in) throws IOException, InvalidQifFileException {
     	do {
     		QifMemorized transaction = QifMemorized.parseMemorized(in, this);
-    		if (transaction == null) {
-    			throw new InvalidQifFileException("", in);
-    		}
     		memorized .add(transaction);
     	} while (in.peekLine() != null && !in.peekLine().startsWith("!"));
     }
@@ -286,9 +278,6 @@ public class QifFile {
     private void parseCategoryList(QifReader in) throws IOException, InvalidQifFileException {
     	do {
     		QifCategory category = QifCategory.parseCategory(in);
-    		if (category == null) {
-    			throw new InvalidQifFileException("", in);
-    		}
     		categories.add(category);
     	} while (in.peekLine() != null && !in.peekLine().startsWith("!"));
     }
@@ -296,9 +285,6 @@ public class QifFile {
     private void parseClassList(QifReader in) throws IOException, InvalidQifFileException {
     	do {
     		QifClassItem category = QifClassItem.parseClass(in);
-    		if (category == null) {
-    			throw new InvalidQifFileException("", in);
-    		}
     		classes.add(category);
     	} while (in.peekLine() != null && !in.peekLine().startsWith("!"));
     }
@@ -312,9 +298,6 @@ public class QifFile {
     private void parseSecurities(QifReader in) throws IOException, InvalidQifFileException {
     	do {
     		QifSecurity security = QifSecurity.parseSecurity(in);
-    		if (security == null) {
-    			throw new InvalidQifFileException("", in);
-    		}
     		securities .add(security);
     	} while (in.peekLine() != null && !in.peekLine().startsWith("!"));
     }
@@ -426,7 +409,6 @@ public class QifFile {
      * @return Returns parsed date
      */
     public QifDate parseDate(String sDate) {                               
-    	Calendar cal = Calendar.getInstance();
     	int month = 0;
     	int day = 0;
     	int year = 0;
@@ -462,45 +444,6 @@ public class QifFile {
 
     	return new QifDate(year, month, day);
     }
-    
-	/**
-	 * Parses the date string and returns a date object: <br>
-	 * 11/2/98 ->> 11/2/1998 <br>
-	 * 3/15'00 ->> 3/15/2000
-	 * 
-	 * @throws InvalidQifFileException 
-	 */
-//	public Date getDate(char key) throws InvalidFileFormat {
-//		String text = properties.get(key);
-//		if (text == null) {
-//			return null;
-//		}
-//
-//		try {
-//			StringTokenizer st = new StringTokenizer(text, "/\'");
-//			int day, month, year;
-//			if (usesUSDates) {
-//				month = Integer.parseInt(st.nextToken().trim());
-//				day = Integer.parseInt(st.nextToken().trim());
-//			} else {
-//				day = Integer.parseInt(st.nextToken().trim());
-//				month = Integer.parseInt(st.nextToken().trim());
-//			}
-//			year = Integer.parseInt(st.nextToken().trim());
-//			if (year < 100) {
-//				if (text.indexOf("'") < 0)
-//					year = year + 1900;
-//				else
-//					year = year + 2000;
-//			}
-//			calendar.clear();
-//			calendar.setLenient(false);
-//			calendar.set(year, month - 1, day, 0, 0, 0);
-//			return calendar.getTime();
-//		} catch (Exception e) {
-//			throw new InvalidFileFormat("Bad date in line '" + text + "'.");
-//		}
-//	}
 
     public static BigDecimal parseMoney(final String money) {
         String sMoney = money;

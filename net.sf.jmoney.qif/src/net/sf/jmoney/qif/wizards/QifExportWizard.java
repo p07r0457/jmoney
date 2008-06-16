@@ -47,7 +47,6 @@ import net.sf.jmoney.qif.QIFEntry;
 import net.sf.jmoney.qif.QIFEntryInfo;
 import net.sf.jmoney.qif.QIFPlugin;
 
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
