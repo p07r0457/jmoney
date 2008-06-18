@@ -439,11 +439,11 @@ public class StockAccount extends CapitalAccount {
 		// if there is a requirement to have different formatters for stock depending
 		// on the currency/exchange of the stock.
 		
-		// This implementation formats all prices with two decimal places.
-		final int SCALE_FACTOR = 100;
+		// This implementation formats all prices with four decimal places.
+		final int SCALE_FACTOR = 10000;
 		final NumberFormat numberFormat = NumberFormat.getNumberInstance();
-		numberFormat.setMaximumFractionDigits(2);
-		numberFormat.setMinimumFractionDigits(2);
+		numberFormat.setMaximumFractionDigits(4);
+		numberFormat.setMinimumFractionDigits(0);
 		
 		return new IAmountFormatter() {
 			public String format(long amount) {
@@ -460,6 +460,43 @@ public class StockAccount extends CapitalAccount {
 				}
 				return Math.round(
 						amount.doubleValue() * SCALE_FACTOR);
+			}
+		};
+	}
+
+	/**
+	 * Returns an object that knows how to both format and parse stock quantities.
+	 * 
+	 * If the stock is known then the stock will be used as the formatter.  However,
+	 * it is possible the user will enter the stock quantity before entering the
+	 * stock, in which case the account decides how the stock quantity is formatted.
+	 */
+	public IAmountFormatter getQuantityFormatter() {
+		// There is currently only one implementation.  We may need to extend this
+		// if there is a requirement to have different formatters for stock depending
+		// on the currency/exchange of the stock.
+		
+		// This implementation formats all quantities as numbers with three decimal places.
+		final int SCALE_FACTOR = 1000;
+		final NumberFormat numberFormat = NumberFormat.getNumberInstance();
+		numberFormat.setMaximumFractionDigits(3);
+		numberFormat.setMinimumFractionDigits(0);
+		
+		return new IAmountFormatter() {
+			public String format(long amount) {
+				double a = ((double) amount) / SCALE_FACTOR;
+				return numberFormat.format(a);
+			}
+
+			public long parse(String amountString) {
+				Number amount;
+				try {
+					amount = numberFormat.parse(amountString);
+				} catch (ParseException ex) {
+					// If bad user entry, return zero
+					amount = new Double(0);
+				}
+				return Math.round(amount.doubleValue() * SCALE_FACTOR);
 			}
 		};
 	}

@@ -35,35 +35,9 @@ import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 /**
- * @author Nigel
+ * The metadata for the Stock class.
  *
- * Add extra properties to the Entry objects to support QIF import
- * and export.  The plug-in in which this class appears provides support
- * to import and export QIF files.  However not all properties supported
- * by QIF files are included in the base set of JMoney properties.
- * We do not want to drop any data when importing a QIF file because,
- * even though the JMoney framework does not know about all the
- * properties, plug-ins may be able to make use of the properties.
- * This class adds all the properties supported by QIF that are
- * not base JMoney properties.
- * <P>
- * The data can be accessed by a plug-in in many ways:
- * <LI>A plug-in can depend on this plug-in.  That plug-in can then
- * 		access the properties in this class.</LI>
- * <LI>A propagator plug-in can progagate property values between this
- * 		class and properties in other Entry extension property set 
- * 		classes.
- * 		This approach should be taken if using a plug-in that was
- * 		developed without any knowledge of this plug-in.</LI>
- * <LI>A generic property editor can allow the user to edit properties
- * 		in this extension, even though the property editor does not
- * 		depend on this extension and does not know about this extension.
- * 		developed without any knowledge of this plug-in.</LI>
- * <LI>Even if no other plug-in accesses a property imported by QIF
- * 		import, the property value will be maintained for as long as
- * 		the entry is not deleted and will be written out if a QIF
- * 		export is performed.</LI>
- * <P>
+ * @author Nigel Westbury
  */
 public class StockInfo implements IPropertySetInfo {
 	
@@ -78,17 +52,20 @@ public class StockInfo implements IPropertySetInfo {
 					objectKey, 
 					parentKey, 
 					values.getScalarValue(CommodityInfo.getNameAccessor()),
+					values.getScalarValue(StockInfo.getSymbolAccessor()),
 					values.getScalarValue(StockInfo.getNominalValueAccessor()),
 					values);
 		}
 	});
 
+	private static ScalarPropertyAccessor<String> symbolAccessor;
 	private static ScalarPropertyAccessor<String> nominalValueAccessor;
 	
 	public PropertySet registerProperties() {
 
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 
+		symbolAccessor = propertySet.addProperty("symbol", StocksPlugin.getResourceString("PropertyDesc.symbol"), String.class, 2, 20, textControlFactory, null);
 		nominalValueAccessor = propertySet.addProperty("nominalValue", StocksPlugin.getResourceString("PropertyDesc.nominalValue"), String.class, 2, 20, textControlFactory, null);
 		
 		return propertySet;
@@ -100,6 +77,13 @@ public class StockInfo implements IPropertySetInfo {
 	public static ExtendablePropertySet<Stock> getPropertySet() {
 		return propertySet;
 	}
+
+	/**
+	 * @return
+	 */
+	public static ScalarPropertyAccessor<String> getSymbolAccessor() {
+		return symbolAccessor;
+	}	
 
 	/**
 	 * @return

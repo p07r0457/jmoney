@@ -214,6 +214,10 @@ public class StockAccountInfo implements IPropertySetInfo {
 		return propertySet;
 	}
 
+	public static ExtendablePropertySet<StockAccount> getPropertySet() {
+		return propertySet;
+	}
+
 	/**
 	 * @return
 	 */

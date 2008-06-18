@@ -1,5 +1,6 @@
 package net.sf.jmoney.stocks.pages;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 
 import net.sf.jmoney.entrytable.BaseEntryRowControl;
@@ -36,7 +37,17 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 
 	private boolean quantityManuallyEdited = false;
 
-	private long sharePrice;
+	/**
+	 * The share price currently shown to the user, or null if
+	 * this is a new entry and no share price has been entered.
+	 * 
+	 * This is saved here (not fetched each time) because we often
+	 * update other fields when fields are updated in order to keep
+	 * the transaction balanced.  We need to know the previous price,
+	 * not the price that would have balanced the transaction, when
+	 * we do these calculations.
+	 */
+	private BigDecimal sharePrice;
 
 	private boolean sharePriceManuallyEdited = false;
 
@@ -44,13 +55,41 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 
 	private boolean tax1RatesManuallyEdited = false;
 
-	private boolean tax2RatesManuallyEdited = false;
+	private boolean tax2RatesToBeCalculated = false;
 
 	private boolean netAmountManuallyEdited = false;
 
 	public StockEntryRowControl(final Composite parent, int style, VirtualRowTable rowTable, Block<StockEntryData, ? super StockEntryRowControl> rootBlock, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style, rowTable, rootBlock);
 		init(this, rootBlock, selectionTracker, focusCellTracker);
+	}
+	
+	@Override
+	public void setContent(StockEntryData committedEntryData) {
+		super.setContent(committedEntryData);
+		if (committedEntryData == null) {
+			// TODO: Is there a better way of seeing if there is a tax table?
+			tax2RatesToBeCalculated = (((StockAccount)uncommittedEntryData.getEntry().getAccount()).getTax2Rates() != null);
+		} else {
+			tax2RatesToBeCalculated = false;
+		}
+		
+		if (uncommittedEntryData.isPurchaseOrSale()) {
+			sharePrice = uncommittedEntryData.calculatePrice();
+		} else {
+			sharePrice = null;
+		}
+		
+		this.addTransactionTypeChangeListener(new ITransactionTypeChangeListener() {
+			@Override
+			public void transactionTypeChanged() {
+				if (uncommittedEntryData.isPurchaseOrSale()) {
+					sharePrice = uncommittedEntryData.calculatePrice();
+				} else {
+					sharePrice = null;
+				}
+			}
+		});
 	}
 	
 	/*
@@ -142,15 +181,53 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 		 * tables for a deduction then leave it blank and calculate the net
 		 * amount as though the deduction were zero.
 		 */
-		if (sharePrice != 0) {
+		if (sharePrice != null) {
 
 //		if (sharePriceManuallyEdited) {
 			calculateExpenses();
 		}
 	}
 
+	public void commissionChanged() {
+		assert(uncommittedEntryData.isPurchaseOrSale());
+		commissionManuallyEdited = true;
+		
+		/*
+		 * If both the share price and the quantity have been entered then we
+		 * can update the gross amount based on the new amount of this expense.
+		 */
+		if (sharePrice != null && uncommittedEntryData.getPurchaseOrSaleEntry().getAmount() != 0) {
+			updateNetAmount();
+		}
+	}
 
-	public void sharePriceChanged(long sharePrice) {
+	public void tax1Changed() {
+		assert(uncommittedEntryData.isPurchaseOrSale());
+		tax1RatesManuallyEdited = true;
+		
+		/*
+		 * If both the share price and the quantity have been entered then we
+		 * can update the gross amount based on the new amount of this expense.
+		 */
+		if (sharePrice != null && uncommittedEntryData.getPurchaseOrSaleEntry().getAmount() != 0) {
+			updateNetAmount();
+		}
+	}
+
+	public void tax2Changed() {
+		assert(uncommittedEntryData.isPurchaseOrSale());
+		tax2RatesToBeCalculated = false;
+		
+		/*
+		 * If both the share price and the quantity have been entered then we
+		 * can update the gross amount based on the new amount of this expense.
+		 */
+		if (sharePrice != null && uncommittedEntryData.getPurchaseOrSaleEntry().getAmount() != 0) {
+			updateNetAmount();
+		}
+	}
+
+	public void sharePriceChanged(BigDecimal sharePrice) {
 		assert(uncommittedEntryData.isPurchaseOrSale());
 		this.sharePrice = sharePrice;
 		sharePriceManuallyEdited = true;
@@ -177,9 +254,12 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	 * and then calculates the net amount.
 	 */
 	private void calculateExpenses() {
+		// TODO: Can we clean this up a little?  Stock quantities are to three decimal places,
+		// (long value is number of thousanths) hence why we shift the long value three places.
 		long quantity = uncommittedEntryData.getPurchaseOrSaleEntry().getAmount();
-		long grossAmount = sharePrice * quantity;
-
+		BigDecimal grossAmount1 = sharePrice.multiply(BigDecimal.valueOf(quantity).movePointLeft(3));
+		long grossAmount = grossAmount1.movePointRight(2).longValue();
+		
 		StockAccount account = (StockAccount)getUncommittedEntryData().getEntry().getAccount();
 		
 		RatesTable commissionRates = 
@@ -194,7 +274,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 			uncommittedEntryData.getTax1Entry().setAmount(account.getTax1Rates().calculateRate(grossAmount));
 		}
 		
-		if (account.getTax2Rates() != null && !tax2RatesManuallyEdited) {
+		if (tax2RatesToBeCalculated) {
 			uncommittedEntryData.getTax2Entry().setAmount(account.getTax2Rates().calculateRate(grossAmount));
 		}
 		
@@ -203,8 +283,12 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 
 	private void updateNetAmount() {
 		if (!netAmountManuallyEdited) {
-			long quantity = uncommittedEntryData.getPurchaseOrSaleEntry().getAmount();
-			long amount = sharePrice * quantity;
+			// TODO: Can we clean this up a little?  Stock quantities are to three decimal places,
+			// (long value is number of thousanths) hence why we shift the long value three places.
+			long lQuantity = uncommittedEntryData.getPurchaseOrSaleEntry().getAmount();
+			BigDecimal quantity = BigDecimal.valueOf(lQuantity).movePointLeft(3);
+			BigDecimal grossAmount1 = sharePrice.multiply(quantity);
+			long amount = grossAmount1.movePointRight(2).longValue();
 			
 			if (uncommittedEntryData.getCommissionEntry() != null) {
 				amount += uncommittedEntryData.getCommissionEntry().getAmount();

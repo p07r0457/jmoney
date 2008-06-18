@@ -32,12 +32,16 @@ import net.sf.jmoney.model2.ListKey;
 
 public class Stock extends Commodity {
 	
+	// This implementation formats all quantities as numbers with three decimal places.
+	private int SCALE_FACTOR = 1000;
+
 	private static NumberFormat numberFormat = NumberFormat.getNumberInstance();
 	static {
-		numberFormat.setMaximumFractionDigits(0);
+		numberFormat.setMaximumFractionDigits(3);
 		numberFormat.setMinimumFractionDigits(0);
 	}
 	
+	private String symbol;
 	private String nominalValue;
 	
     /**
@@ -48,10 +52,12 @@ public class Stock extends Commodity {
 			IObjectKey objectKey,
 			ListKey parentKey,
 			String name,
+			String symbol,
 			String nominalValue,
 			IValues extensionValues) {
 		super(objectKey, parentKey, name, extensionValues);
-		
+
+		this.symbol = symbol;
 		this.nominalValue = nominalValue;
 	}
 
@@ -72,6 +78,10 @@ public class Stock extends Commodity {
 		return "net.sf.jmoney.stocks.stock";
 	}
 	
+	public String getSymbol() {
+		return symbol;
+	}
+	
 	/**
 	 * @return the nominal value.  For example, "ORD 25P"
 	 */
@@ -79,6 +89,14 @@ public class Stock extends Commodity {
 		return nominalValue;
 	}
 	
+	public void setSymbol(String symbol) {
+		String oldSymbol = this.symbol;
+		this.symbol = symbol;
+
+		// Notify the change manager.
+		processPropertyChange(StockInfo.getSymbolAccessor(), oldSymbol, symbol);
+	}
+
 	public void setNominalValue(String nominalValue) {
 		String oldNominalValue = this.nominalValue;
 		this.nominalValue = nominalValue;
@@ -92,25 +110,26 @@ public class Stock extends Commodity {
 		Number amount;
 		try {
 			amount = numberFormat.parse(amountString);
-		} catch (ParseException pex) {
+		} catch (ParseException ex) {
+			// If bad user entry, return zero
 			amount = new Double(0);
 		}
-		return Math.round(amount.doubleValue());
+		return Math.round(amount.doubleValue() * SCALE_FACTOR);
 	}
 	
 	@Override
 	public String format(long amount) {
-		double a = amount;
+		double a = ((double) amount) / SCALE_FACTOR;
 		return numberFormat.format(a);
 	}
 	
 	/**
-	 * @return The scale factor.  Always 1 for stock.
+	 * @return The scale factor.  Always 1000 for stock for the time being.
 	 */
 	// TODO: This property should be for currency only.
 	@Override
 	public short getScaleFactor() {
-		return 1;
+		return 1000;
 	}
 }
 

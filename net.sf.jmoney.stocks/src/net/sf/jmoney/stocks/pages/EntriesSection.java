@@ -18,8 +18,10 @@
  */
 package net.sf.jmoney.stocks.pages;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.BalanceColumn;
@@ -43,8 +45,8 @@ import net.sf.jmoney.entrytable.SplitEntryRowControl;
 import net.sf.jmoney.entrytable.StackBlock;
 import net.sf.jmoney.entrytable.StackControl;
 import net.sf.jmoney.entrytable.VerticalBlock;
+import net.sf.jmoney.fields.IAmountFormatter;
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -59,6 +61,7 @@ import net.sf.jmoney.stocks.StockAccount;
 import net.sf.jmoney.stocks.StockControl;
 import net.sf.jmoney.stocks.StockEntry;
 import net.sf.jmoney.stocks.StockEntryInfo;
+import net.sf.jmoney.stocks.pages.StockEntryRowControl.TransactionType;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
@@ -295,21 +298,16 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					}
 
 					public void load(StockEntryData data) {
-						// The price is calculated.
+						/*
+						 * The price is calculated, not stored in the model. A
+						 * method in the EntryData object is provided to do this
+						 * calculation.
+						 */
 						assert(data.isPurchaseOrSale());
-						long totalShares = data.getPurchaseOrSaleEntry().getAmount();
-						long totalCash = 0;
-						for (Entry entry: data.getEntry().getTransaction().getEntryCollection()) {
-							if (entry.getCommodity() instanceof Currency) {
-								totalCash += entry.getAmount();
-							}
-						}
-						if (totalCash != 0 && totalShares != 0) {
-							// Either we gain cash and lose stock, or we lose cash
-							// and gain stock.  Hence we need to negate to get a
-							// positive value.
-							double price = -((double)totalCash)/totalShares;
-							control.setText(account.getPriceFormatter().format((long)price));
+						BigDecimal bPrice = data.calculatePrice();
+						if (bPrice != null) {
+							long lPrice = bPrice.movePointRight(4).longValue(); 
+							control.setText(account.getPriceFormatter().format(lPrice));
 						} else {
 							control.setText("");
 						}
@@ -326,7 +324,70 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						 * saved and also because other values may need to be
 						 * adjusted as a result of the new share price.
 						 */
-						rowControl.sharePriceChanged(amount);
+						rowControl.sharePriceChanged(new BigDecimal(amount).movePointLeft(4));
+					}
+
+					public void setFocusListener(FocusListener controlFocusListener) {
+						control.addFocusListener(controlFocusListener);
+					}
+				};
+			}
+		};  
+
+		IndividualBlock<StockEntryData, StockEntryRowControl> shareNumberColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Quantity", EntryInfo.getAmountAccessor().getMinimumWidth(), EntryInfo.getAmountAccessor().getWeight()) {
+
+			@Override
+			public ICellControl<StockEntryData> createCellControl(Composite parent, final StockEntryRowControl rowControl) {
+				final Text control = new Text(parent, SWT.RIGHT);
+				
+				return new ICellControl<StockEntryData>() {
+
+					private StockEntryData data;
+					
+					public Control getControl() {
+						return control;
+					}
+
+					public void load(StockEntryData data) {
+						this.data = data;
+
+						IAmountFormatter formatter = getFormatter();
+						
+						long quantity = data.getPurchaseOrSaleEntry().getAmount();
+						if (data.getTransactionType() == TransactionType.Sell) {
+							quantity = -quantity;
+						}
+						control.setText(formatter.format(quantity));
+					}
+
+					private IAmountFormatter getFormatter() {
+						IAmountFormatter formatter = data.getPurchaseOrSaleEntry().getCommodity();
+						if (formatter == null) {
+							/*
+							 * The user has not yet selected the stock. As the
+							 * way the quantity of a stock is formatted may
+							 * potentially depend on the stock, we do not know
+							 * exactly how to format and parse the quantity.
+							 * However in practice it is unlikely to differ
+							 * between different stock in the same account so we
+							 * use a default formatter from the account.
+							 */
+							formatter = account.getQuantityFormatter();
+						}
+						return formatter;
+					}
+
+					public void save() {
+						IAmountFormatter formatter = getFormatter();
+						long quantity = formatter.parse(control.getText());
+						if (data.getTransactionType() == TransactionType.Sell) {
+							quantity = -quantity;
+						}
+						
+						Entry entry = data.getPurchaseOrSaleEntry();
+						entry.setAmount(quantity);
+						
+						rowControl.quantityChanged();
 					}
 
 					public void setFocusListener(FocusListener controlFocusListener) {
@@ -337,17 +398,6 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		};  
 
 		
-		IndividualBlock<StockEntryData, StockEntryRowControl> shareNumberColumn = new PropertyBlock<StockEntryData, StockEntryRowControl>(EntryInfo.getAmountAccessor(), "shareNumber", "Quantity") {
-			@Override
-			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
-				return data.getPurchaseOrSaleEntry();
-			}
-			@Override
-			public void fireUserChange(StockEntryRowControl rowControl) {
-				rowControl.quantityChanged();
-			}
-		};		
-		
 		final IndividualBlock<StockEntryData, Composite> withholdingTaxColumn = new PropertyBlock<StockEntryData, Composite>(EntryInfo.getAmountAccessor(), "withholdingTax", "Withholding Tax") {
 			@Override
 			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
@@ -355,32 +405,49 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 			}
 		};		
 
-		ArrayList<Block<? super StockEntryData, ? super StockEntryRowControl>> expenseColumns = new ArrayList<Block<? super StockEntryData, ? super StockEntryRowControl>>();
+		List<Block<? super StockEntryData, ? super StockEntryRowControl>> expenseColumns = new ArrayList<Block<? super StockEntryData, ? super StockEntryRowControl>>();
 		
-		IndividualBlock<StockEntryData, Composite> commissionColumn = new PropertyBlock<StockEntryData, Composite>(EntryInfo.getAmountAccessor(), "commission", "Commission") {
+		IndividualBlock<StockEntryData, StockEntryRowControl> commissionColumn = new PropertyBlock<StockEntryData, StockEntryRowControl>(EntryInfo.getAmountAccessor(), "commission", "Commission") {
 			@Override
 			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
 				return data.getCommissionEntry();
+			}
+			
+			@Override
+			public void fireUserChange(StockEntryRowControl rowControl) {
+				rowControl.commissionChanged();
 			}
 		};		
 		expenseColumns.add(commissionColumn);
 		
 		if (account.getTax1Name() != null) {
-			IndividualBlock<StockEntryData, Composite> tax1Column = new PropertyBlock<StockEntryData, Composite>(EntryInfo.getAmountAccessor(), "tax1", account.getTax1Name()) {
+			IndividualBlock<StockEntryData, StockEntryRowControl> tax1Column = new PropertyBlock<StockEntryData, StockEntryRowControl>(EntryInfo.getAmountAccessor(), "tax1", account.getTax1Name()) {
 				@Override
 				public ExtendableObject getObjectContainingProperty(StockEntryData data) {
 					return data.getTax1Entry();
 				}
+				
+				@Override
+				public void fireUserChange(StockEntryRowControl rowControl) {
+					rowControl.tax1Changed();
+				}
+
 			};
 			expenseColumns.add(tax1Column);
 		}
 		
 		if (account.getTax2Name() != null) {
-			IndividualBlock<StockEntryData, Composite> tax2Column = new PropertyBlock<StockEntryData, Composite>(EntryInfo.getAmountAccessor(), "tax2", account.getTax2Name()) {
+			IndividualBlock<StockEntryData, StockEntryRowControl> tax2Column = new PropertyBlock<StockEntryData, StockEntryRowControl>(EntryInfo.getAmountAccessor(), "tax2", account.getTax2Name()) {
 				@Override
 				public ExtendableObject getObjectContainingProperty(StockEntryData data) {
 					return data.getTax2Entry();
 				}
+				
+				@Override
+				public void fireUserChange(StockEntryRowControl rowControl) {
+					rowControl.tax2Changed();
+				}
+
 			};
 			expenseColumns.add(tax2Column);
 		}

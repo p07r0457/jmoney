@@ -49,9 +49,13 @@ public class RatesTable {
 	
 	private ArrayList<Band> bands;
 	
-	// Construct a new rates table.
+	/*
+	 * Default constructor constructs a rates table that returns zero
+	 * for all amounts.
+	 */
 	public RatesTable() {
 		bands = new ArrayList<Band>();
+		bands.add(new Band(0, 0.0));
 	}
 	
 	// Construct a rates table from a String object.

@@ -1,19 +1,20 @@
 package net.sf.jmoney.stocks.pages;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Iterator;
-
-import org.eclipse.core.runtime.Assert;
 
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.Transaction.EntryCollection;
 import net.sf.jmoney.stocks.Stock;
 import net.sf.jmoney.stocks.StockAccount;
 import net.sf.jmoney.stocks.pages.StockEntryRowControl.TransactionType;
+
+import org.eclipse.core.runtime.Assert;
 
 public class StockEntryData extends EntryData {
 
@@ -370,5 +371,40 @@ public class StockEntryData extends EntryData {
 	 */
 	public Entry getTransferEntry() {
 		return transferEntry;
+	}
+
+	/*
+	 * The price is calculated, not stored in the model. This method
+	 * calculates the share price from the data in the model.  It does
+	 * this by adding up all the cash entries to get the gross proceeds
+	 * or cost and then dividing by the number of shares.
+	 * 
+	 * @return the calculated price to four decimal places, or null
+	 * 		if the price cannot be calculated (e.g. if the share quantity
+	 * 		is zero)
+	 */
+	public BigDecimal calculatePrice() {
+		assert(isPurchaseOrSale());
+
+		BigDecimal totalShares = BigDecimal.valueOf(purchaseOrSaleEntry.getAmount())
+				.movePointLeft(3);
+
+		long totalCash = 0;
+		for (Entry eachEntry: getEntry().getTransaction().getEntryCollection()) {
+			if (eachEntry.getCommodity() instanceof Currency) {
+				totalCash += eachEntry.getAmount();
+			}
+		}
+		
+		BigDecimal price = null;
+		if (totalCash != 0 && !totalShares.equals(BigDecimal.valueOf(0))) {
+			/*
+			 * Either we gain cash and lose stock, or we lose cash and gain
+			 * stock. Hence we need to negate to get a positive value.
+			 */
+			price = BigDecimal.valueOf(-totalCash).movePointLeft(2).divide(totalShares, 4, RoundingMode.HALF_UP);
+		}
+		
+		return price;
 	}
 }
