@@ -127,8 +127,14 @@ class DeltaListIterator<E extends ExtendableObject> implements Iterator<E> {
 	
 	public void remove() {
 		if (lastObject != null) {
-			// Add to the deleted list
-			deletedObjects.add(lastObject.getObjectKey());
+			// Add to the deleted list.
+			/*
+			 * Note that the deleted list is a list of the committed object
+			 * keys, but lastObject will be the uncommitted version of the
+			 * object.
+			 */
+			UncommittedObjectKey uncommittedKey = (UncommittedObjectKey)lastObject.getObjectKey();
+			deletedObjects.add(uncommittedKey.getCommittedObjectKey());
 		} else {
 			// The last object returned was not a committed object but was
 			// added in this delta.

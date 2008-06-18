@@ -524,6 +524,8 @@ public class TransactionManager extends DataManager {
 		// delta between the datastore and the uncommitted view.
 		// Now that the changes have been committed, these changes
 		// must be cleared.
+		
+		// TODO: Is this loop needed if the outer list is being cleared anyway?
 		for (DeltaListManager<?> modifiedList: modifiedLists) {
 			modifiedList.addedObjects.clear();
 			modifiedList.deletedObjects.clear();
