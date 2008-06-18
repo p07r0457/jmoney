@@ -24,23 +24,24 @@ package net.sf.jmoney.entrytable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 public class HorizontalBlock<T, R extends RowControl<T,R>> extends Block<T,R> {
-	private ArrayList<Block<? super T,? super R>> children;
+	private List<Block<? super T,? super R>> children;
 
 	public HorizontalBlock(Block<? super T, ? super R> child1, Block<? super T,? super R> child2) {
-		ArrayList<Block<? super T,? super R>> children = new ArrayList<Block<? super T,? super R>>();
+		List<Block<? super T,? super R>> children = new ArrayList<Block<? super T,? super R>>();
 		children.add(child1);
 		children.add(child2);
 		init(children);
 	}
 	
 	public HorizontalBlock(Block<? super T,? super R> child1, Block<? super T,? super R> child2, Block<? super T,? super R> child3) {
-		ArrayList<Block<? super T,? super R>> children = new ArrayList<Block<? super T,? super R>>();
+		List<Block<? super T,? super R>> children = new ArrayList<Block<? super T,? super R>>();
 		children.add(child1);
 		children.add(child2);
 		children.add(child3);
@@ -48,7 +49,7 @@ public class HorizontalBlock<T, R extends RowControl<T,R>> extends Block<T,R> {
 	}
 	
 	public HorizontalBlock(Block<? super T,? super R> child1, Block<? super T,? super R> child2, Block<? super T,? super R> child3, Block<? super T,? super R> child4) {
-		ArrayList<Block<? super T,? super R>> children = new ArrayList<Block<? super T,? super R>>();
+		List<Block<? super T,? super R>> children = new ArrayList<Block<? super T,? super R>>();
 		children.add(child1);
 		children.add(child2);
 		children.add(child3);
@@ -57,7 +58,7 @@ public class HorizontalBlock<T, R extends RowControl<T,R>> extends Block<T,R> {
 	}
 	
 	public HorizontalBlock(Block<? super T,? super R> child1, Block<? super T,? super R> child2, Block<? super T,? super R> child3, Block<? super T,? super R> child4, Block<? super T,? super R> child5) {
-		ArrayList<Block<? super T,? super R>> children = new ArrayList<Block<? super T,? super R>>();
+		List<Block<? super T,? super R>> children = new ArrayList<Block<? super T,? super R>>();
 		children.add(child1);
 		children.add(child2);
 		children.add(child3);
@@ -67,7 +68,7 @@ public class HorizontalBlock<T, R extends RowControl<T,R>> extends Block<T,R> {
 	}
 	
 	public HorizontalBlock(Block<? super T,? super R> child1, Block<? super T,? super R> child2, Block<? super T,? super R> child3, Block<? super T,? super R> child4, Block<? super T,? super R> child5, Block<? super T,? super R> child6) {
-		ArrayList<Block<? super T,? super R>> children = new ArrayList<Block<? super T,? super R>>();
+		List<Block<? super T,? super R>> children = new ArrayList<Block<? super T,? super R>>();
 		children.add(child1);
 		children.add(child2);
 		children.add(child3);
@@ -90,11 +91,11 @@ public class HorizontalBlock<T, R extends RowControl<T,R>> extends Block<T,R> {
 		init (children);
 	}
 	
-	public HorizontalBlock(ArrayList<Block<? super T,? super R>> children) {
+	public HorizontalBlock(List<Block<? super T,? super R>> children) {
 		init(children);
 	}
 
-	private void init(ArrayList<Block<? super T,? super R>> children) {
+	private void init(List<Block<? super T,? super R>> children) {
 		this.children = children;
 
 		/*
@@ -126,7 +127,7 @@ public class HorizontalBlock<T, R extends RowControl<T,R>> extends Block<T,R> {
 
 	@Override
 	public Collection<CellBlock<? super T,? super R>> buildCellList() {
-		ArrayList<CellBlock<? super T,? super R>> cellList = new ArrayList<CellBlock<? super T,? super R>>();
+		List<CellBlock<? super T,? super R>> cellList = new ArrayList<CellBlock<? super T,? super R>>();
 		for (Block<? super T,? super R> child: children) {
 			cellList.addAll(child.buildCellList());
 		}
