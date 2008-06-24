@@ -21,7 +21,14 @@
  */
 package net.sf.jmoney.reconciliation.reconcilePage;
 
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.List;
+import java.util.TimeZone;
 import java.util.Vector;
 import java.util.regex.Matcher;
 
@@ -472,7 +479,24 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 	 * 2. A statement must be open in the editor 
 	 */
 	void importStatement() {
-		Collection<IBankStatementSource.EntryData> importedEntries = statementSource.importEntries(getSite().getShell(), getAccount());
+		/*
+		 * Set the default start date to be the first day after the date of the previous
+		 * statement (if any and if statements are dated, not numbered), and the default
+		 * end date to be the date of this statement.
+		 */
+		Date defaultEndDate = 
+			statement.isNumber() ? null : statement.getStatementDate();
+		
+		BankStatement priorStatement = fStatementsSection.getPriorStatement(statement);
+		Date defaultStartDate = null;
+		if (priorStatement != null && !priorStatement.isNumber()) {
+			Calendar oneDayLater = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+			oneDayLater.setTime(priorStatement.getStatementDate());
+			oneDayLater.add(Calendar.DAY_OF_MONTH, 1);
+			defaultStartDate = oneDayLater.getTime();
+		}
+		
+		Collection<IBankStatementSource.EntryData> importedEntries = statementSource.importEntries(getSite().getShell(), getAccount(), defaultStartDate, defaultEndDate);
 		if (importedEntries != null) {
 			/*
 			 * Create a transaction to be used to import the entries.  This allows the entries to
@@ -483,8 +507,124 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 			CurrencyAccount accountInTransaction = transactionManager.getCopyInTransaction(account.getBaseObject());
 			IncomeExpenseAccount defaultCategoryInTransaction = accountInTransaction.getPropertyValue(ReconciliationAccountInfo.getDefaultCategoryAccessor());
 			Session sessionInTransaction = accountInTransaction.getSession();
-  
-			for (IBankStatementSource.EntryData entryData: importedEntries) {
+
+			/*
+			 * Get the patterns sorted into order.  It is important that we test patterns in the
+			 * correct order because an entry may match both a general pattern and a more specific
+			 * pattern.
+			 */
+			List<MemoPattern> sortedPatterns = new ArrayList<MemoPattern>(account.getPatternCollection());
+			Collections.sort(sortedPatterns, new Comparator<MemoPattern>(){
+				public int compare(MemoPattern arg1, MemoPattern arg2) {
+					return arg1.getOrderingIndex() - arg2.getOrderingIndex();
+				}
+			});
+			
+			entryLoop: for (IBankStatementSource.EntryData entryData: importedEntries) {
+				/*
+				 * First we try auto-matching.
+				 * 
+				 * If we have an auto-match then we don't have to create a new
+				 * transaction at all. We just update a few properties in the
+				 * existing entry.
+				 * 
+				 * An entry auto-matches if:
+				 *  - The amount exactly matches
+				 *  - The entry has no statement set
+				 *  - If a check number is specified in the existing entry then
+				 * it must match a check number in the import (but if no check
+				 * number is in the existing entry, that is ok)
+				 *  - The date must be either exactly equal,
+				 * 
+				 * or it can be up to 10 days in the future but it can only be
+				 * in the future if there is a check number match. This allows,
+				 * say, a check to match that is likely not going to appear till
+				 * a few days later.
+				 * 
+				 * or it can be up to 1 day in the future but only if there
+				 * are no other entries that match. This restriction prevents a
+				 * false match when there are lots of charges for the same
+				 * amount very close together (e.g. consider a cup of coffee
+				 * charged every day or two)
+				 */
+				Collection<Entry> possibleMatches = new ArrayList<Entry>();
+				for (Entry entry : account.getBaseObject().getEntries()) {
+					if (entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor()) == null
+							&& entry.getAmount() == entryData.amount) {
+						System.out.println("amount: " + entryData.amount);
+						Date importedDate = (entryData.valueDate != null)
+						? entryData.valueDate
+								: entryData.clearedDate;
+						if (entry.getCheck() == null) {
+							if (entry.getTransaction().getDate().equals(importedDate)) {
+								// Auto-reconcile
+								possibleMatches.add(entry);
+								
+								/*
+								 * Date exactly matched - so we can quit
+								 * searching for other matches. (If user entered
+								 * multiple entries with same check number then
+								 * the user will not be surprised to see an
+								 * arbitrary one being used for the match).
+								 */
+								break;
+							} else {
+								Calendar fiveDaysLater = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+								fiveDaysLater.setTime(entry.getTransaction().getDate());
+								fiveDaysLater.add(Calendar.DAY_OF_MONTH, 5);
+								
+								if ((entryData.check == null || entryData.check.length() == 0) 
+										&& (importedDate.equals(entry.getTransaction().getDate())
+										 || importedDate.after(entry.getTransaction().getDate()))
+										 && importedDate.before(fiveDaysLater.getTime())) {
+									// Auto-reconcile
+									possibleMatches.add(entry);
+								}
+							}
+						} else {
+							// A check number is present
+							Calendar twentyDaysLater = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+							twentyDaysLater.setTime(entry.getTransaction().getDate());
+							twentyDaysLater.add(Calendar.DAY_OF_MONTH, 20);
+							
+							if (entry.getCheck().equals(entryData.check)
+									&& (importedDate.equals(entry.getTransaction().getDate())
+									 || importedDate.after(entry.getTransaction().getDate()))
+									 && importedDate.before(twentyDaysLater.getTime())) {
+								// Auto-reconcile
+								possibleMatches.add(entry);
+								
+								/*
+								 * Check number matched - so we can quit
+								 * searching for other matches. (If user entered
+								 * multiple entries with same check number then
+								 * the user will not be surprised to see an
+								 * arbitrary one being used for the match).
+								 */
+								break;
+							}
+						}
+					}
+				}
+
+				if (possibleMatches.size() == 1) {
+					Entry match = possibleMatches.iterator().next();
+					
+					Entry entryInTrans = transactionManager.getCopyInTransaction(match);
+
+					if (entryData.valueDate == null) {
+						entryInTrans.setValuta(entryData.clearedDate);
+					} else {
+						entryInTrans.setValuta(entryData.valueDate);
+					}
+
+					entryInTrans.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), getStatement());
+					entryInTrans.setCheck(entryData.check);
+					entryInTrans.setPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor(), entryData.uniqueId);
+
+					continue entryLoop;
+				}
+				
 		   		Transaction transaction = sessionInTransaction.createTransaction();
 		   		Entry entry1 = transaction.createEntry();
 		   		Entry entry2 = transaction.createEntry();
@@ -496,7 +636,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 		   		 * use the values for memo, description etc. from the pattern.
 		   		 */
 				String text = entryData.getTextToMatch();
-		   		for (MemoPattern pattern: account.getPatternCollection()) {
+		   		for (MemoPattern pattern: sortedPatterns) {
 		   			Matcher m = pattern.getCompiledPattern().matcher(text);
 		   			System.out.println(pattern.getPattern() + ", " + text);
 		   			if (m.matches()) {

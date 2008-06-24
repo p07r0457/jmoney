@@ -324,10 +324,23 @@ public class StatementsSection extends SectionPart {
 		 * @return
 		 */
 		public StatementDetails getLastStatement() {
-			if (this.statementDetailsMap.isEmpty()) {
+			if (statementDetailsMap.isEmpty()) {
 				return null;
 			} else {
 				return statementDetailsMap.get(statementDetailsMap.lastKey());
+			}
+		}
+
+		/**
+		 * @return the last statement before the given statement, or null if there is no
+		 * 		statement prior to the given statement
+		 */
+		public BankStatement getPriorStatement(BankStatement statement) {
+			SortedMap<BankStatement, StatementDetails> headMap = statementDetailsMap.headMap(statement);
+			if (headMap.isEmpty()) {
+				return null;
+			} else {
+				return headMap.lastKey();
 			}
 		}
 	}
@@ -369,6 +382,14 @@ public class StatementsSection extends SectionPart {
 	 */
 	public StatementDetails getLastStatement() {
 		return contentProvider.getLastStatement();
+	}
+
+	/**
+	 * @return the last statement before the given statement, or null if there is no
+	 * 		statement prior to the given statement
+	 */
+	public BankStatement getPriorStatement(BankStatement statement) {
+		return contentProvider.getPriorStatement(statement);
 	}
 
 	/**

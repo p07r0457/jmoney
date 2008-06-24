@@ -55,21 +55,23 @@ public interface IBankStatementSource {
 	 *            way amounts are interpreted or implementations may add
 	 *            properties to the account objects that affect the import
 	 *            process.
+	 * @param defaultEndDate 
+	 * @param defaultStartDate 
 	 * @return a collection of EntryData objects if entries are available for
 	 *         importing, or null if the user cancelled the operation or if an
 	 *         error occured.
 	 */
-	Collection<EntryData> importEntries(Shell shell, CurrencyAccount account);
+	Collection<EntryData> importEntries(Shell shell, CurrencyAccount account, Date defaultStartDate, Date defaultEndDate);
 	
 	class EntryData {
-		private Date clearedDate = null;
-		private Date valueDate = null;
-		private String check = null;
+		public Date clearedDate = null;
+		public Date valueDate = null;
+		public String check = null;
 		private String memo = null;
 		private String name = null;
 		private String payee = null;
-		private long amount = 0;
-		private String uniqueId = null;
+		public long amount = 0;  // Use getter???
+		public String uniqueId = null;
 		private Map<PropertyAccessor, Object> propertyMap = new HashMap<PropertyAccessor, Object>();
 		
 		public void setClearedDate(Date clearedDate) {

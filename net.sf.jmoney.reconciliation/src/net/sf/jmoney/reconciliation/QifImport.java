@@ -76,7 +76,7 @@ public class QifImport implements IBankStatementSource {
 	 */
 	private boolean usesUSDates;
 	
-	public Collection<EntryData> importEntries(Shell shell, CurrencyAccount account) {
+	public Collection<EntryData> importEntries(Shell shell, CurrencyAccount account, Date defaultStartDate, Date defaultEndDate) {
 		FileDialog dialog = new FileDialog(shell);
 		dialog.setFilterExtensions(new String [] { "*.qif" } );
 		dialog.setFilterNames(new String [] { "Quicken Import Files (*.qif)" } );
@@ -89,7 +89,7 @@ public class QifImport implements IBankStatementSource {
 		File qifFile = new File(fileName);
 		Vector<EntryData> entries = new Vector<EntryData>();
 		
-		ImportStatementDialog dialog2 = new ImportStatementDialog(shell, null, null, null);
+		ImportStatementDialog dialog2 = new ImportStatementDialog(shell, defaultStartDate, defaultEndDate, null);
 		if (dialog2.open() != Dialog.OK) {
 			return null;
 		}
@@ -145,9 +145,9 @@ public class QifImport implements IBankStatementSource {
 				
 				if (entryDate != null
 				 && (startDate == null
-			  	   || entryDate.compareTo(startDate) > 0)
+			  	   || entryDate.compareTo(startDate) >= 0)
 				  && (endDate == null
-				   || entryDate.compareTo(endDate) < 0)) {
+				   || entryDate.compareTo(endDate) <= 0)) {
 					entries.add(entryData);
 				}
 				

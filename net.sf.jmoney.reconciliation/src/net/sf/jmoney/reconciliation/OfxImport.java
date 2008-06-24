@@ -30,10 +30,10 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Currency;
+import java.util.Date;
 import java.util.Vector;
 
 import net.sf.jmoney.model2.CurrencyAccount;
-import net.sf.jmoney.reconciliation.parser.CurrencyParser;
 import net.sf.jmoney.reconciliation.parser.SimpleDOMParser;
 import net.sf.jmoney.reconciliation.parser.SimpleElement;
 
@@ -48,7 +48,7 @@ import org.eclipse.swt.widgets.Shell;
  * @author Nigel Westbury
  */
 public class OfxImport implements IBankStatementSource {
-	public Collection<EntryData> importEntries(Shell shell, CurrencyAccount account) {
+	public Collection<EntryData> importEntries(Shell shell, CurrencyAccount account, Date defaultStartDate, Date defaultEndDate) {
 
 		// Prompt the user for the file.
 		FileDialog dialog = new FileDialog(shell);
@@ -138,8 +138,12 @@ public class OfxImport implements IBankStatementSource {
 		int month = Integer.parseInt(data.substring(4, 6));
 		int day = Integer.parseInt(data.substring(6, 8));
 
+		// Date object is always based on local time, which is ok because the
+		// Date as milliseconds is never persisted, and the timezone won't change
+		// within a session (will it?)
 		Calendar cal = Calendar.getInstance();
-		cal.set(year, month-1, day);
+		cal.set(year, month-1, day, 0, 0, 0);
+		cal.set(Calendar.MILLISECOND, 0);
 		entryData.setClearedDate(cal.getTime());
 
 		tmpElement = foundElement.findElement("TRNAMT");
@@ -151,8 +155,20 @@ public class OfxImport implements IBankStatementSource {
 		// Locale based on info available in the ofx-file. -> solution : this
 		// dirty hack
 
-		long amount = CurrencyParser.double2long(currency, Double
-				.parseDouble(data.replace(',', '.')));
+		// We got rounding errors using double, so try this...
+		// I am sure it can be tidied up, but I just want something that
+		// works.
+		String [] parts = data.replace(',', '.').split("\\.");
+		long amount = Integer.parseInt(parts[0]) * 100;
+		if (parts.length > 1) {
+			if (data.startsWith("-")) {
+				amount -= Integer.parseInt(parts[1]);
+			} else {
+				amount += Integer.parseInt(parts[1]);
+			}
+		}
+//		long amount = CurrencyParser.double2long(currency, Double
+//				.parseDouble(data.replace(',', '.')));
 
 		entryData.setAmount(amount);
 
