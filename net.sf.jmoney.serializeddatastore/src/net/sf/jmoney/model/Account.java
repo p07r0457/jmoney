@@ -32,13 +32,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Vector;
 
-import net.sf.jmoney.Constants;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
 
 /**
  * The data model for an account.
  */
-public class Account implements Category, Serializable, Constants {
+public class Account implements Category, Serializable {
 
 	private static final long serialVersionUID = -204768756583878194L;
 

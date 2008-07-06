@@ -32,7 +32,7 @@ import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.ResourceBundle;
 
-import net.sf.jmoney.Constants;
+import net.sf.jmoney.JMoneyPlugin;
 
 /**
  * This class was created because the currency support wich comes with the Java
@@ -76,7 +76,8 @@ public class Currency implements Comparable {
 	}
 
 	private static void initSystemCurrencies() {
-		InputStream in = Constants.class.getResourceAsStream("resources/Currencies.txt");
+		// TODO: How does this work?  Currencies.txt is not in resources folder?!
+		InputStream in = JMoneyPlugin.class.getResourceAsStream("resources/Currencies.txt");
 		BufferedReader buffer = new BufferedReader(new InputStreamReader(in));
 		currencies = new Hashtable();
 		try {
