@@ -568,7 +568,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 
         public Image getImage(Object obj) {
             if (obj instanceof Account) {
-                return Constants.CATEGORY_ICON;
+                return IncomeExpenseAccountInfo.getPropertySet().getIcon();
             } else {
                 throw new RuntimeException("");
             }
