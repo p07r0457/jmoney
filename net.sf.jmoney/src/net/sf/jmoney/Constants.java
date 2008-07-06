@@ -22,9 +22,6 @@
 
 package net.sf.jmoney;
 
-import java.util.ResourceBundle;
-
-import org.eclipse.swt.graphics.Image;
 
 /**
  * An interface that holds the global constants.
@@ -51,93 +48,4 @@ public interface Constants {
 	 * Product version.
 	 */
 	public static final String PRODUCT_VERSION = "1.0";
-
-	/**
-	 * Corresponding int for CANCEL.
-	 */
-	public static final int CANCEL = 0;
-
-	/**
-	 * Corresponding int for OK.
-	 */
-	public static final int OK = 1;
-
-	/**
-	 * Corresponding int for HELP.
-	 */
-	public static final int HELP = 2;
-
-	/**
-	 * Corresponding int for NEW.
-	 */
-	public static final int NEW = 3;
-/*
-	public static final ImageIcon JMONEY_IMAGE =
-		new ImageIcon(Constants.class.getResource("images/jmoney_logo.png"));
-*/
-	
-	public static final Image ACCOUNTS_ICON =
-		JMoneyPlugin.createImage("icons/accounts.gif");
-
-	public static final Image ACCOUNT_ICON =
-		JMoneyPlugin.createImage("icons/account.gif");
-
-	public static final Image CATEGORY_ICON =
-		JMoneyPlugin.createImage("icons/category.gif");
-/*
-	public static final ImageIcon ARROW_UP_ICON =
-		new ImageIcon(Constants.class.getResource("images/ArrowUp.gif"));
-
-	public static final ImageIcon ARROW_DOWN_ICON =
-		new ImageIcon(Constants.class.getResource("images/ArrowDown.gif"));
-
-	public static final ImageIcon PRINT_ICON =
-		new ImageIcon(Constants.class.getResource("images/jlfgr/Print16.gif"));
-		
-	public static final ImageIcon IMPORT_ICON =
-		new ImageIcon(Constants.class.getResource("images/jlfgr/Import16.gif"));
-		
-	public static final ImageIcon EXPORT_ICON =
-		new ImageIcon(Constants.class.getResource("images/jlfgr/Export16.gif"));
-
-	public static final ImageIcon UNDO_ICON =
-		new ImageIcon(Constants.class.getResource("images/jlfgr/Undo16.gif"));
-
-	public static final ImageIcon REDO_ICON =
-		new ImageIcon(Constants.class.getResource("images/jlfgr/Redo16.gif"));
-
-	public static final ImageIcon CUT_ICON =
-		new ImageIcon(Constants.class.getResource("images/jlfgr/Cut16.gif"));
-
-	public static final ImageIcon COPY_ICON =
-		new ImageIcon(Constants.class.getResource("images/jlfgr/Copy16.gif"));
-
-	public static final ImageIcon PASTE_ICON =
-		new ImageIcon(Constants.class.getResource("images/jlfgr/Paste16.gif"));
-
-	public static final ImageIcon FIND_ICON =
-		new ImageIcon(Constants.class.getResource("images/jlfgr/Find16.gif"));
-
-	public static final ImageIcon FIND_AGAIN_ICON =
-		new ImageIcon(Constants.class.getResource("images/jlfgr/FindAgain16.gif"));
-		
-	public static final ImageIcon PREFERENCES_ICON =
-		new ImageIcon(Constants.class.getResource("images/jlfgr/Preferences16.gif"));
-
-	public static final ImageIcon ABOUT_ICON =
-		new ImageIcon(Constants.class.getResource("images/jlfgr/About16.gif"));
-*/
-	/**
-	 * The language resource bundle.
-	 */
-/*	
-	public static ResourceBundle LANGUAGE =
-		ResourceBundle.getBundle("net.sf.jmoney.resources.Language");
-*/
-	/**
-	 * The general resource bundle.
-	 */
-	public static ResourceBundle GENERAL =
-		ResourceBundle.getBundle("net.sf.jmoney.resources.General");
-
 }

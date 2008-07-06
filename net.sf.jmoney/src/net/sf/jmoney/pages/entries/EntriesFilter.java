@@ -25,7 +25,6 @@ package net.sf.jmoney.pages.entries;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
-import net.sf.jmoney.Constants;
 import net.sf.jmoney.entrytable.EntryData;
 
 /**
@@ -33,7 +32,7 @@ import net.sf.jmoney.entrytable.EntryData;
  * 
  * @author Johann Gyger
  */
-public class EntriesFilter implements Constants {
+public class EntriesFilter {
 
     /**
      * Filter type, defined as index of FILTER_TYPES.
