@@ -254,18 +254,24 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 				// the multi-page editor then the controls will never
 				// have been initialized.  When the editor is closed, this
 				// method throws an exception.
+				
+				// This is a bit of a hack.  The persisted value is not saved if the part
+				// controls were never created, which is a bug.  However, better than
+				// an exception.
 				VerySimpleDateFormat dateFormat = new VerySimpleDateFormat(JMoneyPlugin.getDefault().getDateFormat());
-				int period = periodBox.getSelectionIndex();
-				if (period != -1) {
-					memento.putInteger("period", period);
-					if (period == CUSTOM) {
-						memento.putString("fromDate", dateFormat.format(fromField.getDate()));
-						memento.putString("toDate", dateFormat.format(toField.getDate()));
+				if (periodBox != null) {
+					int period = periodBox.getSelectionIndex();
+					if (period != -1) {
+						memento.putInteger("period", period);
+						if (period == CUSTOM) {
+							memento.putString("fromDate", dateFormat.format(fromField.getDate()));
+							memento.putString("toDate", dateFormat.format(toField.getDate()));
+						}
 					}
+					memento.putString(
+							"subtotals",
+							String.valueOf(subtotalsCheckBox.getSelection()));
 				}
-				memento.putString(
-						"subtotals",
-						String.valueOf(subtotalsCheckBox.getSelection()));
 			}
 		};
 
