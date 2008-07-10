@@ -32,13 +32,6 @@ package net.sf.jmoney.model2;
  * @author Nigel Westbury
  */
 public class SessionChangeAdapter implements SessionChangeListener {
-	/**
-	 * The session has been replaced.  All views of session data
-	 * should be fully refreshed.
-	 */
-    public void sessionReplaced(Session oldSession, Session newSession) {
-    }
-	
 	public void objectInserted(ExtendableObject newObject) {
 	}
 
