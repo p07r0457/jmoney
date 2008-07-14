@@ -81,7 +81,6 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 		}
 		
 		this.addTransactionTypeChangeListener(new ITransactionTypeChangeListener() {
-			@Override
 			public void transactionTypeChanged() {
 				if (uncommittedEntryData.isPurchaseOrSale()) {
 					sharePrice = uncommittedEntryData.calculatePrice();

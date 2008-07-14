@@ -527,7 +527,6 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						
 						rowControl.addTransactionTypeChangeListener(new ITransactionTypeChangeListener() {
 
-							@Override
 							public void transactionTypeChanged() {
 								Block<? super StockEntryData, ? super StockEntryRowControl> topBlock = getTopBlock(rowControl.getUncommittedEntryData());
 								
