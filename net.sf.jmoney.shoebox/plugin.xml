@@ -20,6 +20,16 @@
    </extension>
 
    <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            id="net.sf.jmoney.shoebox.editor"
+            name="Reciept Entry Editor"
+            icon="icons/shoebox.gif"
+            class="net.sf.jmoney.shoebox.ShoeboxEditor">
+      </editor>
+   </extension>
+
+   <extension
          point="net.sf.jmoney.shoebox.templates">
       <template
             id="credit"
