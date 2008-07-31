@@ -31,21 +31,21 @@ public interface Constants {
 	/**
 	 * The name of the author.
 	 */
-	public static final String AUTHOR = "Johann Gyger";
+	public static final String AUTHOR = "Johann Gyger"; //$NON-NLS-1$
 
 	/**
 	 * The email address of the author.
 	 */
-	public static final String EMAIL = "jgyger@users.sf.net";
+	public static final String EMAIL = "jgyger@users.sf.net"; //$NON-NLS-1$
 
 	/**
 	 * Copyright string.
 	 */
 	public static final String COPYRIGHT =
-		"Copyright (C) 2000 - 2004 " + AUTHOR + " <" + EMAIL + ">";
+		"Copyright (C) 2000 - 2004 " + AUTHOR + " <" + EMAIL + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 	/**
 	 * Product version.
 	 */
-	public static final String PRODUCT_VERSION = "1.0";
+	public static final String PRODUCT_VERSION = "1.0"; //$NON-NLS-1$
 }
