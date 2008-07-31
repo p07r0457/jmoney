@@ -147,7 +147,7 @@ abstract public class PropertyBlock<T extends EntryData, R extends Composite> ex
 
 	public static PropertyBlock<EntryData, Composite> createTransactionColumn(
 			ScalarPropertyAccessor<?> propertyAccessor) {
-		return new PropertyBlock<EntryData, Composite>(propertyAccessor, "transaction") {
+		return new PropertyBlock<EntryData, Composite>(propertyAccessor, "transaction") { //$NON-NLS-1$
 			@Override
 			public ExtendableObject getObjectContainingProperty(EntryData data) {
 				return data.getEntry().getTransaction();
@@ -157,7 +157,7 @@ abstract public class PropertyBlock<T extends EntryData, R extends Composite> ex
 
 	public static PropertyBlock<EntryData, Composite> createEntryColumn(
 			ScalarPropertyAccessor<?> propertyAccessor) {
-		return new PropertyBlock<EntryData, Composite>(propertyAccessor, "entry") {
+		return new PropertyBlock<EntryData, Composite>(propertyAccessor, "entry") { //$NON-NLS-1$
 			@Override
 			public ExtendableObject getObjectContainingProperty(EntryData data) {
 				return data.getEntry();
@@ -172,7 +172,7 @@ abstract public class PropertyBlock<T extends EntryData, R extends Composite> ex
 	 * @return
 	 */
 	public static PropertyBlock<EntryData, Composite> createEntryColumn(ScalarPropertyAccessor<?> propertyAccessor, String displayName) {
-		return new PropertyBlock<EntryData, Composite>(propertyAccessor, "entry", displayName) {
+		return new PropertyBlock<EntryData, Composite>(propertyAccessor, "entry", displayName) { //$NON-NLS-1$
 			@Override
 			public ExtendableObject getObjectContainingProperty(EntryData data) {
 				return data.getEntry();

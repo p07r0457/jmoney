@@ -76,9 +76,9 @@ public class TextControlWithMruCombo extends TextComposite {
     @Override	
 	public void init(IMemento memento) {
 		if (memento != null) {
-			IMemento [] mruTextMementos = memento.getChildren("mruText");
+			IMemento [] mruTextMementos = memento.getChildren("mruText"); //$NON-NLS-1$
 			for (int i = 0; i < mruTextMementos.length; i++) {
-				String text = mruTextMementos[i].getString("text");
+				String text = mruTextMementos[i].getString("text"); //$NON-NLS-1$
 	    		recentlyUsedList.addLast(text);
 	    		combo.add(text);
 			}
@@ -88,7 +88,7 @@ public class TextControlWithMruCombo extends TextComposite {
     @Override	
 	public void saveState(IMemento memento) {
 		for (String text: recentlyUsedList) {
-			memento.createChild("mruText").putString("text", text);
+			memento.createChild("mruText").putString("text", text); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 }

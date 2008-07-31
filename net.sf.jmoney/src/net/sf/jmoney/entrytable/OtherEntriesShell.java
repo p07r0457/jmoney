@@ -12,6 +12,7 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -131,7 +132,7 @@ public class OtherEntriesShell {
 			composite.setLayout(layout);
 
 	        Button newSplitButton = new Button(composite, SWT.PUSH);
-	        newSplitButton.setText("New Split");
+	        newSplitButton.setText(Messages.OtherEntriesShell_NewSplit);
 	        newSplitButton.addSelectionListener(new SelectionAdapter() {
 	        	@Override
 				public void widgetSelected(SelectionEvent e) {
@@ -140,7 +141,7 @@ public class OtherEntriesShell {
 			}); 
 	        
 	        Button deleteSplitButton = new Button(composite, SWT.PUSH);
-	        deleteSplitButton.setText("Delete Split");
+	        deleteSplitButton.setText(Messages.OtherEntriesShell_DeleteSplit);
 	        deleteSplitButton.addSelectionListener(new SelectionAdapter() {
 	        	@Override
 				public void widgetSelected(SelectionEvent e) {
@@ -149,8 +150,8 @@ public class OtherEntriesShell {
 			}); 
 	        
 	        Button adjustButton = new Button(composite, SWT.PUSH);
-	        adjustButton.setText("Adjust");
-	        adjustButton.setToolTipText("Adjust the amount of the selected split to balance the transaction");
+	        adjustButton.setText(Messages.OtherEntriesShell_Adjust);
+	        adjustButton.setToolTipText(Messages.OtherEntriesShell_AdjustToolTipText);
 	        adjustButton.addSelectionListener(new SelectionAdapter() {
 	        	@Override
 				public void widgetSelected(SelectionEvent e) {

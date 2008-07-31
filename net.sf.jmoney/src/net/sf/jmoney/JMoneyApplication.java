@@ -26,6 +26,8 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import net.sf.jmoney.resources.Messages;
+
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
@@ -89,18 +91,18 @@ public class JMoneyApplication implements IApplication {
         String os = Platform.getOS();
         String pathname = null;
         if (Platform.OS_WIN32.equals(os)) {
-            pathname = "Application Data" + File.separator + "JMoney";
+            pathname = "Application Data" + File.separator + "JMoney"; //$NON-NLS-1$ //$NON-NLS-2$
         } else if (Platform.OS_MACOSX.equals(os)) {
-            pathname = "Library" + File.separator + "JMoney";
+            pathname = "Library" + File.separator + "JMoney"; //$NON-NLS-1$ //$NON-NLS-2$
         } else if (Platform.OS_LINUX.equals(os)) {
-            pathname = ".jmoney";
+            pathname = ".jmoney"; //$NON-NLS-1$
         } else {
             // No special location, use default instance location.
             return;
         }
 
         // Prepend user directory
-        pathname = System.getProperty("user.home") + File.separator + pathname;
+        pathname = System.getProperty("user.home") + File.separator + pathname; //$NON-NLS-1$
 
         // Make sure that the directory exists.
         File workspace = new File(pathname);
@@ -110,11 +112,11 @@ public class JMoneyApplication implements IApplication {
         // We can't use File.toURL() due to Eclipse bug 54081.
         pathname = workspace.getAbsolutePath().replace(File.separatorChar, '/');
         try {
-            URL url = new URL("file", null, pathname);
+            URL url = new URL("file", null, pathname); //$NON-NLS-1$
             // TODO Lock workspace
             instanceLoc.setURL(url, false);
         } catch (MalformedURLException e) {
-            MessageDialog.openError(shell, "Invalid Workspace", "Invalid pathname for JMoney workspace: " + pathname);
+            MessageDialog.openError(shell, Messages.JMoneyApplication_InvalidWorkspaceTitle, Messages.JMoneyApplication_InvalidWorkspaceMessage + pathname);
         }
     }
 }

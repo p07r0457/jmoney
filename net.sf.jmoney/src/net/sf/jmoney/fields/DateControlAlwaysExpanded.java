@@ -63,7 +63,7 @@ public class DateControlAlwaysExpanded extends DateComposite {
     @Override	
 	public void setDate(Date date) {
 		if (date == null) {
-			textControl.setText("");
+			textControl.setText(""); //$NON-NLS-1$
 		} else {
 			textControl.setText(fDateFormat.format(date));
 			

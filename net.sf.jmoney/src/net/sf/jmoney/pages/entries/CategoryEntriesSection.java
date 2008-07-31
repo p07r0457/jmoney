@@ -20,7 +20,6 @@ package net.sf.jmoney.pages.entries;
 
 import java.util.Collection;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.BalanceColumn;
 import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
@@ -46,6 +45,7 @@ import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.swt.widgets.Composite;
@@ -71,7 +71,7 @@ public class CategoryEntriesSection extends SectionPart implements IEntriesConte
     
     public CategoryEntriesSection(Composite parent, IncomeExpenseAccount account, EntriesFilter filter, FormToolkit toolkit) {
         super(parent, toolkit, Section.TITLE_BAR);
-        getSection().setText("All Entries");
+        getSection().setText(Messages.CategoryEntriesSection_Title);
         this.account = account;
         this.filter = filter;
         createClient(toolkit);
@@ -116,7 +116,7 @@ public class CategoryEntriesSection extends SectionPart implements IEntriesConte
 		
 		rootBlock = new HorizontalBlock<EntryData, EntryRowControl>(
 				transactionDateColumn,
-				PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor(), JMoneyPlugin.getResourceString("Entry.description")),
+				PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor(), Messages.CategoryEntriesSection_EntryDescription),
 				new OtherEntriesBlock(
 						new HorizontalBlock<Entry, SplitEntryRowControl>(
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),

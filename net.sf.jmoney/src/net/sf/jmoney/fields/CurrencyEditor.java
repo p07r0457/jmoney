@@ -98,16 +98,16 @@ public class CurrencyEditor implements IPropertyControl {
     	this.extendableObject = extendableObject;
     	
     	if (extendableObject == null) {
-            propertyControl.setText("");
+            propertyControl.setText(""); //$NON-NLS-1$
     	} else {
             Currency currency = extendableObject.getPropertyValue(currencyPropertyAccessor);
             // Currency should not be null, but check in case of incomplete data.
             // TODO: clean this up when we know the policy on invalid data in the
             // datastore.
             if (currency == null) {
-                propertyControl.setText("");
+                propertyControl.setText(""); //$NON-NLS-1$
             } else {
-            	propertyControl.setText(currency.getName() == null ? "" : currency.getName());
+            	propertyControl.setText(currency.getName() == null ? "" : currency.getName()); //$NON-NLS-1$
             }
 
             // If the currency property being edited is the currency

@@ -23,7 +23,8 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.resources.Messages;
+
 
 /**
  * The data model for an bank account.
@@ -78,7 +79,7 @@ public class BankAccount extends CurrencyAccount {
 		super(objectKey, parent);
 		
 		// Overwrite the default name with our own default name.
-		this.name = JMoneyPlugin.getResourceString("Account.newAccount");
+		this.name = Messages.BankAccount_Name;
 		
         this.bank = null;
         this.accountNumber = null;
@@ -91,7 +92,7 @@ public class BankAccount extends CurrencyAccount {
 	// the property set from the map.
     @Override	
 	protected String getExtendablePropertySetId() {
-		return "net.sf.jmoney.bankAccount";
+		return "net.sf.jmoney.bankAccount"; //$NON-NLS-1$
 	}
 	
 	/**

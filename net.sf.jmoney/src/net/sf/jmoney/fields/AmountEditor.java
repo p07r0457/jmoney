@@ -107,7 +107,7 @@ public class AmountEditor implements IPropertyControl {
         fObject = object;
         
     	if (object == null) {
-            propertyControl.setText("");
+            propertyControl.setText(""); //$NON-NLS-1$
     	} else {
             setControlContent();
         	
@@ -132,7 +132,7 @@ public class AmountEditor implements IPropertyControl {
 		// value as a Long.
 		Long amount = fObject.getPropertyValue(amountPropertyAccessor);
 		if (amount == null) {
-			propertyControl.setText("");
+			propertyControl.setText(""); //$NON-NLS-1$
 		} else {
 			propertyControl.setText(fCommodity.format(amount.longValue()));
 		}
@@ -189,7 +189,7 @@ public class AmountEditor implements IPropertyControl {
 		 * set the control text ourselves first.
 		 */
     	String amountString = propertyControl.getText();
-    	if (!amountString.equals("")) {
+    	if (!amountString.equals("")) { //$NON-NLS-1$
     		long amount = newCommodity.parse(amountString);
     		propertyControl.setText(newCommodity.format(amount));
     		fObject.setPropertyValue(amountPropertyAccessor, amount);

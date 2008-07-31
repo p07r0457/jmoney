@@ -155,7 +155,7 @@ public class NodeEditor extends FormEditor {
      */
     @Override	
     public void doSaveAs() {
-        throw new RuntimeException("Illegal invocation");
+        throw new RuntimeException("Illegal invocation"); //$NON-NLS-1$
     }
 
     /* (non-Javadoc)
@@ -191,7 +191,7 @@ public class NodeEditor extends FormEditor {
 						pages,
 						null);
 				window.getActivePage().openEditor(editorInput,
-				"net.sf.jmoney.genericEditor");
+				"net.sf.jmoney.genericEditor"); //$NON-NLS-1$
 			} catch (PartInitException e) {
 				JMoneyPlugin.log(e);
 			}

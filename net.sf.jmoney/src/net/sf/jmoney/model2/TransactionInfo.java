@@ -24,8 +24,8 @@ package net.sf.jmoney.model2;
 
 import java.util.Date;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.DateControlFactory;
+import net.sf.jmoney.resources.Messages;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -46,7 +46,7 @@ import net.sf.jmoney.fields.DateControlFactory;
  */
 public class TransactionInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<Transaction> propertySet = PropertySet.addBaseFinalPropertySet(Transaction.class, "Financial Transaction", new IExtendableObjectConstructors<Transaction>() {
+	private static ExtendablePropertySet<Transaction> propertySet = PropertySet.addBaseFinalPropertySet(Transaction.class, Messages.TransactionInfo_Description, new IExtendableObjectConstructors<Transaction>() {
 
 		public Transaction construct(IObjectKey objectKey, ListKey parentKey) {
 			return new Transaction(objectKey, parentKey);
@@ -77,8 +77,8 @@ public class TransactionInfo implements IPropertySetInfo {
 		
         IPropertyControlFactory<Date> dateControlFactory = new DateControlFactory();
 		
-		entriesAccessor = propertySet.addPropertyList("entry", JMoneyPlugin.getResourceString("<not used???>"), EntryInfo.getPropertySet(), entryGetter);
-		dateAccessor = propertySet.addProperty("date", JMoneyPlugin.getResourceString("Entry.date"), Date.class, 0, 74, dateControlFactory, null);
+		entriesAccessor = propertySet.addPropertyList("entry", Messages.TransactionInfo_Entry, EntryInfo.getPropertySet(), entryGetter); //$NON-NLS-1$
+		dateAccessor = propertySet.addProperty("date", Messages.TransactionInfo_Date, Date.class, 0, 74, dateControlFactory, null); //$NON-NLS-1$
 		
 		return propertySet;
 	}

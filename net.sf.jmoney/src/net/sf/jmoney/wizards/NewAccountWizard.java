@@ -34,6 +34,7 @@ import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
@@ -79,7 +80,7 @@ public class NewAccountWizard extends Wizard implements IWorkbenchWizard {
 	public NewAccountWizard(Session session, IncomeExpenseAccount parentAccount) {
 		this.accountPropertySet = IncomeExpenseAccountInfo.getPropertySet();
 		
-		this.setWindowTitle("Create a New Category");
+		this.setWindowTitle(Messages.NewAccountWizard_WindowTitleCategory);
 		this.setHelpAvailable(true);
 		
 		transactionManager = new TransactionManager(session.getDataManager());
@@ -103,7 +104,7 @@ public class NewAccountWizard extends Wizard implements IWorkbenchWizard {
 	public NewAccountWizard(Session session, CapitalAccount parentAccount, ExtendablePropertySet<? extends CapitalAccount> accountPropertySet) {
 		this.accountPropertySet = accountPropertySet;
 		
-		this.setWindowTitle("Create a New Account");
+		this.setWindowTitle(Messages.NewAccountWizard_WindowTitleAccount);
 		this.setHelpAvailable(true);
 		
 		transactionManager = new TransactionManager(session.getDataManager());
@@ -127,10 +128,10 @@ public class NewAccountWizard extends Wizard implements IWorkbenchWizard {
 	public void addPages()
 	{
 		// Show the page that prompts for all the property values.
-		WizardPage propertyPage = new WizardPropertyPage("propertyPage", "Account Properties", "Enter values for the account properties", newUncommittedAccount, accountPropertySet, AccountInfo.getNameAccessor());
+		WizardPage propertyPage = new WizardPropertyPage(Messages.NewAccountWizard_PropertyPageName, Messages.NewAccountWizard_PropertyPageTitle, Messages.NewAccountWizard_PropertyPageMessage, newUncommittedAccount, accountPropertySet, AccountInfo.getNameAccessor());
 		addPage(propertyPage);
 
-		WizardPage summaryPage = new SummaryPage("summaryPage");
+		WizardPage summaryPage = new SummaryPage(Messages.NewAccountWizard_SummaryPageName);
 		addPage(summaryPage);
 	}
 	
@@ -138,7 +139,7 @@ public class NewAccountWizard extends Wizard implements IWorkbenchWizard {
 	public boolean performFinish() {
 		// TODO: verify properties are valid.
 		
-		transactionManager.commit("Add New Account");
+		transactionManager.commit("Add New Account"); //$NON-NLS-1$
 		
 		newCommittedAccount = (Account)((UncommittedObjectKey)newUncommittedAccount.getObjectKey()).getCommittedObjectKey().getObject();
 		
@@ -149,8 +150,8 @@ public class NewAccountWizard extends Wizard implements IWorkbenchWizard {
 		
 		SummaryPage(String pageName) {
 			super(pageName);
-			setTitle("Summary");
-			setMessage("");
+			setTitle(Messages.NewAccountWizard_SummaryPageTitle);
+			setMessage(Messages.NewAccountWizard_SummaryPageMessage);
 		}
 		
 		public void createControl(Composite parent) {
@@ -167,7 +168,7 @@ public class NewAccountWizard extends Wizard implements IWorkbenchWizard {
 			gd1.widthHint = 300;
 			
 			Label introText = new Label(container, SWT.WRAP);
-			introText.setText("The account has been setup.  To view the account, double click on the account in the navigation view.");
+			introText.setText(Messages.NewAccountWizard_SummaryPageContent);
 			introText.setLayoutData(gd1);
 			
 			setControl(container);			
@@ -176,7 +177,7 @@ public class NewAccountWizard extends Wizard implements IWorkbenchWizard {
 		@Override
 		public void performHelp() {
 			MessageBox messageBox = new MessageBox(getShell(), SWT.ICON_WARNING | SWT.OK);
-			messageBox.setMessage("No help is available for this page.");
+			messageBox.setMessage(Messages.NewAccountWizard_SummaryPageHelpMessage);
 			messageBox.open();
 		}
 	}

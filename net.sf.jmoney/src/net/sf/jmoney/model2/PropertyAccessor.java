@@ -145,7 +145,7 @@ public abstract class PropertyAccessor {
    	// exist with the same name as both, say, an account property
    	// and an entry property.  We should probably add the base
    	// class name here too.
-       return propertySet.toString() + "." + localName;
+       return propertySet.toString() + "." + localName; //$NON-NLS-1$
    }
    
    /**

@@ -34,6 +34,7 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -105,7 +106,7 @@ public class TransactionDialog {
    		final Transaction transaction = accountEntry.getTransaction();
    		
         shell = new Shell(parent, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.CLOSE);
-        shell.setText("Transaction Details");
+        shell.setText(Messages.TransactionDialog_Text);
     
         GridLayout sectionLayout = new GridLayout();
         sectionLayout.numColumns = 1;
@@ -155,7 +156,7 @@ public class TransactionDialog {
 		
         // Create the 'add entry' button.
         Button addButton = new Button(buttonArea, SWT.PUSH);
-        addButton.setText("Split off New Entry");
+        addButton.setText(Messages.TransactionDialog_ButtonAddText);
         addButton.addSelectionListener(new SelectionAdapter() {
         	@Override
         	public void widgetSelected(SelectionEvent event) {
@@ -200,7 +201,7 @@ public class TransactionDialog {
 
         // Create the 'delete entry' button.
         Button deleteButton = new Button(buttonArea, SWT.PUSH);
-        deleteButton.setText("Delete Entries with Zero or Blank Amounts");
+        deleteButton.setText(Messages.TransactionDialog_ButtonDeleteText);
         deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
         	public void widgetSelected(SelectionEvent event) {
@@ -222,18 +223,18 @@ public class TransactionDialog {
 
         // Create the 'OK' button
         Button okButton = new Button(buttonArea, SWT.PUSH);
-        okButton.setText("OK");
+        okButton.setText(Messages.TransactionDialog_ButtonOkText);
         okButton.addSelectionListener(new SelectionAdapter() {
 			@Override
         	public void widgetSelected(SelectionEvent event) {
-        		transactionManager.commit("Edit Transaction");
+        		transactionManager.commit("Edit Transaction"); //$NON-NLS-1$
         		shell.close();
         	}
         });
 
         // Create the 'cancel' button
         Button cancelButton = new Button(buttonArea, SWT.PUSH);
-        cancelButton.setText("Cancel");
+        cancelButton.setText(Messages.TransactionDialog_ButtonCancelText);
         cancelButton.addSelectionListener(new SelectionAdapter() {
 			@Override
         	public void widgetSelected(SelectionEvent event) {

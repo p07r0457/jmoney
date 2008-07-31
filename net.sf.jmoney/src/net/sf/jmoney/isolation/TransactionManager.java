@@ -227,7 +227,7 @@ public class TransactionManager extends DataManager {
     	}
     	
     	if (committedObject.getDataManager() != baseDataManager) {
-    		throw new RuntimeException("Invalid call to getCopyInTransaction.  The object passed must belong to the data manager that is the base data manager of this transaction manager.");
+    		throw new RuntimeException("Invalid call to getCopyInTransaction.  The object passed must belong to the data manager that is the base data manager of this transaction manager."); //$NON-NLS-1$
     	}
     	
     	// First look in our map to see if this object has already been

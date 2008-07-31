@@ -97,7 +97,7 @@ public class EntryRowControl extends BaseEntryRowControl<EntryData, EntryRowCont
 			for (Entry entry: uncommittedEntryData.getEntry().getTransaction().getEntryCollection()) {
 				if (entry.getAmount() == 0) {
 					throw new InvalidUserEntryException(
-							"A non-zero credit or debit amount must be entered.",
+							"A non-zero credit or debit amount must be entered.", //$NON-NLS-1$
 							null);
 				}
 			}

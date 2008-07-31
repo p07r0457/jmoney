@@ -38,6 +38,7 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
+import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.NodeEditor;
 import net.sf.jmoney.views.SectionlessPage;
 
@@ -63,7 +64,7 @@ import org.eclipse.ui.forms.widgets.FormToolkit;
  */
 public class AccountPropertiesPage implements IBookkeepingPageFactory {
 	
-    private static final String PAGE_ID = "net.sf.jmoney.accountProperties";
+    private static final String PAGE_ID = "net.sf.jmoney.accountProperties"; //$NON-NLS-1$
     
 	/**
 	 * The implementation for the composite control that contains
@@ -187,14 +188,14 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 								String description;
 								if (propertyAccessor == AccountInfo.getNameAccessor()) {
 									description = 
-										"rename account from " + oldValueText
-										+ " to " + newValueText;
+										"rename account from " + oldValueText //$NON-NLS-1$
+										+ " to " + newValueText; //$NON-NLS-1$
 								} else {
 									description = 
-										"change " + propertyAccessor.getDisplayName() + " property"
-										+ " in '" + AccountPropertiesControl.this.account.getName() + "' account"
-										+ " from " + oldValueText
-										+ " to " + newValueText;
+										"change " + propertyAccessor.getDisplayName() + " property" //$NON-NLS-1$ //$NON-NLS-2$
+										+ " in '" + AccountPropertiesControl.this.account.getName() + "' account" //$NON-NLS-1$ //$NON-NLS-2$
+										+ " from " + oldValueText //$NON-NLS-1$
+										+ " to " + newValueText; //$NON-NLS-1$
 								}
 
 								IOperationHistory history = JMoneyPlugin.getDefault().getWorkbench().getOperationSupport().getOperationHistory();
@@ -269,8 +270,8 @@ public class AccountPropertiesPage implements IBookkeepingPageFactory {
 		SectionlessPage formPage = new SectionlessPage(
 				editor,
 				PAGE_ID, 
-				JMoneyPlugin.getResourceString("AccountPropertiesPanel.title"),  //$NON-NLS-1$
-				JMoneyPlugin.getResourceString("AccountPropertiesPanel.header")) { //$NON-NLS-1$
+				Messages.AccountPropertiesPage_Title,  
+				Messages.AccountPropertiesPage_FormHeader) { 
 			
 		    @Override	
 			public Composite createControl(Object nodeObject, Composite parent, FormToolkit toolkit, IMemento memento) {

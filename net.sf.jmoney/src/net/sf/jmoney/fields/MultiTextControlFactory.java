@@ -28,6 +28,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -55,9 +56,9 @@ public class MultiTextControlFactory implements IPropertyControlFactory<String> 
     public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends String> propertyAccessor) {
         String value = extendableObject.getPropertyValue(propertyAccessor);
         if (value == null || value.length() == 0) {
-            return "empty";
+            return Messages.MultiTextControlFactory_Empty;
         } else {
-            return "'" + value + "'";
+            return "'" + value + "'"; //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
 

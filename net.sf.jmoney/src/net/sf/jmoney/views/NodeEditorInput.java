@@ -116,7 +116,7 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
 		} else if (nodeObject instanceof Account) {
 			return ((Account)nodeObject).getFullAccountName();
 		} else {
-	        return "tool tip text to distinquish pages with same name";
+	        return "tool tip text to distinquish pages with same name"; //$NON-NLS-1$
 		}
     }
 
@@ -166,7 +166,7 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
 	 * @see org.eclipse.ui.IPersistableElement#getFactoryId()
 	 */
 	public String getFactoryId() {
-		return "net.sf.jmoney.nodeEditor";
+		return "net.sf.jmoney.nodeEditor"; //$NON-NLS-1$
 	}
 
 	/**
@@ -181,20 +181,20 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
     	// Save the details of the session.
     	DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		if (sessionManager != null) {
-			IMemento sessionMemento = memento.createChild("session");
+			IMemento sessionMemento = memento.createChild("session"); //$NON-NLS-1$
 			IPersistableElement pe = (IPersistableElement)sessionManager.getAdapter(IPersistableElement.class);
-			sessionMemento.putString("currentSessionFactoryId", pe.getFactoryId());
-			pe.saveState(sessionMemento.createChild("currentSession"));
+			sessionMemento.putString("currentSessionFactoryId", pe.getFactoryId()); //$NON-NLS-1$
+			pe.saveState(sessionMemento.createChild("currentSession")); //$NON-NLS-1$
 		}
 		
 		// Save the node.  The node may be either
 		// a TreeNode object or an object in the data model.
 		if (nodeObject instanceof TreeNode) {
-			memento.putString("treeNode", ((TreeNode)nodeObject).getId());
+			memento.putString("treeNode", ((TreeNode)nodeObject).getId()); //$NON-NLS-1$
 		} else if (nodeObject instanceof Account) {
-			memento.putString("account", ((Account)nodeObject).getFullAccountName());
+			memento.putString("account", ((Account)nodeObject).getFullAccountName()); //$NON-NLS-1$
 		} else {
-			throw new RuntimeException("unknown object type");
+			throw new RuntimeException("unknown object type"); //$NON-NLS-1$
 		}
 		
 		// Save the contents of each page.
@@ -203,7 +203,7 @@ public class NodeEditorInput implements IEditorInput, IPersistableElement {
 		// or the editor has been closed.  In either case we cannot
 		// save the page state because the page controls do not exist.
 		if (pages == null) {
-			if (JMoneyPlugin.DEBUG) System.out.println("no pages set in " + nodeObject.toString());
+			if (JMoneyPlugin.DEBUG) System.out.println("no pages set in " + nodeObject.toString()); //$NON-NLS-1$
 		} else {
 			for (int i = 0; i < pageFactories.size(); i++) {
 				PageEntry entry = pageFactories.get(i);

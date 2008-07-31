@@ -24,6 +24,9 @@ package net.sf.jmoney.entrytable;
 
 import java.util.Comparator;
 
+import net.sf.jmoney.resources.Messages;
+
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -38,17 +41,17 @@ import org.eclipse.swt.widgets.Shell;
  * Represents a column of data that can be displayed in the entries table,
  * edited by the user, sorted, or used in a filter.
  * <P>
- * All columns are managed by an object of this class.  Special
- * implementations exist for the credit, debit, and balance columns.
- * More generic implementations exist for the other properties.
+ * All columns are managed by an object of this class. Special implementations
+ * exist for the credit, debit, and balance columns. More generic
+ * implementations exist for the other properties.
  */
-public abstract class IndividualBlock<T, R> extends CellBlock<T,R> {
-	
+public abstract class IndividualBlock<T, R> extends CellBlock<T, R> {
+
 	/**
 	 * The localized text to be shown in the header.
 	 */
 	private String text;
-	
+
 	public IndividualBlock(String text, int minimumWidth, int weight) {
 		super(minimumWidth, weight);
 		this.text = text;
@@ -58,7 +61,9 @@ public abstract class IndividualBlock<T, R> extends CellBlock<T,R> {
 	public void createHeaderControls(Composite parent, T entryData) {
 		Label label = new Label(parent, SWT.NULL);
 		label.setText(text);
-		label.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_GRAY));
+		label
+				.setBackground(Display.getCurrent().getSystemColor(
+						SWT.COLOR_GRAY));
 
 		label.setMenu(buildPopupMenu(parent.getShell()));
 	}
@@ -75,11 +80,11 @@ public abstract class IndividualBlock<T, R> extends CellBlock<T,R> {
 	public Comparator<T> getComparator() {
 		return null;
 	}
-	
+
 	private Menu buildPopupMenu(Shell shell) {
 		// Bring up a pop-up menu.
 		// It would be a more consistent interface if this menu were
-		// linked to the column header.  However, TableColumn has
+		// linked to the column header. However, TableColumn has
 		// no setMenu method, nor does the column header respond to
 		// SWT.MenuDetect nor any other event when right clicked.
 		// This code works but does not follow the popup-menu conventions
@@ -89,23 +94,18 @@ public abstract class IndividualBlock<T, R> extends CellBlock<T,R> {
 
 		MenuItem removeColItem = new MenuItem(popupMenu, SWT.NONE);
 
-		MenuItem shiftColLeftItem = new MenuItem(popupMenu,
-				SWT.NONE);
+		MenuItem shiftColLeftItem = new MenuItem(popupMenu, SWT.NONE);
 
-		MenuItem shiftColRightItem = new MenuItem(popupMenu,
-				SWT.NONE);
+		MenuItem shiftColRightItem = new MenuItem(popupMenu, SWT.NONE);
 
 		Object[] messageArgs = new Object[] { text };
 
-		removeColItem.setText(new java.text.MessageFormat(
-				"Remove {0} column", java.util.Locale.US)
-				.format(messageArgs));
-		shiftColLeftItem.setText(new java.text.MessageFormat(
-				"Move {0} column left", java.util.Locale.US)
-				.format(messageArgs));
-		shiftColRightItem.setText(new java.text.MessageFormat(
-				"Move {0} column right", java.util.Locale.US)
-				.format(messageArgs));
+		removeColItem.setText(NLS.bind(Messages.IndividualBlock_RemoveColumn,
+				messageArgs));
+		shiftColLeftItem.setText(NLS.bind(Messages.IndividualBlock_MoveLeft,
+				messageArgs));
+		shiftColRightItem.setText(NLS.bind(Messages.IndividualBlock_MoveRight,
+				messageArgs));
 
 		removeColItem.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -127,45 +127,32 @@ public abstract class IndividualBlock<T, R> extends CellBlock<T,R> {
 				// TODO: shift right if we can
 			}
 		});
-		
-/* TODO: complete implementation of this.
- * We need to allow the user to add columns?????
- 
-		new MenuItem(popupMenu, SWT.SEPARATOR);
-		
-		for (final IEntriesTableProperty entriesSectionProperty: entriesContent.getAllEntryDataObjects()) {
-			boolean found = false;
-			for (int index = 0; index < fTable.getColumnCount(); index++) {
-				IEntriesTableProperty entryData2 = (IEntriesTableProperty) (fTable
-						.getColumn(index).getData());
-				if (entryData2 == entriesSectionProperty) {
-					found = true;
-					break;
-				}
-			}
 
-			if (!found) {
-				Object[] messageArgs2 = new Object[] { entriesSectionProperty
-						.getText() };
-
-				MenuItem addColItem = new MenuItem(popupMenu,
-						SWT.NONE);
-				addColItem.setText(new java.text.MessageFormat(
-						"Add {0} column", java.util.Locale.US)
-						.format(messageArgs2));
-
-				addColItem
-						.addSelectionListener(new SelectionAdapter() {
-							public void widgetSelected(
-									SelectionEvent e) {
-								addColumn(entriesSectionProperty,
-										Math.max(1, column));
-							}
-						});
-			}
-		}
-*/
-//		popupMenu.setVisible(true);
+		/*
+		 * TODO: complete implementation of this. We need to allow the user to
+		 * add columns?????
+		 * 
+		 * new MenuItem(popupMenu, SWT.SEPARATOR);
+		 * 
+		 * for (final IEntriesTableProperty entriesSectionProperty:
+		 * entriesContent.getAllEntryDataObjects()) { boolean found = false; for
+		 * (int index = 0; index < fTable.getColumnCount(); index++) {
+		 * IEntriesTableProperty entryData2 = (IEntriesTableProperty) (fTable
+		 * .getColumn(index).getData()); if (entryData2 ==
+		 * entriesSectionProperty) { found = true; break; } }
+		 * 
+		 * if (!found) { Object[] messageArgs2 = new Object[] {
+		 * entriesSectionProperty .getText() };
+		 * 
+		 * MenuItem addColItem = new MenuItem(popupMenu, SWT.NONE);
+		 * addColItem.setText(new java.text.MessageFormat( "Add {0} column",
+		 * java.util.Locale.US) .format(messageArgs2));
+		 * 
+		 * addColItem .addSelectionListener(new SelectionAdapter() { public void
+		 * widgetSelected( SelectionEvent e) { addColumn(entriesSectionProperty,
+		 * Math.max(1, column)); } }); } }
+		 */
+		// popupMenu.setVisible(true);
 		return popupMenu;
 	}
 

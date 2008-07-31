@@ -61,7 +61,7 @@ public class Transaction extends ExtendableObject {
 	
     @Override	
 	protected String getExtendablePropertySetId() {
-		return "net.sf.jmoney.transaction";
+		return "net.sf.jmoney.transaction"; //$NON-NLS-1$
 	}
 	
     /**
@@ -129,11 +129,11 @@ public class Transaction extends ExtendableObject {
         }
         
         if (!thisEntryFound) {
-        	throw new RuntimeException("Double entry error");
+        	throw new RuntimeException("Double entry error"); //$NON-NLS-1$
         }
         
         if (anotherEntry == null) {
-        	throw new RuntimeException("Double entry error");
+        	throw new RuntimeException("Double entry error"); //$NON-NLS-1$
         }
         
         return anotherEntry;

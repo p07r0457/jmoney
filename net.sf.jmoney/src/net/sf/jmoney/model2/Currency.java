@@ -63,7 +63,7 @@ public class Currency extends Commodity {
 		super(objectKey, parentKey, name, extensionValues);
 		
 		if (decimals < 0 || decimals > MAX_DECIMALS)
-			throw new IllegalArgumentException("Number of decimals not supported");
+			throw new IllegalArgumentException("Number of decimals not supported"); //$NON-NLS-1$
 
 		this.code = code;
 		this.decimals = decimals;
@@ -83,7 +83,7 @@ public class Currency extends Commodity {
 
     @Override	
 	protected String getExtendablePropertySetId() {
-		return "net.sf.jmoney.currency";
+		return "net.sf.jmoney.currency"; //$NON-NLS-1$
 	}
 	
 	/**
@@ -128,7 +128,7 @@ public class Currency extends Commodity {
 	
 	@Override
 	public String toString() {
-		return getName() + " (" + getCode() + ")";
+		return getName() + " (" + getCode() + ")"; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	/**

@@ -22,8 +22,8 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.CurrencyControlFactory;
+import net.sf.jmoney.resources.Messages;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -44,7 +44,7 @@ import net.sf.jmoney.fields.CurrencyControlFactory;
  */
 public class SessionInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<Session> propertySet = PropertySet.addBaseFinalPropertySet(Session.class, "JMoney Session", new IExtendableObjectConstructors<Session>() {
+	private static ExtendablePropertySet<Session> propertySet = PropertySet.addBaseFinalPropertySet(Session.class, Messages.SessionInfo_Description, new IExtendableObjectConstructors<Session>() {
 
 		public Session construct(IObjectKey objectKey, ListKey parentKey) {
 			return new Session(objectKey, parentKey);
@@ -95,11 +95,11 @@ public class SessionInfo implements IPropertySetInfo {
 			}
 		};
 
-		commoditiesAccessor = propertySet.addPropertyList("commodity", JMoneyPlugin.getResourceString("<not used???>"), CommodityInfo.getPropertySet(), commodityGetter);
-		accountsAccessor = propertySet.addPropertyList("account", JMoneyPlugin.getResourceString("<not used???>"), AccountInfo.getPropertySet(), accountGetter);
-		transactionsAccessor = propertySet.addPropertyList("transaction", JMoneyPlugin.getResourceString("<not used???>"), TransactionInfo.getPropertySet(), transactionGetter);
+		commoditiesAccessor = propertySet.addPropertyList("commodity", Messages.SessionInfo_Commodity, CommodityInfo.getPropertySet(), commodityGetter); //$NON-NLS-1$
+		accountsAccessor = propertySet.addPropertyList("account", Messages.SessionInfo_Account, AccountInfo.getPropertySet(), accountGetter); //$NON-NLS-1$
+		transactionsAccessor = propertySet.addPropertyList("transaction", Messages.SessionInfo_Transaction, TransactionInfo.getPropertySet(), transactionGetter); //$NON-NLS-1$
 		
-		defaultCurrencyAccessor = propertySet.addProperty("defaultCurrency", JMoneyPlugin.getResourceString("Session.defaultCurrency"), Currency.class, 2, 20, currencyControlFactory, null);
+		defaultCurrencyAccessor = propertySet.addProperty("defaultCurrency", Messages.SessionInfo_DefaultCurrency, Currency.class, 2, 20, currencyControlFactory, null); //$NON-NLS-1$
 		
 		return propertySet;
 	}

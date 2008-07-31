@@ -26,7 +26,7 @@ package net.sf.jmoney.model2;
 import java.util.Calendar;
 import java.util.Date;
 
-import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.resources.Messages;
 
 /**
  * The data model for an entry.
@@ -132,7 +132,7 @@ public final class Entry extends ExtendableObject {
 
     @Override	
 	protected String getExtendablePropertySetId() {
-		return "net.sf.jmoney.entry";
+		return "net.sf.jmoney.entry"; //$NON-NLS-1$
 	}
 	
 	/**
@@ -212,7 +212,7 @@ public final class Entry extends ExtendableObject {
 		} else if (getTransaction().hasMoreThanTwoEntries()) {
 			// TODO: get rid of this message from here,
 			// and move text from jmoney to jmoney.accountentriespanel
-			return JMoneyPlugin.getResourceString("SplitCategory.name");
+			return Messages.Entry_SplitEntry;
 		} else {
 			return null;
 		}                    

@@ -22,8 +22,8 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.TextControlFactory;
+import net.sf.jmoney.resources.Messages;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -44,14 +44,14 @@ import net.sf.jmoney.fields.TextControlFactory;
  */
 public class CommodityInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<Commodity> propertySet = PropertySet.addBaseAbstractPropertySet(Commodity.class, "Base Commodity (includes currencies)");
+	private static ExtendablePropertySet<Commodity> propertySet = PropertySet.addBaseAbstractPropertySet(Commodity.class, Messages.CommodityInfo_Description);
 
 	private static ScalarPropertyAccessor<String> nameAccessor = null;
 
 	public PropertySet registerProperties() {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		
-		nameAccessor = propertySet.addProperty("name", JMoneyPlugin.getResourceString("Commodity.name"), String.class, 3, 20, textControlFactory, null);
+		nameAccessor = propertySet.addProperty("name", Messages.CommodityInfo_Name, String.class, 3, 20, textControlFactory, null); //$NON-NLS-1$
 
 		return propertySet;
 	}

@@ -149,7 +149,7 @@ public abstract class Account extends ExtendableObject implements Comparable<Acc
             level = 0;
         else 
             level = getParent().getLevel() + 1;
-        if (JMoneyPlugin.DEBUG) System.out.println("Level from " + this.name + ", child of " + getParent() +" is " + level);
+        if (JMoneyPlugin.DEBUG) System.out.println("Level from " + this.name + ", child of " + getParent() +" is " + level); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         return level;
     }
 }

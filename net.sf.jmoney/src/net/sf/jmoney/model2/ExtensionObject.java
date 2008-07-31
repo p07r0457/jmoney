@@ -106,11 +106,11 @@ public abstract class ExtensionObject {
     		return theObjectKeyField.get(this);
     	} catch (IllegalArgumentException e) {
     		e.printStackTrace();
-    		throw new RuntimeException("internal error");
+    		throw new RuntimeException("internal error"); //$NON-NLS-1$
     	} catch (IllegalAccessException e) {
     		e.printStackTrace();
     		// TODO: check the protection earlier and raise MalformedPlugin
-    		throw new RuntimeException("internal error - field protection problem");
+    		throw new RuntimeException("internal error - field protection problem"); //$NON-NLS-1$
     	}
 	}
 }

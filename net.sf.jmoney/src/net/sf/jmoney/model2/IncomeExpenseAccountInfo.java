@@ -22,9 +22,9 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.CheckBoxControlFactory;
 import net.sf.jmoney.fields.CurrencyControlFactory;
+import net.sf.jmoney.resources.Messages;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -44,7 +44,7 @@ import net.sf.jmoney.fields.CurrencyControlFactory;
  */
 public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<IncomeExpenseAccount> propertySet = PropertySet.addDerivedFinalPropertySet(IncomeExpenseAccount.class, "Income or Expense Category", AccountInfo.getPropertySet(), new IExtendableObjectConstructors<IncomeExpenseAccount>() {
+	private static ExtendablePropertySet<IncomeExpenseAccount> propertySet = PropertySet.addDerivedFinalPropertySet(IncomeExpenseAccount.class, Messages.IncomeExpenseAccountInfo_Description, AccountInfo.getPropertySet(), new IExtendableObjectConstructors<IncomeExpenseAccount>() {
 
 		public IncomeExpenseAccount construct(IObjectKey objectKey,
 				ListKey parentKey) {
@@ -89,15 +89,15 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 			}
 		};
 		
-		subAccountAccessor = propertySet.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), IncomeExpenseAccountInfo.getPropertySet(), accountGetter);
-		multiCurrencyAccessor = propertySet.addProperty("multiCurrency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.multiCurrency"), Boolean.class, 0, 10, new CheckBoxControlFactory(), null); 
-		currencyAccessor = propertySet.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), Currency.class, 2, 20, currencyControlFactory, onlyIfSingleCurrency);
+		subAccountAccessor = propertySet.addPropertyList("subAccount", Messages.IncomeExpenseAccountInfo_SubAccount, IncomeExpenseAccountInfo.getPropertySet(), accountGetter); //$NON-NLS-1$
+		multiCurrencyAccessor = propertySet.addProperty("multiCurrency", Messages.IncomeExpenseAccountInfo_MultiCurrency, Boolean.class, 0, 10, new CheckBoxControlFactory(), null);  //$NON-NLS-1$
+		currencyAccessor = propertySet.addProperty("currency", Messages.IncomeExpenseAccountInfo_Currency, Currency.class, 2, 20, currencyControlFactory, onlyIfSingleCurrency); //$NON-NLS-1$
 		
 		// We should define something for the implied enumerated value
 		// that is controlled by the derived class type.  This has not
 		// been designed yet, so for time being we have nothing to do.
 		
-		propertySet.setIcon("icons/category.gif");
+		propertySet.setIcon("icons/category.gif"); //$NON-NLS-1$
 		
 		return propertySet;
 	}

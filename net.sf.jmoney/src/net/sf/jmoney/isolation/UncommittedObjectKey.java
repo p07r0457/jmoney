@@ -151,7 +151,7 @@ public class UncommittedObjectKey implements IObjectKey {
 		} else if (committedObjectKey != null) {
 			return committedObjectKey.hashCode();
 		} else {
-			throw new RuntimeException("bad case");
+			throw new RuntimeException("bad case"); //$NON-NLS-1$
 		}
 	}
 			
@@ -163,7 +163,7 @@ public class UncommittedObjectKey implements IObjectKey {
 		} else if (extendableObject != null) {
 			return extendableObject;
 		} else {
-			throw new RuntimeException("bad case");
+			throw new RuntimeException("bad case"); //$NON-NLS-1$
 		}
 	}
 

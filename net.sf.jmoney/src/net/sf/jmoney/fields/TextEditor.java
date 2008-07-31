@@ -53,7 +53,7 @@ public class TextEditor implements IPropertyControl {
 		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 			if (changedObject.equals(extendableObject) && changedProperty == propertyAccessor) {
 	            String text = extendableObject.getPropertyValue(propertyAccessor);
-	            propertyControl.setText(text == null ? "" : text);
+	            propertyControl.setText(text == null ? "" : text); //$NON-NLS-1$
 			}
 		}
 	};
@@ -80,10 +80,10 @@ public class TextEditor implements IPropertyControl {
         extendableObject = object;
 
         if (object == null) {
-            propertyControl.setText("");
+            propertyControl.setText(""); //$NON-NLS-1$
     	} else {
             String text = object.getPropertyValue(propertyAccessor);
-            propertyControl.setText(text == null ? "" : text);
+            propertyControl.setText(text == null ? "" : text); //$NON-NLS-1$
         	
         	/*
         	 * We must listen to the model for changes in the value

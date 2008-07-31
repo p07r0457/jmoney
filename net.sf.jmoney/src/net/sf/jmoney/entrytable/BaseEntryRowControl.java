@@ -37,6 +37,7 @@ import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.Transaction.EntryCollection;
 import net.sf.jmoney.pages.entries.ForeignCurrencyDialog;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
@@ -44,6 +45,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyAdapter;
@@ -60,14 +62,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
-//TODO: Should RowControl wrap, rather than extend, CellContainer?
-//or should this class?  The problem is, input to cellContainer is
-//controlled by this class and so should not be publicly available.
-//Currently uncommittedEntryData and input are two copies of the same
-//thing.
+// TODO: Should RowControl wrap, rather than extend, CellContainer?
+// or should this class? The problem is, input to cellContainer is
+// controlled by this class and so should not be publicly available.
+// Currently uncommittedEntryData and input are two copies of the same
+// thing.
 // Or should this wrap RowControl, as RowControl is also used for split
 // entries, and that does pass on the input as is.
-public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEntryRowControl<T,R>> extends RowControl<T,R> {
+public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEntryRowControl<T, R>>
+		extends RowControl<T, R> {
 	// The darker blue and green lines for the listed entry in each transaction
 	protected static final Color transactionColor = new Color(Display
 			.getCurrent(), 235, 235, 255);
@@ -82,41 +85,42 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	protected static final Color alternateEntryColor = new Color(Display
 			.getCurrent(), 245, 255, 255);
 
-	protected static final Color selectedRowColor = new Color(Display.getCurrent(), 215, 215, 255);
+	protected static final Color selectedRowColor = new Color(Display
+			.getCurrent(), 215, 215, 255);
 
 	private static AudioClip clip;
 	static {
-		IPath path = new Path("icons").append("ding.au");
-		URL url = FileLocator.find(Platform.getBundle(JMoneyPlugin.PLUGIN_ID), path, null);
+		IPath path = new Path("icons").append("ding.au"); //$NON-NLS-1$ //$NON-NLS-2$
+		URL url = FileLocator.find(Platform.getBundle(JMoneyPlugin.PLUGIN_ID),
+				path, null);
 		clip = Applet.newAudioClip(url);
 	}
 
 	private VirtualRowTable<T> rowTable;
-	
+
 	/**
-	 * The transaction manager used for all changes made in
-	 * this row.  It is created when the contents are set into this object and
-	 * remains usable for the rest of the time that this object
-	 * represents a visible row.
+	 * The transaction manager used for all changes made in this row. It is
+	 * created when the contents are set into this object and remains usable for
+	 * the rest of the time that this object represents a visible row.
 	 */
 	TransactionManager transactionManager = null;
 
 	/**
-	 * The EntryData object on which this row is based.  This will contain
-	 * the committed version of the entry, or a null Entry object if this row
+	 * The EntryData object on which this row is based. This will contain the
+	 * committed version of the entry, or a null Entry object if this row
 	 * represents the 'new entry' row.
 	 * 
 	 * Note that this field should not be used as input to the cell controls.
 	 * This row implementation does its row editing inside a transaction and
-	 * will create an uncommitted version of the EntryData that is used as
-	 * input to the cell controls.
+	 * will create an uncommitted version of the EntryData that is used as input
+	 * to the cell controls.
 	 */
 	protected T committedEntryData = null;
 
 	/**
-	 * The EntryData object currently set into this object, or null
-	 * if this object does not represent a currently visible row
-	 * (duplicate of base input field)
+	 * The EntryData object currently set into this object, or null if this
+	 * object does not represent a currently visible row (duplicate of base
+	 * input field)
 	 */
 	protected T uncommittedEntryData = null;
 
@@ -131,7 +135,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	private KeyListener keyListener = new KeyAdapter() {
 		@Override
 		public void keyPressed(KeyEvent e) {
-//			parent.keyPressed(TableRow.this, e);
+			// parent.keyPressed(TableRow.this, e);
 		}
 	};
 
@@ -141,15 +145,15 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	private TraverseListener traverseListener = new TraverseListener() {
 		public void keyTraversed(TraverseEvent e) {
 			/*
-			 * FEATURE IN SWT: When SWT needs to resolve a mnemonic (accelerator)
-			 * character, it recursively calls the traverse event down all
-			 * controls in the container hierarchy.  If e.doit is false,
-			 * no control has yet matched the mnemonic, and we don't have to
-			 * do anything since we don't do mnemonic matching and no mnemonic
-			 * has matched.
+			 * FEATURE IN SWT: When SWT needs to resolve a mnemonic
+			 * (accelerator) character, it recursively calls the traverse event
+			 * down all controls in the container hierarchy. If e.doit is false,
+			 * no control has yet matched the mnemonic, and we don't have to do
+			 * anything since we don't do mnemonic matching and no mnemonic has
+			 * matched.
 			 */
 			if (e.doit) {
-//				parent.keyTraversed(TableRow.this, e);
+				// parent.keyTraversed(TableRow.this, e);
 			}
 		}
 	};
@@ -162,18 +166,18 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 
 	private ArrayList<IBalanceChangeListener> balanceChangeListeners = new ArrayList<IBalanceChangeListener>();
 
-	public BaseEntryRowControl(final Composite parent, int style, VirtualRowTable rowTable, Block<T, ?> rootBlock) {
+	public BaseEntryRowControl(final Composite parent, int style,
+			VirtualRowTable rowTable, Block<T, ?> rootBlock) {
 		super(parent, style);
 		this.rowTable = rowTable;
-		
+
 		/*
-		 * We have a margin of 1 at the top and 2 at the bottom.
-		 * The reason for this is because we want a 2-pixel wide black
-		 * line around the selected row.  However, a 1-pixel wide black
-		 * line is drawn along the bottom of every row.  Therefore we
-		 * we want to draw only a 1-pixel wide black line at the top of
-		 * the selected row.  The top and bottom margins are there only
-		 * so we can draw these lines.
+		 * We have a margin of 1 at the top and 2 at the bottom. The reason for
+		 * this is because we want a 2-pixel wide black line around the selected
+		 * row. However, a 1-pixel wide black line is drawn along the bottom of
+		 * every row. Therefore we we want to draw only a 1-pixel wide black
+		 * line at the top of the selected row. The top and bottom margins are
+		 * there only so we can draw these lines.
 		 */
 		BlockLayout<T> layout = new BlockLayout<T>(rootBlock, false);
 		layout.marginTop = 1;
@@ -185,30 +189,29 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	}
 
 	/**
-	 * Draws a border around the row.  A light gray single line is
-	 * drawn at the bottom if the row is not selected.  A black double
-	 * line is drawn at the bottom and a black single line at the top and
-	 * sides if the row is selected.
-	 * @param gc 
+	 * Draws a border around the row. A light gray single line is drawn at the
+	 * bottom if the row is not selected. A black double line is drawn at the
+	 * bottom and a black single line at the top and sides if the row is
+	 * selected.
+	 * 
+	 * @param gc
 	 */
 	protected void drawBorder(GC gc) {
 		Color oldColor = gc.getBackground();
 		try {
-			
-			
+
 			// Get the colors we need
 			Display display = Display.getCurrent();
-			Color blackColor = display
-			.getSystemColor(SWT.COLOR_BLACK);
+			Color blackColor = display.getSystemColor(SWT.COLOR_BLACK);
 			// pretty black
 			Color lineColor = display
-			.getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
+					.getSystemColor(SWT.COLOR_WIDGET_DARK_SHADOW);
 			// Looks white
 			Color secondaryColor = display
-			.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
+					.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
 			// Fairly dark gray
 			Color hilightColor = display
-			.getSystemColor(SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW);
+					.getSystemColor(SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW);
 
 			Point controlSize = getSize();
 
@@ -220,9 +223,9 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 				// bottom edge
 				gc.fillRectangle(0, controlSize.y - 2, controlSize.x, 2);
 				// left edge
-				gc.fillRectangle(0, 1, 1, controlSize.y-3);
+				gc.fillRectangle(0, 1, 1, controlSize.y - 3);
 				// right edge
-				gc.fillRectangle(controlSize.x - 1, 1, 1, controlSize.y-3);
+				gc.fillRectangle(controlSize.x - 1, 1, 1, controlSize.y - 3);
 			} else {
 				gc.setBackground(lineColor);
 				gc.fillRectangle(0, controlSize.y - 1, controlSize.x, 1);
@@ -241,21 +244,21 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 			 * positions of the controls.
 			 */
 			gc.setBackground(secondaryColor);
-			((BlockLayout)getLayout()).paintRowLines(gc, this);
+			((BlockLayout) getLayout()).paintRowLines(gc, this);
 		} finally {
 			gc.setBackground(oldColor);
 		}
 	}
 
 	/**
-	 * Sets the content of this row.  This class does all row editing inside
-	 * a transaction, so the input to the contained controls is the uncommitted
-	 * version.  However, the committed version should be passed to this method.
+	 * Sets the content of this row. This class does all row editing inside a
+	 * transaction, so the input to the contained controls is the uncommitted
+	 * version. However, the committed version should be passed to this method.
 	 * This method will create the transaction to be used for editing this row.
 	 * 
-	 * @param committedEntryData the committed version of the EntryData that is
-	 * 		to provide the contents of this row, or null if this is the new
-	 * 		entry row.
+	 * @param committedEntryData
+	 *            the committed version of the EntryData that is to provide the
+	 *            contents of this row, or null if this is the new entry row.
 	 */
 	public void setContent(T committedEntryData) {
 		this.committedEntryData = committedEntryData;
@@ -263,25 +266,31 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		setAppropriateBackgroundColor();
 
 		/*
-		 * Every row gets its own transaction.  This ensures that edits can be
+		 * Every row gets its own transaction. This ensures that edits can be
 		 * made at any time but the edits are not validated and no one else sees
 		 * the changes until the selection is moved off this row.
 		 */
-		// TODO: Some cleanup.  We don't need to create a new transaction each time.
-		// Perhaps we should have separate derived classes for the regular rows and
+		// TODO: Some cleanup. We don't need to create a new transaction each
+		// time.
+		// Perhaps we should have separate derived classes for the regular rows
+		// and
 		// the new entry row.
-		transactionManager = new TransactionManager(committedEntryData.getBaseSessionManager());
+		transactionManager = new TransactionManager(committedEntryData
+				.getBaseSessionManager());
 		Entry entryInTransaction;
 		if (committedEntryData.getEntry() == null) {
-			Transaction newTransaction = transactionManager.getSession().createTransaction();
+			Transaction newTransaction = transactionManager.getSession()
+					.createTransaction();
 			entryInTransaction = createNewEntry(newTransaction);
 		} else {
-			entryInTransaction = transactionManager.getCopyInTransaction(committedEntryData.getEntry());
+			entryInTransaction = transactionManager
+					.getCopyInTransaction(committedEntryData.getEntry());
 		}
-		uncommittedEntryData = createUncommittedEntryData(entryInTransaction, transactionManager);
+		uncommittedEntryData = createUncommittedEntryData(entryInTransaction,
+				transactionManager);
 		uncommittedEntryData.setIndex(committedEntryData.getIndex());
 		uncommittedEntryData.setBalance(committedEntryData.getBalance());
-		
+
 		// The uncommitted version of the EntryData object forms the input to
 		// the cell controls.
 		setInput(uncommittedEntryData);
@@ -294,7 +303,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	protected void setSelected(boolean isSelected) {
 		this.isSelected = isSelected;
 		setAppropriateBackgroundColor();
-		
+
 		/*
 		 * We need to tell the table that contains this row. This allows the
 		 * table to release the row if it is not currently visible and is now
@@ -303,7 +312,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		if (!isSelected) {
 			rowTable.rowDeselected(this);
 		}
-		
+
 		if (isSelected) {
 			// This call may be needed only to update the header
 			rowTable.setCurrentRow(input, uncommittedEntryData);
@@ -316,10 +325,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 
 	@Override
 	protected boolean commitChanges() {
-		return commitChanges(
-				(committedEntryData.getEntry() == null)
-				? "New Transaction"
-				: "Transaction Changes");
+		return commitChanges((committedEntryData.getEntry() == null) ? "New Transaction" //$NON-NLS-1$
+				: "Transaction Changes"); //$NON-NLS-1$
 	}
 
 	/**
@@ -348,31 +355,34 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 			Commodity commodity = null;
 			boolean mixedCommodities = false;
 
-			// TODO: itemWithError is not actually used.  See if there is an
-			// easy way of accessing the relevant controls.  Otherwise we should
+			// TODO: itemWithError is not actually used. See if there is an
+			// easy way of accessing the relevant controls. Otherwise we should
 			// delete this.
 
 			try {
 				if (uncommittedEntryData.getEntry().getTransaction().getDate() == null) {
 					throw new InvalidUserEntryException(
-							"The date cannot be blank.",
-							null);
+							Messages.BaseEntryRowControl_DateError, null);
 				}
 
-				for (Entry entry: uncommittedEntryData.getEntry().getTransaction().getEntryCollection()) {
+				for (Entry entry : uncommittedEntryData.getEntry()
+						.getTransaction().getEntryCollection()) {
 					if (entry.getAccount() == null) {
 						throw new InvalidUserEntryException(
-								"A category must be selected.",
-								null);
+								Messages.BaseEntryRowControl_CategoryError, null);
 					}
 
 					if (entry.getAccount() instanceof IncomeExpenseAccount) {
-						IncomeExpenseAccount incomeExpenseAccount = (IncomeExpenseAccount)entry.getAccount();
+						IncomeExpenseAccount incomeExpenseAccount = (IncomeExpenseAccount) entry
+								.getAccount();
 						if (incomeExpenseAccount.isMultiCurrency()
 								&& entry.getIncomeExpenseCurrency() == null) {
 							throw new InvalidUserEntryException(
-									"A currency must be selected (" + incomeExpenseAccount.getName() + " is a multi-currency category).",
-									null);
+									NLS
+											.bind(
+													Messages.BaseEntryRowControl_CurrencyError,
+													incomeExpenseAccount
+															.getName()), null);
 						}
 					}
 
@@ -401,9 +411,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 				if (totalAmount != 0 && !mixedCommodities) {
 					if (uncommittedEntryData.hasSplitEntries()) {
 						throw new InvalidUserEntryException(
-								"The transaction does not balance.  " +
-								"Unless some entries in the transaction are in different currencies, " +
-								"the sum of all the entries in a transaction must add up to zero.",
+								Messages.BaseEntryRowControl_BalanceError,
 								null);
 					} else {
 						Entry accountEntry = uncommittedEntryData.getEntry();
@@ -414,57 +422,65 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 
 				// Do any specific processing in derived classes.
 				specificValidation();
-				
+
 			} catch (InvalidUserEntryException e) {
-		        MessageDialog dialog = new MessageDialog(
-						getShell(), 
-						"Incomplete or invalid data in entry", 
-		        		null, // accept the default window icon
+				MessageDialog dialog = new MessageDialog(
+						getShell(),
+						Messages.BaseEntryRowControl_ErrorTitle,
+						null, // accept the default window icon
 						e.getLocalizedMessage(),
-						MessageDialog.ERROR, 
-						new String[] { "Discard", IDialogConstants.CANCEL_LABEL }, 
+						MessageDialog.ERROR,
+						new String[] { Messages.BaseEntryRowControl_Discard, IDialogConstants.CANCEL_LABEL },
 						1);
-		        int result = dialog.open();
-		        if (result == 0) {
-		        	// Discard
-		        	
-		        	// TODO: Some of this code is duplicated below.
-		        	
-					transactionManager = new TransactionManager(committedEntryData.getBaseSessionManager());
+				int result = dialog.open();
+				if (result == 0) {
+					// Discard
+
+					// TODO: Some of this code is duplicated below.
+
+					transactionManager = new TransactionManager(
+							committedEntryData.getBaseSessionManager());
 					Entry entryInTransaction;
 					if (committedEntryData.getEntry() == null) {
-						Transaction newTransaction = transactionManager.getSession().createTransaction();
+						Transaction newTransaction = transactionManager
+								.getSession().createTransaction();
 						entryInTransaction = createNewEntry(newTransaction);
 					} else {
-						entryInTransaction = transactionManager.getCopyInTransaction(committedEntryData.getEntry());
+						entryInTransaction = transactionManager
+								.getCopyInTransaction(committedEntryData
+										.getEntry());
 					}
-					
+
 					// Update the controls.
 
-					uncommittedEntryData = createUncommittedEntryData(entryInTransaction, transactionManager);
-					uncommittedEntryData.setIndex(committedEntryData.getIndex());
-					uncommittedEntryData.setBalance(committedEntryData.getBalance());
+					uncommittedEntryData = createUncommittedEntryData(
+							entryInTransaction, transactionManager);
+					uncommittedEntryData
+							.setIndex(committedEntryData.getIndex());
+					uncommittedEntryData.setBalance(committedEntryData
+							.getBalance());
 
-					for (final ICellControl<? super T> control: controls.values()) {
+					for (final ICellControl<? super T> control : controls
+							.values()) {
 						control.load(uncommittedEntryData);
 					}
-					
-		        	return true;
-		        } else {
-		        	// Cancel the selection change
-		        	if (e.getItemWithError() != null) {
-		        		e.getItemWithError().setFocus();
-		        	}
+
+					return true;
+				} else {
+					// Cancel the selection change
+					if (e.getItemWithError() != null) {
+						e.getItemWithError().setFocus();
+					}
 					return false;
-		        }
+				}
 			}
 
 			// Commit the changes to the transaction
 			transactionManager.commit(transactionLabel);
-			
+
 			// Sound the tone
-	        clip.play();
-	 			
+			clip.play();
+
 			/*
 			 * It may be that this was a new entry not previously committed. If
 			 * so, the committed entry in the EntryData object will be null. In
@@ -473,21 +489,24 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 			 * the new entry that we have just committed because the table is
 			 * listening for new entries).
 			 * 
-			 * This listener should also have caused the balance for the new entry
-			 * row to be updated.
+			 * This listener should also have caused the balance for the new
+			 * entry row to be updated.
 			 */
 			if (committedEntryData.getEntry() == null) {
-				Transaction newTransaction = transactionManager.getSession().createTransaction();
+				Transaction newTransaction = transactionManager.getSession()
+						.createTransaction();
 				Entry entryInTransaction = createNewEntry(newTransaction);
 
 				// Update the controls.
-				
-				uncommittedEntryData = createUncommittedEntryData(entryInTransaction, transactionManager);
+
+				uncommittedEntryData = createUncommittedEntryData(
+						entryInTransaction, transactionManager);
 				uncommittedEntryData.setIndex(committedEntryData.getIndex());
-				uncommittedEntryData.setBalance(committedEntryData.getBalance());
-				
+				uncommittedEntryData
+						.setBalance(committedEntryData.getBalance());
+
 				// Load all top level controls with this data.
-				for (final ICellControl<? super T> control: controls.values()) {
+				for (final ICellControl<? super T> control : controls.values()) {
 					control.load(uncommittedEntryData);
 				}
 			}
@@ -496,46 +515,50 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		return true;
 	}
 
-	protected abstract void specificValidation() throws InvalidUserEntryException;
+	protected abstract void specificValidation()
+			throws InvalidUserEntryException;
 
 	/**
-	 * Given an accounting transaction, which must be empty (no properties
-	 * set or entries created), create entries and set properties as appropriate
-	 * for a new entry.
+	 * Given an accounting transaction, which must be empty (no properties set
+	 * or entries created), create entries and set properties as appropriate for
+	 * a new entry.
 	 * 
-	 * Because the appropriate initialization of a new entry is dependent on what
-	 * is being shown in the table, this initialization is passed on to the context
-	 * provider.
+	 * Because the appropriate initialization of a new entry is dependent on
+	 * what is being shown in the table, this initialization is passed on to the
+	 * context provider.
 	 * 
 	 * @param newTransaction
 	 * @return
 	 */
 	private Entry createNewEntry(Transaction newTransaction) {
 		// TODO: Kludge here
-		return ((EntriesTable)getParent().getParent().getParent()).entriesContent.createNewEntry(newTransaction);
+		return ((EntriesTable) getParent().getParent().getParent()).entriesContent
+				.createNewEntry(newTransaction);
 	}
 
 	/**
-	 * This method is used when the user wants to duplicate a transaction.
-	 * This method should be called only when this row contains a new entry
-	 * that has no properties set and that has not yet been committed
-	 * (i.e. it is the blank row that the user may use for creating new entries).
+	 * This method is used when the user wants to duplicate a transaction. This
+	 * method should be called only when this row contains a new entry that has
+	 * no properties set and that has not yet been committed (i.e. it is the
+	 * blank row that the user may use for creating new entries).
 	 * 
-	 * Certain properties are copied in from the given entry.  The given entry
+	 * Certain properties are copied in from the given entry. The given entry
 	 * must be a committed entry in the same session manager to which this entry
 	 * would be committed.
 	 * 
-	 * This method leaves this row uncommitted.  Therefore it is important that
-	 * the caller always sets focus to this row after calling this method.
-	 * (By design, only the focus row should ever have uncommitted data).
+	 * This method leaves this row uncommitted. Therefore it is important that
+	 * the caller always sets focus to this row after calling this method. (By
+	 * design, only the focus row should ever have uncommitted data).
 	 */
 	public void initializeFromTemplate(EntryData sourceEntryData) {
-		Transaction targetTransaction = uncommittedEntryData.getEntry().getTransaction(); 
-		
+		Transaction targetTransaction = uncommittedEntryData.getEntry()
+				.getTransaction();
+
 		copyData(sourceEntryData.getEntry(), uncommittedEntryData.getEntry());
 
-		Iterator<Entry> iter = uncommittedEntryData.getSplitEntries().iterator();
-		for (Entry sourceEntry: sourceEntryData.getSplitEntries()) {
+		Iterator<Entry> iter = uncommittedEntryData.getSplitEntries()
+				.iterator();
+		for (Entry sourceEntry : sourceEntryData.getSplitEntries()) {
 			Entry targetEntry;
 			if (iter.hasNext()) {
 				targetEntry = iter.next();
@@ -543,7 +566,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 				targetEntry = targetTransaction.createEntry();
 			}
 
-			targetEntry.setAccount(transactionManager.getCopyInTransaction(sourceEntry.getAccount()));
+			targetEntry.setAccount(transactionManager
+					.getCopyInTransaction(sourceEntry.getAccount()));
 			copyData(sourceEntry, targetEntry);
 		}
 	}
@@ -556,7 +580,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	 */
 	private void copyData(Entry sourceEntry, Entry targetEntry) {
 		targetEntry.setMemo(sourceEntry.getMemo());
-		targetEntry.setIncomeExpenseCurrency(transactionManager.getCopyInTransaction(sourceEntry.getIncomeExpenseCurrency()));
+		targetEntry.setIncomeExpenseCurrency(transactionManager
+				.getCopyInTransaction(sourceEntry.getIncomeExpenseCurrency()));
 		targetEntry.setAmount(sourceEntry.getAmount());
 	}
 
@@ -569,17 +594,17 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	 * Gets the column that has the focus.
 	 * 
 	 * This method is used to preserve the column selection when cursoring up
-	 * and down between rows.  If the column cannot be determined that simply
+	 * and down between rows. If the column cannot be determined that simply
 	 * return 0 so that the first column gets the focus in the new row.
 	 * 
 	 * @return the 0-based index of the cell in this row that has the focus
 	 */
 	public int getCurrentColumn() {
 		// TODO: We can probably save this information in the focus
-		// listener, which will work much better.  For example, if the
+		// listener, which will work much better. For example, if the
 		// focus is not in the table but a cell is still in selected mode
 		// then the correct value will be returned.
-		Control [] children = getChildren();
+		Control[] children = getChildren();
 		for (int columnIndex = 0; columnIndex < children.length; columnIndex++) {
 			if (hasFocus(children[columnIndex])) {
 				return columnIndex;
@@ -590,7 +615,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	}
 
 	private boolean hasFocus(Control control) {
-		if (control.isFocusControl()) return true;
+		if (control.isFocusControl())
+			return true;
 
 		// We probably have to call recursively on child controls -
 		// but let's try first without.
@@ -611,30 +637,32 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	}
 
 	/*
-	 * Refreshes the balance and other properties of the row control that
-	 * may be affected when other rows change.
+	 * Refreshes the balance and other properties of the row control that may be
+	 * affected when other rows change.
 	 */
 	public void refreshBalance() {
-		// The new balance will have been updated in the committed entry data object,
+		// The new balance will have been updated in the committed entry data
+		// object,
 		// but not in the uncommitted entry data object.
-		// As the balances are based on the committed data, this is a little funny.
+		// As the balances are based on the committed data, this is a little
+		// funny.
 		// This must be done before balanceChanged is fired below, because that
 		// looks at the uncommitted entry data.
 		uncommittedEntryData.setIndex(committedEntryData.getIndex());
 		uncommittedEntryData.setBalance(committedEntryData.getBalance());
-		
+
 		setAppropriateBackgroundColor();
-		
-		for (IBalanceChangeListener listener: balanceChangeListeners) {
+
+		for (IBalanceChangeListener listener : balanceChangeListeners) {
 			listener.balanceChanged();
 		}
 	}
-	
+
 	private void setAppropriateBackgroundColor() {
 		if (isSelected) {
 			setBackground(selectedRowColor);
 		} else {
-			if (committedEntryData.getIndex()%2 == 0) {
+			if (committedEntryData.getIndex() % 2 == 0) {
 				setBackground(alternateTransactionColor);
 			} else {
 				setBackground(transactionColor);
@@ -647,8 +675,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	}
 
 	/**
-	 * @return the committed version of the EntryData object for this row,
-	 * 		or null if this row represents the new entry row
+	 * @return the committed version of the EntryData object for this row, or
+	 *         null if this row represents the new entry row
 	 */
 	public T getContent() {
 		return committedEntryData;
@@ -656,4 +684,3 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 
 	public abstract void amountChanged();
 }
-

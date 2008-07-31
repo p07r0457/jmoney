@@ -24,6 +24,7 @@ package net.sf.jmoney.actions;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.DatastoreManager;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -58,8 +59,8 @@ public class CloseSessionAction implements IWorkbenchWindowActionDelegate {
 		if (sessionManager == null) {
 			MessageDialog.openWarning(
 					window.getShell(),
-					"Jmoney Plug-in",
-					"No session is open!");
+					Messages.CloseSessionAction_WarningTitle,
+					Messages.CloseSessionAction_WarningMessage);
 		} else {
 			if (sessionManager.canClose(window)) {
 				sessionManager.close();

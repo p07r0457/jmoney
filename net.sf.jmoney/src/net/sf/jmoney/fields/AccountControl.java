@@ -115,7 +115,7 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
 		        // (the parameters may be null, but fields should always have been set by
 		        // the time control gets focus).
 		        allAccounts = new Vector<A>();
-		        addAccounts("", AccountControl.this.session.getAccountCollection(), listControl, AccountControl.this.accountClass);
+		        addAccounts("", AccountControl.this.session.getAccountCollection(), listControl, AccountControl.this.accountClass); //$NON-NLS-1$
 		        
 //		        shell.setSize(listControl.computeSize(SWT.DEFAULT, listControl.getItemHeight()*10));
 		        
@@ -243,7 +243,7 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
 		for (A matchingAccount: matchingAccounts) {
     		allAccounts.add(matchingAccount);
 			listControl.add(prefix + matchingAccount.getName());
-    		addAccounts(prefix + matchingAccount.getName() + ":", matchingAccount.getSubAccountCollection(), listControl, accountClass);
+    		addAccounts(prefix + matchingAccount.getName() + ":", matchingAccount.getSubAccountCollection(), listControl, accountClass); //$NON-NLS-1$
 		}
         
     }
@@ -256,7 +256,7 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
 		this.account = account;
 		
 		if (account == null) {
-			textControl.setText("");
+			textControl.setText(""); //$NON-NLS-1$
 	} else {
         textControl.setText(account.getName());
 	}

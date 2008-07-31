@@ -22,9 +22,9 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AmountInCurrencyAccountControlFactory;
 import net.sf.jmoney.fields.CurrencyControlFactory;
+import net.sf.jmoney.resources.Messages;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -45,7 +45,7 @@ import net.sf.jmoney.fields.CurrencyControlFactory;
  */
 public class CurrencyAccountInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<CurrencyAccount> propertySet = PropertySet.addDerivedAbstractPropertySet(CurrencyAccount.class, "Account containing a single currency", CapitalAccountInfo.getPropertySet());
+	private static ExtendablePropertySet<CurrencyAccount> propertySet = PropertySet.addDerivedAbstractPropertySet(CurrencyAccount.class, Messages.CurrencyAccountInfo_Description, CapitalAccountInfo.getPropertySet());
 
 	private static ReferencePropertyAccessor<Currency> currencyAccessor = null;
 	private static ScalarPropertyAccessor<Long> startBalanceAccessor = null;
@@ -58,8 +58,8 @@ public class CurrencyAccountInfo implements IPropertySetInfo {
 			}
 		};
 		
-		currencyAccessor = propertySet.addProperty("currency", JMoneyPlugin.getResourceString("AccountPropertiesPanel.currency"), Currency.class, 3, 30, currencyControlFactory, null);
-		startBalanceAccessor = propertySet.addProperty("startBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.startBalance"), Long.class, 2, 40, amountControlFactory, null);
+		currencyAccessor = propertySet.addProperty("currency", Messages.CurrencyAccountInfo_Currency, Currency.class, 3, 30, currencyControlFactory, null); //$NON-NLS-1$
+		startBalanceAccessor = propertySet.addProperty("startBalance", Messages.CurrencyAccountInfo_StartBalance, Long.class, 2, 40, amountControlFactory, null); //$NON-NLS-1$
 		
 		return propertySet;
 	}

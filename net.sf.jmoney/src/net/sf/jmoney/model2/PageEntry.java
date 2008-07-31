@@ -58,7 +58,7 @@ public class PageEntry {
 	public IBookkeepingPageFactory getPageFactory() {
 		if (pageFactory == null) {
 			try {
-				pageFactory = (IBookkeepingPageFactory)pageElement.createExecutableExtension("class");
+				pageFactory = (IBookkeepingPageFactory)pageElement.createExecutableExtension("class"); //$NON-NLS-1$
 			} catch (CoreException e) {
                 JMoneyPlugin.log(e);
 			}

@@ -32,7 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.resources.Messages;
 
 /**
  * The data model for an account.
@@ -81,7 +81,7 @@ public abstract class CapitalAccount extends Account {
 			ListKey parent) { 
 		super(objectKey, parent);
 
-		this.name = JMoneyPlugin.getResourceString("Account.newAccount");
+		this.name = Messages.CapitalAccount_Name;
 		
 		this.subAccounts = objectKey.constructListManager(CapitalAccountInfo.getSubAccountAccessor());
         this.abbreviation = null;
@@ -90,7 +90,7 @@ public abstract class CapitalAccount extends Account {
 
     @Override	
 	protected String getExtendablePropertySetId() {
-		return "net.sf.jmoney.capitalAccount";
+		return "net.sf.jmoney.capitalAccount"; //$NON-NLS-1$
 	}
 	
 	/**
@@ -155,7 +155,7 @@ public abstract class CapitalAccount extends Account {
     				}
     			};
     		} else {
-    			throw new RuntimeException("given property cannot be used for entry sorting");
+    			throw new RuntimeException("given property cannot be used for entry sorting"); //$NON-NLS-1$
     		}
     		
     		if (descending) {
@@ -207,7 +207,7 @@ public abstract class CapitalAccount extends Account {
 	    if (getParent() == null) {
 		       return name;
 		    } else {
-		        return getParent().getFullAccountName() + "." + this.name;
+		        return getParent().getFullAccountName() + "." + this.name; //$NON-NLS-1$
 		    }
 	}
 

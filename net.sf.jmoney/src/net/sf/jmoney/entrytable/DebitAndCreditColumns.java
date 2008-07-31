@@ -29,6 +29,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -112,13 +113,13 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 				// Debit column
 				textControl.setText(amount < 0 
 						? commodityForFormatting.format(-amount) 
-								: ""
+								: "" //$NON-NLS-1$
 				);
 			} else {
 				// Credit column
 				textControl.setText(amount > 0 
 						? commodityForFormatting.format(amount) 
-								: ""
+								: "" //$NON-NLS-1$
 				);
 			}
 		}
@@ -189,11 +190,11 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 	private BaseEntryRowControl rowControl;
 
 	public static DebitAndCreditColumns createCreditColumn(Commodity commodityForFormatting) {
-    	return new DebitAndCreditColumns("credit", "Credit", commodityForFormatting, false); //$NON-NLS-2$
+    	return new DebitAndCreditColumns("credit", Messages.DebitAndCreditColumns_CreditName, commodityForFormatting, false);  //$NON-NLS-1$
 	}
 	
 	public static DebitAndCreditColumns createDebitColumn(Commodity commodityForFormatting) {
-    	return new DebitAndCreditColumns("debit", "Debit", commodityForFormatting, true);     //$NON-NLS-2$
+    	return new DebitAndCreditColumns("debit", Messages.DebitAndCreditColumns_DebitName, commodityForFormatting, true);      //$NON-NLS-1$
 	}
 	
 	private DebitAndCreditColumns(String id, String name, Commodity commodity, boolean isDebit) {

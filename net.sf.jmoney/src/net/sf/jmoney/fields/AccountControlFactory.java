@@ -28,6 +28,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IReferenceControlFactory;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.widgets.Composite;
 
@@ -46,13 +47,13 @@ public abstract class AccountControlFactory<P, A extends Account> extends Proper
     @Override	
 	public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends A> propertyAccessor) {
         Account value = extendableObject.getPropertyValue(propertyAccessor);
-        return value == null ? "<none>" : value.getFullAccountName();
+        return value == null ? Messages.AccountControlFactory_None : value.getFullAccountName();
     }
 
     @Override	
     public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends A> propertyAccessor) {
         Account value = extendableObject.getPropertyValue(propertyAccessor);
-        return value == null ? "" : value.getFullAccountName();
+        return value == null ? "" : value.getFullAccountName(); //$NON-NLS-1$
     }
 
 	public A getDefaultValue() {

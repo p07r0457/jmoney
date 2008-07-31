@@ -24,6 +24,7 @@ package net.sf.jmoney.entrytable;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -69,11 +70,11 @@ public class OtherEntriesButton extends CellBlock<EntryData, EntryRowControl> {
 	    FocusCellTracker cellTracker = new FocusCellTracker();
 
 		if (downArrowImage == null) {
-			ImageDescriptor descriptor = JMoneyPlugin.createImageDescriptor("icons/comboArrow.gif");
+			ImageDescriptor descriptor = JMoneyPlugin.createImageDescriptor("icons/comboArrow.gif"); //$NON-NLS-1$
 			downArrowImage = descriptor.createImage();
 		}
 
-		return new ButtonCellControl(rowControl, downArrowImage, "Show the other entries in this transaction.") {
+		return new ButtonCellControl(rowControl, downArrowImage, Messages.OtherEntriesButton_ToolTipText) {
 			@Override
 			protected void run(EntryRowControl rowControl) {
 				final OtherEntriesShell shell = new OtherEntriesShell(rowControl.getShell(), SWT.ON_TOP, rowControl.getUncommittedEntryData(), otherEntriesRootBlock, false);

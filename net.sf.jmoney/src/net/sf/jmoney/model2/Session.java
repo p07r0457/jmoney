@@ -109,7 +109,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 
     @Override	
 	protected String getExtendablePropertySetId() {
-		return "net.sf.jmoney.session";
+		return "net.sf.jmoney.session"; //$NON-NLS-1$
 	}
 	
     public Currency getDefaultCurrency() {

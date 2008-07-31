@@ -79,7 +79,7 @@ public class TableLayout extends Layout {
 		
 		int width = 0;
 		for (int i = 0; i < table.getColumnCount(); i++) {
-			ColumnLayoutData layoutData = (ColumnLayoutData) table.getColumn(i).getData("layoutData");
+			ColumnLayoutData layoutData = (ColumnLayoutData) table.getColumn(i).getData("layoutData"); //$NON-NLS-1$
 			if (layoutData instanceof ColumnPixelData) {
 				ColumnPixelData col = (ColumnPixelData) layoutData;
 				width += col.width;
@@ -166,7 +166,7 @@ public class TableLayout extends Layout {
 		
 		// First calculate the minimum space
 		for (int i = 0; i < size; i++) {
-			ColumnLayoutData col = (ColumnLayoutData) tableColumns[i].getData("layoutData");
+			ColumnLayoutData col = (ColumnLayoutData) tableColumns[i].getData("layoutData"); //$NON-NLS-1$
 			if (col instanceof ColumnWeightData) {
 				ColumnWeightData cw = (ColumnWeightData) col;
 				int minimumWidth = cw.minimumWidth;
@@ -187,7 +187,7 @@ public class TableLayout extends Layout {
 			int rest = width - fixedWidth;
 			int totalDistributed = 0;
 			for (int i = 0; i < size; i++) {
-				ColumnLayoutData col = (ColumnLayoutData) tableColumns[i].getData("layoutData");
+				ColumnLayoutData col = (ColumnLayoutData) tableColumns[i].getData("layoutData"); //$NON-NLS-1$
 				if (col instanceof ColumnWeightData) {
 					ColumnWeightData cw = (ColumnWeightData) col;
 					int pixels = cw.weight * rest / totalWeight;
@@ -203,7 +203,7 @@ public class TableLayout extends Layout {
 			// number of columns with non-zero weights.
 			int diff = rest - totalDistributed;
 			for (int i = 0; i < size && diff > 0; i++) {
-				ColumnLayoutData col = (ColumnLayoutData) tableColumns[i].getData("layoutData");
+				ColumnLayoutData col = (ColumnLayoutData) tableColumns[i].getData("layoutData"); //$NON-NLS-1$
 				if (col instanceof ColumnWeightData) {
 					++widths[i];
 					--diff;

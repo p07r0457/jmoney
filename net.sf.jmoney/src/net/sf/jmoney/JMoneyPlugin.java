@@ -68,13 +68,14 @@ import org.osgi.framework.BundleContext;
  */
 public class JMoneyPlugin extends AbstractUIPlugin {
 
-    public static final String PLUGIN_ID = "net.sf.jmoney";
+    public static final String PLUGIN_ID = "net.sf.jmoney"; //$NON-NLS-1$
 
-    public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney/debug"));
+    public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney/debug")); //$NON-NLS-1$ //$NON-NLS-2$
 
 	//The shared instance.
 	private static JMoneyPlugin plugin;
 	//Resource bundle.
+	@Deprecated
 	private ResourceBundle resourceBundle;
 	
     private DatastoreManager sessionManager = null;
@@ -105,7 +106,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 		super();
 		plugin = this;
 		try {
-			resourceBundle   = ResourceBundle.getBundle("net.sf.jmoney.resources.Language");
+			resourceBundle   = ResourceBundle.getBundle("net.sf.jmoney.resources.Language"); //$NON-NLS-1$
 		} catch (MissingResourceException x) {
 			resourceBundle = null;
 		}
@@ -141,7 +142,9 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	/**
 	 * Returns the string from the plugin's resource bundle,
 	 * or 'key' if not found.
+	 * @deprecated Use Messages in package net.sf.jmoney.resources.
 	 */
+	@Deprecated
 	public static String getResourceString(String key) {
 		ResourceBundle bundle = JMoneyPlugin.getDefault().getResourceBundle();
 		try {
@@ -153,9 +156,9 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 
 	public static Image createImage(String name) {
 //		String iconPath = "icons/";
-		String iconPath = "";
+		String iconPath = ""; //$NON-NLS-1$
 		try {
-			URL installURL = getDefault().getBundle().getEntry("/");
+			URL installURL = getDefault().getBundle().getEntry("/"); //$NON-NLS-1$
 			URL url = new URL(installURL, iconPath + name);
 			return ImageDescriptor.createFromURL(url).createImage();
 		} catch (MalformedURLException e) {
@@ -167,9 +170,9 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	public static ImageDescriptor createImageDescriptor(String name) {
 		// Make above call this, or remove above
 //		String iconPath = "icons/";
-		String iconPath = "";
+		String iconPath = ""; //$NON-NLS-1$
 		try {
-			URL installURL = getDefault().getBundle().getEntry("/");
+			URL installURL = getDefault().getBundle().getEntry("/"); //$NON-NLS-1$
 			URL url = new URL(installURL, iconPath + name);
 			return ImageDescriptor.createFromURL(url);
 		} catch (MalformedURLException e) {
@@ -191,12 +194,13 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	 * @param e Exception to log
 	 */
 	public static void log(Throwable e) {
-		log(new Status(IStatus.ERROR, JMoneyPlugin.PLUGIN_ID, IStatus.ERROR, "Internal errror", e));
+		log(new Status(IStatus.ERROR, JMoneyPlugin.PLUGIN_ID, IStatus.ERROR, "Internal errror", e)); //$NON-NLS-1$
 	}
 
 	/**
 	 * Returns the plugin's resource bundle,
 	 */
+	@Deprecated
 	public ResourceBundle getResourceBundle() {
 		return resourceBundle;
 	}
@@ -329,10 +333,10 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         if (result != null) return result;
 
         // Find the currency in our list of ISO 4217 currencies
-        ResourceBundle res = ResourceBundle.getBundle("net.sf.jmoney.resources.Currency");
+        ResourceBundle res = ResourceBundle.getBundle("net.sf.jmoney.resources.Currency"); //$NON-NLS-1$
         byte decimals = 2;
         try {
-            InputStream in = JMoneyPlugin.class.getResourceAsStream("Currencies.txt");
+            InputStream in = JMoneyPlugin.class.getResourceAsStream("Currencies.txt"); //$NON-NLS-1$
             BufferedReader buffer = new BufferedReader(new InputStreamReader(in));
             for (String line = buffer.readLine(); line != null; line = buffer.readLine()) {
                 if (line.substring(0, 3).equals(code)) {
@@ -380,7 +384,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         Currency currency = getIsoCurrency(session, code);
         if (currency == null) {
         	// JMoney depends on a default currency
-        	currency = getIsoCurrency(session, "USD");
+        	currency = getIsoCurrency(session, "USD"); //$NON-NLS-1$
         }
         
         /*
@@ -431,7 +435,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 		 * set by by JMoneyPreferenceInitializer (an extension to the
 		 * org.eclipse.core.runtime.preferences extension point).
 		 */
-    	return getPreferenceStore().getString("dateFormat");
+    	return getPreferenceStore().getString("dateFormat"); //$NON-NLS-1$
     }
 
 	/**
@@ -453,19 +457,19 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 				return getDefault().getSession();
 			}
 			
-			String factoryId = memento.getString("currentSessionFactoryId"); 
+			String factoryId = memento.getString("currentSessionFactoryId");  //$NON-NLS-1$
 			if (factoryId != null && factoryId.length() != 0) {
 				// Search for the factory.
 				IExtensionRegistry registry = Platform.getExtensionRegistry();
-				for (IConfigurationElement element: registry.getConfigurationElementsFor("org.eclipse.ui.elementFactories")) {
-					if (element.getName().equals("factory")) {
-						if (element.getAttribute("id").equals(factoryId)) {
+				for (IConfigurationElement element: registry.getConfigurationElementsFor("org.eclipse.ui.elementFactories")) { //$NON-NLS-1$
+					if (element.getName().equals("factory")) { //$NON-NLS-1$
+						if (element.getAttribute("id").equals(factoryId)) { //$NON-NLS-1$
 							try {
-								ISessionFactory listener = (ISessionFactory)element.createExecutableExtension("class");
+								ISessionFactory listener = (ISessionFactory)element.createExecutableExtension("class"); //$NON-NLS-1$
 
 								// Create and initialize the session object from 
 								// the data stored in the memento.
-								listener.openSession(memento.getChild("currentSession"));
+								listener.openSession(memento.getChild("currentSession")); //$NON-NLS-1$
 								return getDefault().getSession();
 							} catch (CoreException e) {
 								// Could not create the factory given by the 'class' attribute

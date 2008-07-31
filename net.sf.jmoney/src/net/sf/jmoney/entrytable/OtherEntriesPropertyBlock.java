@@ -56,7 +56,7 @@ public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData, EntryR
 		);
 
 		this.accessor = accessor;
-		this.id = "other." + accessor.getName();
+		this.id = "other." + accessor.getName(); //$NON-NLS-1$
 	}
 
 	/**
@@ -73,7 +73,7 @@ public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData, EntryR
 		);
 
 		this.accessor = accessor;
-		this.id = "other." + accessor.getName();
+		this.id = "other." + accessor.getName(); //$NON-NLS-1$
 	}
 
 	public String getId() {

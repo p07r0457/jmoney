@@ -27,20 +27,22 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.StringTokenizer;
 
+import net.sf.jmoney.resources.Messages;
+
 public class VerySimpleDateFormat {
 
 	public static final String[] DATE_PATTERNS =
 		{
-			"dd.MM.yyyy",
-			"dd/MM/yyyy",
-			"dd-MM-yyyy",
-			"MM/dd/yyyy",
-			"MM-dd-yyyy",
-			"yyyy.dd.MM",
-			"yyyy.MM.dd",
-			"yyyy.MM.dd.",
-			"yyyy/MM/dd",
-			"yyyy-MM-dd" };
+			"dd.MM.yyyy", //$NON-NLS-1$
+			"dd/MM/yyyy", //$NON-NLS-1$
+			"dd-MM-yyyy", //$NON-NLS-1$
+			"MM/dd/yyyy", //$NON-NLS-1$
+			"MM-dd-yyyy", //$NON-NLS-1$
+			"yyyy.dd.MM", //$NON-NLS-1$
+			"yyyy.MM.dd", //$NON-NLS-1$
+			"yyyy.MM.dd.", //$NON-NLS-1$
+			"yyyy/MM/dd", //$NON-NLS-1$
+			"yyyy-MM-dd" }; //$NON-NLS-1$
 
 	private SimpleDateFormat formatter;
 	
@@ -49,15 +51,15 @@ public class VerySimpleDateFormat {
 
 	public VerySimpleDateFormat(String pattern) {
 		formatter = new SimpleDateFormat(pattern);
-		dayIndex = pattern.indexOf("dd");
-		monthIndex = pattern.indexOf("MM");
-		yearIndex = pattern.indexOf("yyyy");
-        if (pattern.indexOf(".") > -1) {
-            delimiter = ".";
-        } else if (pattern.indexOf("/") > -1) {
-            delimiter = "/";
-        } else if (pattern.indexOf("-") > -1) {
-            delimiter = "-";
+		dayIndex = pattern.indexOf("dd"); //$NON-NLS-1$
+		monthIndex = pattern.indexOf("MM"); //$NON-NLS-1$
+		yearIndex = pattern.indexOf("yyyy"); //$NON-NLS-1$
+        if (pattern.indexOf(".") > -1) { //$NON-NLS-1$
+            delimiter = "."; //$NON-NLS-1$
+        } else if (pattern.indexOf("/") > -1) { //$NON-NLS-1$
+            delimiter = "/"; //$NON-NLS-1$
+        } else if (pattern.indexOf("-") > -1) { //$NON-NLS-1$
+            delimiter = "-"; //$NON-NLS-1$
         }
 	}
 
@@ -68,7 +70,7 @@ public class VerySimpleDateFormat {
 	 * 			parameter is null
 	 */
 	public String format(Date date) {
-		return (date == null) ? "" : formatter.format(date);
+		return (date == null) ? "" : formatter.format(date); //$NON-NLS-1$
 	}
 
 	public Date parse(String dateString) {
@@ -130,13 +132,13 @@ public class VerySimpleDateFormat {
 						year += year < 30 ? 2000 : 1900;
 					break;
 				default :
-					throw new IllegalArgumentException("No valid date: " + dateString);
+					throw new IllegalArgumentException("No valid date: " + dateString); //$NON-NLS-1$
 			}
 			cl.set(year, month, day);
 			return cl.getTime();
 		} catch (Exception e) {
             if (e instanceof IllegalArgumentException) {
-                throw new IllegalArgumentException("No valid date: " + dateString);
+                throw new IllegalArgumentException("No valid date: " + dateString); //$NON-NLS-1$
             }
             return null;
 		}

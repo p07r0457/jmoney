@@ -22,8 +22,8 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.TextControlFactory;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.widgets.Composite;
 
@@ -46,7 +46,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class CurrencyInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<Currency> propertySet = PropertySet.addDerivedFinalPropertySet(Currency.class, "Currency", CommodityInfo.getPropertySet(), new IExtendableObjectConstructors<Currency>() {
+	private static ExtendablePropertySet<Currency> propertySet = PropertySet.addDerivedFinalPropertySet(Currency.class, Messages.CurrencyInfo_Description, CommodityInfo.getPropertySet(), new IExtendableObjectConstructors<Currency>() {
 
 		public Currency construct(IObjectKey objectKey, ListKey parentKey) {
 			return new Currency(
@@ -89,8 +89,8 @@ public class CurrencyInfo implements IPropertySetInfo {
 			}
 		};
 
-		codeAccessor = propertySet.addProperty("code", JMoneyPlugin.getResourceString("Currency.code"), String.class, 0, 8, textControlFactory, null);
-		decimalsAccessor = propertySet.addProperty("decimals", JMoneyPlugin.getResourceString("Currency.decimals"), Integer.class, 0, 8, numberControlFactory, null);
+		codeAccessor = propertySet.addProperty("code", Messages.CurrencyInfo_Code, String.class, 0, 8, textControlFactory, null); //$NON-NLS-1$
+		decimalsAccessor = propertySet.addProperty("decimals", Messages.CurrencyInfo_DecimalPlace, Integer.class, 0, 8, numberControlFactory, null); //$NON-NLS-1$
 		
 		return propertySet;
 	}

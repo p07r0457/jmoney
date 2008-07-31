@@ -6,6 +6,7 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -116,7 +117,7 @@ public class OtherEntriesControl extends Composite {
 	private Control createDownArrowButton() {
 		downArrowButton = new Button(this, SWT.NO_TRIM);
 		if (downArrowImage == null) {
-			ImageDescriptor descriptor = JMoneyPlugin.createImageDescriptor("icons/comboArrow.gif");
+			ImageDescriptor descriptor = JMoneyPlugin.createImageDescriptor("icons/comboArrow.gif"); //$NON-NLS-1$
 			downArrowImage = descriptor.createImage();
 		}
 		downArrowButton.setImage(downArrowImage);
@@ -141,7 +142,7 @@ public class OtherEntriesControl extends Composite {
 		childComposite.setLayout(stackLayout);
 		
 		splitLabel = new Label(childComposite, SWT.NONE);
-		splitLabel.setText(JMoneyPlugin.getResourceString("SplitCategory.name"));
+		splitLabel.setText(Messages.OtherEntriesControl_SplitEntry);
 
 		otherEntryControl = new SplitEntryRowControl(childComposite, SWT.NONE, rootBlock, true, selectionTracker, focusCellTracker);
 		

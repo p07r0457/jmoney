@@ -26,6 +26,7 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.resources.Messages;
 
 /**
  * A control factory to edit an amount of a commodity.
@@ -39,9 +40,9 @@ public abstract class AmountControlFactory extends PropertyControlFactory<Long> 
     public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
         Long amount = extendableObject.getPropertyValue(propertyAccessor);
         if (amount == null) {
-            return "none";
+            return Messages.AmountControlFactory_None;
         } else {
-            return "'" + getCommodity(extendableObject).format(amount.longValue()) + "'";
+            return "'" + getCommodity(extendableObject).format(amount.longValue()) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
 
@@ -49,7 +50,7 @@ public abstract class AmountControlFactory extends PropertyControlFactory<Long> 
     public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Long> propertyAccessor) {
         Long amount = extendableObject.getPropertyValue(propertyAccessor);
         if (amount == null) {
-            return "";
+            return ""; //$NON-NLS-1$
         } else {
         	// TODO: clean this up when we have a plan for incomplete data.
         	// For time being, use the default currency for formatting if the user

@@ -186,7 +186,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 		ExtendableObject extendableObject = (ExtendableObject)object;
 		
 		if (extendableObject.getDataManager() != listKey.getParentKey().getDataManager()) {
-    		throw new RuntimeException("Invalid call to remove.  The object passed does not belong to the data manager that is the base data manager of this collection.");
+    		throw new RuntimeException("Invalid call to remove.  The object passed does not belong to the data manager that is the base data manager of this collection."); //$NON-NLS-1$
 		}
 		
 		/*

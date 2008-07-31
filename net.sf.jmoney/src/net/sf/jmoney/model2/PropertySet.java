@@ -111,7 +111,7 @@ public abstract class PropertySet<E> {
 		 * Check that the property set id is unique.
 		 */
 		if (allPropertySetIds.contains(propertySetId)) {
-			throw new MalformedPluginException("More than one property set has an id of " + propertySetId);
+			throw new MalformedPluginException("More than one property set has an id of " + propertySetId); //$NON-NLS-1$
 		}
 		this.propertySetId = propertySetId;
 		allPropertySetIds.add(propertySetId);
@@ -133,30 +133,30 @@ public abstract class PropertySet<E> {
 		// We do have other problems, however, which have required a second pass thru
 		// the property sets.
 		
-		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.fields")) {
-			if (element.getName().equals("extendable-property-set")) {
+		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.fields")) { //$NON-NLS-1$
+			if (element.getName().equals("extendable-property-set")) { //$NON-NLS-1$
 				try {
-					Object listener = element.createExecutableExtension("info-class");
+					Object listener = element.createExecutableExtension("info-class"); //$NON-NLS-1$
 					if (!(listener instanceof IPropertySetInfo)) {
 						throw new MalformedPluginException(
-								"Plug-in " + element.getContributor().getName()
-								+ " extends the net.sf.jmoney.fields extension point. "
-								+ "However, the class specified by the info-class attribute "
-								+ "(" + listener.getClass().getName() + ") "
-								+ "does not implement the IPropertySetInfo interface. "
-								+ "This interface must be implemented by all classes referenced "
-								+ "by the info-class attribute.");
+								"Plug-in " + element.getContributor().getName() //$NON-NLS-1$
+								+ " extends the net.sf.jmoney.fields extension point. " //$NON-NLS-1$
+								+ "However, the class specified by the info-class attribute " //$NON-NLS-1$
+								+ "(" + listener.getClass().getName() + ") " //$NON-NLS-1$ //$NON-NLS-2$
+								+ "does not implement the IPropertySetInfo interface. " //$NON-NLS-1$
+								+ "This interface must be implemented by all classes referenced " //$NON-NLS-1$
+								+ "by the info-class attribute."); //$NON-NLS-1$
 					}
 
 					IPropertySetInfo pageListener = (IPropertySetInfo)listener;
 
 					String fullPropertySetId = element.getNamespaceIdentifier();
-					String id = element.getAttribute("id");
+					String id = element.getAttribute("id"); //$NON-NLS-1$
 					if (id != null && id.length() != 0) {
 						fullPropertySetId = fullPropertySetId + '.' + id;
 					}
 
-					String basePropertySetId = element.getAttribute("base-property-set");
+					String basePropertySetId = element.getAttribute("base-property-set"); //$NON-NLS-1$
 					if (basePropertySetId != null && basePropertySetId.length() == 0) {
 						basePropertySetId = null;
 					}
@@ -165,33 +165,33 @@ public abstract class PropertySet<E> {
 					if (e.getStatus().getException() instanceof ClassNotFoundException) {
 						ClassNotFoundException e2 = (ClassNotFoundException)e.getStatus().getException();
 						throw new MalformedPluginException(
-								"Plug-in " + element.getContributor().getName()
-								+ " extends the net.sf.jmoney.fields extension point. "
-								+ "However, the class specified by the info-class attribute "
-								+ "(" + e2.getMessage() + ") "
-								+ "could not be found. "
-								+ "The info-class attribute must specify a class that implements the "
-								+ "IPropertySetInfo interface.");
+								"Plug-in " + element.getContributor().getName() //$NON-NLS-1$
+								+ " extends the net.sf.jmoney.fields extension point. " //$NON-NLS-1$
+								+ "However, the class specified by the info-class attribute " //$NON-NLS-1$
+								+ "(" + e2.getMessage() + ") " //$NON-NLS-1$ //$NON-NLS-2$
+								+ "could not be found. " //$NON-NLS-1$
+								+ "The info-class attribute must specify a class that implements the " //$NON-NLS-1$
+								+ "IPropertySetInfo interface."); //$NON-NLS-1$
 					}
 					e.printStackTrace();
 				}
 			}
 		}
 
-		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.fields")) {
-			if (element.getName().equals("extension-property-set")) {
+		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.fields")) { //$NON-NLS-1$
+			if (element.getName().equals("extension-property-set")) { //$NON-NLS-1$
 				try {
-					Object listener = element.createExecutableExtension("info-class");
+					Object listener = element.createExecutableExtension("info-class"); //$NON-NLS-1$
 					if (listener instanceof IPropertySetInfo) {
 						IPropertySetInfo pageListener = (IPropertySetInfo)listener;
 
 						String fullPropertySetId = element.getNamespaceIdentifier();
-						String id = element.getAttribute("id");
+						String id = element.getAttribute("id"); //$NON-NLS-1$
 						if (id != null && id.length() != 0) {
 							fullPropertySetId = fullPropertySetId + '.' + id;
 						}
 
-						String extendablePropertySetId = element.getAttribute("extendable-property-set");
+						String extendablePropertySetId = element.getAttribute("extendable-property-set"); //$NON-NLS-1$
 						if (extendablePropertySetId != null) {
 							registerExtensionPropertySet(fullPropertySetId, extendablePropertySetId, pageListener);
 						} else {
@@ -211,7 +211,7 @@ public abstract class PropertySet<E> {
 		 */
 		for (PropertySet propertySet: PropertySet.allPropertySets) {
 			if (propertySet.getId() == null) {
-				throw new MalformedPluginException("The property set for " + propertySet.getImplementationClass().getName() + " has not been registered in the plugin.xml file.");
+				throw new MalformedPluginException("The property set for " + propertySet.getImplementationClass().getName() + " has not been registered in the plugin.xml file."); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		}
 		
@@ -446,9 +446,9 @@ public abstract class PropertySet<E> {
 	public <V> ScalarPropertyAccessor<V> addProperty(String name, String displayName, Class<V> classOfValue, int weight, int minimumWidth, IPropertyControlFactory<V> propertyControlFactory, IPropertyDependency<E> propertyDependency) {
 		if (propertyControlFactory == null) {
 			throw new MalformedPluginException(
-					"No IPropertyControlFactory object has been specified for property " + name
-					+ ".  This is needed even if the property is not editable.  (Though the method that gets the" +
-			" control may return null if the property is not editable).");
+					"No IPropertyControlFactory object has been specified for property " + name //$NON-NLS-1$
+					+ ".  This is needed even if the property is not editable.  (Though the method that gets the" + //$NON-NLS-1$
+			" control may return null if the property is not editable)."); //$NON-NLS-1$
 		}
 
 		ScalarPropertyAccessor<V> accessor = new ScalarPropertyAccessor<V>(classOfValue, this, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency);
@@ -459,9 +459,9 @@ public abstract class PropertySet<E> {
 	public <V extends ExtendableObject> ReferencePropertyAccessor<V> addProperty(String name, String displayName, Class<V> classOfValue, int weight, int minimumWidth, final IReferenceControlFactory<E,V> propertyControlFactory, IPropertyDependency<E> propertyDependency) {
 		if (propertyControlFactory == null) {
 			throw new MalformedPluginException(
-					"No IPropertyControlFactory object has been specified for property " + name
-					+ ".  This is needed even if the property is not editable.  (Though the method that gets the" +
-			" control may return null if the property is not editable).");
+					"No IPropertyControlFactory object has been specified for property " + name //$NON-NLS-1$
+					+ ".  This is needed even if the property is not editable.  (Though the method that gets the" + //$NON-NLS-1$
+			" control may return null if the property is not editable)."); //$NON-NLS-1$
 		}
 
 		ReferencePropertyAccessor<V> accessor = new ReferencePropertyAccessor<V>(classOfValue, this, name, displayName, weight, minimumWidth, propertyControlFactory, propertyDependency) {

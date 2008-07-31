@@ -28,6 +28,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IReferenceControlFactory;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.widgets.Composite;
 
@@ -46,13 +47,13 @@ public abstract class CurrencyControlFactory<P> extends PropertyControlFactory<C
     @Override	
     public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Currency> propertyAccessor) {
         Currency value = extendableObject.getPropertyValue(propertyAccessor);
-        return value == null ? "none" : "'" + value.getName() + "'";
+        return value == null ? Messages.CurrencyControlFactory_None : "'" + value.getName() + "'";  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
     }
 
     @Override	
     public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Currency> propertyAccessor) {
         Currency value = extendableObject.getPropertyValue(propertyAccessor);
-        return value == null ? "" : value.getCode();
+        return value == null ? "" : value.getCode(); //$NON-NLS-1$
     }
 
 	public Currency getDefaultValue() {

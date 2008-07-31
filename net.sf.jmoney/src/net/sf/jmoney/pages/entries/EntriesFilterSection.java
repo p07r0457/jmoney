@@ -23,8 +23,8 @@ package net.sf.jmoney.pages.entries;
 
 import java.util.Collection;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.IndividualBlock;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
@@ -71,8 +71,8 @@ public class EntriesFilterSection extends SectionPart {
     			// get confused because entries are not being shown.
     		}
     	});
-    	getSection().setText("Entries Filter");
-        getSection().setDescription("Show only entries in the table below that match your filter criteria.");
+    	getSection().setText(Messages.EntriesFilterSection_Text);
+        getSection().setDescription(Messages.EntriesFilterSection_Description);
 		createClient(toolkit);
 	}
 
@@ -85,16 +85,16 @@ public class EntriesFilterSection extends SectionPart {
 
         fFilterCombo = new Combo(container, toolkit.getBorderStyle() | SWT.READ_ONLY);
         toolkit.adapt(fFilterCombo, true, true);
-        String[] fFilterComboItems = { JMoneyPlugin.getResourceString("EntriesFilterSection.filter"),
-                JMoneyPlugin.getResourceString("EntriesFilterSection.clear")};
+        String[] fFilterComboItems = { Messages.EntriesFilterSection_ComboItemFilter,
+                Messages.EntriesFilterSection_ComboItemClear};
         fFilterCombo.setItems(fFilterComboItems);
         fFilterCombo.select(0);
         fFilterCombo.addSelectionListener(new SelectionAdapter() {
     	    @Override	
 			public void widgetSelected(SelectionEvent e) {
 				if (fFilterCombo.getSelectionIndex() == 1) {
-					fFilterText.setText("");
-					filter.setPattern("");
+					fFilterText.setText(""); //$NON-NLS-1$
+					filter.setPattern(""); //$NON-NLS-1$
 					// always leave selection at 'filter' (this combo is acting as a push button)
 					fFilterCombo.select(0);
 				}
@@ -105,7 +105,7 @@ public class EntriesFilterSection extends SectionPart {
         // on which a filter may be based.
         String[] filterTypes = new String[allEntryDataObjects.size() + 1];
         int i = 0;
-        filterTypes[i++] = JMoneyPlugin.getResourceString("EntryFilter.entry"); 
+        filterTypes[i++] = Messages.EntriesFilterSection_Entry; 
         for (IndividualBlock entriesSectionProperty: allEntryDataObjects) {
             filterTypes[i++] = entriesSectionProperty.getText();
         }
@@ -123,11 +123,11 @@ public class EntriesFilterSection extends SectionPart {
         
         fOperationCombo = new Combo(container, toolkit.getBorderStyle() | SWT.READ_ONLY);
         toolkit.adapt(fOperationCombo, true, true);
-        String[] fOperationComboItems = { JMoneyPlugin.getResourceString("EntriesFilterSection.contains"),};
+        String[] fOperationComboItems = { Messages.EntriesFilterSection_ComboItemContains,};
         fOperationCombo.setItems(fOperationComboItems);
         fOperationCombo.select(0);
 
-        fFilterText = toolkit.createText(container, "");
+        fFilterText = toolkit.createText(container, ""); //$NON-NLS-1$
         fFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         fFilterText.addFocusListener(new FocusAdapter() {
 		    @Override	

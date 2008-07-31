@@ -48,7 +48,7 @@ public class CheckBoxControlFactory implements IPropertyControlFactory<Boolean> 
     public String formatValueForMessage(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Boolean> propertyAccessor) {
         Boolean value = extendableObject.getPropertyValue(propertyAccessor);
         if (value == null) {
-            return "N/A";
+            return "N/A"; //$NON-NLS-1$
         } else {
             return value.toString();
         }
@@ -57,7 +57,7 @@ public class CheckBoxControlFactory implements IPropertyControlFactory<Boolean> 
     public String formatValueForTable(ExtendableObject extendableObject, ScalarPropertyAccessor<? extends Boolean> propertyAccessor) {
         Boolean value = extendableObject.getPropertyValue(propertyAccessor);
         if (value == null) {
-            return "";
+            return ""; //$NON-NLS-1$
         } else {
             return value.toString();
         }

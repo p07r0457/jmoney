@@ -131,12 +131,12 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 		 * map.
 		 */
 		if (classToPropertySetMap.containsKey(classOfObject)) {
-			throw new MalformedPluginException("More than one property set uses " + classOfObject + " as the Java implementation class.");
+			throw new MalformedPluginException("More than one property set uses " + classOfObject + " as the Java implementation class."); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		classToPropertySetMap.put(classOfObject, this);
 
 		if (basePropertySet != null && !basePropertySet.isDerivable()) {
-			throw new MalformedPluginException(basePropertySet.getImplementationClass().getName() + " is a base property for " + propertySetId + ".  However, " + basePropertySet.getImplementationClass().getName() + " is not derivable (setDerivable() has not been called from the IPropertySetInfo implementation).");
+			throw new MalformedPluginException(basePropertySet.getImplementationClass().getName() + " is a base property for " + propertySetId + ".  However, " + basePropertySet.getImplementationClass().getName() + " is not derivable (setDerivable() has not been called from the IPropertySetInfo implementation)."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
 		if (!derivable) {
@@ -290,7 +290,7 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	 */
 	public ExtendablePropertySet<? super E> getBasePropertySet() {
 		if (isExtension) {
-			throw new RuntimeException("getBasePropertySet called for an extension.");
+			throw new RuntimeException("getBasePropertySet called for an extension."); //$NON-NLS-1$
 		}
 
 		return basePropertySet;

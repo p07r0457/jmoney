@@ -98,10 +98,10 @@ class IntegerEditor implements IPropertyControl {
         extendableObject = object;
 
         if (object == null) {
-            propertyControl.setText("");
+            propertyControl.setText(""); //$NON-NLS-1$
     	} else {
             Integer value = object.getPropertyValue(propertyAccessor);
-            propertyControl.setText(value == null ? "" : value.toString());
+            propertyControl.setText(value == null ? "" : value.toString()); //$NON-NLS-1$
     	}
     	propertyControl.setEnabled(object != null);
     }

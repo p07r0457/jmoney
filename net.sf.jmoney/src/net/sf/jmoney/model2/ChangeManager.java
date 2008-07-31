@@ -232,7 +232,7 @@ public class ChangeManager {
 			for (ScalarPropertyAccessor<?> propertyAccessor : actualPropertySet
 					.getScalarProperties3()) {
 				if (index != propertyAccessor.getIndexIntoScalarProperties()) {
-					throw new RuntimeException("index mismatch");
+					throw new RuntimeException("index mismatch"); //$NON-NLS-1$
 				}
 
 				Object value = oldObject.getPropertyValue(propertyAccessor);
@@ -295,7 +295,7 @@ public class ChangeManager {
 			 * reference this object key, they will be using the same proxy.
 			 */
 			if (objectKeyProxy.key != null) {
-				throw new RuntimeException("internal error - key proxy error");
+				throw new RuntimeException("internal error - key proxy error"); //$NON-NLS-1$
 			}
 			objectKeyProxy.key = object.getObjectKey();
 			keyProxyMap.put(objectKeyProxy.key, objectKeyProxy);

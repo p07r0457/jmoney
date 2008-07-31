@@ -41,6 +41,7 @@ import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.pages.entries.EntryRowSelectionListener;
 import net.sf.jmoney.pages.entries.TransactionDialog;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -231,7 +232,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 		buttonArea.setLayout(layoutOfButtons);
 		
         // Create the 'add transaction' button.
-		Button addButton = toolkit.createButton(buttonArea, "New Transaction", SWT.PUSH);
+		Button addButton = toolkit.createButton(buttonArea, Messages.EntriesTable_NewTransaction, SWT.PUSH);
 		addButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent event) {
@@ -270,7 +271,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 		});
 
         // Create the 'duplicate transaction' button.
-        Button duplicateButton = toolkit.createButton(buttonArea, "Duplicate Transaction", SWT.PUSH);
+        Button duplicateButton = toolkit.createButton(buttonArea, Messages.EntriesTable_DuplicateTransaction, SWT.PUSH);
         duplicateButton.addSelectionListener(new SelectionAdapter() {
 			@Override
         	public void widgetSelected(SelectionEvent event) {
@@ -282,7 +283,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
         			if (selectedEntry == null) {
         				// This is the empty row control.
         				// TODO: Should we attempt to commit this first, then duplicate it if it committed?
-        				MessageDialog.openInformation(getShell(), "No Selection", "You must first select the entry you want to duplicate. (The current selection is a new entry that has not yet been registered).");
+        				MessageDialog.openInformation(getShell(), Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageDuplicateNotRegistered);
         			} else {
         				/*
 						 * The 'new entry' row was not the selected row, so we
@@ -314,13 +315,13 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
         				// its uncommitted data, so we have nothing more to do. 
         			}
         		} else {
-        			MessageDialog.openInformation(getShell(), "No Selection", "You must first select the entry you want to duplicate.");
+        			MessageDialog.openInformation(getShell(), Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageDuplicate);
         		}
         	}
         });
 
         // Create the 'delete transaction' button.
-        Button deleteButton = toolkit.createButton(buttonArea, "Delete Transaction", SWT.PUSH);
+        Button deleteButton = toolkit.createButton(buttonArea, Messages.EntriesTable_DeleteTransaction, SWT.PUSH);
         deleteButton.addSelectionListener(new SelectionAdapter() {
 			@Override
         	public void widgetSelected(SelectionEvent event) {
@@ -332,7 +333,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
             		if (selectedEntry == null) {
             			// This is the empty row control.
             			// TODO: Should we just clear the control contents?
-            			MessageDialog.openInformation(getShell(), "No Selection", "You must first select the entry you want to delete. (The current selection is a new entry that has not yet been registered).");
+            			MessageDialog.openInformation(getShell(), Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageDeleteNotRegistered);
             		} else {
             			// Does this need be so complex??? It is only in a transaction
             			// so we can undo it.  A more efficient way would be to make the change
@@ -342,16 +343,16 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
             			Entry selectedEntry2 = transactionManager.getCopyInTransaction(selectedEntry); 
             			Transaction transaction = selectedEntry2.getTransaction();
             			transaction.getSession().deleteTransaction(transaction);
-            			transactionManager.commit("Delete Transaction");
+            			transactionManager.commit("Delete Transaction"); //$NON-NLS-1$
             		}
         		} else {
-        			MessageDialog.openInformation(getShell(), "No Selection", "You must first select the entry you want to delete.");
+        			MessageDialog.openInformation(getShell(), Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageDelete);
         		}
         	}
         });
         
         // Create the 'details' button.
-        Button detailsButton = toolkit.createButton(buttonArea, "Details", SWT.PUSH);
+        Button detailsButton = toolkit.createButton(buttonArea, Messages.EntriesTable_Details, SWT.PUSH);
         detailsButton.addSelectionListener(new SelectionAdapter() {
 			@Override
         	public void widgetSelected(SelectionEvent event) {
@@ -363,7 +364,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
         			TransactionDialog dialog = new TransactionDialog(getShell(), selectedEntry);
         			dialog.open();
         		} else {
-        			MessageDialog.openInformation(getShell(), "No Selection", "You must first select the entry.");
+        			MessageDialog.openInformation(getShell(), Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageSelect);
         		}
         	}
         });
@@ -1129,7 +1130,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 	private void showMessage (String message) {
 		MessageDialog.openWarning(
 				table.getShell(),
-				"Disabled Action Selected",
+				Messages.EntriesTable_WarningTitle,
 				message);
 	}
 

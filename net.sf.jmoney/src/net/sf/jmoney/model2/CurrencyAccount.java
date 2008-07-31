@@ -26,6 +26,7 @@ package net.sf.jmoney.model2;
 import java.util.Date;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.resources.Messages;
 
 /**
  * The data model for an account.
@@ -91,7 +92,7 @@ public abstract class CurrencyAccount extends CapitalAccount {
 		super(objectKey, parent);
 		
 		// Set a default name.
-		this.name = JMoneyPlugin.getResourceString("Account.newAccount");
+		this.name = Messages.CurrencyAccount_Name;
 		
 		// Set the currency to the session default currency.
 		this.currencyKey = objectKey.getSession().getDefaultCurrency().getObjectKey();
@@ -101,7 +102,7 @@ public abstract class CurrencyAccount extends CapitalAccount {
 
     @Override	
 	protected String getExtendablePropertySetId() {
-		return "net.sf.jmoney.currencyAccount";
+		return "net.sf.jmoney.currencyAccount"; //$NON-NLS-1$
 	}
 	
 	/**
@@ -161,7 +162,7 @@ public abstract class CurrencyAccount extends CapitalAccount {
     	if (getParent() == null) {
     		return name;
     	} else {
-    		return getParent().getFullAccountName() + "." + this.name;
+    		return getParent().getFullAccountName() + "." + this.name; //$NON-NLS-1$
     	}
     }
 	
@@ -173,7 +174,7 @@ public abstract class CurrencyAccount extends CapitalAccount {
 	 * @author Faucheux
 	 */
 	public long getBalance(Session session, Date fromDate, Date toDate) {
-		if (JMoneyPlugin.DEBUG) System.out.println("Calculing the Balance for >" + name + "< (without sub-accounts) between " + fromDate + " and " + toDate);
+		if (JMoneyPlugin.DEBUG) System.out.println("Calculing the Balance for >" + name + "< (without sub-accounts) between " + fromDate + " and " + toDate); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
 		long bal = getStartBalance();
 
@@ -205,7 +206,7 @@ public abstract class CurrencyAccount extends CapitalAccount {
 	 * @author Faucheux
 	 */
 	public long getBalanceWithSubAccounts(Session session, Date fromDate, Date toDate) {
-		if (JMoneyPlugin.DEBUG) System.out.println("Calculing the Balance for >" + name + "< (with sub-accounts) between " + fromDate + " and " + toDate);
+		if (JMoneyPlugin.DEBUG) System.out.println("Calculing the Balance for >" + name + "< (with sub-accounts) between " + fromDate + " and " + toDate); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		long bal = getBalance(session, fromDate, toDate);
 		
 		// This logic may not be quite right.  If a stock account is a sub account of

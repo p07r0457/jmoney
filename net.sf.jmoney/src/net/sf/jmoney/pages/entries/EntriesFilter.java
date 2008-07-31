@@ -42,7 +42,7 @@ public class EntriesFilter {
 	/**
      * Filter pattern.  An empty filter pattern indicates that filtering is off.
      */
-    protected String pattern = "";
+    protected String pattern = ""; //$NON-NLS-1$
 
     protected transient PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
@@ -65,11 +65,11 @@ public class EntriesFilter {
     public void setPattern(String aPattern) {
         String normalizedPattern = 
         	(aPattern == null)
-        	? ""
+        	? "" //$NON-NLS-1$
         			: aPattern.toLowerCase();
         if (!normalizedPattern.equals(pattern)) {
             pattern = aPattern;
-            changeSupport.firePropertyChange("pattern", null, null);
+            changeSupport.firePropertyChange("pattern", null, null); //$NON-NLS-1$
         }
     }
 
@@ -91,7 +91,7 @@ public class EntriesFilter {
     public void setType(int aType) {
         if (filterColumnIndex == aType) return;
         filterColumnIndex = aType;
-        changeSupport.firePropertyChange("type", null, null);
+        changeSupport.firePropertyChange("type", null, null); //$NON-NLS-1$
     }
 
     /**
@@ -111,7 +111,7 @@ public class EntriesFilter {
      * @return True, if "entry" matches the filter criteria; false, else
      */
 	public boolean filterEntry(EntryData data) {
-		if (pattern.equals("")) {
+		if (pattern.equals("")) { //$NON-NLS-1$
 			// Filter is not active so all entries match
 			return true;
 		} else {

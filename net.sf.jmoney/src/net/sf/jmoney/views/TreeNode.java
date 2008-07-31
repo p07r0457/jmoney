@@ -82,14 +82,14 @@ public class TreeNode implements IAdaptable {
 	public static void init() {
 		// Load the extensions
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
-		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.pages")) {
-			if (element.getName().equals("node")) {
+		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.pages")) { //$NON-NLS-1$
+			if (element.getName().equals("node")) { //$NON-NLS-1$
 
-				String label = element.getAttribute("label");
-				String icon = element.getAttribute("icon");
-				String id = element.getAttribute("id");
-				String parentNodeId = element.getAttribute("parent");
-				String position = element.getAttribute("position");
+				String label = element.getAttribute("label"); //$NON-NLS-1$
+				String icon = element.getAttribute("icon"); //$NON-NLS-1$
+				String id = element.getAttribute("id"); //$NON-NLS-1$
+				String parentNodeId = element.getAttribute("parent"); //$NON-NLS-1$
+				String position = element.getAttribute("position"); //$NON-NLS-1$
 
 				if (id != null && id.length() != 0) {
 					String fullNodeId = element.getNamespaceIdentifier() + '.' + id;
@@ -99,7 +99,7 @@ public class TreeNode implements IAdaptable {
 						descriptor = JMoneyPlugin.imageDescriptorFromPlugin(element.getContributor().getName(), icon); 
 						if (descriptor == null) {
 							// try getting the image from the JMoney plug-in. 
-							descriptor = JMoneyPlugin.imageDescriptorFromPlugin("net.sf.jmoney", icon);
+							descriptor = JMoneyPlugin.imageDescriptorFromPlugin("net.sf.jmoney", icon); //$NON-NLS-1$
 						}
 					}
 
@@ -110,16 +110,16 @@ public class TreeNode implements IAdaptable {
 
 					IDynamicTreeNode dynamicTreeNode = null;
 					try {
-						Object listener = element.createExecutableExtension("class");
+						Object listener = element.createExecutableExtension("class"); //$NON-NLS-1$
 						if (!(listener instanceof IDynamicTreeNode)) {
 							throw new MalformedPluginException(
-									"Plug-in " + element.getContributor().getName()
-									+ " extends the net.sf.jmoney.pages extension point. "
-									+ "However, the class specified by the class attribute in the node element "
-									+ "(" + listener.getClass().getName() + ") "
-									+ "does not implement the IDynamicTreeNode interface. "
-									+ "This interface must be implemented by all classes referenced "
-									+ "by the class attribute.");
+									"Plug-in " + element.getContributor().getName() //$NON-NLS-1$
+									+ " extends the net.sf.jmoney.pages extension point. " //$NON-NLS-1$
+									+ "However, the class specified by the class attribute in the node element " //$NON-NLS-1$
+									+ "(" + listener.getClass().getName() + ") " //$NON-NLS-1$ //$NON-NLS-2$
+									+ "does not implement the IDynamicTreeNode interface. " //$NON-NLS-1$
+									+ "This interface must be implemented by all classes referenced " //$NON-NLS-1$
+									+ "by the class attribute."); //$NON-NLS-1$
 						}
 
 						dynamicTreeNode = (IDynamicTreeNode)listener;
@@ -134,13 +134,13 @@ public class TreeNode implements IAdaptable {
 							if (e.getStatus().getException() instanceof ClassNotFoundException) {
 								ClassNotFoundException e2 = (ClassNotFoundException)e.getStatus().getException();
 								throw new MalformedPluginException(
-										"Plug-in " + element.getContributor().getName()
-										+ " extends the net.sf.jmoney.pages extension point. "
-										+ "However, the class specified by the class attribute in the node element "
-										+ "(" + e2.getMessage() + ") "
-										+ "could not be found. "
-										+ "The class attribute must specify a class that implements the "
-										+ "IDynamicTreeNode interface.");
+										"Plug-in " + element.getContributor().getName() //$NON-NLS-1$
+										+ " extends the net.sf.jmoney.pages extension point. " //$NON-NLS-1$
+										+ "However, the class specified by the class attribute in the node element " //$NON-NLS-1$
+										+ "(" + e2.getMessage() + ") " //$NON-NLS-1$ //$NON-NLS-2$
+										+ "could not be found. " //$NON-NLS-1$
+										+ "The class attribute must specify a class that implements the " //$NON-NLS-1$
+										+ "IDynamicTreeNode interface."); //$NON-NLS-1$
 							}
 							e.printStackTrace();
 							continue;
@@ -157,7 +157,7 @@ public class TreeNode implements IAdaptable {
 		// with the given parent node id then the node
 		// is placed at the root.
 
-		invisibleRoot = new TreeNode("root", "", null, "", 0, null);
+		invisibleRoot = new TreeNode("root", "", null, "", 0, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
 		for (TreeNode treeNode: idToNodeMap.values()) {
 			TreeNode parentNode;
@@ -174,14 +174,14 @@ public class TreeNode implements IAdaptable {
 		}	
 		
 		// Set the list of pages for each node.
-		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.pages")) {
-			if (element.getName().equals("pages")) {
+		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.pages")) { //$NON-NLS-1$
+			if (element.getName().equals("pages")) { //$NON-NLS-1$
 				// TODO: remove plug-in as bad if the id is not unique.
-				String id = element.getAttribute("id");
+				String id = element.getAttribute("id"); //$NON-NLS-1$
 				String pageId = element.getNamespaceIdentifier() + '.' + id;
-				String nodeId = element.getAttribute("node");
+				String nodeId = element.getAttribute("node"); //$NON-NLS-1$
 
-				String position = element.getAttribute("position");
+				String position = element.getAttribute("position"); //$NON-NLS-1$
 				int pos = 5;
 				if (position != null) {
 					pos = Integer.parseInt(position);
@@ -202,7 +202,7 @@ public class TreeNode implements IAdaptable {
 					// (This means the page should be supplied if
 					// the node represents an object that contains
 					// the given property set).
-					String propertySetId = element.getAttribute("extendable-property-set");
+					String propertySetId = element.getAttribute("extendable-property-set"); //$NON-NLS-1$
 					if (propertySetId != null) {
 						try {
 							ExtendablePropertySet<?> pagePropertySet = PropertySet.getExtendablePropertySet(propertySetId);

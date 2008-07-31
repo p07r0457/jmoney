@@ -22,9 +22,9 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.MultiTextControlFactory;
 import net.sf.jmoney.fields.TextControlFactory;
+import net.sf.jmoney.resources.Messages;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -45,7 +45,7 @@ import net.sf.jmoney.fields.TextControlFactory;
  */
 public class CapitalAccountInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<CapitalAccount> propertySet = PropertySet.addDerivedAbstractPropertySet(CapitalAccount.class, "Capital Account", AccountInfo.getPropertySet());
+	private static ExtendablePropertySet<CapitalAccount> propertySet = PropertySet.addDerivedAbstractPropertySet(CapitalAccount.class, Messages.CapitalAccountInfo_Description, AccountInfo.getPropertySet());
 
 	private static ListPropertyAccessor<CapitalAccount> subAccountAccessor = null;
 	private static ScalarPropertyAccessor<String> abbreviationAccessor = null;
@@ -61,11 +61,11 @@ public class CapitalAccountInfo implements IPropertySetInfo {
 			}
 		};
 		
-		subAccountAccessor = propertySet.addPropertyList("subAccount", JMoneyPlugin.getResourceString("<not used???>"), CapitalAccountInfo.getPropertySet(), accountGetter);
-		abbreviationAccessor = propertySet.addProperty("abbreviation", JMoneyPlugin.getResourceString("AccountPropertiesPanel.abbrevation"), String.class, 5, 70, textControlFactory, null);
-		commentAccessor      = propertySet.addProperty("comment", JMoneyPlugin.getResourceString("AccountPropertiesPanel.comment"), String.class, 5, 150, commentControlFactory, null);
+		subAccountAccessor = propertySet.addPropertyList("subAccount", Messages.CapitalAccountInfo_subAccount, CapitalAccountInfo.getPropertySet(), accountGetter); //$NON-NLS-1$
+		abbreviationAccessor = propertySet.addProperty("abbreviation", Messages.CapitalAccountInfo_Abbreviation, String.class, 5, 70, textControlFactory, null); //$NON-NLS-1$
+		commentAccessor      = propertySet.addProperty("comment", Messages.CapitalAccountInfo_Comment, String.class, 5, 150, commentControlFactory, null); //$NON-NLS-1$
 		
-		propertySet.setIcon("icons/account.gif");
+		propertySet.setIcon("icons/account.gif"); //$NON-NLS-1$
 		
 		return propertySet;
 	}

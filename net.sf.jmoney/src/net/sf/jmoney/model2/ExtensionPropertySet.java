@@ -49,7 +49,7 @@ public class ExtensionPropertySet<E extends ExtensionObject> extends PropertySet
 
 		// TODO: move outside this constructor.
 		if (extendablePropertySet == null) {
-			throw new MalformedPluginException("A non-null extendable property set must be passed.");
+			throw new MalformedPluginException("A non-null extendable property set must be passed."); //$NON-NLS-1$
 		}
 	}
 	

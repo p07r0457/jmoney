@@ -52,27 +52,27 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 public class PreferencePage
 	extends FieldEditorPreferencePage
 	implements IWorkbenchPreferencePage {
-	public static final String P_PATH = "pathPreference";
+	public static final String P_PATH = "pathPreference"; //$NON-NLS-1$
 
 	public PreferencePage() {
 		super(GRID);
 		setPreferenceStore(JMoneyPlugin.getDefault().getPreferenceStore());
-		setDescription("JMoney preferences");
+		setDescription("JMoney preferences"); //$NON-NLS-1$
 		initializeDefaults();
 		
 		// The title of this page is picked up and used by the
 		// preference dialog as the text in the preferences
 		// navigation tree.
-		setTitle("core JMoney preferences");
+		setTitle("core JMoney preferences"); //$NON-NLS-1$
 	}
 /**
  * Sets the default values of the preferences.
  */
 	private void initializeDefaults() {
 		IPreferenceStore store = getPreferenceStore();
-		store.setDefault("booleanPreference", true);
-		store.setDefault("dateFormat", "yyyy-MM-dd");
-		store.setDefault("stringPreference", "Default value");
+		store.setDefault("booleanPreference", true); //$NON-NLS-1$
+		store.setDefault("dateFormat", "yyyy-MM-dd"); //$NON-NLS-1$ //$NON-NLS-2$
+		store.setDefault("stringPreference", "Default value"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
@@ -83,11 +83,11 @@ public class PreferencePage
 	@Override	
 	public void createFieldEditors() {
 		addField(new DirectoryFieldEditor(P_PATH, 
-				"&Directory preference:", getFieldEditorParent()));
+				"&Directory preference:", getFieldEditorParent())); //$NON-NLS-1$
 		addField(
 			new BooleanFieldEditor(
-					"booleanPreference",
-				"&An example of a boolean preference",
+					"booleanPreference", //$NON-NLS-1$
+				"&An example of a boolean preference", //$NON-NLS-1$
 				getFieldEditorParent()));
 
 		
@@ -99,14 +99,14 @@ public class PreferencePage
 		}
 		
 		addField(new RadioGroupFieldEditor(
-			"dateFormat",
-			"Date Format",
+			"dateFormat", //$NON-NLS-1$
+			"Date Format", //$NON-NLS-1$
 			1,
 			dateOptions2,
 			getFieldEditorParent()));
 		
 		addField(
-			new StringFieldEditor("stringPreference", "A &text preference:", getFieldEditorParent()));
+			new StringFieldEditor("stringPreference", "A &text preference:", getFieldEditorParent())); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	public void init(IWorkbench workbench) {

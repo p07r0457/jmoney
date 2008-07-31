@@ -75,10 +75,10 @@ public class Propagator {
 		
 		// Load the list of available propagators.
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
-		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.propagators")) {
-			if (element.getName().equals("propagator")) {
+		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.propagators")) { //$NON-NLS-1$
+			if (element.getName().equals("propagator")) { //$NON-NLS-1$
 				try {
-					Object listener = element.createExecutableExtension("class");
+					Object listener = element.createExecutableExtension("class"); //$NON-NLS-1$
 					propagators.add(listener);
 				} catch (CoreException e) {
 					e.printStackTrace();
@@ -94,16 +94,16 @@ public class Propagator {
 			
 			Method [] methods = propagatorObject.getClass().getMethods();
 			for (int i = 0; i < methods.length; i++) {
-				if (methods[i].getName().equals("propertyChange")) {
+				if (methods[i].getName().equals("propertyChange")) { //$NON-NLS-1$
 					if (methods[i].getReturnType() != void.class) {
-						throw new MalformedPluginException("propertyChange methods in propagators must return void");
+						throw new MalformedPluginException("propertyChange methods in propagators must return void"); //$NON-NLS-1$
 					}
 					Class [] parameters = methods[i].getParameterTypes();
 					if (parameters.length != 3) {
-						throw new MalformedPluginException("propertyChange methods in propagators must have three parameters");
+						throw new MalformedPluginException("propertyChange methods in propagators must have three parameters"); //$NON-NLS-1$
 					}
 					if (parameters[0] != ScalarPropertyAccessor.class) {
-						throw new MalformedPluginException("The first parameter in propertyChange methods in propagators must be of type " + ScalarPropertyAccessor.class.getSimpleName());
+						throw new MalformedPluginException("The first parameter in propertyChange methods in propagators must be of type " + ScalarPropertyAccessor.class.getSimpleName()); //$NON-NLS-1$
 					}
 
 					/*
@@ -170,7 +170,7 @@ public class Propagator {
 						// incompatible.  We need a way of resolving this.
 						Class sourceExtensionClass = parameters[1];
 						Class destinationExtensionClass = parameters[2];
-						throw new MalformedPluginException("There is more than one propagator from " + sourceExtensionClass.getName() + " to " + destinationExtensionClass.getName() + ".");
+						throw new MalformedPluginException("There is more than one propagator from " + sourceExtensionClass.getName() + " to " + destinationExtensionClass.getName() + "."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 					}
 					
 					// (More than one property set may share the same extension class.  When this happens,

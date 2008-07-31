@@ -105,9 +105,9 @@ public class AccountControlWithMruList<A extends Account> extends AccountComposi
     @Override	
 	public void init(IMemento memento) {
 		if (memento != null) {
-			IMemento [] mruAccountMementos = memento.getChildren("mruAccount");
+			IMemento [] mruAccountMementos = memento.getChildren("mruAccount"); //$NON-NLS-1$
 			for (int i = 0; i < mruAccountMementos.length; i++) {
-				String fullAccountName = mruAccountMementos[i].getString("name");
+				String fullAccountName = mruAccountMementos[i].getString("name"); //$NON-NLS-1$
 				Account account = session.getAccountByFullName(fullAccountName);
 				if (accountClass.isInstance(account)) {
 					recentlyUsedList.addLast(accountClass.cast(account));
@@ -120,7 +120,7 @@ public class AccountControlWithMruList<A extends Account> extends AccountComposi
 	@Override
 	public void saveState(IMemento memento) {
 		for (Account account: recentlyUsedList) {
-			memento.createChild("mruAccount").putString("name", account.getFullAccountName());
+			memento.createChild("mruAccount").putString("name", account.getFullAccountName()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 }

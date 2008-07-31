@@ -128,7 +128,7 @@ public class DateControl extends DateComposite {
 		
 		button = new Button(this, SWT.DOWN);
 		if (threeDotsImage == null) {
-			ImageDescriptor descriptor = JMoneyPlugin.createImageDescriptor("icons/dots_button.gif");
+			ImageDescriptor descriptor = JMoneyPlugin.createImageDescriptor("icons/dots_button.gif"); //$NON-NLS-1$
 			threeDotsImage = descriptor.createImage();
 		}
 		button.setImage(threeDotsImage);
@@ -229,13 +229,13 @@ public class DateControl extends DateComposite {
 
 	    @Override	
 		public Point computeSize(Composite editor, int wHint, int hHint, boolean force) {
-			if (JMoneyPlugin.DEBUG) System.out.println("wHint =" + wHint + ", " + hHint);
+			if (JMoneyPlugin.DEBUG) System.out.println("wHint =" + wHint + ", " + hHint); //$NON-NLS-1$ //$NON-NLS-2$
 			if (wHint != SWT.DEFAULT && hHint != SWT.DEFAULT)
 				return new Point(wHint, hHint);
 			Point contentsSize = textControl.computeSize(SWT.DEFAULT, SWT.DEFAULT, force); 
 			Point buttonSize =  button.computeSize(SWT.DEFAULT, SWT.DEFAULT, force);
-			if (JMoneyPlugin.DEBUG) System.out.println("contents =" + contentsSize.x + ", " + contentsSize.y);
-			if (JMoneyPlugin.DEBUG) System.out.println("contents =" + buttonSize.x + ", " + buttonSize.y);
+			if (JMoneyPlugin.DEBUG) System.out.println("contents =" + contentsSize.x + ", " + contentsSize.y); //$NON-NLS-1$ //$NON-NLS-2$
+			if (JMoneyPlugin.DEBUG) System.out.println("contents =" + buttonSize.x + ", " + buttonSize.y); //$NON-NLS-1$ //$NON-NLS-2$
 			// Just return the button width to ensure the button is not clipped
 			// if the label is long.  Date text needs 60
 			// The label will just use whatever extra width there is
@@ -252,7 +252,7 @@ public class DateControl extends DateComposite {
     @Override	
 	public void setDate(Date date) {
 		if (date == null) {
-        textControl.setText("");
+        textControl.setText(""); //$NON-NLS-1$
 	} else {
         this.textControl.setText(fDateFormat.format(date));
 	}

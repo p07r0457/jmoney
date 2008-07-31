@@ -42,14 +42,14 @@ public class NodeEditorFactory implements IElementFactory {
 	// in the file runtime-workspace\.metadata\.plugins\org.eclipse.ui.workbench\workbench.xml.
 	public IAdaptable createElement(IMemento memento) {
 		// Get the session from the data in the memento.
-		Session session = JMoneyPlugin.openSession(memento.getChild("session"));
+		Session session = JMoneyPlugin.openSession(memento.getChild("session")); //$NON-NLS-1$
 		if (session == null) {
 			// null indicates the element could not be re-created.
 			return null;
 		}
 		
 		// See if the node is a TreeNode.
-		String nodeId = memento.getString("treeNode");
+		String nodeId = memento.getString("treeNode"); //$NON-NLS-1$
 		if (nodeId != null) {
 			TreeNode node = TreeNode.getTreeNode(nodeId);
 			if (node != null) {
@@ -58,7 +58,7 @@ public class NodeEditorFactory implements IElementFactory {
 		}
 		
 		// See if the node is an account.
-		String fullAccountName = memento.getString("account");
+		String fullAccountName = memento.getString("account"); //$NON-NLS-1$
 		if (fullAccountName != null) {
 			Account account = JMoneyPlugin.getDefault().getSession().getAccountByFullName(fullAccountName);
 			if (account != null) {

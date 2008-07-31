@@ -37,6 +37,7 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;
@@ -334,12 +335,12 @@ class EntryControls {
 							entry.setAmount(-amount);
 							debitText.setText(commodityForFormatting.format(amount));
 							// When a debit is entered, clear out any credit.
-							creditText.setText("");
+							creditText.setText(""); //$NON-NLS-1$
 						} else {
-							if (creditText.getText().equals("")) { 
+							if (creditText.getText().equals("")) {  //$NON-NLS-1$
 								entry.setAmount(0);
 							}
-							debitText.setText("");
+							debitText.setText(""); //$NON-NLS-1$
 						}
 					}
 				});
@@ -365,12 +366,12 @@ class EntryControls {
 							entry.setAmount(amount);
 							creditText.setText(commodityForFormatting.format(amount));
 							// When a debit is entered, clear out any credit.
-							debitText.setText("");
+							debitText.setText(""); //$NON-NLS-1$
 						} else {
-							if (debitText.getText().equals("")) { 
+							if (debitText.getText().equals("")) {  //$NON-NLS-1$
 								entry.setAmount(0);
 							}
-							creditText.setText("");
+							creditText.setText(""); //$NON-NLS-1$
 						}
 					}
 				});
@@ -473,12 +474,12 @@ class EntryControls {
 		if (amount > 0) {
 			creditText.setText(commodityForFormatting.format(amount));
 		} else {
-			creditText.setText("");
+			creditText.setText(""); //$NON-NLS-1$
 		}
 		if (amount < 0) {
 			debitText.setText(commodityForFormatting.format(-amount));
 		} else {
-			debitText.setText("");
+			debitText.setText(""); //$NON-NLS-1$
 		}
 		
 		// Labels may have changed.
@@ -525,15 +526,15 @@ class EntryControls {
 		
 		// The choice of labels for the two amount controls also depend
 		// on the type of account that is selected.
-		String debitText = "";
-		String creditText = "";
+		String debitText = ""; //$NON-NLS-1$
+		String creditText = ""; //$NON-NLS-1$
 		if (account != null) {
 			if (account instanceof IncomeExpenseAccount) {
-				debitText = "Income:";
-				creditText = "Expense:";
+				debitText = Messages.EntryControls_Income;
+				creditText = Messages.EntryControls_Expense;
 			} else {
-				debitText = "Debit:";
-				creditText = "Credit:";
+				debitText = Messages.EntryControls_Debit;
+				creditText = Messages.EntryControls_Credit;
 			}
 		}
 		debitLabel.setText(debitText);

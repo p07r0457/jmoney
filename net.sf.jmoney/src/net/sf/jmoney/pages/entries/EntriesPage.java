@@ -39,6 +39,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.TransactionInfo;
+import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.NodeEditor;
 
 import org.eclipse.swt.layout.GridData;
@@ -56,7 +57,7 @@ import org.eclipse.ui.forms.widgets.ScrolledForm;
  */
 public class EntriesPage extends FormPage implements IBookkeepingPage {
 
-    public static final String PAGE_ID = "entries";
+    public static final String PAGE_ID = "entries"; //$NON-NLS-1$
     
 	protected NodeEditor fEditor;
 
@@ -77,7 +78,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
      * @param editor Parent editor
      */
     public EntriesPage(NodeEditor editor) {
-        super(editor, PAGE_ID, "Entries");
+        super(editor, PAGE_ID, Messages.EntriesPage_Title);
         fEditor = editor;
     }
 
@@ -94,7 +95,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         
         // Add properties from the transaction.
         for (ScalarPropertyAccessor propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
-        	allEntryDataObjects.add(new PropertyBlock<EntryData, Composite>(propertyAccessor, "transaction") {
+        	allEntryDataObjects.add(new PropertyBlock<EntryData, Composite>(propertyAccessor, "transaction") { //$NON-NLS-1$
     		    @Override	
         		public ExtendableObject getObjectContainingProperty(EntryData data) {
         			return data.getEntry().getTransaction();
@@ -111,7 +112,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
            		&& propertyAccessor != EntryInfo.getIncomeExpenseCurrencyAccessor()
         		&& propertyAccessor != EntryInfo.getAmountAccessor()) {
             	if (propertyAccessor.isScalar() && propertyAccessor.isEditable()) {
-            		allEntryDataObjects.add(new PropertyBlock<EntryData, Composite>(propertyAccessor, "this") {
+            		allEntryDataObjects.add(new PropertyBlock<EntryData, Composite>(propertyAccessor, "this") { //$NON-NLS-1$
             		    @Override	
     					public ExtendableObject getObjectContainingProperty(EntryData data) {
     						return data.getEntry();
@@ -128,7 +129,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
          * (a transfer or a purchase with money coming from more than one account).
          */
    		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAccountAccessor()));
-   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getMemoAccessor(), "description"));
+   		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getMemoAccessor(), Messages.EntriesPage_EntryDescription));
    		allEntryDataObjects.add(new OtherEntriesPropertyBlock(EntryInfo.getAmountAccessor()));
 
         /*
@@ -142,7 +143,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		 * account object.
 		 */
    		// TODO: This is not correct at all...
-        allEntryDataObjects.add(new PropertyBlock<EntryData, Composite>(EntryInfo.getIncomeExpenseCurrencyAccessor(), "common2") {
+        allEntryDataObjects.add(new PropertyBlock<EntryData, Composite>(EntryInfo.getIncomeExpenseCurrencyAccessor(), "common2") { //$NON-NLS-1$
 		    @Override	
         	public ExtendableObject getObjectContainingProperty(EntryData data) {
         		Entry entry = data.getEntry();
@@ -175,7 +176,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
 		 * the credit or debit column).
 		 */
         if (account instanceof CurrencyAccount) {
-        	allEntryDataObjects.add(new PropertyBlock<EntryData, Composite>(EntryInfo.getAmountAccessor(), "other") {
+        	allEntryDataObjects.add(new PropertyBlock<EntryData, Composite>(EntryInfo.getAmountAccessor(), "other") { //$NON-NLS-1$
     		    @Override	
         		public ExtendableObject getObjectContainingProperty(EntryData data) {
         			if (!data.hasSplitEntries()) {
@@ -225,7 +226,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
     		});
         }
 
-        form.setText("Accounting Entries");
+        form.setText(Messages.EntriesPage_Text);
 /* We need to get this working so we can remove that row of buttons.
  * 
  

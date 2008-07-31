@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.popup.actions;
 
+import net.sf.jmoney.resources.Messages;
+
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
@@ -52,8 +54,8 @@ public class NewAccountAction implements IObjectActionDelegate {
 		Shell shell = new Shell();
 		MessageDialog.openInformation(
 			shell,
-			"Jmoney Plug-in",
-			"New CapitalAccount was executed.");
+			Messages.NewAccountAction_Title,
+			Messages.NewAccountAction_Message);
 	}
 
 	/**

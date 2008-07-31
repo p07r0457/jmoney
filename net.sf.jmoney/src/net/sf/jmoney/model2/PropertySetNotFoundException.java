@@ -39,6 +39,6 @@ public class PropertySetNotFoundException extends Exception {
     
     @Override	
     public String getMessage() {
-        return "The '" + missingPropertySetId + "' property set was not found.";
+        return "The '" + missingPropertySetId + "' property set was not found."; //$NON-NLS-1$ //$NON-NLS-2$
     }
 }

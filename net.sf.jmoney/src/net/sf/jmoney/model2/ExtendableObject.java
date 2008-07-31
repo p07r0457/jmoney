@@ -196,7 +196,7 @@ public abstract class ExtendableObject {
 		 */
 		if (newValue instanceof ExtendableObject
 				&& ((ExtendableObject)newValue).getDataManager() != getDataManager()) {
-			throw new RuntimeException("The object being set as the value of a property and the parent object are being managed by different data managers.  Objects cannot contain references to objects from other data managers.");
+			throw new RuntimeException("The object being set as the value of a property and the parent object are being managed by different data managers.  Objects cannot contain references to objects from other data managers."); //$NON-NLS-1$
 		}
 		
 		if (oldValue == newValue ||
@@ -306,9 +306,9 @@ public abstract class ExtendableObject {
 			// TODO: We should be able to validate this at compile time using generics.
 			// This would involve adding the implementation class of the containing
 			// property set as a type parameter to all property accessors.
-			throw new RuntimeException("Property " + propertyAccessor.getName()
-					+ " is implemented by " + implementationClass.getName()
-					+ " but is being called on an object of type "
+			throw new RuntimeException("Property " + propertyAccessor.getName() //$NON-NLS-1$
+					+ " is implemented by " + implementationClass.getName() //$NON-NLS-1$
+					+ " but is being called on an object of type " //$NON-NLS-1$
 					+ getClass().getName());
 		}
 		
@@ -603,11 +603,11 @@ remove this...
     	try {
     		return theObjectKeyField.get(this);
     	} catch (IllegalArgumentException e) {
-    		throw new RuntimeException("internal error", e);
+    		throw new RuntimeException("internal error", e); //$NON-NLS-1$
     	} catch (IllegalAccessException e) {
     		e.printStackTrace();
     		// TODO: check the protection earlier and raise MalformedPlugin
-    		throw new RuntimeException("internal error - field protection problem");
+    		throw new RuntimeException("internal error - field protection problem"); //$NON-NLS-1$
     	}
 	}
 	

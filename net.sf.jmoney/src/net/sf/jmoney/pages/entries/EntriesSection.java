@@ -20,7 +20,6 @@ package net.sf.jmoney.pages.entries;
 
 import java.util.Collection;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.BalanceColumn;
 import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
@@ -47,6 +46,7 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.swt.widgets.Composite;
@@ -72,7 +72,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     
     public EntriesSection(Composite parent, CurrencyAccount account, EntriesFilter filter, FormToolkit toolkit) {
         super(parent, toolkit, Section.TITLE_BAR);
-        getSection().setText("All Entries");
+        getSection().setText(Messages.EntriesSection_Text);
         this.account = account;
         this.filter = filter;
         createClient(toolkit);
@@ -127,7 +127,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 				new OtherEntriesBlock(
 						new HorizontalBlock<Entry, SplitEntryRowControl>(
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
-								new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), JMoneyPlugin.getResourceString("Entry.description")),
+								new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), Messages.EntriesSection_EntryDescription),
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
 						)
 				),

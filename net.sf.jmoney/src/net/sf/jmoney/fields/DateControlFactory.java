@@ -31,6 +31,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.widgets.Composite;
 
@@ -78,9 +79,9 @@ public class DateControlFactory implements IPropertyControlFactory<Date> {
             ScalarPropertyAccessor<? extends Date> propertyAccessor) {
         Date value = extendableObject.getPropertyValue(propertyAccessor);
         if (value == null) {
-            return "none";
+            return Messages.DateControlFactory_None;
         } else {
-            return "'" + fDateFormat.format(value) + "'";
+            return "'" + fDateFormat.format(value) + "'"; //$NON-NLS-1$ //$NON-NLS-2$
         }
     }
 

@@ -38,6 +38,6 @@ public class JMoneyPreferenceInitializer extends AbstractPreferenceInitializer {
 	@Override
 	public void initializeDefaultPreferences() {
 		Preferences node = new DefaultScope().getNode("net.sf.jmoney"); //$NON-NLS-1$
-		node.put("dateFormat", "yyyy-MM-dd");
+		node.put("dateFormat", "yyyy-MM-dd"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

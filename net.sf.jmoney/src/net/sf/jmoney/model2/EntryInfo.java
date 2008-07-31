@@ -32,6 +32,7 @@ import net.sf.jmoney.fields.AmountEditor;
 import net.sf.jmoney.fields.CurrencyControlFactory;
 import net.sf.jmoney.fields.DateControlFactory;
 import net.sf.jmoney.fields.TextControlFactory;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -80,7 +81,7 @@ public class EntryInfo implements IPropertySetInfo {
     */
 
 	
-	private static ExtendablePropertySet<Entry> propertySet = PropertySet.addBaseFinalPropertySet(Entry.class, "Accounting Entry", new IExtendableObjectConstructors<Entry>() {
+	private static ExtendablePropertySet<Entry> propertySet = PropertySet.addBaseFinalPropertySet(Entry.class, Messages.EntryInfo_Description, new IExtendableObjectConstructors<Entry>() {
 
 		public Entry construct(IObjectKey objectKey, ListKey parentKey) {
 			return new Entry(objectKey, parentKey);
@@ -241,13 +242,13 @@ public class EntryInfo implements IPropertySetInfo {
 			}
 		};
 		
-		checkAccessor       = propertySet.addProperty("check",       JMoneyPlugin.getResourceString("Entry.check"),       String.class, 2, 50,  textControlFactory, onlyIfBankAccount);
-		accountAccessor     = propertySet.addProperty("account",     JMoneyPlugin.getResourceString("Entry.category"),    Account.class, 2, 70,  accountControlFactory, null);
-		valutaAccessor      = propertySet.addProperty("valuta",      JMoneyPlugin.getResourceString("Entry.valuta"),      Date.class, 0, 74,  dateControlFactory, onlyIfCurrencyAccount);
-		memoAccessor        = propertySet.addProperty("memo",        JMoneyPlugin.getResourceString("Entry.memo"),        String.class, 5, 100, textControlFactory, null);
-		amountAccessor      = propertySet.addProperty("amount",      JMoneyPlugin.getResourceString("Entry.amount"),      Long.class, 2, 70,  amountControlFactory, null);
-		creationAccessor    = propertySet.addProperty("creation",    JMoneyPlugin.getResourceString("Entry.creation"),    Long.class, 0, 70,  creationControlFactory, null);
-		incomeExpenseCurrencyAccessor = propertySet.addProperty("incomeExpenseCurrency",    JMoneyPlugin.getResourceString("Entry.currency"),    Currency.class, 2, 70, currencyControlFactory, onlyIfIncomeExpenseAccount);
+		checkAccessor       = propertySet.addProperty("check",Messages.EntryInfo_Check,String.class, 2, 50,  textControlFactory, onlyIfBankAccount); //$NON-NLS-1$
+		accountAccessor     = propertySet.addProperty("account",Messages.EntryInfo_Category,Account.class, 2, 70,  accountControlFactory, null); //$NON-NLS-1$
+		valutaAccessor      = propertySet.addProperty("valuta",Messages.EntryInfo_Valuta,Date.class, 0, 74,  dateControlFactory, onlyIfCurrencyAccount); //$NON-NLS-1$
+		memoAccessor        = propertySet.addProperty("memo",Messages.EntryInfo_Memo,String.class, 5, 100, textControlFactory, null); //$NON-NLS-1$
+		amountAccessor      = propertySet.addProperty("amount",Messages.EntryInfo_Amount,Long.class, 2, 70,  amountControlFactory, null); //$NON-NLS-1$
+		creationAccessor    = propertySet.addProperty("creation",Messages.EntryInfo_Creation,Long.class, 0, 70,  creationControlFactory, null); //$NON-NLS-1$
+		incomeExpenseCurrencyAccessor = propertySet.addProperty("incomeExpenseCurrency",Messages.EntryInfo_Currency,Currency.class, 2, 70, currencyControlFactory, onlyIfIncomeExpenseAccount); //$NON-NLS-1$
 		
 		return propertySet;
 	}

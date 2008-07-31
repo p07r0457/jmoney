@@ -89,30 +89,30 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 		Class implementationClass = propertySet.getImplementationClass();
 
 		if (classOfValueObject.isPrimitive()) {		
-			throw new MalformedPluginException("Property '" + localName + "' in '" + implementationClass.getName() + "' has been parameterized by a primitive type (" + classOfValueObject.getName() + ").  Although primitive types may be used by the getters and setters, the equivalent object classes must be used for parameterization.");
+			throw new MalformedPluginException("Property '" + localName + "' in '" + implementationClass.getName() + "' has been parameterized by a primitive type (" + classOfValueObject.getName() + ").  Although primitive types may be used by the getters and setters, the equivalent object classes must be used for parameterization."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 		
 		// Use introspection on the interface to find the getter method.
 		// Following the Java beans pattern, we allow the getter for a
 		// boolean property to have a prefix of either "get" or "is".
 		try {
-			theGetMethod = findMethod("get", localName, null);
+			theGetMethod = findMethod("get", localName, null); //$NON-NLS-1$
 		} catch (MalformedPluginException e) {
 			try {
-				theGetMethod = findMethod("is", localName, null);
+				theGetMethod = findMethod("is", localName, null); //$NON-NLS-1$
 				if (theGetMethod.getReturnType() != boolean.class) {
-					throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + implementationClass.getName() + "' must return boolean.");
+					throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + implementationClass.getName() + "' must return boolean."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				}
 			} catch (MalformedPluginException e2) {
 				String propertyNamePart =
 					localName.toUpperCase().substring(0, 1)
 					+ localName.substring(1, localName.length());
-				throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a method with a signature of get" + propertyNamePart + "() or, if a boolean property, a signature of is" + propertyNamePart + "().");
+				throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a method with a signature of get" + propertyNamePart + "() or, if a boolean property, a signature of is" + propertyNamePart + "()."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			}
 		}
 
 		if (theGetMethod.getReturnType() == void.class) {
-			throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + implementationClass.getName() + "' must not return void.");
+			throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + implementationClass.getName() + "' must not return void."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
 		classOfValueType = theGetMethod.getReturnType();
@@ -137,17 +137,17 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 
 
 		if (classOfObjectReturnedByGetter != classOfValueObject) {
-			throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + implementationClass.getName() + "' returns type '" + theGetMethod.getReturnType().getName() + "' but code metadata indicates the type should be '" + classOfValueObject.getName() + "'.");
+			throw new MalformedPluginException("Method '" + theGetMethod.getName() + "' in '" + implementationClass.getName() + "' returns type '" + theGetMethod.getReturnType().getName() + "' but code metadata indicates the type should be '" + classOfValueObject.getName() + "'."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 		}
 
 		this.classOfValueObject = classOfValueObject;
 
 		// Use introspection on the implementation class to find the setter method.
 		Class parameterTypes[] = {classOfValueType};
-		theSetMethod = findMethod("set", localName, parameterTypes);
+		theSetMethod = findMethod("set", localName, parameterTypes); //$NON-NLS-1$
 
 		if (theSetMethod.getReturnType() != void.class) {
-			throw new MalformedPluginException("Method '" + theSetMethod.getName() + "' in '" + implementationClass.getName() + "' must return void type .");
+			throw new MalformedPluginException("Method '" + theSetMethod.getName() + "' in '" + implementationClass.getName() + "' must return void type ."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		}
 
 		/*
@@ -262,23 +262,23 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 		try {
 			return getDeclaredMethodRecursively(propertySet.getImplementationClass(), methodName, parameters);
 		} catch (NoSuchMethodException e) {
-			String parameterText = "";
+			String parameterText = ""; //$NON-NLS-1$
 			if (parameters != null) {
 				for (int paramIndex = 0; paramIndex < parameters.length; paramIndex++) {
 					if (paramIndex > 0) {
-						parameterText = parameterText + ", ";
+						parameterText = parameterText + ", "; //$NON-NLS-1$
 					}
 					String className = parameters[paramIndex].getName();
 					if (parameters[paramIndex].isArray()) {
 						// The returned class name seems to be a mess when the class is an array,
 						// so we tidy it up.
-						parameterText = parameterText + className.substring(2, className.length()-1) + "[]";
+						parameterText = parameterText + className.substring(2, className.length()-1) + "[]"; //$NON-NLS-1$
 					} else {
 						parameterText = parameterText + className;
 					}
 				}
 			}
-			throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a method with a signature of " + methodName + "(" + parameterText + ").");
+			throw new MalformedPluginException("The " + propertySet.getImplementationClass().getName() + " class must have a method with a signature of " + methodName + "(" + parameterText + ")."); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 	}
 
@@ -313,14 +313,14 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 		} catch (InvocationTargetException e) {
 			// TODO Process this properly
 			e.printStackTrace();
-			throw new RuntimeException("Plugin error");
+			throw new RuntimeException("Plugin error"); //$NON-NLS-1$
 		} catch (Exception e) {
 			// IllegalAccessException and IllegalArgumentException exceptions should
 			// not be possible here because the method was checked
 			// for correct access rights and parameters during initialization.
 			// Therefore throw a runtime exception.
 			e.printStackTrace();
-			throw new RuntimeException("internal error");
+			throw new RuntimeException("internal error"); //$NON-NLS-1$
 		}
 	}
 
@@ -331,14 +331,14 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 		} catch (InvocationTargetException e) {
 			// TODO Process this properly
 			e.getCause().printStackTrace();
-			throw new RuntimeException("Plugin error");
+			throw new RuntimeException("Plugin error"); //$NON-NLS-1$
 		} catch (Exception e) {
 			// IllegalAccessException and IllegalArgumentException exceptions should
 			// not be possible here because the method was checked
 			// for correct access rights and parameters during initialization.
 			// Therefore throw a runtime exception.
 			e.printStackTrace();
-			throw new RuntimeException("internal error");
+			throw new RuntimeException("internal error"); //$NON-NLS-1$
 		}
 	}
 
@@ -380,7 +380,7 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 		// change to "empty".
 		String formattedValue = propertyControlFactory.formatValueForMessage(object, this);
 		return (formattedValue == null || formattedValue.length() == 0)
-		? "empty" : formattedValue;
+		? "empty" : formattedValue; //$NON-NLS-1$
 	}
 
 	/**
@@ -404,7 +404,7 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 		// If null is returned to us, change to the empty string.
 		String formattedValue = propertyControlFactory.formatValueForTable(object, this);
 		return (formattedValue == null)
-		? "" : formattedValue;
+		? "" : formattedValue; //$NON-NLS-1$
 	}
 
 	/**

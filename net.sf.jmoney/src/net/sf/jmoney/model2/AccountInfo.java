@@ -22,8 +22,8 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.TextControlFactory;
+import net.sf.jmoney.resources.Messages;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -51,14 +51,14 @@ public class AccountInfo implements IPropertySetInfo {
 	 * This enables type safety and also avoids the need to worry about
 	 * the order in which 
 	 */
-	private static ExtendablePropertySet<Account> propertySet = PropertySet.addBaseAbstractPropertySet(Account.class, "Account");
+	private static ExtendablePropertySet<Account> propertySet = PropertySet.addBaseAbstractPropertySet(Account.class, Messages.AccountInfo_Description);
 
 	private static ScalarPropertyAccessor<String> nameAccessor = null;
 
 	public PropertySet registerProperties() {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		
-		nameAccessor = propertySet.addProperty("name", JMoneyPlugin.getResourceString("AccountPropertiesPanel.name"), String.class, 5, 100, textControlFactory, null);
+		nameAccessor = propertySet.addProperty("name", Messages.AccountInfo_Name, String.class, 5, 100, textControlFactory, null); //$NON-NLS-1$
 		
 		return propertySet;
 	}

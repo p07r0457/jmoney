@@ -23,7 +23,8 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.resources.Messages;
+
 
 /**
  * An implementation of the IncomeExpenseAccount interface
@@ -66,13 +67,13 @@ public class IncomeExpenseAccount extends Account {
 			IObjectKey objectKey, 
 			ListKey parentKey) { 
 		super(objectKey, parentKey);
-		this.name = JMoneyPlugin.getResourceString("Account.newAccount");
+		this.name = Messages.IncomeExpenseAccount_Name;
 		this.subAccounts = objectKey.constructListManager(IncomeExpenseAccountInfo.getSubAccountAccessor());
 	}
 
     @Override	
 	protected String getExtendablePropertySetId() {
-		return "net.sf.jmoney.category";
+		return "net.sf.jmoney.category"; //$NON-NLS-1$
 	}
 	
     @Override	
@@ -81,7 +82,7 @@ public class IncomeExpenseAccount extends Account {
 			fullAccountName = name;
 			Account ancestorCategory = getParent();
 			while (ancestorCategory != null) {
-				fullAccountName = ancestorCategory.getName() + ":" + fullAccountName;
+				fullAccountName = ancestorCategory.getName() + ":" + fullAccountName; //$NON-NLS-1$
 				ancestorCategory = ancestorCategory.getParent();
 			}
 		}

@@ -156,6 +156,6 @@ public class WizardPropertyPage extends WizardPage {
 	
 	@Override
 	public void performHelp() {
-		PlatformUI.getWorkbench().getHelpSystem().displayHelp("net.sf.jmoney.newAccountWizardId");
+		PlatformUI.getWorkbench().getHelpSystem().displayHelp("net.sf.jmoney.newAccountWizardId"); //$NON-NLS-1$
 	}
 }

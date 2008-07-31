@@ -45,8 +45,8 @@ public class PropertyNotFoundException extends Exception {
     
     @Override	
 	public String getMessage() {
-        return "The '" + propertySetId + "." + localPropertyName + "' property was not found."
-		  + "  (The property set with an id of " + propertySetId + " has a property info class"
-		  + " that does not register a property called " + localPropertyName + ").";
+        return "The '" + propertySetId + "." + localPropertyName + "' property was not found." //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		  + "  (The property set with an id of " + propertySetId + " has a property info class" //$NON-NLS-1$ //$NON-NLS-2$
+		  + " that does not register a property called " + localPropertyName + ")."; //$NON-NLS-1$ //$NON-NLS-2$
     }
 }
