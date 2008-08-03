@@ -31,7 +31,7 @@ public class FortisbankingOfxTest extends TestCase {
 	 * @throws ParseException 
 	 */
 	public void testGetEntriesBufferedReader() {
-		Collection<EntryData> entries = ofxImport.getEntries(bufferedReader);
+		Collection<EntryData> entries = ofxImport.getEntries(bufferedReader, null, null);
 		assertTrue(entries.size() > 0);
 		assertEquals(32,entries.size());
 		for (EntryData data: entries) {
