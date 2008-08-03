@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.reconciliation.reconcilePage;
 
-import java.awt.Checkbox;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -45,14 +44,17 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 /**
- * Once an import file has been selected, this dialog box appears
- * to get more information from the user and to confirm the import.
+ * Once an import file has been selected, this dialog box appears to get more
+ * information from the user and to confirm the import.
+ * 
+ * Specifically, this dialog box asks for a range of dates to import. Either the
+ * start date, the end date or both may be blank to indicate there is no limit
+ * to the entries to be imported.
  * 
  * @author Nigel Westbury
  */
 public class ImportStatementDialog extends Dialog {
 	
-	private boolean importAll;
 	/**
 	 * The start date, or null if no start date
 	 */
@@ -64,20 +66,14 @@ public class ImportStatementDialog extends Dialog {
 	private Date endDate = null;
 
 	/**
-	 * Ok button widget.
-	 */
-	private Button okButton;
-
-	/**
 	 * Error message label widget.
 	 */
 	private Text errorMessageText;
 	
 	private AlternativeContentLayout alternativeContentLayout;
 
-	private Checkbox importAllCheckbox;
-	private DateControl startDateControl;
-	private DateControl endDateControl;
+	DateControl startDateControl;
+	DateControl endDateControl;
 	
 	/**
 	 * Creates an input dialog with OK and Cancel buttons. Note that the dialog
@@ -110,13 +106,8 @@ public class ImportStatementDialog extends Dialog {
 	@Override
 	protected void buttonPressed(int buttonId) {
 		if (buttonId == IDialogConstants.OK_ID) {
-//			if (importAllCheckbox.getState()) {
-//				importAll = true;
-//			} else {
-				importAll = false;
-				startDate = startDateControl.getDate();
-				endDate = endDateControl.getDate();
-//			}
+			startDate = startDateControl.getDate();
+			endDate = endDateControl.getDate();
 		}
 		super.buttonPressed(buttonId);
 	}
@@ -130,7 +121,7 @@ public class ImportStatementDialog extends Dialog {
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		// create OK and Cancel buttons by default
-		okButton = createButton(parent, IDialogConstants.OK_ID,
+		createButton(parent, IDialogConstants.OK_ID,
 				IDialogConstants.OK_LABEL, true);
 		createButton(parent, IDialogConstants.CANCEL_ID,
 				IDialogConstants.CANCEL_LABEL, false);
@@ -224,6 +215,7 @@ public class ImportStatementDialog extends Dialog {
 		
 		// If called during createDialogArea, the okButton
 		// will not have been created yet.
+		Button okButton = getButton(IDialogConstants.OK_ID);
 		if (okButton != null) {
 			okButton.setEnabled(errorMessage == null);
 		}

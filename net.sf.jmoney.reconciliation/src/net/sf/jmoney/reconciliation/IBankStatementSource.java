@@ -179,5 +179,9 @@ public interface IBankStatementSource {
 		public String getDefaultDescription() {
 			return payee == null?(memo==null?name:memo):payee;
 		}
+		
+		public Date getClearedDate() {
+			return clearedDate;
+		}
 	}
 }

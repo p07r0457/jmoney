@@ -36,7 +36,9 @@ import java.util.Vector;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.reconciliation.parser.SimpleDOMParser;
 import net.sf.jmoney.reconciliation.parser.SimpleElement;
+import net.sf.jmoney.reconciliation.reconcilePage.ImportStatementDialog;
 
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 
@@ -62,6 +64,13 @@ public class OfxImport implements IBankStatementSource {
 			return null;
 		}
 
+		ImportStatementDialog dialog2 = new ImportStatementDialog(shell, defaultStartDate, defaultEndDate, null);
+		if (dialog2.open() != Dialog.OK) {
+			return null;
+		}
+		Date startDate = dialog2.getStartDate();
+		Date endDate = dialog2.getEndDate();
+		
 		File sessionFile = new File(fileName);
 
 		BufferedReader buffer = null;
@@ -73,10 +82,10 @@ public class OfxImport implements IBankStatementSource {
 			return null;
 		}
 
-		return getEntries(buffer);
+		return getEntries(buffer, startDate, endDate);
 	}
 
-	Collection<EntryData> getEntries(BufferedReader buffer) {
+	Collection<EntryData> getEntries(BufferedReader buffer, Date startDate, Date endDate) {
 		SimpleDOMParser parser = new SimpleDOMParser();
 		SimpleElement rootElement = null;
 		try {
@@ -92,12 +101,12 @@ public class OfxImport implements IBankStatementSource {
 		if (rootElement == null)
 			return entries;
 
-		entries = parseOfx(rootElement);
+		entries = parseOfx(rootElement, startDate, endDate);
 
 		return entries;
 	}
 
-	private Collection<EntryData> parseOfx(SimpleElement rootElement) {
+	private Collection<EntryData> parseOfx(SimpleElement rootElement, Date startDate, Date endDate) {
 		Vector<EntryData> v = new Vector<EntryData>();
 		SimpleElement foundElement = rootElement.findElement("CURDEF");
 		Currency currency = null;
@@ -110,7 +119,14 @@ public class OfxImport implements IBankStatementSource {
 		foundElement = rootElement.findElement("STMTTRN");
 		while (foundElement != null) {
 			EntryData data = parseSTMTTRN(foundElement, currency);
-			v.add(data);
+			if ((startDate == null
+					|| data.getClearedDate().compareTo(startDate) >= 0)
+					&& (endDate == null
+							|| data.getClearedDate().compareTo(endDate) <= 0)) {
+				v.add(data);
+			}
+					
+			
 			foundElement = foundElement.getNextSibling();
 		}
 		return v;
