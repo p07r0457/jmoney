@@ -1,24 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
-<plugin
-   id="net.sf.jmoney.stocks"
-   name="Stocks And Bonds Plug-in"
-   version="1.0.0"
-   provider-name=""
-   class="net.sf.jmoney.stocks.StocksPlugin">
-
-   <runtime>
-      <library name="stocks.jar">
-         <export name="*"/>
-      </library>
-   </runtime>
-
-   <requires>
-      <import plugin="org.eclipse.ui"/>
-      <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="net.sf.jmoney"/>
-      <import plugin="org.eclipse.ui.forms"/>
-   </requires>
+<plugin>
 
    <extension
          point="net.sf.jmoney.pages">
