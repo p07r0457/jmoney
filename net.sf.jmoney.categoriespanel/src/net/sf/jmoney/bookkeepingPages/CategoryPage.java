@@ -159,9 +159,13 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			 * The visibility of all property controls with dependencies are updated. 
 			 */
 			public void setVisibility() {
-				boolean isApplicable = propertyAccessor.isPropertyApplicable(selectedAccount);
-				propertyLabel.setVisible(isApplicable);
-				propertyControl.getControl().setVisible(isApplicable);
+				// selectedAccount may be null if there is no selection
+				// (there will be no selection if the selected object is deleted).
+				if (selectedAccount != null) {
+					boolean isApplicable = propertyAccessor.isPropertyApplicable(selectedAccount);
+					propertyLabel.setVisible(isApplicable);
+					propertyControl.getControl().setVisible(isApplicable);
+				}
 			}
 		}
 		
