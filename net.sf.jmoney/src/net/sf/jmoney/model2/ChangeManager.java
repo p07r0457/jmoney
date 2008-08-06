@@ -26,23 +26,21 @@ import java.util.Collection;
 import java.util.Vector;
 
 /**
- * Keeps track of changes made to the model.  This is done to enable the 
+ * Keeps track of changes made to the model. This is done to enable the
  * undo/redo feature.
- * 
- * As changes are undone and redone, the id of each object may change.
- * For example, in the serializeddatastore plug-in, the id of each object
- * is a reference to the object itself, i.e. the java identity.  Unless
- * we keep a reference to these objects, which we don't, the identity of
- * objects will not be the same when the object is re-created.  (Even if
- * we kept a reference to an object, it is not possible to insert that
- * object back into the object store for various technical reasons).
- * If the datastore is a database, for example in the jdbcdatastore plug-in,
- * the id is automatically generated as a value of a unique column.
- * The database may decide to re-use the id of a delete row.
- * Therefore, this class never stores ids of objects that have been
- * deleted.  When an object is deleted, all old values that reference
- * the object are replaced with references to the delete entry.
- * This allows the data to be re-created correctly by the undo method.
+ * <P>
+ * As changes are undone and redone, the id of each object may change. For
+ * example, in the serializeddatastore plug-in, the id of each object is a
+ * reference to the object itself, i.e. the java identity, so the identity of
+ * objects will not be the same when the object is re-created. If the datastore
+ * is a database, for example in the jdbcdatastore plug-in, the id is
+ * automatically generated as a value of a unique column. The database may
+ * decide to re-use the id of a deleted row.
+ * <P>
+ * Because of these issues, this class never stores ids of objects that have
+ * been deleted. When an object is deleted, all old values that reference the
+ * object are replaced with references to the delete entry. This allows the data
+ * to be re-created correctly by the undo method.
  * 
  * @author Nigel Westbury
  */

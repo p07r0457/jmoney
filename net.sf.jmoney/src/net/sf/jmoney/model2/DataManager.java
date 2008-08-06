@@ -171,11 +171,10 @@ public abstract class DataManager implements IAdaptable {
     	/*
 		 * Notify listeners who are listening to us using the
 		 * SessionChangeListener interface.
-		 */
-
-        /*
-		 * Take a copy of the listener list. By doing this we allow
-		 * listeners to safely add or remove listeners.
+		 * 
+		 * Take a copy of the listener list. By doing this we allow listeners to
+		 * safely add or remove listeners. Note that listeners from both the
+		 * weakly referenced list and from the normal list must be processed.
 		 */
         Vector<SessionChangeListener> listenerArray = new Vector<SessionChangeListener>();
 
