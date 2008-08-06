@@ -11,11 +11,10 @@ import net.sf.jmoney.model2.PageEntry;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.TreeNode;
 
 import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.jface.action.IMenuManager;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -29,7 +28,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.navigator.CommonNavigator;
 
 public class JMoneyCommonNavigator extends CommonNavigator {
-	public static String ID = "net.sf.jmoney.navigationView";
+	public static String ID = "net.sf.jmoney.navigationView"; //$NON-NLS-1$
 	
 	/**
 	 * Control for the text that is displayed when no session
@@ -48,7 +47,7 @@ public class JMoneyCommonNavigator extends CommonNavigator {
 		if (memento != null) {
 			// Restore any session that was open when the workbench
 			// was last closed.
-			session = JMoneyPlugin.openSession(memento.getChild("session"));
+			session = JMoneyPlugin.openSession(memento.getChild("session")); //$NON-NLS-1$
 		} else {
 			session = null;
 		}
@@ -67,10 +66,10 @@ public class JMoneyCommonNavigator extends CommonNavigator {
 		// Save the details of the session.
 		DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		if (sessionManager != null) {
-			IMemento sessionMemento = memento.createChild("session");
+			IMemento sessionMemento = memento.createChild("session"); //$NON-NLS-1$
 			IPersistableElement pe = (IPersistableElement)sessionManager.getAdapter(IPersistableElement.class);
-			sessionMemento.putString("currentSessionFactoryId", pe.getFactoryId());
-			pe.saveState(sessionMemento.createChild("currentSession"));
+			sessionMemento.putString("currentSessionFactoryId", pe.getFactoryId()); //$NON-NLS-1$
+			pe.saveState(sessionMemento.createChild("currentSession")); //$NON-NLS-1$
 		}
 	}
 
@@ -86,7 +85,7 @@ public class JMoneyCommonNavigator extends CommonNavigator {
 		
 		// Create the control that will be visible if no session is open
 		noSessionMessage = new Label(composite, SWT.WRAP);
-		noSessionMessage.setText(JMoneyPlugin.getResourceString("NavigationView.noSessionMessage"));
+		noSessionMessage.setText(Messages.JMoneyCommonNavigator_NoSession);
 		noSessionMessage.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_DARK_RED));
 
 		// Create the tree viewer

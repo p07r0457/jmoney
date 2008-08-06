@@ -11,6 +11,7 @@ import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.AccountsNode;
 import net.sf.jmoney.views.CategoriesNode;
 import net.sf.jmoney.views.TreeNode;
@@ -29,6 +30,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.wizard.WizardDialog;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
@@ -54,58 +56,57 @@ public class AccountsActionProvider extends CommonActionProvider {
 
 	private boolean fHasContributedToViewMenu = false;
 
-	
 	@Override
 	public void init(ICommonActionExtensionSite site) {
 		super.init(site);
-		
-		drillDownAdapter = new DrillDownAdapter((TreeViewer)site.getStructuredViewer());
-		
+
+		drillDownAdapter = new DrillDownAdapter((TreeViewer) site
+				.getStructuredViewer());
+
 		makeActions();
 	}
-	
+
 	@Override
 	public void fillContextMenu(IMenuManager manager) {
-		IStructuredSelection selection = (IStructuredSelection) getContext().getSelection();
+		IStructuredSelection selection = (IStructuredSelection) getContext()
+				.getSelection();
 
 		openAction.selectionChanged(selection);
 		if (openAction.isEnabled()) {
 			manager.insertAfter(ICommonMenuConstants.GROUP_OPEN, openAction);
 		}
-		
+
 		manager.add(new Separator());
 
 		// TODO: move selection stuff into the actions.
 		Object selectedObject = selection.getFirstElement();
-		if (selectedObject != null) {  // Needed???
-		
-		if (selectedObject == TreeNode.getTreeNode(AccountsNode.ID) 
-				|| selectedObject instanceof CapitalAccount) {
-			for (Action newAccountAction: newAccountActions) {
-				manager.add(newAccountAction);
+		if (selectedObject != null) { // Needed???
+
+			if (selectedObject == TreeNode.getTreeNode(AccountsNode.ID)
+					|| selectedObject instanceof CapitalAccount) {
+				for (Action newAccountAction : newAccountActions) {
+					manager.add(newAccountAction);
+				}
 			}
+
+			if (selectedObject == TreeNode.getTreeNode(CategoriesNode.ID)
+					|| selectedObject instanceof IncomeExpenseAccount) {
+				manager.add(newCategoryAction);
+			}
+
+			if (selectedObject instanceof Account) {
+				manager.add(deleteAccountAction);
+			}
+
+			manager.add(new Separator());
+
+			// ActionGroup ag = new UndoRedoActionGroup(
+			// getActionSite().getViewSite(),
+			// PlatformUI.getWorkbench().getOperationSupport().getUndoContext(),
+			// true);
+			// ag.fillContextMenu(manager);
+
 		}
-
-		if (selectedObject == TreeNode.getTreeNode(CategoriesNode.ID) 
-				|| selectedObject instanceof IncomeExpenseAccount) {
-			manager.add(newCategoryAction);
-		}
-
-		if (selectedObject instanceof Account) {
-			manager.add(deleteAccountAction);
-		}
-
-		manager.add(new Separator());
-
-
-//		ActionGroup ag = new UndoRedoActionGroup(
-//				getActionSite().getViewSite(),
-//				PlatformUI.getWorkbench().getOperationSupport().getUndoContext(),
-//				true);
-//		ag.fillContextMenu(manager);
-		
-		}
-
 
 		drillDownAdapter.addNavigationActions(manager);
 
@@ -115,36 +116,38 @@ public class AccountsActionProvider extends CommonActionProvider {
 
 	@Override
 	public void fillActionBars(IActionBars actionBars) {
-		IStructuredSelection selection = (IStructuredSelection) getContext().getSelection();
-		if (selection.size() == 1 && selection.getFirstElement() instanceof Account) {
+		IStructuredSelection selection = (IStructuredSelection) getContext()
+				.getSelection();
+		if (selection.size() == 1
+				&& selection.getFirstElement() instanceof Account) {
 			openAction.selectionChanged(selection);
-			actionBars.setGlobalActionHandler(ICommonActionConstants.OPEN, openAction);
+			actionBars.setGlobalActionHandler(ICommonActionConstants.OPEN,
+					openAction);
 		}
 
-		if (!fHasContributedToViewMenu ) {
+		if (!fHasContributedToViewMenu) {
 			fillLocalPullDown(actionBars.getMenuManager());
 			fillLocalToolBar(actionBars.getToolBarManager());
 			fHasContributedToViewMenu = true;
 		}
 
 		/*
-		 * This action provider is used for navigation trees
-		 * in view parts only.  The CommonViewerSite object will
-		 * therefore in fact implement ICommonViewerWorkbenchSite.
-		 * ICommonViewerWorkbenchSite would not be implemented if
-		 * the tree is in a dialog.
+		 * This action provider is used for navigation trees in view parts only.
+		 * The CommonViewerSite object will therefore in fact implement
+		 * ICommonViewerWorkbenchSite. ICommonViewerWorkbenchSite would not be
+		 * implemented if the tree is in a dialog.
 		 */
-		ICommonViewerWorkbenchSite site = (ICommonViewerWorkbenchSite)getActionSite().getViewSite();
-		
-		ActionGroup undoRedoActionGroup = new UndoRedoActionGroup(
-				site.getSite(), 
-				site.getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
-				true);
+		ICommonViewerWorkbenchSite site = (ICommonViewerWorkbenchSite) getActionSite()
+				.getViewSite();
+
+		ActionGroup undoRedoActionGroup = new UndoRedoActionGroup(site
+				.getSite(), site.getWorkbenchWindow().getWorkbench()
+				.getOperationSupport().getUndoContext(), true);
 		undoRedoActionGroup.fillActionBars(actionBars);
 	}
 
 	private void fillLocalPullDown(IMenuManager manager) {
-		for (Action newAccountAction: newAccountActions) {
+		for (Action newAccountAction : newAccountActions) {
 			manager.add(newAccountAction);
 		}
 		manager.add(newCategoryAction);
@@ -162,123 +165,128 @@ public class AccountsActionProvider extends CommonActionProvider {
 		 * capital account class, and that is not itself derivable, add a menu
 		 * item to create a new account of that type.
 		 */
-		for (final ExtendablePropertySet<? extends CapitalAccount> derivedPropertySet: CapitalAccountInfo.getPropertySet().getDerivedPropertySets()) {
+		for (final ExtendablePropertySet<? extends CapitalAccount> derivedPropertySet : CapitalAccountInfo
+				.getPropertySet().getDerivedPropertySets()) {
 
-			Object [] messageArgs = new Object[] {
-					derivedPropertySet.getObjectDescription()
-			};
+			Object[] messageArgs = new Object[] { derivedPropertySet
+					.getObjectDescription() };
 
-			String text = new java.text.MessageFormat(
-							JMoneyPlugin.getResourceString("MainFrame.newAccount"), 
-							java.util.Locale.US)
-					.format(messageArgs);
+			String text = NLS.bind(Messages.AccountsActionProvider_NewAccount, messageArgs);
 
-			String tooltip = new java.text.MessageFormat(
-							"Create a New {0}", 
-							java.util.Locale.US)
-					.format(messageArgs);
-			
+			String tooltip = NLS.bind(Messages.AccountsActionProvider_CreateNewAccount, messageArgs);
+
 			Action newAccountAction = new BaseSelectionListenerAction(text) {
-				@Override	
+				@Override
 				public void run() {
 					CapitalAccount account = null;
-					IStructuredSelection selection = super.getStructuredSelection();
-					for (Object selectedObject: selection.toList()) {
+					IStructuredSelection selection = super
+							.getStructuredSelection();
+					for (Object selectedObject : selection.toList()) {
 						if (selectedObject instanceof CapitalAccount) {
-							account = (CapitalAccount)selectedObject;
+							account = (CapitalAccount) selectedObject;
 							break;
 						}
 					}
 
 					Session session = JMoneyPlugin.getDefault().getSession();
-					
-					NewAccountWizard wizard = new NewAccountWizard(session, account, derivedPropertySet);
-					WizardDialog dialog = new WizardDialog(getActionSite().getViewSite().getShell(), wizard);
+
+					NewAccountWizard wizard = new NewAccountWizard(session,
+							account, derivedPropertySet);
+					WizardDialog dialog = new WizardDialog(getActionSite()
+							.getViewSite().getShell(), wizard);
 					dialog.setPageSize(600, 300);
 					int result = dialog.open();
 					if (result == WizardDialog.OK) {
 						// Having added the new account, set it as the selected
 						// account in the tree viewer.
-						getActionSite().getStructuredViewer().setSelection(new StructuredSelection(wizard.getNewAccount()), true);
+						getActionSite().getStructuredViewer()
+								.setSelection(
+										new StructuredSelection(wizard
+												.getNewAccount()), true);
 					}
 				}
 			};
 
 			newAccountAction.setToolTipText(tooltip);
-			newAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-					getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+			newAccountAction.setImageDescriptor(PlatformUI.getWorkbench()
+					.getSharedImages().getImageDescriptor(
+							ISharedImages.IMG_OBJS_INFO_TSK));
 
 			newAccountActions.add(newAccountAction);
 		}
 
-		Object [] messageArgs = new Object[] {
-				IncomeExpenseAccountInfo.getPropertySet().getObjectDescription()
-		};
+		Object[] messageArgs = new Object[] { IncomeExpenseAccountInfo
+				.getPropertySet().getObjectDescription() };
 
-		String text = new java.text.MessageFormat(
-						JMoneyPlugin.getResourceString("MainFrame.newAccount"), 
-						java.util.Locale.US)
-				.format(messageArgs);
+		String text = NLS.bind(Messages.AccountsActionProvider_NewAccount, messageArgs);
 
-		String tooltip = new java.text.MessageFormat(
-						"Create a New {0}", 
-						java.util.Locale.US)
-				.format(messageArgs);
+		String tooltip = NLS.bind(Messages.AccountsActionProvider_CreateNewAccount, messageArgs);
 
 		newCategoryAction = new BaseSelectionListenerAction(text) {
-			@Override	
+			@Override
 			public void run() {
 				IncomeExpenseAccount account = null;
 				IStructuredSelection selection = super.getStructuredSelection();
-				for (Object selectedObject: selection.toList()) {
+				for (Object selectedObject : selection.toList()) {
 					if (selectedObject instanceof IncomeExpenseAccount) {
-						account = (IncomeExpenseAccount)selectedObject;
+						account = (IncomeExpenseAccount) selectedObject;
 						break;
 					}
 				}
 
 				Session session = JMoneyPlugin.getDefault().getSession();
-				
+
 				NewAccountWizard wizard = new NewAccountWizard(session, account);
-				WizardDialog dialog = new WizardDialog(getActionSite().getViewSite().getShell(), wizard);
+				WizardDialog dialog = new WizardDialog(getActionSite()
+						.getViewSite().getShell(), wizard);
 				dialog.setPageSize(600, 300);
 				int result = dialog.open();
 				if (result == WizardDialog.OK) {
 					// Having added the new account, set it as the selected
 					// account in the tree viewer.
-					getActionSite().getStructuredViewer().setSelection(new StructuredSelection(wizard.getNewAccount()), true);
+					getActionSite().getStructuredViewer().setSelection(
+							new StructuredSelection(wizard.getNewAccount()),
+							true);
 				}
 			}
 		};
 
 		newCategoryAction.setToolTipText(tooltip);
 
-		newCategoryAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-				getImageDescriptor(ISharedImages.IMG_OBJS_INFO_TSK));
+		newCategoryAction.setImageDescriptor(PlatformUI.getWorkbench()
+				.getSharedImages().getImageDescriptor(
+						ISharedImages.IMG_OBJS_INFO_TSK));
 
-		deleteAccountAction = new BaseSelectionListenerAction(JMoneyPlugin.getResourceString("MainFrame.deleteAccount")) {
-			@Override	
+		deleteAccountAction = new BaseSelectionListenerAction(Messages.AccountsActionProvider_DeleteAccount) {
+			@Override
 			public void run() {
 				final Session session = JMoneyPlugin.getDefault().getSession();
 				Account account = null;
 				IStructuredSelection selection = super.getStructuredSelection();
-				for (Object selectedObject: selection.toList()) {
-					account = (Account)selectedObject;
+				for (Object selectedObject : selection.toList()) {
+					account = (Account) selectedObject;
 					break;
 				}
 				if (account != null) {
 					final Account account2 = account;
 
-					IOperationHistory history = PlatformUI.getWorkbench().getOperationSupport().getOperationHistory();
+					IOperationHistory history = PlatformUI.getWorkbench()
+							.getOperationSupport().getOperationHistory();
 
-					IUndoableOperation operation = new AbstractDataOperation(session, "delete account") {
+					IUndoableOperation operation = new AbstractDataOperation(
+							session, "delete account") { //$NON-NLS-1$
 						@Override
 						public IStatus execute() throws ExecutionException {
 							if (account2.getParent() != null) {
 								if (account2.getParent() instanceof CapitalAccount) {
-									((CapitalAccount)account2.getParent()).getSubAccountCollection().remove(account2);
+									((CapitalAccount) account2.getParent())
+											.getSubAccountCollection().remove(
+													account2);
 								} else {
-									((IncomeExpenseAccount)account2.getParent()).getSubAccountCollection().remove(account2);
+									((IncomeExpenseAccount) account2
+											.getParent())
+											.getSubAccountCollection().remove(
+													account2);
 								}
 							} else {
 								session.deleteAccount(account2);
@@ -298,9 +306,10 @@ public class AccountsActionProvider extends CommonActionProvider {
 				}
 			}
 		};
-		deleteAccountAction.setToolTipText("Delete an account");
-		deleteAccountAction.setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().
-				getImageDescriptor(ISharedImages.IMG_TOOL_DELETE));
+		deleteAccountAction.setToolTipText(Messages.AccountsActionProvider_DeleteAccount);
+		deleteAccountAction.setImageDescriptor(PlatformUI.getWorkbench()
+				.getSharedImages().getImageDescriptor(
+						ISharedImages.IMG_TOOL_DELETE));
 	}
 
 }

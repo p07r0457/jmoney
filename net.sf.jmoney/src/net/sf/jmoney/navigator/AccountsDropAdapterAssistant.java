@@ -13,6 +13,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.AccountsNode;
 import net.sf.jmoney.views.CategoriesNode;
 import net.sf.jmoney.views.TreeNode;
@@ -185,12 +186,12 @@ public class AccountsDropAdapterAssistant extends
 			Object[] messageArgs = new Object[] {
 					objectsToMove.iterator().next().toString() 
 			};
-			description = new MessageFormat("Move {0}", java.util.Locale.US).format(messageArgs); 
+			description = new MessageFormat(Messages.AccountsDropAdapterAssistant_Move, java.util.Locale.US).format(messageArgs); 
 		} else {
 			Object[] messageArgs = new Object[] {
 					Integer.toString(objectsToMove.size())
 			};
-			description = new MessageFormat("Move {0} Accounts", java.util.Locale.US).format(messageArgs); 
+			description = new MessageFormat(Messages.AccountsDropAdapterAssistant_MultiMove, java.util.Locale.US).format(messageArgs); 
 		}
 
 		Session session = JMoneyPlugin.getDefault().getSession();

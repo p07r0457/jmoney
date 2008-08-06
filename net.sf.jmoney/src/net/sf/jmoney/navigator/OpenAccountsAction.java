@@ -8,6 +8,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.PageEntry;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.NodeEditorInput;
 
 import org.eclipse.core.runtime.Assert;
@@ -26,8 +27,8 @@ import org.eclipse.ui.navigator.INavigatorContentService;
 public class OpenAccountsAction extends BaseSelectionListenerAction {
 
 	public OpenAccountsAction() {
-		super(JMoneyPlugin.getResourceString("MainFrame.openEditor") + " XXX");
-		setToolTipText(JMoneyPlugin.getResourceString("MainFrame.openEditor"));
+		super(Messages.OpenAccountsAction_Text + " XXX"); //$NON-NLS-1$
+		setToolTipText(Messages.OpenAccountsAction_ToolTipText);
 	}
 
 	@Override
@@ -67,7 +68,7 @@ public class OpenAccountsAction extends BaseSelectionListenerAction {
 								pageFactories,
 								null);
 						window.getActivePage().openEditor(editorInput,
-						"net.sf.jmoney.genericEditor");
+						"net.sf.jmoney.genericEditor"); //$NON-NLS-1$
 					} catch (PartInitException e) {
 						JMoneyPlugin.log(e);
 					}

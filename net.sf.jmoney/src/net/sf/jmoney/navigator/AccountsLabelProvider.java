@@ -3,10 +3,12 @@ package net.sf.jmoney.navigator;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.PropertySet;
+import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.TreeNode;
 
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.navigator.IDescriptionProvider;
 
@@ -20,7 +22,7 @@ public class AccountsLabelProvider extends LabelProvider implements ILabelProvid
 			ExtendableObject extendableObject = (ExtendableObject)obj;
 			return PropertySet.getPropertySet(extendableObject.getClass()).getIcon();
 		} else {
-			throw new RuntimeException("");
+			throw new RuntimeException(Messages.AccountsLabelProvider_Image);
 		}
 	}
 
@@ -31,17 +33,17 @@ public class AccountsLabelProvider extends LabelProvider implements ILabelProvid
 		} else if (element instanceof ExtendableObject) {
 			return ((ExtendableObject)element).toString();
 		}
-		return "should never happen";
+		return Messages.AccountsLabelProvider_DefaultText;
 	}
 
 	public String getDescription(Object element) {
 		if (element instanceof TreeNode) {
-			return "Root of All Capital Accounts";
+			return Messages.AccountsLabelProvider_TreeNodeDescription;
 		}
 		if (element instanceof CapitalAccount) {
-			return "Capital Account: " + ((CapitalAccount)element).getName();
+			return NLS.bind(Messages.AccountsLabelProvider_CapitalAccountDescription,((CapitalAccount)element).getName());
 		}
-		return "should never happen";
+		return Messages.AccountsLabelProvider_DefaultDescription;
 	}
 
 }

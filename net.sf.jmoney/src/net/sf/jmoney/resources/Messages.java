@@ -9,6 +9,16 @@ public class Messages extends NLS {
 	public static String AccountInfo_Name;
 	public static String AccountPropertiesPage_FormHeader;
 	public static String AccountPropertiesPage_Title;
+	public static String AccountsActionProvider_CreateNewAccount;
+	public static String AccountsActionProvider_DeleteAccount;
+	public static String AccountsActionProvider_NewAccount;
+	public static String AccountsDropAdapterAssistant_Move;
+	public static String AccountsDropAdapterAssistant_MultiMove;
+	public static String AccountsLabelProvider_CapitalAccountDescription;
+	public static String AccountsLabelProvider_DefaultDescription;
+	public static String AccountsLabelProvider_DefaultText;
+	public static String AccountsLabelProvider_Image;
+	public static String AccountsLabelProvider_TreeNodeDescription;
 	public static String AmountControlFactory_None;
 	public static String BalanceColumn_Name;
 	public static String BankAccount_Name;
@@ -97,6 +107,7 @@ public class Messages extends NLS {
 	public static String JMoneyActionBarAdvisor_Window;
 	public static String JMoneyApplication_InvalidWorkspaceMessage;
 	public static String JMoneyApplication_InvalidWorkspaceTitle;
+	public static String JMoneyCommonNavigator_NoSession;
 	public static String MultiTextControlFactory_Empty;
 	public static String NavigationView_CreateNewAccount;
 	public static String NavigationView_DeleteAccount;
@@ -118,6 +129,8 @@ public class Messages extends NLS {
 	public static String NewAccountWizard_SummaryPageTitle;
 	public static String NewAccountWizard_WindowTitleAccount;
 	public static String NewAccountWizard_WindowTitleCategory;
+	public static String OpenAccountsAction_Text;
+	public static String OpenAccountsAction_ToolTipText;
 	public static String OtherEntriesButton_ToolTipText;
 	public static String OtherEntriesControl_SplitEntry;
 	public static String OtherEntriesShell_Adjust;

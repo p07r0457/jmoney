@@ -50,7 +50,7 @@ public class DeleteAccountAction extends ActionDelegate {
 
 				IOperationHistory history = PlatformUI.getWorkbench().getOperationSupport().getOperationHistory();
 
-				IUndoableOperation operation = new AbstractDataOperation(session, "delete account") {
+				IUndoableOperation operation = new AbstractDataOperation(session, "delete account") { //$NON-NLS-1$
 					@Override
 					public IStatus execute() throws ExecutionException {
 						if (account2.getParent() != null) {
