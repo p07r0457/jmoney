@@ -110,7 +110,7 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
 		
 		// Create the edit controls
 		GridData gdEditArea = new GridData();
-		gdEditArea.horizontalAlignment = GridData.FILL;
+		gdEditArea.horizontalAlignment = SWT.FILL;
 		if (expandedControls) {
 			createExpandedEditArea(areaComposite).setLayoutData(gdEditArea);
 		} else {
