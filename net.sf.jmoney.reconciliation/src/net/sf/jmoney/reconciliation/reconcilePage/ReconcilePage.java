@@ -204,7 +204,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         form.getBody().setLayout(layout);
         
         fStatementsSection = new StatementsSection(form.getBody(), managedForm.getToolkit(), account.getBaseObject());
-        GridData data = new GridData(GridData.FILL_VERTICAL);
+        GridData data = new GridData(SWT.LEFT, SWT.FILL, false, true);
         data.verticalSpan = 2;
         fStatementsSection.getSection().setLayoutData(data);
         managedForm.addPart(fStatementsSection);
@@ -408,11 +408,9 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
         	}
         });
 
-        GridData gridData1 = new GridData(GridData.FILL_BOTH);
+        GridData gridData1 = new GridData(SWT.FILL, SWT.FILL, true, true);
         gridData1.heightHint = 200;   // TODO: tidy up???
         gridData1.widthHint = 200;   // TODO: tidy up???
-		gridData1.grabExcessHorizontalSpace = true;
-		gridData1.grabExcessVerticalSpace = true;
         containerOfSash.setLayoutData(gridData1);
         
         /*

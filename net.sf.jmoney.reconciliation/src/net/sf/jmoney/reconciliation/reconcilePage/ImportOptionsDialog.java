@@ -103,8 +103,6 @@ class ImportOptionsDialog extends Dialog {
 
 	AccountControl<IncomeExpenseAccount> defaultAccountControl;
 
-	private Button okButton;
-
 	Image errorImage;
 	
 	/**
@@ -181,7 +179,7 @@ class ImportOptionsDialog extends Dialog {
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		// create OK and Cancel buttons by default
-		okButton = createButton(parent, IDialogConstants.OK_ID,
+		createButton(parent, IDialogConstants.OK_ID,
 				IDialogConstants.OK_LABEL, true);
 		createButton(parent, IDialogConstants.CANCEL_ID,
 				IDialogConstants.CANCEL_LABEL, false);
@@ -227,7 +225,7 @@ class ImportOptionsDialog extends Dialog {
 		final StackLayout stackLayout = new StackLayout();
 		stackContainer.setLayout(stackLayout);
 
-		GridData containerData = new GridData(GridData.FILL_BOTH);
+		GridData containerData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		containerData.grabExcessHorizontalSpace = true;
 		containerData.grabExcessVerticalSpace = true;
 		stackContainer.setLayoutData(containerData);
@@ -276,7 +274,7 @@ class ImportOptionsDialog extends Dialog {
 
 		// Create the table of patterns
 		Control patternMatchingTableControl = createPatternMatchingTableControl(composite);
-		GridData tableData = new GridData(GridData.FILL_BOTH);
+		GridData tableData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		tableData.horizontalSpan = 2;
 		tableData.grabExcessHorizontalSpace = true;
 		tableData.grabExcessVerticalSpace = false;  //?????
@@ -302,7 +300,7 @@ class ImportOptionsDialog extends Dialog {
 
 		// Set up the table
 		final Table table = viewer.getTable();
-		table.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, true));
+		table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
 		TableViewerFocusCellManager focusCellManager = new TableViewerFocusCellManager(viewer, new FocusCellOwnerDrawHighlighter(viewer));
 		ColumnViewerEditorActivationStrategy actSupport = new ColumnViewerEditorActivationStrategy(viewer) {
@@ -393,7 +391,7 @@ class ImportOptionsDialog extends Dialog {
 
 		// Create the button area
 		Control buttonAreaControl = createButtonArea(composite);
-		buttonAreaControl.setLayoutData(new GridData(GridData.FILL_VERTICAL));
+		buttonAreaControl.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, true));
 
 		return composite;
 	}
@@ -489,7 +487,7 @@ class ImportOptionsDialog extends Dialog {
 
 		button = new Button(container, SWT.PUSH);
 		button.setText("Add Row");
-		button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		button.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		button.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -507,7 +505,7 @@ class ImportOptionsDialog extends Dialog {
 
 		button = new Button(container, SWT.PUSH);
 		button.setText("Remove Row");
-		button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		button.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		button.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -531,7 +529,7 @@ class ImportOptionsDialog extends Dialog {
 
 		button = new Button(container, SWT.PUSH);
 		button.setText("Up");
-		button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		button.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		button.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -565,7 +563,7 @@ class ImportOptionsDialog extends Dialog {
 
 		button = new Button(container, SWT.PUSH);
 		button.setText("Down");
-		button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		button.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		button.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
@@ -633,6 +631,7 @@ class ImportOptionsDialog extends Dialog {
 		
 		// If called during createDialogArea, the okButton
 		// will not have been created yet.
+		Button okButton = getButton(IDialogConstants.OK_ID);
 		if (okButton != null) {
 			okButton.setEnabled(errorMessage == null);
 		}
