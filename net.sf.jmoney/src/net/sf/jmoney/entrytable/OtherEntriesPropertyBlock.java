@@ -112,7 +112,7 @@ public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData, EntryR
 					propertyControl.load(entry);
 					propertyControls.add(propertyControl);
 
-					propertyControl.getControl().setLayoutData(new GridData(GridData.FILL,GridData.FILL, true, true));					
+					propertyControl.getControl().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));					
 
 					addFocusListenerRecursively(propertyControl.getControl(), controlFocusListener);
 				}
