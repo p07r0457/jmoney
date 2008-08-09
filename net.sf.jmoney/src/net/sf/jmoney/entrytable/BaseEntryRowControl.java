@@ -26,7 +26,6 @@ import java.applet.Applet;
 import java.applet.AudioClip;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -35,8 +34,6 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Transaction;
-import net.sf.jmoney.model2.Transaction.EntryCollection;
-import net.sf.jmoney.pages.entries.ForeignCurrencyDialog;
 import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.core.runtime.FileLocator;
@@ -47,7 +44,6 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -351,74 +347,12 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		if (transactionManager.hasChanges()) {
 			// Validate the transaction.
 
-			long totalAmount = 0;
-			Commodity commodity = null;
-			boolean mixedCommodities = false;
-
 			// TODO: itemWithError is not actually used. See if there is an
 			// easy way of accessing the relevant controls. Otherwise we should
 			// delete this.
 
 			try {
-				if (uncommittedEntryData.getEntry().getTransaction().getDate() == null) {
-					throw new InvalidUserEntryException(
-							Messages.BaseEntryRowControl_DateError, null);
-				}
-
-				for (Entry entry : uncommittedEntryData.getEntry()
-						.getTransaction().getEntryCollection()) {
-					if (entry.getAccount() == null) {
-						throw new InvalidUserEntryException(
-								Messages.BaseEntryRowControl_CategoryError, null);
-					}
-
-					if (entry.getAccount() instanceof IncomeExpenseAccount) {
-						IncomeExpenseAccount incomeExpenseAccount = (IncomeExpenseAccount) entry
-								.getAccount();
-						if (incomeExpenseAccount.isMultiCurrency()
-								&& entry.getIncomeExpenseCurrency() == null) {
-							throw new InvalidUserEntryException(
-									NLS
-											.bind(
-													Messages.BaseEntryRowControl_CurrencyError,
-													incomeExpenseAccount
-															.getName()), null);
-						}
-					}
-
-					if (commodity == null) {
-						commodity = entry.getCommodity();
-					} else if (!commodity.equals(entry.getCommodity())) {
-						mixedCommodities = true;
-					}
-
-					totalAmount += entry.getAmount();
-				}
-
-				/*
-				 * If all the entries are in the same currency then the sum of
-				 * the entries in the transaction must add to zero. In a
-				 * transaction with child rows we display an error to the user
-				 * if the sum is not zero. However, in a simple transaction the
-				 * amount of the income and expense is not shown because it
-				 * always matches the amount of the credit or debit. The amounts
-				 * may not match if, for example, the currencies used to differ
-				 * but the user changed the category so that the currencies now
-				 * match. We present the data to the user as tho the other
-				 * amount does not exist, so we should silently correct the
-				 * amount.
-				 */
-				if (totalAmount != 0 && !mixedCommodities) {
-					if (uncommittedEntryData.hasSplitEntries()) {
-						throw new InvalidUserEntryException(
-								Messages.BaseEntryRowControl_BalanceError,
-								null);
-					} else {
-						Entry accountEntry = uncommittedEntryData.getEntry();
-						Entry otherEntry = uncommittedEntryData.getOtherEntry();
-						otherEntry.setAmount(-accountEntry.getAmount());
-					}
-				}
+				baseValidation(uncommittedEntryData.getEntry().getTransaction());
 
 				// Do any specific processing in derived classes.
 				specificValidation();
@@ -513,6 +447,70 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		}
 
 		return true;
+	}
+
+	public static void baseValidation(Transaction transaction) throws InvalidUserEntryException {
+		long totalAmount = 0;
+		Commodity commodity = null;
+		boolean mixedCommodities = false;
+
+		if (transaction.getDate() == null) {
+			throw new InvalidUserEntryException(
+					Messages.BaseEntryRowControl_DateError, null);
+		}
+
+		for (Entry entry: transaction.getEntryCollection()) {
+			if (entry.getAccount() == null) {
+				throw new InvalidUserEntryException(
+						Messages.BaseEntryRowControl_CategoryError, null);
+			}
+
+			if (entry.getAccount() instanceof IncomeExpenseAccount) {
+				IncomeExpenseAccount incomeExpenseAccount = (IncomeExpenseAccount)entry.getAccount();
+				if (incomeExpenseAccount.isMultiCurrency()
+						&& entry.getIncomeExpenseCurrency() == null) {
+					throw new InvalidUserEntryException(
+							NLS
+									.bind(
+											Messages.BaseEntryRowControl_CurrencyError,
+											incomeExpenseAccount
+													.getName()), null);
+				}
+			}
+
+			if (commodity == null) {
+				commodity = entry.getCommodity();
+			} else if (!commodity.equals(entry.getCommodity())) {
+				mixedCommodities = true;
+			}
+
+			totalAmount += entry.getAmount();
+		}
+
+		/*
+		 * If all the entries are in the same currency then the sum of
+		 * the entries in the transaction must add to zero. In a
+		 * transaction with child rows we display an error to the user
+		 * if the sum is not zero. However, in a simple transaction the
+		 * amount of the income and expense is not shown because it
+		 * always matches the amount of the credit or debit. The amounts
+		 * may not match if, for example, the currencies used to differ
+		 * but the user changed the category so that the currencies now
+		 * match. We present the data to the user as tho the other
+		 * amount does not exist, so we should silently correct the
+		 * amount.
+		 */
+		if (totalAmount != 0 && !mixedCommodities) {
+//			if (uncommittedEntryData.hasSplitEntries()) {
+			throw new InvalidUserEntryException(
+					Messages.BaseEntryRowControl_BalanceError,
+					null);
+//			} else {
+//				Entry accountEntry = uncommittedEntryData.getEntry();
+//				Entry otherEntry = uncommittedEntryData.getOtherEntry();
+//				otherEntry.setAmount(-accountEntry.getAmount());
+//			}
+		}
 	}
 
 	protected abstract void specificValidation()

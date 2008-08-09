@@ -40,7 +40,7 @@ import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.pages.entries.EntryRowSelectionListener;
-import net.sf.jmoney.pages.entries.TransactionDialog;
+import net.sf.jmoney.transactionDialog.TransactionDialog;
 import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.core.runtime.Assert;
@@ -361,7 +361,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
         		if (selectedRowControl != null) {
         			Entry selectedEntry = selectedRowControl.uncommittedEntryData.getEntry();
 
-        			TransactionDialog dialog = new TransactionDialog(getShell(), selectedEntry);
+    				TransactionDialog dialog = new TransactionDialog(getShell(), selectedEntry);
         			dialog.open();
         		} else {
         			MessageDialog.openInformation(getShell(), Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageSelect);
