@@ -44,11 +44,7 @@ public class MultiTextControlFactory implements IPropertyControlFactory<String> 
 
     public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<String> propertyAccessor) {
         IPropertyControl multiText = new TextEditor(parent, SWT.MULTI | SWT.WRAP, propertyAccessor);
-        GridData gridData = new GridData();
-        gridData.verticalAlignment = GridData.FILL;
-        gridData.grabExcessVerticalSpace = true;
-        gridData.horizontalAlignment = GridData.FILL;
-        gridData.grabExcessHorizontalSpace = true;
+        GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
         multiText.getControl().setLayoutData(gridData);
         return multiText;
     }

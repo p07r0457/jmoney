@@ -446,7 +446,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 		layout.marginWidth = 0;
 		layout.verticalSpacing = 0;
 		setLayout(layout);
-		setLayoutData(new GridData(GridData.FILL_BOTH));
+		setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
 
 		// create the dialog area and button bar
 		dialogArea = createDialogArea(this);
@@ -472,11 +472,11 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 		layout.marginHeight = 15;
 
 		composite.setLayout(layout);
-		composite.setLayoutData(new GridData(GridData.FILL_BOTH));
+		composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
 		
 		// Build the Page container
 		pageContainer = createPageContainer(composite);
-		GridData gd = new GridData(GridData.FILL_BOTH);
+		GridData gd = new GridData(SWT.FILL, SWT.FILL, false, false);
 		gd.widthHint = pageWidth;
 		gd.heightHint = pageHeight;
 		pageContainer.setLayoutData(gd);
@@ -484,7 +484,7 @@ public class WizardContainer extends Composite implements IWizardContainer2 {
 
 		// Build the separator line
 		Label separator = new Label(composite, SWT.HORIZONTAL | SWT.SEPARATOR);
-		separator.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		separator.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 		
 		return composite;
 	}
