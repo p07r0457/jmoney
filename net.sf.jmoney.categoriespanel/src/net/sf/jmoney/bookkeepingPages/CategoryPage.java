@@ -242,11 +242,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			
 			viewer = new TreeViewer(topLevelControl, SWT.SINGLE | SWT.H_SCROLL | SWT.V_SCROLL);
 			
-			GridData gridData = new GridData();
-			gridData.horizontalAlignment = GridData.FILL;
-			gridData.verticalAlignment = GridData.FILL;
-			gridData.grabExcessHorizontalSpace = true;
-			gridData.grabExcessVerticalSpace = true;
+			GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 			gridData.horizontalSpan = 2;
 			viewer.getControl().setLayoutData(gridData);
 			
@@ -308,9 +304,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 				toolkit.adapt(propertyControl.getControl(), true, true);
 
 				// Make the control take up the full width
-				GridData gridData5 = new GridData();
-				gridData.horizontalAlignment = GridData.FILL;
-				gridData5.grabExcessHorizontalSpace = true;
+				GridData gridData5 = new GridData(SWT.FILL, SWT.TOP, true, false);
 				propertyControl.getControl().setLayoutData(gridData5);
 
 				// Set the control to have no account set (control
