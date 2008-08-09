@@ -42,6 +42,7 @@ import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.NodeEditor;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -198,13 +199,13 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
         form.getBody().setLayout(layout);
         
         fEntriesFilterSection = new EntriesFilterSection(form.getBody(), filter, allEntryDataObjects, getManagedForm().getToolkit());
-        fEntriesFilterSection.getSection().setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        fEntriesFilterSection.getSection().setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
         managedForm.addPart(fEntriesFilterSection);
         fEntriesFilterSection.initialize(managedForm);
         
         if (account instanceof CurrencyAccount) {
         	final EntriesSection fEntriesSection = new EntriesSection(form.getBody(), (CurrencyAccount)account, filter, getManagedForm().getToolkit());
-            fEntriesSection.getSection().setLayoutData(new GridData(GridData.FILL_BOTH));
+            fEntriesSection.getSection().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
             managedForm.addPart(fEntriesSection);
             fEntriesSection.initialize(managedForm);
 
@@ -215,7 +216,7 @@ public class EntriesPage extends FormPage implements IBookkeepingPage {
     		});
         } else {
         	final CategoryEntriesSection fEntriesSection = new CategoryEntriesSection(form.getBody(), (IncomeExpenseAccount)account, filter, getManagedForm().getToolkit());
-            fEntriesSection.getSection().setLayoutData(new GridData(GridData.FILL_BOTH));
+            fEntriesSection.getSection().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
             managedForm.addPart(fEntriesSection);
             fEntriesSection.initialize(managedForm);
 

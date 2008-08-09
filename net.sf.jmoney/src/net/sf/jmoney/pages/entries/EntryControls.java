@@ -268,7 +268,7 @@ class EntryControls {
 		
 		// First column (the one with the dynamic rows of property control pairs)
 		// grabs excess width.
-		GridData column1Data = new GridData(GridData.FILL_BOTH);
+		GridData column1Data = new GridData(SWT.FILL, SWT.FILL, true, true);
 		column1Data.grabExcessHorizontalSpace = true;
 		composite1.setLayoutData(column1Data);
 	

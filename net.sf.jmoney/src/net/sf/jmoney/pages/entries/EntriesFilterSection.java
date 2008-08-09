@@ -128,7 +128,7 @@ public class EntriesFilterSection extends SectionPart {
         fOperationCombo.select(0);
 
         fFilterText = toolkit.createText(container, ""); //$NON-NLS-1$
-        fFilterText.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        fFilterText.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
         fFilterText.addFocusListener(new FocusAdapter() {
 		    @Override	
 			public void focusLost(FocusEvent e) {
