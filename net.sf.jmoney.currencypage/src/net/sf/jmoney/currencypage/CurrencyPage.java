@@ -334,9 +334,9 @@ public class CurrencyPage implements IBookkeepingPageFactory {
     		}
 			
 			
-			createAvailableList(toolkit, container).setLayoutData(new GridData(GridData.FILL_BOTH));
+			createAvailableList(toolkit, container).setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 			createButtonArea(toolkit, container);
-			createSelectedList(toolkit, container).setLayoutData(new GridData(GridData.FILL_BOTH));
+			createSelectedList(toolkit, container).setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 			updateCount();
 			
 			// Listen for changes to the session data.
@@ -432,7 +432,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
                     SWT.NONE);
 
 			Table table = toolkit.createTable(container, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL);
-			GridData gd = new GridData(GridData.FILL_BOTH);
+			GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
 			gd.widthHint = 225;
 			gd.heightHint = 200;
 			table.setLayoutData(gd);
@@ -452,19 +452,19 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			GridLayout layout = new GridLayout();
 			layout.marginWidth = layout.marginHeight = 0;
 			comp.setLayout(layout);
-			comp.setLayoutData(new GridData(GridData.FILL_VERTICAL));
+			comp.setLayoutData(new GridData(SWT.LEFT, SWT.FILL, false, true));
 			
 			Composite container = toolkit.createComposite(comp, SWT.NONE);
 			layout = new GridLayout();
 			layout.marginWidth = 0;
 			layout.marginHeight = 30;
 			container.setLayout(layout);
-			container.setLayoutData(new GridData(GridData.FILL_BOTH));
+			container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 			
 			Button button;
 
 			button = toolkit.createButton(container, CurrencyPagePlugin.getResourceString("CurrencyPage.add"), SWT.PUSH); //$NON-NLS-1$
-			button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+			button.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 			button.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
@@ -474,7 +474,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			setButtonDimensionHint(button);
 			
 			button = toolkit.createButton(container, CurrencyPagePlugin.getResourceString("CurrencyPage.addAll"), SWT.PUSH); //$NON-NLS-1$
-			button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+			button.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 			button.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
@@ -484,7 +484,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			setButtonDimensionHint(button);
 			
 			button = toolkit.createButton(container, CurrencyPagePlugin.getResourceString("CurrencyPage.remove"), SWT.PUSH); //$NON-NLS-1$
-			button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+			button.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 			button.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
@@ -494,7 +494,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			setButtonDimensionHint(button);
 			
 			button = toolkit.createButton(container, CurrencyPagePlugin.getResourceString("CurrencyPage.removeUnused"), SWT.PUSH); //$NON-NLS-1$
-			button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+			button.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 			button.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
@@ -507,7 +507,7 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			toolkit.createLabel(container, null, SWT.NONE);
 			
 			button = toolkit.createButton(container, CurrencyPagePlugin.getResourceString("CurrencyPage.setDefault"), SWT.PUSH); //$NON-NLS-1$
-			button.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+			button.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 			button.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
@@ -594,13 +594,13 @@ public class CurrencyPage implements IBookkeepingPageFactory {
 			layout.marginWidth = 0;
 			layout.marginHeight = 0;
 			container.setLayout(layout);
-			container.setLayoutData(new GridData(GridData.FILL_BOTH));
+			container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 			
 			toolkit.createLabel(container, CurrencyPagePlugin
                     .getResourceString("CurrencyPage.selectedList"), SWT.NONE); //$NON-NLS-1$ 
 
 			Table table = toolkit.createTable(container, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL);
-			GridData gd = new GridData(GridData.FILL_BOTH);
+			GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
 			gd.widthHint = 225;
 			gd.heightHint = 200;
 			table.setLayoutData(gd);
