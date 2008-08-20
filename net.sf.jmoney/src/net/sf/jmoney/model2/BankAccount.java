@@ -39,9 +39,9 @@ public class BankAccount extends CurrencyAccount {
 
 	/**
 	 * The full constructor for a BankAccount object.  This constructor is called
-	 * only be the datastore when loading data from the datastore.  The properties
+	 * only by the datastore when loading data from the datastore.  The properties
 	 * passed to this constructor must be valid because datastores should only pass back
-	 * values that were previously saved from a CapitalAccount object.  So, for example,
+	 * values that were previously saved from a BankAccount object.  So, for example,
 	 * we can be sure that a non-null name and currency are passed to this constructor.
 	 * 
 	 * @param name the name of the account
