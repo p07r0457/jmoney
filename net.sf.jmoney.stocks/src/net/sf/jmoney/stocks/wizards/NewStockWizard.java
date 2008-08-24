@@ -23,10 +23,14 @@
 package net.sf.jmoney.stocks.wizards;
 
 
+import java.util.HashSet;
+import java.util.Set;
+
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
 import net.sf.jmoney.model2.CommodityInfo;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.stocks.Stock;
 import net.sf.jmoney.stocks.StockInfo;
@@ -75,7 +79,8 @@ public class NewStockWizard extends Wizard {
 	public void addPages()
 	{
 		// Show the page that prompts for all the property values.
-		WizardPage propertyPage = new WizardPropertyPage("propertyPage", "Stock Properties", "Enter values for the stock properties", newUncommittedAccount, stockPropertySet, CommodityInfo.getNameAccessor());
+		Set<ScalarPropertyAccessor<?>> excludedProperties = new HashSet<ScalarPropertyAccessor<?>>(); 
+		WizardPage propertyPage = new WizardPropertyPage("propertyPage", "Stock Properties", "Enter values for the stock properties", newUncommittedAccount, stockPropertySet, CommodityInfo.getNameAccessor(), excludedProperties);
 		addPage(propertyPage);
 
 		WizardPage summaryPage = new SummaryPage("summaryPage");
