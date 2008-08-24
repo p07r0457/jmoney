@@ -222,7 +222,7 @@ public abstract class CapitalAccount extends Account {
 	 * 			the property set for the type of capital account
 	 * 			to be created.
 	 */
-	public CapitalAccount createSubAccount(ExtendablePropertySet<? extends CapitalAccount> propertySet) {
+	public <A extends CapitalAccount> A createSubAccount(ExtendablePropertySet<A> propertySet) {
 		return getSubAccountCollection().createNewElement(propertySet);
 	}
         
