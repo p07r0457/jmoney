@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Paypal Plug-in
+Bundle-SymbolicName: net.sf.jmoney.paypal;singleton:=true
+Bundle-Version: 1.0.0
+Bundle-Activator: net.sf.jmoney.paypal.Activator
+Eclipse-LazyStart: true
+Bundle-Localization: plugin
+Bundle-ClassPath: .,
+ lib/opencsv-1.8.jar
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ net.sf.jmoney

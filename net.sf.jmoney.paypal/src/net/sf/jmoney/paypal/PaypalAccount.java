@@ -1,0 +1,165 @@
+/*
+ *
+ *  JMoney - A Personal Finance Manager
+ *  Copyright (c) 2002 Johann Gyger <johann.gyger@switzerland.org>
+ *  Copyright (c) 2004 Nigel Westbury <westbury@users.sourceforge.net>
+ *
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ *
+ */
+
+package net.sf.jmoney.paypal;
+
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.BankAccount;
+import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CurrencyAccount;
+import net.sf.jmoney.model2.IListManager;
+import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.IValues;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.ListKey;
+
+/**
+ * The data model for an bank account.
+ */
+public class PaypalAccount extends CurrencyAccount {
+
+	protected IObjectKey transferBankAccountKey;
+
+	protected IObjectKey transferCreditCardAccountKey;
+
+	protected IObjectKey saleAndPurchaseAccountKey;
+
+	protected IObjectKey paypalFeesAccountKey;
+
+	/**
+	 * The full constructor for a PaypalAccount object.  This constructor is called
+	 * only by the datastore when loading data from the datastore.  The properties
+	 * passed to this constructor must be valid because datastores should only pass back
+	 * values that were previously saved from a CapitalAccount object.  So, for example,
+	 * we can be sure that a non-null name and currency are passed to this constructor.
+	 * 
+	 * @param name the name of the account
+	 */
+	public PaypalAccount(
+			IObjectKey objectKey, 
+			ListKey parent,
+			String name,
+			IListManager<CapitalAccount> subAccounts,
+			String abbreviation,
+			String comment,
+			IObjectKey currencyKey,
+			long startBalance,
+			IObjectKey transferBankAccountKey,
+			IObjectKey transferCreditCardAccountKey,
+			IObjectKey saleAndPurchaseAccountKey,
+			IObjectKey paypalFeesAccountKey,
+			IValues extensionValues) { 
+		super(objectKey, parent, name, subAccounts, abbreviation, comment, currencyKey, startBalance, extensionValues);
+		
+        this.transferBankAccountKey = transferBankAccountKey;
+        this.transferCreditCardAccountKey = transferCreditCardAccountKey;
+        this.saleAndPurchaseAccountKey = saleAndPurchaseAccountKey;
+        this.paypalFeesAccountKey = paypalFeesAccountKey;
+	}
+
+	/**
+	 * The default constructor for a BankAccount object.  This constructor is called
+	 * when a new BankAccount object is created.  The properties are set to default
+	 * values.  The list properties are set to empty lists.  The parameter list for this
+	 * constructor is the same as the full constructor except that there are no parameters
+	 * for the scalar properties.
+	 */
+	public PaypalAccount(
+			IObjectKey objectKey, 
+			ListKey parent) { 
+		super(objectKey, parent);
+		
+		// Overwrite the default name with our own default name.
+		this.name = JMoneyPlugin.getResourceString("Account.newAccount");
+		
+        this.transferBankAccountKey = null;
+        this.transferCreditCardAccountKey = null;
+        this.saleAndPurchaseAccountKey = null;
+        this.paypalFeesAccountKey = null;
+	}
+
+	// TODO: remove this.  If we could get the property set, typed
+	// with the correct type as the generic parameter, then that would
+	// be great.  Otherwise this method is no use because we can get
+	// the property set from the map.
+    @Override	
+	protected String getExtendablePropertySetId() {
+		return "net.sf.jmoney.bankAccount";
+	}
+
+	public BankAccount getTransferBank() {
+        return transferBankAccountKey == null
+        ? null
+        		: (BankAccount)transferBankAccountKey.getObject();
+	}
+
+	public void setTransferBank(BankAccount transferBankAccount) {
+		BankAccount oldAccount = getTransferBank();
+		transferBankAccountKey = transferBankAccount.getObjectKey();
+
+		// Notify the change manager.
+		processPropertyChange(PaypalAccountInfo.getTransferBankAccountAccessor(), oldAccount, transferBankAccount);
+	}
+
+	public BankAccount getTransferCreditCard() {
+        return transferCreditCardAccountKey == null
+        ? null
+        		: (BankAccount)transferCreditCardAccountKey.getObject();
+	}
+
+	public void setTransferCreditCard(BankAccount transferCreditCardAccount) {
+		BankAccount oldAccount = getTransferCreditCard();
+		transferCreditCardAccountKey = transferCreditCardAccount.getObjectKey();
+
+		// Notify the change manager.
+		processPropertyChange(PaypalAccountInfo.getTransferCreditCardAccountAccessor(), oldAccount, transferCreditCardAccount);
+	}
+
+	public IncomeExpenseAccount getSaleAndPurchaseAccount() {
+        return saleAndPurchaseAccountKey == null
+        ? null
+        		: (IncomeExpenseAccount)saleAndPurchaseAccountKey.getObject();
+	}
+
+	public void setSaleAndPurchaseAccount(IncomeExpenseAccount saleAndPurchaseAccount) {
+		IncomeExpenseAccount oldAccount = getSaleAndPurchaseAccount();
+		saleAndPurchaseAccountKey = saleAndPurchaseAccount.getObjectKey();
+
+		// Notify the change manager.
+		processPropertyChange(PaypalAccountInfo.getSaleAndPurchaseAccountAccessor(), oldAccount, saleAndPurchaseAccount);
+	}
+
+	public IncomeExpenseAccount getPaypalFeesAccount() {
+        return paypalFeesAccountKey == null
+        ? null
+        		: (IncomeExpenseAccount)paypalFeesAccountKey.getObject();
+	}
+
+	public void setPaypalFeesAccount(IncomeExpenseAccount paypalFeesAccount) {
+		IncomeExpenseAccount oldAccount = getPaypalFeesAccount();
+		paypalFeesAccountKey = paypalFeesAccount.getObjectKey();
+
+		// Notify the change manager.
+		processPropertyChange(PaypalAccountInfo.getPaypalFeesAccountAccessor(), oldAccount, paypalFeesAccount);
+	}
+}
