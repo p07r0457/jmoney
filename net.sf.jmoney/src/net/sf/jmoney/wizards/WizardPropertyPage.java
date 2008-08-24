@@ -5,6 +5,7 @@ package net.sf.jmoney.wizards;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
@@ -44,11 +45,14 @@ public class WizardPropertyPage extends WizardPage {
 
 	Text nameTextbox;
 	
-	public WizardPropertyPage(String pageName, String title, String message, ExtendableObject extendableObject, ExtendablePropertySet<?> propertySet, ScalarPropertyAccessor<String> namePropertyAccessor) {
+	private Set<ScalarPropertyAccessor<?>> excludedProperties;
+	
+	public WizardPropertyPage(String pageName, String title, String message, ExtendableObject extendableObject, ExtendablePropertySet<?> propertySet, ScalarPropertyAccessor<String> namePropertyAccessor, Set<ScalarPropertyAccessor<?>> excludedProperties) {
 		super(pageName);
 		this.extendableObject = extendableObject;
 		this.propertySet = propertySet;
 		this.namePropertyAccessor = namePropertyAccessor;
+		this.excludedProperties = excludedProperties;
 		
 		setTitle(title);
 		setMessage(message);
@@ -65,50 +69,51 @@ public class WizardPropertyPage extends WizardPage {
 		
 		// Add the properties for the Account objects.
 		for (final ScalarPropertyAccessor<?> propertyAccessor: propertySet.getScalarProperties3()) {
+			if (!excludedProperties.contains(propertyAccessor)) {
+				Label propertyLabel = new Label(container, SWT.NONE);
+				propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
+				final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(container);
 
-			Label propertyLabel = new Label(container, SWT.NONE);
-			propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
-			final IPropertyControl propertyControl = propertyAccessor.createPropertyControl(container);
+				// Bit of a kludge.  We have special processing for the account
+				// name, so save this one.
+				if (propertyAccessor == namePropertyAccessor) {
+					nameTextbox = (Text)propertyControl.getControl();
+				}
 
-			// Bit of a kludge.  We have special processing for the account
-			// name, so save this one.
-			if (propertyAccessor == namePropertyAccessor) {
-				nameTextbox = (Text)propertyControl.getControl();
-			}
-			
-			/*
-			 * If the control factory set up grid data then leave it
-			 * alone. Otherwise set up the grid data based on the
-			 * properties minimum sizes and expansion weights. <P> The
-			 * control widths are set to the minimum width plus 10 times
-			 * the expansion weight. (As we are not short of space, we
-			 * make them a little bigger than their minimum sizes). A
-			 * minimum of 100 pixels is then applied because this makes
-			 * the right sides of the smaller controls line up, which
-			 * looks a little more tidy.
-			 */  
-			if (propertyControl.getControl().getLayoutData() == null) {
-				GridData gridData = new GridData();
-				gridData.minimumWidth = propertyAccessor.getMinimumWidth();
-				gridData.widthHint = Math.max(propertyAccessor.getMinimumWidth() + 10 * propertyAccessor.getWeight(), 100);
-				propertyControl.getControl().setLayoutData(gridData);
-			}
+				/*
+				 * If the control factory set up grid data then leave it
+				 * alone. Otherwise set up the grid data based on the
+				 * properties minimum sizes and expansion weights. <P> The
+				 * control widths are set to the minimum width plus 10 times
+				 * the expansion weight. (As we are not short of space, we
+				 * make them a little bigger than their minimum sizes). A
+				 * minimum of 100 pixels is then applied because this makes
+				 * the right sides of the smaller controls line up, which
+				 * looks a little more tidy.
+				 */  
+				if (propertyControl.getControl().getLayoutData() == null) {
+					GridData gridData = new GridData();
+					gridData.minimumWidth = propertyAccessor.getMinimumWidth();
+					gridData.widthHint = Math.max(propertyAccessor.getMinimumWidth() + 10 * propertyAccessor.getWeight(), 100);
+					propertyControl.getControl().setLayoutData(gridData);
+				}
 
-			propertyControl.getControl().addFocusListener(
-					new FocusAdapter() {
-					    @Override	
-						public void focusLost(FocusEvent e) {
-							// TODO: Verify this is needed.  Clean it up?
-							if (extendableObject.getDataManager().isSessionFiring()) {
-								return;
+				propertyControl.getControl().addFocusListener(
+						new FocusAdapter() {
+							@Override	
+							public void focusLost(FocusEvent e) {
+								// TODO: Verify this is needed.  Clean it up?
+								if (extendableObject.getDataManager().isSessionFiring()) {
+									return;
+								}
+
+								propertyControl.save();
 							}
+						});
 
-							propertyControl.save();
-						}
-					});
-
-			// Add to our list of controls.
-			propertyControlList.put(propertyAccessor, propertyControl);
+				// Add to our list of controls.
+				propertyControlList.put(propertyAccessor, propertyControl);
+			}
 		}
 		
 		// Set the values from the object into the control fields.

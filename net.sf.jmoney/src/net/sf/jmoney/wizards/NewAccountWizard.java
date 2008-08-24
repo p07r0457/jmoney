@@ -23,6 +23,9 @@
 package net.sf.jmoney.wizards;
 
 
+import java.util.HashSet;
+import java.util.Set;
+
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
@@ -33,6 +36,7 @@ import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.resources.Messages;
 
@@ -128,7 +132,8 @@ public class NewAccountWizard extends Wizard implements IWorkbenchWizard {
 	public void addPages()
 	{
 		// Show the page that prompts for all the property values.
-		WizardPage propertyPage = new WizardPropertyPage("propertyPage", Messages.NewAccountWizard_PropertyPageTitle, Messages.NewAccountWizard_PropertyPageMessage, newUncommittedAccount, accountPropertySet, AccountInfo.getNameAccessor()); //$NON-NLS-1$
+		Set<ScalarPropertyAccessor<?>> excludedProperties = new HashSet<ScalarPropertyAccessor<?>>(); 
+		WizardPage propertyPage = new WizardPropertyPage("propertyPage", Messages.NewAccountWizard_PropertyPageTitle, Messages.NewAccountWizard_PropertyPageMessage, newUncommittedAccount, accountPropertySet, AccountInfo.getNameAccessor(), excludedProperties); //$NON-NLS-1$
 		addPage(propertyPage);
 
 		WizardPage summaryPage = new SummaryPage("summaryPage"); //$NON-NLS-1$
