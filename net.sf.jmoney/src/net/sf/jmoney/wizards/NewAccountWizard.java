@@ -128,10 +128,10 @@ public class NewAccountWizard extends Wizard implements IWorkbenchWizard {
 	public void addPages()
 	{
 		// Show the page that prompts for all the property values.
-		WizardPage propertyPage = new WizardPropertyPage(Messages.NewAccountWizard_PropertyPageName, Messages.NewAccountWizard_PropertyPageTitle, Messages.NewAccountWizard_PropertyPageMessage, newUncommittedAccount, accountPropertySet, AccountInfo.getNameAccessor());
+		WizardPage propertyPage = new WizardPropertyPage("propertyPage", Messages.NewAccountWizard_PropertyPageTitle, Messages.NewAccountWizard_PropertyPageMessage, newUncommittedAccount, accountPropertySet, AccountInfo.getNameAccessor()); //$NON-NLS-1$
 		addPage(propertyPage);
 
-		WizardPage summaryPage = new SummaryPage(Messages.NewAccountWizard_SummaryPageName);
+		WizardPage summaryPage = new SummaryPage("summaryPage"); //$NON-NLS-1$
 		addPage(summaryPage);
 	}
 	
@@ -139,7 +139,7 @@ public class NewAccountWizard extends Wizard implements IWorkbenchWizard {
 	public boolean performFinish() {
 		// TODO: verify properties are valid.
 		
-		transactionManager.commit("Add New Account"); //$NON-NLS-1$
+		transactionManager.commit("Add New Account");
 		
 		newCommittedAccount = (Account)((UncommittedObjectKey)newUncommittedAccount.getObjectKey()).getCommittedObjectKey().getObject();
 		

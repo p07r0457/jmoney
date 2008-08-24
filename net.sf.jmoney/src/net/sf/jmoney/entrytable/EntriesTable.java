@@ -343,7 +343,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
             			Entry selectedEntry2 = transactionManager.getCopyInTransaction(selectedEntry); 
             			Transaction transaction = selectedEntry2.getTransaction();
             			transaction.getSession().deleteTransaction(transaction);
-            			transactionManager.commit("Delete Transaction"); //$NON-NLS-1$
+            			transactionManager.commit("Delete Transaction");
             		}
         		} else {
         			MessageDialog.openInformation(getShell(), Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageDelete);

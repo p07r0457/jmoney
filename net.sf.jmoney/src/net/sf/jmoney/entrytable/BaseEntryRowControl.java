@@ -321,8 +321,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 
 	@Override
 	protected boolean commitChanges() {
-		return commitChanges((committedEntryData.getEntry() == null) ? "New Transaction" //$NON-NLS-1$
-				: "Transaction Changes"); //$NON-NLS-1$
+		return commitChanges((committedEntryData.getEntry() == null) ? "New Transaction"
+				: "Transaction Changes");
 	}
 
 	/**

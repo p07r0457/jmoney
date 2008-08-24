@@ -120,12 +120,10 @@ public class Messages extends NLS {
 	public static String NewAccountAction_Message;
 	public static String NewAccountAction_Title;
 	public static String NewAccountWizard_PropertyPageMessage;
-	public static String NewAccountWizard_PropertyPageName;
 	public static String NewAccountWizard_PropertyPageTitle;
 	public static String NewAccountWizard_SummaryPageContent;
 	public static String NewAccountWizard_SummaryPageHelpMessage;
 	public static String NewAccountWizard_SummaryPageMessage;
-	public static String NewAccountWizard_SummaryPageName;
 	public static String NewAccountWizard_SummaryPageTitle;
 	public static String NewAccountWizard_WindowTitleAccount;
 	public static String NewAccountWizard_WindowTitleCategory;
