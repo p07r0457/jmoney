@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: JMoney Test Plug-in
-Bundle-SymbolicName: net.sf.jmoney.test
+Bundle-SymbolicName: net.sf.jmoney.test;singleton:=true
 Bundle-Version: 1.0.0
 Bundle-ClassPath: test.jar
 Bundle-Vendor: JMoney.sf.net
