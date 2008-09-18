@@ -224,6 +224,7 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 //		}
 		
 		rowCount--;
+		adjustVerticalScrollBar();
 		
 		// Refresh the display.
 		scrollToSliderPosition();
@@ -233,29 +234,21 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 
 	/**
 	 * Inserts the given row.
-	 * 
+	 * <P> 
 	 * The row must have been inserted into the underlying content.  This
 	 * method is not responsible for doing that.  This method does
-	 * update the display, increment the row count.
-	 * 
+	 * update the display, increment the row count and adjusting the scroll
+	 * bar.
+	 * <P>
 	 * This method does not affect the current selection.  It is possible that 
 	 * a row is inserted by another view/editor while a row is being edited.
 	 * In such a case, the editing of the row is not affected.
 	 * 
-	 * @param data
+	 * @param index the index into the content of this new row
 	 */
 	public void insertRow(int index) {
-		// Three cases
-//		if (index < topVisibleRow) {
-//			topVisibleRow++;
-//		} else if (index >= topVisibleRow + rows.size()) {
-//			// nothing to do in this case
-//		} else {
-//			BaseEntryRowControl newRow = rowProvider.getNewRow(contentPane, index);
-//			rows.add(this.index - topVisibleRow, newRow);
-//		}
-		
 		rowCount++;
+		adjustVerticalScrollBar();
 		
 		// Refresh the display.
 		scrollToSliderPosition();
