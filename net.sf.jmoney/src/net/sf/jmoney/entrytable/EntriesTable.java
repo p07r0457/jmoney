@@ -154,6 +154,11 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 	 */
 	private Vector<EntryRowSelectionListener> selectionListeners = new Vector<EntryRowSelectionListener>();
 
+	/**
+	 * The row selection tracker is passed to this object because it may be
+	 * shared with other tables (thus forcing a single row selection for two
+	 * or more tables).
+	 */
 	public EntriesTable(Composite parent, FormToolkit toolkit, Block rootBlock, 
 			final IEntriesContent entriesContent, IRowProvider<T> rowProvider, final Session session, IndividualBlock<EntryData, ?> defaultSortColumn, final RowSelectionTracker<? extends BaseEntryRowControl> rowTracker) {
 		super(parent, SWT.NONE);
@@ -541,25 +546,33 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 				int index = originalIndex;
 				Assert.isTrue(index == sortedEntries.indexOf(data));
 				
-				// Bubble to up the screen (down the sort order)
+				/*
+				 * The start index from which we need to update balances.
+				 * This is currently set the this index, but this variable
+				 * must be updated if the current index is moved in the sort
+				 * order. 
+				 */
+				int balanceRefreshStartPoint = index;
+				long balanceRefreshStartAmount = data.getBalance();
+				
+				// Bubble up the screen (down the sort order)
 				while (index > 0) {
 					T data2 = sortedEntries.get(index-1); 
-					if (rowComparator.compare(data2, data) < 0) {
+					if (rowComparator.compare(data2, data) <= 0) {
 						break;
 					}
 					sortedEntries.set(index, data2);
 					index--;
+
+					balanceRefreshStartPoint = index;
+					balanceRefreshStartAmount = data2.getBalance();
 				}
-				
-				// The current value if the index is the point from which we
-				// need to refresh the balances.
-				int balanceRefreshStartPoint = index;
 				
 				// Bubble down the screen (up the sort order)
 				while (index < entries.size() - 1) {
 					T data2 = sortedEntries.get(index+1); 
 					
-					if (rowComparator.compare(data, data2) < 0) {
+					if (rowComparator.compare(data, data2) <= 0) {
 						break;
 					}
 					
@@ -574,7 +587,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 				 * Therefore we must refresh the balances of all later
 				 * entries in the sorted list.
 				 */
-				updateFollowingValues(balanceRefreshStartPoint, data.getBalance());
+				updateFollowingValues(balanceRefreshStartPoint, balanceRefreshStartAmount);
 
 				if (index != originalIndex) {
 					table.refreshContent();
