@@ -49,7 +49,7 @@ import org.eclipse.core.runtime.IAdaptable;
  * 
  * @author  Nigel Westbury
  */
-public abstract class ExtendableObject implements IAdaptable {
+public abstract class ExtendableObject {
 	
 	/**
 	 * The key from which this object can be fetched from
