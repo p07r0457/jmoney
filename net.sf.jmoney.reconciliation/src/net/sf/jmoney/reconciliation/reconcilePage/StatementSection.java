@@ -42,13 +42,14 @@ import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IRowProvider;
+import net.sf.jmoney.entrytable.ISplitEntryContainer;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesButton;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.ReusableRowProvider;
+import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
-import net.sf.jmoney.entrytable.SplitEntryRowControl;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
@@ -249,8 +250,8 @@ public class StatementSection extends SectionPart {
 		CellBlock<EntryData, EntryRowControl> unreconcileButton = new CellBlock<EntryData, EntryRowControl>(20, 0) {
 
 			@Override
-			public ICellControl<EntryData> createCellControl(Composite parent, final EntryRowControl rowControl) {
-				ButtonCellControl cellControl = new ButtonCellControl(rowControl, unreconcileImage, "Remove Entry from this Statement") {
+			public ICellControl<EntryData> createCellControl(Composite parent, final RowControl rowControl, final EntryRowControl coordinator) {
+				ButtonCellControl cellControl = new ButtonCellControl(parent, coordinator, unreconcileImage, "Remove Entry from this Statement") {
 					@Override
 					protected void run(EntryRowControl rowControl) {
 						unreconcileEntry(rowControl);
@@ -318,7 +319,7 @@ public class StatementSection extends SectionPart {
 						if (LocalSelectionTransfer.getTransfer().isSupportedType(event.currentDataType)) {
 							ISelection selection = LocalSelectionTransfer.getTransfer().getSelection();
 							Entry sourceEntry = (Entry)((StructuredSelection)selection).getFirstElement();
-							EntryRowControl dropRow = rowControl;
+							EntryRowControl dropRow = coordinator;
 
 							/*
 							 * Merge data from dragged transaction into the target transaction
@@ -364,7 +365,7 @@ public class StatementSection extends SectionPart {
 			}
 		};
 		 
-		IndividualBlock<EntryData, Composite> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		IndividualBlock<EntryData, RowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
 		CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(fPage.getAccount().getCurrency());
 		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(fPage.getAccount().getCurrency());
 		CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
@@ -379,7 +380,7 @@ public class StatementSection extends SectionPart {
 				PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
 				PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
 				new OtherEntriesButton(
-						new HorizontalBlock<Entry, SplitEntryRowControl>(
+						new HorizontalBlock<Entry, ISplitEntryContainer>(
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
 								new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), JMoneyPlugin.getResourceString("Entry.description")),
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())

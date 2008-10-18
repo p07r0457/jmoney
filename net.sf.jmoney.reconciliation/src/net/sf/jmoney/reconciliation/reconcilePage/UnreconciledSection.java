@@ -41,13 +41,14 @@ import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IRowProvider;
+import net.sf.jmoney.entrytable.ISplitEntryContainer;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesButton;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.ReusableRowProvider;
+import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
-import net.sf.jmoney.entrytable.SplitEntryRowControl;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
 import net.sf.jmoney.model2.Currency;
@@ -197,8 +198,8 @@ public class UnreconciledSection extends SectionPart {
 		
 		CellBlock<EntryData, EntryRowControl> reconcileButton = new CellBlock<EntryData, EntryRowControl>(20, 0) {
 			@Override
-			public ICellControl<EntryData> createCellControl(Composite parent, final EntryRowControl rowControl) {
-				ButtonCellControl cellControl = new ButtonCellControl(rowControl, reconcileImage, "Reconcile this Entry to the above Statement") {
+			public ICellControl<EntryData> createCellControl(Composite parent, RowControl rowControl, final EntryRowControl coordinator) {
+				ButtonCellControl cellControl = new ButtonCellControl(parent, coordinator, reconcileImage, "Reconcile this Entry to the above Statement") {
 					@Override
 					protected void run(EntryRowControl rowControl) {
 						reconcileEntry(rowControl);
@@ -215,7 +216,7 @@ public class UnreconciledSection extends SectionPart {
 
 				dragSource.addDragListener(new DragSourceListener() {
 					public void dragStart(DragSourceEvent event) {
-						Entry uncommittedEntry = rowControl.getUncommittedEntryData().getEntry();
+						Entry uncommittedEntry = coordinator.getUncommittedEntryData().getEntry();
 						UncommittedObjectKey uncommittedKey = (UncommittedObjectKey)uncommittedEntry.getObjectKey();
 						
 						// Allow a drag in all cases except where this entry is a new uncommitted entry.
@@ -229,7 +230,7 @@ public class UnreconciledSection extends SectionPart {
 					public void dragSetData(DragSourceEvent event) {
 						// Provide the data of the requested type.
 						if (LocalSelectionTransfer.getTransfer().isSupportedType(event.dataType)) {
-							Entry uncommittedEntry = rowControl.getUncommittedEntryData().getEntry();
+							Entry uncommittedEntry = coordinator.getUncommittedEntryData().getEntry();
 							UncommittedObjectKey uncommittedKey = (UncommittedObjectKey)uncommittedEntry.getObjectKey();
 							Object sourceEntry = uncommittedKey.getCommittedObjectKey().getObject();
 							LocalSelectionTransfer.getTransfer().setSelection(new StructuredSelection(sourceEntry));
@@ -270,7 +271,7 @@ public class UnreconciledSection extends SectionPart {
 			}
 		};
 
-		IndividualBlock<EntryData, Composite> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		IndividualBlock<EntryData, RowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
 		CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(fPage.getAccount().getCurrency());
 		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(fPage.getAccount().getCurrency());
 		CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
@@ -285,7 +286,7 @@ public class UnreconciledSection extends SectionPart {
 				PropertyBlock.createEntryColumn(EntryInfo.getCheckAccessor()),
 				PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
 				new OtherEntriesButton(
-						new HorizontalBlock<Entry, SplitEntryRowControl>(
+						new HorizontalBlock<Entry, ISplitEntryContainer>(
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
 								new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), JMoneyPlugin.getResourceString("Entry.description")),
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
