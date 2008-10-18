@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IAdaptable;
-import org.eclipse.ui.views.properties.IPropertySource;
 
 /**
  * This is the base class for all objects that may have extension
@@ -626,11 +625,4 @@ remove this...
 	void replaceParentListKey(ListKey listKey) {
 		this.parentKey = listKey;
 	}
-	
-    public Object getAdapter(Class adapter) {
-		 if (adapter == IPropertySource.class) {
-			return new ExtendableObjectPropertySource(this);
-		 }
-        return null;
-     }
 }
