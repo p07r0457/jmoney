@@ -23,8 +23,10 @@
 package net.sf.jmoney.transactionDialog;
 
 import net.sf.jmoney.entrytable.EntryData;
+import net.sf.jmoney.entrytable.EntryRowControl;
 import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IndividualBlock;
+import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.SplitEntryRowControl;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
@@ -174,6 +176,14 @@ class SplitEntryDebitAndCreditColumns extends IndividualBlock<Entry, SplitEntryR
 		public void setFocusListener(FocusListener controlFocusListener) {
 			// Nothing to do
 		}
+
+		public void setSelected() {
+			textControl.setBackground(RowControl.selectedCellColor);
+		}
+
+		public void setUnselected() {
+			textControl.setBackground(null);
+		}
 	}
 
 	private String id;
@@ -200,7 +210,7 @@ class SplitEntryDebitAndCreditColumns extends IndividualBlock<Entry, SplitEntryR
 	}
 
     @Override	
-	public ICellControl<Entry> createCellControl(Composite parent, SplitEntryRowControl rowControl) {
+	public ICellControl<Entry> createCellControl(Composite parent, RowControl rowControl, SplitEntryRowControl coordinator) {
     	
 		final Text textControl = new Text(parent, SWT.TRAIL);
 		textControl.addTraverseListener(new TraverseListener() {

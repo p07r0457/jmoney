@@ -23,10 +23,22 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Layout;
 
+/**
+ * This control contains the properties that come from other entries in the
+ * transaction.  If the transaction is not split then these properties will
+ * be shown directly in this control.  If the transaction is split then a
+ * --Split Entries-- label will be shown together with a button to open an
+ * in-place shell that shows the other entries.
+ * 
+ * In fact the button is shown even if the transaction is not split.  This
+ * enables the user to bring down the shell which contains the buttons used
+ * to create splits.
+ */
 public class OtherEntriesControl extends Composite {
 
-	private Block<Entry, SplitEntryRowControl> rootBlock;
-	private RowSelectionTracker<SplitEntryRowControl> selectionTracker;
+	private RowControl rowControl;
+	private Block<Entry, ISplitEntryContainer> rootBlock;
+	private RowSelectionTracker<BaseEntryRowControl> selectionTracker;
 	private FocusCellTracker focusCellTracker;
 	
 	/**
@@ -49,13 +61,13 @@ public class OtherEntriesControl extends Composite {
 	 * properties that come from the other entry.
 	 * This composite is shown only if the entry is not split.
 	 */
-	private SplitEntryRowControl otherEntryControl;
+	private OtherEntryControl otherEntryControl;
 
 	/**
 	 * The small drop-down button to the right that shows
 	 * the split entry data.
 	 */
-	private Button downArrowButton;
+	Button downArrowButton;
 
 	private EntryData entryData;
 
@@ -102,11 +114,14 @@ public class OtherEntriesControl extends Composite {
 	
 	static private Image downArrowImage = null;
 
-	public OtherEntriesControl(Composite parent, Block<Entry, SplitEntryRowControl> rootBlock, RowSelectionTracker<SplitEntryRowControl> selectionTracker, FocusCellTracker focusCellTracker) {
+	public OtherEntriesControl(Composite parent, RowControl rowControl, Block<Entry, ISplitEntryContainer> rootBlock, RowSelectionTracker<BaseEntryRowControl> selectionTracker, FocusCellTracker focusCellTracker) {
 		super(parent, SWT.NONE);
+		this.rowControl = rowControl;
 		this.rootBlock = rootBlock;
 		this.selectionTracker = selectionTracker;
 		this.focusCellTracker = focusCellTracker;
+		
+		setBackgroundMode(SWT.INHERIT_FORCE);
 		
 		setLayout(new DropdownButtonLayout());
 		
@@ -138,13 +153,15 @@ public class OtherEntriesControl extends Composite {
 	private Control createChildComposite() {
 		childComposite = new Composite(this, SWT.NONE);
 		
+		setBackgroundMode(SWT.INHERIT_FORCE);
+		
 		stackLayout = new StackLayout();
 		childComposite.setLayout(stackLayout);
 		
 		splitLabel = new Label(childComposite, SWT.NONE);
 		splitLabel.setText(Messages.OtherEntriesControl_SplitEntry);
 
-		otherEntryControl = new SplitEntryRowControl(childComposite, SWT.NONE, rootBlock, true, selectionTracker, focusCellTracker);
+		otherEntryControl = new OtherEntryControl(childComposite, rowControl, SWT.NONE, rootBlock, true, selectionTracker, focusCellTracker);
 		
 		return childComposite;
 	}

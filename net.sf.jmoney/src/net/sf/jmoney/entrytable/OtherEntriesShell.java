@@ -41,15 +41,17 @@ public class OtherEntriesShell {
 		
 		private EntryData entryData;
 
-		private Block<Entry, SplitEntryRowControl> rootBlock;
+		private Block<Entry, ISplitEntryContainer> rootBlock;
 		
 		private Shell shell;
 		
 		private RowSelectionTracker<SplitEntryRowControl> rowTracker = new RowSelectionTracker<SplitEntryRowControl>();
 
+		private FocusCellTracker cellTracker = new FocusCellTracker();
+
 	    private Map<Entry, SplitEntryRowControl> rowControls = new HashMap<Entry, SplitEntryRowControl>();
 
-		public OtherEntriesShell(Shell parent, int style, EntryData entryData, Block<Entry, SplitEntryRowControl> rootBlock, boolean isLinked) {
+		public OtherEntriesShell(Shell parent, int style, EntryData entryData, Block<Entry, ISplitEntryContainer> rootBlock, boolean isLinked) {
 			shell = new Shell(parent, style | SWT.MODELESS);
 		
 			this.parentShell = parent;
@@ -68,7 +70,10 @@ public class OtherEntriesShell {
 	        Control buttonArea = createButtonArea(shell);
 	        buttonArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 	        
-	        shell.pack();
+			// TODO: This is not right - should not be created here.
+		    RowSelectionTracker<SplitEntryRowControl> rowTracker = new RowSelectionTracker<SplitEntryRowControl>();
+
+		    shell.pack();
 		}
 
 		private Control createEntriesTable(Composite parent, final boolean isLinked) {
@@ -84,7 +89,6 @@ public class OtherEntriesShell {
 		    /*
 		     * Use a single row tracker and cell focus tracker for this table.
 		     */
-		    final FocusCellTracker cellTracker = new FocusCellTracker();
 			for (Entry entry: entryData.getSplitEntries()) {
 				SplitEntryRowControl row = new SplitEntryRowControl(composite, SWT.NONE, rootBlock, isLinked, rowTracker, cellTracker);
 				row.setInput(entry);

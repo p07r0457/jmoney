@@ -43,7 +43,21 @@ public abstract class CellBlock<T,R> extends Block<T,R> {
 	 */
 	private int index;
 	
-	public abstract ICellControl<T> createCellControl(Composite parent, R rowControl);
+	/**
+	 * Create a control for editing the value in this cell.
+	 * 
+	 * @param parent the parent composite, usually being the RowControl
+	 * 		but may be a child composite in certain circumstances
+	 * @param rowControl the row control that contains this cell, this
+	 * 		parameter being used so that we know which row should become
+	 * 		the selected row when this cell gets focus
+	 * @param coordinator an object that can be used so that controls
+	 * 		can communicate which each other, each cell block being
+	 * 		parameterized with a coordinator class (R) and each cell
+	 * 		being given a class of that type
+	 * @return an ICellControl wrapper around an SWT control
+	 */
+	public abstract ICellControl<T> createCellControl(Composite parent, RowControl rowControl, R coordinator);
 
 	public CellBlock(int minimumWidth, int weight) {
 		this.minimumWidth = minimumWidth;

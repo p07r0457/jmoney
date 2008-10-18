@@ -30,7 +30,7 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-public class VerticalBlock<T, R extends RowControl<T,R>> extends Block<T,R> {
+public class VerticalBlock<T, R> extends Block<T,R> {
 	private List<Block<? super T,? super R>> children;
 
 	public VerticalBlock(Block<? super T,? super R> child1, Block<? super T,? super R> child2) {
@@ -48,6 +48,10 @@ public class VerticalBlock<T, R extends RowControl<T,R>> extends Block<T,R> {
 		init(children);
 	}
 	
+	public VerticalBlock(List<Block<? super T,? super R>> children) {
+		init(children);
+	}
+
 	private void init(List<Block<? super T,? super R>> children) {
 		this.children = children;
 

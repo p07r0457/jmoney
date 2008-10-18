@@ -27,6 +27,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.ui.views.properties.IPropertySource;
+
 /**
  * This is the base class for all objects that may have extension
  * property sets added by plug-ins.  The framework supports the
@@ -47,7 +50,7 @@ import java.util.Map;
  * 
  * @author  Nigel Westbury
  */
-public abstract class ExtendableObject {
+public abstract class ExtendableObject implements IAdaptable {
 	
 	/**
 	 * The key from which this object can be fetched from
@@ -623,4 +626,11 @@ remove this...
 	void replaceParentListKey(ListKey listKey) {
 		this.parentKey = listKey;
 	}
+	
+    public Object getAdapter(Class adapter) {
+		 if (adapter == IPropertySource.class) {
+			return new ExtendableObjectPropertySource(this);
+		 }
+        return null;
+     }
 }

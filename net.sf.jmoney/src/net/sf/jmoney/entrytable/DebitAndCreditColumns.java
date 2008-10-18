@@ -49,7 +49,7 @@ import org.eclipse.swt.widgets.Text;
  */
 public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryRowControl> {
 
-	private class DebitAndCreditCellControl implements ICellControl<EntryData> {
+	private class DebitAndCreditCellControl implements ICellControl2<EntryData> {
 		private Text textControl;
 		private Entry entry = null;
 		
@@ -167,7 +167,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 
 			entry.setAmount(newEntryAmount);
 
-			/* Tell the row control about this change. This enables
+			/* Tell the co-ordinator about this change. This enables
 			 * the row control to update other controls based on this
 			 * change.
 			 * 
@@ -176,18 +176,30 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 			 * when the user changed the properties, and it would then
 			 * have no way of knowing where the change came from.
 			 */
-			rowControl.amountChanged();
+			coordinator.amountChanged();
 		}
 
+		// TODO: Remove this
 		public void setFocusListener(FocusListener controlFocusListener) {
 			// Nothing to do
+		}
+
+		@Override
+		public void setSelected() {
+			textControl.setBackground(RowControl.selectedCellColor);
+		}
+
+		@Override
+		public void setUnselected() {
+			textControl.setBackground(null);
 		}
 	}
 
 	private String id;
 	private Commodity commodity;
 	private boolean isDebit;
-	private BaseEntryRowControl rowControl;
+	private RowControl rowControl;
+	private BaseEntryRowControl coordinator;
 
 	public static DebitAndCreditColumns createCreditColumn(Commodity commodityForFormatting) {
     	return new DebitAndCreditColumns("credit", Messages.DebitAndCreditColumns_CreditName, commodityForFormatting, false);  //$NON-NLS-1$
@@ -209,7 +221,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(Composite parent, BaseEntryRowControl rowControl) {
+	public ICellControl<EntryData> createCellControl(Composite parent, RowControl rowControl, BaseEntryRowControl coordinator) {
     	this.rowControl = rowControl;
     	
 		final Text textControl = new Text(parent, SWT.TRAIL);
@@ -230,9 +242,17 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 				}
 			}
 		});
+
 		
-    	return new DebitAndCreditCellControl(textControl);
-	}
+		ICellControl2<EntryData> cellControl = new DebitAndCreditCellControl(textControl);
+
+		FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
+		textControl.addFocusListener(controlFocusListener);
+//			textControl.addKeyListener(keyListener);
+//			textControl.addTraverseListener(traverseListener);
+		
+		return cellControl;
+    }
 
 	public int compare(EntryData entryData1, EntryData entryData2) {
 		long amount1 = entryData1.getEntry().getAmount();

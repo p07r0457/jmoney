@@ -26,8 +26,12 @@ import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.widgets.Control;
 
 /**
- * This interface is used to control the cell controls in
- * an entries table.
+ * This interface is used to wrap the cell controls in
+ * an entries table, giving all controls a common interface.
+ * 
+ * It is essential that all controls have a common interface
+ * because the framework may have to deal with columns of data
+ * that were contributed by another plug-in. 
  * 
  * @param T the type of the object that supplies the data
  * 			for this cell

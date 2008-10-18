@@ -26,6 +26,7 @@ package net.sf.jmoney.entrytable;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.SessionChangeListener;
 
 import org.eclipse.swt.SWT;
@@ -41,10 +42,11 @@ import org.eclipse.swt.widgets.Display;
  * This is used in rows only, not for headers.
  * (anything to be gained by using it in headers too????)
  */
-// TODO: T should be anything, should not have to extend EntryData
-public class StackControl<T extends EntryData, R extends RowControl<T,R>> extends Composite implements ICellControl<T> {
+public class StackControl<T, R> extends Composite implements ICellControl<T> {
 
-	private R rowControl;
+	private RowControl rowControl;
+	
+	private R coordinator;
 	
 	private StackBlock<T, R> stackBlock;
 	
@@ -69,19 +71,25 @@ public class StackControl<T extends EntryData, R extends RowControl<T,R>> extend
 	 */
 	private SessionChangeListener transactionChangeListener = null;
 
-	public StackControl(Composite parent, R rowControl, StackBlock<T, R> stackBlock) {
+	public StackControl(Composite parent, RowControl rowControl, R coordinator, StackBlock<T, R> stackBlock) {
 		super(parent, SWT.NONE);
 		this.rowControl = rowControl;
+		this.coordinator = coordinator;
 		this.stackBlock = stackBlock;
 		
 		stackLayout = new CompressedStackLayout();
 		setLayout(stackLayout);
 	}
 
+	/**
+	 * Derived classes should override this method and add code to
+	 * maintain change listeners.  The change listeners should 
+	 */
 	public void load(final T entryData) {
 		// TODO: this should be done in a 'row release' method??
 		if (this.entryData != null) {
-			this.entryData.getEntry().getDataManager().removeChangeListener(transactionChangeListener);
+			DataManager dataManager = stackBlock.getDataManager(this.entryData);
+			dataManager.removeChangeListener(transactionChangeListener);
 		}
 		
 		this.entryData = entryData;
@@ -89,8 +97,9 @@ public class StackControl<T extends EntryData, R extends RowControl<T,R>> extend
 		Block<? super T, ? super R> topBlock = stackBlock.getTopBlock(entryData);
 		setTopBlock(topBlock);
 
+		DataManager dataManager = stackBlock.getDataManager(entryData);
 		transactionChangeListener = stackBlock.createListener(entryData, this);
-		entryData.getEntry().getDataManager().addChangeListener(transactionChangeListener);
+		dataManager.addChangeListener(transactionChangeListener);
 	}
 
 	public void save() {
@@ -120,7 +129,7 @@ public class StackControl<T extends EntryData, R extends RowControl<T,R>> extend
 				final BlockLayout<T> childLayout = new BlockLayout<T>(topBlock, false);
 				topControl.setLayout(childLayout);
 				
-				topControl.init(rowControl, topBlock, rowControl.selectionTracker, rowControl.focusCellTracker);
+				topControl.init(rowControl, coordinator, topBlock);
 				topControl.setInput(entryData);
 				
 				final Composite finalTopControl = topControl;

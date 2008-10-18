@@ -33,12 +33,11 @@ import org.eclipse.swt.widgets.Layout;
  * and the control specified in topControl is visible and all other controls are not visible.
  * Users must set the topControl value to flip between the visible items and then call 
  * layout() on the composite which has the StackLayout.
- * 
+ * <P>
  * Where this layout differs is that the preferred size of the control is the
  * preferred size of the top control, ignoring all other controls.  Therefore the
  * preferred size may change as the top control is changed.
  */
-
 public class CompressedStackLayout extends Layout {
 	/**
 	 * The Control that is displayed at the top of the stack.

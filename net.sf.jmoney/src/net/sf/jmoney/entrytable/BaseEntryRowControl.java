@@ -163,8 +163,9 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	private ArrayList<IBalanceChangeListener> balanceChangeListeners = new ArrayList<IBalanceChangeListener>();
 
 	public BaseEntryRowControl(final Composite parent, int style,
-			VirtualRowTable rowTable, Block<T, ?> rootBlock) {
-		super(parent, style);
+			VirtualRowTable rowTable, Block<T, ?> rootBlock,
+			RowSelectionTracker<R> selectionTracker, FocusCellTracker focusCellTracker) {
+		super(parent, style, selectionTracker, focusCellTracker);
 		this.rowTable = rowTable;
 
 		/*
@@ -189,6 +190,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	 * bottom if the row is not selected. A black double line is drawn at the
 	 * bottom and a black single line at the top and sides if the row is
 	 * selected.
+	 * <P>
+	 * Also draws the lines between the controls.
 	 * 
 	 * @param gc
 	 */
@@ -319,10 +322,25 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		return isSelected;
 	}
 
+	/**
+	 * This method should be called whenever a row is to lose selection.
+	 * It makes whatever changes are necessary to the display of the row
+	 * and saves if necessary the data in the row.
+	 * 
+	 * @return true if this method succeeded (or failed in some way that
+	 * 		is not the user's fault and that the user cannot correct), 
+	 * 		false if this method could not save the data because the user
+	 * 		has not properly entered the data and so selection should remain
+	 * 		on the row (in which case this method will display an appropriate
+	 * 		message to the user)
+	 */
 	@Override
-	protected boolean commitChanges() {
-		return commitChanges((committedEntryData.getEntry() == null) ? "New Transaction"
-				: "Transaction Changes");
+	public boolean canDepart() {
+		if (!commitChanges((committedEntryData.getEntry() == null) ? "New Transaction" : "Transaction Changes")) {
+			return false;
+		}
+
+		return super.canDepart();
 	}
 
 	/**
@@ -587,7 +605,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		setSelected(true);
 		getChildren()[currentColumn].setFocus();
 	}
-
+	
 	/**
 	 * Gets the column that has the focus.
 	 * 

@@ -27,8 +27,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.StringTokenizer;
 
-import net.sf.jmoney.resources.Messages;
-
 public class VerySimpleDateFormat {
 
 	public static final String[] DATE_PATTERNS =

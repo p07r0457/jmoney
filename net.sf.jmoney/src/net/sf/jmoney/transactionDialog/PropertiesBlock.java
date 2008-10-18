@@ -27,6 +27,7 @@ import java.util.List;
 
 import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.ICellControl;
+import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.SplitEntryRowControl;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
@@ -81,7 +82,7 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 
 	@Override
 	public ICellControl<Entry> createCellControl(Composite parent,
-			SplitEntryRowControl rowControl) {
+			RowControl rowControl, SplitEntryRowControl coordinator) {
 //    	this.rowControl = rowControl;
     	
     	return new PropertiesCellControl(parent);
@@ -199,6 +200,14 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 
 		public void setFocusListener(FocusListener controlFocusListener) {
 			this.controlFocusListener = controlFocusListener;
+		}
+
+		public void setSelected() {
+			propertiesControl.setBackground(RowControl.selectedCellColor);
+		}
+
+		public void setUnselected() {
+			propertiesControl.setBackground(null);
 		}
 	}
 

@@ -22,12 +22,9 @@
 
 package net.sf.jmoney.entrytable;
 
-import java.util.Collection;
-
 import net.sf.jmoney.model2.Entry;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
@@ -42,7 +39,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
-public class SplitEntryRowControl extends RowControl<Entry, SplitEntryRowControl> {
+public class SplitEntryRowControl extends RowControl<Entry, SplitEntryRowControl> implements ISplitEntryContainer {
 
 	// The lighter colors for the sub-entry lines
 	protected static final Color normalColor = new Color(Display.getCurrent(),
@@ -123,44 +120,22 @@ public class SplitEntryRowControl extends RowControl<Entry, SplitEntryRowControl
 						}
  */
 	
-	public SplitEntryRowControl(final Composite parent, int style, Block<Entry, SplitEntryRowControl> rootBlock, boolean isLinked, final RowSelectionTracker<SplitEntryRowControl> selectionTracker, final FocusCellTracker focusCellTracker) {
-		super(parent, style);
+	public SplitEntryRowControl(final Composite parent, int style, Block<Entry, ? super SplitEntryRowControl> rootBlock, boolean isLinked, final RowSelectionTracker<SplitEntryRowControl> selectionTracker, final FocusCellTracker focusCellTracker) {
+		super(parent, style, selectionTracker, focusCellTracker);
 
 		/*
 		 * We set the top and bottom margins to zero here because that ensures
 		 * the controls inside this composite line up with the rows that are
 		 * outside this composite and in the same row.
 		 */
-		BlockLayout layout = new BlockLayout(rootBlock, isLinked);
+		BlockLayout<Entry> layout = new BlockLayout<Entry>(rootBlock, isLinked);
 		layout.marginTop = 0;
 		layout.marginBottom = 0;
 		layout.verticalSpacing = 1;
 		setLayout(layout);
 
-		setBackground(normalColor);
+		init(this, this, rootBlock);
 
-		init(this, rootBlock, selectionTracker, focusCellTracker);
-/*		
-		Collection<CellBlock<? super Entry, ? super SplitEntryRowControl>> cellList = rootBlock.buildCellList();
-		
-		for (final CellBlock<? super Entry, ? super SplitEntryRowControl> cellBlock: cellList) {
-			// Create the control with no content set.
-			final ICellControl<? super Entry> cellControl = cellBlock.createCellControl(this, this);
-			controls.put(cellBlock, cellControl);
-
-			FocusListener controlFocusListener = new CellFocusListener<SplitEntryRowControl>(this, cellControl, selectionTracker, focusCellTracker);
-
-			Control control = cellControl.getControl();
-//			control.addKeyListener(keyListener);
-			addFocusListenerRecursively(control, controlFocusListener);
-//			control.addTraverseListener(traverseListener);
-			
-			// This is needed in case more child controls are created at a
-			// later time.  This is not the cleanest code, but the UI for  these
-			// split entries may be changed at a later time anyway.
-			cellControl.setFocusListener(controlFocusListener);
-		}
-*/
 		addPaintListener(paintListener);
 	}
 
@@ -174,8 +149,6 @@ public class SplitEntryRowControl extends RowControl<Entry, SplitEntryRowControl
 	protected void drawBorder(GC gc) {
 		Color oldColor = gc.getBackground();
 		try {
-			
-			
 			// Get the colors we need
 			Display display = Display.getCurrent();
 			Color blackColor = display
@@ -284,13 +257,6 @@ public class SplitEntryRowControl extends RowControl<Entry, SplitEntryRowControl
 		// We probably have to call recursively on child controls -
 		// but let's try first without.
 		return false;
-	}
-
-	@Override
-	protected boolean commitChanges() {
-		// Nothing is committed when split entries are departed,
-		// so nothing to do.
-		return true;
 	}
 
 	@Override

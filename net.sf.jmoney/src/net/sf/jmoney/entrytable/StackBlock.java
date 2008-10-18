@@ -24,8 +24,10 @@ package net.sf.jmoney.entrytable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.SessionChangeListener;
 
 import org.eclipse.swt.SWT;
@@ -53,8 +55,8 @@ import org.eclipse.swt.widgets.Control;
  * @param <T>
  * @param <R>
  */
-public abstract class StackBlock<T extends EntryData, R extends RowControl<T,R>> extends CellBlock<T,R> {
-	private ArrayList<Block<? super T,? super R>> children;
+public abstract class StackBlock<T, R> extends CellBlock<T,R> {
+	private List<Block<? super T,? super R>> children;
 
 	/**
 	 * Maps each child block to the child control of the stack composite
@@ -99,7 +101,12 @@ public abstract class StackBlock<T extends EntryData, R extends RowControl<T,R>>
 		init(children);
 	}
 	
-	private void init(ArrayList<Block<? super T,? super R>> children) {
+	public StackBlock(List<Block<? super T,? super R>> children) {
+		super(0, 0);
+		init(children);
+	}
+	
+	private void init(List<Block<? super T,? super R>> children) {
 		this.children = children;
 
 		/*
@@ -168,11 +175,6 @@ public abstract class StackBlock<T extends EntryData, R extends RowControl<T,R>>
 		
 	}
 
-	// TODO: Remove this.....debugging only
-	@Override
-	void positionControls(int x, int y, int verticalSpacing, Control[] controls, T entryData, boolean changed) {
-		super.positionControls(x, y, verticalSpacing, controls, entryData, changed);
-	}
 	/**
 	 * Given a row input element, this method returns a listener that, when
 	 * session change events are fired on it, will determine if those changes
@@ -184,8 +186,12 @@ public abstract class StackBlock<T extends EntryData, R extends RowControl<T,R>>
 	 * @param stackControl
 	 * @return
 	 */
-	public abstract SessionChangeListener createListener(T entryData, StackControl<T,R> stackControl);
+	protected abstract SessionChangeListener createListener(T entryData, StackControl<T,R> stackControl);
 	
+	// TODO: Do we really need this?
+	protected abstract DataManager getDataManager(T data);
+
+
 	/**
 	 * This method is called for both the header controls and the row controls.
 	 * 
@@ -201,47 +207,10 @@ public abstract class StackBlock<T extends EntryData, R extends RowControl<T,R>>
 	@Override
 	int getHeightForGivenWidth(int width, int verticalSpacing, Control[] controls, boolean changed) {
 		return super.getHeightForGivenWidth(width, verticalSpacing, controls, changed);
-//		int height = 0; 
-//		for (Block<? super T,? super R> child: children) {
-//			// TEMP>>>>>
-//			System.out.println("  child height: " + child.getHeightForGivenWidth(width, verticalSpacing, controls, changed)); 
-//			height = Math.max(height, child.getHeightForGivenWidth(width, verticalSpacing, controls, changed));
-//		}
-//		System.out.println("max height: " + height + ", width: " + width); 
-//		return height;
 	}
-
-	
-//	@Override
-//	void layout(int width) {
-//		if (this.width != width) {
-//			this.width = width;
-//			for (Block<? super T,? super R> child: children) {
-//				child.layout(width);
-//			}
-//		}
-//	}
-
-//	@Override
-//	void positionControls(int left, int top, int verticalSpacing, Control[] controls, T entryData, boolean flushCache) {
-//		// TODO: Position controls inside all child composites...
-//		// Check new children get positioned when created....
-//		
-//		if (entryData != null) {
-//			getTopBlock(entryData).positionControls(left, top, verticalSpacing, controls, entryData, flushCache);
-//		}
-//	}
-
 	@Override
 	int getHeight(int verticalSpacing, Control[] controls) {
 		return super.getHeight(verticalSpacing, controls);
-//		int height = 0; 
-//		for (Block<? super T,? super R> child: children) {
-//			System.out.println("  child row height: " + child.getHeight(verticalSpacing, controls)); 
-//			height = Math.max(height, child.getHeight(verticalSpacing, controls));
-//		}
-//		System.out.println("max row height: " + height); 
-//		return height;
 	}
 
 	@Override

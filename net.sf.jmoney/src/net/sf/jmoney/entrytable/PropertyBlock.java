@@ -44,7 +44,7 @@ import org.eclipse.swt.widgets.Control;
  * 
  * @author Nigel Westbury
  */
-abstract public class PropertyBlock<T extends EntryData, R extends Composite> extends IndividualBlock<T, R> {
+abstract public class PropertyBlock<T extends EntryData, R extends RowControl> extends IndividualBlock<T, R> {
 	private ScalarPropertyAccessor<?> accessor;
 	private String id;
 	
@@ -101,10 +101,10 @@ abstract public class PropertyBlock<T extends EntryData, R extends Composite> ex
 	}
 	
     @Override	
-	public ICellControl<T> createCellControl(Composite parent, final R rowControl) {
+	public ICellControl<T> createCellControl(Composite parent, final RowControl rowControl, final R coordinator) {
 		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		
-		return new ICellControl<T>() {
+		ICellControl2<T> cellControl = new ICellControl2<T>() {
 
 			public Control getControl() {
 				return propertyControl.getControl();
@@ -117,15 +117,52 @@ abstract public class PropertyBlock<T extends EntryData, R extends Composite> ex
 
 			public void save() {
 				propertyControl.save();
-				fireUserChange(rowControl);
+				fireUserChange(coordinator);
 			}
 
 			public void setFocusListener(FocusListener controlFocusListener) {
 				// Nothing to do
 			}
+
+			@Override
+			public void setSelected() {
+				propertyControl.getControl().setBackground(RowControl.selectedCellColor);
+			}
+
+			@Override
+			public void setUnselected() {
+				propertyControl.getControl().setBackground(null);
+			}
 		};
+		
+		FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
+
+		// This is a little bit of a kludge.  Might be a little safer to implement a method
+		// in IPropertyControl to add the focus listener?
+		addFocusListenerRecursively(propertyControl.getControl(), controlFocusListener);
+		
+//			textControl.addKeyListener(keyListener);
+//			textControl.addTraverseListener(traverseListener);
+		
+		return cellControl;
 	}
 
+	/**
+	 * Add listeners to each control.
+	 * 
+	 * @param control The control to listen to.
+	 */
+	private void addFocusListenerRecursively(Control control, FocusListener listener) {
+		control.addFocusListener(listener);
+		
+		if (control instanceof Composite) {
+			Composite composite = (Composite) control;
+			for (Control childControl : composite.getChildren()) {
+				addFocusListenerRecursively(childControl, listener);
+			}
+		}
+	}
+	
     @Override	
 	public Comparator<T> getComparator() {
 		final Comparator<ExtendableObject> subComparator = accessor.getComparator();
@@ -145,9 +182,9 @@ abstract public class PropertyBlock<T extends EntryData, R extends Composite> ex
 		}
 	}
 
-	public static PropertyBlock<EntryData, Composite> createTransactionColumn(
+	public static PropertyBlock<EntryData, RowControl> createTransactionColumn(
 			ScalarPropertyAccessor<?> propertyAccessor) {
-		return new PropertyBlock<EntryData, Composite>(propertyAccessor, "transaction") { //$NON-NLS-1$
+		return new PropertyBlock<EntryData, RowControl>(propertyAccessor, "transaction") { //$NON-NLS-1$
 			@Override
 			public ExtendableObject getObjectContainingProperty(EntryData data) {
 				return data.getEntry().getTransaction();
@@ -155,9 +192,9 @@ abstract public class PropertyBlock<T extends EntryData, R extends Composite> ex
 		};
 	}
 
-	public static PropertyBlock<EntryData, Composite> createEntryColumn(
+	public static PropertyBlock<EntryData, RowControl> createEntryColumn(
 			ScalarPropertyAccessor<?> propertyAccessor) {
-		return new PropertyBlock<EntryData, Composite>(propertyAccessor, "entry") { //$NON-NLS-1$
+		return new PropertyBlock<EntryData, RowControl>(propertyAccessor, "entry") { //$NON-NLS-1$
 			@Override
 			public ExtendableObject getObjectContainingProperty(EntryData data) {
 				return data.getEntry();
@@ -171,8 +208,8 @@ abstract public class PropertyBlock<T extends EntryData, R extends Composite> ex
 	 * @param displayName the text to use in the header
 	 * @return
 	 */
-	public static PropertyBlock<EntryData, Composite> createEntryColumn(ScalarPropertyAccessor<?> propertyAccessor, String displayName) {
-		return new PropertyBlock<EntryData, Composite>(propertyAccessor, "entry", displayName) { //$NON-NLS-1$
+	public static PropertyBlock<EntryData, RowControl> createEntryColumn(ScalarPropertyAccessor<?> propertyAccessor, String displayName) {
+		return new PropertyBlock<EntryData, RowControl>(propertyAccessor, "entry", displayName) { //$NON-NLS-1$
 			@Override
 			public ExtendableObject getObjectContainingProperty(EntryData data) {
 				return data.getEntry();

@@ -39,7 +39,7 @@ abstract public class ButtonCellControl implements ICellControl<EntryData> {
 
 	protected abstract void run(EntryRowControl rowControl); 
 
-	public ButtonCellControl (final EntryRowControl parent, Image image, String toolTipText) {
+	public ButtonCellControl (Composite parent, final EntryRowControl coordinator, Image image, String toolTipText) {
 		/*
 		 * Create a button, but override the preferred size to be 10 (by default
 		 * it is 64).  This prevents the button from making the lines too high.
@@ -59,10 +59,10 @@ abstract public class ButtonCellControl implements ICellControl<EntryData> {
 			
 		button.addSelectionListener(new SelectionListener() {
 			public void widgetDefaultSelected(SelectionEvent e) {
-				run(parent);
+				run(coordinator);
 			}
 			public void widgetSelected(SelectionEvent e) {
-				run(parent);
+				run(coordinator);
 			}
 		});
 	}

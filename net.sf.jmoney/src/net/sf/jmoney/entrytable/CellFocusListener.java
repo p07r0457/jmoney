@@ -8,21 +8,30 @@ import org.eclipse.swt.events.FocusEvent;
 
 class CellFocusListener<R extends RowControl> extends FocusAdapter {
 	private R rowControl;
-	private ICellControl<?> cellControl;
+	private ICellControl2<?> cellControl;
 	private RowSelectionTracker<R> selectionTracker;
 	private FocusCellTracker focusCellTracker;
-	
-	public CellFocusListener(R rowControl, ICellControl<?> cellControl, RowSelectionTracker<R> selectionTracker, FocusCellTracker focusCellTracker) {
+
+	// TODO: remove this version?
+	public CellFocusListener(R rowControl, ICellControl2<?> cellControl, RowSelectionTracker<R> selectionTracker, FocusCellTracker focusCellTracker) {
 		this.rowControl = rowControl;
 		this.cellControl = cellControl;
 		this.selectionTracker = selectionTracker;
 		this.focusCellTracker = focusCellTracker;
 	}
 	
+	public CellFocusListener(R rowControl, ICellControl2<?> cellControl) {
+		this.rowControl = rowControl;
+		this.cellControl = cellControl;
+		this.selectionTracker = rowControl.selectionTracker;
+		this.focusCellTracker = rowControl.focusCellTracker;
+	}
+	
     @Override	
 	public void focusGained(FocusEvent e) {
-		final ICellControl<?> previousFocus = focusCellTracker.getFocusCell();
+		final ICellControl2<?> previousFocus = focusCellTracker.getFocusCell();
 		if (cellControl == previousFocus) {
+			System.out.println("here");
 			/*
 			 * The focus has changed to a different control as far as SWT is
 			 * concerned, but the focus is still within the same cell
@@ -76,10 +85,10 @@ class CellFocusListener<R extends RowControl> extends FocusAdapter {
 					 * but we must also update the cell selection.
 					 */ 
 					if (previousFocus != null) {
-						previousFocus.getControl().setBackground(null);
+						previousFocus.setUnselected();
 					}
 
-					cellControl.getControl().setBackground(RowControl.selectedCellColor);
+					cellControl.setSelected();
 				} else {
 					/*
 					 * The row selection change was rejected so restore the original cell selection.

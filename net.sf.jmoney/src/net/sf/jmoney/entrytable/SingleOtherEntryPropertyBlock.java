@@ -31,18 +31,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 /**
- * Represents a property that can be displayed in the entries table,
- * edited by the user, or used in the filter.
+ * Represents a property that can be displayed in the entries table, where
+ * the property comes from the 'other' entry and thus may be in a split entries
+ * table.
  * <P>
- * Only properties where a single value exists in the cell are supported
- * by this class.
- * <P>
- * The credit, debit, and balance columns are hard coded at the end
- * of the table and are not represented by objects of this class.
- * 
- * @author Nigel Westbury
+ * Because there may be more than one split, the input for this property is the Entry
+ * object (not the EntryData object).  If the transaction is not split then this Entry
+ * object will be the other entry in the transaction.
  */
-public class SingleOtherEntryPropertyBlock extends IndividualBlock<Entry, SplitEntryRowControl> {
+public class SingleOtherEntryPropertyBlock extends IndividualBlock<Entry, ISplitEntryContainer> {
 	private ScalarPropertyAccessor<?> accessor;
 	
 	public SingleOtherEntryPropertyBlock(ScalarPropertyAccessor accessor) {
@@ -70,10 +67,10 @@ public class SingleOtherEntryPropertyBlock extends IndividualBlock<Entry, SplitE
 	}
 
     @Override	
-	public ICellControl<Entry> createCellControl(Composite parent, SplitEntryRowControl rowControl) {
+	public ICellControl<Entry> createCellControl(Composite parent, RowControl rowControl, ISplitEntryContainer coordinator) {
 		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		
-		return new ICellControl<Entry>() {
+		ICellControl2<Entry> cellControl = new ICellControl2<Entry>() {
 
 			public Control getControl() {
 				return propertyControl.getControl();
@@ -90,6 +87,44 @@ public class SingleOtherEntryPropertyBlock extends IndividualBlock<Entry, SplitE
 			public void setFocusListener(FocusListener controlFocusListener) {
 				// Nothing to do
 			}
+
+			@Override
+			public void setSelected() {
+				propertyControl.getControl().setBackground(RowControl.selectedCellColor);
+			}
+
+			@Override
+			public void setUnselected() {
+				propertyControl.getControl().setBackground(null);
+			}
 		};
+		
+		// TODO: remove parameterization from following???
+		FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
+
+		// This is a little bit of a kludge.  Might be a little safer to implement a method
+		// in IPropertyControl to add the focus listener?
+		addFocusListenerRecursively(propertyControl.getControl(), controlFocusListener);
+		
+//			textControl.addKeyListener(keyListener);
+//			textControl.addTraverseListener(traverseListener);
+		
+		return cellControl;
+	}
+
+    /**
+	 * Add listeners to each control.
+	 * 
+	 * @param control The control to listen to.
+	 */
+	private void addFocusListenerRecursively(Control control, FocusListener listener) {
+		control.addFocusListener(listener);
+		
+		if (control instanceof Composite) {
+			Composite composite = (Composite) control;
+			for (Control childControl : composite.getChildren()) {
+				addFocusListenerRecursively(childControl, listener);
+			}
+		}
 	}
 }

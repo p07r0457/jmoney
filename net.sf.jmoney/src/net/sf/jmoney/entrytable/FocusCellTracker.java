@@ -8,13 +8,13 @@ public class FocusCellTracker {
 	 * The control that is currently set up as the control
 	 * with the focus.
 	 */
-	protected ICellControl cellControl = null;
+	protected ICellControl2 cellControl = null;
 
-	public void setFocusCell(ICellControl cellControl) {
+	public void setFocusCell(ICellControl2 cellControl) {
 		this.cellControl = cellControl;
 	}
 
-	public ICellControl getFocusCell() {
+	public ICellControl2 getFocusCell() {
 		return cellControl;
 	}
 }

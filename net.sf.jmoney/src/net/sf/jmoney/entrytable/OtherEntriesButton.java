@@ -50,15 +50,15 @@ public class OtherEntriesButton extends CellBlock<EntryData, EntryRowControl> {
 	
 	static private Image downArrowImage = null;
 
-	private Block<Entry, SplitEntryRowControl> otherEntriesRootBlock;
+	private Block<Entry, ISplitEntryContainer> otherEntriesRootBlock;
 	
-	public OtherEntriesButton(Block<Entry, SplitEntryRowControl> otherEntriesRootBlock) {
+	public OtherEntriesButton(Block<Entry, ISplitEntryContainer> otherEntriesRootBlock) {
 		super(DROPDOWN_BUTTON_WIDTH, 0);
 		this.otherEntriesRootBlock = otherEntriesRootBlock;
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(Composite parent, final EntryRowControl rowControl) {
+	public ICellControl<EntryData> createCellControl(Composite parent, final RowControl rowControl, final EntryRowControl coordinator) {
 		
 	    /*
 	     * Use a single row tracker and cell focus tracker for this
@@ -74,10 +74,10 @@ public class OtherEntriesButton extends CellBlock<EntryData, EntryRowControl> {
 			downArrowImage = descriptor.createImage();
 		}
 
-		return new ButtonCellControl(rowControl, downArrowImage, Messages.OtherEntriesButton_ToolTipText) {
+		return new ButtonCellControl(rowControl, coordinator, downArrowImage, Messages.OtherEntriesButton_ToolTipText) {
 			@Override
 			protected void run(EntryRowControl rowControl) {
-				final OtherEntriesShell shell = new OtherEntriesShell(rowControl.getShell(), SWT.ON_TOP, rowControl.getUncommittedEntryData(), otherEntriesRootBlock, false);
+				final OtherEntriesShell shell = new OtherEntriesShell(rowControl.getShell(), SWT.ON_TOP, coordinator.getUncommittedEntryData(), otherEntriesRootBlock, false);
     	        Display display = rowControl.getDisplay();
     	        Rectangle rect = display.map(rowControl, null, this.getControl().getBounds());
     	        shell.open(rect);

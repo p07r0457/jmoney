@@ -81,7 +81,7 @@ public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData, EntryR
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(Composite parent, EntryRowControl rowControl) {
+	public ICellControl<EntryData> createCellControl(Composite parent, RowControl rowControl, EntryRowControl coordinator) {
 		// Because this may be multi-valued, setup the container only.
 		final Composite composite = new Composite(parent, SWT.NONE);
 		

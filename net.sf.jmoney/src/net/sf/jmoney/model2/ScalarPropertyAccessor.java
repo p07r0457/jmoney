@@ -349,10 +349,11 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	 * @return An interface to a wrapper class.
 	 */
 	public IPropertyControl createPropertyControl(Composite parent) {
-		// When a PropertyAccessor object is created, it is
-		// provided with an interface to a factory that constructs
-		// control objects that edit the property.
-		// We call into that factory to create an edit control.
+		/*
+		 * When a PropertyAccessor object is created, it is provided with an
+		 * interface to a factory that constructs control objects that edit the
+		 * property. We call into that factory to create an edit control.
+		 */
 		return propertyControlFactory.createPropertyControl(parent, this);
 	}
 

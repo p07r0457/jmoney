@@ -1,27 +1,27 @@
 package net.sf.jmoney.entrytable;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
 public abstract class RowControl<T, R extends RowControl<T,R>> extends CellContainer<T,R> {
 
-	protected static final Color selectedCellColor = new Color(Display
+	public static final Color selectedCellColor = new Color(Display
 			.getCurrent(), 255, 255, 255);
 
-	protected abstract boolean commitChanges();
+	public RowSelectionTracker<R> selectionTracker;
+	
+	protected FocusCellTracker focusCellTracker;
 	
 	protected abstract void setSelected(boolean isSelected);
 	
-	public RowControl(Composite parent, int style) {
+	public RowControl(Composite parent, int style, RowSelectionTracker<R> selectionTracker, FocusCellTracker focusCellTracker) {
 		super(parent, style);
 
+		this.selectionTracker = selectionTracker;
+		this.focusCellTracker = focusCellTracker;
+		
 		/*
 		 * By default the child controls get the same background as
 		 * this composite.
@@ -53,10 +53,11 @@ public abstract class RowControl<T, R extends RowControl<T,R>> extends CellConta
 	 * 		message to the user)
 	 */
 	public boolean canDepart() {
-		if (!commitChanges()) {
-			return false;
-		}
-
+//		if (focusCellTracker.getFocusCell() != null) {
+//			focusCellTracker.getFocusCell().getControl().setBackground(null);
+//			focusCellTracker.setFocusCell(null);
+//		}
+		
 		setSelected(false);
 		return true;
 	}
