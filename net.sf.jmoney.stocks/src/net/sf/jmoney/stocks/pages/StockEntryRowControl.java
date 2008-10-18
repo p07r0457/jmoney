@@ -60,8 +60,8 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	private boolean netAmountManuallyEdited = false;
 
 	public StockEntryRowControl(final Composite parent, int style, VirtualRowTable rowTable, Block<StockEntryData, ? super StockEntryRowControl> rootBlock, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
-		super(parent, style, rowTable, rootBlock);
-		init(this, rootBlock, selectionTracker, focusCellTracker);
+		super(parent, style, rowTable, rootBlock, selectionTracker, focusCellTracker);
+		init(this, this, rootBlock);
 	}
 	
 	@Override

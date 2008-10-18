@@ -36,17 +36,19 @@ import net.sf.jmoney.entrytable.HorizontalBlock;
 import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IRowProvider;
+import net.sf.jmoney.entrytable.ISplitEntryContainer;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.OtherEntriesBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
+import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
-import net.sf.jmoney.entrytable.SplitEntryRowControl;
 import net.sf.jmoney.entrytable.StackBlock;
 import net.sf.jmoney.entrytable.StackControl;
 import net.sf.jmoney.entrytable.VerticalBlock;
 import net.sf.jmoney.fields.IAmountFormatter;
 import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -104,12 +106,12 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		/*
 		 * Setup the layout structure of the header and rows.
 		 */
-		IndividualBlock<EntryData, Composite> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		IndividualBlock<EntryData, RowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
 
 		IndividualBlock<StockEntryData, StockEntryRowControl> actionColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Action", 50, 1) {
 
 			@Override
-			public ICellControl<StockEntryData> createCellControl(Composite parent, final StockEntryRowControl rowControl) {
+			public ICellControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
 				final CCombo control = new CCombo(parent, SWT.NONE);
 				control.add("buy");
 				control.add("sell");
@@ -123,23 +125,23 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						int index = control.getSelectionIndex();
 						switch (index) {
 						case 0:
-							rowControl.getUncommittedEntryData().forceTransactionToBuy();
+							coordinator.getUncommittedEntryData().forceTransactionToBuy();
 							break;
 						case 1:
-							rowControl.getUncommittedEntryData().forceTransactionToSell();
+							coordinator.getUncommittedEntryData().forceTransactionToSell();
 							break;
 						case 2:
-							rowControl.getUncommittedEntryData().forceTransactionToDividend();
+							coordinator.getUncommittedEntryData().forceTransactionToDividend();
 							break;
 						case 3:
-							rowControl.getUncommittedEntryData().forceTransactionToTransfer();
+							coordinator.getUncommittedEntryData().forceTransactionToTransfer();
 							break;
 						case 4:
-							rowControl.getUncommittedEntryData().forceTransactionToCustom();
+							coordinator.getUncommittedEntryData().forceTransactionToCustom();
 							break;
 						}
 						
-						rowControl.fireTransactionTypeChange();
+						coordinator.fireTransactionTypeChange();
 					}
 				});
 				
@@ -185,6 +187,14 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						// TODO Auto-generated method stub
 						
 					}
+
+					public void setSelected() {
+						control.setBackground(RowControl.selectedCellColor);
+					}
+
+					public void setUnselected() {
+						control.setBackground(null);
+					}
 				};
 			}
 		};  
@@ -192,7 +202,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		IndividualBlock<StockEntryData, StockEntryRowControl> shareNameColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Stock", 50, 1) {
 
 			@Override
-			public ICellControl<StockEntryData> createCellControl(Composite parent, final StockEntryRowControl rowControl) {
+			public ICellControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
 				final StockControl<Stock> control = new StockControl<Stock>(parent, null, Stock.class);
 				
 				ICellControl<StockEntryData> cellControl = new ICellControl<StockEntryData>() {
@@ -249,9 +259,17 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						// TODO Auto-generated method stub
 						
 					}
+
+					public void setSelected() {
+						control.setBackground(RowControl.selectedCellColor);
+					}
+
+					public void setUnselected() {
+						control.setBackground(null);
+					}
 				};
 
-				rowControl.addTransactionTypeChangeListener(new ITransactionTypeChangeListener() {
+				coordinator.addTransactionTypeChangeListener(new ITransactionTypeChangeListener() {
 
 					public void transactionTypeChanged() {
 						/*
@@ -266,12 +284,12 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						 * company.
 						 */
 						Stock stock = control.getStock();
-						if (rowControl.getUncommittedEntryData().isPurchaseOrSale()) {
-							Entry entry = rowControl.getUncommittedEntryData().getPurchaseOrSaleEntry();
+						if (coordinator.getUncommittedEntryData().isPurchaseOrSale()) {
+							Entry entry = coordinator.getUncommittedEntryData().getPurchaseOrSaleEntry();
 							entry.setPropertyValue(StockEntryInfo.getStockAccessor(), stock);
 							control.setEnabled(true);
-						} else if (rowControl.getUncommittedEntryData().isDividend()) {
-							Entry entry = rowControl.getUncommittedEntryData().getDividendEntry();
+						} else if (coordinator.getUncommittedEntryData().isDividend()) {
+							Entry entry = coordinator.getUncommittedEntryData().getDividendEntry();
 							entry.setPropertyValue(StockEntryInfo.getStockAccessor(), stock);
 							control.setEnabled(true);
 						} else {
@@ -288,7 +306,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		IndividualBlock<StockEntryData, StockEntryRowControl> priceColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Price", 60, 1) {
 
 			@Override
-			public ICellControl<StockEntryData> createCellControl(Composite parent, final StockEntryRowControl rowControl) {
+			public ICellControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
 				final Text control = new Text(parent, SWT.RIGHT);
 				
 				return new ICellControl<StockEntryData>() {
@@ -324,11 +342,19 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						 * saved and also because other values may need to be
 						 * adjusted as a result of the new share price.
 						 */
-						rowControl.sharePriceChanged(new BigDecimal(amount).movePointLeft(4));
+						coordinator.sharePriceChanged(new BigDecimal(amount).movePointLeft(4));
 					}
 
 					public void setFocusListener(FocusListener controlFocusListener) {
 						control.addFocusListener(controlFocusListener);
+					}
+
+					public void setSelected() {
+						control.setBackground(RowControl.selectedCellColor);
+					}
+
+					public void setUnselected() {
+						control.setBackground(null);
 					}
 				};
 			}
@@ -337,7 +363,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		IndividualBlock<StockEntryData, StockEntryRowControl> shareNumberColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Quantity", EntryInfo.getAmountAccessor().getMinimumWidth(), EntryInfo.getAmountAccessor().getWeight()) {
 
 			@Override
-			public ICellControl<StockEntryData> createCellControl(Composite parent, final StockEntryRowControl rowControl) {
+			public ICellControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
 				final Text control = new Text(parent, SWT.RIGHT);
 				
 				return new ICellControl<StockEntryData>() {
@@ -387,18 +413,26 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						Entry entry = data.getPurchaseOrSaleEntry();
 						entry.setAmount(quantity);
 						
-						rowControl.quantityChanged();
+						coordinator.quantityChanged();
 					}
 
 					public void setFocusListener(FocusListener controlFocusListener) {
 						control.addFocusListener(controlFocusListener);
+					}
+
+					public void setSelected() {
+						control.setBackground(RowControl.selectedCellColor);
+					}
+
+					public void setUnselected() {
+						control.setBackground(null);
 					}
 				};
 			}
 		};  
 
 		
-		final IndividualBlock<StockEntryData, Composite> withholdingTaxColumn = new PropertyBlock<StockEntryData, Composite>(EntryInfo.getAmountAccessor(), "withholdingTax", "Withholding Tax") {
+		final IndividualBlock<StockEntryData, RowControl> withholdingTaxColumn = new PropertyBlock<StockEntryData, RowControl>(EntryInfo.getAmountAccessor(), "withholdingTax", "Withholding Tax") {
 			@Override
 			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
 				return data.getWithholdingTaxEntry();
@@ -463,7 +497,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 				)
 		);
 
-		final IndividualBlock<StockEntryData, Composite> transferAccountColumn = new PropertyBlock<StockEntryData, Composite>(EntryInfo.getAccountAccessor(), "transferAccount", "Transfer Account") {
+		final IndividualBlock<StockEntryData, RowControl> transferAccountColumn = new PropertyBlock<StockEntryData, RowControl>(EntryInfo.getAccountAccessor(), "transferAccount", "Transfer Account") {
 			@Override
 			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
 				return data.getTransferEntry();
@@ -471,7 +505,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		};		
 
 		final Block<EntryData, BaseEntryRowControl> customTransactionColumn = new OtherEntriesBlock(
-				new HorizontalBlock<Entry, SplitEntryRowControl>(
+				new HorizontalBlock<Entry, ISplitEntryContainer>(
 						new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
 						new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), JMoneyPlugin.getResourceString("Entry.description")),
 						new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
@@ -522,13 +556,13 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					}
 					
 				    @Override	
-					public ICellControl<StockEntryData> createCellControl(Composite parent, final StockEntryRowControl rowControl) {
-						final StackControl<StockEntryData, StockEntryRowControl> control = new StackControl<StockEntryData, StockEntryRowControl>(parent, rowControl, this);
+					public ICellControl<StockEntryData> createCellControl(Composite parent, final RowControl rowControl, final StockEntryRowControl coordinator) {
+						final StackControl<StockEntryData, StockEntryRowControl> control = new StackControl<StockEntryData, StockEntryRowControl>(parent, rowControl, coordinator, this);
 						
-						rowControl.addTransactionTypeChangeListener(new ITransactionTypeChangeListener() {
+						coordinator.addTransactionTypeChangeListener(new ITransactionTypeChangeListener() {
 
 							public void transactionTypeChanged() {
-								Block<? super StockEntryData, ? super StockEntryRowControl> topBlock = getTopBlock(rowControl.getUncommittedEntryData());
+								Block<? super StockEntryData, ? super StockEntryRowControl> topBlock = getTopBlock(coordinator.getUncommittedEntryData());
 								
 								// Set this block in the control
 								control.setTopBlock(topBlock);
@@ -540,7 +574,9 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 								 * the top control may change the size of the
 								 * row.
 								 */
-								fEntriesControl.table.refreshSize(rowControl);
+								// TODO: It is a bit funny using the coordinator here
+								// This needs to be cleaned up.
+								fEntriesControl.table.refreshSize(coordinator);
 								
 								/*
 								 * The above method will re-size the height of the row
@@ -609,7 +645,11 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 							}
 						};
 					}
-						
+
+					@Override
+					protected DataManager getDataManager(StockEntryData data) {
+						return data.getEntry().getDataManager();
+					}
 				},
 				debitColumnManager,
 				creditColumnManager,
