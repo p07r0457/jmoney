@@ -26,7 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.sf.jmoney.entrytable.CellBlock;
+import net.sf.jmoney.entrytable.CellFocusListener;
 import net.sf.jmoney.entrytable.ICellControl;
+import net.sf.jmoney.entrytable.ICellControl2;
 import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.SplitEntryRowControl;
 import net.sf.jmoney.model2.Account;
@@ -83,9 +85,8 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 	@Override
 	public ICellControl<Entry> createCellControl(Composite parent,
 			RowControl rowControl, SplitEntryRowControl coordinator) {
-//    	this.rowControl = rowControl;
     	
-    	return new PropertiesCellControl(parent);
+    	return new PropertiesCellControl(parent, rowControl);
 	}
 
 	private class PropertiesCellControl implements ICellControl<Entry> {
@@ -104,9 +105,11 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 		final private Color labelColor;
 		final private Color controlColor;
 		private List<IPropertyControl> properties;
-		private FocusListener controlFocusListener;
+		private RowControl rowControl;
 
-		public PropertiesCellControl(Composite parent) {
+		public PropertiesCellControl(Composite parent, RowControl rowControl) {
+	    	this.rowControl = rowControl;
+	    	
 			labelColor = Display.getCurrent().getSystemColor(SWT.COLOR_BLUE);
 			controlColor = Display.getCurrent().getSystemColor(SWT.COLOR_YELLOW);
 			
@@ -184,12 +187,52 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 			Label label = new Label(composite, SWT.LEFT);
 			label.setText(accessor.getDisplayName() + ":");
 			label.setForeground(labelColor);
-			IPropertyControl control = accessor.createPropertyControl(composite);
-			control.getControl().setLayoutData(new GridData(accessor.getMinimumWidth(), SWT.DEFAULT));
-			control.getControl().setBackground(controlColor);
-			control.getControl().addFocusListener(controlFocusListener);
-			control.load(entry);
-			properties.add(control);
+			final IPropertyControl propertyControl = accessor.createPropertyControl(composite);
+			propertyControl.getControl().setLayoutData(new GridData(accessor.getMinimumWidth(), SWT.DEFAULT));
+			propertyControl.getControl().setBackground(controlColor);
+
+			// TODO: This will not add listener to child controls - fix this.
+
+			// TODO: This is a really big kludge.
+			// We need this interface just for two methods,
+			// select and unselect.  Should those be Should we move
+			//
+			FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, new ICellControl2<Entry>() {
+				public Control getControl() {
+					return propertyControl.getControl();
+				}
+
+				public void load(Entry data) {
+					propertyControl.load(data);
+				}
+
+				public void save() {
+					propertyControl.save();
+//					fireUserChange(coordinator);
+				}
+
+				public void setFocusListener(FocusListener controlFocusListener) {
+					// Nothing to do???
+				}
+
+				@Override
+				public void setSelected() {
+					propertyControl.getControl().setBackground(RowControl.selectedCellColor);
+				}
+
+				@Override
+				public void setUnselected() {
+					propertyControl.getControl().setBackground(null);
+				}
+			});
+
+			// This is a little bit of a kludge.  Might be a little safer to implement a method
+			// in IPropertyControl to add the focus listener?
+//			addFocusListenerRecursively(propertyControl.getControl(), controlFocusListener);
+			propertyControl.getControl().addFocusListener(controlFocusListener);
+
+			propertyControl.load(entry);
+			properties.add(propertyControl);
 		}
 
 		public void save() {
@@ -199,7 +242,7 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 		}
 
 		public void setFocusListener(FocusListener controlFocusListener) {
-			this.controlFocusListener = controlFocusListener;
+			// TODO: Should this method be removed???
 		}
 
 		public void setSelected() {

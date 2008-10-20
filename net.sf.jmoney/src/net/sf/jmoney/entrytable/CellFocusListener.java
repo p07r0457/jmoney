@@ -6,7 +6,7 @@ package net.sf.jmoney.entrytable;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 
-class CellFocusListener<R extends RowControl> extends FocusAdapter {
+public class CellFocusListener<R extends RowControl> extends FocusAdapter {
 	private R rowControl;
 	private ICellControl2<?> cellControl;
 	private RowSelectionTracker<R> selectionTracker;
