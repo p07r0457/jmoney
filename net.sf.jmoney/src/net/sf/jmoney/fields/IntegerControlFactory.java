@@ -76,7 +76,7 @@ public class IntegerControlFactory implements IPropertyControlFactory<Integer> {
  * 
  * @author Nigel Westbury
  */
-class IntegerEditor implements IPropertyControl {
+class IntegerEditor implements IPropertyControl<ExtendableObject> {
 
     private ExtendableObject extendableObject;
 

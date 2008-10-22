@@ -48,7 +48,7 @@ import org.eclipse.swt.widgets.Control;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class AccountEditor<A extends Account> implements IPropertyControl {
+public class AccountEditor<A extends Account> implements IPropertyControl<ExtendableObject> {
 
     private ExtendableObject extendableObject;
 

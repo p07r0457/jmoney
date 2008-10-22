@@ -4,6 +4,7 @@ package net.sf.jmoney.entrytable;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
 import net.sf.jmoney.resources.Messages;
@@ -193,7 +194,7 @@ public class OtherEntriesControl extends Composite {
 		 * there is a separate focus cell tracker for the cells inside this
 		 * control and the cells outside.
 		 */
-		ICellControl cell = focusCellTracker.getFocusCell();
+		IPropertyControl cell = focusCellTracker.getFocusCell();
 		if (cell != null) {
 			cell.save();
 		}

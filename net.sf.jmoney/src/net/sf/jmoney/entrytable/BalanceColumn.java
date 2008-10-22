@@ -23,6 +23,7 @@
 package net.sf.jmoney.entrytable;
 
 import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.core.runtime.Assert;
@@ -34,7 +35,7 @@ import org.eclipse.swt.widgets.Label;
 
 public class BalanceColumn extends IndividualBlock<EntryData, BaseEntryRowControl> {
 
-	private class BalanceCellControl implements ICellControl<EntryData>, IBalanceChangeListener {
+	private class BalanceCellControl implements IPropertyControl<EntryData>, IBalanceChangeListener {
 		private final Label balanceLabel;
 		private EntryData entyData = null;
 		
@@ -84,7 +85,7 @@ public class BalanceColumn extends IndividualBlock<EntryData, BaseEntryRowContro
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(Composite parent, RowControl rowControl, BaseEntryRowControl coordinator) {
+	public IPropertyControl<EntryData> createCellControl(Composite parent, RowControl rowControl, BaseEntryRowControl coordinator) {
 		final Label balanceLabel = new Label(parent, SWT.TRAIL);
 		
 		BalanceCellControl cellControl = new BalanceCellControl(balanceLabel);

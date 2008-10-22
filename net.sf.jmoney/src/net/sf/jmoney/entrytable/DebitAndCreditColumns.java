@@ -26,6 +26,7 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
@@ -51,6 +52,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 
 	private class DebitAndCreditCellControl implements ICellControl2<EntryData> {
 		private Text textControl;
+		private BaseEntryRowControl coordinator;
 		private Entry entry = null;
 		
 		private SessionChangeListener amountChangeListener = new SessionChangeAdapter() {
@@ -62,8 +64,33 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 			}
 		};
 
-		public DebitAndCreditCellControl(Text textControl) {
-			this.textControl = textControl;
+		public DebitAndCreditCellControl(Composite parent, RowControl rowControl, BaseEntryRowControl coordinator) {
+			this.coordinator = coordinator;
+
+			this.textControl = new Text(parent, SWT.TRAIL);
+
+			FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, this);
+			textControl.addFocusListener(controlFocusListener);
+//				textControl.addKeyListener(keyListener);
+//				textControl.addTraverseListener(traverseListener);
+			
+			textControl.addTraverseListener(new TraverseListener() {
+				public void keyTraversed(TraverseEvent e) {
+					switch (e.detail) {
+					case SWT.TRAVERSE_ARROW_PREVIOUS:
+						if (e.keyCode == SWT.ARROW_UP) {
+							e.doit = false;
+							e.detail = SWT.TRAVERSE_NONE;
+						}
+						break;
+					case SWT.TRAVERSE_ARROW_NEXT:
+						if (e.keyCode == SWT.ARROW_DOWN) {
+							e.doit = true;
+						}
+						break;
+					}
+				}
+			});
 
 			textControl.addDisposeListener(new DisposeListener() {
 				public void widgetDisposed(DisposeEvent e) {
@@ -198,8 +225,6 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 	private String id;
 	private Commodity commodity;
 	private boolean isDebit;
-	private RowControl rowControl;
-	private BaseEntryRowControl coordinator;
 
 	public static DebitAndCreditColumns createCreditColumn(Commodity commodityForFormatting) {
     	return new DebitAndCreditColumns("credit", Messages.DebitAndCreditColumns_CreditName, commodityForFormatting, false);  //$NON-NLS-1$
@@ -221,36 +246,10 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(Composite parent, RowControl rowControl, BaseEntryRowControl coordinator) {
-    	this.rowControl = rowControl;
+	public IPropertyControl<EntryData> createCellControl(Composite parent, RowControl rowControl, BaseEntryRowControl coordinator) {
     	
-		final Text textControl = new Text(parent, SWT.TRAIL);
-		textControl.addTraverseListener(new TraverseListener() {
-			public void keyTraversed(TraverseEvent e) {
-				switch (e.detail) {
-				case SWT.TRAVERSE_ARROW_PREVIOUS:
-					if (e.keyCode == SWT.ARROW_UP) {
-						e.doit = false;
-						e.detail = SWT.TRAVERSE_NONE;
-					}
-					break;
-				case SWT.TRAVERSE_ARROW_NEXT:
-					if (e.keyCode == SWT.ARROW_DOWN) {
-						e.doit = true;
-					}
-					break;
-				}
-			}
-		});
+		ICellControl2<EntryData> cellControl = new DebitAndCreditCellControl(parent, rowControl, coordinator);
 
-		
-		ICellControl2<EntryData> cellControl = new DebitAndCreditCellControl(textControl);
-
-		FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
-		textControl.addFocusListener(controlFocusListener);
-//			textControl.addKeyListener(keyListener);
-//			textControl.addTraverseListener(traverseListener);
-		
 		return cellControl;
     }
 

@@ -25,6 +25,8 @@ package net.sf.jmoney.entrytable;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import net.sf.jmoney.model2.IPropertyControl;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.widgets.Composite;
@@ -55,9 +57,9 @@ public abstract class CellBlock<T,R> extends Block<T,R> {
 	 * 		can communicate which each other, each cell block being
 	 * 		parameterized with a coordinator class (R) and each cell
 	 * 		being given a class of that type
-	 * @return an ICellControl wrapper around an SWT control
+	 * @return an IPropertyControl wrapper around an SWT control
 	 */
-	public abstract ICellControl<T> createCellControl(Composite parent, RowControl rowControl, R coordinator);
+	public abstract IPropertyControl<T> createCellControl(Composite parent, RowControl rowControl, R coordinator);
 
 	public CellBlock(int minimumWidth, int weight) {
 		this.minimumWidth = minimumWidth;

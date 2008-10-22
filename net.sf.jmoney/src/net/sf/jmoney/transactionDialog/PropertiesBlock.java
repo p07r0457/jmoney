@@ -27,7 +27,6 @@ import java.util.List;
 
 import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.CellFocusListener;
-import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.ICellControl2;
 import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.SplitEntryRowControl;
@@ -83,13 +82,13 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 	}
 
 	@Override
-	public ICellControl<Entry> createCellControl(Composite parent,
+	public IPropertyControl<Entry> createCellControl(Composite parent,
 			RowControl rowControl, SplitEntryRowControl coordinator) {
     	
     	return new PropertiesCellControl(parent, rowControl);
 	}
 
-	private class PropertiesCellControl implements ICellControl<Entry> {
+	private class PropertiesCellControl implements IPropertyControl<Entry> {
 		private Composite propertiesControl;
 		private Entry entry = null;
 		
@@ -187,15 +186,16 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 			Label label = new Label(composite, SWT.LEFT);
 			label.setText(accessor.getDisplayName() + ":");
 			label.setForeground(labelColor);
+
 			final IPropertyControl propertyControl = accessor.createPropertyControl(composite);
 			propertyControl.getControl().setLayoutData(new GridData(accessor.getMinimumWidth(), SWT.DEFAULT));
 			propertyControl.getControl().setBackground(controlColor);
 
 			// TODO: This will not add listener to child controls - fix this.
 
-			// TODO: This is a really big kludge.
-			// We need this interface just for two methods,
-			// select and unselect.  Should those be Should we move
+			// TODO: This is a kludge.
+			// We need this wrapper for just for two methods,
+			// select and unselect.  Do we really need those?
 			//
 			FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, new ICellControl2<Entry>() {
 				public Control getControl() {

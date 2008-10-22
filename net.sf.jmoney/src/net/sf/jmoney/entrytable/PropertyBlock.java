@@ -101,7 +101,7 @@ abstract public class PropertyBlock<T extends EntryData, R extends RowControl> e
 	}
 	
     @Override	
-	public ICellControl<T> createCellControl(Composite parent, final RowControl rowControl, final R coordinator) {
+	public IPropertyControl<T> createCellControl(Composite parent, final RowControl rowControl, final R coordinator) {
 		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		
 		ICellControl2<T> cellControl = new ICellControl2<T>() {

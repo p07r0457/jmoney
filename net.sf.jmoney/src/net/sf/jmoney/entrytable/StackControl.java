@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.sf.jmoney.model2.DataManager;
+import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.SessionChangeListener;
 
 import org.eclipse.swt.SWT;
@@ -42,7 +43,7 @@ import org.eclipse.swt.widgets.Display;
  * This is used in rows only, not for headers.
  * (anything to be gained by using it in headers too????)
  */
-public class StackControl<T, R> extends Composite implements ICellControl<T> {
+public class StackControl<T, R> extends Composite implements IPropertyControl<T> {
 
 	private RowControl rowControl;
 	

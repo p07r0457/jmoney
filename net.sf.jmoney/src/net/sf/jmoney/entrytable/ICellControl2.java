@@ -1,9 +1,11 @@
 package net.sf.jmoney.entrytable;
 
+import net.sf.jmoney.model2.IPropertyControl;
+
 /**
  * Interface implemented by all editable cells.
  * <P>
- * ICellControl objects may be controls representing single
+ * IPropertyControl objects may be controls representing single
  * properties that can be edited by the user, or they may be
  * 'composite' or 'container' cells.  If the former then the
  * cell should implement this extended interface.  This interface
@@ -13,7 +15,7 @@ package net.sf.jmoney.entrytable;
  *
  * @param <T>
  */
-public interface ICellControl2<T> extends ICellControl<T> {
+public interface ICellControl2<T> extends IPropertyControl<T> {
 
 	/**
 	 * Set this cell as the cell with the focus.

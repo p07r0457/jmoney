@@ -23,6 +23,7 @@
 package net.sf.jmoney.entrytable;
 
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.IPropertyControl;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
@@ -62,7 +63,7 @@ public class OtherEntriesBlock extends CellBlock<EntryData, BaseEntryRowControl>
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(Composite parent, RowControl rowControl, BaseEntryRowControl coordinator) {
+	public IPropertyControl<EntryData> createCellControl(Composite parent, RowControl rowControl, BaseEntryRowControl coordinator) {
 		
 	    /*
 	     * Use a single row tracker for this
@@ -82,7 +83,7 @@ public class OtherEntriesBlock extends CellBlock<EntryData, BaseEntryRowControl>
 
 		final OtherEntriesControl control = new OtherEntriesControl(parent, rowControl, otherEntriesRootBlock, rowTracker, cellTracker);
 		
-		ICellControl<EntryData> cellControl = new ICellControl<EntryData>() {
+		IPropertyControl<EntryData> cellControl = new IPropertyControl<EntryData>() {
 			public Control getControl() {
 				return control;
 			}

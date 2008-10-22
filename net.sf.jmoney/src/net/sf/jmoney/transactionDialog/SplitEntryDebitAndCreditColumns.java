@@ -23,8 +23,6 @@
 package net.sf.jmoney.transactionDialog;
 
 import net.sf.jmoney.entrytable.EntryData;
-import net.sf.jmoney.entrytable.EntryRowControl;
-import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.SplitEntryRowControl;
@@ -32,6 +30,7 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
@@ -54,7 +53,7 @@ import org.eclipse.swt.widgets.Text;
  */
 class SplitEntryDebitAndCreditColumns extends IndividualBlock<Entry, SplitEntryRowControl> {
 
-	private class DebitAndCreditCellControl implements ICellControl<Entry> {
+	private class DebitAndCreditCellControl implements IPropertyControl<Entry> {
 		private Text textControl;
 		private Entry entry = null;
 		
@@ -210,7 +209,7 @@ class SplitEntryDebitAndCreditColumns extends IndividualBlock<Entry, SplitEntryR
 	}
 
     @Override	
-	public ICellControl<Entry> createCellControl(Composite parent, RowControl rowControl, SplitEntryRowControl coordinator) {
+	public IPropertyControl<Entry> createCellControl(Composite parent, RowControl rowControl, SplitEntryRowControl coordinator) {
     	
 		final Text textControl = new Text(parent, SWT.TRAIL);
 		textControl.addTraverseListener(new TraverseListener() {

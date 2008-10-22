@@ -50,7 +50,7 @@ import org.eclipse.swt.widgets.Control;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class CurrencyEditor implements IPropertyControl {
+public class CurrencyEditor implements IPropertyControl<ExtendableObject> {
 
     private ExtendableObject extendableObject;
 

@@ -70,9 +70,6 @@ public class OtherEntriesShell {
 	        Control buttonArea = createButtonArea(shell);
 	        buttonArea.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
 	        
-			// TODO: This is not right - should not be created here.
-		    RowSelectionTracker<SplitEntryRowControl> rowTracker = new RowSelectionTracker<SplitEntryRowControl>();
-
 		    shell.pack();
 		}
 
@@ -167,8 +164,6 @@ public class OtherEntriesShell {
 		}
 
 		private void addSplit() {
-//			entryData.getEntry().getTransaction().createEntry();
-
 			Transaction transaction = entryData.getEntry().getTransaction();
 			Entry newEntry = transaction.createEntry();
 			
@@ -282,6 +277,10 @@ public class OtherEntriesShell {
 	        final ShellListener parentActivationListener = new ShellAdapter() {
 				@Override
 	        	public void shellActivated(ShellEvent e) {
+					ICellControl2 focusCell = cellTracker.getFocusCell();
+					if (focusCell != null) {
+						focusCell.save();
+					}
 	        		shell.close();
 	        	}
 	        };

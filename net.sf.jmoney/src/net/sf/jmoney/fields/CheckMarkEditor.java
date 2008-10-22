@@ -38,7 +38,7 @@ import org.eclipse.swt.widgets.Control;
  *
  * @author Nigel Westbury
  */
-public class CheckMarkEditor implements IPropertyControl {
+public class CheckMarkEditor implements IPropertyControl<ExtendableObject> {
 
     protected ScalarPropertyAccessor<Boolean> propertyAccessor;
     protected Button propertyControl;

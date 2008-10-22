@@ -33,14 +33,19 @@ import org.eclipse.swt.widgets.Control;
  * to create a <code>Control</code> that can edit the property.
  * The <code>Control</code> is wrapped in an <code>IPropertyControl</code>
  * implementation that handles the movement of data between the
- * property and the control. 
+ * data object and the control. 
+ * <P>
+ * It is essential that all controls have a common interface
+ * because the framework may have to deal with columns of data
+ * that were contributed by another plug-in. 
  * 
+ * @param T the type of the data object that contains this property
  * @see IPropertyControlFactory
  * @see org.eclipse.swt.widgets.Control
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public interface IPropertyControl {
+public interface IPropertyControl<T> {
 
     /**
      * This method gives access to the underlying control.
@@ -72,7 +77,7 @@ public interface IPropertyControl {
      * @param object the object that contains the value of
      * the property, or null if the control in not to be bound
      */
-    void load(ExtendableObject object);
+    void load(T object);
 
     /**
      * This method takes the data in the control and sets it

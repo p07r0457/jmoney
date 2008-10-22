@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.entrytable;
 
+import net.sf.jmoney.model2.IPropertyControl;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.SelectionEvent;
@@ -33,7 +35,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
-abstract public class ButtonCellControl implements ICellControl<EntryData> {
+abstract public class ButtonCellControl implements IPropertyControl<EntryData> {
 
 	private Button button;
 

@@ -32,6 +32,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.resources.Messages;
@@ -346,17 +347,17 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	/**
 	 * Validate the changes made by the user to this row and, if they are valid,
 	 * commit them.
-	 * 
+	 * <P>
 	 * The changes may not be committed for a number of reasons. Perhaps they
 	 * did not meet the restrictions imposed by a validating listener, or
 	 * perhaps the user responded to a dialog in a way that indicated that the
 	 * changes should not be committed.
-	 * 
-	 * if false is returned then the caller should leave this row as the
-	 * selected row.
+	 * <P>
+	 * If false is returned then the caller should not move the selection off
+	 * this row.
 	 * 
 	 * @return true if the changes are either valid and were committed or were
-	 *         canceled by the user, false if the changes were neither committed
+	 *         discarded by the user, false if the changes were neither committed
 	 *         nor discarded (and thus remain outstanding)
 	 */
 	public boolean commitChanges(String transactionLabel) {
@@ -412,7 +413,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 					uncommittedEntryData.setBalance(committedEntryData
 							.getBalance());
 
-					for (final ICellControl<? super T> control : controls
+					for (final IPropertyControl<? super T> control : controls
 							.values()) {
 						control.load(uncommittedEntryData);
 					}
@@ -458,7 +459,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 						.setBalance(committedEntryData.getBalance());
 
 				// Load all top level controls with this data.
-				for (final ICellControl<? super T> control : controls.values()) {
+				for (final IPropertyControl<? super T> control : controls.values()) {
 					control.load(uncommittedEntryData);
 				}
 			}

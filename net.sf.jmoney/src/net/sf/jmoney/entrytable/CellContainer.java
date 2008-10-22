@@ -25,9 +25,9 @@ package net.sf.jmoney.entrytable;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.swt.events.FocusListener;
+import net.sf.jmoney.model2.IPropertyControl;
+
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
 
 public class CellContainer<T,R> extends Composite {
 
@@ -41,7 +41,7 @@ public class CellContainer<T,R> extends Composite {
 	// (and it may as well be a list of the values only), a map
 	// allows us to do stuff like move the focus to the control
 	// in error during transaction validation.
-	protected Map<CellBlock, ICellControl<? super T>> controls = new HashMap<CellBlock, ICellControl<? super T>>();
+	protected Map<CellBlock, IPropertyControl<? super T>> controls = new HashMap<CellBlock, IPropertyControl<? super T>>();
 
 	public CellContainer(Composite parent, int style) {
 		super(parent, style);
@@ -62,7 +62,7 @@ public class CellContainer<T,R> extends Composite {
 	protected void init(RowControl rowControl, R coordinator, Block<? super T, ? super R> rootBlock) {
 		for (CellBlock<? super T, ? super R> cellBlock: rootBlock.buildCellList()) {
 			// Create the control with no content set.
-			final ICellControl<? super T> cellControl = cellBlock.createCellControl(this, rowControl, coordinator);
+			final IPropertyControl<? super T> cellControl = cellBlock.createCellControl(this, rowControl, coordinator);
 			controls.put(cellBlock, cellControl);
 
 			if (input != null) {
@@ -74,7 +74,7 @@ public class CellContainer<T,R> extends Composite {
 	public void setInput(T input) {
 		this.input = input;
 
-		for (final ICellControl<? super T> control: controls.values()) {
+		for (final IPropertyControl<? super T> control: controls.values()) {
 			control.load(input);
 		}
 	}

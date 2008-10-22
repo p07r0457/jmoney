@@ -58,7 +58,7 @@ import org.eclipse.swt.widgets.Text;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class AmountEditor implements IPropertyControl {
+public class AmountEditor implements IPropertyControl<ExtendableObject> {
 
 	private ExtendableObject fObject;
 

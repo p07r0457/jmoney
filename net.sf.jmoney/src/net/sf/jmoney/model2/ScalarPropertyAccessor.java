@@ -348,7 +348,7 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	 * @param parent
 	 * @return An interface to a wrapper class.
 	 */
-	public IPropertyControl createPropertyControl(Composite parent) {
+	public IPropertyControl<ExtendableObject> createPropertyControl(Composite parent) {
 		/*
 		 * When a PropertyAccessor object is created, it is provided with an
 		 * interface to a factory that constructs control objects that edit the

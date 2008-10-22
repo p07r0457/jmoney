@@ -42,7 +42,7 @@ import org.eclipse.swt.widgets.Control;
  *
  * @author Johann Gyger
  */
-public class DateEditor implements IPropertyControl {
+public class DateEditor implements IPropertyControl<ExtendableObject> {
 
     protected ScalarPropertyAccessor<Date> propertyAccessor;
     protected DateControl propertyControl;

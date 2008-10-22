@@ -24,6 +24,7 @@ package net.sf.jmoney.entrytable;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -58,7 +59,7 @@ public class OtherEntriesButton extends CellBlock<EntryData, EntryRowControl> {
 	}
 
     @Override	
-	public ICellControl<EntryData> createCellControl(Composite parent, final RowControl rowControl, final EntryRowControl coordinator) {
+	public IPropertyControl<EntryData> createCellControl(Composite parent, final RowControl rowControl, final EntryRowControl coordinator) {
 		
 	    /*
 	     * Use a single row tracker and cell focus tracker for this

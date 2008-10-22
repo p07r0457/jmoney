@@ -42,6 +42,7 @@ import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
@@ -272,8 +273,7 @@ public class TransactionDialog extends Dialog {
    		for (ScalarPropertyAccessor<?> propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
         	Label propertyLabel = new Label(composite, 0);
         	propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
-        	IPropertyControl propertyControl = propertyAccessor.createPropertyControl(composite);
-        	propertyControl.load(null);
+        	IPropertyControl<ExtendableObject> propertyControl = propertyAccessor.createPropertyControl(composite);
         	propertyControl.load(topEntry.getTransaction());
         }
 		return composite;

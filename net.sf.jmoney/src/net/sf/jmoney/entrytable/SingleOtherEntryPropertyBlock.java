@@ -67,7 +67,7 @@ public class SingleOtherEntryPropertyBlock extends IndividualBlock<Entry, ISplit
 	}
 
     @Override	
-	public ICellControl<Entry> createCellControl(Composite parent, RowControl rowControl, ISplitEntryContainer coordinator) {
+	public IPropertyControl<Entry> createCellControl(Composite parent, RowControl rowControl, ISplitEntryContainer coordinator) {
 		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		
 		ICellControl2<Entry> cellControl = new ICellControl2<Entry>() {

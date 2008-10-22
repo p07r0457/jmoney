@@ -40,7 +40,7 @@ import org.eclipse.swt.widgets.Text;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class TextEditor implements IPropertyControl {
+public class TextEditor implements IPropertyControl<ExtendableObject> {
 
     private ExtendableObject extendableObject;
 
