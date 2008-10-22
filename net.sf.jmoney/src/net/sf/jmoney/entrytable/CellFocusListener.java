@@ -12,14 +12,6 @@ public class CellFocusListener<R extends RowControl> extends FocusAdapter {
 	private RowSelectionTracker<R> selectionTracker;
 	private FocusCellTracker focusCellTracker;
 
-	// TODO: remove this version?
-	public CellFocusListener(R rowControl, ICellControl2<?> cellControl, RowSelectionTracker<R> selectionTracker, FocusCellTracker focusCellTracker) {
-		this.rowControl = rowControl;
-		this.cellControl = cellControl;
-		this.selectionTracker = selectionTracker;
-		this.focusCellTracker = focusCellTracker;
-	}
-	
 	public CellFocusListener(R rowControl, ICellControl2<?> cellControl) {
 		this.rowControl = rowControl;
 		this.cellControl = cellControl;
