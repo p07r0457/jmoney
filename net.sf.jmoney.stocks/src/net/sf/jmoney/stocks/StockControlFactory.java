@@ -19,7 +19,7 @@ public abstract class StockControlFactory<P> extends PropertyControlFactory<Stoc
 
 		final StockControl<Stock> control = new StockControl<Stock>(parent, null, Stock.class);
 		
-		return new IPropertyControl() {
+		return new IPropertyControl<ExtendableObject>() {
 
 			public Control getControl() {
 				return control;

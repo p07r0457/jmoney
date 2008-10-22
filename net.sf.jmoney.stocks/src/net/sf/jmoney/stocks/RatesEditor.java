@@ -46,7 +46,7 @@ import org.eclipse.swt.widgets.Control;
  * 
  * @author  Nigel Westbury
  */
-public class RatesEditor implements IPropertyControl {
+public class RatesEditor implements IPropertyControl<ExtendableObject> {
     
     private StockAccount account = null;
     

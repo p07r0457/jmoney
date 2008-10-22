@@ -33,7 +33,6 @@ import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.EntryRowControl;
 import net.sf.jmoney.entrytable.HorizontalBlock;
-import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IRowProvider;
 import net.sf.jmoney.entrytable.ISplitEntryContainer;
@@ -52,6 +51,7 @@ import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
@@ -111,7 +111,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		IndividualBlock<StockEntryData, StockEntryRowControl> actionColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Action", 50, 1) {
 
 			@Override
-			public ICellControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
+			public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
 				final CCombo control = new CCombo(parent, SWT.NONE);
 				control.add("buy");
 				control.add("sell");
@@ -145,7 +145,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					}
 				});
 				
-				return new ICellControl<StockEntryData>() {
+				return new IPropertyControl<StockEntryData>() {
 
 					public Control getControl() {
 						return control;
@@ -202,10 +202,10 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		IndividualBlock<StockEntryData, StockEntryRowControl> shareNameColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Stock", 50, 1) {
 
 			@Override
-			public ICellControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
+			public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
 				final StockControl<Stock> control = new StockControl<Stock>(parent, null, Stock.class);
 				
-				ICellControl<StockEntryData> cellControl = new ICellControl<StockEntryData>() {
+				IPropertyControl<StockEntryData> cellControl = new IPropertyControl<StockEntryData>() {
 					private StockEntryData data;
 					
 					public Control getControl() {
@@ -306,10 +306,10 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		IndividualBlock<StockEntryData, StockEntryRowControl> priceColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Price", 60, 1) {
 
 			@Override
-			public ICellControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
+			public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
 				final Text control = new Text(parent, SWT.RIGHT);
 				
-				return new ICellControl<StockEntryData>() {
+				return new IPropertyControl<StockEntryData>() {
 
 					public Control getControl() {
 						return control;
@@ -363,10 +363,10 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		IndividualBlock<StockEntryData, StockEntryRowControl> shareNumberColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Quantity", EntryInfo.getAmountAccessor().getMinimumWidth(), EntryInfo.getAmountAccessor().getWeight()) {
 
 			@Override
-			public ICellControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
+			public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
 				final Text control = new Text(parent, SWT.RIGHT);
 				
-				return new ICellControl<StockEntryData>() {
+				return new IPropertyControl<StockEntryData>() {
 
 					private StockEntryData data;
 					
@@ -556,7 +556,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					}
 					
 				    @Override	
-					public ICellControl<StockEntryData> createCellControl(Composite parent, final RowControl rowControl, final StockEntryRowControl coordinator) {
+					public IPropertyControl<StockEntryData> createCellControl(Composite parent, final RowControl rowControl, final StockEntryRowControl coordinator) {
 						final StackControl<StockEntryData, StockEntryRowControl> control = new StackControl<StockEntryData, StockEntryRowControl>(parent, rowControl, coordinator, this);
 						
 						coordinator.addTransactionTypeChangeListener(new ITransactionTypeChangeListener() {
