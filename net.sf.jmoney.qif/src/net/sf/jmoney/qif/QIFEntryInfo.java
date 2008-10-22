@@ -94,7 +94,7 @@ public class QIFEntryInfo implements IPropertySetInfo {
 				// This property is not editable???
 				final Label control = new Label(parent, SWT.NONE);
 				
-		    	return new IPropertyControl() {
+		    	return new IPropertyControl<ExtendableObject>() {
 					public Control getControl() {
 						return control;
 					}
