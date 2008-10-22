@@ -75,7 +75,7 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 				
 				// Property is not editable
 		        final Label control = new Label(parent, SWT.NONE);
-		        return new IPropertyControl() {
+		        return new IPropertyControl<ExtendableObject>() {
 
 					public Control getControl() {
 						return control;
@@ -123,7 +123,7 @@ public class ReconciliationEntryInfo implements IPropertySetInfo {
 		IPropertyControlFactory<BankStatement> statementControlFactory = new PropertyControlFactory<BankStatement>() {
 			public IPropertyControl createPropertyControl(Composite parent, final ScalarPropertyAccessor<BankStatement> propertyAccessor) {
 		        final Text control = new Text(parent, SWT.NONE);
-		        return new IPropertyControl() {
+		        return new IPropertyControl<ExtendableObject>() {
 
 		        	private ExtendableObject object;
 		        	

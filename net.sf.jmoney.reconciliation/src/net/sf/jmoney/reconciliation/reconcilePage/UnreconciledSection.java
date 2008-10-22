@@ -38,7 +38,6 @@ import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.EntryRowControl;
 import net.sf.jmoney.entrytable.HorizontalBlock;
-import net.sf.jmoney.entrytable.ICellControl;
 import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IRowProvider;
 import net.sf.jmoney.entrytable.ISplitEntryContainer;
@@ -54,6 +53,7 @@ import net.sf.jmoney.isolation.UncommittedObjectKey;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
+import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.reconciliation.BankStatement;
@@ -198,7 +198,7 @@ public class UnreconciledSection extends SectionPart {
 		
 		CellBlock<EntryData, EntryRowControl> reconcileButton = new CellBlock<EntryData, EntryRowControl>(20, 0) {
 			@Override
-			public ICellControl<EntryData> createCellControl(Composite parent, RowControl rowControl, final EntryRowControl coordinator) {
+			public IPropertyControl<EntryData> createCellControl(Composite parent, RowControl rowControl, final EntryRowControl coordinator) {
 				ButtonCellControl cellControl = new ButtonCellControl(parent, coordinator, reconcileImage, "Reconcile this Entry to the above Statement") {
 					@Override
 					protected void run(EntryRowControl rowControl) {

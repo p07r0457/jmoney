@@ -45,7 +45,7 @@ import org.eclipse.swt.widgets.Control;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class StatusEditor implements IPropertyControl {
+public class StatusEditor implements IPropertyControl<ExtendableObject> {
 
     private CCombo propertyControl;
 
