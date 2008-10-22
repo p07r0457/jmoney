@@ -139,11 +139,11 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			
 			private ScalarPropertyAccessor propertyAccessor;
 			private Label propertyLabel;
-			private IPropertyControl propertyControl;
+			private IPropertyControl<ExtendableObject> propertyControl;
 			
 			PropertyControls(ScalarPropertyAccessor propertyAccessor, 
 					Label propertyLabel,
-					IPropertyControl propertyControl) {
+					IPropertyControl<ExtendableObject> propertyControl) {
 				this.propertyAccessor = propertyAccessor;
 				this.propertyLabel = propertyLabel;
 				this.propertyControl = propertyControl;
@@ -283,7 +283,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 				final Label propertyLabel = new Label(topLevelControl, 0);
 				propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
 				
-				IPropertyControl propertyControl = propertyAccessor.createPropertyControl(topLevelControl);
+				IPropertyControl<ExtendableObject> propertyControl = propertyAccessor.createPropertyControl(topLevelControl);
 
 				createAndAddFocusListener(propertyControl, propertyAccessor);
 
@@ -320,7 +320,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			return topLevelControl;
 		}
 		
-		private <V> void createAndAddFocusListener(final IPropertyControl propertyControl, final ScalarPropertyAccessor<V> propertyAccessor) {
+		private <V> void createAndAddFocusListener(final IPropertyControl<ExtendableObject> propertyControl, final ScalarPropertyAccessor<V> propertyAccessor) {
 			propertyControl.getControl().addFocusListener(
 					new FocusAdapter() {
 
@@ -520,7 +520,7 @@ public class CategoryPage implements IBookkeepingPageFactory {
 			// should be.  
 			
 			if (parent instanceof Session) {
-				Iterator iter;
+				Iterator<IncomeExpenseAccount> iter;
 
 				iter = ((Session)parent).getIncomeExpenseAccountIterator();
 				int count = 0;
