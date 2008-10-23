@@ -177,6 +177,16 @@ public class OfxImport implements IBankStatementSource {
 		String [] parts = data.replace(',', '.').split("\\.");
 		long amount = Integer.parseInt(parts[0]) * 100;
 		if (parts.length > 1) {
+			
+			// QFX seems to put extra zeroes at the end.
+			// (or at least hsabank.com does)
+			// Remove them to get a length of two.
+			while (parts[1].length() > 2) {
+				if (parts[1].charAt(parts[1].length()-1) != '0') {
+					throw new RuntimeException("Extra digits and they are not zeroes");
+				}
+				parts[1] = parts[1].substring(0, parts[1].length() - 1);
+			}
 			if (data.startsWith("-")) {
 				amount -= Integer.parseInt(parts[1]);
 			} else {
@@ -200,9 +210,20 @@ public class OfxImport implements IBankStatementSource {
 		if (tmpElement != null)
 			entryData.setMemo(tmpElement.getTrimmedText());
 
-		tmpElement = foundElement.findElement("CHECKNUM");
+		// TRNTYPE is in QFX files only?
+		tmpElement = foundElement.findElement("TRNTYPE");
 		if (tmpElement != null)
-			entryData.setCheck(tmpElement.getTrimmedText());
+			entryData.setType(tmpElement.getTrimmedText());
+
+		tmpElement = foundElement.findElement("CHECKNUM");
+		if (tmpElement != null) {
+			String trimmedCheckNum = tmpElement.getTrimmedText();
+			// QFX (or at least hsabank.com) sets CHECKNUM to zero even though not a check.
+			// This is probably a bug at HSA Bank, but we ignore check numbers of zero.
+			if (!trimmedCheckNum.equals("0")) {
+				entryData.setCheck(trimmedCheckNum);
+			}
+		}
 
 		// NOTE [roel] : moved this workaround into
 		// EntryData#assignPropertyValues

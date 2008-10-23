@@ -273,10 +273,7 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 					new NewStatementDialog(getSite().getShell(), lastStatement==null ? null : lastStatement.statement);
 				if (messageBox.open() == Dialog.OK) {
 					statement = messageBox.getValue();
-					long openingBalanceOfNewStatement = 
-						lastStatement == null 
-						? account.getStartBalance()
-						: lastStatement.getClosingBalance();
+					long openingBalanceOfNewStatement = fStatementsSection.getStatementOpeningBalance(statement);
 					fStatementSection.setStatement(statement, openingBalanceOfNewStatement);
 				}				
 			}
@@ -478,6 +475,24 @@ public class ReconcilePage extends FormPage implements IBookkeepingPage {
 	 * 2. A statement must be open in the editor 
 	 */
 	void importStatement() {
+//		outer: for (Entry entry : account.getBaseObject().getEntries()) {
+//		if (entry.getCheck() == null && entry.getMemo() != null) {
+//			if (entry.getMemo().length() < 3) continue;
+//			if (entry.getMemo().length() > 4) continue;
+//			String memo = entry.getMemo();
+//			if (memo.charAt(0) == '0') memo = memo.substring(1);
+//			if (memo.length() < 3) continue;
+//			if (memo.charAt(0) == '0') continue;
+//			for (int i=0; i < memo.length(); i++) {
+//				if (memo.charAt(i) < '0' || memo.charAt(i) > '9') continue outer; 
+//			}
+//			entry.setCheck(memo);
+//			entry.setMemo("check " + memo);
+//		}
+//			
+//		}
+	
+	
 		/*
 		 * Set the default start date to be the first day after the date of the previous
 		 * statement (if any and if statements are dated, not numbered), and the default

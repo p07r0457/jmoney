@@ -68,6 +68,7 @@ public interface IBankStatementSource {
 		public Date valueDate = null;
 		public String check = null;
 		private String memo = null;
+		private String type = null;
 		private String name = null;
 		private String payee = null;
 		public long amount = 0;  // Use getter???
@@ -85,6 +86,9 @@ public interface IBankStatementSource {
 		}
 		public void setMemo(String memo) {
 			this.memo = memo;
+		}
+		public void setType(String type) {
+			this.type = type;
 		}
 		public void setName(String name) {
 			this.name = name;
@@ -149,6 +153,9 @@ public interface IBankStatementSource {
    			String text = "";
    			if (memo != null) {
    				text += "memo=" + memo;
+   			}
+   			if (type != null) {
+   				text += "type=" + type;
    			}
    			if (name != null) {
    				text += "name=" + name;

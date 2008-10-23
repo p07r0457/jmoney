@@ -114,35 +114,38 @@ public class QifImport implements IBankStatementSource {
 			Date entryDate = null;
 
 			line = buffer.readLine();
-			while (line != null) {
+			// Bank of America outputs empty lines at the end
+			while (line != null && line.length() >= 1) {
 				EntryData entryData = new EntryData();
 				
 				do {
-					switch (line.charAt(0)) {
-					case 'T':
-						entryData.setAmount(parseAmount(line, account.getCurrency()));
-						break;
-					case 'D':
-						entryDate = parseDate(line);
-						entryData.setClearedDate(entryDate);
-						break;
-					case 'N':
-						entryData.setCheck(line.substring(1));
-						break;
-					case 'P':
-						entryData.setPayee(line.substring(1));
-						break;
-					case 'M':
-						entryData.setMemo(line.substring(1));
-						break;
-					default:
-						break;
+					// Bank of America outputs empty lines at the end
+					if (line.length() >= 1) {
+						switch (line.charAt(0)) {
+						case 'T':
+							entryData.setAmount(parseAmount(line, account.getCurrency()));
+							break;
+						case 'D':
+							entryDate = parseDate(line);
+							entryData.setClearedDate(entryDate);
+							break;
+						case 'N':
+							entryData.setCheck(line.substring(1));
+							break;
+						case 'P':
+							entryData.setPayee(line.substring(1));
+							break;
+						case 'M':
+							entryData.setMemo(line.substring(1));
+							break;
+						default:
+							break;
+						}
 					}
 					
 					line = buffer.readLine();
 				} while (line.charAt(0) != '^');
 
-				
 				if (entryDate != null
 				 && (startDate == null
 			  	   || entryDate.compareTo(startDate) >= 0)

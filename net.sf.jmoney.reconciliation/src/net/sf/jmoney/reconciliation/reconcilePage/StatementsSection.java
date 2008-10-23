@@ -343,6 +343,17 @@ public class StatementsSection extends SectionPart {
 				return headMap.lastKey();
 			}
 		}
+
+		public long getStatementOpeningBalance(BankStatement statement) {
+			long openingBalance;
+			SortedMap<BankStatement, StatementDetails> priorStatements = statementDetailsMap.headMap(statement);
+			if (priorStatements.isEmpty()) {
+				openingBalance = account.getStartBalance();
+			} else {
+				openingBalance = priorStatements.get(priorStatements.lastKey()).getClosingBalance();
+			}
+			return openingBalance;
+		}
 	}
 	
 	/**
@@ -398,5 +409,20 @@ public class StatementsSection extends SectionPart {
 	public void addSelectionListener(SelectionAdapter listener) {
 		// Pass thru the request to the table control.
 		statementTable.addSelectionListener(listener);
+	}
+
+	/**
+	 * Returns the opening balance for a given statement.
+	 * <P> 
+	 * The statement may not yet exist, so no entry for this
+	 * statement will yet be in the statement map.  The statement
+	 * will not necessarily be the last statement because the user
+	 * may be working backwards and entering prior statements.
+	 * 
+	 * @param statement
+	 * @return the opening balance of this statement
+	 */
+	public long getStatementOpeningBalance(BankStatement statement) {
+		return contentProvider.getStatementOpeningBalance(statement);
 	}	
 }

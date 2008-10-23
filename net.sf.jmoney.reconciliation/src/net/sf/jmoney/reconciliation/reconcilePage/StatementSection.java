@@ -100,7 +100,7 @@ public class StatementSection extends SectionPart {
 	 * Contains two controls:
 	 * - noStatementMessage
 	 * - containerOfTableAndButtons
-	 * Layout: AlternativeLayout
+	 * Layout: StackLayout
 	 */
 	Composite container;
     
