@@ -23,7 +23,15 @@ public class StockEntryData extends EntryData {
 	private Entry mainEntry;
 	private Entry dividendEntry;
 	private Entry withholdingTaxEntry;
+	
+	/**
+	 * the entry for the commission, or null if this is not a purchase or sale
+	 * transaction or if no commission account is configured for this stock
+	 * account because commissions are never charged on any purchases or sales
+	 * in this account
+	 */
 	private Entry commissionEntry;
+	
 	private Entry tax1Entry;
 	private Entry tax2Entry;
 	private Entry purchaseOrSaleEntry;
@@ -338,9 +346,11 @@ public class StockEntryData extends EntryData {
 	}
 
 	/**
-	 * @return the entry in the transaction that represents the
-	 * 		commission, or null if this is not a purchase or sale
-	 * 		transaction
+	 * @return the entry in the transaction that contains the commission, or
+	 *         null if this is not a purchase or sale transaction or if no
+	 *         commission account is configured for this stock account because
+	 *         commissions are never charged on any purchases or sales in this
+	 *         account
 	 */
 	public Entry getCommissionEntry() {
 		return commissionEntry;

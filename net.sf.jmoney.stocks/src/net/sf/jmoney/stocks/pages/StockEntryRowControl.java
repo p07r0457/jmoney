@@ -69,7 +69,8 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 		super.setContent(committedEntryData);
 		if (committedEntryData == null) {
 			// TODO: Is there a better way of seeing if there is a tax table?
-			tax2RatesToBeCalculated = (((StockAccount)uncommittedEntryData.getEntry().getAccount()).getTax2Rates() != null);
+			StockAccount stockAccount = (StockAccount)uncommittedEntryData.getEntry().getAccount();
+			tax2RatesToBeCalculated = (stockAccount.getTax2Account() != null && stockAccount.getTax2Rates() != null);
 		} else {
 			tax2RatesToBeCalculated = false;
 		}
@@ -254,7 +255,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	 */
 	private void calculateExpenses() {
 		// TODO: Can we clean this up a little?  Stock quantities are to three decimal places,
-		// (long value is number of thousanths) hence why we shift the long value three places.
+		// (long value is number of thousandths) hence why we shift the long value three places.
 		long quantity = uncommittedEntryData.getPurchaseOrSaleEntry().getAmount();
 		BigDecimal grossAmount1 = sharePrice.multiply(BigDecimal.valueOf(quantity).movePointLeft(3));
 		long grossAmount = grossAmount1.movePointRight(2).longValue();
@@ -265,11 +266,11 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 			(uncommittedEntryData.getTransactionType() == TransactionType.Buy)
 			? account.getBuyCommissionRates()
 					: account.getSellCommissionRates();
-		if (commissionRates != null && !commissionManuallyEdited) {
+		if (account.getCommissionAccount() != null && commissionRates != null && !commissionManuallyEdited) {
 			uncommittedEntryData.getCommissionEntry().setAmount(commissionRates.calculateRate(grossAmount));
 		}
 		
-		if (account.getTax1Rates() != null && !tax1RatesManuallyEdited) {
+		if (account.getTax1Account() != null && account.getTax1Rates() != null && !tax1RatesManuallyEdited) {
 			uncommittedEntryData.getTax1Entry().setAmount(account.getTax1Rates().calculateRate(grossAmount));
 		}
 		

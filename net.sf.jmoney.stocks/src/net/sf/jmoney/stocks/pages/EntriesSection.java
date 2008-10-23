@@ -441,18 +441,20 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 		List<Block<? super StockEntryData, ? super StockEntryRowControl>> expenseColumns = new ArrayList<Block<? super StockEntryData, ? super StockEntryRowControl>>();
 		
-		IndividualBlock<StockEntryData, StockEntryRowControl> commissionColumn = new PropertyBlock<StockEntryData, StockEntryRowControl>(EntryInfo.getAmountAccessor(), "commission", "Commission") {
-			@Override
-			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
-				return data.getCommissionEntry();
-			}
-			
-			@Override
-			public void fireUserChange(StockEntryRowControl rowControl) {
-				rowControl.commissionChanged();
-			}
-		};		
-		expenseColumns.add(commissionColumn);
+		if (account.getCommissionAccount() != null) {
+			IndividualBlock<StockEntryData, StockEntryRowControl> commissionColumn = new PropertyBlock<StockEntryData, StockEntryRowControl>(EntryInfo.getAmountAccessor(), "commission", "Commission") {
+				@Override
+				public ExtendableObject getObjectContainingProperty(StockEntryData data) {
+					return data.getCommissionEntry();
+				}
+
+				@Override
+				public void fireUserChange(StockEntryRowControl rowControl) {
+					rowControl.commissionChanged();
+				}
+			};		
+			expenseColumns.add(commissionColumn);
+		}
 		
 		if (account.getTax1Name() != null) {
 			IndividualBlock<StockEntryData, StockEntryRowControl> tax1Column = new PropertyBlock<StockEntryData, StockEntryRowControl>(EntryInfo.getAmountAccessor(), "tax1", account.getTax1Name()) {
