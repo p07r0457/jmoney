@@ -22,9 +22,9 @@
 
 package net.sf.jmoney.jdbcdatastore;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -43,9 +43,9 @@ import net.sf.jmoney.model2.EntryInfo;
  */
 public class AccountEntriesList implements Collection<Entry> {
 	private SessionManager sessionManager;
-	private IDatabaseRowKey keyOfRequiredPropertyValue;
-	private String tableName;
-	private String columnName;
+	private final IDatabaseRowKey keyOfRequiredPropertyValue;
+	private final String tableName;
+	private final String columnName;
 	
 	public AccountEntriesList(SessionManager sessionManager, IDatabaseRowKey keyOfRequiredPropertyValue) {
 		this.sessionManager = sessionManager;
@@ -58,13 +58,19 @@ public class AccountEntriesList implements Collection<Entry> {
 	public int size() {
 		try {
 			String sql = "SELECT COUNT(*) FROM " + tableName
-			+ " WHERE \"" + columnName + "\" = " + keyOfRequiredPropertyValue.getRowId();
-			System.out.println(sql);
-			ResultSet resultSet = sessionManager.getReusableStatement().executeQuery(sql);
-			resultSet.next();
-			int size = resultSet.getInt(1);
-			resultSet.close();
-			return size;
+			+ " WHERE \"" + columnName + "\" = ?";
+			System.out.println(sql + " : " + keyOfRequiredPropertyValue.getRowId());
+			PreparedStatement stmt = sessionManager.getConnection().prepareStatement(sql);
+			try {
+				stmt.setInt(1, keyOfRequiredPropertyValue.getRowId());
+				ResultSet resultSet = stmt.executeQuery();
+				resultSet.next();
+				int size = resultSet.getInt(1);
+				resultSet.close();
+				return size;
+			} finally {
+				stmt.close();
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException("SQL Exception: " + e.getMessage());
@@ -75,11 +81,17 @@ public class AccountEntriesList implements Collection<Entry> {
 		try {
 			String sql =
 				"SELECT * FROM " + tableName
-				+ " WHERE \"" + columnName + "\" = " + keyOfRequiredPropertyValue.getRowId();
-			System.out.println(sql);
-			ResultSet resultSet = sessionManager.getReusableStatement().executeQuery(sql);
-			boolean hasNext = resultSet.next();
-			return !hasNext;
+				+ " WHERE \"" + columnName + "\" = ?";
+			System.out.println(sql + " : " + keyOfRequiredPropertyValue.getRowId());
+			PreparedStatement stmt = sessionManager.getConnection().prepareStatement(sql);
+			try {
+				stmt.setInt(1, keyOfRequiredPropertyValue.getRowId());
+				ResultSet resultSet = stmt.executeQuery();
+				boolean hasNext = resultSet.next();
+				return !hasNext;
+			} finally {
+				stmt.close();
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException("SQL Exception: " + e.getMessage());
@@ -95,13 +107,22 @@ public class AccountEntriesList implements Collection<Entry> {
 			// TODO: This code will not work if the index is indexing
 			// objects of a derivable property set.  Table joins would
 			// be required in such a situation.
-			Statement stmt = sessionManager.getConnection().createStatement();
-			String sql = 
-				"SELECT * FROM " + tableName 
-				+ " WHERE \"" + columnName + "\" = " + keyOfRequiredPropertyValue.getRowId();
-			System.out.println(sql);
-			ResultSet resultSet = stmt.executeQuery(sql);
-			return new UncachedObjectIterator<Entry>(resultSet, EntryInfo.getPropertySet(), null, sessionManager);
+			String sql =
+				"SELECT * FROM " + tableName
+				+ " WHERE \"" + columnName + "\" = ?";
+			System.out.println(sql + " : " + keyOfRequiredPropertyValue.getRowId());
+			PreparedStatement stmt = sessionManager.getConnection().prepareStatement(sql);
+//			try {
+				stmt.setInt(1, keyOfRequiredPropertyValue.getRowId());
+				/*
+				 * UncachedObjectIterator takes over ownership of the statement,
+				 * meaning it is the responsibility of UncachedObjectIterator to
+				 * close the statement when it is done.
+				 */
+				return new UncachedObjectIterator<Entry>(stmt, EntryInfo.getPropertySet(), null, sessionManager);
+//			} finally {
+//				stmt.close();
+//			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException("internal error");

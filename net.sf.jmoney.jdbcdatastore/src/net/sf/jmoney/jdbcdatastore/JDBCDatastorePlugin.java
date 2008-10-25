@@ -153,13 +153,12 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 		}
 		
 		try {
-			Connection connection = DriverManager.getConnection(url, user, password);
-			result = new SessionManager(connection);
+			result = new SessionManager(url, user, password);
 		} catch (SQLException e3) {
 			if (e3.getSQLState().equals("08000")) {
 				// A connection error which means the database server is probably not running.
 				String title = JDBCDatastorePlugin.getResourceString("errorTitle");
-				String message = JDBCDatastorePlugin.getResourceString("connectionFailed");
+				String message = JDBCDatastorePlugin.getResourceString("connectionFailed") + e3.getMessage() + "  Check that the database server is running.";
 				MessageDialog waitDialog =
 					new MessageDialog(
 							window.getShell(), 
@@ -169,6 +168,19 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 							MessageDialog.ERROR, 
 							new String[] { IDialogConstants.OK_LABEL }, 0);
 				waitDialog.open();
+			} else if (e3.getSQLState().equals("S1000")) {
+					// The most likely cause of this error state is that the database is not attached.
+					String title = JDBCDatastorePlugin.getResourceString("errorTitle");
+					String message = e3.getMessage() + " " + JDBCDatastorePlugin.getResourceString("databaseNotFound");
+					MessageDialog waitDialog =
+						new MessageDialog(
+								window.getShell(), 
+								title, 
+								null, // accept the default window icon
+								message, 
+								MessageDialog.ERROR, 
+								new String[] { IDialogConstants.OK_LABEL }, 0);
+					waitDialog.open();
 			} else {
 				e3.printStackTrace();
 				throw new RuntimeException(e3.getMessage());

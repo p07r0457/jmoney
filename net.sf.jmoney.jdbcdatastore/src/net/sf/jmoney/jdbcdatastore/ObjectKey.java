@@ -25,6 +25,7 @@ package net.sf.jmoney.jdbcdatastore;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.MessageFormat;
 
 import net.sf.jmoney.jdbcdatastore.SessionManager.DatabaseListKey;
 import net.sf.jmoney.model2.DataManager;
@@ -202,8 +203,8 @@ public class ObjectKey implements IDatabaseRowKey {
 			 * the appropriate tables of additional properties for the derived
 			 * class.
 			 */
+			ExtendablePropertySet<?> finalPropertySet = null;
 			try {
-				ExtendablePropertySet<?> finalPropertySet;
 				
 				if (typedPropertySet.isDerivable()) {
 					/*
@@ -218,24 +219,30 @@ public class ObjectKey implements IDatabaseRowKey {
 					
 					String sql = "SELECT _PROPERTY_SET FROM "
 						+ basemostPropertySet.getId().replace('.', '_')
-						+ " WHERE _ID = " + rowId;
+						+ " WHERE _ID = ?";
 					System.out.println(sql);
-					ResultSet rs = sessionManager.getReusableStatement().executeQuery(sql);
-
-					// Get the final property set.
-					rs.next();
-					String id = rs.getString("_PROPERTY_SET");  // TODO: use index, faster
-
+					PreparedStatement stmt = sessionManager.getConnection().prepareStatement(sql);
 					try {
-						finalPropertySet = PropertySet.getExtendablePropertySet(id);
-					} catch (PropertySetNotFoundException e1) {
-						// TODO: The most probable cause is that an object
-						// is stored in the database, but the plug-in that supports
-						// the object has now gone.
-						// We need to think about the proper way of
-						// handling this scenario.
-						e1.printStackTrace();
-						throw new RuntimeException("Property set stored in database is no longer supported by the installed plug-ins.");
+						stmt.setInt(1, rowId);
+						ResultSet rs = stmt.executeQuery();
+
+						// Get the final property set.
+						rs.next();
+						String id = rs.getString("_PROPERTY_SET");  // TODO: use index, faster
+
+						try {
+							finalPropertySet = PropertySet.getExtendablePropertySet(id);
+						} catch (PropertySetNotFoundException e1) {
+							// TODO: The most probable cause is that an object
+							// is stored in the database, but the plug-in that supports
+							// the object has now gone.
+							// We need to think about the proper way of
+							// handling this scenario.
+							e1.printStackTrace();
+							throw new RuntimeException("Property set stored in database is no longer supported by the installed plug-ins.");
+						}
+					} finally {
+						stmt.close();
 					}
 				} else {
 					finalPropertySet = typedPropertySet;
@@ -257,8 +264,29 @@ public class ObjectKey implements IDatabaseRowKey {
 				
 				rs.close();
 			} catch (SQLException e) {
-				e.printStackTrace();
-				throw new RuntimeException("SQL error");
+				if (e.getSQLState().equals("24000") && finalPropertySet != null) {
+					/*
+					 * This error indicates there is no current row in the
+					 * result set which almost certainly means that the result
+					 * set contained no rows. This in turn implies a corrupted
+					 * database. The most likely situation is that a row exists
+					 * in a base table but the row does not exist in the table
+					 * of derived objects as would be expected by the value of
+					 * _PROPERTY_SET.
+					 * 
+					 * We build a message giving details of this possible
+					 * problem.
+					 */
+					String description = MessageFormat.format(
+							"The database may be corrupted.  A row exists in the {1} table with _ID of {0} and _PROPERTY_SET of {2} but no row exists with an _ID of {0} in one of the derived tables.",
+							rowId,
+							basemostPropertySet.getId().replace('.', '_'),
+							finalPropertySet.getId());
+					throw new RuntimeException(description, e);
+				} else {
+					e.printStackTrace();
+					throw new RuntimeException(e.getMessage(), e);
+				}
 			}
 		}
 		return extendableObject;

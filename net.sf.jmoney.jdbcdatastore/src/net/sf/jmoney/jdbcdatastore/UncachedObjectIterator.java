@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.jdbcdatastore;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -48,6 +49,7 @@ import net.sf.jmoney.model2.ExtendablePropertySet;
  * @author Nigel Westbury
  */
 class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> {
+	private PreparedStatement stmt;
 	private ResultSet resultSet;
 	private ExtendablePropertySet<E> propertySet;
 	private DatabaseListKey<? super E> listKey;
@@ -56,38 +58,48 @@ class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> 
 
 	/**
 	 * It is the responsibility of this iterator to close both the result set
-	 * and the statement when the iterator is done.
+	 * and the statement when the iterator is done. (Note that if the
+	 * constructor throws an exception, the constructor will immediately close
+	 * the statement).
+	 * <P>
+	 * The statement and result set are closed when the iteration has completed
+	 * (when the last object has been obtained from the next() method). However,
+	 * there is a problem in that if the user of this iterator does not do a
+	 * complete iteration of all elements then the result set and statement
+	 * would never be closed. We guard against this by closing these when this
+	 * iterator is garbage collected.
 	 * 
-	 * There is a problem in that if the user of this iterator does not do a
-	 * complete iteration of all elements then the result set and statement are
-	 * never closed. We could guard against this by closing these when this
-	 * iterator is garbage collected. However, for time being we just make it a
-	 * requirement that the iteration is always completed.
-	 * 
-	 * @param resultSet
+	 * @param stmt
+	 *            a prepared statement which, when executed, returns the result
+	 *            set to be used for this iteration
 	 * @param propertySet
 	 *            The property set for the objects in this list, which must be
 	 *            final (cannot be a derivable property set)
 	 * @param listKey
-	 *            The caller may pass a null list key. In that case, a new
-	 *            list key will be generated for each object in the list. If
-	 *            all the objects in the list have the same parent then pass
-	 *            this parent. If the objects in the list have different parents
-	 *            then pass null.
+	 *            The caller may pass a null list key. In that case, a new list
+	 *            key will be generated for each object in the list. If all the
+	 *            objects in the list have the same parent then pass this
+	 *            parent. If the objects in the list have different parents then
+	 *            pass null.
 	 * @param sessionManager
 	 */
-	UncachedObjectIterator(ResultSet resultSet, ExtendablePropertySet<E> propertySet, DatabaseListKey<? super E> listKey, SessionManager sessionManager) {
-		this.resultSet = resultSet;
+	UncachedObjectIterator(PreparedStatement stmt, ExtendablePropertySet<E> propertySet, DatabaseListKey<? super E> listKey, SessionManager sessionManager) {
+		this.stmt = stmt;
 		this.propertySet = propertySet;
 		this.listKey = listKey;
 		this.sessionManager = sessionManager;
 		
 		// Position on first row.
 		try {
+			resultSet = stmt.executeQuery();
 			isAnother = resultSet.next();
 		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
+			try {
+				stmt.close();
+			} catch (SQLException e1) {
+				// Ignore error on close
+			}
+			throw new RuntimeException("UncachedObjectIterator construction failed", e);
 		}
 	}
 	
@@ -120,22 +132,39 @@ class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> 
 			/*
 			 * We have reached the end, so close the statement and result
 			 * set now.  (It is the responsibility of this iterator to do
-			 * so).
+			 * so).  Because the finalizer also closes these (in case the
+			 * caller does not finish the iteration), we set these to null
+			 * after closing them to prevent trying to close twice.
 			 */
 			if (!isAnother) {
-				Statement statement = resultSet.getStatement();
 				resultSet.close();
-				statement.close();
+				resultSet = null;
+				stmt.close();
+				stmt = null;
 			}
 			
 			return extendableObject;
-		} catch (SQLException e3) {
-			e3.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
 			throw new RuntimeException("internal error");
 		}
 	}
 	
 	public void remove() {
 		throw new RuntimeException("unimplemented method");
+	}
+	
+	@Override
+	public void finalize() {
+		try {
+			if (stmt != null) {
+				if (resultSet != null) {
+					resultSet.close();
+				}
+				stmt.close();
+			}
+		} catch (SQLException e) {
+			// Don't worry if the close fails.
+		}
 	}
 }

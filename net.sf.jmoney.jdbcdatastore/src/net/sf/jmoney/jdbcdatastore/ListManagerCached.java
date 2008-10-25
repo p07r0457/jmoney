@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.jdbcdatastore;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -33,7 +34,6 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IValues;
-import net.sf.jmoney.model2.ListKey;
 
 /**
  * Every datastore implementation must provide an implementation
@@ -270,14 +270,24 @@ public class ListManagerCached<E extends ExtendableObject> implements IListManag
 		 */		
 		try {
 			for (ExtendablePropertySet<? extends E> finalPropertySet: listKey.listPropertyAccessor.getElementPropertySet().getDerivedPropertySets()) {
-				ResultSet resultSet = sessionManager.executeListQuery(listKey, finalPropertySet);
-				while (resultSet.next()) {
-					ObjectKey key = new ObjectKey(resultSet, finalPropertySet, listKey, sessionManager);
-					E extendableObject = finalPropertySet.getImplementationClass().cast(key.getObject());
-					elements.add(extendableObject);
+				PreparedStatement stmt = sessionManager.executeListQuery(listKey, finalPropertySet);
+				try {
+					ResultSet resultSet = stmt.executeQuery();
+					try {
+						while (resultSet.next()) {
+							ObjectKey key = new ObjectKey(resultSet, finalPropertySet, listKey, sessionManager);
+							E extendableObject = finalPropertySet.getImplementationClass().cast(key.getObject());
+							elements.add(extendableObject);
+						}
+					} finally {
+						resultSet.close();
+					}
+				} finally {
+					stmt.close();
 				}
 			}
 		} catch (SQLException e) {
+			// TODO: We get an 08S01 here when the socket is reset.
 			e.printStackTrace();
 			throw new RuntimeException("internal error");
 		}

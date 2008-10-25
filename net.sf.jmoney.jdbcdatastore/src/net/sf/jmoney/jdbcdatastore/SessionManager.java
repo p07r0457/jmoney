@@ -26,6 +26,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -34,6 +35,7 @@ import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -89,8 +91,6 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	
 	private Connection connection;
 	
-	private Statement reusableStatement;
-	
 	private IDatabaseRowKey sessionKey;
 	
 	/**
@@ -129,9 +129,28 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * sets that contain a list of objects of the property set.
 	 */
 	private Map<ExtendablePropertySet<?>, Vector<ParentList>> tablesMap = null;
+
+	/*
+	 * This is saved so we can re-connect in case the connection fails.
+	 */
+	private String url;
+
+	/*
+	 * This is saved so we can re-connect in case the connection fails.
+	 */
+	private String user;
+
+	/*
+	 * This is saved so we can re-connect in case the connection fails.
+	 */
+	private String password;
 	
-	public SessionManager(Connection connection) throws SQLException {
-		this.connection = connection;
+	public SessionManager(String url, String user, String password) throws SQLException {
+		this.url = url;
+		this.user = user;
+		this.password = password;
+
+		this.connection = DriverManager.getConnection(url, user, password);
 
 		/*
 		 * Set on the flag that indicates if we are operating with a database that
@@ -149,13 +168,6 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			}
 		}
 		
-		try {
-			this.reusableStatement = connection.createStatement();
-		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new RuntimeException("SQL Exception: " + e.getMessage());
-		}
-	
 		// Create a statement for our use.
 		Statement stmt = connection.createStatement();
 
@@ -268,19 +280,18 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	public Connection getConnection() {
 		return connection;
 	}
-	
+
 	/**
-	 * This method provides a statement object to consumers
-	 * which need a statement object and can guarantee that
-	 * they will have finished with the statement before
-	 * another call to this method is made.  Realistically
-	 * that means this method should only be called when the
-	 * caller has closed the result set before the calling
-	 * method returns and, furthermore, no calls are made to
-	 * methods that may make SQL queries.
+	 * This method should be called whenever a connection fails with an error that
+	 * indicates a new connection needs to be made.
+	 * 
+	 * The usual error when a connect times out is "08S01" (at least with Microsoft SQL Server).
+	 * This method attempts to close the connection, so subsequent attempts to use the connection
+	 * may 
 	 */
-	public Statement getReusableStatement() {
-		return reusableStatement;
+	public void resetConnection() {
+		// TODO Auto-generated method stub
+		
 	}
 	
 	@Override
@@ -293,7 +304,6 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	@Override
 	public void close() {
 		try {
-			reusableStatement.close();
 			connection.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -402,7 +412,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @return
 	 * @throws SQLException
 	 */
-	ResultSet executeListQuery(DatabaseListKey<?> listKey, ExtendablePropertySet<?> finalPropertySet) throws SQLException {
+	PreparedStatement executeListQuery(DatabaseListKey<?> listKey, ExtendablePropertySet<?> finalPropertySet) throws SQLException {
 		String sql = buildJoins(finalPropertySet);
 		
 		/*
@@ -429,9 +439,9 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				sql += " WHERE " + whereClause;
 			}
 
-			Statement stmt = connection.createStatement();
+			PreparedStatement stmt = connection.prepareStatement(sql);
 			System.out.println(sql);
-			return stmt.executeQuery(sql);
+			return stmt;
 		} else {
 			/*
 			 * Add a WHERE clause that limits the result set to those rows
@@ -442,7 +452,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			System.out.println(sql + " : " + listKey.parentKey.getRowId());
 			PreparedStatement stmt = connection.prepareStatement(sql);
 			stmt.setInt(1, listKey.parentKey.getRowId());
-			return stmt.executeQuery();
+			return stmt;
 		}
 	}
 	
@@ -458,86 +468,125 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	public int insertIntoDatabase(ExtendablePropertySet<?> propertySet, ExtendableObject newObject, DatabaseListKey<?> listKey) {
 		int rowId = -1;
 
-		// We must insert into the base table first, then the table for the objects
-		// derived from the base and so on.  The reason is that each derived table
-		// has a primary key field that is a foreign key into its base table.
-		// We can get the chain of property sets only by starting at the given 
-		// property set and repeatedly getting the base property set.  We must
-		// therefore store these so that we can loop through the property sets in
-		// the reverse order.
-		
-		Vector<ExtendablePropertySet<?>> propertySets = new Vector<ExtendablePropertySet<?>>();
-		for (ExtendablePropertySet<?> propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
-			propertySets.add(propertySet2);
+		Statement statement;
+		try {
+			statement = connection.createStatement();
+		} catch (SQLException e) {
+			if (e.getSQLState().equals("HY010")) {
+				/*
+				 * The socket has been reset.  This condition is usually caused
+				 * by a connection that has not been used in a while.  It can most
+				 * likely be fixed simply by reconnecting.
+				 */
+				try {
+					connection.close();
+				} catch (SQLException e2) {
+					/*
+					 * Ignore any failures on the close. It was a 'best efforts
+					 * only' close. In fact, it almost certainly will fail, and
+					 * perhaps we should not even bother to try to close it.
+					 */
+				}	
+				
+				try {
+					connection = DriverManager.getConnection(url, user, password);
+					statement = connection.createStatement();
+				} catch (SQLException e2) {
+					// TODO Handle this properly
+					e.printStackTrace();
+					throw new RuntimeException("internal error", e);
+				}	
+			} else {
+				/*
+				 * The error does not like something that can be fixed by re-creating
+				 * the connection, so pass on the exception. 
+				 */
+				// TODO Handle this properly
+				e.printStackTrace();
+				throw new RuntimeException("internal error", e);
+			}
 		}
 		
-		for (int index = propertySets.size()-1; index >= 0; index--) {
-			ExtendablePropertySet<?> propertySet2 = propertySets.get(index);
-			
-			String sql = "INSERT INTO " 
-				+ propertySet2.getId().replace('.', '_')
-				+ " (";
-			
-			String columnNames = "";
-			String columnValues = "";
-			String separator = "";
-			
-			/*
-			 * If this is a basemost property set then the _ID column will be
-			 * auto-generated by the database.  If this is a derived property
-			 * set then we must insert the id that had been assigned when the
-			 * row in the basemost table was inserted.
-			 */
-			if (index != propertySets.size()-1) {
-				columnNames += separator + "_ID";
-				columnValues += separator + Integer.toString(rowId);
-				separator = ", ";
-			}
-			
-			for (ScalarPropertyAccessor<?> propertyAccessor: propertySet2.getScalarProperties2()) {
-				String columnName = getColumnName(propertyAccessor);
+		try {
+			// We must insert into the base table first, then the table for the objects
+			// derived from the base and so on.  The reason is that each derived table
+			// has a primary key field that is a foreign key into its base table.
+			// We can get the chain of property sets only by starting at the given 
+			// property set and repeatedly getting the base property set.  We must
+			// therefore store these so that we can loop through the property sets in
+			// the reverse order.
 
-				// Get the value from the passed property value array.
-				Object value = newObject.getPropertyValue(propertyAccessor);
-
-				columnNames += separator + "\"" + columnName + "\"";
-				columnValues += separator + valueToSQLText(value);
-
-				separator = ", ";
+			Vector<ExtendablePropertySet<?>> propertySets = new Vector<ExtendablePropertySet<?>>();
+			for (ExtendablePropertySet<?> propertySet2 = propertySet; propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
+				propertySets.add(propertySet2);
 			}
 
-			/* Set the parent id in the appropriate column.
-			 * 
-			 * If the containing list property is a property in one of the three
-			 * lists in the session object
-			 * then, as an optimization, there is no parent column.
-			 */
-			if (listKey.listPropertyAccessor.getElementPropertySet() == propertySet2
-					&& listKey.listPropertyAccessor.getPropertySet() != SessionInfo.getPropertySet()) {
-				String valueString = Integer.toString(listKey.parentKey.getRowId());
-				String parentColumnName = listKey.listPropertyAccessor.getName().replace('.', '_');
-				columnNames += separator + "\"" + parentColumnName + "\"";
-				columnValues += separator + valueString;
-				separator = ", ";
-			}
+			for (int index = propertySets.size()-1; index >= 0; index--) {
+				ExtendablePropertySet<?> propertySet2 = propertySets.get(index);
 
-			/*
-			 * If the base-most property set and it is derivable, the
-			 * _PROPERTY_SET column must be set.
-			 */
-			if (propertySet2.getBasePropertySet() == null
-			 && propertySet2.isDerivable()) {
-				columnNames += separator + "_PROPERTY_SET";
-				// Set to the id of the final
-				// (non-derivable) property set for this object.
-				ExtendablePropertySet<?> finalPropertySet = propertySets.get(0); 
-				columnValues += separator + "\'" + finalPropertySet.getId() + "\'";
-				separator = ", ";
-			}
-			
-			sql += columnNames + ") VALUES(" + columnValues + ")";
-			
-			try {
+				String sql = "INSERT INTO " 
+					+ propertySet2.getId().replace('.', '_')
+					+ " (";
+
+				String columnNames = "";
+				String columnValues = "";
+				String separator = "";
+
+				/*
+				 * If this is a basemost property set then the _ID column will be
+				 * auto-generated by the database.  If this is a derived property
+				 * set then we must insert the id that had been assigned when the
+				 * row in the basemost table was inserted.
+				 */
+				if (index != propertySets.size()-1) {
+					columnNames += separator + "_ID";
+					columnValues += separator + Integer.toString(rowId);
+					separator = ", ";
+				}
+
+				for (ScalarPropertyAccessor<?> propertyAccessor: propertySet2.getScalarProperties2()) {
+					String columnName = getColumnName(propertyAccessor);
+
+					// Get the value from the passed property value array.
+					Object value = newObject.getPropertyValue(propertyAccessor);
+
+					columnNames += separator + "\"" + columnName + "\"";
+					columnValues += separator + valueToSQLText(value);
+
+					separator = ", ";
+				}
+
+				/* Set the parent id in the appropriate column.
+				 * 
+				 * If the containing list property is a property in one of the three
+				 * lists in the session object
+				 * then, as an optimization, there is no parent column.
+				 */
+				if (listKey.listPropertyAccessor.getElementPropertySet() == propertySet2
+						&& listKey.listPropertyAccessor.getPropertySet() != SessionInfo.getPropertySet()) {
+					String valueString = Integer.toString(listKey.parentKey.getRowId());
+					String parentColumnName = listKey.listPropertyAccessor.getName().replace('.', '_');
+					columnNames += separator + "\"" + parentColumnName + "\"";
+					columnValues += separator + valueString;
+					separator = ", ";
+				}
+
+				/*
+				 * If the base-most property set and it is derivable, the
+				 * _PROPERTY_SET column must be set.
+				 */
+				if (propertySet2.getBasePropertySet() == null
+						&& propertySet2.isDerivable()) {
+					columnNames += separator + "_PROPERTY_SET";
+					// Set to the id of the final
+					// (non-derivable) property set for this object.
+					ExtendablePropertySet<?> finalPropertySet = propertySets.get(0); 
+					columnValues += separator + "\'" + finalPropertySet.getId() + "\'";
+					separator = ", ";
+				}
+
+				sql += columnNames + ") VALUES(" + columnValues + ")";
+
 				System.out.println(sql);
 				/*
 				 * Insert the row and, if this is a basemost table, get the
@@ -551,22 +600,28 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 						 * standard way of getting the generated key. We must do
 						 * things slightly differently.
 						 */
-						reusableStatement.execute(sql);
-						rs = reusableStatement.executeQuery("CALL IDENTITY()");
+						statement.execute(sql);
+						rs = statement.executeQuery("CALL IDENTITY()");
 					} else {
-						reusableStatement.execute(sql, Statement.RETURN_GENERATED_KEYS);
-						rs = reusableStatement.getGeneratedKeys();
+						statement.execute(sql, Statement.RETURN_GENERATED_KEYS);
+						rs = statement.getGeneratedKeys();
 					}
 					rs.next();
 					rowId = rs.getInt(1);
 					rs.close();
 				} else {
-					reusableStatement.execute(sql);
+					statement.execute(sql);
 				}
+			}
+		} catch (SQLException e) {
+			// TODO Handle this properly
+			e.printStackTrace();
+			throw new RuntimeException("internal error", e);
+		} finally {
+			try {
+				statement.close();
 			} catch (SQLException e) {
-				// TODO Handle this properly
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
+				// ignore this one
 			}
 		}
 
@@ -577,6 +632,15 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		IDatabaseRowKey objectKey = (IDatabaseRowKey)extendableObject.getObjectKey();
 		ListKey originalListKey = extendableObject.getParentListKey();
 		IDatabaseRowKey originalParentKey = (IDatabaseRowKey)originalListKey.getParentKey();
+		
+		Statement statement;
+		try {
+			statement = connection.createStatement();
+		} catch (SQLException e) {
+			// TODO Handle this properly
+			e.printStackTrace();
+			throw new RuntimeException("internal error", e);
+		}
 		
 		try {
 			boolean priorAutocommitState = connection.getAutoCommit();
@@ -606,7 +670,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 						+ " AND " + parentColumnName + "=" + originalParentKey.getRowId();
 
 					System.out.println(sql);
-					int numberUpdated = reusableStatement.executeUpdate(sql);
+					int numberUpdated = statement.executeUpdate(sql);
 					if (numberUpdated != 1) {
 						throw new RuntimeException("internal error");
 					}
@@ -627,7 +691,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 						+ " AND " + parentColumnName + " IS NULL";
 
 					System.out.println(sql);
-					int numberUpdated = reusableStatement.executeUpdate(sql);
+					int numberUpdated = statement.executeUpdate(sql);
 					if (numberUpdated != 1) {
 						throw new RuntimeException("internal error");
 					}
@@ -639,6 +703,12 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			// TODO Handle this properly
 			e.printStackTrace();
 			throw new RuntimeException("internal error");
+		} finally {
+			try {
+				statement.close();
+			} catch (SQLException e) {
+				// Ignore this one
+			}
 		}
 	}
 	
@@ -657,7 +727,44 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @param sessionManager
 	 */
 	public void updateProperties(ExtendablePropertySet<?> propertySet, int rowId, Object[] oldValues, Object[] newValues) {
-		Statement stmt = getReusableStatement();
+		Statement statement;
+		try {
+			statement = connection.createStatement();
+		} catch (SQLException e) {
+			if (e.getSQLState().equals("HY010")) {
+				/*
+				 * The socket has been reset.  This condition is usually caused
+				 * by a connection that has not been used in a while.  It can most
+				 * likely be fixed simply by reconnecting.
+				 */
+				try {
+					connection.close();
+				} catch (SQLException e2) {
+					/*
+					 * Ignore any failures on the close. It was a 'best efforts
+					 * only' close. In fact, it almost certainly will fail, and
+					 * perhaps we should not even bother to try to close it.
+					 */
+				}	
+				
+				try {
+					connection = DriverManager.getConnection(url, user, password);
+					statement = connection.createStatement();
+				} catch (SQLException e2) {
+					// TODO Handle this properly
+					e.printStackTrace();
+					throw new RuntimeException("internal error", e);
+				}	
+			} else {
+				/*
+				 * The error does not like something that can be fixed by re-creating
+				 * the connection, so pass on the exception. 
+				 */
+				// TODO Handle this properly
+				e.printStackTrace();
+				throw new RuntimeException("internal error", e);
+			}
+		}
 
 		// The array of property values contains the properties from the
 		// base table first, then the table derived from that and so on.
@@ -714,7 +821,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				
 				try {
 					System.out.println(sql);
-					int numberUpdated = stmt.executeUpdate(sql);
+					int numberUpdated = statement.executeUpdate(sql);
 					if (numberUpdated != 1) {
 						// This could happen if a column in the table contains a string
 						// serialization of a custom object, and the column contained a string
@@ -791,8 +898,6 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	public boolean deleteFromDatabase(IDatabaseRowKey objectKey) {
 		ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(objectKey.getObject().getClass()); 
 		
-		Statement stmt = getReusableStatement();
-
 		/*
 		 * Because we cannot always use CASCADE, we must first delete objects
 		 * in list properties contained in this object.  This is a recursive
@@ -814,22 +919,29 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			
 			String sql = "DELETE FROM " 
 				+ propertySet2.getId().replace('.', '_')
-				+ " WHERE _ID=" + objectKey.getRowId();
+				+ " WHERE _ID = ?";
 			
 			try {
 				System.out.println(sql);
-				int rowCount = stmt.executeUpdate(sql);
-				if (rowCount != 1) {
-					if (rowCount == 0
-							&& propertySet2 == propertySet) {
-						/*
-						 * The object does not exist in the database. It is
-						 * possible that another process deleted it so we ignore
-						 * this condition.
-						 */
-					} else {
-						throw new RuntimeException("database is inconsistent");
+
+				PreparedStatement stmt = getConnection().prepareStatement(sql);
+				try {
+					stmt.setInt(1, objectKey.getRowId());
+					int rowCount = stmt.executeUpdate();
+					if (rowCount != 1) {
+						if (rowCount == 0
+								&& propertySet2 == propertySet) {
+							/*
+							 * The object does not exist in the database. It is
+							 * possible that another process deleted it so we ignore
+							 * this condition.
+							 */
+						} else {
+							throw new RuntimeException("database is inconsistent");
+						}
 					}
+				} finally {
+					stmt.close();
 				}
 			} catch (SQLException e) {
 				if (e.getSQLState().equals("23000")) {
@@ -1667,13 +1779,21 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		
 		try {
 			String sql = "SELECT SUM(amount) FROM net_sf_jmoney_entry, net_sf_jmoney_transaction"
-				+ " WHERE account = " + proxy.getRowId()
-				+ " AND date >= " + fromDate
-				+ " AND date <= " + toDate;
+				+ " WHERE account = ?"
+				+ " AND date >= ?"
+				+ " AND date <= ?";
 			System.out.println(sql);
-			ResultSet rs = getReusableStatement().executeQuery(sql);
-			rs.next();
-			return rs.getLong(0);
+			PreparedStatement stmt = getConnection().prepareStatement(sql);
+			try {
+				stmt.setInt(1, proxy.getRowId());
+				stmt.setDate(2, new java.sql.Date(fromDate.getTime()));
+				stmt.setDate(3, new java.sql.Date(toDate.getTime()));
+				ResultSet resultSet = stmt.executeQuery();
+				resultSet.next();
+				return resultSet.getLong(0);
+			} finally {
+				stmt.close();
+			}
 		} catch (SQLException e) {
 			throw new RuntimeException("SQL statement failed");
 		}
@@ -1693,22 +1813,31 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	public long[] getEntryTotalsByMonth(CapitalAccount account, int startYear, int startMonth, int numberOfMonths, boolean includeSubAccounts) {
 		IDatabaseRowKey proxy = (IDatabaseRowKey)account.getObjectKey();
 		
-		String startDateString = '\''
-			+ new Integer(startYear).toString() + "-"
-			+ new Integer(startMonth).toString() + "-"
-			+ new Integer(1).toString()
-			+ '\'';
+//		String startDateString = '\''
+//			+ new Integer(startYear).toString() + "-"
+//			+ new Integer(startMonth).toString() + "-"
+//			+ new Integer(1).toString()
+//			+ '\'';
+		Calendar c = Calendar.getInstance();
+		c.set(Calendar.YEAR, startYear);
+		c.set(Calendar.MONTH, startMonth - 1);
+		c.set(Calendar.DAY_OF_MONTH, 1);
+		Date startDate = c.getTime();
 
 		int endMonth = startMonth + numberOfMonths;
 		int years = (endMonth - 1) / 12;
 		endMonth -= years * 12;
 		int endYear = startYear + years;
 		
-		String endDateString = '\''
-			+ new Integer(endYear).toString() + "-"
-			+ new Integer(endMonth).toString() + "-"
-			+ new Integer(1).toString()
-			+ '\'';
+//		String endDateString = '\''
+//			+ new Integer(endYear).toString() + "-"
+//			+ new Integer(endMonth).toString() + "-"
+//			+ new Integer(1).toString()
+//			+ '\'';
+		c.set(Calendar.YEAR, endYear);
+		c.set(Calendar.MONTH, endMonth - 1);
+		c.set(Calendar.DAY_OF_MONTH, 1);
+		Date endDate = c.getTime();
 
 		String accountList = "(" + proxy.getRowId();
 		if (includeSubAccounts) {
@@ -1724,18 +1853,25 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			String sql = "SELECT SUM(amount), DateSerial(Year(date),Month(date),1) FROM net_sf_jmoney_entry, net_sf_jmoney_transaction"
 				+ " GROUP BY DateSerial(Year(date),Month(date),1)"
 				+ " WHERE account IN " + accountList
-				+ " AND date >= " + startDateString
-				+ " AND date < " + endDateString
+				+ " AND date >= ?"
+				+ " AND date < ?"
 				+ " ORDER BY DateSerial(Year(date),Month(date),1)";
 			System.out.println(sql);
-			ResultSet rs = getReusableStatement().executeQuery(sql);
-			
-			long [] totals = new long[numberOfMonths];
-			for (int i = 0; i < numberOfMonths; i++) {
-				rs.next();
-				totals[i] = rs.getLong(0);
+			PreparedStatement stmt = getConnection().prepareStatement(sql);
+			try {
+				stmt.setDate(1, new java.sql.Date(startDate.getTime()));
+				stmt.setDate(2, new java.sql.Date(endDate.getTime()));
+				ResultSet rs = stmt.executeQuery();
+
+				long [] totals = new long[numberOfMonths];
+				for (int i = 0; i < numberOfMonths; i++) {
+					rs.next();
+					totals[i] = rs.getLong(0);
+				}
+				return totals;
+			} finally {
+				stmt.close();
 			}
-			return totals;
 		} catch (SQLException e) {
 			throw new RuntimeException("SQL statement failed");
 		}
@@ -1793,5 +1929,50 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			basePropertySet = basePropertySet.getBasePropertySet();
 		}
 		return basePropertySet;
+	}
+
+	/**
+	 * If a connection times out, MS SQL Server will successfully create
+	 * a statement on that connection but will fail when the statement is
+	 * executed.  It is therefore important that the call to {@link Statement#executeQuery(String)}
+	 * is included in the try block.
+	 *  
+	 * @param sql
+	 * @return
+	 * @throws SQLException
+	 */
+	public ResultSet executeQuery(String sql) throws SQLException {
+		try {
+			// TODO: problem here.  Statement is never closed.
+			Statement stmt = connection.createStatement();
+			return stmt.executeQuery(sql);
+		} catch (SQLException e) {
+			if (e.getSQLState().equals("08S01")) {
+				/*
+				 * The socket has been reset.  This condition is usually caused
+				 * by a connection that has not been used in a while.  It can most
+				 * likely be fixed simply by reconnecting.
+				 */
+				try {
+					connection.close();
+				} catch (SQLException e2) {
+					/*
+					 * Ignore any failures on the close. It was a 'best efforts
+					 * only' close. In fact, it almost certainly will fail, and
+					 * perhaps we should not even bother to try to close it.
+					 */
+				}	
+				
+				connection = DriverManager.getConnection(url, user, password);
+				Statement stmt = connection.createStatement();
+				return stmt.executeQuery(sql);
+			} else {
+				/*
+				 * The error does not like something that can be fixed by re-creating
+				 * the connection, so pass on the exception. 
+				 */
+				throw e;
+			}
+		}
 	}
 }

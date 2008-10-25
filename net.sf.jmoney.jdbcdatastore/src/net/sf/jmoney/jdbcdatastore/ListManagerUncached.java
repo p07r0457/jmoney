@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.jdbcdatastore;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collection;
@@ -114,13 +115,19 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 			String tableName = listKey.listPropertyAccessor.getElementPropertySet().getId().replace('.', '_');
 			String columnName = listKey.listPropertyAccessor.getName().replace('.', '_');
 			String sql = "SELECT COUNT(*) FROM " + tableName
-			+ " WHERE \"" + columnName + "\" = " + listKey.parentKey.getRowId();
+			+ " WHERE \"" + columnName + "\" = ?";
 			System.out.println(sql);
-			ResultSet resultSet = sessionManager.getReusableStatement().executeQuery(sql);
-			resultSet.next();
-			int size = resultSet.getInt(1);
-			resultSet.close();
-			return size;
+			PreparedStatement stmt = sessionManager.getConnection().prepareStatement(sql);
+			try {
+				stmt.setInt(1, listKey.parentKey.getRowId());
+				ResultSet resultSet = stmt.executeQuery();
+				resultSet.next();
+				int size = resultSet.getInt(1);
+				resultSet.close();
+				return size;
+			} finally {
+				stmt.close();
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException("internal error");
@@ -152,8 +159,8 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		 * and the associated statement.
 		 */		
 		try {
-			ResultSet resultSet = sessionManager.executeListQuery(listKey, listKey.listPropertyAccessor.getElementPropertySet());
-			return new UncachedObjectIterator<E>(resultSet, listKey.listPropertyAccessor.getElementPropertySet(), listKey, sessionManager);
+			PreparedStatement stmt = sessionManager.executeListQuery(listKey, listKey.listPropertyAccessor.getElementPropertySet());
+			return new UncachedObjectIterator<E>(stmt, listKey.listPropertyAccessor.getElementPropertySet(), listKey, sessionManager);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw new RuntimeException("internal error");
