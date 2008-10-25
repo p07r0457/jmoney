@@ -20,7 +20,7 @@
  *
  */
 
-package net.sf.jmoney.stocks;
+package net.sf.jmoney.stocks.model;
 
 import net.sf.jmoney.model2.Currency;
 

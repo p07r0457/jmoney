@@ -23,7 +23,7 @@ package net.sf.jmoney.stocks.pages;
 
 import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.stocks.StockAccount;
+import net.sf.jmoney.stocks.model.StockAccount;
 import net.sf.jmoney.views.NodeEditor;
 
 import org.eclipse.swt.layout.GridData;

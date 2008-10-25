@@ -28,7 +28,7 @@ import java.util.Collection;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.stocks.Stock;
+import net.sf.jmoney.stocks.model.Stock;
 import net.sf.jmoney.views.IDynamicTreeNode;
 
 public class StocksNode implements IDynamicTreeNode {

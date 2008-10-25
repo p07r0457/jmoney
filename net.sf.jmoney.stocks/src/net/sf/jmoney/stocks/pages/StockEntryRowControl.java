@@ -12,8 +12,8 @@ import net.sf.jmoney.entrytable.VirtualRowTable;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.stocks.RatesTable;
-import net.sf.jmoney.stocks.StockAccount;
+import net.sf.jmoney.stocks.model.RatesTable;
+import net.sf.jmoney.stocks.model.StockAccount;
 
 import org.eclipse.swt.widgets.Composite;
 

@@ -10,8 +10,8 @@ import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Transaction.EntryCollection;
-import net.sf.jmoney.stocks.Stock;
-import net.sf.jmoney.stocks.StockAccount;
+import net.sf.jmoney.stocks.model.Stock;
+import net.sf.jmoney.stocks.model.StockAccount;
 import net.sf.jmoney.stocks.pages.StockEntryRowControl.TransactionType;
 
 import org.eclipse.core.runtime.Assert;

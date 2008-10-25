@@ -1,10 +1,10 @@
-package net.sf.jmoney.stocks;
+package net.sf.jmoney.stocks.model;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.stocks.RatesTable.Band;
+import net.sf.jmoney.stocks.model.RatesTable.Band;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusAdapter;

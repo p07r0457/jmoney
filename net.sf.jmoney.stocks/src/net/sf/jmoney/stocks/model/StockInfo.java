@@ -20,7 +20,7 @@
  *
  */
 
-package net.sf.jmoney.stocks;
+package net.sf.jmoney.stocks.model;
 
 import net.sf.jmoney.fields.TextControlFactory;
 import net.sf.jmoney.model2.CommodityInfo;
@@ -33,6 +33,7 @@ import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.stocks.StocksPlugin;
 
 /**
  * The metadata for the Stock class.

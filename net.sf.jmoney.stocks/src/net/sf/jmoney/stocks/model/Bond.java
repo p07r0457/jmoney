@@ -20,7 +20,7 @@
  *
  */
 
-package net.sf.jmoney.stocks;
+package net.sf.jmoney.stocks.model;
 
 import java.text.NumberFormat;
 import java.text.ParseException;

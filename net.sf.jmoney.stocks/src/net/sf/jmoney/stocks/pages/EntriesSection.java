@@ -58,11 +58,11 @@ import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
-import net.sf.jmoney.stocks.Stock;
-import net.sf.jmoney.stocks.StockAccount;
-import net.sf.jmoney.stocks.StockControl;
-import net.sf.jmoney.stocks.StockEntry;
-import net.sf.jmoney.stocks.StockEntryInfo;
+import net.sf.jmoney.stocks.model.Stock;
+import net.sf.jmoney.stocks.model.StockAccount;
+import net.sf.jmoney.stocks.model.StockControl;
+import net.sf.jmoney.stocks.model.StockEntry;
+import net.sf.jmoney.stocks.model.StockEntryInfo;
 import net.sf.jmoney.stocks.pages.StockEntryRowControl.TransactionType;
 
 import org.eclipse.swt.SWT;
@@ -698,7 +698,13 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 	}
 
 	public boolean isEntryInTable(Entry entry) {
-		return account.equals(entry.getAccount());
+		/*
+		 * Entry must be in right account AND be in the currency of the account.
+		 * The account will contain stock entries and these should not appear
+		 * as top level entries in the table.
+		 */
+		return account == entry.getAccount()
+			&& entry.getCommodity() == account.getCurrency();
 	}
 
 	/* (non-Javadoc)

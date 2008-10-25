@@ -32,8 +32,8 @@ import net.sf.jmoney.model2.CommodityInfo;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.stocks.Stock;
-import net.sf.jmoney.stocks.StockInfo;
+import net.sf.jmoney.stocks.model.Stock;
+import net.sf.jmoney.stocks.model.StockInfo;
 import net.sf.jmoney.wizards.WizardPropertyPage;
 
 import org.eclipse.jface.wizard.Wizard;

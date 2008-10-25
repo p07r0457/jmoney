@@ -20,7 +20,7 @@
  *
  */
 
-package net.sf.jmoney.stocks;
+package net.sf.jmoney.stocks.model;
 
 import java.util.Comparator;
 
@@ -44,6 +44,7 @@ import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ReferencePropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.stocks.StocksPlugin;
 
 import org.eclipse.swt.widgets.Composite;
 

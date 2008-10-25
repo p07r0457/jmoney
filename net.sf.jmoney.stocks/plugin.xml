@@ -24,22 +24,22 @@
          point="net.sf.jmoney.fields">
       <extendable-property-set
       	id="stock"
-          info-class="net.sf.jmoney.stocks.StockInfo"
+          info-class="net.sf.jmoney.stocks.model.StockInfo"
           base-property-set="net.sf.jmoney.commodity">
       </extendable-property-set>
       <extendable-property-set
       	id="bond"
-          info-class="net.sf.jmoney.stocks.BondInfo"
+          info-class="net.sf.jmoney.stocks.model.BondInfo"
           base-property-set="net.sf.jmoney.commodity">
       </extendable-property-set>
       <extendable-property-set
       	id="stockAccount"
-          info-class="net.sf.jmoney.stocks.StockAccountInfo"
+          info-class="net.sf.jmoney.stocks.model.StockAccountInfo"
           base-property-set="net.sf.jmoney.capitalAccount">
       </extendable-property-set>
       <extension-property-set
       	id="entryProperties"
-          info-class="net.sf.jmoney.stocks.StockEntryInfo"
+          info-class="net.sf.jmoney.stocks.model.StockEntryInfo"
 	      extendable-property-set="net.sf.jmoney.entry">
       </extension-property-set>
    </extension>
