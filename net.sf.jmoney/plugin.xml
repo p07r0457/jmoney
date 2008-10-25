@@ -85,9 +85,11 @@
    </extension>
 
 	<extension point="org.eclipse.ui.newWizards">
-		<wizard id="net.sf.jmoney.wizards.new.bankaccount"
-			name="Bank Account"
-			class="net.sf.jmoney.wizards.NewAccountWizard">
+		<wizard
+        category="net.sf.jmoney.wizards.newAccounts"
+        class="net.sf.jmoney.wizards.NewAccountWizard"
+        id="net.sf.jmoney.wizards.new.bankaccount"
+        name="Bank Account">
 			<description>
 				Create a new Bank Account. 
 			</description>

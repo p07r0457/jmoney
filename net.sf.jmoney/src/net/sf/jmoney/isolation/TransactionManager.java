@@ -117,18 +117,19 @@ public class TransactionManager extends DataManager {
 	Map<IObjectKey, ModifiedObject> modifiedObjects = new HashMap<IObjectKey, ModifiedObject>();
 	
 	/**
-	 * Every extendable object that has ever been created in this transaction and passed
-	 * to the user is in this map.  This is required because all DataManager
-	 * objects must guarantee that there is only ever a single instance of an
-	 * object in existence.
-	 * 
-	 * Objects that were created in this transaction are not in this map.
-	 * There is only one instance of such objects in any case, so only that one
-	 * instance would be returned.
-	 * 
-	 * The object key is the key in the committed datastore.  Only objects
-	 * that exist in the underlying datastore are in this map, and it is
-	 * just easier to use the committed key than to use an uncommitted key.  
+	 * Every extendable object that exists in the base data manager and that has
+	 * already had a copy created in this data manager will be put in this map.
+	 * This is required because all DataManager objects must guarantee that
+	 * there is only ever a single instance of an object in existence.
+	 * <P>
+	 * Objects that were created in this transaction (i.e. do not exist in the
+	 * base data manager) are not in this map. There is no risk of having two
+	 * instances of the same such object because all such objects created by
+	 * this class are distinct objects.
+	 * <P>
+	 * The object key is the key in the committed datastore. Only objects that
+	 * exist in the underlying datastore are in this map, and it is just easier
+	 * to use the committed key than to use an uncommitted key.
 	 */
 	Map<IObjectKey, ExtendableObject> allObjects = new HashMap<IObjectKey, ExtendableObject>();
 	
@@ -230,18 +231,18 @@ public class TransactionManager extends DataManager {
     		throw new RuntimeException("Invalid call to getCopyInTransaction.  The object passed must belong to the data manager that is the base data manager of this transaction manager."); //$NON-NLS-1$
     	}
     	
-    	// First look in our map to see if this object has already been
-    	// modified within the context of this transaction manager.
-    	// If it has, return the modified version.
-    	// Also check to see if the object has been deleted within the
-    	// context of this transaction manager.  If it has then we raise
-    	// an error.  
-    	
-    	// Both these situations are not likely to happen
-    	// because usually one object is copied into the transaction
-    	// manager and all other objects are obtained by traversing
-    	// from that object.  However, it is good to check.
-
+    	/*
+		 * First look in our map to see if this object has already been modified
+		 * within the context of this transaction manager. If it has, return the
+		 * modified version. Also check to see if the object has been deleted
+		 * within the context of this transaction manager. If it has then we
+		 * raise an error.
+		 * 
+		 * Both these situations are not likely to happen because usually one
+		 * object is copied into the transaction manager and all other objects
+		 * are obtained by traversing from that object. However, it is good to
+		 * check.
+		 */
 		ExtendableObject objectInTransaction = allObjects.get(committedObject.getObjectKey());
 		if (objectInTransaction != null) {
 			// TODO: decide if and how we check for deleted objects.
