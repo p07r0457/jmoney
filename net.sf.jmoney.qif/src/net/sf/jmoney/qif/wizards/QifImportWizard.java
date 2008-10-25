@@ -206,7 +206,8 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 			 * have been set and should be in a valid state, so we
 			 * can now commit the imported entries to the datastore.
 			 */
-			transactionManager.commit("Import " + file.getName());									
+			String transactionDescription = String.format("Import {0}", file.getName());
+			transactionManager.commit(transactionDescription);									
 
 			if (!results.isEmpty()) {
 				StringBuffer combined = new StringBuffer();
