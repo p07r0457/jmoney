@@ -44,7 +44,7 @@ import org.eclipse.swt.widgets.Text;
  * @author Nigel Westbury
  * @author Johann Gyger
  */
-public class UrlEditor implements IPropertyControl {
+public class UrlEditor implements IPropertyControl<ExtendableObject> {
 
     private ExtendableObject extendableObject;
 

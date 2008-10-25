@@ -37,7 +37,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class UrlControlFactory implements IPropertyControlFactory<URL> {
 
-    public IPropertyControl createPropertyControl(Composite parent, ScalarPropertyAccessor<URL> propertyAccessor) {
+    public IPropertyControl<ExtendableObject> createPropertyControl(Composite parent, ScalarPropertyAccessor<URL> propertyAccessor) {
         return new UrlEditor(parent, propertyAccessor);
     }
 

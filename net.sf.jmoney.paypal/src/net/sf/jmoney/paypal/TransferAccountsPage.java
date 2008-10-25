@@ -1,6 +1,7 @@
 package net.sf.jmoney.paypal;
 
 import net.sf.jmoney.model2.BankAccount;
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ReferencePropertyAccessor;
 import net.sf.jmoney.paypal.resources.Messages;
@@ -49,7 +50,7 @@ public class TransferAccountsPage extends WizardPage {
 		Label propertyLabel = new Label(container, SWT.NONE);
 		ReferencePropertyAccessor<BankAccount> bankAccessor = PaypalAccountInfo.getTransferBankAccountAccessor();
 		propertyLabel.setText(bankAccessor.getDisplayName() + ':');
-		IPropertyControl propertyControl = bankAccessor.createPropertyControl(container);
+		IPropertyControl<ExtendableObject> propertyControl = bankAccessor.createPropertyControl(container);
 		propertyControl.load(paypalAccount);
 		
 		Label label2 = new Label(container, SWT.WRAP);
@@ -64,7 +65,7 @@ public class TransferAccountsPage extends WizardPage {
 		Label propertyLabel2 = new Label(container, SWT.NONE);
 		ReferencePropertyAccessor<BankAccount> creditCardAccessor = PaypalAccountInfo.getTransferCreditCardAccountAccessor();
 		propertyLabel2.setText(creditCardAccessor.getDisplayName() + ':');
-		IPropertyControl propertyControl2 = creditCardAccessor.createPropertyControl(container);
+		IPropertyControl<ExtendableObject> propertyControl2 = creditCardAccessor.createPropertyControl(container);
 		propertyControl2.load(paypalAccount);
 		
 		setPageComplete(false);

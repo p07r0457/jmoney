@@ -1,5 +1,6 @@
 package net.sf.jmoney.paypal;
 
+import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ReferencePropertyAccessor;
@@ -46,7 +47,7 @@ public class PaypalFeesPage extends WizardPage {
 		Label propertyLabel = new Label(container, SWT.NONE);
 		ReferencePropertyAccessor<IncomeExpenseAccount> feesAccessor = PaypalAccountInfo.getPaypalFeesAccountAccessor();
 		propertyLabel.setText(feesAccessor.getDisplayName() + ':');
-		IPropertyControl propertyControl = feesAccessor.createPropertyControl(container);
+		IPropertyControl<ExtendableObject> propertyControl = feesAccessor.createPropertyControl(container);
 		propertyControl.load(paypalAccount);
 		
 		setPageComplete(false);
