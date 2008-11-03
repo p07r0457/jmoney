@@ -41,4 +41,57 @@
       </pages>
    </extension>
 
+<extension point="org.eclipse.ui.commands">
+    <command
+          id="net.sf.jmoney.reports.accountBalances"
+          name="Account Balances">
+    </command>
+    <command
+          id="net.sf.jmoney.reports.incomeExpense"
+          name="Income and Expenses">
+    </command>
+</extension>
+
+<extension point="org.eclipse.ui.handlers">
+    <handler
+          class="net.sf.jmoney.shoebox.OpenEditorHandler"
+          commandId="net.sf.jmoney.reports.accountBalances">
+       <enabledWhen>
+          <with variable="activeContexts">
+             <iterate operator="or">
+                <equals value="net.sf.jmoney.sessionOpen"/>
+             </iterate>
+          </with>
+       </enabledWhen>
+    </handler>
+    <handler
+          class="net.sf.jmoney.shoebox.OpenEditorHandler"
+          commandId="net.sf.jmoney.reports.incomeExpense">
+       <enabledWhen>
+          <with variable="activeContexts">
+             <iterate operator="or">
+                <equals value="net.sf.jmoney.sessionOpen"/>
+             </iterate>
+          </with>
+       </enabledWhen>
+    </handler>
+</extension>
+
+<extension point="org.eclipse.ui.menus">
+     <menuContribution locationURI="menu:reports">
+        <command commandId="net.sf.jmoney.reports.accountBalances"
+            label="%Report.AccountBalances.Title"
+            icon="icons/report.gif"
+            tooltip="Show Account Balances">
+        </command>
+        <command commandId="net.sf.jmoney.reports.incomeExpense"
+            label="%Report.IncomeExpense.Title"
+            icon="icons/report.gif"
+            tooltip="Show Income and Expenses">
+        </command>
+     </menuContribution>
+</extension>
+ 
+
+
 </plugin>

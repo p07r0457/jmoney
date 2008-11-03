@@ -48,4 +48,77 @@
       </pages>
    </extension>
 
+
+<extension point="org.eclipse.ui.commands">
+    <command
+          id="net.sf.jmoney.charts.lineChart"
+          name="Open Line Chart Editor">
+    </command>
+    <command
+          id="net.sf.jmoney.charts.pieChart"
+          name="Open Pie Chart Editor">
+    </command>
+    <command
+          id="net.sf.jmoney.charts.stackChart"
+          name="Open Stack Chart Editor">
+    </command>
+</extension>
+
+<extension point="org.eclipse.ui.handlers">
+    <handler
+          class="net.sf.jmoney.charts.OpenLineChartHandler"
+          commandId="net.sf.jmoney.charts.lineChart">
+       <enabledWhen>
+          <with variable="activeContexts">
+             <iterate operator="or">
+                <equals value="net.sf.jmoney.sessionOpen"/>
+             </iterate>
+          </with>
+       </enabledWhen>
+    </handler>
+    <handler
+          class="net.sf.jmoney.charts.OpenPieChartHandler"
+          commandId="net.sf.jmoney.charts.pieChart">
+       <enabledWhen>
+          <with variable="activeContexts">
+             <iterate operator="or">
+                <equals value="net.sf.jmoney.sessionOpen"/>
+             </iterate>
+          </with>
+       </enabledWhen>
+    </handler>
+    <handler
+          class="net.sf.jmoney.charts.OpenStackChartHandler"
+          commandId="net.sf.jmoney.charts.stackChart">
+       <enabledWhen>
+          <with variable="activeContexts">
+             <iterate operator="or">
+                <equals value="net.sf.jmoney.sessionOpen"/>
+             </iterate>
+          </with>
+       </enabledWhen>
+    </handler>
+</extension>
+
+<extension point="org.eclipse.ui.menus">
+     <menuContribution locationURI="menu:charts">
+        <command commandId="net.sf.jmoney.charts.lineChart"
+            label="%Chart.lineChart"
+            icon="icons/chart.gif"
+            tooltip="Show line chart">
+        </command>
+        <command commandId="net.sf.jmoney.charts.pieChart"
+            label="%Chart.pieChart"
+            icon="icons/chart.gif"
+            tooltip="Show pie chart">
+        </command>
+        <command commandId="net.sf.jmoney.charts.stackChart"
+            label="%Chart.stackedChart"
+            icon="icons/chart.gif"
+            tooltip="Show stack chart">
+        </command>
+     </menuContribution>
+</extension>
+ 
+
 </plugin>

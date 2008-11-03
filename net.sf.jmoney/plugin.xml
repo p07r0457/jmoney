@@ -153,7 +153,26 @@
          </action>
       </objectContribution>
    </extension>
+
+<extension point="org.eclipse.ui.menus">
+     <menuContribution locationURI="menu:org.eclipse.ui.main.menu?after=edit">
+        <menu label="%searchMenu.label"
+              mnemonic="%searchMenu.mnemonic"
+              id="org.eclipse.search.menu">
+           <separator name="internalDialogGroup" visible="false" />
+           <separator name="dialogGroup" visible="false" />
+           <separator name="fileSearchContextMenuActionsGroup"
+                      visible="true" />
+           <separator name="contextMenuActionsGroup" visible="true" />
+           <separator name="occurencesActionsGroup" visible="true" />
+           <separator name="extraSearchGroup" visible="true" />
+        </menu>
+     </menuContribution>
+  </extension>
+
 -->   
+
+
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
@@ -193,6 +212,10 @@
         <factory 
            id ="net.sf.jmoney.nodeEditor" 
            class="net.sf.jmoney.views.NodeEditorFactory">
+        </factory> 
+        <factory 
+           id ="net.sf.jmoney.sessionEditor" 
+           class="net.sf.jmoney.views.SessionEditorFactory">
         </factory> 
    </extension>
 

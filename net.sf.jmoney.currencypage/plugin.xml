@@ -17,4 +17,51 @@
       </pages>
    </extension>
 
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            id="net.sf.jmoney.currencypage.editor"
+            name="%NavigationTreeModel.currencies"
+            icon="icons/currencies.gif"
+            class="net.sf.jmoney.currencypage.CurrencyEditor">
+      </editor>
+   </extension>
+
+<extension point="org.eclipse.ui.commands">
+    <command
+          id="net.sf.jmoney.commands.openCurrencies"
+          name="Open Currency Editor">
+    </command>
+</extension>
+
+<extension point="org.eclipse.ui.handlers">
+    <handler
+          class="net.sf.jmoney.currencypage.OpenEditorHandler"
+          commandId="net.sf.jmoney.commands.openCurrencies">
+       <enabledWhen>
+          <with variable="activeContexts">
+             <iterate operator="or">
+                <equals value="net.sf.jmoney.sessionOpen"/>
+             </iterate>
+          </with>
+       </enabledWhen>
+    </handler>
+</extension>
+
+<extension point="org.eclipse.ui.menus">
+     <menuContribution locationURI="menu:navigate?after=openEditors">
+        <command commandId="net.sf.jmoney.commands.openCurrencies"
+                 label="%NavigationTreeModel.currencies"
+                 icon="icons/currencies.gif"
+                 tooltip="Edit list of available currencies">
+        </command>
+     </menuContribution>
+     <menuContribution locationURI="toolbar:main?after=openEditors">
+        <command commandId="net.sf.jmoney.commands.openCurrencies"
+                 icon="icons/currencies.gif"
+                 tooltip="Edit list of available currencies">
+        </command>
+     </menuContribution>
+</extension>
+ 
 </plugin>

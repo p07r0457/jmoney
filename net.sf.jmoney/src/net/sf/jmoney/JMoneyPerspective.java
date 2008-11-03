@@ -45,7 +45,7 @@ public class JMoneyPerspective implements IPerspectiveFactory {
         navigator.addView(NavigationView.ID_VIEW);
 
         IFolderLayout bottom = layout.createFolder("bottom", IPageLayout.BOTTOM, 0.8f, layout.getEditorArea()); //$NON-NLS-1$
-        bottom.addView(ERROR_LOG_VIEW_ID);
+//        bottom.addView(ERROR_LOG_VIEW_ID);
 
         layout.addShowViewShortcut(NavigationView.ID_VIEW);
         layout.addShowViewShortcut(ERROR_LOG_VIEW_ID);

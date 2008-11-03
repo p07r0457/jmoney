@@ -83,18 +83,6 @@ public class ShoeboxEditor extends EditorPart {
     private Block<EntryData, EntryRowControl> rootBlock;
     
 	@Override
-	public void doSave(IProgressMonitor monitor) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void doSaveAs() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
 	public void init(IEditorSite site, IEditorInput input)
 			throws PartInitException {
 		
@@ -120,6 +108,16 @@ public class ShoeboxEditor extends EditorPart {
 	@Override
 	public boolean isSaveAsAllowed() {
 		return false;
+	}
+
+	@Override
+	public void doSave(IProgressMonitor monitor) {
+		// Will never be called because editor is never dirty.
+	}
+
+	@Override
+	public void doSaveAs() {
+		// Will never be called because editor is never dirty and 'save as' is not allowed anyway.
 	}
 
 	@Override

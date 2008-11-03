@@ -106,6 +106,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
         menuBar.add(createFileMenu());
         menuBar.add(createEditMenu());
         menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        menuBar.add(createNavigateMenu());
         menuBar.add(createWindowMenu());
         menuBar.add(createHelpMenu());
     }
@@ -120,6 +121,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     	IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
     	coolBar.add(new ToolBarContributionItem(toolbar, "main")); //$NON-NLS-1$
     	toolbar.add(newAction);
+    	toolbar.add(new Separator("openEditors"));
     	
     	
 //        coolBar.add(newAction);
@@ -165,7 +167,39 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     }   
 
     /**
-     * Creates and returns the Help menu.
+     * Creates and returns the Navigate menu.
+     */
+    private MenuManager createNavigateMenu() {
+        MenuManager menu = new MenuManager("&Navigate", IWorkbenchActionConstants.M_NAVIGATE);
+        menu.add(new Separator("openEditors"));
+        menu.add(new Separator());
+        menu.add(createReportsMenu());
+        menu.add(createChartsMenu());
+        menu.add(new Separator());
+        menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        return menu;
+    }
+
+    /**
+     * Creates and returns the Reports menu.
+     */
+    private MenuManager createReportsMenu() {
+        MenuManager menu = new MenuManager("&Reports", JMoneyPlugin.createImageDescriptor("icons/report.gif"), "reports");
+        menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        return menu;
+    }
+
+    /**
+     * Creates and returns the Charts menu.
+     */
+    private MenuManager createChartsMenu() {
+        MenuManager menu = new MenuManager("&Charts", JMoneyPlugin.createImageDescriptor("icons\\chart.gif"), "charts");
+        menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        return menu;
+    }
+
+    /**
+     * Creates and returns the Window menu.
      */
     private MenuManager createWindowMenu() {
         MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_Window, IWorkbenchActionConstants.M_WINDOW);

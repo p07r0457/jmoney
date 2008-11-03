@@ -60,6 +60,9 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.contexts.IContextActivation;
+import org.eclipse.ui.contexts.IContextService;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -81,7 +84,14 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     private DatastoreManager sessionManager = null;
 
     private Vector<CurrentSessionChangeListener> sessionChangeListeners = new Vector<CurrentSessionChangeListener>();
-    
+
+    /**
+	 * A context that is active if a session is open and inactive if no session
+	 * is open. This context is used to set the enabled state of menu and
+	 * toolbar items.
+	 */
+	private IContextActivation sessionOpenContext = null;
+	  
     // Create a listener that listens for changes to the new session.
     private SessionChangeFirerListener sessionChangeFirerListener =
     	new SessionChangeFirerListener() {
@@ -309,11 +319,17 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         
         // Stop listening to the old session and start listening to the
         // new session for changes within the session.
-        if (oldSessionManager != null) {
+		
+        IContextService contextService = (IContextService) PlatformUI.getWorkbench().getService(IContextService.class);
+
+		if (oldSessionManager != null) {
         	oldSessionManager.removeSessionChangeFirerListener(sessionChangeFirerListener);
+        	contextService.deactivateContext(sessionOpenContext);
+        	sessionOpenContext = null;
         }
         if (newSessionManager != null) {
         	newSessionManager.addSessionChangeFirerListener(sessionChangeFirerListener);
+        	sessionOpenContext = contextService.activateContext("net.sf.jmoney.sessionOpen");
         }
 	}
 
