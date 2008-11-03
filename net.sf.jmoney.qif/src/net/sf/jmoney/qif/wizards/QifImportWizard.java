@@ -221,16 +221,16 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 					combined.append(result);
 					separator = ", ";
 				}
-				MessageDialog.openInformation(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "QIF file imported", combined.toString());
+				MessageDialog.openInformation(window.getShell(), "QIF file imported", combined.toString());
 			} else {
-				MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Unable to import QIF file", "No data was found that could be imported by any of the installed plug-ins.");
+				MessageDialog.openError(window.getShell(), "Unable to import QIF file", "No data was found that could be imported by any of the installed plug-ins.");
 			}
 		} catch (IOException e) {
-			MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Unable to read QIF file", e.getLocalizedMessage());
+			MessageDialog.openError(window.getShell(), "Unable to read QIF file", e.getLocalizedMessage());
 		} catch (InvalidQifFileException e) {
-			MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Unable to import QIF file", e.getLocalizedMessage());
+			MessageDialog.openError(window.getShell(), "Unable to import QIF file", e.getLocalizedMessage());
 		} catch (AmbiguousDateException e) {
-			MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "QIF file has an ambiguous date format that cannot be guessed from your locale.", e.getLocalizedMessage());
+			MessageDialog.openError(window.getShell(), "QIF file has an ambiguous date format that cannot be guessed from your locale.", e.getLocalizedMessage());
 		}
 	}
 }

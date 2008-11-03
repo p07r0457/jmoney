@@ -13,3 +13,4 @@ Require-Bundle: org.eclipse.ui,
  net.sf.jmoney
 Eclipse-LazyStart: true
 Bundle-Vendor: JMoney.sf.net
+Bundle-RequiredExecutionEnvironment: J2SE-1.5
