@@ -83,8 +83,18 @@ public class StackControl<T, R> extends Composite implements IPropertyControl<T>
 	}
 
 	/**
+	 * This method determines the top control in the stack and loads the
+	 * input only for that top control.  If another control should be bought
+	 * to the top for whatever reason then that control is loaded at that
+	 * time.
+	 * <P>
+	 * This is important not only for performance reasons but also because
+	 * controls inside a stack control can assume that they will only be loaded
+	 * if visible, thus saving those controls from needing to check that they
+	 * are applicable.
+	 *  
 	 * Derived classes should override this method and add code to
-	 * maintain change listeners.  The change listeners should 
+	 * maintain change listeners.  The change listeners should??? 
 	 */
 	public void load(final T entryData) {
 		// TODO: this should be done in a 'row release' method??
@@ -95,6 +105,7 @@ public class StackControl<T, R> extends Composite implements IPropertyControl<T>
 		
 		this.entryData = entryData;
 
+		// Note that setting the top block will also load it.
 		Block<? super T, ? super R> topBlock = stackBlock.getTopBlock(entryData);
 		setTopBlock(topBlock);
 
@@ -108,6 +119,10 @@ public class StackControl<T, R> extends Composite implements IPropertyControl<T>
 	}
 
 	/**
+	 * Set the control (associated with the given block) to
+	 * the top of the stack, creating it if necessary, and always
+	 * loading it.
+	 * <P>
 	 * This method may change the preferred height of the row.  It is
 	 * the caller's responsibility to resize the row to its preferred
 	 * height after calling this method.
@@ -131,7 +146,6 @@ public class StackControl<T, R> extends Composite implements IPropertyControl<T>
 				topControl.setLayout(childLayout);
 				
 				topControl.init(rowControl, coordinator, topBlock);
-				topControl.setInput(entryData);
 				
 				final Composite finalTopControl = topControl;
 				topControl.addPaintListener(new PaintListener() {
@@ -152,6 +166,7 @@ public class StackControl<T, R> extends Composite implements IPropertyControl<T>
 
 				childControls.put(topBlock, topControl);
 			}
+			topControl.setInput(entryData);
 		}
 		stackLayout.topControl = topControl;
 		
