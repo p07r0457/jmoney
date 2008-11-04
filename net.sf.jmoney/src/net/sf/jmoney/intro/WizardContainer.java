@@ -14,10 +14,10 @@ import java.util.ArrayList;
 
 import net.sf.jmoney.JMoneyPlugin;
 
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.resource.JFaceResources;
-import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.wizard.IWizard;
 import org.eclipse.jface.wizard.IWizardContainer2;
 import org.eclipse.jface.wizard.IWizardPage;

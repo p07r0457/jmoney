@@ -27,8 +27,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.core.runtime.IAdaptable;
-
 /**
  * This is the base class for all objects that may have extension
  * property sets added by plug-ins.  The framework supports the
