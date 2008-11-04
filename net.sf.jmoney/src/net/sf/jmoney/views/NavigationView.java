@@ -239,6 +239,8 @@ public class NavigationView extends ViewPart {
 
 	private class MyCurrentSessionChangeListener extends SessionChangeAdapter
 			implements CurrentSessionChangeListener {
+
+		@Override
 		public void sessionReplaced(Session oldSession, Session newSession) {
 			// Close all editors
 			IWorkbenchWindow window = getSite().getWorkbenchWindow();

@@ -23,5 +23,6 @@ Export-Package: net.sf.jmoney,
  net.sf.jmoney.resources,
  net.sf.jmoney.views,
  net.sf.jmoney.wizards
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
 Bundle-Vendor: JMoney.sf.net
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
