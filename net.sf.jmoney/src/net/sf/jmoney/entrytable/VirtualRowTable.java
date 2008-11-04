@@ -1005,6 +1005,11 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 	public void refreshSize(BaseEntryRowControl<T, ?> rowControl) {
 		int rowTop = rowControl.getLocation().y;
 		
+		// NOTE: This code does not do what the javadoc says it should do when
+		// this row is not the selected row.  It keeps the top of the changed row
+		// at the same position, not the top of the selected row.  Is this worth
+		// worrying about?
+		
 		int rowHeight = rowControl.computeSize(clientAreaSize.x, SWT.DEFAULT).y;
 		rowControl.setSize(clientAreaSize.x, rowHeight);
 
