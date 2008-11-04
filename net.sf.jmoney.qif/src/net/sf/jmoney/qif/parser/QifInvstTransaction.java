@@ -72,6 +72,10 @@ public class QifInvstTransaction {
 			case 'T':
 				tran.amount = QifFile.parseMoney(value);
 				break;
+			case 'U':
+				// Quicken 98 exports contain this, but the value always
+				// seems to be the same as 'T' above, so ignore it.
+				break;
 			case 'C':
 	    		if (value.length() != 1) {
 	    			throw new InvalidQifFileException("Reconcile status must be one character", in);
@@ -101,6 +105,9 @@ public class QifInvstTransaction {
 				break;
 			case 'Q':
 				tran.quantity = value;
+				break;
+			case 'O':
+				tran.commission = QifFile.parseMoney(value);
 				break;
 			case '$': // must check before split trans checks... Does Quicken allow for split investment transactions?
 				if (tran.amountTrans == null) {
@@ -205,9 +212,10 @@ public class QifInvstTransaction {
 		return memo;
 	}
 
-	public String getType() {
-		return type;
-	}
+	// TODO: remove type?
+//	public String getType() {
+//		return type;
+//	}
 
 	/**
 	 * 
@@ -223,8 +231,8 @@ public class QifInvstTransaction {
 	 * @return account for the transfer
 	 * 		or null if none specified
 	 */
-	public String getTransferAccount() {
-		return transferAccount;
+	public QifCategoryLine getTransferAccount() {
+		return transferAccount == null ? null : new QifCategoryLine(transferAccount);
 	}
 
 

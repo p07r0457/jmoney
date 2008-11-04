@@ -75,6 +75,16 @@ public class BasicImporter implements IQifImporter {
 
 		for (QifAccount qifAccount : qifFile.accountList) {
 
+			if (qifAccount.getTransactions().size() == 0) {
+				/*
+				 * This account has no normal (non-investment) transactions. It
+				 * may be an account definition that does not include
+				 * transactions, or it may be an investment account. Either way,
+				 * we don't process it because here we are only importing normal
+				 * transactions.
+				 */
+				continue;
+			}
 			CapitalAccount account = getAccount(qifAccount.getName(), session);
 			if (!(account instanceof CurrencyAccount)) {
 				// TODO: process error properly
