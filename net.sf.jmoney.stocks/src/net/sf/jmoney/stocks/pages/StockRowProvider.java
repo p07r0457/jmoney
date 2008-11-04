@@ -77,7 +77,16 @@ public class StockRowProvider implements IRowProvider<StockEntryData> {
 	}
 	
 	public void releaseRow(BaseEntryRowControl<StockEntryData, ?> rowControl) {
+		if (!rowControl.getVisible()) {
+			System.out.println("PROBLEM");
+		}
 		rowControl.setVisible(false);
+		if (rowControl.getVisible()) {
+			System.out.println("PROBLEM2");
+		}
+//		System.out.println(rowControl.toString() + " now invisible");
+		
 		spareRows.add(rowControl);
+		System.out.println("new spare row count: " + spareRows.size());
 	}
 }

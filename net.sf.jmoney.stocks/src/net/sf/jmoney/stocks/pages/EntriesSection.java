@@ -28,11 +28,13 @@ import net.sf.jmoney.entrytable.BalanceColumn;
 import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.CellBlock;
+import net.sf.jmoney.entrytable.CellFocusListener;
 import net.sf.jmoney.entrytable.DebitAndCreditColumns;
 import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.EntryRowControl;
 import net.sf.jmoney.entrytable.HorizontalBlock;
+import net.sf.jmoney.entrytable.ICellControl2;
 import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IRowProvider;
 import net.sf.jmoney.entrytable.ISplitEntryContainer;
@@ -309,7 +311,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 			public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
 				final Text control = new Text(parent, SWT.RIGHT);
 				
-				return new IPropertyControl<StockEntryData>() {
+				ICellControl2<StockEntryData> cellControl = new ICellControl2<StockEntryData>() {
 
 					public Control getControl() {
 						return control;
@@ -357,6 +359,12 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						control.setBackground(null);
 					}
 				};
+				
+				FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
+				control.addFocusListener(controlFocusListener);
+				
+				return cellControl;
+				
 			}
 		};  
 
@@ -366,7 +374,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 			public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
 				final Text control = new Text(parent, SWT.RIGHT);
 				
-				return new IPropertyControl<StockEntryData>() {
+				ICellControl2<StockEntryData> cellControl = new ICellControl2<StockEntryData>() {
 
 					private StockEntryData data;
 					
@@ -428,6 +436,11 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						control.setBackground(null);
 					}
 				};
+				
+				FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
+				control.addFocusListener(controlFocusListener);
+				
+				return cellControl;
 			}
 		};  
 
