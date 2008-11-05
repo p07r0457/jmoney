@@ -11,5 +11,6 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.forms
 Export-Package: net.sf.jmoney.bookkeepingPages,
  net.sf.jmoney.categoriespanel
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
 Bundle-Vendor: JMoney.sf.net
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
