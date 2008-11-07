@@ -277,7 +277,7 @@ public class InvestmentImporter implements IQifImporter {
 				} else if (qifTransaction.getAction().equals("XOut")) {
 					transferEntry.setMemo(qifTransaction.getMemo());
 				}
-				transferEntry.setAmount(-amount);
+				transferEntry.setAmount(amount);
 			} else if (qifTransaction.getAction().equals("ScrIssue")) {
 				// For a stock split, the share arrive as though income paid as share
 				// for an income account.  The entry for the source of the shares is
