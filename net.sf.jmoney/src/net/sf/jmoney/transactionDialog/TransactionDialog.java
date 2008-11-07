@@ -34,7 +34,9 @@ import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.FocusCellTracker;
 import net.sf.jmoney.entrytable.Header;
 import net.sf.jmoney.entrytable.HorizontalBlock;
+import net.sf.jmoney.entrytable.ICellControl2;
 import net.sf.jmoney.entrytable.InvalidUserEntryException;
+import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.entrytable.SplitEntryRowControl;
@@ -54,6 +56,9 @@ import org.eclipse.jface.dialogs.DialogMessageArea;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusAdapter;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -273,10 +278,134 @@ public class TransactionDialog extends Dialog {
    		for (ScalarPropertyAccessor<?> propertyAccessor: TransactionInfo.getPropertySet().getScalarProperties3()) {
         	Label propertyLabel = new Label(composite, 0);
         	propertyLabel.setText(propertyAccessor.getDisplayName() + ':');
-        	IPropertyControl<ExtendableObject> propertyControl = propertyAccessor.createPropertyControl(composite);
+        	final IPropertyControl<ExtendableObject> propertyControl = propertyAccessor.createPropertyControl(composite);
         	propertyControl.load(topEntry.getTransaction());
+
+        	// Create an ICellControl2, which is really just an IPropertyControl but with 2 extra methods.
+        	// We do this by wrapping.   Can this be cleaned up a little?
+    		final ICellControl2<Entry> cellControl = new ICellControl2<Entry>() {
+
+    			public Control getControl() {
+    				return propertyControl.getControl();
+    			}
+
+    			public void load(Entry entry) {
+    				propertyControl.load(entry);
+    			}
+
+    			public void save() {
+    				propertyControl.save();
+    			}
+
+    			public void setFocusListener(FocusListener controlFocusListener) {
+    				// Nothing to do
+    			}
+
+    			@Override
+    			public void setSelected() {
+    				propertyControl.getControl().setBackground(RowControl.selectedCellColor);
+    			}
+
+    			@Override
+    			public void setUnselected() {
+    				propertyControl.getControl().setBackground(null);
+    			}
+    		};
+    		
+
+        	
+        	addFocusListenerRecursively(propertyControl.getControl(), new FocusAdapter() {
+				@Override
+				public void focusGained(FocusEvent e) {
+					final ICellControl2<?> previousFocus = cellTracker.getFocusCell();
+					if (cellControl == previousFocus) {
+						System.out.println("here");
+						/*
+						 * The focus has changed to a different control as far as SWT is
+						 * concerned, but the focus is still within the same cell
+						 * control. This can happen if the cell control is a composite
+						 * that contains multiple child controls, such as the date
+						 * control. Focus may move from the text box of a date control
+						 * to the button in the date control, but focus has not left the
+						 * cell. We take no action in this situation.
+						 * 
+						 * This can also happen if focus was lost to a control outside
+						 * of the table. This does not change the focus cell within the
+						 * table so when focus is returned to the table we will not see
+						 * a cell change here.
+						 */
+						return;
+					}
+
+					/*
+					 * It is important to set the new focus cell straight away. The
+					 * reason is that if, for example, a dialog box is shown (such as
+					 * may happen in the selectionTracker.setSelection method below)
+					 * then focus will move away from the control to the dialog then
+					 * back again when the dialog is closed. If the new focus is already
+					 * set then nothing will happen the second time the control gets
+					 * focus (because of the test above).
+					 */
+					cellTracker.setFocusCell(cellControl);
+
+					/*
+					 * Make sure any changes in the control are written back to the model.
+					 */
+					if (previousFocus != null) {
+						previousFocus.save();
+					}
+
+					/*
+					 * Opening dialog boxes (as may be done by the
+					 * selectionTracker.setSelection method below) and calling setFocus
+					 * both cause problems if done from within the focusGained method.
+					 * We therefore queue up a new task on this same thread to check
+					 * whether the row selection can change and either update the
+					 * display (background colors and borders) to show the row selection
+					 * or revert the focus to the original cell.
+					 */
+					cellControl.getControl().getDisplay().asyncExec(new Runnable() {
+						public void run() {
+							// No row is selected when a transaction property is selected
+							boolean success = rowTracker.setSelection(null, /*TODO: cellBlock*/null);
+							if (success) {
+								/*
+								 * The row selection will have been set by the setSelection method
+								 * but we must also update the cell selection.
+								 */ 
+								if (previousFocus != null) {
+									previousFocus.setUnselected();
+								}
+
+								cellControl.setSelected();
+							} else {
+								/*
+								 * The row selection change was rejected so restore the original cell selection.
+								 */
+	
+								// This needs to be sorted out, but is not high priority because row depatures
+								// rarely (never) fail in this dialog.
+//								rowTracker.getSelectedRow().scrollToShowRow();
+								
+								// TODO: Should we be restoring selection to the cell that needs correcting?
+								cellTracker.setFocusCell(previousFocus);
+								previousFocus.getControl().setFocus();
+							}
+						}
+					});
+				}
+			});
         }
 		return composite;
+	}
+
+	private void addFocusListenerRecursively(Control control, FocusListener listener) {
+		control.addFocusListener(listener);
+		if (control instanceof Composite) {
+			for (Control child: ((Composite)control).getChildren()) {
+				addFocusListenerRecursively(child, listener);
+			}
+		}
 	}
 
 	private Control createEntriesTable(Composite parent) {

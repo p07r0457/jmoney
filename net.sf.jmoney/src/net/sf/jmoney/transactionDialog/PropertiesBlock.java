@@ -52,20 +52,13 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 
 /**
- * This class represents a block where alternative layouts are shown,
- * depending on the type of the transaction.
- * 
- * This class contains an abstract method, getTopBlock.  This method is
- * passed the row input.  An implementation must be provided that determines
- * which of the child blocks is to be shown.
- * 
- * Note that because a different block may be shown in each row, it is not possible
- * for the header to show all the column headers for all rows.  The header will
- * show the correct column headers only for the selected row, or will be blank if
- * no row is selected.
- * 
- * getTopBlock may return null for a particular row input.  In that case the block
- * will be blank for that row.
+ * This class represents a block that contains all properties (except a few standard ones that
+ * have their own column).  All the properties appear in this cell, with labels and wrapped in
+ * a horizontal row layout.
+ * <P>
+ * Use this when you want to show all properties to the user, with the set of properties adjusting
+ * according to what is applicable to each entry.  This is not the most user friendly of formats,
+ * but it does give the user the most control.
  */
 class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 	
@@ -226,13 +219,25 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 				}
 			});
 
-			// This is a little bit of a kludge.  Might be a little safer to implement a method
-			// in IPropertyControl to add the focus listener?
-//			addFocusListenerRecursively(propertyControl.getControl(), controlFocusListener);
-			propertyControl.getControl().addFocusListener(controlFocusListener);
+			/*
+			 * The control may in fact be a composite control, in which case the
+			 * composite control itself will never get the focus. Only the child
+			 * controls will get the focus, so we add the listener recursively
+			 * to all child controls.
+			 */
+			addFocusListenerRecursively(propertyControl.getControl(), controlFocusListener);
 
 			propertyControl.load(entry);
 			properties.add(propertyControl);
+		}
+
+		private void addFocusListenerRecursively(Control control, FocusListener listener) {
+			control.addFocusListener(listener);
+			if (control instanceof Composite) {
+				for (Control child: ((Composite)control).getChildren()) {
+					addFocusListenerRecursively(child, listener);
+				}
+			}
 		}
 
 		public void save() {
