@@ -245,9 +245,14 @@ public class InvestmentImporter implements IQifImporter {
 	        	
 			} else if (qifTransaction.getAction().equals("Div")) {
 				firstEntry.setAmount(amount);
-				Entry dividendEntry = transaction.createEntry();
+				StockEntry dividendEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 				dividendEntry.setAccount(account.getDividendAccount());
 				dividendEntry.setAmount(-amount);
+				
+		        // Find the security
+		        String security = qifTransaction.getSecurity();
+		        Stock stock = findStock(session, security);		        
+				dividendEntry.setStock(stock);
 			} else if (qifTransaction.getAction().equals("IntInc")) {
 				firstEntry.setAmount(amount);
 				Entry interestEntry = transaction.createEntry();
