@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.jdbcdatastore;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -49,7 +48,7 @@ import net.sf.jmoney.model2.ExtendablePropertySet;
  * @author Nigel Westbury
  */
 class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> {
-	private PreparedStatement stmt;
+	private Statement stmt;
 	private ResultSet resultSet;
 	private ExtendablePropertySet<E> propertySet;
 	private DatabaseListKey<? super E> listKey;
@@ -82,24 +81,21 @@ class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> 
 	 *            parent. If the objects in the list have different parents then
 	 *            pass null.
 	 * @param sessionManager
+	 * @throws SQLException
 	 */
-	UncachedObjectIterator(PreparedStatement stmt, ExtendablePropertySet<E> propertySet, DatabaseListKey<? super E> listKey, SessionManager sessionManager) {
-		this.stmt = stmt;
+	UncachedObjectIterator(ResultSet resultSet, ExtendablePropertySet<E> propertySet, DatabaseListKey<? super E> listKey, SessionManager sessionManager) {
 		this.propertySet = propertySet;
 		this.listKey = listKey;
 		this.sessionManager = sessionManager;
 		
 		// Position on first row.
 		try {
-			resultSet = stmt.executeQuery();
-			isAnother = resultSet.next();
+		this.stmt = resultSet.getStatement();
+		this.resultSet = resultSet;
+		isAnother = resultSet.next();
 		} catch (SQLException e) {
-			try {
-				stmt.close();
-			} catch (SQLException e1) {
-				// Ignore error on close
-			}
-			throw new RuntimeException("UncachedObjectIterator construction failed", e);
+			// Should really attempt to close, but this is not a likely exception.
+			throw new RuntimeException("SQL failure");
 		}
 	}
 	

@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.jdbcdatastore;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -42,10 +43,10 @@ import net.sf.jmoney.model2.EntryInfo;
  * @author Nigel Westbury
  */
 public class AccountEntriesList implements Collection<Entry> {
-	private SessionManager sessionManager;
-	private final IDatabaseRowKey keyOfRequiredPropertyValue;
-	private final String tableName;
-	private final String columnName;
+	SessionManager sessionManager;
+	final IDatabaseRowKey keyOfRequiredPropertyValue;
+	final String tableName;
+	final String columnName;
 	
 	public AccountEntriesList(SessionManager sessionManager, IDatabaseRowKey keyOfRequiredPropertyValue) {
 		this.sessionManager = sessionManager;
@@ -103,30 +104,27 @@ public class AccountEntriesList implements Collection<Entry> {
 	}
 	
 	public Iterator<Entry> iterator() {
-		try {
-			// TODO: This code will not work if the index is indexing
-			// objects of a derivable property set.  Table joins would
-			// be required in such a situation.
-			String sql =
-				"SELECT * FROM " + tableName
-				+ " WHERE \"" + columnName + "\" = ?";
-			System.out.println(sql + " : " + keyOfRequiredPropertyValue.getRowId());
-			PreparedStatement stmt = sessionManager.getConnection().prepareStatement(sql);
-//			try {
+		ResultSet rs = sessionManager.runWithReconnect(new IRunnableSql<ResultSet>() {
+			public ResultSet execute(Connection connection) throws SQLException {
+				// TODO: This code will not work if the index is indexing
+				// objects of a derivable property set.  Table joins would
+				// be required in such a situation.
+				String sql =
+					"SELECT * FROM " + tableName
+					+ " WHERE \"" + columnName + "\" = ?";
+				System.out.println(sql + " : " + keyOfRequiredPropertyValue.getRowId());
+				PreparedStatement stmt = connection.prepareStatement(sql);
 				stmt.setInt(1, keyOfRequiredPropertyValue.getRowId());
-				/*
-				 * UncachedObjectIterator takes over ownership of the statement,
-				 * meaning it is the responsibility of UncachedObjectIterator to
-				 * close the statement when it is done.
-				 */
-				return new UncachedObjectIterator<Entry>(stmt, EntryInfo.getPropertySet(), null, sessionManager);
-//			} finally {
-//				stmt.close();
-//			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		}
+				return stmt.executeQuery();
+			}
+		});
+		
+		/*
+		 * UncachedObjectIterator takes over ownership of the statement,
+		 * meaning it is the responsibility of UncachedObjectIterator to
+		 * close the statement when it is done.
+		 */
+		return new UncachedObjectIterator<Entry>(rs, EntryInfo.getPropertySet(), null, sessionManager);
 	}
 	
 	public Object[] toArray() {

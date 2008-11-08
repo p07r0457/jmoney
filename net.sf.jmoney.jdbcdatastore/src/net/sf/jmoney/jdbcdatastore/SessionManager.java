@@ -281,19 +281,6 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		return connection;
 	}
 
-	/**
-	 * This method should be called whenever a connection fails with an error that
-	 * indicates a new connection needs to be made.
-	 * 
-	 * The usual error when a connect times out is "08S01" (at least with Microsoft SQL Server).
-	 * This method attempts to close the connection, so subsequent attempts to use the connection
-	 * may 
-	 */
-	public void resetConnection() {
-		// TODO Auto-generated method stub
-		
-	}
-	
 	@Override
 	public boolean canClose(IWorkbenchWindow window) {
 		// A JDBC database can always be closed without further
@@ -1932,46 +1919,39 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	}
 
 	/**
-	 * If a connection times out, MS SQL Server will successfully create
-	 * a statement on that connection but will fail when the statement is
-	 * executed.  It is therefore important that the call to {@link Statement#executeQuery(String)}
-	 * is included in the try block.
-	 *  
-	 * @param sql
-	 * @return
-	 * @throws SQLException
+	 * This method executes the code in the given runnable. If an exception is
+	 * thrown indicating that the connection has timed out then the connection
+	 * will be reset and the code will be attempted a second time. All other
+	 * exceptions are returned to the caller.
 	 */
-	public ResultSet executeQuery(String sql) throws SQLException {
+	public <T> T runWithReconnect(IRunnableSql<T> runnableSql) {
 		try {
-			// TODO: problem here.  Statement is never closed.
-			Statement stmt = connection.createStatement();
-			return stmt.executeQuery(sql);
+			return runnableSql.execute(connection);
 		} catch (SQLException e) {
-			if (e.getSQLState().equals("08S01")) {
-				/*
-				 * The socket has been reset.  This condition is usually caused
-				 * by a connection that has not been used in a while.  It can most
-				 * likely be fixed simply by reconnecting.
-				 */
-				try {
-					connection.close();
-				} catch (SQLException e2) {
+			try {
+				if (e.getSQLState().equals("08S01")) {
 					/*
-					 * Ignore any failures on the close. It was a 'best efforts
-					 * only' close. In fact, it almost certainly will fail, and
-					 * perhaps we should not even bother to try to close it.
+					 * The socket has been reset.  This condition is usually caused
+					 * by a connection that has not been used in a while.  It can most
+					 * likely be fixed simply by reconnecting.
 					 */
-				}	
-				
-				connection = DriverManager.getConnection(url, user, password);
-				Statement stmt = connection.createStatement();
-				return stmt.executeQuery(sql);
-			} else {
-				/*
-				 * The error does not like something that can be fixed by re-creating
-				 * the connection, so pass on the exception. 
-				 */
-				throw e;
+					try {
+						connection.close();
+					} catch (SQLException e2) {
+						/*
+						 * Ignore any failures on the close. It was a 'best efforts
+						 * only' close. In fact, it almost certainly will fail, and
+						 * perhaps we should not even bother to try to close it.
+						 */
+					}	
+					
+					connection = DriverManager.getConnection(url, user, password);
+					return runnableSql.execute(connection);
+				} else {
+					throw e;
+				}
+			} catch (SQLException e2) {
+				throw new RuntimeException("SQL failed and retry cannot fix", e2);
 			}
 		}
 	}

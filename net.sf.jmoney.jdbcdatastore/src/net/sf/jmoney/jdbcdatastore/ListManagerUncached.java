@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.jdbcdatastore;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -43,8 +44,8 @@ import net.sf.jmoney.model2.IValues;
  * @author Nigel Westbury
  */
 public class ListManagerUncached<E extends ExtendableObject> implements IListManager<E> {
-	private SessionManager sessionManager;
-	private DatabaseListKey<E> listKey;
+	SessionManager sessionManager;
+	DatabaseListKey<E> listKey;
 	
 	public ListManagerUncached(SessionManager sessionManager, DatabaseListKey<E> listKey) {
 		this.sessionManager = sessionManager;
@@ -158,13 +159,16 @@ public class ListManagerUncached<E extends ExtendableObject> implements IListMan
 		 * The UnchachedObjectIterator is responsible for closing the result set
 		 * and the associated statement.
 		 */		
-		try {
-			PreparedStatement stmt = sessionManager.executeListQuery(listKey, listKey.listPropertyAccessor.getElementPropertySet());
-			return new UncachedObjectIterator<E>(stmt, listKey.listPropertyAccessor.getElementPropertySet(), listKey, sessionManager);
-		} catch (SQLException e) {
-			e.printStackTrace();
-			throw new RuntimeException("internal error");
-		}
+		ResultSet rs = sessionManager.runWithReconnect(new IRunnableSql<ResultSet>() {
+			public ResultSet execute(Connection connection) throws SQLException {
+				// Although the connection is passed, it is not really necessary because it
+				// is taken from the session manager, and that would be the same connection.
+				PreparedStatement stmt = sessionManager.executeListQuery(listKey, listKey.listPropertyAccessor.getElementPropertySet());
+				return stmt.executeQuery();
+			}
+		});
+
+		return new UncachedObjectIterator<E>(rs, listKey.listPropertyAccessor.getElementPropertySet(), listKey, sessionManager);
 	}
 
 	public Object[] toArray() {
