@@ -37,7 +37,7 @@ public class BalanceColumn extends IndividualBlock<EntryData, BaseEntryRowContro
 
 	private class BalanceCellControl implements IPropertyControl<EntryData>, IBalanceChangeListener {
 		private final Label balanceLabel;
-		private EntryData entyData = null;
+		private EntryData entryData = null;
 		
 		private BalanceCellControl(Label balanceLabel) {
 			this.balanceLabel = balanceLabel;
@@ -48,7 +48,7 @@ public class BalanceColumn extends IndividualBlock<EntryData, BaseEntryRowContro
 		}
 
 		public void load(EntryData entryData) {
-			this.entyData = entryData;
+			this.entryData = entryData;
 			balanceLabel.setText(commodityForFormatting.format(entryData.getBalance() + entryData.getEntry().getAmount()));
 		}
 
@@ -66,7 +66,7 @@ public class BalanceColumn extends IndividualBlock<EntryData, BaseEntryRowContro
 			 * the amount in a previous entry changes, or a previous entry is
 			 * inserted or removed.
 			 */
-			balanceLabel.setText(commodityForFormatting.format(entyData.getBalance() + entyData.getEntry().getAmount()));
+			balanceLabel.setText(commodityForFormatting.format(entryData.getBalance() + entryData.getEntry().getAmount()));
 		}
 	}
 
