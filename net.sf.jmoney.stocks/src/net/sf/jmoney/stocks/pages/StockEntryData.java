@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.util.Iterator;
 
 import net.sf.jmoney.entrytable.EntryData;
+import net.sf.jmoney.entrytable.InvalidUserEntryException;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.DataManager;
@@ -18,6 +19,8 @@ import org.eclipse.core.runtime.Assert;
 
 public class StockEntryData extends EntryData {
 
+	private StockAccount account;
+	
 	private TransactionType transactionType;
 
 	private Entry mainEntry;
@@ -28,7 +31,8 @@ public class StockEntryData extends EntryData {
 	 * the entry for the commission, or null if this is not a purchase or sale
 	 * transaction or if no commission account is configured for this stock
 	 * account because commissions are never charged on any purchases or sales
-	 * in this account
+	 * in this account, and possibly null if there can be a commission but none
+	 * has been entered for this entry
 	 */
 	private Entry commissionEntry;
 	
@@ -42,16 +46,18 @@ public class StockEntryData extends EntryData {
 	public StockEntryData(Entry entry, DataManager dataManager) {
 		super(entry, dataManager);
 
+
 		// Note that there are two versions of this object for every row.
 		// One contains the committed entry and the other contains the entry
 		// being edited inside a transaction.  If this is the new entry row
 		// and is the committed version then entry will be null, so we can't
-		// analyze it.
+		// analyze it and we can't determine the account.
 		
 		// TODO We should consider merging the two instances into one.
 		
 		// TODO Call this on-demand.
 		if (entry != null) {
+			account = (StockAccount)entry.getAccount();
 			analyzeTransaction();
 		}
 	}
@@ -60,7 +66,6 @@ public class StockEntryData extends EntryData {
 		/*
 		 * Analyze the transaction to see which type of transaction this is.
 		 */
-		StockAccount account = (StockAccount)getEntry().getAccount();
 
 		/*
 		 * If just one entry then this is not a valid transaction, so must be
@@ -154,9 +159,6 @@ public class StockEntryData extends EntryData {
 	public void forceTransactionToDividend() {
 		transactionType = TransactionType.Dividend;
 
-		// Move this to be a field???
-		StockAccount account = (StockAccount)getEntry().getAccount();
-
 		EntryCollection entries = getEntry().getTransaction().getEntryCollection();
 		for (Iterator<Entry> iter = entries.iterator(); iter.hasNext(); ) {
 			Entry entry = iter.next();
@@ -178,10 +180,7 @@ public class StockEntryData extends EntryData {
 			dividendEntry.setAccount(account.getDividendAccount());
 		}
 
-		if (withholdingTaxEntry == null && account.getWithholdingTaxAccount() != null) {
-			withholdingTaxEntry = entries.createEntry();
-			withholdingTaxEntry.setAccount(account.getWithholdingTaxAccount());
-		}
+		// withholdingTaxEntry is optional and will be created when needed.
 
 		dividendEntry.setAmount(-mainEntry.getAmount());
 	}
@@ -197,9 +196,6 @@ public class StockEntryData extends EntryData {
 	private void forceTransactionToBuyOrSell(TransactionType transactionType) {
 		this.transactionType = transactionType;
 			
-		// Move this to be a field???
-		StockAccount account = (StockAccount)getEntry().getAccount();
-
 		EntryCollection entries = getEntry().getTransaction().getEntryCollection();
 		for (Iterator<Entry> iter = entries.iterator(); iter.hasNext(); ) {
 			Entry entry = iter.next();
@@ -221,20 +217,8 @@ public class StockEntryData extends EntryData {
 			purchaseOrSaleEntry.setAccount(account);
 		}
 
-		if (commissionEntry == null && account.getCommissionAccount() != null) {
-			commissionEntry = entries.createEntry();
-			commissionEntry.setAccount(account.getCommissionAccount());
-		}
-
-		if (tax1Entry == null && account.getTax1Account() != null) {
-			tax1Entry = entries.createEntry();
-			tax1Entry.setAccount(account.getTax1Account());
-		}
-
-		if (tax2Entry == null && account.getTax2Account() != null) {
-			tax2Entry = entries.createEntry();
-			tax2Entry.setAccount(account.getTax2Account());
-		}
+		// Commission, tax 1, and tax 2 entries may be null in this transaction type.
+		// They are created when needed to connect the controls.
 
 		// TODO: What is our strategy on changing values to keep
 		// the transaction balanced.  Quicken has a dialog box that
@@ -328,11 +312,18 @@ public class StockEntryData extends EntryData {
 	 * 
 	 * @return the entry that represents the withholding tax, or null if the
 	 *         withholding tax is not applicable to this transaction
-	 *         (transaction is a transfer or some other type that does not
-	 *         represent a transaction type which may potentially include a
-	 *         withholding tax)
+	 *         (transaction is not a dividend transaction or no withholding tax
+	 *         account has been set for the account) but never null if a
+	 *         withholding tax amount could be entered for this entry even if
+	 *         none has been
 	 */
 	public Entry getWithholdingTaxEntry() {
+		assert(transactionType == TransactionType.Dividend);
+		
+		if (withholdingTaxEntry == null && account.getWithholdingTaxAccount() != null) {
+			withholdingTaxEntry = getEntry().getTransaction().createEntry();
+			withholdingTaxEntry.setAccount(account.getWithholdingTaxAccount());
+		}
 		return withholdingTaxEntry;
 	}
 
@@ -350,27 +341,53 @@ public class StockEntryData extends EntryData {
 	 *         null if this is not a purchase or sale transaction or if no
 	 *         commission account is configured for this stock account because
 	 *         commissions are never charged on any purchases or sales in this
-	 *         account
+	 *         account, but never null if a commission can be entered for this
+	 *         entry even if none has been
 	 */
 	public Entry getCommissionEntry() {
+		assert(isPurchaseOrSale());
+		
+		if (commissionEntry == null && account.getCommissionAccount() != null) {
+			commissionEntry = getEntry().getTransaction().createEntry();
+			commissionEntry.setAccount(account.getCommissionAccount());
+		}
+
 		return commissionEntry;
 	}
 
 	/**
 	 * @return the entry in the transaction that represents the
 	 * 		tax 1 amount, or null if this is not a purchase or sale
-	 * 		transaction
+	 * 		transaction or if no tax 1 is configured for the account,
+	 * 		but never null if a tax 1 amount could be entered for this
+	 * 		entry even if none has been
 	 */
 	public Entry getTax1Entry() {
+		assert(isPurchaseOrSale());
+		
+		if (tax1Entry == null && account.getTax1Account() != null) {
+			tax1Entry = getEntry().getTransaction().createEntry();
+			tax1Entry.setAccount(account.getTax1Account());
+		}
+
 		return tax1Entry;
 	}
 
 	/**
 	 * @return the entry in the transaction that represents the
 	 * 		tax 2 amount, or null if this is not a purchase or sale
-	 * 		transaction
+	 * 		transaction or if no tax 2 is configured for the account,
+	 * 		but never null if a tax 2 amount could be entered for this
+	 * 		entry even if none has been
 	 */
 	public Entry getTax2Entry() {
+		assert(isPurchaseOrSale());
+		
+		if (tax2Entry == null && account.getTax2Account() != null) {
+			tax2Entry = getEntry().getTransaction().createEntry();
+			tax2Entry.setAccount(account.getTax2Account());
+		}
+
 		return tax2Entry;
 	}
 
@@ -416,5 +433,86 @@ public class StockEntryData extends EntryData {
 		}
 		
 		return price;
+	}
+
+	public void specificValidation() throws InvalidUserEntryException {
+		if (transactionType == null) {
+			throw new InvalidUserEntryException("No transaction type selected.", null);
+		}
+		
+		/*
+		 * Check for zero amounts. Some fields may be zeroes (for example, commissions and
+		 * withheld taxes), others may not (for example, quantity of stock sold).
+		 * 
+		 * We do leave entries with zero amounts.  This makes the code simpler
+		 * because the transaction is already set up for the transaction type,
+		 * and it is easier to determine the transaction type.  
+		 * 
+		 * It is possible that the total proceeds of a sale are zero.  Anyone who
+		 * has disposed of shares in a sub-prime mortgage company in order to
+		 * claim the capital loss will know that the commission may equal the sale
+		 * price.  It is probably good that the transaction still shows up in
+		 * the cash entries list for the account.
+		 */
+		switch (transactionType) {
+		case Buy:
+		case Sell:
+			if (purchaseOrSaleEntry.getAmount() == 0) {
+				throw new InvalidUserEntryException("The quantity of stock in a purchase or sale cannot be zero.", null);
+			}
+			if (commissionEntry != null 
+					&& commissionEntry.getAmount() == 0) {
+				mainEntry.getTransaction().deleteEntry(commissionEntry);
+				commissionEntry = null;
+			}
+			if (tax1Entry != null 
+					&& tax1Entry.getAmount() == 0) {
+				mainEntry.getTransaction().deleteEntry(tax1Entry);
+				tax1Entry = null;
+			}
+			if (tax2Entry != null 
+					&& tax2Entry.getAmount() == 0) {
+				mainEntry.getTransaction().deleteEntry(tax2Entry);
+				tax2Entry = null;
+			}
+			break;
+		case Dividend:
+			if (dividendEntry.getAmount() == 0) {
+				throw new InvalidUserEntryException("The amount of a dividend cannot be zero.", null);
+			}
+			if (withholdingTaxEntry != null 
+					&& withholdingTaxEntry.getAmount() == 0
+					&& withholdingTaxEntry.getMemo() == null) {
+				mainEntry.getTransaction().deleteEntry(withholdingTaxEntry);
+				withholdingTaxEntry = null;
+			}
+			break;
+		case Transfer:
+			if (transferEntry.getAmount() == 0) {
+				throw new InvalidUserEntryException("The amount of a transfer cannot be zero.", null);
+			}
+			break;
+		case Other:
+			// We don't allow any amounts to be zero except the listed entry
+			// (the listed entry is used to ensure a transaction appears in this
+			// list even if the transaction does not result in a change in the cash
+			// balance).
+			Entry mainEntry = getEntry();
+			if (mainEntry.getTransaction().getEntryCollection().size() == 1) {
+				// TODO: create another entry when 'other' selected and don't allow it to be
+				// deleted, thus this check is not necessary.
+				// TODO: should not be 'other' when no transaction has been selected
+				// (should be null)
+				throw new InvalidUserEntryException("Must have another entry.", null);
+			}
+			for (Entry entry : mainEntry.getTransaction().getEntryCollection()) {
+				if (entry != mainEntry) {
+					if (entry.getAmount() == 0) {
+						throw new InvalidUserEntryException("The amount of an entry in this transaction cannot be zero.", null);
+					}
+				}
+			}
+			break;
+		}
 	}
 }
