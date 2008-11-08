@@ -170,6 +170,13 @@ public class StackControl<T, R> extends Composite implements IPropertyControl<T>
 		}
 		stackLayout.topControl = topControl;
 		
+		/*
+		 * Re-layout with the new top control. Note that we don't re-layout the
+		 * controls inside the child controls because changing the input does
+		 * not change the layout of the blocks.
+		 */ 
+		layout(false);
+		
 		// Fire event that tells header to change
 		if (rowControl instanceof BaseEntryRowControl
 				&& ((BaseEntryRowControl)rowControl).isSelected()) {
