@@ -37,10 +37,13 @@ import org.eclipse.jface.action.ToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
+import org.eclipse.ui.menus.CommandContributionItem;
+import org.eclipse.ui.menus.CommandContributionItemParameter;
 
 /**
  * @author Johann Gyger
@@ -121,12 +124,23 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     	IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
     	coolBar.add(new ToolBarContributionItem(toolbar, "main")); //$NON-NLS-1$
     	toolbar.add(newAction);
-    	toolbar.add(new Separator("openEditors"));
+    	toolbar.add(new Separator("edit")); //$NON-NLS-1$
+    	toolbar.add(new Separator("navigate")); //$NON-NLS-1$
+
+    	// This is an example of how menus can be added programatically.
+    	// This is probably better than in plugin.xml if we can figure out how to make the
+    	// menus be visible only when an appropriate editor is active.
+    	CommandContributionItemParameter params = new CommandContributionItemParameter(PlatformUI
+				.getWorkbench(), null, "net.sf.jmoney.transactionDetails", //$NON-NLS-1$
+				CommandContributionItem.STYLE_PUSH);
+		params.tooltip = "%Commands.tooltip.viewTransactionDetails";  // TODO:
+//  	params.icon = ???.getImageDescriptor();
+		toolbar.add(new CommandContributionItem(params));
     	
-    	
-//        coolBar.add(newAction);
-//        coolBar.add(importAction);
-//        coolBar.add(exportAction);
+    	toolbar.add(new Separator("openEditors")); //$NON-NLS-1$
+    	toolbar.add(new Separator());
+    	toolbar.add(importAction);
+        toolbar.add(exportAction);
     }
 
     /**
