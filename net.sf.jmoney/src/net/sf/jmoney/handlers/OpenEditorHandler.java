@@ -46,11 +46,11 @@ public class OpenEditorHandler extends AbstractHandler implements IExecutableExt
 
 	public void setInitializationData(IConfigurationElement config,
 			String propertyName, Object data) throws CoreException {
-		for (IConfigurationElement classElements : config.getChildren("class")) {
-			for (IConfigurationElement parameterElements : classElements.getChildren("parameter")) {
-				String parameterName = parameterElements.getAttribute("name");
-				if (parameterName.equals("editorId")) {	
-					editorId = parameterElements.getAttribute("value");
+		for (IConfigurationElement classElements : config.getChildren("class")) { //$NON-NLS-1$
+			for (IConfigurationElement parameterElements : classElements.getChildren("parameter")) { //$NON-NLS-1$
+				String parameterName = parameterElements.getAttribute("name"); //$NON-NLS-1$
+				if (parameterName.equals("editorId")) {	 //$NON-NLS-1$
+					editorId = parameterElements.getAttribute("value"); //$NON-NLS-1$
 				}
 			}
 		}

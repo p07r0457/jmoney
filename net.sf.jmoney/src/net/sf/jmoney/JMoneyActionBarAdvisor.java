@@ -133,7 +133,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     	CommandContributionItemParameter params = new CommandContributionItemParameter(PlatformUI
 				.getWorkbench(), null, "net.sf.jmoney.transactionDetails", //$NON-NLS-1$
 				CommandContributionItem.STYLE_PUSH);
-		params.tooltip = "%Commands.tooltip.viewTransactionDetails";  // TODO:
+		params.tooltip = Messages.JMoneyActionBarAdvisor_TransactionDetailsToolTipText;  // TODO:
 //  	params.icon = ???.getImageDescriptor();
 		toolbar.add(new CommandContributionItem(params));
     	
@@ -147,7 +147,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
      * Creates and returns the File menu.
      */
     private MenuManager createFileMenu() {
-        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_File, IWorkbenchActionConstants.M_FILE);
+        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuFileName, IWorkbenchActionConstants.M_FILE);
 
         menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_START));
 
@@ -168,7 +168,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
      * Creates and returns the File menu.
      */
     private MenuManager createEditMenu() {
-        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_Edit, IWorkbenchActionConstants.M_EDIT);
+        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuEditName, IWorkbenchActionConstants.M_EDIT);
 
         menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_START));
         menu.add(undoAction);
@@ -184,8 +184,8 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
      * Creates and returns the Navigate menu.
      */
     private MenuManager createNavigateMenu() {
-        MenuManager menu = new MenuManager("&Navigate", IWorkbenchActionConstants.M_NAVIGATE);
-        menu.add(new Separator("openEditors"));
+        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuNavigateName, IWorkbenchActionConstants.M_NAVIGATE);
+        menu.add(new Separator("openEditors")); //$NON-NLS-1$
         menu.add(new Separator());
         menu.add(createReportsMenu());
         menu.add(createChartsMenu());
@@ -198,7 +198,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
      * Creates and returns the Reports menu.
      */
     private MenuManager createReportsMenu() {
-        MenuManager menu = new MenuManager("&Reports", JMoneyPlugin.createImageDescriptor("icons/report.gif"), "reports");
+        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuReportsName, JMoneyPlugin.createImageDescriptor("icons/report.gif"), "reports");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
         menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         return menu;
     }
@@ -207,7 +207,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
      * Creates and returns the Charts menu.
      */
     private MenuManager createChartsMenu() {
-        MenuManager menu = new MenuManager("&Charts", JMoneyPlugin.createImageDescriptor("icons\\chart.gif"), "charts");
+        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuChartsName, JMoneyPlugin.createImageDescriptor("icons/chart.gif"), "charts");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
         menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         return menu;
     }
@@ -216,9 +216,9 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
      * Creates and returns the Window menu.
      */
     private MenuManager createWindowMenu() {
-        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_Window, IWorkbenchActionConstants.M_WINDOW);
+        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuWindowName, IWorkbenchActionConstants.M_WINDOW);
         {
-            MenuManager showViewMenuMgr = new MenuManager(Messages.JMoneyActionBarAdvisor_ShowView, "showView"); //$NON-NLS-1$
+            MenuManager showViewMenuMgr = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuShowViewName, "showView"); //$NON-NLS-1$
             IContributionItem showViewMenu = ContributionItemFactory.VIEWS_SHORTLIST.create(window);
             showViewMenuMgr.add(showViewMenu);
             menu.add(showViewMenuMgr);
@@ -234,7 +234,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
      * Creates and returns the Help menu.
      */
     private MenuManager createHelpMenu() {
-        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_Help, IWorkbenchActionConstants.M_HELP);
+        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuHelpName, IWorkbenchActionConstants.M_HELP);
 
         // Help
         if (introAction != null) {

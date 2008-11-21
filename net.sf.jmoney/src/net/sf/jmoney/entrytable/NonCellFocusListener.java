@@ -41,7 +41,7 @@ class NonCellFocusListener<R extends RowControl> extends FocusAdapter {
 	public void focusGained(FocusEvent e) {
 		final ICellControl2<?> previousFocus = focusCellTracker.getFocusCell();
 		if (previousFocus != null) {
-			System.out.println("here");
+			System.out.println("here"); //$NON-NLS-1$
 			/*
 			 * No cell has the focus, so we don't need to clear that out.
 			 */

@@ -39,6 +39,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusListener;
@@ -70,7 +71,7 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 	@Override
 	public void createHeaderControls(Composite parent, Entry entry) {
 		Label label = new Label(parent, SWT.NULL);
-		label.setText("Properties");
+		label.setText(Messages.PropertiesBlock_Properties);
 		label.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_GRAY));
 	}
 
@@ -177,7 +178,7 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 			Composite composite = new Composite(parent, SWT.NONE);
 			composite.setLayout(new GridLayout(2, false));
 			Label label = new Label(composite, SWT.LEFT);
-			label.setText(accessor.getDisplayName() + ":");
+			label.setText(accessor.getDisplayName() + ":"); //$NON-NLS-1$
 			label.setForeground(labelColor);
 
 			final IPropertyControl propertyControl = accessor.createPropertyControl(composite);

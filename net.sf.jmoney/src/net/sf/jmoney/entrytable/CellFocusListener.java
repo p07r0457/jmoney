@@ -23,7 +23,7 @@ public class CellFocusListener<R extends RowControl> extends FocusAdapter {
 	public void focusGained(FocusEvent e) {
 		final ICellControl2<?> previousFocus = focusCellTracker.getFocusCell();
 		if (cellControl == previousFocus) {
-			System.out.println("here");
+			System.out.println("here"); //$NON-NLS-1$
 			/*
 			 * The focus has changed to a different control as far as SWT is
 			 * concerned, but the focus is still within the same cell

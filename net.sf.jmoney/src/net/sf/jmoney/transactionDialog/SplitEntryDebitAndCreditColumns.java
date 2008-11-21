@@ -34,6 +34,7 @@ import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -117,13 +118,13 @@ class SplitEntryDebitAndCreditColumns extends IndividualBlock<Entry, SplitEntryR
 				// Debit column
 				textControl.setText(amount < 0 
 						? commodityForFormatting.format(-amount) 
-								: ""
+								: "" //$NON-NLS-1$
 				);
 			} else {
 				// Credit column
 				textControl.setText(amount > 0 
 						? commodityForFormatting.format(amount) 
-								: ""
+								: "" //$NON-NLS-1$
 				);
 			}
 		}
@@ -190,11 +191,11 @@ class SplitEntryDebitAndCreditColumns extends IndividualBlock<Entry, SplitEntryR
 	private boolean isDebit;
 
 	public static SplitEntryDebitAndCreditColumns createCreditColumn(Commodity commodityForFormatting) {
-    	return new SplitEntryDebitAndCreditColumns("credit", "Credit", commodityForFormatting, false); //$NON-NLS-2$
+    	return new SplitEntryDebitAndCreditColumns("credit", Messages.SplitEntryDebitAndCreditColumns_Credit, commodityForFormatting, false);  //$NON-NLS-1$
 	}
 	
 	public static SplitEntryDebitAndCreditColumns createDebitColumn(Commodity commodityForFormatting) {
-    	return new SplitEntryDebitAndCreditColumns("debit", "Debit", commodityForFormatting, true);     //$NON-NLS-2$
+    	return new SplitEntryDebitAndCreditColumns("debit", Messages.SplitEntryDebitAndCreditColumns_Debit, commodityForFormatting, true);      //$NON-NLS-1$
 	}
 	
 	private SplitEntryDebitAndCreditColumns(String id, String name, Commodity commodity, boolean isDebit) {

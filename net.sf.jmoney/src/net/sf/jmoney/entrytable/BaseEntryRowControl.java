@@ -337,7 +337,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	 */
 	@Override
 	public boolean canDepart() {
-		if (!commitChanges((committedEntryData.getEntry() == null) ? "New Transaction" : "Transaction Changes")) {
+		if (!commitChanges((committedEntryData.getEntry() == null) ? Messages.BaseEntryRowControl_NewTransaction : Messages.BaseEntryRowControl_TransactionChanges)) {
 			return false;
 		}
 

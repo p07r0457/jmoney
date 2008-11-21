@@ -144,7 +144,7 @@ public class NewAccountWizard extends Wizard implements IWorkbenchWizard {
 	public boolean performFinish() {
 		// TODO: verify properties are valid.
 		
-		transactionManager.commit("Add New Account");
+		transactionManager.commit("Add New Account"); //$NON-NLS-1$
 		
 		newCommittedAccount = (Account)((UncommittedObjectKey)newUncommittedAccount.getObjectKey()).getCommittedObjectKey().getObject();
 		

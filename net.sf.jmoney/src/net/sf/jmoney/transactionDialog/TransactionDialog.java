@@ -50,6 +50,7 @@ import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.DialogMessageArea;
@@ -126,7 +127,7 @@ public class TransactionDialog extends Dialog {
 		case IDialogConstants.OK_ID:
 			// All edits are transferred to the model as they are made,
 			// so we just need to commit them.
-    		transactionManager.commit("Edit Transaction");
+    		transactionManager.commit("Edit Transaction"); //$NON-NLS-1$
 			break;
 		case NEW_SPLIT_ID:
 			newSplit();
@@ -201,17 +202,17 @@ public class TransactionDialog extends Dialog {
 	@Override
 	protected void configureShell(Shell shell) {
 		super.configureShell(shell);
-		shell.setText("Transaction Details");
+		shell.setText(Messages.TransactionDialog_ShellText);
 	}
 	
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		createButton(parent, NEW_SPLIT_ID,
-				"New Split", false);
+				Messages.TransactionDialog_ButtonTextNewSplit, false);
 		createButton(parent, DELETE_SPLIT_ID,
-				"Delete Split", false);
+				Messages.TransactionDialog_ButtonTextDeleteSplit, false);
 		createButton(parent, ADJUST_AMOUNT_ID,
-				"Adjust Amount", false);
+				Messages.TransactionDialog_ButtonTextAdjustAmont, false);
 		// create OK and Cancel buttons by default
 		createButton(parent, IDialogConstants.OK_ID,
 				IDialogConstants.OK_LABEL, true);
@@ -249,10 +250,7 @@ public class TransactionDialog extends Dialog {
 		}, composite);
 		
 		Label label = new Label(composite, SWT.WRAP);
-		label.setText("Transactions are normally shown in a concise manner, showing details "
-						+ "in a way appropriate for the context.  However, sometimes you just need more flexibility in editing the transaction or you need to see the details. "
-						+ "This dialog shows the underlying structure and properties of the transaction and allows you to edit them. "
-						+ "You need to be a little more careful when using this dialog.");
+		label.setText(Messages.TransactionDialog_DialogLabel);
 
 		GridData messageData = new GridData();
 		Rectangle rect = getShell().getMonitor().getClientArea();
@@ -319,7 +317,7 @@ public class TransactionDialog extends Dialog {
 				public void focusGained(FocusEvent e) {
 					final ICellControl2<?> previousFocus = cellTracker.getFocusCell();
 					if (cellControl == previousFocus) {
-						System.out.println("here");
+						System.out.println("here"); //$NON-NLS-1$
 						/*
 						 * The focus has changed to a different control as far as SWT is
 						 * concerned, but the focus is still within the same cell
@@ -485,7 +483,7 @@ public class TransactionDialog extends Dialog {
 
 			if (amounts.size() == 2) {
 				List<Map.Entry<Commodity, Long>> a = new ArrayList<Map.Entry<Commodity, Long>>(amounts.entrySet());
-				String message = MessageFormat.format("This transaction results in 1 {0} = {2} {1}, or 1 {2} = {3} {0}.",
+				String message = MessageFormat.format(Messages.TransactionDialog_Message,
 						a.get(0).getKey().getName(),
 						a.get(1).getKey().getName(),
 						a.get(0).getValue(),

@@ -7,6 +7,7 @@ import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.PageEntry;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.NodeEditorInput;
 import net.sf.jmoney.views.TreeNode;
 
@@ -35,7 +36,7 @@ public class SessionEditorInput implements IEditorInput, IPersistableElement {
 
 	public String getName() {
 		// TODO Auto-generated method stub
-		return "my name";
+		return Messages.SessionEditorInput_Name;
 	}
 
 	/* (non-Javadoc)
@@ -49,7 +50,7 @@ public class SessionEditorInput implements IEditorInput, IPersistableElement {
 
 	public String getToolTipText() {
 		// TODO Auto-generated method stub
-		return "my tooltip";
+		return Messages.SessionEditorInput_ToolTipText;
 	}
 
 	public Object getAdapter(Class adapter) {

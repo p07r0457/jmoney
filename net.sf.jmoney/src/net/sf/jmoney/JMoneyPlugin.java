@@ -329,7 +329,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         }
         if (newSessionManager != null) {
         	newSessionManager.addSessionChangeFirerListener(sessionChangeFirerListener);
-        	sessionOpenContext = contextService.activateContext("net.sf.jmoney.sessionOpen");
+        	sessionOpenContext = contextService.activateContext("net.sf.jmoney.sessionOpen"); //$NON-NLS-1$
         }
 	}
 
