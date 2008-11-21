@@ -22,9 +22,9 @@
 
 package net.sf.jmoney.model2;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AmountInCurrencyAccountControlFactory;
 import net.sf.jmoney.fields.TextControlFactory;
+import net.sf.jmoney.resources.Messages;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -45,7 +45,7 @@ import net.sf.jmoney.fields.TextControlFactory;
  */
 public class BankAccountInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<BankAccount> propertySet = PropertySet.addDerivedFinalPropertySet(BankAccount.class, JMoneyPlugin.getResourceString("AccountPropertiesPanel.ObjectDescription"), CurrencyAccountInfo.getPropertySet(), new IExtendableObjectConstructors<BankAccount>() { //$NON-NLS-1$
+	private static ExtendablePropertySet<BankAccount> propertySet = PropertySet.addDerivedFinalPropertySet(BankAccount.class, Messages.BankAccountInfo_BankAccount, CurrencyAccountInfo.getPropertySet(), new IExtendableObjectConstructors<BankAccount>() { 
 
 		public BankAccount construct(IObjectKey objectKey, ListKey parentKey) {
 			return new BankAccount(
@@ -81,9 +81,9 @@ public class BankAccountInfo implements IPropertySetInfo {
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 		IPropertyControlFactory<Long> amountControlFactory = new AmountInCurrencyAccountControlFactory();
 		
-		bankAccessor          = propertySet.addProperty("bank", JMoneyPlugin.getResourceString("AccountPropertiesPanel.bank"), String.class, 5, 100, textControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
-		accountNumberAccessor = propertySet.addProperty("accountNumber", JMoneyPlugin.getResourceString("AccountPropertiesPanel.accountNumber"), String.class, 2, 70, textControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
-		minBalanceAccessor    = propertySet.addProperty("minBalance", JMoneyPlugin.getResourceString("AccountPropertiesPanel.minBalance"), Long.class, 2, 40, amountControlFactory, null); //$NON-NLS-1$ //$NON-NLS-2$
+		bankAccessor          = propertySet.addProperty("bank", Messages.BankAccountInfo_Bank, String.class, 5, 100, textControlFactory, null); //$NON-NLS-1$ 
+		accountNumberAccessor = propertySet.addProperty("accountNumber", Messages.BankAccountInfo_AccountNumber, String.class, 2, 70, textControlFactory, null); //$NON-NLS-1$ 
+		minBalanceAccessor    = propertySet.addProperty("minBalance", Messages.BankAccountInfo_MinimalBalance, Long.class, 2, 40, amountControlFactory, null); //$NON-NLS-1$ 
 		
 		return propertySet;
 	}
