@@ -351,6 +351,13 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         // Find the currency in our list of ISO 4217 currencies
         ResourceBundle res = ResourceBundle.getBundle("net.sf.jmoney.resources.Currency"); //$NON-NLS-1$
         byte decimals = 2;
+        String name = null;
+        try{
+        	name = res.getString(code);
+        }catch (Exception e){
+        	//Problem when retrieve the name return null
+        	return null;
+        }
         try {
             InputStream in = JMoneyPlugin.class.getResourceAsStream("Currencies.txt"); //$NON-NLS-1$
             BufferedReader buffer = new BufferedReader(new InputStreamReader(in));
@@ -374,7 +381,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 
         result = session.createCommodity(CurrencyInfo.getPropertySet());
         result.setCode(code);
-        result.setName(res.getString(code));
+        result.setName(name);
         result.setDecimals(decimals);
 
         return result;
