@@ -114,6 +114,9 @@ public class Messages extends NLS {
 	public static String JMoneyActionBarAdvisor_MenuReportsName;
 	public static String JMoneyActionBarAdvisor_MenuShowViewName;
 	public static String JMoneyActionBarAdvisor_MenuWindowName;
+	public static String JMoneyActionBarAdvisor_NewTransactionToolTipText;
+	public static String JMoneyActionBarAdvisor_DeleteTransactionToolTipText;
+	public static String JMoneyActionBarAdvisor_DuplicateTransactionToolTipText;
 	public static String JMoneyActionBarAdvisor_TransactionDetailsToolTipText;
 	public static String JMoneyApplication_InvalidWorkspaceMessage;
 	public static String JMoneyApplication_InvalidWorkspaceTitle;

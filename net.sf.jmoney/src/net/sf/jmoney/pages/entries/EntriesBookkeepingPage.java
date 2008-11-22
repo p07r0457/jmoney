@@ -22,11 +22,11 @@
 
 package net.sf.jmoney.pages.entries;
 
-import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.views.NodeEditor;
 
+import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.PartInitException;
 
@@ -38,14 +38,8 @@ public class EntriesBookkeepingPage implements IBookkeepingPageFactory {
     /* (non-Javadoc)
      * @see net.sf.jmoney.IBookkeepingPage#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
      */
-	public IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento) {
-		EntriesPage formPage = new EntriesPage(editor);
-		try {
-			editor.addPage(formPage);
-		} catch (PartInitException e) {
-			JMoneyPlugin.log(e);
-			// TODO: cleanly leave out this page.
-		}
-		return formPage;
+	public void createPages(NodeEditor editor, IEditorInput input, IMemento memento) throws PartInitException {
+		IEditorPart formPage = new AccountEntriesEditor();
+		editor.addPage(formPage, "Entries");
     }
 }

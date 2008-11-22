@@ -24,6 +24,7 @@ package net.sf.jmoney;
 
 import net.sf.jmoney.resources.Messages;
 
+import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IContributionItem;
@@ -61,6 +62,11 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     private IAction introAction;
     private IAction aboutAction;
 
+    private ContributionItem newTransactionItem;
+    private ContributionItem deleteTransactionItem;
+    private ContributionItem duplicateTransactionItem;
+    private ContributionItem viewTransactionItem;
+
     public JMoneyActionBarAdvisor(IActionBarConfigurer configurer) {
         super(configurer);
         window = configurer.getWindowConfigurer().getWindow();
@@ -71,6 +77,31 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
      */
     @Override	
     protected void makeActions(final IWorkbenchWindow window) {
+    	/*
+    	 * Define the global retargetable commands.
+    	 * These do not have to be cleaned up when this plug-in is unloaded because
+    	 * this action bar advisor is used only when this plug-in's application is the
+    	 * running application, so this plug-in can't be unloaded without stopping the
+    	 * application.  Thus these commands do not have to be cleaned up in
+    	 * Plugin.shutdown. 
+    	 */
+//    	ICommandService cmdService = (ICommandService)PlatformUI.getWorkbench().getAdapter(ICommandService.class);
+//    	IBindingService bindingService = (IBindingService)PlatformUI.getWorkbench().getAdapter(IBindingService.class);
+//    	Category editCategory = cmdService.getCategory("net.sf.jmoney.category.edit");
+//    	Category navigateCategory = cmdService.getCategory("net.sf.jmoney.category.navigate");
+//
+//    	Command deleteTransactionCommand = cmdService.getCommand("net.sf.jmoney.deleteTransaction");
+//    	deleteTransactionCommand.define("Delete Transaction", "Delete A Transaction", editCategory);
+//    	
+//    	Command duplicateTransactionCommand = cmdService.getCommand("net.sf.jmoney.deleteTransaction");
+//    	duplicateTransactionCommand.define("Duplicate Transaction", "Duplicate A Transaction", editCategory);
+//    	
+//    	Command deleteTransactionCommand = cmdService.getCommand("net.sf.jmoney.deleteTransaction");
+//    	deleteTransactionCommand.define("Delete Transaction", "Delete A Transaction", editCategory);
+//    	
+//    	Command deleteTransactionCommand = cmdService.getCommand("net.sf.jmoney.deleteTransaction");
+//    	deleteTransactionCommand.define("Delete Transaction", "Delete A Transaction", editCategory);
+
         newAction = ActionFactory.NEW_WIZARD_DROP_DOWN.create(window);
         register(newAction);
 
@@ -99,7 +130,49 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
 
         aboutAction = ActionFactory.ABOUT.create(window);
         register(aboutAction);
+        
+    	// Create the contribution items from the commands.
+        
+		newTransactionItem = createContributionItemFromCommand(
+				"net.sf.jmoney.newTransaction", //$NON-NLS-1$
+				"icons/new_entry.gif", //$NON-NLS-1$
+				Messages.JMoneyActionBarAdvisor_NewTransactionToolTipText);
+
+		deleteTransactionItem = createContributionItemFromCommand(
+				"net.sf.jmoney.deleteTransaction", //$NON-NLS-1$
+				"icons/delete_entry.gif", //$NON-NLS-1$
+				Messages.JMoneyActionBarAdvisor_DeleteTransactionToolTipText);
+
+		duplicateTransactionItem = createContributionItemFromCommand(
+				"net.sf.jmoney.duplicateTransaction", //$NON-NLS-1$
+				"icons/duplicate_entry.gif", //$NON-NLS-1$
+				Messages.JMoneyActionBarAdvisor_DuplicateTransactionToolTipText);
+
+		viewTransactionItem = createContributionItemFromCommand(
+				"net.sf.jmoney.transactionDetails", //$NON-NLS-1$
+				"icons/view_transaction.gif", //$NON-NLS-1$
+				Messages.JMoneyActionBarAdvisor_TransactionDetailsToolTipText);
     }
+
+    /**
+     * Helper method to create a contribution item that wraps a command.  This
+     * method is used so that commands can be added to the menu and
+     * toolbar programatically.
+     * <P>
+     * This could be done in plugin.xml, but by adding this plug-in's
+     * own commands programatically, we have full control over the initial
+     * layout and ordering of the menu and toolbar.
+     */
+	private ContributionItem createContributionItemFromCommand(String commandId, String iconFile, String tooltip) {
+		CommandContributionItemParameter params = new CommandContributionItemParameter(
+    			PlatformUI.getWorkbench(), 
+    			null, 
+    			commandId,
+				CommandContributionItem.STYLE_PUSH);
+		params.tooltip = tooltip;
+		params.icon = JMoneyPlugin.createImageDescriptor(iconFile);
+		return new CommandContributionItem(params);
+	}
 
     /* (non-Javadoc)
      * @see org.eclipse.ui.application.ActionBarAdvisor#fillMenuBar(org.eclipse.jface.action.IMenuManager)
@@ -124,20 +197,17 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     	IToolBarManager toolbar = new ToolBarManager(SWT.FLAT | SWT.RIGHT);
     	coolBar.add(new ToolBarContributionItem(toolbar, "main")); //$NON-NLS-1$
     	toolbar.add(newAction);
-    	toolbar.add(new Separator("edit")); //$NON-NLS-1$
-    	toolbar.add(new Separator("navigate")); //$NON-NLS-1$
 
-    	// This is an example of how menus can be added programatically.
-    	// This is probably better than in plugin.xml if we can figure out how to make the
-    	// menus be visible only when an appropriate editor is active.
-    	CommandContributionItemParameter params = new CommandContributionItemParameter(PlatformUI
-				.getWorkbench(), null, "net.sf.jmoney.transactionDetails", //$NON-NLS-1$
-				CommandContributionItem.STYLE_PUSH);
-		params.tooltip = Messages.JMoneyActionBarAdvisor_TransactionDetailsToolTipText;  // TODO:
-//  	params.icon = ???.getImageDescriptor();
-		toolbar.add(new CommandContributionItem(params));
+    	toolbar.add(new Separator("edit")); //$NON-NLS-1$
+		toolbar.add(newTransactionItem);
+		toolbar.add(deleteTransactionItem);
+		toolbar.add(duplicateTransactionItem);
+    	
+    	toolbar.add(new Separator("navigate")); //$NON-NLS-1$
+		toolbar.add(viewTransactionItem);
     	
     	toolbar.add(new Separator("openEditors")); //$NON-NLS-1$
+
     	toolbar.add(new Separator());
     	toolbar.add(importAction);
         toolbar.add(exportAction);
@@ -173,7 +243,12 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
         menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_START));
         menu.add(undoAction);
         menu.add(redoAction);
-        menu.add(new Separator());
+
+        menu.add(new Separator("transactions")); //$NON-NLS-1$
+        menu.add(newTransactionItem);
+        menu.add(deleteTransactionItem);
+        menu.add(duplicateTransactionItem);
+    	
         menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_END));
 
@@ -186,7 +261,12 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     private MenuManager createNavigateMenu() {
         MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuNavigateName, IWorkbenchActionConstants.M_NAVIGATE);
         menu.add(new Separator("openEditors")); //$NON-NLS-1$
-        menu.add(new Separator());
+
+        // TODO: Is this the right place in the menu for this?
+        menu.add(new Separator("openDialogs")); //$NON-NLS-1$
+        menu.add(viewTransactionItem);
+
+		menu.add(new Separator());
         menu.add(createReportsMenu());
         menu.add(createChartsMenu());
         menu.add(new Separator());

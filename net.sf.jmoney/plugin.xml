@@ -108,38 +108,41 @@
       </scheme>
    </extension>
 
+<!-- The toolbar contributions are made programatically.  However, there is
+a problem with the menu contributions.  They are not appearing when added
+programatically so until the problem is resolved, they are added declaratively.
+
+Note that adding items declaratively is an inferior solution because there is
+no control over the order.  It should normally only be made when plug-ins contribute
+items to an existing menu or toolbar.
+-->
+
 <extension point="org.eclipse.ui.menus">
      <menuContribution locationURI="menu:edit?after=additions">
         <command
               commandId="net.sf.jmoney.newTransaction"
-              mnemonic="N"/>
-     </menuContribution>
-     <menuContribution locationURI="toolbar:main?after=edit">
-        <command commandId="net.sf.jmoney.newTransaction"
-                 tooltip="%Commands.tooltip.newTransaction" />
+              icon="icons/new_entry.GIF">
+        </command>
      </menuContribution>
 
      <menuContribution locationURI="menu:edit?after=additions">
-        <command commandId="net.sf.jmoney.deleteTransaction" />
-     </menuContribution>
-     <menuContribution locationURI="toolbar:main?after=edit">
-        <command commandId="net.sf.jmoney.deleteTransaction"
-                 tooltip="%Commands.tooltip.deleteTransaction" />
+        <command
+              commandId="net.sf.jmoney.deleteTransaction"
+              icon="icons/delete_entry.GIF"/>
      </menuContribution>
 
      <menuContribution locationURI="menu:edit?after=additions">
-        <command commandId="net.sf.jmoney.duplicateTransaction" />
-     </menuContribution>
-     <menuContribution locationURI="toolbar:main?after=edit">
-        <command commandId="net.sf.jmoney.duplicateTransaction"
-                 tooltip="%Commands.tooltip.duplicateTransaction" />
+        <command
+              commandId="net.sf.jmoney.duplicateTransaction"
+              icon="icons/duplicate_entry.GIF"/>
      </menuContribution>
 
      <menuContribution locationURI="menu:navigate?after=openEditors">
-        <command commandId="net.sf.jmoney.transactionDetails" />
+        <command
+              commandId="net.sf.jmoney.transactionDetails"
+              icon="icons/view_transaction.GIF"/>
      </menuContribution>
 </extension>
-
 
    <extension
          point="org.eclipse.ui.actionSets">
@@ -280,13 +283,6 @@
             extendable-property-set="net.sf.jmoney.categoryAccount"
             id="categoryEntries"
             position="1">
-      </pages>
-
-      <pages
-            class="net.sf.jmoney.pages.accountProperties.AccountPropertiesPage"
-            extendable-property-set="net.sf.jmoney.capitalAccount"
-            id="accountProperties"            
-            position="2">
       </pages>
    </extension>
    

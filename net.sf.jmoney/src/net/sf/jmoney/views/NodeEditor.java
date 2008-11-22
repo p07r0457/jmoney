@@ -39,6 +39,7 @@ import net.sf.jmoney.model2.SessionChangeListener;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -73,10 +74,23 @@ public class NodeEditor extends FormEditor {
     		PageEntry entry = pageListeners.get(i);
     		String pageId = entry.getPageId();
     		IBookkeepingPageFactory pageListener = entry.getPageFactory();
-    		pages[i] = pageListener.createFormPage(this, memento==null?null:memento.getChild(pageId));
+    		try {
+    			/*IBookkeepingPage page =*/ pageListener.createPages(this, cInput, memento==null?null:memento.getChild(pageId));
+//    			pages.add(page);
+    		} catch (PartInitException e) {
+    			e.printStackTrace();
+    			// Silently miss out this page
+    		}
     	}
     	
     	cInput.pages = pages;
+    	
+//    	try {
+//			addPage(new AccountEntriesEditor(), getEditorInput());
+//		} catch (PartInitException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
     }
 
     @Override	
@@ -196,5 +210,10 @@ public class NodeEditor extends FormEditor {
 				JMoneyPlugin.log(e);
 			}
 		}
+	}
+
+	public void addPage(IEditorPart editor, String label) throws PartInitException {
+		int pageIndex = addPage(editor, getEditorInput());
+		setPageText(pageIndex, label);
 	}
 }

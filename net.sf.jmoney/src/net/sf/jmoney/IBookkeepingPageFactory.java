@@ -24,7 +24,9 @@ package net.sf.jmoney;
 
 import net.sf.jmoney.views.NodeEditor;
 
+import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IMemento;
+import org.eclipse.ui.PartInitException;
 
 /**
  * Interface that must be implemented by all classes that
@@ -42,5 +44,5 @@ public interface IBookkeepingPageFactory {
 	 * 			when the page was last closed.  If no prior state
 	 * 			is available then <code>memento</code> will be null.
 	 */
-	IBookkeepingPage createFormPage(NodeEditor editor, IMemento memento);
+	void createPages(NodeEditor editor, IEditorInput input, IMemento memento) throws PartInitException;
 }

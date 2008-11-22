@@ -25,6 +25,8 @@ import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.DebitAndCreditColumns;
+import net.sf.jmoney.entrytable.DeleteTransactionHandler;
+import net.sf.jmoney.entrytable.DuplicateTransactionHandler;
 import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.EntryRowControl;
@@ -33,6 +35,8 @@ import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IRowProvider;
 import net.sf.jmoney.entrytable.ISplitEntryContainer;
 import net.sf.jmoney.entrytable.IndividualBlock;
+import net.sf.jmoney.entrytable.NewTransactionHandler;
+import net.sf.jmoney.entrytable.OpenTransactionDialogHandler;
 import net.sf.jmoney.entrytable.OtherEntriesBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.ReusableRowProvider;
@@ -49,11 +53,13 @@ import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.resources.Messages;
 
+import org.eclipse.core.commands.IHandler;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
+import org.eclipse.ui.handlers.IHandlerService;
 
 /**
  * TODO
@@ -64,6 +70,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 	private CurrencyAccount account;
 	private EntriesFilter filter;
+	private IHandlerService handlerService;
 
     private EntriesTable fEntriesControl;
     
@@ -71,11 +78,12 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     
     private Block<EntryData, ? super EntryRowControl> rootBlock;
     
-    public EntriesSection(Composite parent, CurrencyAccount account, EntriesFilter filter, FormToolkit toolkit) {
+    public EntriesSection(Composite parent, CurrencyAccount account, EntriesFilter filter, FormToolkit toolkit, IHandlerService handlerService) {
         super(parent, toolkit, Section.TITLE_BAR);
         getSection().setText(Messages.EntriesSection_Text);
         this.account = account;
         this.filter = filter;
+        this.handlerService = handlerService;
         createClient(toolkit);
     }
 
@@ -139,7 +147,8 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 		// Create the table control.
 	    IRowProvider<EntryData> rowProvider = new ReusableRowProvider(rootBlock);
-		fEntriesControl = new EntriesTable<EntryData>(getSection(), toolkit, rootBlock, this, rowProvider, account.getSession(), transactionDateColumn, new RowSelectionTracker<EntryRowControl>()) {
+		RowSelectionTracker<EntryRowControl> rowTracker = new RowSelectionTracker<EntryRowControl>();
+		fEntriesControl = new EntriesTable<EntryData>(getSection(), toolkit, rootBlock, this, rowProvider, account.getSession(), transactionDateColumn, rowTracker) {
 			@Override
 			protected EntryData createEntryRowInput(Entry entry) {
 				return new EntryData(entry, session.getDataManager());
@@ -152,7 +161,20 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		}; 
 		fEntriesControl.addSelectionListener(tableSelectionListener);
 			
-        getSection().setClient(fEntriesControl);
+		// Activate the handlers
+		IHandler handler = new NewTransactionHandler(rowTracker, fEntriesControl);
+		handlerService.activateHandler("net.sf.jmoney.newTransaction", handler);		
+
+		handler = new DeleteTransactionHandler(rowTracker);
+		handlerService.activateHandler("net.sf.jmoney.deleteTransaction", handler);		
+
+		handler = new DuplicateTransactionHandler(rowTracker, fEntriesControl);
+		handlerService.activateHandler("net.sf.jmoney.duplicateTransaction", handler);		
+
+		handler = new OpenTransactionDialogHandler(rowTracker);
+		handlerService.activateHandler("net.sf.jmoney.transactionDetails", handler);		
+
+		getSection().setClient(fEntriesControl);
         toolkit.paintBordersFor(fEntriesControl);
         refresh();
     }

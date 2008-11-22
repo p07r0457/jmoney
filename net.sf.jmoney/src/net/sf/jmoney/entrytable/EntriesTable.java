@@ -223,158 +223,6 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 		gridData.widthHint = 100;
 		table.setLayoutData(gridData);
 
-        // Create the button area
-		Composite buttonArea = toolkit.createComposite(this);
-		
-		// Note that the buttons touch each other and also touch
-		// the table above.  This makes it clearer that the buttons
-		// are tightly associated with the table.
-		RowLayout layoutOfButtons = new RowLayout();
-		layoutOfButtons.fill = false;
-		layoutOfButtons.justify = true;
-		layoutOfButtons.marginTop = 0;
-		layoutOfButtons.spacing = 5;
-		buttonArea.setLayout(layoutOfButtons);
-		
-        // Create the 'add transaction' button.
-		Button addButton = toolkit.createButton(buttonArea, Messages.EntriesTable_NewTransaction, SWT.PUSH);
-		addButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent event) {
-				/*
-				 * This action is not absolutely necessary because there is
-				 * always an empty row at the end of the table that can be used
-				 * to add a new transaction.
-				 * 
-				 * This action is helpful, though, because it does one of two
-				 * things:
-				 * 
-				 * 1. If the 'new entry' row is not the currently selected row
-				 * then it sets the 'new entry' row to be the selected row,
-				 * scrolling if necessary.
-				 * 
-				 * 2. If the 'new entry' row is the currently selected row then
-				 * the entry is committed and, if the commit succeeded, the
-				 * newly created 'new entry' row is selected.
-				 */
-				RowControl selectedRowControl = rowTracker.getSelectedRow();
-				if (selectedRowControl != null) {
-					if (!selectedRowControl.canDepart()) {
-						return;
-					}
-				}
-				
-				/*
-				 * Regardless of whether the 'new entry' row was previously
-				 * selected or not, and regardless of whether any attempt to
-				 * commit the row failed, we select what is now the 'new entry'
-				 * row.
-				 */
-				// TODO: Is this method name confusing?
-				table.getRowControl(newEntryRow);
-			}
-		});
-
-        // Create the 'duplicate transaction' button.
-        Button duplicateButton = toolkit.createButton(buttonArea, Messages.EntriesTable_DuplicateTransaction, SWT.PUSH);
-        duplicateButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-        	public void widgetSelected(SelectionEvent event) {
-        		BaseEntryRowControl selectedRowControl = rowTracker.getSelectedRow();
-        		
-        		if (selectedRowControl != null) {
-        			Entry selectedEntry = selectedRowControl.committedEntryData.getEntry();
-
-        			if (selectedEntry == null) {
-        				// This is the empty row control.
-        				// TODO: Should we attempt to commit this first, then duplicate it if it committed?
-        				MessageDialog.openInformation(getShell(), Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageDuplicateNotRegistered);
-        			} else {
-        				/*
-						 * The 'new entry' row was not the selected row, so we
-						 * know that there can't be any changes in the 'new
-						 * entry' row. We copy properties from the selected
-						 * entry into the new 'entry row' and then select the
-						 * 'new entry' row.
-						 */
-
-        				BaseEntryRowControl newEntryRowControl = table.getRowControl(newEntryRow);
-        				Entry newEntry = newEntryRowControl.uncommittedEntryData.getEntry();
-        				TransactionManager transactionManager = (TransactionManager)newEntry.getDataManager();
-        				
-        				newEntry.setMemo(selectedEntry.getMemo());
-        				newEntry.setAmount(selectedEntry.getAmount());
-        				
-        				Entry thisEntry = newEntryRowControl.uncommittedEntryData.getOtherEntry();
-        				for (Entry origEntry: selectedRowControl.committedEntryData.getSplitEntries()) {
-        					if (thisEntry == null) {
-        						thisEntry = newEntryRowControl.uncommittedEntryData.getEntry().getTransaction().createEntry();
-        					}
-            				thisEntry.setAccount(transactionManager.getCopyInTransaction(origEntry.getAccount()));
-            				thisEntry.setMemo(origEntry.getMemo());
-            				thisEntry.setAmount(origEntry.getAmount());
-            				thisEntry = null;
-        				}
-        				
-        				// The 'new entry' row control should be listening for changes to
-        				// its uncommitted data, so we have nothing more to do. 
-        			}
-        		} else {
-        			MessageDialog.openInformation(getShell(), Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageDuplicate);
-        		}
-        	}
-        });
-
-        // Create the 'delete transaction' button.
-        Button deleteButton = toolkit.createButton(buttonArea, Messages.EntriesTable_DeleteTransaction, SWT.PUSH);
-        deleteButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-        	public void widgetSelected(SelectionEvent event) {
-        		BaseEntryRowControl selectedRowControl = rowTracker.getSelectedRow();
-        		
-        		if (selectedRowControl != null) {
-            		Entry selectedEntry = selectedRowControl.committedEntryData.getEntry();
-        			
-            		if (selectedEntry == null) {
-            			// This is the empty row control.
-            			// TODO: Should we just clear the control contents?
-            			MessageDialog.openInformation(getShell(), Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageDeleteNotRegistered);
-            		} else {
-            			// Does this need be so complex??? It is only in a transaction
-            			// so we can undo it.  A more efficient way would be to make the change
-            			// in a callback.
-
-            			TransactionManager transactionManager = new TransactionManager(selectedEntry.getDataManager());
-            			Entry selectedEntry2 = transactionManager.getCopyInTransaction(selectedEntry); 
-            			Transaction transaction = selectedEntry2.getTransaction();
-            			transaction.getSession().deleteTransaction(transaction);
-            			transactionManager.commit("Delete Transaction"); //$NON-NLS-1$
-            		}
-        		} else {
-        			MessageDialog.openInformation(getShell(), Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageDelete);
-        		}
-        	}
-        });
-        
-        // Create the 'details' button.
-        Button detailsButton = toolkit.createButton(buttonArea, Messages.EntriesTable_Details, SWT.PUSH);
-        detailsButton.addSelectionListener(new SelectionAdapter() {
-			@Override
-        	public void widgetSelected(SelectionEvent event) {
-        		BaseEntryRowControl selectedRowControl = rowTracker.getSelectedRow();
-        		
-        		if (selectedRowControl != null) {
-        			Entry selectedEntry = selectedRowControl.uncommittedEntryData.getEntry();
-
-    				TransactionDialog dialog = new TransactionDialog(getShell(), selectedEntry);
-        			dialog.open();
-        		} else {
-        			MessageDialog.openInformation(getShell(), Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageSelect);
-        		}
-        	}
-        });
-        
-		
 		session.getDataManager().addChangeListener(new SessionChangeAdapter() {
 			@Override
 			public void objectInserted(ExtendableObject newObject) {
@@ -1169,4 +1017,26 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 	}
 
 	protected abstract T createEntryRowInput(Entry entry);
+
+	/**
+	 * Gets the row control that represents the 'new entry' row.  This row
+	 * contains an entry that has never been committed to the datastore.
+	 * <P>
+	 * This method enables callers to set data into the 'new entry' row
+	 * and so help with the creation of new entries.  For example, the
+	 * 'duplicate transaction' handler will call this method to get the
+	 * 'new entry' row and set data into it from the source transaction.
+	 */
+	public BaseEntryRowControl getNewEntryRowControl() {
+		return table.getRowControl(newEntryRow);
+	}
+
+	/**
+	 * This method is currently used only by the 'new transaction'
+	 * handler.  It sets the new entry row as the current row.
+	 */
+	public void selectNewEntryRow() {
+		// TODO: Is this method name confusing?
+		table.getRowControl(newEntryRow);
+	}
 }
