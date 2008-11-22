@@ -51,6 +51,7 @@ import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
 import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.IPropertyControl;
@@ -87,7 +88,7 @@ import org.eclipse.ui.forms.widgets.Section;
  */
 public class UnreconciledSection extends SectionPart {
 
-	ReconcilePage fPage;
+	ReconcileEditor editor;
 
 	EntriesTable fUnreconciledEntriesControl;
 
@@ -97,11 +98,11 @@ public class UnreconciledSection extends SectionPart {
 
 	ArrayList<CellBlock<EntryData, EntryRowControl>> cellList;
 
-	public UnreconciledSection(ReconcilePage page, Composite parent, RowSelectionTracker rowTracker) {
-		super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
+	public UnreconciledSection(Composite parent, FormToolkit toolkit, ReconcileEditor page, RowSelectionTracker rowTracker) {
+		super(parent, toolkit, Section.TITLE_BAR);
 		getSection().setText("Unreconciled Entries");
-		fPage = page;
-		this.toolkit = page.getManagedForm().getToolkit();
+		this.editor = page;
+		this.toolkit = toolkit;
 
 		unreconciledTableContents = new IEntriesContent() {
 			public Collection<Entry> getEntries() {
@@ -116,7 +117,7 @@ public class UnreconciledSection extends SectionPart {
 		        	account
 						.getSortedEntries(TransactionInfo.getDateAccessor(), false);
 				 */
-				Collection<Entry> accountEntries = fPage.getAccount().getEntries();
+				Collection<Entry> accountEntries = editor.getAccount().getEntries();
 
 				Vector<Entry> requiredEntries = new Vector<Entry>();
 				for (Entry entry: accountEntries) {
@@ -132,7 +133,7 @@ public class UnreconciledSection extends SectionPart {
 				// This entry is to be shown if the account
 				// matches and no statement is set.
 				BankStatement statement = entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor());
-				return fPage.getAccount().equals(entry.getAccount())
+				return editor.getAccount().equals(entry.getAccount())
 				&& statement == null;
 			}
 
@@ -183,7 +184,7 @@ public class UnreconciledSection extends SectionPart {
 				// It is assumed that the entry is in a data manager that is a direct
 				// child of the data manager that contains the account.
 				TransactionManager tm = (TransactionManager)newEntry.getDataManager();
-				newEntry.setAccount(tm.getCopyInTransaction(fPage.getAccount()));
+				newEntry.setAccount(tm.getCopyInTransaction(editor.getAccount()));
 			}
 		};
 
@@ -272,9 +273,9 @@ public class UnreconciledSection extends SectionPart {
 		};
 
 		IndividualBlock<EntryData, RowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
-		CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(fPage.getAccount().getCurrency());
-		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(fPage.getAccount().getCurrency());
-		CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(fPage.getAccount().getCurrency());
+		CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(editor.getAccount().getCurrency());
+		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(editor.getAccount().getCurrency());
+		CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(editor.getAccount().getCurrency());
 
 		/*
 		 * Setup the layout structure of the header and rows.
@@ -299,7 +300,7 @@ public class UnreconciledSection extends SectionPart {
 
 		// Create the table control.
 	    IRowProvider rowProvider = new ReusableRowProvider(rootBlock);
-		fUnreconciledEntriesControl = new EntriesTable<EntryData>(getSection(), toolkit, rootBlock, unreconciledTableContents, rowProvider, fPage.getAccount().getSession(), transactionDateColumn, rowTracker) {
+		fUnreconciledEntriesControl = new EntriesTable<EntryData>(getSection(), toolkit, rootBlock, unreconciledTableContents, rowProvider, editor.getAccount().getSession(), transactionDateColumn, rowTracker) {
 			@Override
 			protected EntryData createEntryRowInput(Entry entry) {
 				return new EntryData(entry, session.getDataManager());
@@ -317,7 +318,7 @@ public class UnreconciledSection extends SectionPart {
 	}
 
 	public void reconcileEntry(EntryRowControl rowControl) {
-		if (fPage.getStatement() != null) {
+		if (editor.getStatement() != null) {
 			Entry entry = rowControl.getUncommittedTopEntry();
 
 			// TODO: What do we do about the blank entry???
@@ -337,7 +338,7 @@ public class UnreconciledSection extends SectionPart {
 			// event.  We set the property to put the entry into the
 			// statement and immediately commit the change.
 			if (entry != null) {
-				entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), fPage.getStatement());
+				entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), editor.getStatement());
 
 				/*
 				 * We tell the row control to commit its changes. These changes

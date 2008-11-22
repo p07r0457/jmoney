@@ -50,6 +50,7 @@ import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
@@ -92,8 +93,10 @@ import org.eclipse.ui.forms.widgets.Section;
  */
 public class StatementSection extends SectionPart {
 
-    ReconcilePage fPage;
+    ReconcileEditor fPage;
 
+    Account account;
+    
     EntriesTable fReconciledEntriesControl;
     
 	/**
@@ -118,11 +121,11 @@ public class StatementSection extends SectionPart {
     
     long openingBalance = 0;
     
-    public StatementSection(ReconcilePage page, Composite parent, RowSelectionTracker<EntryRowControl> rowTracker) {
-        super(parent, page.getManagedForm().getToolkit(), Section.TITLE_BAR);
+    public StatementSection(Composite parent, FormToolkit toolkit, ReconcileEditor page, RowSelectionTracker<EntryRowControl> rowTracker) {
+        super(parent, toolkit, Section.TITLE_BAR);
         getSection().setText("Entries Shown on Statement");
         fPage = page;
-    	this.toolkit = page.getManagedForm().getToolkit();
+    	this.toolkit = toolkit;
     	
         container = toolkit.createComposite(getSection());
 
