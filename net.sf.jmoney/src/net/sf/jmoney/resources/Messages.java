@@ -56,6 +56,7 @@ public class Messages extends NLS {
 	public static String DateControlFactory_None;
 	public static String DebitAndCreditColumns_CreditName;
 	public static String DebitAndCreditColumns_DebitName;
+	public static String EntriesBookkeepingPage_Label;
 	public static String EntriesFilterSection_ComboItemClear;
 	public static String EntriesFilterSection_ComboItemContains;
 	public static String EntriesFilterSection_ComboItemFilter;

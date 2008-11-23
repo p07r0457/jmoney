@@ -23,6 +23,7 @@
 package net.sf.jmoney.pages.entries;
 
 import net.sf.jmoney.IBookkeepingPageFactory;
+import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.NodeEditor;
 
 import org.eclipse.ui.IEditorInput;
@@ -40,6 +41,6 @@ public class EntriesBookkeepingPage implements IBookkeepingPageFactory {
      */
 	public void createPages(NodeEditor editor, IEditorInput input, IMemento memento) throws PartInitException {
 		IEditorPart formPage = new AccountEntriesEditor();
-		editor.addPage(formPage, "Entries");
+		editor.addPage(formPage, Messages.EntriesBookkeepingPage_Label);
     }
 }
