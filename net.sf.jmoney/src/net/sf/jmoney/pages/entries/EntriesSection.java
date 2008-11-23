@@ -163,16 +163,16 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 			
 		// Activate the handlers
 		IHandler handler = new NewTransactionHandler(rowTracker, fEntriesControl);
-		handlerService.activateHandler("net.sf.jmoney.newTransaction", handler);		
+		handlerService.activateHandler("net.sf.jmoney.newTransaction", handler);		 //$NON-NLS-1$
 
 		handler = new DeleteTransactionHandler(rowTracker);
-		handlerService.activateHandler("net.sf.jmoney.deleteTransaction", handler);		
+		handlerService.activateHandler("net.sf.jmoney.deleteTransaction", handler);		 //$NON-NLS-1$
 
 		handler = new DuplicateTransactionHandler(rowTracker, fEntriesControl);
-		handlerService.activateHandler("net.sf.jmoney.duplicateTransaction", handler);		
+		handlerService.activateHandler("net.sf.jmoney.duplicateTransaction", handler);		 //$NON-NLS-1$
 
 		handler = new OpenTransactionDialogHandler(rowTracker);
-		handlerService.activateHandler("net.sf.jmoney.transactionDetails", handler);		
+		handlerService.activateHandler("net.sf.jmoney.transactionDetails", handler);		 //$NON-NLS-1$
 
 		getSection().setClient(fEntriesControl);
         toolkit.paintBordersFor(fEntriesControl);
