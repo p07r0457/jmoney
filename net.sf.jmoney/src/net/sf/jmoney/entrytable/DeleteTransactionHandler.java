@@ -43,7 +43,7 @@ public class DeleteTransactionHandler extends AbstractHandler {
     			Entry selectedEntry2 = transactionManager.getCopyInTransaction(selectedEntry); 
     			Transaction transaction = selectedEntry2.getTransaction();
     			transaction.getSession().deleteTransaction(transaction);
-    			transactionManager.commit("Delete Transaction");
+    			transactionManager.commit("Delete Transaction"); //$NON-NLS-1$
     		}
 		} else {
 			MessageDialog.openInformation(shell, Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageDelete);

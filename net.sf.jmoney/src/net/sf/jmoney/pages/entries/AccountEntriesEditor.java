@@ -38,7 +38,7 @@ import org.eclipse.ui.part.EditorPart;
 
 public class AccountEntriesEditor extends EditorPart {
 
-	static public final String ID = "net.sf.jmoney.accountEntriesEditor";
+	static public final String ID = "net.sf.jmoney.accountEntriesEditor"; //$NON-NLS-1$
 	
 	protected Vector<IndividualBlock> allEntryDataObjects = new Vector<IndividualBlock>();
 
