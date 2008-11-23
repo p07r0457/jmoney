@@ -30,6 +30,8 @@ import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.CellFocusListener;
 import net.sf.jmoney.entrytable.DebitAndCreditColumns;
+import net.sf.jmoney.entrytable.DeleteTransactionHandler;
+import net.sf.jmoney.entrytable.DuplicateTransactionHandler;
 import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.EntryRowControl;
@@ -39,6 +41,8 @@ import net.sf.jmoney.entrytable.IEntriesContent;
 import net.sf.jmoney.entrytable.IRowProvider;
 import net.sf.jmoney.entrytable.ISplitEntryContainer;
 import net.sf.jmoney.entrytable.IndividualBlock;
+import net.sf.jmoney.entrytable.NewTransactionHandler;
+import net.sf.jmoney.entrytable.OpenTransactionDialogHandler;
 import net.sf.jmoney.entrytable.OtherEntriesBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.RowControl;
@@ -67,6 +71,7 @@ import net.sf.jmoney.stocks.model.StockEntry;
 import net.sf.jmoney.stocks.model.StockEntryInfo;
 import net.sf.jmoney.stocks.pages.StockEntryRowControl.TransactionType;
 
+import org.eclipse.core.commands.IHandler;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.events.FocusListener;
@@ -78,6 +83,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
+import org.eclipse.ui.handlers.IHandlerService;
 
 /**
  * TODO
@@ -87,15 +93,17 @@ import org.eclipse.ui.forms.widgets.Section;
 public class EntriesSection extends SectionPart implements IEntriesContent {
 
 	private StockAccount account;
+	private IHandlerService handlerService;
 
     private EntriesTable<StockEntryData> fEntriesControl;
     
     private Block<StockEntryData, StockEntryRowControl> rootBlock;
     
-    public EntriesSection(Composite parent, StockAccount account, FormToolkit toolkit) {
+    public EntriesSection(Composite parent, StockAccount account, FormToolkit toolkit, IHandlerService handlerService) {
         super(parent, toolkit, Section.TITLE_BAR);
         getSection().setText("All Entries");
         this.account = account;
+        this.handlerService = handlerService;
         createClient(toolkit);
     }
 
@@ -207,7 +215,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 			public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
 				final StockControl<Stock> control = new StockControl<Stock>(parent, null, Stock.class);
 				
-				IPropertyControl<StockEntryData> cellControl = new IPropertyControl<StockEntryData>() {
+				ICellControl2<StockEntryData> cellControl = new ICellControl2<StockEntryData>() {
 					private StockEntryData data;
 					
 					public Control getControl() {
@@ -257,11 +265,6 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						}
 					}
 
-					public void setFocusListener(FocusListener controlFocusListener) {
-						// TODO Auto-generated method stub
-						
-					}
-
 					public void setSelected() {
 						control.setBackground(RowControl.selectedCellColor);
 					}
@@ -271,6 +274,17 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					}
 				};
 
+				FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
+
+				/*
+				 * The control may in fact be a composite control, in which case the
+				 * composite control itself will never get the focus. Only the child
+				 * controls will get the focus, so we add the listener recursively
+				 * to all child controls.
+				 */
+				addFocusListenerRecursively(cellControl.getControl(), controlFocusListener);
+
+				
 				coordinator.addTransactionTypeChangeListener(new ITransactionTypeChangeListener() {
 
 					public void transactionTypeChanged() {
@@ -302,6 +316,15 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 				});
 				
 				return cellControl;
+			}
+
+			private void addFocusListenerRecursively(Control control, FocusListener listener) {
+				control.addFocusListener(listener);
+				if (control instanceof Composite) {
+					for (Control child: ((Composite)control).getChildren()) {
+						addFocusListenerRecursively(child, listener);
+					}
+				}
 			}
 		};  
 
@@ -531,7 +554,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(account.getCurrency());
     	CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(account.getCurrency());
 		
-		RowSelectionTracker<EntryRowControl> rowSelectionTracker = new RowSelectionTracker<EntryRowControl>();
+		RowSelectionTracker<EntryRowControl> rowTracker = new RowSelectionTracker<EntryRowControl>();
 
 		rootBlock = new HorizontalBlock<StockEntryData, StockEntryRowControl>(
 				transactionDateColumn,
@@ -673,7 +696,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 		// Create the table control.
 	    IRowProvider<StockEntryData> rowProvider = new StockRowProvider(rootBlock);
-		fEntriesControl = new EntriesTable<StockEntryData>(getSection(), toolkit, rootBlock, this, rowProvider, account.getSession(), transactionDateColumn, rowSelectionTracker) {
+		fEntriesControl = new EntriesTable<StockEntryData>(getSection(), toolkit, rootBlock, this, rowProvider, account.getSession(), transactionDateColumn, rowTracker) {
 			@Override
 			protected StockEntryData createEntryRowInput(Entry entry) {
 				return new StockEntryData(entry, session.getDataManager());
@@ -685,6 +708,19 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 			}
 		}; 
 			
+		// Activate the handlers
+		IHandler handler = new NewTransactionHandler(rowTracker, fEntriesControl);
+		handlerService.activateHandler("net.sf.jmoney.newTransaction", handler);		
+
+		handler = new DeleteTransactionHandler(rowTracker);
+		handlerService.activateHandler("net.sf.jmoney.deleteTransaction", handler);		
+
+		handler = new DuplicateTransactionHandler(rowTracker, fEntriesControl);
+		handlerService.activateHandler("net.sf.jmoney.duplicateTransaction", handler);		
+
+		handler = new OpenTransactionDialogHandler(rowTracker);
+		handlerService.activateHandler("net.sf.jmoney.transactionDetails", handler);		
+
         getSection().setClient(fEntriesControl);
         toolkit.paintBordersFor(fEntriesControl);
         refresh();
