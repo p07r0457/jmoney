@@ -1,52 +1,32 @@
 package net.sf.jmoney.reconciliation.reconcilePage;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.Vector;
 import java.util.regex.Matcher;
 
-import net.sf.jmoney.ITransactionTemplate;
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.entrytable.BaseEntryRowControl;
-import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.CellBlock;
-import net.sf.jmoney.entrytable.DebitAndCreditColumns;
-import net.sf.jmoney.entrytable.EntriesTable;
+import net.sf.jmoney.entrytable.DeleteTransactionHandler;
+import net.sf.jmoney.entrytable.DuplicateTransactionHandler;
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.EntryRowControl;
-import net.sf.jmoney.entrytable.HorizontalBlock;
-import net.sf.jmoney.entrytable.IEntriesContent;
-import net.sf.jmoney.entrytable.IRowProvider;
-import net.sf.jmoney.entrytable.ISplitEntryContainer;
-import net.sf.jmoney.entrytable.IndividualBlock;
-import net.sf.jmoney.entrytable.OtherEntriesBlock;
+import net.sf.jmoney.entrytable.NewTransactionHandler;
+import net.sf.jmoney.entrytable.OpenTransactionDialogHandler;
 import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
-import net.sf.jmoney.entrytable.ReusableRowProvider;
 import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
-import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
-import net.sf.jmoney.entrytable.VerticalBlock;
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.isolation.UncommittedObjectKey;
-import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
-import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
@@ -59,9 +39,9 @@ import net.sf.jmoney.reconciliation.ReconciliationAccount;
 import net.sf.jmoney.reconciliation.ReconciliationAccountInfo;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
-import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.NodeEditorInput;
 
+import org.eclipse.core.commands.IHandler;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -71,7 +51,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Point;
@@ -84,16 +63,12 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Sash;
-import org.eclipse.swt.widgets.TabFolder;
-import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.swt.widgets.ToolBar;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.ui.IEditorInput;
@@ -102,6 +77,7 @@ import org.eclipse.ui.IMemento;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.EditorPart;
 
 public class ReconcileEditor extends EditorPart {
@@ -451,7 +427,7 @@ public class ReconcileEditor extends EditorPart {
          * The common row tracker.  This is used by both tables, so that
          * there is only one selection in the part.
          */
-	    RowSelectionTracker rowTracker = new RowSelectionTracker();
+	    RowSelectionTracker<EntryRowControl> rowTracker = new RowSelectionTracker();
         
         fStatementSection = new StatementSection(containerOfSash, toolkit, this, rowTracker);
 
@@ -472,6 +448,26 @@ public class ReconcileEditor extends EditorPart {
         fUnreconciledSection.getSection().setLayoutData(formData);
 
         form.setText("Reconcile Entries against Bank Statement/Bank's Records");
+
+         /*
+		 * Activate the handlers. Note that the 'new' and 'duplicate' actions
+		 * put the new entry into the unreconciled section. It is important that
+		 * is where the new entry is put because no statement is set on the
+		 * entry for a new or duplicated entry.
+		 */
+		IHandlerService handlerService = (IHandlerService) getSite().getService(IHandlerService.class);
+
+		IHandler handler = new NewTransactionHandler(rowTracker, fUnreconciledSection.fUnreconciledEntriesControl);
+		handlerService.activateHandler("net.sf.jmoney.newTransaction", handler);		
+
+		handler = new DeleteTransactionHandler(rowTracker);
+		handlerService.activateHandler("net.sf.jmoney.deleteTransaction", handler);		
+
+		handler = new DuplicateTransactionHandler(rowTracker, fUnreconciledSection.fUnreconciledEntriesControl);
+		handlerService.activateHandler("net.sf.jmoney.duplicateTransaction", handler);		
+
+		handler = new OpenTransactionDialogHandler(rowTracker);
+		handlerService.activateHandler("net.sf.jmoney.transactionDetails", handler);		
 	}
 	
 	private void init(IMemento memento) {
