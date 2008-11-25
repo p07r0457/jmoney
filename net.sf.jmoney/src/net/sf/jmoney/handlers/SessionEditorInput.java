@@ -1,15 +1,9 @@
 package net.sf.jmoney.handlers;
 
-import java.util.Vector;
-
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.DatastoreManager;
-import net.sf.jmoney.model2.PageEntry;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.resources.Messages;
-import net.sf.jmoney.views.NodeEditorInput;
-import net.sf.jmoney.views.TreeNode;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;

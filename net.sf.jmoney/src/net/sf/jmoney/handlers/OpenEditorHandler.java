@@ -1,7 +1,6 @@
 package net.sf.jmoney.handlers;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.views.NodeEditorInput;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;

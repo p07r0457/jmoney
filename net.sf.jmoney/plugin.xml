@@ -71,6 +71,10 @@
    <extension
          point="org.eclipse.ui.commands">
       <command
+            defaultHandler="net.sf.jmoney.handlers.CloseSessionHandler"
+            id="net.sf.jmoney.closeSession"
+            name="Close Session"/>
+      <command
             name="%Commands.newTransaction"
             id="net.sf.jmoney.newTransaction"/>
       <command
@@ -118,11 +122,15 @@ items to an existing menu or toolbar.
 -->
 
 <extension point="org.eclipse.ui.menus">
+     <menuContribution locationURI="menu:file?after=sessionGroup">
+        <command
+              commandId="net.sf.jmoney.closeSession"/>
+     </menuContribution>
+
      <menuContribution locationURI="menu:edit?after=additions">
         <command
               commandId="net.sf.jmoney.newTransaction"
-              icon="icons/new_entry.GIF">
-        </command>
+              icon="icons/new_entry.GIF"/>
      </menuContribution>
 
      <menuContribution locationURI="menu:edit?after=additions">
@@ -143,23 +151,6 @@ items to an existing menu or toolbar.
               icon="icons/view_transaction.GIF"/>
      </menuContribution>
 </extension>
-
-   <extension
-         point="org.eclipse.ui.actionSets">
-      <actionSet
-            label="Sample Action Set"
-            visible="true"
-            id="net.sf.jmoney.actionSet">
-         <action
-               label="&amp;Close Session"
-               class="net.sf.jmoney.actions.CloseSessionAction"
-               tooltip="Close current session"
-               menubarPath="file/sessionGroup"
-               toolbarPath="fileGroup"
-               id="net.sf.jmoney.actions.CloseSessionAction">
-         </action>
-      </actionSet>
-   </extension>
 
 	<extension point="org.eclipse.ui.newWizards">
 		<wizard

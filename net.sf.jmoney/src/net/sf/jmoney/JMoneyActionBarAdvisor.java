@@ -221,6 +221,8 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
 
         menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_START));
 
+        menu.add(new Separator("sessionGroup")); //$NON-NLS-1$
+
         menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 
         menu.add(new Separator());
