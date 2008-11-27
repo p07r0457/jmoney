@@ -3,6 +3,7 @@
  */
 package net.sf.jmoney.wizards;
 
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +13,7 @@ import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
@@ -36,6 +38,7 @@ public class WizardPropertyPage extends WizardPage {
 	private ExtendableObject extendableObject;
 	private ExtendablePropertySet<?> propertySet;
 	private ScalarPropertyAccessor<String> namePropertyAccessor;
+	private String defaultName;
 	
 	/**
 	 * List of the IPropertyControl objects for the
@@ -115,12 +118,12 @@ public class WizardPropertyPage extends WizardPage {
 				propertyControlList.put(propertyAccessor, propertyControl);
 			}
 		}
-		
 		// Set the values from the object into the control fields.
 		for (IPropertyControl propertyControl: propertyControlList.values()) {
 			propertyControl.load(extendableObject);
 		}
-		
+		//After the load i update the defaultName
+		defaultName = nameTextbox.getText();
 		setApplicability();
 		
 		// This listener code assumes that the applicability of account properties depends only
@@ -141,7 +144,8 @@ public class WizardPropertyPage extends WizardPage {
 		
 		nameTextbox.setFocus();
 		
-		setControl(container);		
+		setControl(container);
+		
 	}
 	
 	private void setApplicability() {
@@ -156,7 +160,18 @@ public class WizardPropertyPage extends WizardPage {
 		/*
 		 * This method controls whether the 'Next' button is enabled.
 		 */
-		return nameTextbox.getText().length() != 0;
+		boolean result = true;
+		if(defaultName.equalsIgnoreCase(nameTextbox.getText())){
+			setErrorMessage(MessageFormat.format(Messages.WizardPropertyPage_ErrorSameAsDefaultName,defaultName));
+			result = false;
+		}else if(nameTextbox.getText().length() == 0){
+			setErrorMessage(Messages.WizardPropertyPage_ErrorNameEmpty);
+			result = false;
+		}
+		if(result){
+			setErrorMessage(null);
+		}
+		return result;
 	}
 	
 	@Override

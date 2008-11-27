@@ -172,6 +172,8 @@ public class Messages extends NLS {
 	public static String WizardContainer_Maximize;
 	public static String WizardContainer_NotImplemented;
 	public static String WizardContainer_Standby;
+	public static String WizardPropertyPage_ErrorNameEmpty;
+	public static String WizardPropertyPage_ErrorSameAsDefaultName;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
