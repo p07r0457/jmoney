@@ -33,8 +33,6 @@ import net.sf.jmoney.model2.Session;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtension;
-import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -51,7 +49,7 @@ import org.osgi.framework.BundleContext;
  */
 public class SerializedDatastorePlugin extends AbstractUIPlugin {
 
-	public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney.serializeddatastore/debug"));
+	public static final boolean DEBUG = "true".equalsIgnoreCase(Platform.getDebugOption("net.sf.jmoney.serializeddatastore/debug")); //$NON-NLS-1$ //$NON-NLS-2$
 
 	//The shared instance.
 	private static SerializedDatastorePlugin plugin;
@@ -68,7 +66,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	public SerializedDatastorePlugin() {
 		plugin = this;
 		try {
-			resourceBundle = ResourceBundle.getBundle("net.sf.jmoney.serializeddatastore.Language");
+			resourceBundle = ResourceBundle.getBundle("net.sf.jmoney.serializeddatastore.Language"); //$NON-NLS-1$
 		} catch (MissingResourceException x) {
 			resourceBundle = null;
 		}
@@ -85,6 +83,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * Returns the string from the plugin's resource bundle,
 	 * or 'key' if not found.
 	 */
+	@Deprecated
 	public static String getResourceString(String key) {
 		ResourceBundle bundle = SerializedDatastorePlugin.getDefault().getResourceBundle();
 		try {
@@ -97,6 +96,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	/**
 	 * Returns the plugin's resource bundle,
 	 */
+	@Deprecated
 	public ResourceBundle getResourceBundle() {
 		return resourceBundle;
 	}
@@ -117,7 +117,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	public static void init() {
 		// Load the extensions
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
-		IConfigurationElement[] elements = registry.getConfigurationElementsFor("net.sf.jmoney.serializeddatastore.filestores");
+		IConfigurationElement[] elements = registry.getConfigurationElementsFor("net.sf.jmoney.serializeddatastore.filestores"); //$NON-NLS-1$
 
 		/*
 		 * Count the number of file-format extensions. (As it is the only valid
@@ -126,7 +126,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		 */
 		int count = 0;
 		for (IConfigurationElement element: elements) {
-			if (element.getName().equals("file-format")) {
+			if (element.getName().equals("file-format")) { //$NON-NLS-1$
 				count++;
 			}
 		}
@@ -136,12 +136,12 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		
 		int k = 0;
 		for (IConfigurationElement element: elements) {
-			if (element.getName().equals("file-format")) {
-				String filePattern = element.getAttribute("file-pattern");
-				String formatDescription = element.getAttribute("format-description");
+			if (element.getName().equals("file-format")) { //$NON-NLS-1$
+				String filePattern = element.getAttribute("file-pattern"); //$NON-NLS-1$
+				String formatDescription = element.getAttribute("format-description"); //$NON-NLS-1$
 
 				filterPatterns[k] = filePattern;
-				filterNames[k] = formatDescription + " (" + filePattern + ")";
+				filterNames[k] = formatDescription + " (" + filePattern + ")"; //$NON-NLS-1$ //$NON-NLS-2$
 				k++;
 			}
 		}
@@ -190,10 +190,10 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 		
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
 		Vector<IConfigurationElement> matchingElements = new Vector<IConfigurationElement>();
-		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.serializeddatastore.filestores")) {
-			if (element.getName().equals("file-format")) {
+		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.serializeddatastore.filestores")) { //$NON-NLS-1$
+			if (element.getName().equals("file-format")) { //$NON-NLS-1$
 				// The file pattern should start with an asterisk
-				String filePattern = element.getAttribute("file-pattern");
+				String filePattern = element.getAttribute("file-pattern"); //$NON-NLS-1$
 				if (filePattern.charAt(0) == '*'
 					&& fileName.endsWith(filePattern.substring(1))) {
 					matchingElements.add(element);
@@ -209,12 +209,12 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 */
 	public static IFileDatastore getFileDatastoreImplementation(String id) {
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
-		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.serializeddatastore.filestores")) {
-			if (element.getName().equals("file-format")) {
-				String id2 = element.getNamespaceIdentifier() + '.' + element.getAttribute("id");
+		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.serializeddatastore.filestores")) { //$NON-NLS-1$
+			if (element.getName().equals("file-format")) { //$NON-NLS-1$
+				String id2 = element.getNamespaceIdentifier() + '.' + element.getAttribute("id"); //$NON-NLS-1$
 				if (id2.equals(id)) {
 					try {
-						return (IFileDatastore)element.createExecutableExtension("class");
+						return (IFileDatastore)element.createExecutableExtension("class"); //$NON-NLS-1$
 					} catch (CoreException e) {
 						e.printStackTrace();
 						return null;
@@ -245,9 +245,9 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			MessageDialog dialog =
 				new MessageDialog(
 						window.getShell(), 
-						"Menu item unavailable", 
+						Messages.SerializedDatastorePlugin_MessageMenu, 
 						null, // accept the default window icon
-						"No session is open.", 
+						Messages.SerializedDatastorePlugin_MessageNoSession, 
 						MessageDialog.ERROR, 
 						new String[] { IDialogConstants.OK_LABEL }, 0);
 			dialog.open();
@@ -258,15 +258,9 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 			MessageDialog dialog =
 				new MessageDialog(
 						window.getShell(), 
-						"Menu item unavailable", 
+						Messages.SerializedDatastorePlugin_MessageMenu, 
 						null, // accept the default window icon
-						"This session cannot be saved using this 'save' action.  " +
-						"More than one plug-in is installed that provides a " +
-						"datastore implementation.  The current session was " +
-						"created using a different plug-in from the plug-in that " +
-						"created this 'save' action.  You can only use this 'save' " +
-						"action if the session was created using the corresponding " +
-						"'new' or 'open' action.", 
+						Messages.SerializedDatastorePlugin_SaveProblem,
 						MessageDialog.ERROR, 
 						new String[] { IDialogConstants.OK_LABEL }, 0);
 			dialog.open();

@@ -32,7 +32,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Vector;
 
-import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
+import net.sf.jmoney.serializeddatastore.Messages;
 
 /**
  * The data model for an account.
@@ -61,7 +61,7 @@ public class Account implements Category, Serializable {
 	 */
 	public static final int VALUTA_ORDER = 3;
 
-	protected static String defaultCurrencyCode = "USD";
+	protected static String defaultCurrencyCode = "USD"; //$NON-NLS-1$
 
 	protected static String[] entryOrderNames;
 
@@ -241,7 +241,7 @@ public class Account implements Category, Serializable {
 		if (name != null && name.equals(aName))
 			return;
 		name = aName;
-		changeSupport.firePropertyChange("name", null, name);
+		changeSupport.firePropertyChange("name", null, name); //$NON-NLS-1$
 	}
 
 	/**
@@ -249,14 +249,14 @@ public class Account implements Category, Serializable {
 	 */
 	public void setEntries(Vector newEntries) {
 		entries = newEntries;
-		changeSupport.firePropertyChange("entries", null, entries);
+		changeSupport.firePropertyChange("entries", null, entries); //$NON-NLS-1$
 	}
 
 	public void setCurrencyCode(String aCurrencyCode) {
 		if (currencyCode != null && currencyCode.equals(aCurrencyCode))
 			return;
 		currencyCode = aCurrencyCode;
-		changeSupport.firePropertyChange("currency", null, currencyCode);
+		changeSupport.firePropertyChange("currency", null, currencyCode); //$NON-NLS-1$
 	}
 
 	/**
@@ -266,7 +266,7 @@ public class Account implements Category, Serializable {
 		if (bank != null && bank.equals(aBank))
 			return;
 		bank = aBank;
-		changeSupport.firePropertyChange("bank", null, bank);
+		changeSupport.firePropertyChange("bank", null, bank); //$NON-NLS-1$
 	}
 
 	/**
@@ -277,7 +277,7 @@ public class Account implements Category, Serializable {
 		if (accountNumber != null && accountNumber.equals(anAccountNumber))
 			return;
 		accountNumber = anAccountNumber;
-		changeSupport.firePropertyChange("accountNumber", null, accountNumber);
+		changeSupport.firePropertyChange("accountNumber", null, accountNumber); //$NON-NLS-1$
 	}
 
 	/**
@@ -288,7 +288,7 @@ public class Account implements Category, Serializable {
 		if (startBalance == s)
 			return;
 		startBalance = s;
-		changeSupport.firePropertyChange("startBalance", null, new Long(s));
+		changeSupport.firePropertyChange("startBalance", null, new Long(s)); //$NON-NLS-1$
 	}
 
 	/**
@@ -298,7 +298,7 @@ public class Account implements Category, Serializable {
 		if (minBalance == m)
 			return;
 		minBalance = m;
-		changeSupport.firePropertyChange("minBalance", null, m);
+		changeSupport.firePropertyChange("minBalance", null, m); //$NON-NLS-1$
 	}
 
 	/**
@@ -308,7 +308,7 @@ public class Account implements Category, Serializable {
 		if (abbrevation != null && abbrevation.equals(anAbbrevation))
 			return;
 		abbrevation = anAbbrevation;
-		changeSupport.firePropertyChange("abbrevation", null, abbrevation);
+		changeSupport.firePropertyChange("abbrevation", null, abbrevation); //$NON-NLS-1$
 	}
 
 	/**
@@ -318,7 +318,7 @@ public class Account implements Category, Serializable {
 		if (comment != null && comment.equals(aComment))
 			return;
 		comment = aComment;
-		changeSupport.firePropertyChange("comment", null, comment);
+		changeSupport.firePropertyChange("comment", null, comment); //$NON-NLS-1$
 	}
 
 	/**
@@ -364,8 +364,8 @@ public class Account implements Category, Serializable {
 	}
 
 	public String getFullCategoryName() {
-		return SerializedDatastorePlugin.getResourceString("TransferCategory.name")
-			+ ":"
+		return Messages.Account_FullCategoryName 
+			+ ":" //$NON-NLS-1$
 			+ getCategoryName();
 	}
 

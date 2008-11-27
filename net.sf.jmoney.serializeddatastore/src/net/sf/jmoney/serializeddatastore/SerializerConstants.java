@@ -61,10 +61,10 @@ public interface SerializerConstants {
 	/**
 	 * Filename extension
 	 */
-	public static final String FILE_EXTENSION = ".jmx";
+	public static final String FILE_EXTENSION = ".jmx"; //$NON-NLS-1$
 
 	/**
 	 * File filter name
 	 */
-	public static final String FILE_FILTER_NAME = "JMoney Files (*.jmx)";
+	public static final String FILE_FILTER_NAME = "JMoney Files (*.jmx)"; //$NON-NLS-1$
 }

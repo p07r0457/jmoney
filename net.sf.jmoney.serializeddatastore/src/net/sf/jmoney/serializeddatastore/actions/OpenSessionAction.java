@@ -26,6 +26,7 @@ import java.io.File;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.serializeddatastore.IFileDatastore;
+import net.sf.jmoney.serializeddatastore.Messages;
 import net.sf.jmoney.serializeddatastore.SerializedDatastorePlugin;
 import net.sf.jmoney.serializeddatastore.SessionManager;
 
@@ -77,7 +78,7 @@ public class OpenSessionAction implements IWorkbenchWindowActionDelegate {
                 	/*
                 	 * The user has entered an extension that is not recognized.
                 	 */
-                	MessageDialog.openError(window.getShell(), "Invalid Filename", "You have entered a file name with an unrecognized extension.  The supported extensions can be found by using the 'Files of type' drop-down in the 'Open' dialog.");
+                	MessageDialog.openError(window.getShell(), Messages.OpenSessionAction_ErrorTitle, Messages.OpenSessionAction_ErrorMessage);
                 	return;
                 }
                 
@@ -91,11 +92,11 @@ public class OpenSessionAction implements IWorkbenchWindowActionDelegate {
                 IFileDatastore fileDatastore;
                 String fileFormatId;
 				try {
-					fileDatastore = (IFileDatastore)elements[0].createExecutableExtension("class");
-					fileFormatId = elements[0].getDeclaringExtension().getNamespaceIdentifier() + '.' + elements[0].getAttribute("id");
+					fileDatastore = (IFileDatastore)elements[0].createExecutableExtension("class"); //$NON-NLS-1$
+					fileFormatId = elements[0].getDeclaringExtension().getNamespaceIdentifier() + '.' + elements[0].getAttribute("id"); //$NON-NLS-1$
 				} catch (CoreException e) {
 					e.printStackTrace();
-					throw new RuntimeException("internal error");
+					throw new RuntimeException("internal error"); //$NON-NLS-1$
 				}
 
 				SessionManager sessionManager = new SessionManager(fileFormatId, fileDatastore, sessionFile);

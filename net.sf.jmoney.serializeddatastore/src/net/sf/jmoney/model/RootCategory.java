@@ -22,6 +22,8 @@
 
 package net.sf.jmoney.model;
 
+import net.sf.jmoney.serializeddatastore.Messages;
+
 
 public class RootCategory extends AbstractCategory {
 
@@ -31,7 +33,7 @@ public class RootCategory extends AbstractCategory {
 	}
 
 	public String getCategoryName() {
-		return "not used"; //Constants.LANGUAGE.getString("RootCategory.name");
+		return Messages.RootCategory_CategoryName;
 	}
 
 }

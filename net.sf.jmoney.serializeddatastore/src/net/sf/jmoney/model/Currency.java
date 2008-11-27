@@ -33,6 +33,7 @@ import java.util.Hashtable;
 import java.util.ResourceBundle;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.serializeddatastore.Messages;
 
 /**
  * This class was created because the currency support wich comes with the Java
@@ -42,7 +43,7 @@ import net.sf.jmoney.JMoneyPlugin;
 public class Currency implements Comparable {
 
 	public static final ResourceBundle NAME =
-		ResourceBundle.getBundle("net.sf.jmoney.resources.Currency");
+		ResourceBundle.getBundle("net.sf.jmoney.resources.Currency"); //$NON-NLS-1$
 	public static final int MAX_DECIMALS = 4;
 	private static final short[] SCALE_FACTOR = { 1, 10, 100, 1000, 10000 };
 	private static Hashtable currencies = null;
@@ -77,7 +78,7 @@ public class Currency implements Comparable {
 
 	private static void initSystemCurrencies() {
 		// TODO: How does this work?  Currencies.txt is not in resources folder?!
-		InputStream in = JMoneyPlugin.class.getResourceAsStream("resources/Currencies.txt");
+		InputStream in = JMoneyPlugin.class.getResourceAsStream("resources/Currencies.txt"); //$NON-NLS-1$
 		BufferedReader buffer = new BufferedReader(new InputStreamReader(in));
 		currencies = new Hashtable();
 		try {
@@ -109,7 +110,7 @@ public class Currency implements Comparable {
 
 	protected Currency(String c, byte d) {
 		if (d > MAX_DECIMALS)
-			throw new IllegalArgumentException("Number of decimals not supported");
+			throw new IllegalArgumentException(Messages.Currency_DecimalProblem);
 		code = c;
 		decimals = d;
 	}
@@ -130,7 +131,7 @@ public class Currency implements Comparable {
 
 	@Override
 	public String toString() {
-		return getCurrencyName() + " (" + getCode() + ")";
+		return getCurrencyName() + " (" + getCode() + ")"; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	/**
@@ -158,7 +159,7 @@ public class Currency implements Comparable {
 	}
 
 	public String format(Long amount) {
-		return amount == null ? "" : format(amount.longValue());
+		return amount == null ? "" : format(amount.longValue()); //$NON-NLS-1$
 	}
 
 	/**

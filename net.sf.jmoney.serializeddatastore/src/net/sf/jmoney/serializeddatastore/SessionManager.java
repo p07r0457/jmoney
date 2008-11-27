@@ -42,7 +42,6 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.FileDialog;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPersistableElement;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -135,9 +134,8 @@ public class SessionManager extends DatastoreManager {
     }
 
 	boolean requestSave(IWorkbenchWindow window) {
-		String title = SerializedDatastorePlugin.getResourceString("MainFrame.saveOldSessionTitle");
-		String question =
-			SerializedDatastorePlugin.getResourceString("MainFrame.saveOldSessionQuestion");
+		String title = Messages.SessionManager_SaveTitle;
+		String question = Messages.SessionManager_SaveQuestion;
 		MessageDialog dialog = new MessageDialog(
 				window.getShell(),
 				title,
@@ -157,7 +155,7 @@ public class SessionManager extends DatastoreManager {
 		case 2: // CANCEL
 			return false;
 		default:
-			throw new RuntimeException("bad switch value");
+			throw new RuntimeException("bad switch value"); //$NON-NLS-1$
 		}
 	}
 	
@@ -190,7 +188,7 @@ public class SessionManager extends DatastoreManager {
             	/*
             	 * The user has entered an extension that is not recognized.
             	 */
-            	MessageDialog.openError(window.getShell(), "Invalid Filename", "You have entered a file name with an unrecognized extension.  The supported extensions can be found by using the 'Save as type' drop-down in the 'Save As' dialog.");
+            	MessageDialog.openError(window.getShell(), Messages.SessionManager_InvalidFileName, Messages.SessionManager_ErrorMessage);
             	return;
             }
             
@@ -200,11 +198,11 @@ public class SessionManager extends DatastoreManager {
 
             // For time being, we simply use the first entry.
 			try {
-				fileDatastore = (IFileDatastore)elements[0].createExecutableExtension("class");
-				fileDatastoreId = elements[0].getDeclaringExtension().getNamespaceIdentifier() + '.' + elements[0].getAttribute("id");
+				fileDatastore = (IFileDatastore)elements[0].createExecutableExtension("class"); //$NON-NLS-1$
+				fileDatastoreId = elements[0].getDeclaringExtension().getNamespaceIdentifier() + '.' + elements[0].getAttribute("id"); //$NON-NLS-1$
 			} catch (CoreException e) {
 				e.printStackTrace();
-				throw new RuntimeException("internal error");
+				throw new RuntimeException("internal error"); //$NON-NLS-1$
 			}
     		
 			// Write the file and then set the session file to the new file.
@@ -242,11 +240,11 @@ public class SessionManager extends DatastoreManager {
 	
 	private boolean dontOverwrite(File file, IWorkbenchWindow window) {
 		if (file.exists()) {
-			String question = SerializedDatastorePlugin.getResourceString("MainFrame.OverwriteExistingFile")
-			+ " "
+			String question = Messages.SessionManager_OverwriteExistingFile
+			+ " : " //$NON-NLS-1$
 			+ file.getPath()
-			+ "?";
-			String title = SerializedDatastorePlugin.getResourceString("MainFrame.FileExists");
+			+ "?"; //$NON-NLS-1$
+			String title = Messages.SessionManager_OverwriteTitle;
 			
 			boolean answer = MessageDialog.openQuestion(
 					window.getShell(),
@@ -285,7 +283,7 @@ public class SessionManager extends DatastoreManager {
 	private IPersistableElement persistableElement 
 	= new IPersistableElement() {
 		public String getFactoryId() {
-			return "net.sf.jmoney.serializeddatastore.SessionFactory";
+			return "net.sf.jmoney.serializeddatastore.SessionFactory"; //$NON-NLS-1$
 		}
 		public void saveState(IMemento memento) {
 			// If no session file is set then the session has never been saved.
@@ -295,8 +293,8 @@ public class SessionManager extends DatastoreManager {
 			// in this situation and the code to re-create the session will, in this case,
 			// re-create an empty session.
 			if (sessionFile != null) {
-				memento.putString("fileFormatId", fileDatastoreId);
-				memento.putString("fileName", sessionFile.getPath());
+				memento.putString("fileFormatId", fileDatastoreId); //$NON-NLS-1$
+				memento.putString("fileName", sessionFile.getPath()); //$NON-NLS-1$
 			}
 		}
 	};

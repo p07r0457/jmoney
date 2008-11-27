@@ -22,13 +22,15 @@
 
 package net.sf.jmoney.model;
 
+import net.sf.jmoney.serializeddatastore.Messages;
+
 
 public class TransferCategory extends AbstractCategory {
 
 	private static final long serialVersionUID = -3087388118525899946L;
 
 	public String getCategoryName() {
-	return "transfer not used"; //Constants.LANGUAGE.getString("TransferCategory.name");
+	return Messages.TransferCategory_Name;
     }
 
 }

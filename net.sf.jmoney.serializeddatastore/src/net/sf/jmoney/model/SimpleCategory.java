@@ -51,7 +51,7 @@ public class SimpleCategory extends AbstractCategory {
 			if (path.length > 1) {
 				fullCategoryName = path[1].toString();
 				for (int i = 2; i < path.length; i++)
-					fullCategoryName += ":" + path[i];
+					fullCategoryName += ":" + path[i]; //$NON-NLS-1$
 			} else
 				fullCategoryName = categoryName;
 		}

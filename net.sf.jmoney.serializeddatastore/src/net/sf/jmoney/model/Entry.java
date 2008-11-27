@@ -30,6 +30,8 @@ import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Date;
 
+import net.sf.jmoney.serializeddatastore.Messages;
+
 /**
  * The data model for an entry.
  */
@@ -93,9 +95,9 @@ public class Entry implements Serializable {
 	 */
 	public static String[] statusNames() {
 		String[] text = new String[3];
-		text[UNCLEARED] = "not used"; //Constants.LANGUAGE.getString("Entry.uncleared");
-		text[RECONCILING] = "not used"; //Constants.LANGUAGE.getString("Entry.reconciling");
-		text[CLEARED] = "not used"; //Constants.LANGUAGE.getString("Entry.cleared");
+		text[UNCLEARED] = Messages.Entry_UnclearedName;
+		text[RECONCILING] = Messages.Entry_ReconcilingName;
+		text[CLEARED] = Messages.Entry_ClearedName;
 		return text;
 	}
 
@@ -195,10 +197,10 @@ public class Entry implements Serializable {
 	 */
 	public String getStatusString() {
 		String[] text = new String[3];
-		text[UNCLEARED] = "not used"; //Constants.LANGUAGE.getString("Entry.unclearedShort");
+		text[UNCLEARED] = Messages.Entry_UnclearedStatus;
 		text[RECONCILING] =
-			"not used"; //Constants.LANGUAGE.getString("Entry.reconcilingShort");
-		text[CLEARED] = "not used"; //Constants.LANGUAGE.getString("Entry.clearedShort");
+			Messages.Entry_ReconcilingStatus;
+		text[CLEARED] = Messages.Entry_ClearedStatus;
 		return text[getStatus()];
 	}
 
@@ -216,7 +218,7 @@ public class Entry implements Serializable {
 		if (check != null && check.equals(aCheck))
 			return;
 		check = aCheck.length() == 0 ? null : aCheck;
-		changeSupport.firePropertyChange("check", null, check);
+		changeSupport.firePropertyChange("check", null, check); //$NON-NLS-1$
 	}
 
 	/**
@@ -226,7 +228,7 @@ public class Entry implements Serializable {
 		if (date != null && date.equals(aDate))
 			return;
 		date = aDate;
-		changeSupport.firePropertyChange("date", null, date);
+		changeSupport.firePropertyChange("date", null, date); //$NON-NLS-1$
 	}
 
 	/**
@@ -236,7 +238,7 @@ public class Entry implements Serializable {
 		if (valuta != null && valuta.equals(aValuta))
 			return;
 		valuta = aValuta;
-		changeSupport.firePropertyChange("valuta", null, valuta);
+		changeSupport.firePropertyChange("valuta", null, valuta); //$NON-NLS-1$
 	}
 
 	/**
@@ -246,7 +248,7 @@ public class Entry implements Serializable {
 		if (description != null && description.equals(aDescription))
 			return;
 		description = aDescription.length() == 0 ? null : aDescription;
-		changeSupport.firePropertyChange("description", null, description);
+		changeSupport.firePropertyChange("description", null, description); //$NON-NLS-1$
 	}
 
 	/**
@@ -256,7 +258,7 @@ public class Entry implements Serializable {
 		if (category != null && category.equals(aCategory))
 			return;
 		category = aCategory;
-		changeSupport.firePropertyChange("category", null, category);
+		changeSupport.firePropertyChange("category", null, category); //$NON-NLS-1$
 	}
 
 	/**
@@ -266,7 +268,7 @@ public class Entry implements Serializable {
 		if (amount == anAmount)
 			return;
 		amount = anAmount;
-		changeSupport.firePropertyChange("amount", null, new Double(amount));
+		changeSupport.firePropertyChange("amount", null, new Double(amount)); //$NON-NLS-1$
 	}
 
 	/**
@@ -276,7 +278,7 @@ public class Entry implements Serializable {
 		if (status == aStatus)
 			return;
 		status = aStatus;
-		changeSupport.firePropertyChange("status", 0, status);
+		changeSupport.firePropertyChange("status", 0, status); //$NON-NLS-1$
 	}
 
 	/**
@@ -286,7 +288,7 @@ public class Entry implements Serializable {
 		if (memo != null && memo.equals(aMemo))
 			return;
 		memo = aMemo.length() == 0 ? null : aMemo;
-		changeSupport.firePropertyChange("memo", null, memo);
+		changeSupport.firePropertyChange("memo", null, memo); //$NON-NLS-1$
 	}
 
 	/**

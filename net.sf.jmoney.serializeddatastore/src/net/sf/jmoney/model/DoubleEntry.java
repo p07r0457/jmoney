@@ -80,10 +80,10 @@ public class DoubleEntry extends Entry {
 	public void setDate(Date aDate) {
 		if (date != null && date.equals(aDate)) return;
 		date = aDate;
-		changeSupport.firePropertyChange("date", null, date);
+		changeSupport.firePropertyChange("date", null, date); //$NON-NLS-1$
 		if (other == null) return;
 		other.date = aDate;
-		other.changeSupport.firePropertyChange("date", null, date);
+		other.changeSupport.firePropertyChange("date", null, date); //$NON-NLS-1$
 	}
 
 	/**
@@ -93,10 +93,10 @@ public class DoubleEntry extends Entry {
 	public void setDescription(String aDescription) {
 		if (description != null && description.equals(aDescription)) return;
 		description = aDescription.length() == 0? null: aDescription;
-		changeSupport.firePropertyChange("description", null, description);
+		changeSupport.firePropertyChange("description", null, description); //$NON-NLS-1$
 		if (other == null) return;
 		other.description = description;
-		other.changeSupport.firePropertyChange("description", null, description);
+		other.changeSupport.firePropertyChange("description", null, description); //$NON-NLS-1$
 	}
 
 	/**
@@ -106,10 +106,10 @@ public class DoubleEntry extends Entry {
 	public void setMemo(String aMemo) {
 		if (memo != null && memo.equals(aMemo)) return;
 		memo = aMemo.length() == 0? null: aMemo;
-		changeSupport.firePropertyChange("memo", null, memo);
+		changeSupport.firePropertyChange("memo", null, memo); //$NON-NLS-1$
 		if (other == null) return;
 		other.memo = memo;
-		other.changeSupport.firePropertyChange("memo", null, memo);
+		other.changeSupport.firePropertyChange("memo", null, memo); //$NON-NLS-1$
 	}
 
 	public void remove() {

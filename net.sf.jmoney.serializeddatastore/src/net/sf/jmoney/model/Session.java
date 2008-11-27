@@ -99,7 +99,7 @@ public class Session implements Serializable {
         if (modified == m)
             return;
         modified = m;
-        changeSupport.firePropertyChange("modified", !m, m);
+        changeSupport.firePropertyChange("modified", !m, m); //$NON-NLS-1$
     }
 
     public void modified() {

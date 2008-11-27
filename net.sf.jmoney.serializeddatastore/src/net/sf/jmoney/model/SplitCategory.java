@@ -22,13 +22,15 @@
 
 package net.sf.jmoney.model;
 
+import net.sf.jmoney.serializeddatastore.Messages;
+
 
 public class SplitCategory extends AbstractCategory {
 
 	private static final long serialVersionUID = -3667630366605958650L;
 
 	public String getCategoryName() {
-	return "split not used"; //Constants.LANGUAGE.getString("SplitCategory.name");
+	return Messages.SplitCategory_Name;
     }
 
 }

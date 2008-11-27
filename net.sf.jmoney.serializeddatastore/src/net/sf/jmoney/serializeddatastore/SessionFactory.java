@@ -48,8 +48,8 @@ public class SessionFactory implements ISessionFactory {
 	 * @see org.eclipse.ui.IElementFactory#createElement(org.eclipse.ui.IMemento)
 	 */
 	public void openSession(IMemento memento) {
-		String fileFormatId = memento.getString("fileFormatId");
-		String fileName = memento.getString("fileName");
+		String fileFormatId = memento.getString("fileFormatId"); //$NON-NLS-1$
+		String fileName = memento.getString("fileName"); //$NON-NLS-1$
         if (fileFormatId != null && fileName != null) {
             IFileDatastore fileDatastore = SerializedDatastorePlugin.getFileDatastoreImplementation(fileFormatId);
             File sessionFile = new File(fileName);

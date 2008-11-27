@@ -41,7 +41,7 @@ public class SplittedEntry extends Entry {
 
 	public void setEntries(Vector newEntries) {
 		entries = newEntries;
-		changeSupport.firePropertyChange("entries", null, entries);
+		changeSupport.firePropertyChange("entries", null, entries); //$NON-NLS-1$
 	}
 
 	public void addEntry(Entry e) {
