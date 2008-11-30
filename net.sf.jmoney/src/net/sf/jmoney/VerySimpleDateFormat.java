@@ -126,7 +126,7 @@ public class VerySimpleDateFormat {
 					day = Integer.parseInt(d);
 					month = Integer.parseInt(m) - 1;
 					year = Integer.parseInt(y);
-					if (y.length() < 3)
+					if (y != null && y.length() < 3)
 						year += year < 30 ? 2000 : 1900;
 					break;
 				default :
