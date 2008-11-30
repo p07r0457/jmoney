@@ -100,6 +100,7 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 	 * Moves the given object into this collection, removing it from its
 	 * current parent.
 	 */
+	@SuppressWarnings("unchecked")
 	public void moveElement(final E extendableObject) {
 		Assert.isTrue(listKey.getParentKey().getDataManager() == extendableObject.getDataManager());
 		
