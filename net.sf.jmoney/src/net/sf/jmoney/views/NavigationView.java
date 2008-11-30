@@ -276,10 +276,19 @@ public class NavigationView extends ViewPart {
 		}
 
 		@Override
-		public void objectInserted(ExtendableObject newObject) {
+		public void objectInserted(final ExtendableObject newObject) {
 			if (newObject instanceof Account) {
-				Object parentElement = contentProvider.getParent(newObject);
-				viewer.insert(parentElement, newObject, 0);
+				getSite().getShell().getDisplay().asyncExec(new Runnable() {
+					public void run() {
+						Object parentElement = contentProvider
+								.getParent(newObject);
+						viewer.insert(parentElement, newObject, 0);
+						viewer.refresh(TreeNode.getTreeNode(AccountsNode.ID),
+								false);
+						viewer.refresh(TreeNode.getTreeNode(CategoriesNode.ID),
+								false);
+					}
+				});
 			}
 		}
 
@@ -302,12 +311,20 @@ public class NavigationView extends ViewPart {
 		}
 
 		@Override
-		public void objectChanged(ExtendableObject changedObject,
+		public void objectChanged(final ExtendableObject changedObject,
 				ScalarPropertyAccessor propertyAccessor, Object oldValue,
 				Object newValue) {
 			if (changedObject instanceof Account
 					&& propertyAccessor == AccountInfo.getNameAccessor()) {
-				viewer.update(changedObject, null);
+				getSite().getShell().getDisplay().asyncExec(new Runnable() {
+					public void run() {
+						viewer.update(changedObject, null);
+						viewer.refresh(TreeNode.getTreeNode(AccountsNode.ID),
+								false);
+						viewer.refresh(TreeNode.getTreeNode(CategoriesNode.ID),
+								false);
+					}
+				});
 			}
 		}
 
@@ -348,8 +365,7 @@ public class NavigationView extends ViewPart {
 		if (memento != null) {
 			// Restore any session that was open when the workbench
 			// was last closed.
-			session = JMoneyPlugin.openSession(memento
-					.getChild("session")); //$NON-NLS-1$
+			session = JMoneyPlugin.openSession(memento.getChild("session")); //$NON-NLS-1$
 		} else {
 			session = null;
 		}
