@@ -12,6 +12,7 @@ public class CellFocusListener<R extends RowControl> extends FocusAdapter {
 	private RowSelectionTracker<R> selectionTracker;
 	private FocusCellTracker focusCellTracker;
 
+	@SuppressWarnings("unchecked")
 	public CellFocusListener(R rowControl, ICellControl2<?> cellControl) {
 		this.rowControl = rowControl;
 		this.cellControl = cellControl;
@@ -90,7 +91,9 @@ public class CellFocusListener<R extends RowControl> extends FocusAdapter {
 					
 					// TODO: Should we be restoring selection to the cell that needs correcting?
 					focusCellTracker.setFocusCell(previousFocus);
-					previousFocus.getControl().setFocus();
+					if (previousFocus != null) {
+					    previousFocus.getControl().setFocus();
+					}
 				}
 			}
 		});
