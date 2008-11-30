@@ -33,6 +33,7 @@ import org.eclipse.swt.widgets.Composite;
 
 public class EntryRowControl extends BaseEntryRowControl<EntryData, EntryRowControl> {
 
+	@SuppressWarnings("unchecked")
 	public EntryRowControl(final Composite parent, int style, VirtualRowTable rowTable, Block<EntryData, ? super EntryRowControl> rootBlock, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style, rowTable, rootBlock, selectionTracker, focusCellTracker);
 		init(this, this, rootBlock);
@@ -92,8 +93,6 @@ public class EntryRowControl extends BaseEntryRowControl<EntryData, EntryRowCont
 					uncommittedEntryData);
 			dialog.open();
 		} else {
-			Transaction y = uncommittedEntryData.getEntry().getTransaction();
-			EntryCollection x = uncommittedEntryData.getEntry().getTransaction().getEntryCollection();
 			for (Entry entry: uncommittedEntryData.getEntry().getTransaction().getEntryCollection()) {
 				if (entry.getAmount() == 0) {
 					throw new InvalidUserEntryException(
