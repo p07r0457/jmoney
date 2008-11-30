@@ -10,7 +10,6 @@ import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.ModifyEvent;
-import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseAdapter;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -49,8 +48,6 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
      * The text control; initially <code>null</code>.
      */
     protected AccountControl<A> accountControl;
-
-    private ModifyListener modifyListener;
 
     /**
      * State information for updating action enablement
@@ -247,20 +244,6 @@ public class AccountCellEditor<A extends Account> extends CellEditor {
 
     // We could also do this:
 //    	        	return super.getLayoutData();
-    }
-
-    /**
-     * Return the modify listener.
-     */
-    private ModifyListener getModifyListener() {
-        if (modifyListener == null) {
-            modifyListener = new ModifyListener() {
-                public void modifyText(ModifyEvent e) {
-                    editOccured(e);
-                }
-            };
-        }
-        return modifyListener;
     }
 
     /**
