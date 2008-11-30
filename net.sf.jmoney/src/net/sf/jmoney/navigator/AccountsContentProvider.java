@@ -22,8 +22,6 @@ import org.eclipse.swt.widgets.Display;
 
 public class AccountsContentProvider implements ITreeContentProvider {
 
-	private MyCurrentSessionChangeListener listener;
-
 	public Object[] getChildren(Object parentElement) {
 		if (parentElement instanceof TreeNode) {
 			return ((TreeNode)parentElement).getChildren();
