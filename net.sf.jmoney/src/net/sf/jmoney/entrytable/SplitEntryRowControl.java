@@ -25,13 +25,8 @@ package net.sf.jmoney.entrytable;
 import net.sf.jmoney.model2.Entry;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.TraverseEvent;
-import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
@@ -55,71 +50,12 @@ public class SplitEntryRowControl extends RowControl<Entry, SplitEntryRowControl
 	 */
 	private boolean isSelected = false;
 
-	/**
-	 * Forward key presses to the parent control
-	 */
-	private KeyListener keyListener = new KeyAdapter() {
-		@Override
-		public void keyPressed(KeyEvent e) {
-//			parent.keyPressed(TableRow.this, e);
-		}
-	};
-
-	/**
-	 * Forward traverse events to the parent control
-	 */
-	private TraverseListener traverseListener = new TraverseListener() {
-		public void keyTraversed(TraverseEvent e) {
-			/*
-			 * FEATURE IN SWT: When SWT needs to resolve a mnemonic (accelerator)
-			 * character, it recursively calls the traverse event down all
-			 * controls in the containership hierarchy.  If e.doit is false,
-			 * no control has yet matched the mnemonic, and we don't have to
-			 * do anything since we don't do mnemonic matching and no mnemonic
-			 * has matched.
-			 */
-			if (e.doit) {
-//				parent.keyTraversed(TableRow.this, e);
-			}
-		}
-	};
-
 	private PaintListener paintListener = new PaintListener() {
 		public void paintControl(PaintEvent e) {
 			drawBorder(e.gc);
 		}
 	};
 
-/*
-						/*
-						 * If the category property, listen for changes and set
-						 * the currency to be the currency of the listed account
-						 * whenever the category is set to a multi-currency
-						 * category and no currency is set.
-						 * /
-						if (entryData.getId().equals("common2.net.sf.jmoney.entry.account")) {
-							currentCellPropertyControl.getControl().addListener(SWT.Selection, new Listener() {
-								public void handleEvent(Event event) {
-									Entry changedEntry = data.getEntryForCommon2Fields();
-									Account account = changedEntry.getAccount();
-									if (account instanceof IncomeExpenseAccount) {
-										IncomeExpenseAccount incomeExpenseAccount = (IncomeExpenseAccount)account;
-										if (incomeExpenseAccount.isMultiCurrency()
-												&& changedEntry.getIncomeExpenseCurrency() == null) {
-											// Find the capital account in this transaction and set
-											// the currency of this income or expense to match the
-											// currency of the capital entry.
-											Commodity defaultCommodity = data.getEntryInAccount().getCommodity();
-											if (defaultCommodity instanceof Currency) {
-												changedEntry.setIncomeExpenseCurrency((Currency)defaultCommodity);
-											}
-										}
-									}
-								}
-							});
-						}
- */
-	
 	public SplitEntryRowControl(final Composite parent, int style, Block<Entry, ? super SplitEntryRowControl> rootBlock, boolean isLinked, final RowSelectionTracker<SplitEntryRowControl> selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style, selectionTracker, focusCellTracker);
 
@@ -160,8 +96,8 @@ public class SplitEntryRowControl extends RowControl<Entry, SplitEntryRowControl
 			Color secondaryColor = display
 			.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
 			// Fairly dark gray
-			Color hilightColor = display
-			.getSystemColor(SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW);
+			//Color hilightColor = display
+			//.getSystemColor(SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW);
 
 			Point controlSize = getSize();
 

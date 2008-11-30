@@ -71,21 +71,20 @@ public class SingleOtherEntryPropertyBlock extends IndividualBlock<Entry, ISplit
 		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
 		
 		ICellControl2<Entry> cellControl = new ICellControl2<Entry>() {
-
+			@Override
 			public Control getControl() {
 				return propertyControl.getControl();
 			}
 
+			@SuppressWarnings("unchecked")
+			@Override
 			public void load(Entry entry) {
 				propertyControl.load(entry);
 			}
 
+			@Override
 			public void save() {
 				propertyControl.save();
-			}
-
-			public void setFocusListener(FocusListener controlFocusListener) {
-				// Nothing to do
 			}
 
 			@Override

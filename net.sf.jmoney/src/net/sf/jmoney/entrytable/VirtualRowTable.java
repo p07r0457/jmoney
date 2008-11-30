@@ -481,11 +481,12 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 		 * with the bottom. 
 		 */
 		int rowPosition = anchorRowPosition;
+		int myAnchorRowPosition = anchorRowPosition;
 		int rowIndex = anchorRowIndex;
 		while (rowPosition < clientAreaSize.y) {
 			if (rowIndex == rowCount) {
 				// We have run out of rows.  Re-align to bottom.
-				anchorRowPosition += (clientAreaSize.y - rowPosition);
+			    	myAnchorRowPosition += (clientAreaSize.y - rowPosition);
 				break;
 			}
 
@@ -501,7 +502,7 @@ public class VirtualRowTable<T extends EntryData> extends Composite {
 		 * run out of rows in the underlying model then we must scroll to
 		 * the top.
 		 */
-		rowPosition = anchorRowPosition;
+		rowPosition = myAnchorRowPosition;
 		rowIndex = anchorRowIndex;
 		while (rowPosition > 0) {
 			if (rowIndex == 0) {

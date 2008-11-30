@@ -101,6 +101,7 @@ public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData, EntryR
 				return composite;
 			}
 
+			@SuppressWarnings("unchecked")
 			public void load(EntryData data) {
 				for (Control child: composite.getChildren()) {
 					child.dispose();
@@ -122,10 +123,6 @@ public class OtherEntriesPropertyBlock extends IndividualBlock<EntryData, EntryR
 				for (IPropertyControl propertyControl: propertyControls) {
 					propertyControl.save();
 				}
-			}
-
-			public void setFocusListener(FocusListener controlFocusListener) {
-				this.controlFocusListener = controlFocusListener;
 			}
 
 			private void addFocusListenerRecursively(Control control, FocusListener listener) {

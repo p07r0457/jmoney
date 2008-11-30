@@ -102,26 +102,25 @@ abstract public class PropertyBlock<T extends EntryData, R extends RowControl> e
 	
     @Override	
 	public IPropertyControl<T> createCellControl(Composite parent, final RowControl rowControl, final R coordinator) {
-		final IPropertyControl propertyControl = accessor.createPropertyControl(parent);
+		final IPropertyControl<ExtendableObject> propertyControl = accessor.createPropertyControl(parent);
 		
 		ICellControl2<T> cellControl = new ICellControl2<T>() {
 
+		    	@Override
 			public Control getControl() {
 				return propertyControl.getControl();
 			}
 
+			@Override
 			public void load(T data) {
 				ExtendableObject entryContainingProperty = getObjectContainingProperty(data);
 				propertyControl.load(entryContainingProperty);
 			}
 
+			@Override
 			public void save() {
 				propertyControl.save();
 				fireUserChange(coordinator);
-			}
-
-			public void setFocusListener(FocusListener controlFocusListener) {
-				// Nothing to do
 			}
 
 			@Override

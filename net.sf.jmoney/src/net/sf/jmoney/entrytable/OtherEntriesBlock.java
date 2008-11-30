@@ -62,6 +62,7 @@ public class OtherEntriesBlock extends CellBlock<EntryData, BaseEntryRowControl>
 		otherEntriesRootBlock.initIndexes(0);
 	}
 
+    @SuppressWarnings("unchecked")
     @Override	
 	public IPropertyControl<EntryData> createCellControl(Composite parent, RowControl rowControl, BaseEntryRowControl coordinator) {
 		
@@ -93,9 +94,6 @@ public class OtherEntriesBlock extends CellBlock<EntryData, BaseEntryRowControl>
 			public void save() {
 				control.save();
 			}
-			public void setFocusListener(FocusListener controlFocusListener) {
-				// TODO Auto-generated method stub
-			}
 		};
 
 		FocusListener controlFocusListener = new NonCellFocusListener<RowControl>(rowControl);
@@ -111,6 +109,7 @@ public class OtherEntriesBlock extends CellBlock<EntryData, BaseEntryRowControl>
 		return cellControl;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void createHeaderControls(Composite parent, EntryData entryData) {
 		Composite composite = new Composite(parent, SWT.NONE);

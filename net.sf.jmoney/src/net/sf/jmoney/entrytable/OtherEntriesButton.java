@@ -60,16 +60,6 @@ public class OtherEntriesButton extends CellBlock<EntryData, EntryRowControl> {
 
     @Override	
 	public IPropertyControl<EntryData> createCellControl(Composite parent, final RowControl rowControl, final EntryRowControl coordinator) {
-		
-	    /*
-	     * Use a single row tracker and cell focus tracker for this
-	     * table.  This needs to be generalized for, say, the reconciliation
-	     * editor if there is to be a single row selection for both tables.
-	     */
-		// TODO: This is not right - should not be created here.
-	    RowSelectionTracker<SplitEntryRowControl> rowTracker = new RowSelectionTracker<SplitEntryRowControl>();
-	    FocusCellTracker cellTracker = new FocusCellTracker();
-
 		if (downArrowImage == null) {
 			ImageDescriptor descriptor = JMoneyPlugin.createImageDescriptor("icons/comboArrow.gif"); //$NON-NLS-1$
 			downArrowImage = descriptor.createImage();
