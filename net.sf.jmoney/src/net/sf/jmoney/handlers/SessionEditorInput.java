@@ -54,17 +54,17 @@ public class SessionEditorInput implements IEditorInput, IPersistableElement {
     /* (non-Javadoc)
      * @see java.lang.Object#equals(java.lang.Object)
      */
-    @Override	
+    @Override
     public boolean equals(Object obj) {
-        if (obj == this) return true;
+	if (obj == this) {
+	    return true;
+	}
 
-        if (obj instanceof SessionEditorInput) {
-        	SessionEditorInput input = (SessionEditorInput) obj;
-        	return true; // TODO: check same session?
-//            return nodeObject.equals(input.nodeObject);
-        }
+	if (obj instanceof SessionEditorInput) {
+	    return true; // TODO: check same session?
+	}
 
-        return false;
+	return false;
     }
 
     /* (non-Javadoc)
