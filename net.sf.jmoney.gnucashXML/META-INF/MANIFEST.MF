@@ -12,5 +12,7 @@ Export-Package: net.sf.jmoney.gnucashXML,
  net.sf.jmoney.gnucashXML.actions
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- net.sf.jmoney
+ net.sf.jmoney,
+ org.eclipse.ui.ide,
+ org.eclipse.core.resources
 Eclipse-LazyStart: true

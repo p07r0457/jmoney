@@ -22,5 +22,16 @@
                id="net.sf.jmoney.gnucashXML.actions.gnucashXMLExport"/>
       </actionSet>
    </extension>
+     <extension
+           point="org.eclipse.ui.importWizards">
+        <wizard
+              class="net.sf.jmoney.gnucashXML.wizards.GnucashImportWizard"
+              id="net.sf.jmoney.gnucashXML.ImportWizard"
+              name="Gnucash Import">
+           <description>
+              Import data from a Gnucash file.
+           </description>
+        </wizard>
+     </extension>
 
 </plugin>
