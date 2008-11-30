@@ -290,6 +290,7 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	 * This method will find the method if any of the interfaces
 	 * extended by this interface define the method. 
 	 */
+	@SuppressWarnings("unchecked")
 	private Method getDeclaredMethodRecursively(Class implementationClass, String methodName, Class[] arguments)
 		throws NoSuchMethodException {
 		Class classToTry = implementationClass;
@@ -348,6 +349,7 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	 * @param parent
 	 * @return An interface to a wrapper class.
 	 */
+	@SuppressWarnings("unchecked")
 	public IPropertyControl<ExtendableObject> createPropertyControl(Composite parent) {
 		/*
 		 * When a PropertyAccessor object is created, it is provided with an
