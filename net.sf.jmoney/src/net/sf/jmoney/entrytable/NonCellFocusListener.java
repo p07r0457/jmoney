@@ -31,6 +31,7 @@ class NonCellFocusListener<R extends RowControl> extends FocusAdapter {
 		this.focusCellTracker = focusCellTracker;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public NonCellFocusListener(R rowControl) {
 		this.rowControl = rowControl;
 		this.selectionTracker = rowControl.selectionTracker;
@@ -72,6 +73,7 @@ class NonCellFocusListener<R extends RowControl> extends FocusAdapter {
 		 * or revert the focus to the original cell.
 		 */
 		rowControl.getDisplay().asyncExec(new Runnable() {
+			@SuppressWarnings("null")
 			public void run() {
 				boolean success = selectionTracker.setSelection(rowControl, /*TODO: cellBlock*/null);
 				if (success) {
