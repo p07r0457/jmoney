@@ -208,6 +208,7 @@ public class ChangeManager {
 		private KeyProxy objectKeyProxy;
 		private ExtendablePropertySet<? extends E> actualPropertySet;
 
+		@SuppressWarnings("unchecked")
 		ChangeEntry_Delete(KeyProxy parentKeyProxy,
 				ListPropertyAccessor<E> owningListProperty, E oldObject) {
 			this.parentKeyProxy = parentKeyProxy;
