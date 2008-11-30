@@ -38,7 +38,6 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
-import net.sf.jmoney.model2.SessionChangeListener;
 import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.swt.SWT;
@@ -85,15 +84,6 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 	private class PropertiesCellControl implements IPropertyControl<Entry> {
 		private Composite propertiesControl;
 		private Entry entry = null;
-		
-		private SessionChangeListener amountChangeListener = new SessionChangeAdapter() {
-			@Override
-			public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
-				if (changedObject.equals(entry) && changedProperty == EntryInfo.getAmountAccessor()) {
-//					setControlContent();
-				}
-			}
-		};
 		
 		final private Color labelColor;
 		final private Color controlColor;
@@ -174,6 +164,7 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 			}
 		}
 
+		@SuppressWarnings("unchecked")
 		private void createPropertyControl(Composite parent, ScalarPropertyAccessor accessor) {
 			Composite composite = new Composite(parent, SWT.NONE);
 			composite.setLayout(new GridLayout(2, false));
@@ -196,17 +187,15 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 					return propertyControl.getControl();
 				}
 
+				@Override
 				public void load(Entry data) {
 					propertyControl.load(data);
 				}
 
+				@Override
 				public void save() {
 					propertyControl.save();
 //					fireUserChange(coordinator);
-				}
-
-				public void setFocusListener(FocusListener controlFocusListener) {
-					// Nothing to do???
 				}
 
 				@Override

@@ -295,10 +295,6 @@ public class TransactionDialog extends Dialog {
     				propertyControl.save();
     			}
 
-    			public void setFocusListener(FocusListener controlFocusListener) {
-    				// Nothing to do
-    			}
-
     			@Override
     			public void setSelected() {
     				propertyControl.getControl().setBackground(RowControl.selectedCellColor);
@@ -387,7 +383,9 @@ public class TransactionDialog extends Dialog {
 								
 								// TODO: Should we be restoring selection to the cell that needs correcting?
 								cellTracker.setFocusCell(previousFocus);
-								previousFocus.getControl().setFocus();
+								if (previousFocus != null) {
+								    previousFocus.getControl().setFocus();
+								}
 							}
 						}
 					});
