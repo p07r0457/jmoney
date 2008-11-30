@@ -115,6 +115,7 @@ class EntryControls {
 		/**
 		 * @param entry
 		 */
+		@SuppressWarnings("unchecked")
 		public void load(Entry entry) {
 			propertyControl.load(entry);
 		}
