@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 
-import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.AccountInfo;
 import net.sf.jmoney.model2.CommodityInfo;
 import net.sf.jmoney.model2.Entry;
@@ -40,18 +39,11 @@ import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.pages.entries.EntryRowSelectionListener;
-import net.sf.jmoney.transactionDialog.TransactionDialog;
-import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.core.runtime.Assert;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.forms.widgets.FormToolkit;
@@ -159,6 +151,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 	 * shared with other tables (thus forcing a single row selection for two
 	 * or more tables).
 	 */
+	@SuppressWarnings("unchecked")
 	public EntriesTable(Composite parent, FormToolkit toolkit, Block rootBlock, 
 			final IEntriesContent entriesContent, IRowProvider<T> rowProvider, final Session session, IndividualBlock<EntryData, ?> defaultSortColumn, final RowSelectionTracker<? extends BaseEntryRowControl> rowTracker) {
 		super(parent, SWT.NONE);
@@ -963,36 +956,11 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 		selectionListeners.add(tableSelectionListener);
 	}
 
-	/**
-	 * A private utility method for notifying our listeners of
-	 * a selection change event.
-	 * 
-	 * @param event the event to be passed on to the listeners
-	 */
-	private void fireSelectionChanges(EntryData data) {
-		for (EntryRowSelectionListener listener: selectionListeners) {
-			listener.widgetSelected(data);
-		}
-	}
-
-	private void fireRowDefaultSelection(EntryData data) {
-		for (EntryRowSelectionListener listener: selectionListeners) {
-			listener.widgetDefaultSelected(data);
-		}
-	}
-
 	/* (non-Javadoc)
 	 * @see net.sf.jmoney.pages.entries.IEntriesControl#getControl()
 	 */
 	public Control getControl() {
 		return table;
-	}
-
-	private void showMessage (String message) {
-		MessageDialog.openWarning(
-				table.getShell(),
-				Messages.EntriesTable_WarningTitle,
-				message);
 	}
 
 	// TODO: This class is duplicated in Header.
