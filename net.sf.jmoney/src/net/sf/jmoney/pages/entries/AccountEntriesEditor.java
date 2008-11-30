@@ -21,7 +21,6 @@ import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.NodeEditorInput;
 
-import org.eclipse.core.commands.IHandler;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -237,7 +236,7 @@ public class AccountEntriesEditor extends EditorPart {
         form.setText(Messages.EntriesPage_Text);
 	}
 	
-	private void init(IMemento memento) {
+//	private void init(IMemento memento) {
 //		if (memento != null) {
 //			IMemento [] templateMementos = memento.getChildren("template");
 //			for (int i = 0; i < templateMementos.length; i++) {
@@ -247,7 +246,7 @@ public class AccountEntriesEditor extends EditorPart {
 //				}
 //			}
 //		}
-	}
+//	}
 	
 	public void saveState(IMemento memento) {
 //		for (String id: transactionTypes.keySet()) {
