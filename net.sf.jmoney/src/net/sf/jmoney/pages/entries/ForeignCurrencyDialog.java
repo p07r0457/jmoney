@@ -70,6 +70,7 @@ public class ForeignCurrencyDialog {
 
 	private Display display;
 
+	@SuppressWarnings("unchecked")
 	public ForeignCurrencyDialog(Shell parent, EntryData item) {
 
 		this.display = parent.getDisplay();
