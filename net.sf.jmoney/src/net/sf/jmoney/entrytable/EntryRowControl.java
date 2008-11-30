@@ -25,8 +25,6 @@ package net.sf.jmoney.entrytable;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.Transaction;
-import net.sf.jmoney.model2.Transaction.EntryCollection;
 import net.sf.jmoney.pages.entries.ForeignCurrencyDialog;
 
 import org.eclipse.swt.widgets.Composite;
