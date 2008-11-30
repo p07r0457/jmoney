@@ -147,6 +147,7 @@ public class TransactionManager extends DataManager {
 	 * changes to our data
 	 */
 	// TODO: use this flag to ensure that performRefresh is called correctly.
+	@SuppressWarnings("unused")
 	private boolean insideTransaction = false;
 
     /**
@@ -217,6 +218,7 @@ public class TransactionManager extends DataManager {
      * 			of the object in this transaction, or null if the
      * 			given object has been deleted in this transaction 
      */
+    @SuppressWarnings("unchecked")
     public <E extends ExtendableObject> E getCopyInTransaction(final E committedObject) {
     	/*
 		 * As a convenience to the caller, this method accepts null objects. If
@@ -603,6 +605,7 @@ public class TransactionManager extends DataManager {
 	 * 			inserted
 	 * @return the committed version of the object
 	 */
+	@SuppressWarnings("unchecked")
 	private <E extends ExtendableObject> E commitNewObject(final E newObject, ExtendableObject parent, ListPropertyAccessor<E> listAccessor, boolean isDescendentInsert) {
 		ExtendablePropertySet<? extends E> actualPropertySet = listAccessor.getElementPropertySet().getActualPropertySet((Class<? extends E>)newObject.getClass());
 		

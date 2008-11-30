@@ -54,6 +54,7 @@ public class UncommittedListManager<E extends ExtendableObject> extends Vector<E
 	/**
 	 * Create a new extendable object in the list represented by this object.
 	 */
+	@SuppressWarnings("unchecked")
 	public <F extends E> F createNewElement(ExtendablePropertySet<F> propertySet) {
 		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
 		F extendableObject = propertySet.constructDefaultImplementationObject(objectKey, listKey);
@@ -69,6 +70,7 @@ public class UncommittedListManager<E extends ExtendableObject> extends Vector<E
 	 * This method is used only if a nested transaction manager is commitinsg
 	 * its changes into this transaction manager.
 	 */
+	@SuppressWarnings("unchecked")
 	public <F extends E> F createNewElement(ExtendablePropertySet<F> propertySet, IValues values) {
 		UncommittedObjectKey objectKey = new UncommittedObjectKey(transactionManager);
 		F extendableObject = propertySet.constructImplementationObject(objectKey, listKey, values);
