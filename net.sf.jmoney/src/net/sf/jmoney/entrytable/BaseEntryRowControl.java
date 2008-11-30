@@ -45,13 +45,8 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyAdapter;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
-import org.eclipse.swt.events.TraverseEvent;
-import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Point;
@@ -126,35 +121,6 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	 */
 	private boolean isSelected = false;
 
-	/**
-	 * Forward key presses to the parent control
-	 */
-	private KeyListener keyListener = new KeyAdapter() {
-		@Override
-		public void keyPressed(KeyEvent e) {
-			// parent.keyPressed(TableRow.this, e);
-		}
-	};
-
-	/**
-	 * Forward traverse events to the parent control
-	 */
-	private TraverseListener traverseListener = new TraverseListener() {
-		public void keyTraversed(TraverseEvent e) {
-			/*
-			 * FEATURE IN SWT: When SWT needs to resolve a mnemonic
-			 * (accelerator) character, it recursively calls the traverse event
-			 * down all controls in the container hierarchy. If e.doit is false,
-			 * no control has yet matched the mnemonic, and we don't have to do
-			 * anything since we don't do mnemonic matching and no mnemonic has
-			 * matched.
-			 */
-			if (e.doit) {
-				// parent.keyTraversed(TableRow.this, e);
-			}
-		}
-	};
-
 	private PaintListener paintListener = new PaintListener() {
 		public void paintControl(PaintEvent e) {
 			drawBorder(e.gc);
@@ -164,7 +130,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	private ArrayList<IBalanceChangeListener> balanceChangeListeners = new ArrayList<IBalanceChangeListener>();
 
 	public BaseEntryRowControl(final Composite parent, int style,
-			VirtualRowTable rowTable, Block<T, ?> rootBlock,
+			VirtualRowTable<T> rowTable, Block<T, ?> rootBlock,
 			RowSelectionTracker<R> selectionTracker, FocusCellTracker focusCellTracker) {
 		super(parent, style, selectionTracker, focusCellTracker);
 		this.rowTable = rowTable;
@@ -210,8 +176,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 			Color secondaryColor = display
 					.getSystemColor(SWT.COLOR_WIDGET_NORMAL_SHADOW);
 			// Fairly dark gray
-			Color hilightColor = display
-					.getSystemColor(SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW);
+			//Color hilightColor = display
+			//		.getSystemColor(SWT.COLOR_WIDGET_HIGHLIGHT_SHADOW);
 
 			Point controlSize = getSize();
 
