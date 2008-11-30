@@ -23,7 +23,6 @@
 package net.sf.jmoney;
 
 import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 import net.sf.jmoney.resources.Messages;
@@ -114,9 +113,10 @@ public class JMoneyApplication implements IApplication {
         try {
             URL url = new URL("file", null, pathname); //$NON-NLS-1$
             // TODO Lock workspace
-            instanceLoc.setURL(url, false);
-        } catch (MalformedURLException e) {
+            instanceLoc.set(url, false);
+        } catch (Exception e) {
+        	JMoneyPlugin.log(e);
             MessageDialog.openError(shell, Messages.JMoneyApplication_InvalidWorkspaceTitle, Messages.JMoneyApplication_InvalidWorkspaceMessage + pathname);
-        }
+		}
     }
 }
