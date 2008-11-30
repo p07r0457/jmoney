@@ -1,14 +1,8 @@
 package net.sf.jmoney.navigator;
 
-import java.util.Vector;
-
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.CurrentSessionChangeListener;
 import net.sf.jmoney.model2.DatastoreManager;
-import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.PageEntry;
-import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.resources.Messages;
@@ -38,25 +32,13 @@ public class JMoneyCommonNavigator extends CommonNavigator {
 	private Composite composite;
 	private StackLayout stackLayout;
 	
-	private Session session;
-
 	@Override	
 	public void init(IViewSite site, IMemento memento) throws PartInitException {
 		init(site);
 
-		if (memento != null) {
-			// Restore any session that was open when the workbench
-			// was last closed.
-			session = JMoneyPlugin.openSession(memento.getChild("session")); //$NON-NLS-1$
-		} else {
-			session = null;
-		}
-
-		// init is called before createPartControl,
-		// and the objects that need the memento are not
-		// created until createPartControl is called so we save
-		// the memento now for later use.
-		// this.memento = memento; 
+		// Restore any session that was open when the workbench
+		// was last closed.
+		JMoneyPlugin.openSession(memento.getChild("session")); //$NON-NLS-1$
 	}
 
 	@Override	
@@ -100,30 +82,6 @@ public class JMoneyCommonNavigator extends CommonNavigator {
 		JMoneyPlugin.getDefault().addSessionChangeListener(new MyCurrentSessionChangeListener(), getCommonViewer().getControl());
 	}
 	
-	/**
-	 * Given a node in the navigation view, returns an array
-	 * containing the page factories that create each tabbed
-	 * page in the editor.
-	 * <P>
-	 * If there are no pages to be displayed for this node
-	 * then an empty array is returned and no editor is opened
-	 * for the node.
-	 * 
-	 * @param selectedObject
-	 * @return a vector of elements of type IBookkeepingPage
-	 */
-	private Vector<PageEntry> getPageFactories(Object selectedObject) {
-		if (selectedObject instanceof TreeNode) {
-			return ((TreeNode)selectedObject).getPageFactories();
-		} else if (selectedObject instanceof ExtendableObject) {
-			ExtendableObject extendableObject = (ExtendableObject)selectedObject;
-			ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(extendableObject.getClass());
-			return propertySet.getPageFactories();
-		} else {
-			return new Vector<PageEntry>();
-		}
-	}
-
 	@Override
 	protected IAdaptable getInitialInput() {
 		return TreeNode.getInvisibleRoot();
@@ -142,8 +100,6 @@ public class JMoneyCommonNavigator extends CommonNavigator {
 				// This is not an immediate problem but may become
 				// a problem as JMoney is further developed.
 			}
-
-			JMoneyCommonNavigator.this.session = newSession;
 
 			updateTopControl();
 			composite.layout(false);
