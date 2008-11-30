@@ -22,8 +22,6 @@
 
 package net.sf.jmoney.entrytable;
 
-import java.util.Comparator;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
@@ -70,20 +68,4 @@ public class Header<T> extends Composite {
         return true;
 	}
 
-	// TODO: This class is duplicated in EntriesTable.
-	// Need to get sorting working.
-	private class RowComparator implements Comparator<EntryData> {
-		private Comparator<EntryData> cellComparator;
-		private boolean ascending;
-		
-		RowComparator(IndividualBlock<EntryData, EntryRowControl> sortProperty, boolean ascending) {
-			this.cellComparator = sortProperty.getComparator();
-			this.ascending = ascending;
-		}
-		
-		public int compare(EntryData entryData1, EntryData entryData2) {
-			int result = cellComparator.compare(entryData1, entryData2);
-			return ascending ? result : -result;
-		}
-	}
 }
