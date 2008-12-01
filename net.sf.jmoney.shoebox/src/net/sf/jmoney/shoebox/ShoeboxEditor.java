@@ -65,7 +65,7 @@ public class ShoeboxEditor extends EditorPart {
 	
 	private Session session;
 	
-    private EntriesTable recentlyAddedEntriesControl;
+    private EntriesTable<EntryData> recentlyAddedEntriesControl;
     private IEntriesContent recentEntriesTableContents = null;
     
 	Collection<IObjectKey> ourEntryList = new Vector<IObjectKey>();
@@ -120,6 +120,7 @@ public class ShoeboxEditor extends EditorPart {
 		// Will never be called because editor is never dirty and 'save as' is not allowed anyway.
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void createPartControl(Composite parent) {
 		
@@ -289,9 +290,9 @@ public class ShoeboxEditor extends EditorPart {
 		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.shoebox.templates")) {
 			if (element.getName().equals("template")) {
 
-				String label = element.getAttribute("label");
+//				String label = element.getAttribute("label");
 				String id = element.getAttribute("id");
-				String position = element.getAttribute("position");
+//				String position = element.getAttribute("position");
 				String fullId = element.getNamespaceIdentifier() + "." + id;
 
 				try {
@@ -301,10 +302,10 @@ public class ShoeboxEditor extends EditorPart {
 					tabItem.setText(transactionType.getDescription());
 					tabItem.setControl(transactionType.createControl(tabFolder, true, null, ourEntryList));
 
-					int positionNumber = 800;
-					if (position != null) {
-						positionNumber = Integer.parseInt(position);
-					}
+//					int positionNumber = 800;
+//					if (position != null) {
+//						positionNumber = Integer.parseInt(position);
+//					}
 
 					transactionTypes.put(fullId, transactionType);
 
@@ -318,18 +319,6 @@ public class ShoeboxEditor extends EditorPart {
         return tabFolder;
 	}
 
-	private void init(IMemento memento) {
-		if (memento != null) {
-			IMemento [] templateMementos = memento.getChildren("template");
-			for (int i = 0; i < templateMementos.length; i++) {
-				ITransactionTemplate transactionType = transactionTypes.get(templateMementos[i].getID());
-				if (transactionType != null) {
-					transactionType.init(templateMementos[i]);
-				}
-			}
-		}
-	}
-	
 	public void saveState(IMemento memento) {
 		for (String id: transactionTypes.keySet()) {
 			ITransactionTemplate transactionType = transactionTypes.get(id);
