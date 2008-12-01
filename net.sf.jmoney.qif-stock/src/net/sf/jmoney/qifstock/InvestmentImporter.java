@@ -293,12 +293,12 @@ public class InvestmentImporter implements IQifImporter {
 				
 		        Long quantity = stock.parse(qifTransaction.getQuantity());
 
-		        int ratio = 1;
-		        if (qifTransaction.getMemo().equals("2:1 stock split")) {
-		        	ratio = 2;
-		        }
-		        
-	        	StockEntry firstEntryAsStock = firstEntry.getExtension(StockEntryInfo.getPropertySet(), true);
+//		        int ratio = 1;
+//		        if (qifTransaction.getMemo().equals("2:1 stock split")) {
+//		        	ratio = 2;
+//		        }
+
+		        StockEntry firstEntryAsStock = firstEntry.getExtension(StockEntryInfo.getPropertySet(), true);
 	        	firstEntryAsStock.setStock(stock);
 	        	firstEntryAsStock.setStockChange(true);
 	        	firstEntryAsStock.setAmount(quantity);

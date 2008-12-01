@@ -6,3 +6,4 @@ Bundle-Version: 1.0.0
 Require-Bundle: net.sf.jmoney,
  net.sf.jmoney.qif,
  net.sf.jmoney.stocks
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
