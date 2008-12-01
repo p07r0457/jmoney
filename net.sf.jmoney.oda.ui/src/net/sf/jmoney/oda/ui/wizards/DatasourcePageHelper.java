@@ -62,13 +62,16 @@ public class DatasourcePageHelper
     }
     
     Properties collectCustomProperties(Properties properties) {
-        if( properties == null )
-            properties = new Properties();
+    	Properties result = properties;
+
+    	if (properties == null) {
+    		result = new Properties();
+    	}
         
         // Normally the properties would be set from the controls here,
         // but this datasource has no properties.
 
-        return properties;
+        return result;
     }
     
     void initCustomControl(Properties profileProperties) {

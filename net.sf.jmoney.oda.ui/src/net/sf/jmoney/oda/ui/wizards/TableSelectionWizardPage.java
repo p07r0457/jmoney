@@ -396,7 +396,7 @@ public class TableSelectionWizardPage extends DataSetWizardPage
 			} else {
 				TreeItem rootItem = new TreeItem(objectClassTree, SWT.NONE);
 				rootItem.setData(startingPoint);
-				rootItem.setText("The " + startingPoint.getPropertySet().getObjectDescription() + " object");
+				rootItem.setText("The " + newStartingPropertySet.getObjectDescription() + " object");
 				
 				for (ListPropertyAccessor childListAccessor: newStartingPropertySet.getListProperties3()) {
 					TreeItem item = new TreeItem(rootItem, SWT.NONE);
@@ -575,26 +575,6 @@ public class TableSelectionWizardPage extends DataSetWizardPage
 		}
 	}
 
-	private class TreeItemWrapper {
-		/**
-		 * The wrapped tree item, or null if this object represents
-		 * the root of the tree
-		 */
-		TreeItem item;
-	
-		TreeItemWrapper(TreeItem item) {
-			this.item = item;
-		}
-		
-		TreeItem[] getItems() {
-			if (item != null) {
-				return item.getItems();
-			} else {
-				return objectClassTree.getItems(); 
-			}
-		}
-	}
-	
 	private TreeItem findTreeItem(IMemento itemListMemento) {
 
 		IMemento child = itemListMemento.getChild("listProperty");
