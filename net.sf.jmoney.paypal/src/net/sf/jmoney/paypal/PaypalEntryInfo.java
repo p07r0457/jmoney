@@ -75,9 +75,7 @@ public class PaypalEntryInfo implements IPropertySetInfo {
 	private static ScalarPropertyAccessor<String> merchantEmailAccessor;
 	private static ScalarPropertyAccessor<URL> itemUrlAccessor;
 	
-	public PropertySet registerProperties() {
-		PaypalEntryInfo.propertySet = propertySet;
-
+	public PropertySet<PaypalEntry> registerProperties() {
 		IPropertyControlFactory<String> textPropertyControlFactory = new TextControlFactory();
 		IPropertyControlFactory<URL> urlPropertyControlFactory = new UrlControlFactory();
 		

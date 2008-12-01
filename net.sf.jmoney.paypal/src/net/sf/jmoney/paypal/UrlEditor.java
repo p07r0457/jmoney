@@ -53,6 +53,7 @@ public class UrlEditor implements IPropertyControl<ExtendableObject> {
     private Text propertyControl;
 
     private SessionChangeListener amountChangeListener = new SessionChangeAdapter() {
+		@SuppressWarnings("unchecked")
 		@Override
 		public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
 			if (changedObject.equals(extendableObject) && changedProperty == propertyAccessor) {

@@ -60,6 +60,7 @@ public class PaypalAccountInfo implements IPropertySetInfo {
 
 	private static ExtendablePropertySet<PaypalAccount> propertySet = PropertySet.addDerivedFinalPropertySet(PaypalAccount.class, Messages.PaypalAccountInfo_ObjectDescription, CurrencyAccountInfo.getPropertySet(), new IExtendableObjectConstructors<PaypalAccount>() { //$NON-NLS-1$
 
+		@SuppressWarnings("unchecked")
 		public PaypalAccount construct(IObjectKey objectKey, ListKey parentKey) {
 			return new PaypalAccount(
 					objectKey, 
@@ -67,6 +68,7 @@ public class PaypalAccountInfo implements IPropertySetInfo {
 			);
 		}
 
+		@SuppressWarnings("unchecked")
 		public PaypalAccount construct(IObjectKey objectKey,
 				ListKey parentKey, IValues values) {
 			return new PaypalAccount(
@@ -92,7 +94,7 @@ public class PaypalAccountInfo implements IPropertySetInfo {
 	private static ReferencePropertyAccessor<IncomeExpenseAccount> saleAndPurchaseAccountAccessor = null;
 	private static ReferencePropertyAccessor<IncomeExpenseAccount> paypalFeesAccountAccessor = null;
 
-    public PropertySet registerProperties() {
+    public PropertySet<PaypalAccount> registerProperties() {
     	
         IReferenceControlFactory<PaypalAccount,BankAccount> bankAccountControlFactory = new AccountControlFactory<PaypalAccount,BankAccount>() {
 			public IObjectKey getObjectKey(PaypalAccount parentObject) {

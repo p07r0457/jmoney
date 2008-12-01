@@ -57,7 +57,7 @@ public class PaypalAccount extends CurrencyAccount {
 	 */
 	public PaypalAccount(
 			IObjectKey objectKey, 
-			ListKey parent,
+			ListKey<?> parent,
 			String name,
 			IListManager<CapitalAccount> subAccounts,
 			String abbreviation,
@@ -86,7 +86,7 @@ public class PaypalAccount extends CurrencyAccount {
 	 */
 	public PaypalAccount(
 			IObjectKey objectKey, 
-			ListKey parent) { 
+			ListKey<?> parent) { 
 		super(objectKey, parent);
 		
 		// Overwrite the default name with our own default name.

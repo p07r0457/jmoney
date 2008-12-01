@@ -177,19 +177,19 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 				String dateString = nextLine[0];
 				String payeeName = nextLine[3];
 				String type = nextLine[4];
-				String status = nextLine[5];
+				//String status = nextLine[5];
 				Long grossAmount = getAmount(nextLine[6]);
 				Long fee = getAmount(nextLine[7]);
 				Long netAmount = getAmount(nextLine[8]);
 				String merchantEmail = nextLine[10];
-				String transactionId = nextLine[11];
+				//String transactionId = nextLine[11];
 				String memo = nextLine[14];
 				long shippingAndHandlingAmount = getAmount(nextLine[16]);
 				long insurance = getAmount(nextLine[17]);
 				long salesTax = getAmount(nextLine[18]);
 				String itemUrlString = nextLine[25];
 				String quantityString = nextLine[32];
-				Long balance = getAmount(nextLine[34]);
+				//Long balance = getAmount(nextLine[34]);
 
 		        DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
 		        Date date;
