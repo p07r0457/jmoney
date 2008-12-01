@@ -1005,10 +1005,6 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		return extendableObject;
 	}
 
-	private <E2 extends ExtendableObject> IListManager<E2> createListManager(DatabaseListKey<E2> listKey) {
-		return new ListManagerCached<E2>(this, listKey, true);
-	}
-
 	/**
 	 * Construct an object with the given property values.
 	 * 
@@ -1160,8 +1156,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				 */
 				Collection<ExtensionPropertySet<?>> nonDefaultExtensions = new Vector<ExtensionPropertySet<?>>();
 				outerLoop: for (ExtensionPropertySet<?> extensionPropertySet: propertySet.getExtensionPropertySets()) {
-					boolean nonDefaultValueFound = false;
-					for (ScalarPropertyAccessor accessor: extensionPropertySet.getScalarProperties1()) {
+					for (@SuppressWarnings("unused") ScalarPropertyAccessor accessor: extensionPropertySet.getScalarProperties1()) {
 						// TODO: Complete this implementation, if it is worth it.  On the other hand, perhaps it
 						// is not unacceptable to always create extensions.
 						if (true) {
@@ -1170,7 +1165,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 							continue outerLoop;
 						}
 					}
-					for (ListPropertyAccessor accessor: extensionPropertySet.getListProperties1()) {
+					for (@SuppressWarnings("unused") ListPropertyAccessor accessor: extensionPropertySet.getListProperties1()) {
 						// For time being, always create an extension if there is a list property in it.
 						nonDefaultExtensions.add(extensionPropertySet);
 						continue outerLoop;
@@ -1279,6 +1274,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * another account (if the account is a sub-account) or may be the
 	 * session.
 	 */
+	@SuppressWarnings("unchecked")
 	<E extends ExtendableObject> DatabaseListKey<? super E> buildParentKey(ResultSet rs, ExtendablePropertySet<E> propertySet) throws SQLException {
 		/* 
 		 * A column exists in this table for each list which can contain objects

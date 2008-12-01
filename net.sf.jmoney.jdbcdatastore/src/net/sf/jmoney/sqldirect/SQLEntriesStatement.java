@@ -4,11 +4,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import net.sf.jmoney.jdbcdatastore.ObjectKey;
 import net.sf.jmoney.jdbcdatastore.SessionManager;
 import net.sf.jmoney.jdbcdatastore.UncachedObjectIterator;
 import net.sf.jmoney.model2.Entry;
