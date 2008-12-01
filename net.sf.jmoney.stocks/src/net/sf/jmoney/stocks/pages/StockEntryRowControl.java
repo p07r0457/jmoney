@@ -35,8 +35,6 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	 */
 	private boolean withholdingTaxManuallyEdited = false;
 
-	private boolean quantityManuallyEdited = false;
-
 	/**
 	 * The share price currently shown to the user, or null if
 	 * this is a new entry and no share price has been entered.
@@ -49,8 +47,6 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	 */
 	private BigDecimal sharePrice;
 
-	private boolean sharePriceManuallyEdited = false;
-
 	private boolean commissionManuallyEdited = false;
 
 	private boolean tax1RatesManuallyEdited = false;
@@ -59,6 +55,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 
 	private boolean netAmountManuallyEdited = false;
 
+	@SuppressWarnings("unchecked")
 	public StockEntryRowControl(final Composite parent, int style, VirtualRowTable rowTable, Block<StockEntryData, ? super StockEntryRowControl> rootBlock, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style, rowTable, rootBlock, selectionTracker, focusCellTracker);
 		init(this, this, rootBlock);
@@ -120,10 +117,6 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 
 	@Override
 	public void amountChanged() {
-		
-		StockAccount account = (StockAccount)getUncommittedEntryData().getEntry().getAccount();
-		
-		
 		Entry entry = uncommittedEntryData.getEntry();
 		switch (uncommittedEntryData.getTransactionType()) {
 		case Buy:
@@ -169,7 +162,6 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 
 	public void quantityChanged() {
 		assert(uncommittedEntryData.isPurchaseOrSale());
-		quantityManuallyEdited = true;
 		
 		/*
 		 * If the share price has been entered then we can calculate the gross amount
@@ -230,7 +222,6 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	public void sharePriceChanged(BigDecimal sharePrice) {
 		assert(uncommittedEntryData.isPurchaseOrSale());
 		this.sharePrice = sharePrice;
-		sharePriceManuallyEdited = true;
 
 		/*
 		 * If we know the share quantity then we can calculate the gross amount

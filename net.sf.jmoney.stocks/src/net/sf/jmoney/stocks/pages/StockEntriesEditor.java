@@ -1,36 +1,14 @@
 package net.sf.jmoney.stocks.pages;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.Vector;
-
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.entrytable.EntryData;
-import net.sf.jmoney.entrytable.IndividualBlock;
-import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
-import net.sf.jmoney.entrytable.PropertyBlock;
-import net.sf.jmoney.entrytable.RowControl;
-import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CurrencyAccount;
-import net.sf.jmoney.model2.Entry;
-import net.sf.jmoney.model2.EntryInfo;
-import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.model2.TransactionInfo;
-import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.stocks.model.StockAccount;
 import net.sf.jmoney.views.NodeEditorInput;
 
-import org.eclipse.core.commands.IHandler;
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
-import org.eclipse.ui.IMemento;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;

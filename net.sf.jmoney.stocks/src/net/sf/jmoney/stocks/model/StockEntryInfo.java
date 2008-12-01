@@ -82,8 +82,6 @@ public class StockEntryInfo implements IPropertySetInfo {
 	private static ScalarPropertyAccessor<Date> bargainDateAccessor;
 	
 	public PropertySet registerProperties() {
-		StockEntryInfo.propertySet = propertySet;
-
 		IPropertyControlFactory<Boolean> booleanPropertyControlFactory = new CheckBoxControlFactory();
 
 		IReferenceControlFactory<StockEntry,Stock> stockPropertyControlFactory = new StockControlFactory<StockEntry>() {

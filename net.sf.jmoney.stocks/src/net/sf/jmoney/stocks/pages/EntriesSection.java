@@ -81,6 +81,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.SectionPart;
+import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.handlers.IHandlerService;
@@ -100,7 +101,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     private Block<StockEntryData, StockEntryRowControl> rootBlock;
     
     public EntriesSection(Composite parent, StockAccount account, FormToolkit toolkit, IHandlerService handlerService) {
-        super(parent, toolkit, Section.TITLE_BAR);
+        super(parent, toolkit, ExpandableComposite.TITLE_BAR);
         getSection().setText("All Entries");
         this.account = account;
         this.handlerService = handlerService;
@@ -191,19 +192,6 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					public void save() {
 						// TODO Auto-generated method stub
 						
-					}
-
-					public void setFocusListener(FocusListener controlFocusListener) {
-						// TODO Auto-generated method stub
-						
-					}
-
-					public void setSelected() {
-						control.setBackground(RowControl.selectedCellColor);
-					}
-
-					public void setUnselected() {
-						control.setBackground(null);
 					}
 				};
 			}
@@ -370,10 +358,6 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						coordinator.sharePriceChanged(new BigDecimal(amount).movePointLeft(4));
 					}
 
-					public void setFocusListener(FocusListener controlFocusListener) {
-						control.addFocusListener(controlFocusListener);
-					}
-
 					public void setSelected() {
 						control.setBackground(RowControl.selectedCellColor);
 					}
@@ -445,10 +429,6 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						entry.setAmount(quantity);
 						
 						coordinator.quantityChanged();
-					}
-
-					public void setFocusListener(FocusListener controlFocusListener) {
-						control.addFocusListener(controlFocusListener);
 					}
 
 					public void setSelected() {

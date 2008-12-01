@@ -27,7 +27,6 @@ import net.sf.jmoney.model2.Currency;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.DialogMessageArea;
 import org.eclipse.jface.dialogs.IDialogConstants;
-import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
@@ -38,7 +37,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.Text;
 
 /**
  * An input dialog that allows the user to configure the methods for importing statement data
@@ -62,11 +60,6 @@ class RatesDialog extends Dialog {
 	 * Ok button widget.
 	 */
 	private Button okButton;
-
-	/**
-	 * Error message label widget.
-	 */
-	private Text errorMessageText;
 
 	Image errorImage;
 
@@ -172,22 +165,20 @@ class RatesDialog extends Dialog {
 	 *            the error message, or <code>null</code> to clear
 	 */
 	public void updateErrorMessage() {
-		String errorMessage = null;
-
 		// TODO:
 	
-		if (errorMessage == null) {
+//		if (errorMessage == null) {
 			messageArea.clearErrorMessage();
-		} else {
-			messageArea.updateText(errorMessage, IMessageProvider.ERROR);
-		}
+//		} else {
+//			messageArea.updateText(errorMessage, IMessageProvider.ERROR);
+//		}
 		
 //		errorMessageText.setText(errorMessage == null ? "" : errorMessage); //$NON-NLS-1$
 
 		// If called during createDialogArea, the okButton
 		// will not have been created yet.
 		if (okButton != null) {
-			okButton.setEnabled(errorMessage == null);
+			okButton.setEnabled(true);
 		}
 //		errorMessageText.getParent().update();
 	}

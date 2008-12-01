@@ -28,7 +28,7 @@ import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IPropertyControl;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
-import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -71,7 +71,7 @@ public class RatesEditor implements IPropertyControl<ExtendableObject> {
 
 				
 				RatesDialog dialog = new RatesDialog(propertyControl.getShell(), title, account.getPropertyValue(ratesPropertyAccessor), account.getCurrency());
-				if (dialog.open() == Dialog.OK) {
+				if (dialog.open() == Window.OK) {
 					account.setPropertyValue(ratesPropertyAccessor, dialog.getRates());
 				}
 			}

@@ -31,6 +31,7 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.stocks.wizards.NewStockWizard;
 
+import org.eclipse.jface.window.Window;
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyAdapter;
@@ -145,7 +146,7 @@ public class StockControl<A extends Stock> extends Composite {
 				WizardDialog dialog = new WizardDialog(shell, wizard);
 				dialog.setPageSize(600, 300);
 				int result = dialog.open();
-				if (result == WizardDialog.OK) {
+				if (result == Window.OK) {
 					/*
 					 * Having created the new stock, set it as the
 					 * selected stock in this control.
