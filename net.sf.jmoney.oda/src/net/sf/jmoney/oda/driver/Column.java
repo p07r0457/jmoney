@@ -7,14 +7,12 @@ public abstract class Column {
 	String displayName;
 	Class classOfValueObject;
 	boolean isNullAllowed;
-	int unitMultiplier;
 	
-	public Column(String name, String displayName, Class classOfValueObject, boolean isNullAllowed/*, int unitMultiplier*/) {
+	public Column(String name, String displayName, Class classOfValueObject, boolean isNullAllowed) {
 		this.name = name;
 		this.displayName = displayName;
 		this.classOfValueObject = classOfValueObject;
 		this.isNullAllowed = isNullAllowed;
-		this.unitMultiplier = unitMultiplier;
 	}
 
 	public String getName() {
