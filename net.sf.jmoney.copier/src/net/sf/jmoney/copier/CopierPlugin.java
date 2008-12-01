@@ -174,11 +174,11 @@ public class CopierPlugin extends AbstractUIPlugin {
     	for (ExtensionPropertySet<?> extensionPropertySet: oldObject.getExtensions()) {
     		for (PropertyAccessor propertyAccessor: extensionPropertySet.getProperties1()) {
     			if (propertyAccessor.isScalar()) {
-					ScalarPropertyAccessor<?> scalarAccessor = (ScalarPropertyAccessor)propertyAccessor;
+					ScalarPropertyAccessor<?> scalarAccessor = (ScalarPropertyAccessor<?>)propertyAccessor;
 					copyScalarProperty(scalarAccessor, oldObject, newObject, objectMap);
 				} else {
 					// Property is a list property.
-					ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor)propertyAccessor;
+					ListPropertyAccessor<?> listAccessor = (ListPropertyAccessor<?>)propertyAccessor;
 					copyList(newObject, oldObject, listAccessor, objectMap);
 				}
     		}
@@ -194,6 +194,7 @@ public class CopierPlugin extends AbstractUIPlugin {
     	}
     }
 
+    @SuppressWarnings("unchecked")
     private <V> void copyScalarProperty(ScalarPropertyAccessor<V> propertyAccessor, ExtendableObject oldObject, ExtendableObject newObject, Map objectMap) {
     		V oldValue = oldObject.getPropertyValue(propertyAccessor);
     		V newValue;
@@ -208,6 +209,7 @@ public class CopierPlugin extends AbstractUIPlugin {
 					newValue);
     }
     
+    @SuppressWarnings("unchecked")
     private <E extends ExtendableObject> void copyList(ExtendableObject newParent, ExtendableObject oldParent, ListPropertyAccessor<E> listAccessor, Map<Object, Object> objectMap) {
 		ObjectCollection<E> newList = newParent.getListPropertyValue(listAccessor);
 		for (E oldSubObject: oldParent.getListPropertyValue(listAccessor)) {
