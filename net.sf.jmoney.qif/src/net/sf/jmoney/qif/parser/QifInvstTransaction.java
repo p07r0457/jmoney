@@ -40,7 +40,6 @@ public class QifInvstTransaction {
 	private String price;
 	private String quantity;
 	private BigDecimal commission;
-	private String type;
 	private String amountTrans;
 	private List<QifSplitTransaction> splits = new ArrayList<QifSplitTransaction>();
 	private List<String> address = new ArrayList<String>();
@@ -211,11 +210,6 @@ public class QifInvstTransaction {
 	public String getMemo() {
 		return memo;
 	}
-
-	// TODO: remove type?
-//	public String getType() {
-//		return type;
-//	}
 
 	/**
 	 * 

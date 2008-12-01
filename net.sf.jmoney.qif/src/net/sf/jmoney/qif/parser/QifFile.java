@@ -43,6 +43,7 @@ public class QifFile {
 	 */
 	private QifDateFormat dateFormat;
 
+	@SuppressWarnings("unused")
 	private boolean autoSwitch = false;
 	
 	private File file;

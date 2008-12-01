@@ -170,6 +170,7 @@ public class QifExportWizard extends Wizard implements IImportWizard {
 	    }
 	}
 
+	@SuppressWarnings("unused")
 	private void exportAccount(CapitalAccount capitalAccount, File file) {
 		if (!(capitalAccount instanceof CurrencyAccount)) {
 			// TODO: process other account types
