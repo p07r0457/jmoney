@@ -206,18 +206,13 @@ items to an existing menu or toolbar.
       </page>
    </extension>
 
-   <extension
-         point="org.eclipse.ui.views">
-      <category
-            name="JMoney Basic"
-            id="net.sf.jmoney.viewCategory">
-      </category>
+   <extension 
+   		 point="org.eclipse.ui.views">
       <view
+            id="net.sf.jmoney.views.NavigationView"
             name="Navigation"
             icon="icons/accounts.gif"
-            category="net.sf.jmoney.viewCategory"
-            class="net.sf.jmoney.views.NavigationView"
-            id="net.sf.jmoney.views.NavigationView">
+            class="net.sf.jmoney.views.NavigationView">
       </view>
    </extension>
 
