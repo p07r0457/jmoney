@@ -49,14 +49,12 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.part.EditorPart;
 
 public class ShoeboxEditor extends EditorPart {
@@ -78,7 +76,7 @@ public class ShoeboxEditor extends EditorPart {
 	 * remains usable for the rest of the time that this page
 	 * exists.
 	 */
-	private TransactionManager transactionManager = null;
+//	private TransactionManager transactionManager = null;
 
     private Block<EntryData, EntryRowControl> rootBlock;
     
@@ -96,7 +94,7 @@ public class ShoeboxEditor extends EditorPart {
 		DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
 		session = sessionManager.getSession();
 
-        transactionManager = new TransactionManager(sessionManager);
+//        transactionManager = new TransactionManager(sessionManager);
 	}
 
 	@Override
