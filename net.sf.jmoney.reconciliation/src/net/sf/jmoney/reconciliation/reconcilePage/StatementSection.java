@@ -396,7 +396,7 @@ public class StatementSection extends SectionPart {
 		
 		// Create the table control.
 	    IRowProvider rowProvider = new ReusableRowProvider(rootBlock);
-        fReconciledEntriesControl = new EntriesTable<EntryData>(container, toolkit, rootBlock, reconciledTableContents, rowProvider, fPage.getAccount().getSession(), transactionDateColumn, rowTracker) {
+        fReconciledEntriesControl = new EntriesTable<EntryData>(container, rootBlock, reconciledTableContents, rowProvider, fPage.getAccount().getSession(), transactionDateColumn, rowTracker) {
 			@Override
 			protected EntryData createEntryRowInput(Entry entry) {
 				return new EntryData(entry, session.getDataManager());

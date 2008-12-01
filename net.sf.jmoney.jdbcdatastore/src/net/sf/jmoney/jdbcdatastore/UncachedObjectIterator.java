@@ -47,7 +47,7 @@ import net.sf.jmoney.model2.ExtendablePropertySet;
  * 
  * @author Nigel Westbury
  */
-class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> {
+public class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> {
 	private Statement stmt;
 	private ResultSet resultSet;
 	private ExtendablePropertySet<E> propertySet;
@@ -83,7 +83,7 @@ class UncachedObjectIterator<E extends ExtendableObject> implements Iterator<E> 
 	 * @param sessionManager
 	 * @throws SQLException
 	 */
-	UncachedObjectIterator(ResultSet resultSet, ExtendablePropertySet<E> propertySet, DatabaseListKey<? super E> listKey, SessionManager sessionManager) {
+	public UncachedObjectIterator(ResultSet resultSet, ExtendablePropertySet<E> propertySet, DatabaseListKey<? super E> listKey, SessionManager sessionManager) {
 		this.propertySet = propertySet;
 		this.listKey = listKey;
 		this.sessionManager = sessionManager;

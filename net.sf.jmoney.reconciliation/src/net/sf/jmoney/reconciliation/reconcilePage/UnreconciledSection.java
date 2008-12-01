@@ -300,7 +300,7 @@ public class UnreconciledSection extends SectionPart {
 
 		// Create the table control.
 	    IRowProvider rowProvider = new ReusableRowProvider(rootBlock);
-		fUnreconciledEntriesControl = new EntriesTable<EntryData>(getSection(), toolkit, rootBlock, unreconciledTableContents, rowProvider, editor.getAccount().getSession(), transactionDateColumn, rowTracker) {
+		fUnreconciledEntriesControl = new EntriesTable<EntryData>(getSection(), rootBlock, unreconciledTableContents, rowProvider, editor.getAccount().getSession(), transactionDateColumn, rowTracker) {
 			@Override
 			protected EntryData createEntryRowInput(Entry entry) {
 				return new EntryData(entry, session.getDataManager());

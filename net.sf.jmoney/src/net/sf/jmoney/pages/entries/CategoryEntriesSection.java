@@ -132,7 +132,7 @@ public class CategoryEntriesSection extends SectionPart implements IEntriesConte
 
 		// Create the table control.
 	    IRowProvider<EntryData> rowProvider = new ReusableRowProvider(rootBlock);
-		fEntriesControl = new EntriesTable<EntryData>(getSection(), toolkit, rootBlock, this, rowProvider, account.getSession(), transactionDateColumn, new RowSelectionTracker<EntryRowControl>()) {
+		fEntriesControl = new EntriesTable<EntryData>(getSection(), rootBlock, this, rowProvider, account.getSession(), transactionDateColumn, new RowSelectionTracker<EntryRowControl>()) {
 			@Override
 			protected EntryData createEntryRowInput(Entry entry) {
 				return new EntryData(entry, session.getDataManager());

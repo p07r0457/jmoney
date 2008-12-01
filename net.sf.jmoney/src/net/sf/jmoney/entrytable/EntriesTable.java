@@ -39,6 +39,7 @@ import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.pages.entries.EntryRowSelectionListener;
+import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.swt.SWT;
@@ -46,7 +47,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.forms.widgets.FormToolkit;
 
 /**
  * Class that displays a list of entries in a table. The table contains one row
@@ -151,14 +151,11 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 	 * shared with other tables (thus forcing a single row selection for two
 	 * or more tables).
 	 */
-	@SuppressWarnings("unchecked")
-	public EntriesTable(Composite parent, FormToolkit toolkit, Block rootBlock, 
+	public EntriesTable(Composite parent, Block rootBlock, 
 			final IEntriesContent entriesContent, IRowProvider<T> rowProvider, final Session session, IndividualBlock<EntryData, ?> defaultSortColumn, final RowSelectionTracker<? extends BaseEntryRowControl> rowTracker) {
 		super(parent, SWT.NONE);
 		
 		this.session = session;
-
-		toolkit.adapt(this, true, false);
 
 		GridLayout layout = new GridLayout(1, false);
 		layout.marginWidth = 0;

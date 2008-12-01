@@ -40,7 +40,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Slider;
 
-public class VirtualRowTable<T extends EntryData> extends Composite {
+public class VirtualRowTable<T extends EntryData> extends Composite implements ICompositeTable<T> {
 
 	/** the number of rows in the underlying model */
 	int rowCount;

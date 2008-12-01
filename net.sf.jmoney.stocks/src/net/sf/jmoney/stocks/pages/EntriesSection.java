@@ -696,7 +696,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 		// Create the table control.
 	    IRowProvider<StockEntryData> rowProvider = new StockRowProvider(rootBlock);
-		fEntriesControl = new EntriesTable<StockEntryData>(getSection(), toolkit, rootBlock, this, rowProvider, account.getSession(), transactionDateColumn, rowTracker) {
+		fEntriesControl = new EntriesTable<StockEntryData>(getSection(), rootBlock, this, rowProvider, account.getSession(), transactionDateColumn, rowTracker) {
 			@Override
 			protected StockEntryData createEntryRowInput(Entry entry) {
 				return new StockEntryData(entry, session.getDataManager());

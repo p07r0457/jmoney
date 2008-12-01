@@ -101,7 +101,7 @@ public class ShoeboxEditor extends EditorPart {
 
 	@Override
 	public boolean isDirty() {
-		// Page is never dirty
+		// Editor is never dirty
 		return false;
 	}
 
@@ -122,7 +122,6 @@ public class ShoeboxEditor extends EditorPart {
 
 	@Override
 	public void createPartControl(Composite parent) {
-		FormToolkit toolkit = new FormToolkit(Display.getCurrent());
 		
         recentEntriesTableContents = new IEntriesContent() {
 
@@ -199,13 +198,6 @@ public class ShoeboxEditor extends EditorPart {
 			}
         };
 
-		/**
-		 * topLevelControl is a control with grid layout, 
-		 * with one column of vertical controls.
-		 */
-//        Composite topLevelControl = parent;
-
-        
 		//Create an outer composite for spacing
         ScrolledComposite scrolled = new ScrolledComposite(parent, SWT.V_SCROLL | SWT.H_SCROLL);
 
@@ -216,9 +208,6 @@ public class ShoeboxEditor extends EditorPart {
 				| GridData.GRAB_VERTICAL);
 				
 		scrolled.setLayoutData(scrolledData);
-		
-//		scrolled.setMinWidth(200);
-//		scrolled.setMinHeight(200);
 		
 		Composite topLevelControl = new Composite(scrolled, SWT.NONE);
 		
@@ -262,7 +251,7 @@ public class ShoeboxEditor extends EditorPart {
 		
         // Create the table control.
 	    IRowProvider<EntryData> rowProvider = new ReusableRowProvider(rootBlock);
-        recentlyAddedEntriesControl = new EntriesTable<EntryData>(topLevelControl, toolkit, rootBlock, recentEntriesTableContents, rowProvider, this.session, transactionDateColumn, new RowSelectionTracker()) {
+        recentlyAddedEntriesControl = new EntriesTable<EntryData>(topLevelControl, rootBlock, recentEntriesTableContents, rowProvider, this.session, transactionDateColumn, new RowSelectionTracker()) {
 			@Override
 			protected EntryData createEntryRowInput(Entry entry) {
 				return new EntryData(entry, session.getDataManager());

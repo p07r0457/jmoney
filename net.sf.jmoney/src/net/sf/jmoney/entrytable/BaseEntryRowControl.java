@@ -88,7 +88,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		clip = Applet.newAudioClip(url);
 	}
 
-	private VirtualRowTable<T> rowTable;
+	private ICompositeTable<T> rowTable;
 
 	/**
 	 * The transaction manager used for all changes made in this row. It is
@@ -130,7 +130,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	private ArrayList<IBalanceChangeListener> balanceChangeListeners = new ArrayList<IBalanceChangeListener>();
 
 	public BaseEntryRowControl(final Composite parent, int style,
-			VirtualRowTable<T> rowTable, Block<T, ?> rootBlock,
+			ICompositeTable<T> rowTable, Block<T, ?> rootBlock,
 			RowSelectionTracker<R> selectionTracker, FocusCellTracker focusCellTracker) {
 		super(parent, style, selectionTracker, focusCellTracker);
 		this.rowTable = rowTable;
