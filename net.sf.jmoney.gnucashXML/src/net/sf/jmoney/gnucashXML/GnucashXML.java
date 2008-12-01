@@ -40,12 +40,11 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.BankAccountInfo;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.CapitalAccountInfo;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 import oracle.xml.parser.v2.DOMParser;
@@ -752,6 +751,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
 	 * 
 	 * @author Faucheux
 	 */
+	@SuppressWarnings("unchecked")
 	private void exportTransaction(Transaction transaction) {
 		if (GnucashXMLPlugin.DEBUG)
 			System.out.println("Export transaction " + transaction.hashCode());
@@ -859,6 +859,7 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
 	 * @return a description
 	 * @author Olivier Faucheux
 	 */
+	@SuppressWarnings("unchecked")
 	private String getDescription(Transaction t) {
 		String s = null;
 		Iterator it = t.getEntryCollection().iterator();
