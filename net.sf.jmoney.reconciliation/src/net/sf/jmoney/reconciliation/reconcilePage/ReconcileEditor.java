@@ -74,7 +74,6 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IMemento;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.handlers.IHandlerService;
@@ -115,9 +114,7 @@ public class ReconcileEditor extends EditorPart {
 	
     
 	@Override
-	public void init(IEditorSite site, IEditorInput input)
-			throws PartInitException {
-		
+	public void init(IEditorSite site, IEditorInput input) {
 		setSite(site);
 		setInput(input);
 		
@@ -427,7 +424,7 @@ public class ReconcileEditor extends EditorPart {
          * The common row tracker.  This is used by both tables, so that
          * there is only one selection in the part.
          */
-	    RowSelectionTracker<EntryRowControl> rowTracker = new RowSelectionTracker();
+	    RowSelectionTracker<EntryRowControl> rowTracker = new RowSelectionTracker<EntryRowControl>();
         
         fStatementSection = new StatementSection(containerOfSash, toolkit, this, rowTracker);
 
@@ -468,18 +465,6 @@ public class ReconcileEditor extends EditorPart {
 
 		handler = new OpenTransactionDialogHandler(rowTracker);
 		handlerService.activateHandler("net.sf.jmoney.transactionDetails", handler);		
-	}
-	
-	private void init(IMemento memento) {
-//		if (memento != null) {
-//			IMemento [] templateMementos = memento.getChildren("template");
-//			for (int i = 0; i < templateMementos.length; i++) {
-//				ITransactionTemplate transactionType = transactionTypes.get(templateMementos[i].getID());
-//				if (transactionType != null) {
-//					transactionType.init(templateMementos[i]);
-//				}
-//			}
-//		}
 	}
 	
 	public void saveState(IMemento memento) {

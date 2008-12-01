@@ -106,18 +106,18 @@ public class SimpleElement {
 				+ tagName.length() + 2 + 3 * spaces);
 		appendWhiteSpace(spaces, sb);
 		sb.append("<" + tagName + ">" + newline);
-		spaces += 2;
+		int myspace = spaces + 2;
 		if (!isEmptyText()) {
-			appendWhiteSpace(spaces, sb);
+			appendWhiteSpace(myspace, sb);
 			sb.append(trimString);
-			appendWhiteSpace(spaces, sb);
+			appendWhiteSpace(myspace, sb);
 			sb.append(newline);
 		}
 		for (SimpleElement element : getChildElements()) {
-			sb.append(element.toXMLString(spaces));
+			sb.append(element.toXMLString(myspace));
 		}
-		spaces -= 2;
-		appendWhiteSpace(spaces, sb);
+		myspace -= 2;
+		appendWhiteSpace(myspace, sb);
 		sb.append("</" + tagName + ">" + newline);
 		return sb.toString();
 	}

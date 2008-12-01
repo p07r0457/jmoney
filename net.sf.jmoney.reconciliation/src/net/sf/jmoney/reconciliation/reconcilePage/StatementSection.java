@@ -121,7 +121,8 @@ public class StatementSection extends SectionPart {
     
     long openingBalance = 0;
     
-    public StatementSection(Composite parent, FormToolkit toolkit, ReconcileEditor page, RowSelectionTracker<EntryRowControl> rowTracker) {
+    @SuppressWarnings("unchecked")
+	public StatementSection(Composite parent, FormToolkit toolkit, ReconcileEditor page, RowSelectionTracker<EntryRowControl> rowTracker) {
         super(parent, toolkit, Section.TITLE_BAR);
         getSection().setText("Entries Shown on Statement");
         fPage = page;
@@ -558,7 +559,6 @@ public class StatementSection extends SectionPart {
 		 */
 		Date sourceDate = sourceTransaction.getDate();
 		Date targetDate = targetTransaction.getDate();
-		System.out.println("source date: " + sourceDate.toLocaleString() + ", target date: " + targetDate.toLocaleString());
 		if (sourceDate.compareTo(targetDate) < 0) {
 			targetTransaction.setDate(sourceDate);
 		}

@@ -22,9 +22,7 @@
 
 package net.sf.jmoney.reconciliation.reconcilePage;
 
-import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.views.NodeEditor;
 
 import org.eclipse.ui.IEditorInput;

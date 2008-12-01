@@ -98,6 +98,7 @@ public class UnreconciledSection extends SectionPart {
 
 	ArrayList<CellBlock<EntryData, EntryRowControl>> cellList;
 
+	@SuppressWarnings("unchecked")
 	public UnreconciledSection(Composite parent, FormToolkit toolkit, ReconcileEditor page, RowSelectionTracker rowTracker) {
 		super(parent, toolkit, Section.TITLE_BAR);
 		getSection().setText("Unreconciled Entries");
