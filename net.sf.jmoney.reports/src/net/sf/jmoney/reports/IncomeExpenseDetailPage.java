@@ -395,7 +395,7 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 			params.put("DateToday", dateFormat.format(new Date()));
 			params.put("Page", ReportsPlugin.getResourceString("Report.Page"));
 
-			Collection items = getItems();
+			Collection<Item<?>> items = getItems();
 			if (items.isEmpty()) {
 				MessageDialog dialog =
 					new MessageDialog(
@@ -417,11 +417,11 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 		}
 	}
 
-	private Collection getItems() {
+	@SuppressWarnings("unchecked")
+	private Collection<Item> getItems() {
         Vector<Item> allItems = new Vector<Item>();
-
-        for (Iterator eIt = account.getEntries().iterator(); eIt.hasNext();) {
-            Entry e = (Entry) eIt.next();
+        for (Iterator<Entry> eIt = account.getEntries().iterator(); eIt.hasNext();) {
+            Entry e = eIt.next();
             if (accept(e)) {
                 Item i = new Item(account, e);
                 allItems.add(i);
@@ -448,6 +448,7 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 		return (d.before(toDate) || d.equals(toDate));
 	}
 
+	@SuppressWarnings("unchecked")
 	public class Item implements Comparable {
 
 		private Entry entry;
@@ -514,6 +515,7 @@ public class IncomeExpenseDetailPage implements IBookkeepingPageFactory {
 			return entry.getAccount() == null;
 		}
 
+		@SuppressWarnings("unchecked")
 		public int compareTo(Object o) {
 			Item other = (Item) o;
 			if (noCategory() && other.noCategory())

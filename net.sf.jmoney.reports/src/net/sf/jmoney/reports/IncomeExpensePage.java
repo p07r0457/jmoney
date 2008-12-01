@@ -353,9 +353,10 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 		toField.setDate(toDate);
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void generateReport() {
 		try {
-			Map params = new HashMap();
+			//Map params = new HashMap();
 			
 			/* Parameters are no longer needed because the Java
 			 * code can simply obtain the values while generating
@@ -831,6 +832,7 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	private JRDesignField createField(String name, Class classOfField) {
 		JRDesignField field = new JRDesignField();
 		field.setName(name);
@@ -860,6 +862,7 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 		return variable;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private JRExpression createExpression(Class expressionClass, int expressionNumber) {
 		JRDesignExpression expression = new JRDesignExpression();
 		expression.setValueClassName(expressionClass.getName());
@@ -867,6 +870,7 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 		return expression;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public JasperReport compileReport(JasperDesign jasperDesign, JRCalculator calculator) {
 		Collection brokenRules = JRVerifier.verifyDesign(jasperDesign);
 		if (brokenRules != null && brokenRules.size() > 0)
@@ -906,6 +910,7 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 		return jasperReport;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private Collection getItems() {
 		Vector<Item> allItems = new Vector<Item>();
 		
@@ -964,6 +969,7 @@ public class IncomeExpensePage implements IBookkeepingPageFactory {
 		return (d.before(toDate) || d.equals(toDate));
 	}
 	
+	@SuppressWarnings("unchecked")
 	public class Item implements Comparable {
 		
 		private Account category;

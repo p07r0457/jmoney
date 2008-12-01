@@ -69,19 +69,20 @@ public class IncomeExpenseCalculator extends JRCalculator
     private JRFillVariable variable_BaseCategoryIncome = null;
     private JRFillVariable variable_BaseCategoryExpense = null;
 
-    private Map expressionMap;
+    private Map<Integer, Integer> expressionMap;
 /*    
 	private VerySimpleDateFormat dateFormat =	
 		new VerySimpleDateFormat(ClientPlugin.getDefault().getDateFormat());	
 */
-    public IncomeExpenseCalculator(Map expressionMap) {
+    public IncomeExpenseCalculator(Map<Integer, Integer> expressionMap) {
 		this.expressionMap = expressionMap;
 	}
 
 	/**
      *
      */
-    public void customizedInit(Map pm, Map fm, Map vm)
+    @SuppressWarnings("unchecked")
+	public void customizedInit(Map pm, Map fm, Map vm)
     {
         field_currencyCode = (JRFillField)fm.get("currencyCode");
         field_baseCategory = (JRFillField)fm.get("baseCategory");

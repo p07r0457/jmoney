@@ -56,9 +56,9 @@ public class AccountBalancesCalculator extends JRCalculator
     private JRFillVariable variable_PAGE_COUNT = null;
     private JRFillVariable variable_BalanceSum = null;
 
-    private Map expressionMap;
+    private Map<?, ?> expressionMap;
 
-    public AccountBalancesCalculator(Map expressionMap) {
+    public AccountBalancesCalculator(Map<?, ?> expressionMap) {
 		this.expressionMap = expressionMap;
 	}
 
@@ -66,7 +66,8 @@ public class AccountBalancesCalculator extends JRCalculator
 	/**
      *
      */
-    public void customizedInit(Map pm, Map fm, Map vm)
+    @SuppressWarnings("unchecked")
+	public void customizedInit(Map pm, Map fm, Map vm)
     {
         field_currencyCode = (JRFillField)fm.get("currencyCode");
         field_accountName = (JRFillField)fm.get("accountName");
