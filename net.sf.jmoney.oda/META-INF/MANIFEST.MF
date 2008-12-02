@@ -13,5 +13,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui.forms,
  org.eclipse.birt.report.engine,
  org.eclipse.birt.report.engine.emitter.html
-Eclipse-LazyStart: true
 Export-Package: net.sf.jmoney.oda.driver
+Bundle-ActivationPolicy: lazy
+Bundle-Vendor: JMoney.sf.net
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
