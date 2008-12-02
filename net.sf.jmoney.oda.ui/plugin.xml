@@ -34,8 +34,7 @@
       <page
             id="net.sf.jmoney.oda"
             name="%profile.propertypage.name"
-            class="net.sf.jmoney.oda.ui.wizards.DatasourcePropertyPage"
-            objectClass="org.eclipse.datatools.connectivity.IConnectionProfile">
+            class="net.sf.jmoney.oda.ui.wizards.DatasourcePropertyPage">
          <filter
                name="org.eclipse.datatools.profile.property.id"
                value="net.sf.jmoney.oda"/>

@@ -10,4 +10,6 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.datatools.connectivity.oda.design.ui,
  net.sf.jmoney.oda,
  net.sf.jmoney
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
+Bundle-Vendor: JMoney.sf.net
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
