@@ -184,6 +184,7 @@ public class Account implements Category, Serializable {
 		return entries;
 	}
 
+	@SuppressWarnings("unchecked")
 	public void addEntry(Entry entry) {
 		entries.addElement(entry);
 	}
@@ -208,6 +209,7 @@ public class Account implements Category, Serializable {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public void replaceEntry(Entry oldEntry, Entry newEntry) {
 		int index = entries.indexOf(oldEntry);
 		cleanupEntry(oldEntry);
@@ -340,6 +342,7 @@ public class Account implements Category, Serializable {
 	/**
 	 * Sort the entries.
 	 */
+	@SuppressWarnings("unchecked")
 	public void sortEntries(Comparator c) {
 		Collections.sort(entries, c);
 	}

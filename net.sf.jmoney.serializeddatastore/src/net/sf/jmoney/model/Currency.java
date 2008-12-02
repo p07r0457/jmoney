@@ -76,6 +76,7 @@ public class Currency implements Comparable {
 		return (Currency) currencies.get(code);
 	}
 
+	@SuppressWarnings("unchecked")
 	private static void initSystemCurrencies() {
 		// TODO: How does this work?  Currencies.txt is not in resources folder?!
 		InputStream in = JMoneyPlugin.class.getResourceAsStream("resources/Currencies.txt"); //$NON-NLS-1$

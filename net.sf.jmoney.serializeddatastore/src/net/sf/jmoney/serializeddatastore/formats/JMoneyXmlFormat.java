@@ -663,6 +663,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 *            is found then this original event processor must be
 		 *            restored as the active event processor.
 		 */
+		@SuppressWarnings("unchecked")
 		ObjectProcessor(SessionManager sessionManager, ObjectProcessor parent,
 				ListKey listKey, ExtendablePropertySet<?> propertySet) {
 			super(sessionManager, parent);
@@ -695,8 +696,9 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			// Kludge: "memo" is now used for both accounts and categories.
 			// This can be removed once all old xml format files have been
 			// updated.
+			String myLocalName = localName;
 			if (localName.equals("description")) { //$NON-NLS-1$
-				localName = "memo"; //$NON-NLS-1$
+				myLocalName = "memo"; //$NON-NLS-1$
 			}
 
 			// We set propertyAccessor to be the property accessor
@@ -732,11 +734,11 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					// Search this property set and base property sets,
 					// but exclude extensions.
 					propertyAccessor = propertySet
-							.getPropertyAccessorGivenLocalNameAndExcludingExtensions(localName);
+							.getPropertyAccessorGivenLocalNameAndExcludingExtensions(myLocalName);
 				} else {
 					ExtensionPropertySet<?> propertySet = PropertySet
 							.getExtensionPropertySet(namespace);
-					propertyAccessor = propertySet.getProperty(localName);
+					propertyAccessor = propertySet.getProperty(myLocalName);
 				}
 			} catch (PropertySetNotFoundException e) {
 				// The property no longer exists.
@@ -883,6 +885,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			}
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public SAXEventProcessor endElement() {
 
@@ -956,6 +959,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 * the value into the appropriate property or add it to the appropriate
 		 * list.
 		 */
+		@SuppressWarnings("unchecked")
 		@Override
 		public void elementCompleted(Object value) {
 			/*
@@ -1085,6 +1089,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			s += new String(ch, start, length);
 		}
 
+		@SuppressWarnings("unchecked")
 		@Override
 		public SAXEventProcessor endElement() {
 			// TODO: change this. Find a constructor from string.
@@ -1807,6 +1812,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void copyEntryProperties(net.sf.jmoney.model.Entry oldEntry,
 			Entry entry, ScalarPropertyAccessor<?> statusProperty) {
 		entry.setCheck(oldEntry.getCheck());

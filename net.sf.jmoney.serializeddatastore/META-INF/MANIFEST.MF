@@ -13,5 +13,6 @@ Export-Package: net.sf.jmoney.gui,
  net.sf.jmoney.serializeddatastore,
  net.sf.jmoney.serializeddatastore.actions,
  net.sf.jmoney.serializeddatastore.formats
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
 Bundle-Vendor: JMoney.sf.net
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6

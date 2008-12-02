@@ -44,6 +44,7 @@ public class SplittedEntry extends Entry {
 		changeSupport.firePropertyChange("entries", null, entries); //$NON-NLS-1$
 	}
 
+	@SuppressWarnings("unchecked")
 	public void addEntry(Entry e) {
 		e.setDate(getDate());
 		entries.addElement(e);
@@ -63,6 +64,7 @@ public class SplittedEntry extends Entry {
 		entries.removeAllElements();
 	}
 
+	@SuppressWarnings("unchecked")
 	public void setEntryAt(Entry newEntry, int index) {
 		Entry oldEntry = (Entry) entries.elementAt(index);
 		if (oldEntry instanceof DoubleEntry) ((DoubleEntry) oldEntry).removeOther();

@@ -50,6 +50,7 @@ public class SortedTreeNode
 		sortChildren();
 	}
 
+	@SuppressWarnings("unchecked")
 	public void sortChildren() {
 		if (children == null)
 			return;

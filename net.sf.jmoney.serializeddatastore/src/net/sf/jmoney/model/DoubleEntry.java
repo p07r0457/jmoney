@@ -124,6 +124,7 @@ public class DoubleEntry extends Entry {
 		a.getEntries().removeElement(getOther());
 	}
 
+	@SuppressWarnings("unchecked")
 	public void addOther() {
 		Account a = (Account) getCategory();
 		a.getEntries().addElement(getOther());

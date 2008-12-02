@@ -27,6 +27,8 @@ package net.sf.jmoney.model;
  */
 public abstract class AbstractCategory implements Category {
 
+	private static final long serialVersionUID = 9097367613429480727L;
+
 	protected CategoryNode categoryNode = new CategoryNode(this);
 
 	public String getFullCategoryName() {

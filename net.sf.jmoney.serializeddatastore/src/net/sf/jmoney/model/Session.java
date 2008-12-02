@@ -80,7 +80,8 @@ public class Session implements Serializable {
         return null;
     }
 
-    public Account getNewAccount(String name) {
+    @SuppressWarnings("unchecked")
+	public Account getNewAccount(String name) {
         Account account = new Account(name);
         getAccounts().addElement(account);
         getCategories().insertNodeInto(
