@@ -9,5 +9,6 @@ Require-Bundle: org.eclipse.core.runtime,
  net.sf.jmoney,
  net.sf.jmoney.qif,
  net.sf.jmoney.reconciliation
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
 Bundle-Vendor: JMoney.sf.net
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
