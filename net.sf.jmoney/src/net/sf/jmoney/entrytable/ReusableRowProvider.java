@@ -54,6 +54,7 @@ public class ReusableRowProvider implements IRowProvider<EntryData> {
 		this.focusCellTracker = focusCellTracker;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public BaseEntryRowControl getNewRow(Composite parent, EntryData entryData) {
 		BaseEntryRowControl<EntryData, ?> rowControl;
 		

@@ -61,6 +61,7 @@ public class WizardPropertyPage extends WizardPage {
 		setMessage(message);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void createControl(Composite parent) {
 		Composite container = new Composite(parent, SWT.NONE);
 		

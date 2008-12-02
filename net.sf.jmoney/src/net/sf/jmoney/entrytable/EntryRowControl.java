@@ -31,6 +31,7 @@ import org.eclipse.swt.widgets.Composite;
 
 public class EntryRowControl extends BaseEntryRowControl<EntryData, EntryRowControl> {
 
+	@SuppressWarnings("unchecked")
 	public EntryRowControl(final Composite parent, int style, ICompositeTable<EntryData> rowTable, Block<EntryData, ? super EntryRowControl> rootBlock, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style, rowTable, rootBlock, selectionTracker, focusCellTracker);
 		init(this, this, rootBlock);

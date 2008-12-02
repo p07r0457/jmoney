@@ -42,7 +42,6 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.intro.IIntroSite;
 import org.eclipse.ui.part.IntroPart;
 
@@ -362,7 +361,7 @@ public class JMoneyIntroPart extends IntroPart {
 	public void setFocus() {
 	}
 
-	public void init(IIntroSite site) throws PartInitException {
+	public void init(IIntroSite site) {
 		setSite(site);		
 	}
 

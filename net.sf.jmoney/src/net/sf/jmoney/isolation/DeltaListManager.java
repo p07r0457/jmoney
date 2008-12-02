@@ -35,7 +35,6 @@ import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * This is a special implementation of the IListManager interface. It is used
@@ -219,7 +218,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		 * It is fairly complex to implement this inside a transaction.
 		 * Therefore we do not support this.
 		 */ 
-		throw new NotImplementedException();
+		throw new RuntimeException("Not implemented.");
 	}
 	
     @Override	
@@ -267,7 +266,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
     	 * to another.  Moving an object is not supported when inside a
     	 * transaction because it is too complicated.
     	 */
-    	throw new NotImplementedException();
+		throw new RuntimeException("Not implemented.");
 	}
 
     @Override	
@@ -277,7 +276,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
     	 * to another.  Moving an object is not supported when inside a
     	 * transaction because it is too complicated.
     	 */
-    	throw new NotImplementedException();
+		throw new RuntimeException("Not implemented.");
 	}
 
 	/**
