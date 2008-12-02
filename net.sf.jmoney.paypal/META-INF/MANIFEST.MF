@@ -4,7 +4,9 @@ Bundle-Name: Paypal Plug-in
 Bundle-SymbolicName: net.sf.jmoney.paypal;singleton:=true
 Bundle-Version: 1.0.0
 Bundle-Activator: net.sf.jmoney.paypal.Activator
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
+Bundle-Vendor: JMoney.sf.net
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-Localization: plugin
 Bundle-ClassPath: .,
  lib/opencsv-1.8.jar
