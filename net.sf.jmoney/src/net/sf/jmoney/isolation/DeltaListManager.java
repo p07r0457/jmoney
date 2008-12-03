@@ -218,7 +218,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		 * It is fairly complex to implement this inside a transaction.
 		 * Therefore we do not support this.
 		 */ 
-		throw new RuntimeException("Not implemented.");
+		throw new RuntimeException("Not implemented."); //$NON-NLS-1$
 	}
 	
     @Override	
@@ -266,7 +266,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
     	 * to another.  Moving an object is not supported when inside a
     	 * transaction because it is too complicated.
     	 */
-		throw new RuntimeException("Not implemented.");
+		throw new RuntimeException("Not implemented."); //$NON-NLS-1$
 	}
 
     @Override	
@@ -276,7 +276,7 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
     	 * to another.  Moving an object is not supported when inside a
     	 * transaction because it is too complicated.
     	 */
-		throw new RuntimeException("Not implemented.");
+		throw new RuntimeException("Not implemented."); //$NON-NLS-1$
 	}
 
 	/**
