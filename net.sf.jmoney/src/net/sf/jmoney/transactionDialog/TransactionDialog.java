@@ -127,6 +127,12 @@ public class TransactionDialog extends Dialog {
 		case IDialogConstants.OK_ID:
 			// All edits are transferred to the model as they are made,
 			// so we just need to commit them.
+			
+			// But first make sure the current selection is saved.
+			if (cellTracker.getFocusCell() != null) {
+				cellTracker.getFocusCell().save();
+			}
+			
     		transactionManager.commit("Edit Transaction"); //$NON-NLS-1$
 			break;
 		case NEW_SPLIT_ID:
