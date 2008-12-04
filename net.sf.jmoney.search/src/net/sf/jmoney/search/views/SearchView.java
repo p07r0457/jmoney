@@ -218,13 +218,26 @@ public class SearchView extends ViewPart {
 	private void setEntries(List<Entry> entries) {
 		this.entries = entries;
 		if (tableComposite != null) {
-			for (Control child : tableComposite.getChildren()) {
-				child.dispose();
+			
+			/*
+			 * there may be a selected row in the previous search that has
+			 * unsaved changes. the following call will clear the selection only
+			 * if there are no unsaved changes in it. if there are unsaved
+			 * changes, a message will be shown to the user and we should simply
+			 * leave the old search.
+			 * 
+			 * it would be better if this check were done before the user
+			 * entered the new search, but never mind.
+			 */
+			if (rowTracker.setSelection(null, null)) {
+				for (Control child : tableComposite.getChildren()) {
+					child.dispose();
+				}
+				createTableControls(rootBlock);
+				sc.setMinSize(tableComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+				tableComposite.layout(true);  // Seems to be needed - following line does not seem to layout the table for us.  Probably because of new child controls.
+				sc.layout(true);
 			}
-			createTableControls(rootBlock);
-			sc.setMinSize(tableComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
-			tableComposite.layout(true);  // Seems to be needed - following line does not seem to layout the table for us.  Probably because of new child controls.
-			sc.layout(true);
 		}
 	}
 
