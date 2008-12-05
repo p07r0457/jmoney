@@ -214,6 +214,13 @@ items to an existing menu or toolbar.
             icon="icons/accounts.gif"
             class="net.sf.jmoney.views.NavigationView">
       </view>
+      <view
+            category="net.sf.jmoney.viewCategory"
+            class="net.sf.jmoney.navigator.JMoneyCommonNavigator"
+            icon="icons/filenav_nav.gif"
+            id="net.sf.jmoney.navigationView"
+            name="Navigator">
+      </view>
    </extension>
 
    <extension
@@ -319,6 +326,142 @@ items to an existing menu or toolbar.
       	id="entry"
           info-class="net.sf.jmoney.model2.EntryInfo">
       </extendable-property-set>
+   </extension>
+   <extension
+         point="org.eclipse.ui.navigator.viewer">
+      <viewer
+            viewerId="net.sf.jmoney.navigationView">
+          <popupMenu
+                allowsPlatformContributions="true"
+                id="net.sf.jmoney.navigator.ProjectExplorer#PopupMenu">  
+             <insertionPoint name="group.new"/>
+             <insertionPoint
+                   name="group.open"
+                   separator="true"/>
+             <insertionPoint name="group.openWith"/>   
+             <insertionPoint name="group.edit"
+                   separator="true"/>   
+             <insertionPoint name="group.reorganize" />         
+             <insertionPoint
+                   name="group.report"
+                   separator="true"/>     
+             <insertionPoint
+                   name="group.search"
+                   separator="true"/>              
+             <insertionPoint
+                   name="additions"
+                   separator="true"/>              
+             <insertionPoint
+                   name="group.properties"
+                   separator="true"/>
+             
+          </popupMenu>
+      </viewer>
+      <viewerContentBinding
+            viewerId="net.sf.jmoney.navigationView">
+         <includes>
+            <contentExtension
+                  isRoot="false"
+                  pattern="net.sf.jmoney.navigator.accountsContent">
+            </contentExtension>
+         </includes>
+      </viewerContentBinding>
+      <dragAssistant
+            class="net.sf.jmoney.navigator.AccountsDragAdapterAssistant"
+            viewerId="net.sf.jmoney.navigationView">
+      </dragAssistant>
+   </extension>
+   <extension
+         point="org.eclipse.ui.navigator.navigatorContent">
+      <navigatorContent
+            activeByDefault="true"
+            contentProvider="net.sf.jmoney.navigator.AccountsContentProvider"
+            icon="icons/accounts.gif"
+            id="net.sf.jmoney.navigator.accountsContent"
+            labelProvider="net.sf.jmoney.navigator.AccountsLabelProvider"
+            name="Accounts Content"
+            priority="high">
+         <triggerPoints>
+            <or>
+               <instanceof
+                     value="net.sf.jmoney.views.TreeNode">
+               </instanceof>
+               <instanceof
+                     value="net.sf.jmoney.model2.Account">
+               </instanceof>
+            </or>
+         </triggerPoints>
+         <possibleChildren>
+            <or>
+               <instanceof
+                     value="net.sf.jmoney.views.TreeNode">
+               </instanceof>
+               <instanceof
+                     value="net.sf.jmoney.model2.Account">
+               </instanceof>
+            </or>
+         </possibleChildren>
+         <dropAssistant
+               class="net.sf.jmoney.navigator.AccountsDropAdapterAssistant"
+               id="net.sf.jmoney.dropAssistant">
+            <possibleDropTargets>
+               <or>
+                  <instanceof
+                        value="net.sf.jmoney.model2.Account">
+                  </instanceof>
+               <instanceof
+                     value="net.sf.jmoney.views.TreeNode">
+               </instanceof>
+               </or>
+            </possibleDropTargets>
+         </dropAssistant>
+      <actionProvider
+            class="net.sf.jmoney.navigator.AccountsActionProvider"
+            id="net.sf.jmoney.accountsActionProvider">
+      </actionProvider>
+      </navigatorContent>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="net.sf.jmoney.extendableObjectContribution"
+            objectClass="net.sf.jmoney.model2.Account">
+         <action
+               class="net.sf.jmoney.popup.actions.DeleteAccountAction"
+               enablesFor="1"
+               icon="icons/delete_obj.gif"
+               id="net.sf.jmoney.action.deleteAction"
+               label="%MainFrame.deleteAccount"
+               menubarPath="group.edit"
+               tooltip="Deletes the selected account">
+         </action>
+      </objectContribution>
+   </extension>
+   
+	<extension point="org.eclipse.ui.navigator.viewer">
+	  <viewerContentBinding viewerId="net.sf.jmoney.navigationView">
+	    <includes>
+	      <contentExtension pattern="net.sf.jmoney.linkHelper"/>
+	    </includes>
+	  </viewerContentBinding>
+	</extension>
+   
+   <extension
+         point="org.eclipse.ui.navigator.linkHelper">
+      <linkHelpexr
+            class="net.sf.jmoney.navigator.LinkHelper"
+            id="net.sf.jmoney.linkHelper">
+         <selectionEnablement>
+            <instanceof
+                  value="net.sf.jmoney.model2.Account">
+            </instanceof>
+         </selectionEnablement>
+         <editorInputEnablement>
+            <instanceof
+                  value="net.sf.jmoney.views.NodeEditorInput">
+            </instanceof>
+         </editorInputEnablement>
+      </linkHelpexr>
    </extension>
 
 </plugin>
