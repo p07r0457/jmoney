@@ -26,12 +26,14 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.copier.CopierPlugin;
 import net.sf.jmoney.model2.DatastoreManager;
 
+import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
+import org.eclipse.ui.WorkbenchException;
 
 /**
  * Our sample action implements workbench action delegate.
@@ -90,10 +92,24 @@ public class CutSessionAction implements IWorkbenchWindowActionDelegate {
 		// later read the data from it.
 		CopierPlugin.setSessionManager(sessionManager);
 		
-		// Set the current session to null.
-		// This must be done because otherwise the session
-		// would be closed when another session is loaded.
-		JMoneyPlugin.getDefault().setSessionManager(null);
+		/*
+		 * Close this window but leave the session open.
+		 * 
+		 * This ensures that the session cannot be closed before
+		 * it is pasted into the new location.
+		 */ 
+		// TODO: There is a problem with this.  If the session is
+		// never pasted then it is never closed.  Better may be to
+		// leave the window open, requiring the user to create a
+		// target session in another window, and giving an error if
+		// a paste is done after the source session was closed.
+		try {
+			window.getActivePage().close();
+			window.openPage(null);
+		} catch (WorkbenchException e) {
+			// TODO: Uncomment this when this becomes a handler
+//			throw new ExecutionException("Workbench exception occured while closing window.", e); //$NON-NLS-1$
+		}
 	}
 
 	/**
