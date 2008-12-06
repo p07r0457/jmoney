@@ -23,8 +23,9 @@
 package net.sf.jmoney.jdbcdatastore;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.ISessionFactory;
 
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.ui.IElementFactory;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchWindow;
 
@@ -37,20 +38,15 @@ import org.eclipse.ui.IWorkbenchWindow;
  * (the user cannot select another database without changing
  * the preferences), so the memento is not used.
  */
-public class SessionFactory implements ISessionFactory {
+public class SessionFactory implements IElementFactory {
 //	private IWorkbenchWindow window;
-	/**
-	 * The constructor.
-	 */
-	public SessionFactory() {
-	}
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IElementFactory#createElement(org.eclipse.ui.IMemento)
 	 */
-	public void openSession(IMemento memento) {
+	public IAdaptable createElement(IMemento memento) {
+		// TODO This should probably be a silent method.
 		IWorkbenchWindow window = JMoneyPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow();
-		JMoneyPlugin.getDefault().setSessionManager(
-				JDBCDatastorePlugin.getDefault().readSession(window));
+		return JDBCDatastorePlugin.getDefault().readSession(window);
 	}
 }
