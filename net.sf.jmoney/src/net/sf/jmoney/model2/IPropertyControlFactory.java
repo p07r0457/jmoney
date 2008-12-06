@@ -27,11 +27,14 @@ import java.util.Comparator;
 import org.eclipse.swt.widgets.Composite;
 
 /**
+ * All properties that can be edited by the user must, of course, have
+ * controls that can be used for such purpose.  So that the framework
+ * can create a control for a property, the property metadata contains
+ * a control factory.  The control factories must implement this
+ * interface.
+ * 
  * @param V the type of the value that can be edited by the controls
  * 			produced by this factory
- * 
- * @author Nigel
- *
  */
 public interface IPropertyControlFactory<V> {
 	/**
