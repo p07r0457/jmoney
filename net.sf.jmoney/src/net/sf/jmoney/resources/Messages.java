@@ -123,6 +123,8 @@ public class Messages extends NLS {
 	public static String JMoneyApplication_InvalidWorkspaceTitle;
 	public static String JMoneyCommonNavigator_NoSession;
 	public static String MultiTextControlFactory_Empty;
+	public static String NavigationTreeModel_accounts;
+	public static String NavigationTreeModel_categories;
 	public static String NavigationView_CreateNewAccount;
 	public static String NavigationView_DeleteAccount;
 	public static String NavigationView_Image;

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.AbstractDataOperation;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
@@ -16,7 +15,6 @@ import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.AccountsNode;
 import net.sf.jmoney.views.CategoriesNode;
-import net.sf.jmoney.views.TreeNode;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.operations.IOperationHistory;
@@ -35,10 +33,6 @@ import org.eclipse.ui.part.PluginTransfer;
 
 public class AccountsDropAdapterAssistant extends
 		org.eclipse.ui.navigator.CommonDropAdapterAssistant {
-
-	public AccountsDropAdapterAssistant() {
-		// TODO Auto-generated constructor stub
-	}
 
 	@Override
 	public IStatus validateDrop(Object target, int operation,
@@ -80,12 +74,12 @@ public class AccountsDropAdapterAssistant extends
 				return Status.OK_STATUS;
 			}
 
-			Session session = JMoneyPlugin.getDefault().getSession();
+//			Session session = JMoneyPlugin.getDefault().getSession();
 			
-			if (target == TreeNode.getTreeNode(AccountsNode.ID)) {
-				success = moveCapitalAccounts(session.getAccountCollection(), draggedObjects);
-			} else if (target == TreeNode.getTreeNode(CategoriesNode.ID)) {
-				success = moveCategoryAccounts(session.getAccountCollection(), draggedObjects);
+			if (target instanceof AccountsNode) {
+				success = moveCapitalAccounts(((AccountsNode)target).getSession().getAccountCollection(), draggedObjects);
+			} else if (target instanceof CategoriesNode) {
+				success = moveCategoryAccounts(((CategoriesNode)target).getSession().getAccountCollection(), draggedObjects);
 			} else if (target instanceof CapitalAccount) {
 				success = moveCapitalAccounts(((CapitalAccount)target).getSubAccountCollection(), draggedObjects);
 			} else if (target instanceof IncomeExpenseAccount) {
@@ -113,12 +107,22 @@ public class AccountsDropAdapterAssistant extends
 	private boolean canDropObject(Object draggedObject, Object targetObject) {
 		boolean success = false;
 
-		if (targetObject == TreeNode.getTreeNode(AccountsNode.ID)) {
-			if (draggedObject instanceof CapitalAccount) {
+		/*
+		 * Note that the user may have multiple sessions open.
+		 * 
+		 * We currently support drag and drop only within the same
+		 * session.
+		 */
+		if (targetObject instanceof AccountsNode) {
+			AccountsNode targetNode = (AccountsNode)targetObject;
+			if (draggedObject instanceof CapitalAccount
+					&& ((CapitalAccount)draggedObject).getSession() == targetNode.getSession()) {
 				success = true;
 			}
-		} else if (targetObject == TreeNode.getTreeNode(CategoriesNode.ID)) {
-			if (draggedObject instanceof IncomeExpenseAccount) {
+		} else if (targetObject instanceof CategoriesNode) {
+			CategoriesNode targetNode = (CategoriesNode)targetObject;
+			if (draggedObject instanceof IncomeExpenseAccount
+					&& ((IncomeExpenseAccount)draggedObject).getSession() == targetNode.getSession()) {
 				success = true;
 			}
 		} else if (targetObject instanceof CapitalAccount) {
@@ -194,7 +198,12 @@ public class AccountsDropAdapterAssistant extends
 			description = new MessageFormat(Messages.AccountsDropAdapterAssistant_MultiMove, java.util.Locale.US).format(messageArgs); 
 		}
 
-		Session session = JMoneyPlugin.getDefault().getSession();
+		/*
+		 * Session should be the same in all dragged objects and in
+		 * the target object, so just get it from the first dragged
+		 * object.
+		 */
+		Session session = objectsToMove.iterator().next().getSession();
 		
 		IUndoableOperation operation = new AbstractDataOperation(session, description) {
 			@Override

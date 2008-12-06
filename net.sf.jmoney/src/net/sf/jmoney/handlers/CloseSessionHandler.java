@@ -1,6 +1,5 @@
 package net.sf.jmoney.handlers;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.resources.Messages;
 
@@ -10,6 +9,7 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 public class CloseSessionHandler extends AbstractHandler {
@@ -19,7 +19,7 @@ public class CloseSessionHandler extends AbstractHandler {
 		Shell shell = HandlerUtil.getActiveShellChecked(event);
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 		
-		DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		DatastoreManager sessionManager = (DatastoreManager)window.getActivePage().getInput();
 		if (sessionManager == null) {
 			MessageDialog.openWarning(
 					shell,
@@ -28,7 +28,14 @@ public class CloseSessionHandler extends AbstractHandler {
 		} else {
 			if (sessionManager.canClose(window)) {
 				sessionManager.close();
-				JMoneyPlugin.getDefault().setSessionManager(null);
+				
+				// Replace page with one that has null input.
+				try {
+					window.getActivePage().close();
+					window.openPage(null);
+				} catch (WorkbenchException e) {
+					throw new ExecutionException("Workbench exception occured while closing window.", e); //$NON-NLS-1$
+				}
 			}
 		}
 

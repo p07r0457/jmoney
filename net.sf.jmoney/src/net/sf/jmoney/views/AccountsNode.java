@@ -26,9 +26,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.eclipse.ui.IWorkbenchWindow;
+
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.AccountInfo;
 import net.sf.jmoney.model2.CapitalAccount;
+import net.sf.jmoney.model2.CurrentSessionChangeListener;
+import net.sf.jmoney.model2.DatastoreManager;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.SessionChangeAdapter;
 
 /**
  * @author Administrateur
@@ -37,25 +48,29 @@ public class AccountsNode implements IDynamicTreeNode {
 
     public static final String ID = "net.sf.jmoney.capitalAccounts"; //$NON-NLS-1$
 
+    private DatastoreManager sessionManager;
+    
+    public AccountsNode(DatastoreManager sessionManager) {
+    	this.sessionManager = sessionManager;
+    	
+    }
+    
 	public boolean hasChildren() {
-		Session session = JMoneyPlugin.getDefault().getSession();
-		if (session != null) {
-			return session.getCapitalAccountIterator().hasNext();
-		} else {
-			return false;
-		}
+		return sessionManager.getSession().getCapitalAccountIterator().hasNext();
 	}
 
 	public Collection<Object> getChildren() {
-		Session session = JMoneyPlugin.getDefault().getSession();
 		ArrayList<Object> children = new ArrayList<Object>();
-		if (session != null) {
-			for (Iterator<CapitalAccount> iter = session.getCapitalAccountIterator(); iter.hasNext(); ) {
-				CapitalAccount account = iter.next();
-				children.add(account);
-			}
+		for (Iterator<CapitalAccount> iter = sessionManager.getSession().getCapitalAccountIterator(); iter.hasNext(); ) {
+			CapitalAccount account = iter.next();
+			children.add(account);
 		}
 		return children;
 	}
+
+	public Session getSession() {
+		return sessionManager.getSession();
+	}
+
 }
 

@@ -33,7 +33,6 @@ public class DeleteAccountAction extends ActionDelegate {
      */
     @Override
     public void run(IAction action) {
-			final Session session = JMoneyPlugin.getDefault().getSession();
 			Account account = null;
 			
 			if (this.selection == null) {
@@ -46,6 +45,7 @@ public class DeleteAccountAction extends ActionDelegate {
 				break;
 			}
 			if (account != null) {
+				final Session session = account.getSession();
 				final Account account2 = account;
 
 				IOperationHistory history = PlatformUI.getWorkbench().getOperationSupport().getOperationHistory();

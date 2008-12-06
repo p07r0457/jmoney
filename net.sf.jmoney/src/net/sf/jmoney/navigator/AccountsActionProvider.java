@@ -2,11 +2,11 @@ package net.sf.jmoney.navigator;
 
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.AbstractDataOperation;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CapitalAccountInfo;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
@@ -62,8 +62,9 @@ public class AccountsActionProvider extends CommonActionProvider {
 
 		drillDownAdapter = new DrillDownAdapter((TreeViewer) site
 				.getStructuredViewer());
-
-		makeActions();
+		DatastoreManager sessionManager = (DatastoreManager)site.getStructuredViewer().getInput();
+		
+		makeActions(sessionManager.getSession());
 	}
 
 	@Override
@@ -159,7 +160,7 @@ public class AccountsActionProvider extends CommonActionProvider {
 		drillDownAdapter.addNavigationActions(manager);
 	}
 
-	private void makeActions() {
+	private void makeActions(final Session session) {
 		/*
 		 * For each class of object derived (directly or indirectly) from the
 		 * capital account class, and that is not itself derivable, add a menu
@@ -187,8 +188,6 @@ public class AccountsActionProvider extends CommonActionProvider {
 							break;
 						}
 					}
-
-					Session session = JMoneyPlugin.getDefault().getSession();
 
 					NewAccountWizard wizard = new NewAccountWizard(session,
 							account, derivedPropertySet);
@@ -234,8 +233,6 @@ public class AccountsActionProvider extends CommonActionProvider {
 					}
 				}
 
-				Session session = JMoneyPlugin.getDefault().getSession();
-
 				NewAccountWizard wizard = new NewAccountWizard(session, account);
 				WizardDialog dialog = new WizardDialog(getActionSite()
 						.getViewSite().getShell(), wizard);
@@ -260,7 +257,6 @@ public class AccountsActionProvider extends CommonActionProvider {
 		deleteAccountAction = new BaseSelectionListenerAction(Messages.AccountsActionProvider_DeleteAccount) {
 			@Override
 			public void run() {
-				final Session session = JMoneyPlugin.getDefault().getSession();
 				Account account = null;
 				IStructuredSelection selection = super.getStructuredSelection();
 				for (Object selectedObject : selection.toList()) {

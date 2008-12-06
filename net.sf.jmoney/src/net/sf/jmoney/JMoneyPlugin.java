@@ -39,7 +39,6 @@ import net.sf.jmoney.model2.CurrencyInfo;
 import net.sf.jmoney.model2.CurrentSessionChangeListener;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ISessionChangeFirer;
-import net.sf.jmoney.model2.ISessionFactory;
 import net.sf.jmoney.model2.Propagator;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
@@ -81,7 +80,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	@Deprecated
 	private ResourceBundle resourceBundle;
 	
-    private DatastoreManager sessionManager = null;
+//    private DatastoreManager sessionManager = null;
 
     private Vector<CurrentSessionChangeListener> sessionChangeListeners = new Vector<CurrentSessionChangeListener>();
 
@@ -216,7 +215,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	}
 	
     public DatastoreManager getSessionManager() {
-        return sessionManager;
+		return (DatastoreManager)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getInput();
     }
    
     /**
@@ -224,6 +223,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	 * Returns false if canceled by user or the save fails.
 	 */
 	public boolean saveOldSession(IWorkbenchWindow window) {
+		DatastoreManager sessionManager = getSessionManager();
 		if (sessionManager == null) {
 			return true;
 		} else {
@@ -234,6 +234,7 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	// Helper method
     // TODO: see if we really need this method.
     public Session getSession() {
+		DatastoreManager sessionManager = getSessionManager();
         return sessionManager == null 
 			? null 
 			: sessionManager.getSession();
@@ -255,25 +256,27 @@ public class JMoneyPlugin extends AbstractUIPlugin {
      * both canClose() and close() are called on the previous session.
      * This method will not close any previously set session.
      */
+    // TODO: Clean this up.  It doesn't set the session manager anymore,
+    // but sort of initializes it.
     public void setSessionManager(DatastoreManager newSessionManager) {
         // It is up to the caller to ensure that the previous session
         // has been closed.
 
-        if (sessionManager == newSessionManager)
-            return;
-        DatastoreManager oldSessionManager = sessionManager;
-        sessionManager = newSessionManager;
+//        if (sessionManager == newSessionManager)
+//            return;
+//        DatastoreManager oldSessionManager = sessionManager;
+//        sessionManager = newSessionManager;
         
     	/*
 		 * JMoney depends on having at least one currency, which must also be
 		 * set as the default currency. If there is no default currency then
 		 * this must be a new datastore and we must set a default currency.
 		 */
-        if (newSessionManager != null) {
-        	if (getSession().getDefaultCurrency() == null) {
+//        if (newSessionManager != null) {
+        	if (newSessionManager.getSession().getDefaultCurrency() == null) {
         		initSystemCurrency(getSession());
         	}
-        }
+//        }
 
         // It is possible, tho I can't think why, that a listener who
         // we tell of a change in the current session will modify either
@@ -304,31 +307,31 @@ public class JMoneyPlugin extends AbstractUIPlugin {
         // TODO: Implement the above or decide on a design and what
         // restrictions we impose.
         
-        if (!sessionChangeListeners.isEmpty()) {
-        	// Take a copy of the listener list.  By doing this we
-        	// allow listeners to safely add or remove listeners.
-        	CurrentSessionChangeListener listenerArray[] = new CurrentSessionChangeListener[sessionChangeListeners.size()];
-        	sessionChangeListeners.copyInto(listenerArray);
-        	for (int i = 0; i < listenerArray.length; i++) {
-        		listenerArray[i].sessionReplaced(
-        				oldSessionManager == null ? null : oldSessionManager.getSession(), 
-        				newSessionManager == null ? null : newSessionManager.getSession()
-        		);
-        	}
-        }
+//        if (!sessionChangeListeners.isEmpty()) {
+//        	// Take a copy of the listener list.  By doing this we
+//        	// allow listeners to safely add or remove listeners.
+//        	CurrentSessionChangeListener listenerArray[] = new CurrentSessionChangeListener[sessionChangeListeners.size()];
+//        	sessionChangeListeners.copyInto(listenerArray);
+//        	for (int i = 0; i < listenerArray.length; i++) {
+//        		listenerArray[i].sessionReplaced(
+//        				oldSessionManager == null ? null : oldSessionManager.getSession(), 
+//        				newSessionManager == null ? null : newSessionManager.getSession()
+//        		);
+//        	}
+//        }
         
         // Stop listening to the old session and start listening to the
         // new session for changes within the session.
 		
         IContextService contextService = (IContextService) PlatformUI.getWorkbench().getService(IContextService.class);
 
-		if (oldSessionManager != null) {
-        	oldSessionManager.removeSessionChangeFirerListener(sessionChangeFirerListener);
-        	contextService.deactivateContext(sessionOpenContext);
-        	sessionOpenContext = null;
-        }
+//		if (oldSessionManager != null) {
+//        	oldSessionManager.removeSessionChangeFirerListener(sessionChangeFirerListener);
+//        	contextService.deactivateContext(sessionOpenContext);
+//        	sessionOpenContext = null;
+//        }
         if (newSessionManager != null) {
-        	newSessionManager.addSessionChangeFirerListener(sessionChangeFirerListener);
+//        	newSessionManager.addSessionChangeFirerListener(sessionChangeFirerListener);
         	sessionOpenContext = contextService.activateContext("net.sf.jmoney.sessionOpen"); //$NON-NLS-1$
         }
 	}
@@ -471,40 +474,42 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	 * @return
 	 */
 	public static Session openSession(IMemento memento) {
-		if (memento != null) {
-			// This is a kludge.  Only one session can be open at a time,
-			// therefore all views that need a session will save the same
-			// data in the session memento.  Therefore, if a session is open,
-			// just return that.  We know it is the right session.
-			if (getDefault().getSession() != null) {
-				return getDefault().getSession();
-			}
-			
-			String factoryId = memento.getString("currentSessionFactoryId");  //$NON-NLS-1$
-			if (factoryId != null && factoryId.length() != 0) {
-				// Search for the factory.
-				IExtensionRegistry registry = Platform.getExtensionRegistry();
-				for (IConfigurationElement element: registry.getConfigurationElementsFor("org.eclipse.ui.elementFactories")) { //$NON-NLS-1$
-					if (element.getName().equals("factory")) { //$NON-NLS-1$
-						if (element.getAttribute("id").equals(factoryId)) { //$NON-NLS-1$
-							try {
-								ISessionFactory listener = (ISessionFactory)element.createExecutableExtension("class"); //$NON-NLS-1$
-
-								// Create and initialize the session object from 
-								// the data stored in the memento.
-								listener.openSession(memento.getChild("currentSession")); //$NON-NLS-1$
-								return getDefault().getSession();
-							} catch (CoreException e) {
-								// Could not create the factory given by the 'class' attribute
-								// Log the error and start JMoney with no open session.
-								e.printStackTrace();
-							}
-							break;
-						}
-					}
-				}
-			}
-		}
+		// Don't need this anymore, but check if there is other stuff
+		// we can clean out as well as this code.
+//		if (memento != null) {
+//			// This is a kludge.  Only one session can be open at a time,
+//			// therefore all views that need a session will save the same
+//			// data in the session memento.  Therefore, if a session is open,
+//			// just return that.  We know it is the right session.
+//			if (getDefault().getSession() != null) {
+//				return getDefault().getSession();
+//			}
+//			
+//			String factoryId = memento.getString("currentSessionFactoryId");  //$NON-NLS-1$
+//			if (factoryId != null && factoryId.length() != 0) {
+//				// Search for the factory.
+//				IExtensionRegistry registry = Platform.getExtensionRegistry();
+//				for (IConfigurationElement element: registry.getConfigurationElementsFor("org.eclipse.ui.elementFactories")) { //$NON-NLS-1$
+//					if (element.getName().equals("factory")) { //$NON-NLS-1$
+//						if (element.getAttribute("id").equals(factoryId)) { //$NON-NLS-1$
+//							try {
+//								ISessionFactory listener = (ISessionFactory)element.createExecutableExtension("class"); //$NON-NLS-1$
+//
+//								// Create and initialize the session object from 
+//								// the data stored in the memento.
+//								listener.openSession(memento.getChild("currentSession")); //$NON-NLS-1$
+//								return getDefault().getSession();
+//							} catch (CoreException e) {
+//								// Could not create the factory given by the 'class' attribute
+//								// Log the error and start JMoney with no open session.
+//								e.printStackTrace();
+//							}
+//							break;
+//						}
+//					}
+//				}
+//			}
+//		}
 		
     	return null;
 	}

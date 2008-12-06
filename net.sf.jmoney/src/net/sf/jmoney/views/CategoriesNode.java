@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Session;
 
@@ -37,31 +37,27 @@ public class CategoriesNode implements IDynamicTreeNode {
 
     public static final String ID = "net.sf.jmoney.categoriesNode"; //$NON-NLS-1$
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.views.IDynamicTreeNode#hasChildren()
-	 */
+    private DatastoreManager sessionManager;
+    
+    public CategoriesNode(DatastoreManager sessionManager) {
+    	this.sessionManager = sessionManager;
+    }
+    
 	public boolean hasChildren() {
-		Session session = JMoneyPlugin.getDefault().getSession();
-		if (session != null) {
-			return session.getIncomeExpenseAccountIterator().hasNext();
-		} else {
-			return false;
-		}
+		return sessionManager.getSession().getIncomeExpenseAccountIterator().hasNext();
 	}
 
-	/* (non-Javadoc)
-	 * @see net.sf.jmoney.views.IDynamicTreeNode#getChildren()
-	 */
 	public Collection<Object> getChildren() {
-		Session session = JMoneyPlugin.getDefault().getSession();
 		ArrayList<Object> children = new ArrayList<Object>();
-		if (session != null) {
-			for (Iterator<IncomeExpenseAccount> iter = session.getIncomeExpenseAccountIterator(); iter.hasNext(); ) {
-				IncomeExpenseAccount account = iter.next();
-				children.add(account);
-			}
+		for (Iterator<IncomeExpenseAccount> iter = sessionManager.getSession().getIncomeExpenseAccountIterator(); iter.hasNext(); ) {
+			IncomeExpenseAccount account = iter.next();
+			children.add(account);
 		}
 		return children;
+	}
+
+	public Session getSession() {
+		return sessionManager.getSession();
 	}
 }
 

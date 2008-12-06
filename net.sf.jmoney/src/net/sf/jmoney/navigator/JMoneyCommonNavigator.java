@@ -38,21 +38,22 @@ public class JMoneyCommonNavigator extends CommonNavigator {
 
 		// Restore any session that was open when the workbench
 		// was last closed.
-		JMoneyPlugin.openSession(memento.getChild("session")); //$NON-NLS-1$
+//		JMoneyPlugin.openSession(memento.getChild("session")); //$NON-NLS-1$
 	}
 
 	@Override	
 	public void saveState(IMemento memento) {
 		// Save the information required to re-create this navigation view.
 
-		// Save the details of the session.
-		DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
-		if (sessionManager != null) {
-			IMemento sessionMemento = memento.createChild("session"); //$NON-NLS-1$
-			IPersistableElement pe = (IPersistableElement)sessionManager.getAdapter(IPersistableElement.class);
-			sessionMemento.putString("currentSessionFactoryId", pe.getFactoryId()); //$NON-NLS-1$
-			pe.saveState(sessionMemento.createChild("currentSession")); //$NON-NLS-1$
-		}
+		// Nothing to save because session now done as part of window...
+//		// Save the details of the session.
+//		DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+//		if (sessionManager != null) {
+//			IMemento sessionMemento = memento.createChild("session"); //$NON-NLS-1$
+//			IPersistableElement pe = (IPersistableElement)sessionManager.getAdapter(IPersistableElement.class);
+//			sessionMemento.putString("currentSessionFactoryId", pe.getFactoryId()); //$NON-NLS-1$
+//			pe.saveState(sessionMemento.createChild("currentSession")); //$NON-NLS-1$
+//		}
 	}
 
 	/**
@@ -78,41 +79,51 @@ public class JMoneyCommonNavigator extends CommonNavigator {
 		 * Changes that affect this view include changes to account names and
 		 * new or deleted accounts.
 		 */
-		updateTopControl();
-		JMoneyPlugin.getDefault().addSessionChangeListener(new MyCurrentSessionChangeListener(), getCommonViewer().getControl());
-	}
-	
-	@Override
-	protected IAdaptable getInitialInput() {
-		return TreeNode.getInvisibleRoot();
-	}
+//		updateTopControl();
+//		JMoneyPlugin.getDefault().addSessionChangeListener(new MyCurrentSessionChangeListener(), getCommonViewer().getControl());
 
-	private class MyCurrentSessionChangeListener extends SessionChangeAdapter implements CurrentSessionChangeListener {
-		public void sessionReplaced(Session oldSession, Session newSession) {
-			// Close all editors
-			IWorkbenchWindow window = getSite().getWorkbenchWindow();
-			boolean allClosed = window.getActivePage().closeAllEditors(true);
-			if (!allClosed) {
-				// User hit 'cancel' when prompted to save some
-				// unsaved data or perhaps an error occurred.
-				// We probably should veto the session replacement,
-				// but by this time it is too late.
-				// This is not an immediate problem but may become
-				// a problem as JMoney is further developed.
-			}
-
-			updateTopControl();
-			composite.layout(false);
-		}
-	}
-
-	private void updateTopControl() {
+		// TODO: We don't need a stack control because top never changes
+		
 		// Make either the label or the tree control visible, depending
 		// on whether the new session is null or not.
-		if (JMoneyPlugin.getDefault().getSession() == null) {
+		if (getSite().getPage().getInput() == null) {
 			stackLayout.topControl = noSessionMessage;
 		} else {
 			stackLayout.topControl = getCommonViewer().getControl();
 		}
 	}
+	
+//	@Override
+//	protected IAdaptable getInitialInput() {
+//		return TreeNode.getInvisibleRoot();
+//	}
+
+//	private class MyCurrentSessionChangeListener extends SessionChangeAdapter implements CurrentSessionChangeListener {
+//		public void sessionReplaced(Session oldSession, Session newSession) {
+//			// Close all editors
+//			IWorkbenchWindow window = getSite().getWorkbenchWindow();
+//			boolean allClosed = window.getActivePage().closeAllEditors(true);
+//			if (!allClosed) {
+//				// User hit 'cancel' when prompted to save some
+//				// unsaved data or perhaps an error occurred.
+//				// We probably should veto the session replacement,
+//				// but by this time it is too late.
+//				// This is not an immediate problem but may become
+//				// a problem as JMoney is further developed.
+//			}
+//
+//			updateTopControl();
+//			composite.layout(false);
+//		}
+//	}
+
+//	private void updateTopControl() {
+//		// Make either the label or the tree control visible, depending
+//		// on whether the new session is null or not.
+//		if (JMoneyPlugin.getDefault().getSession() == null) {
+//			stackLayout.topControl = noSessionMessage;
+//		} else {
+//			stackLayout.topControl = getCommonViewer().getControl();
+//		}
+//	}
 }
