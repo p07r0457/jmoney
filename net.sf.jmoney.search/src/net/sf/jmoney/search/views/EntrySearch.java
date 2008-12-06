@@ -138,7 +138,6 @@ public class EntrySearch implements IEntrySearch {
 			String entryTableName = EntryInfo.getPropertySet().getId().replace('.', '_');
 			String transactionTableName = TransactionInfo.getPropertySet().getId().replace('.', '_');
 			
-			
 			StringBuffer whereClause = new StringBuffer();
 			String separator = "";
 			
@@ -170,8 +169,6 @@ public class EntrySearch implements IEntrySearch {
 				throw new SearchException("Query Failed", "No restriction has been entered.  You must have at least one restriction.");
 			}
 			
-			//			MessageFormat.format(arg0, arg1);
-						
 			String sql = "SELECT * FROM " + entryTableName +
 				" join " + transactionTableName + " ON net_sf_jmoney_transaction._id = net_sf_jmoney_entry.net_sf_jmoney_transaction_entry" +
 				" WHERE " + whereClause + "order by date";
@@ -193,18 +190,15 @@ public class EntrySearch implements IEntrySearch {
 			}
 			
 			entries = statement.execute();
-
-			//		        support = Class.forName("net.sf.jmoney.sqldirect.Entries").newInstance();
-//		} catch (ClassNotFoundException e) {
+		} catch (SQLException e) {
+			throw new SearchException("SQL Exception", e.getLocalizedMessage());
+		} catch (NoClassDefFoundError e) {
 			/*
 			 * Search the long way, which is the correct way if the entire
 			 * session has been read into memory (such as is done by the
 			 * Serialized datastore plug-in), and is the best we can do if some
 			 * other storage mechanism.
 			 */
-		} catch (SQLException e) {
-			throw new SearchException("SQL Exception", e.getLocalizedMessage());
-		} catch (NoClassDefFoundError e) {
 			throw new SearchException("Query Failed", "This query has been implemented only for SQL databases.  You are not using an SQL database.  Please implement this feature and try again.");
 		}
 	}
