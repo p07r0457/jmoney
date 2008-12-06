@@ -25,8 +25,9 @@ package net.sf.jmoney.serializeddatastore;
 import java.io.File;
 
 import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.ISessionFactory;
 
+import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.ui.IElementFactory;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchWindow;
 
@@ -37,22 +38,20 @@ import org.eclipse.ui.IWorkbenchWindow;
  * this delegate will be created and execution will be 
  * delegated to it.
  */
-public class SessionFactory implements ISessionFactory {
-	/**
-	 * The constructor.
-	 */
-	public SessionFactory() {
-	}
+public class SessionFactory implements IElementFactory {
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IElementFactory#createElement(org.eclipse.ui.IMemento)
 	 */
-	public void openSession(IMemento memento) {
+	public IAdaptable createElement(IMemento memento) {
 		String fileFormatId = memento.getString("fileFormatId"); //$NON-NLS-1$
 		String fileName = memento.getString("fileName"); //$NON-NLS-1$
         if (fileFormatId != null && fileName != null) {
             IFileDatastore fileDatastore = SerializedDatastorePlugin.getFileDatastoreImplementation(fileFormatId);
             File sessionFile = new File(fileName);
+            
+            // TODO this should be silent, simply returning null if the
+            // element can not be recreated.
             IWorkbenchWindow window = JMoneyPlugin.getDefault().getWorkbench().getActiveWorkbenchWindow();
             SessionManager sessionManager = new SessionManager(fileFormatId, fileDatastore, sessionFile);
             
@@ -62,7 +61,10 @@ public class SessionFactory implements ISessionFactory {
             // responsible for displaying an appropriate message to the user.
 			boolean isGoodFileRead = fileDatastore.readSession(sessionFile, sessionManager, window);
 			if (isGoodFileRead) {
-				JMoneyPlugin.getDefault().setSessionManager(sessionManager);
+				return sessionManager;
+			} else {
+				// Null indicates the element could not be re-created.
+				return null;
 			}
         } else {
         	// No file name is set. This can happen if the workbench was last
@@ -70,8 +72,11 @@ public class SessionFactory implements ISessionFactory {
 			// user would have been prompted to save the session when the
 			// workbench closed, the user must have pressed the 'no' button. We
 			// create a new empty session.
-            JMoneyPlugin.getDefault().setSessionManager(
-            		SerializedDatastorePlugin.getDefault().newSession());
+        	
+        	// TODO decide if this is really right.  Surely we wouldn't have
+        	// saved anything in the memento if the last session had no file name
+        	// because it had never been saved.
+            return SerializedDatastorePlugin.getDefault().newSession();
         }
 	}
 }
