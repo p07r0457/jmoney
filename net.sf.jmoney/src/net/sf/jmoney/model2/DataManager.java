@@ -32,10 +32,11 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Control;
 
 /**
- * An interface to an object that manages a view on the data.
- * This is a base interface that is extended by ISessionManager to
- * manage a view of data committed to a datastore and is also
- * extended by ITransactionManager to manage a view of uncommitted data.
+ * An object that manages a view on the data.
+ * <P>
+ * This is a base object that is extended by DatastoreManager to manage a view
+ * of data committed to a datastore and is also extended by TransactionManager
+ * to manage a view of uncommitted data.
  */
 public abstract class DataManager implements IAdaptable {
 	
