@@ -448,7 +448,7 @@ items to an existing menu or toolbar.
    
    <extension
          point="org.eclipse.ui.navigator.linkHelper">
-      <linkHelpexr
+      <linkHelper
             class="net.sf.jmoney.navigator.LinkHelper"
             id="net.sf.jmoney.linkHelper">
          <selectionEnablement>
@@ -461,7 +461,7 @@ items to an existing menu or toolbar.
                   value="net.sf.jmoney.views.NodeEditorInput">
             </instanceof>
          </editorInputEnablement>
-      </linkHelpexr>
+      </linkHelper>
    </extension>
 
 </plugin>
