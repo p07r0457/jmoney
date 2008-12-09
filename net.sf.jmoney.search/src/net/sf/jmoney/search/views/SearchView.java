@@ -3,7 +3,6 @@ package net.sf.jmoney.search.views;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.CellBlock;
@@ -27,6 +26,7 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.TransactionInfo;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.search.IEntrySearch;
 
@@ -54,12 +54,12 @@ public class SearchView extends ViewPart {
 
 	private FocusCellTracker cellTracker;
 
-    private List<Entry> entries = new ArrayList<Entry>();
+	private List<Entry> entries = new ArrayList<Entry>();
 
 	private Block<EntryData, EntryRowControl> rootBlock;
 
 	private ScrolledComposite sc;
-    
+
 	private SearchAgainAction fSearchAgainAction;
 	private SearchHistoryDropDownAction fSearchHistoryDropDownAction;
 
@@ -70,7 +70,7 @@ public class SearchView extends ViewPart {
 	private Composite parent;
 
 	private Label noSearchLabel;
-	
+
 	public SearchView() {
 		fSearchAgainAction= new SearchAgainAction(this);
 		fSearchAgainAction.setEnabled(false);
@@ -78,7 +78,7 @@ public class SearchView extends ViewPart {
 		fSearchHistoryDropDownAction= new SearchHistoryDropDownAction(this);
 		fSearchHistoryDropDownAction.setEnabled(false);
 	}
-	
+
 	private void contributeToActionBars() {
 		IActionBars bars = getViewSite().getActionBars();
 		fillLocalPullDown(bars.getMenuManager());
@@ -93,86 +93,91 @@ public class SearchView extends ViewPart {
 		manager.add(fSearchAgainAction);
 		manager.add(fSearchHistoryDropDownAction);
 	}
-	
+
 	@Override
 	public void createPartControl(Composite parent) {
-		Session session = JMoneyPlugin.getDefault().getSession();
-		
-		/*
-		 * Setup the layout structure of the header and rows.
-		 */
-		IndividualBlock<EntryData, RowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
+		DatastoreManager manager = (DatastoreManager)getSite().getPage().getInput();
+		if (manager == null) {
+			// TODO put up some message, or can we stop the user from opening this
+			// view when there is no session open?
+		} else {
+			Session session = manager.getSession();
 
-		// TODO: Formatting according to the default currency is not necessarily correct
-		CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(session.getDefaultCurrency());
-		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(session.getDefaultCurrency());
-		
-    	rootBlock = new HorizontalBlock<EntryData, EntryRowControl>(
-				transactionDateColumn,
-				PropertyBlock.createEntryColumn(EntryInfo.getAccountAccessor()),
-				PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
-				new OtherEntriesBlock(
-						new HorizontalBlock<Entry, ISplitEntryContainer>(
-								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
-								new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), Messages.EntriesSection_EntryDescription),
-								new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
-						)
-				),
-				debitColumnManager,
-				creditColumnManager
-		);
+			/*
+			 * Setup the layout structure of the header and rows.
+			 */
+			IndividualBlock<EntryData, RowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
 
-		/*
-		 * Ensure indexes are set.
-		 */
-		rootBlock.initIndexes(0);
+			// TODO: Formatting according to the default currency is not necessarily correct
+			CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(session.getDefaultCurrency());
+			CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(session.getDefaultCurrency());
 
-		stackLayout = new StackLayout();
-		parent.setLayout(stackLayout);
-		this.parent = parent;
+			rootBlock = new HorizontalBlock<EntryData, EntryRowControl>(
+					transactionDateColumn,
+					PropertyBlock.createEntryColumn(EntryInfo.getAccountAccessor()),
+					PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor()),
+					new OtherEntriesBlock(
+							new HorizontalBlock<Entry, ISplitEntryContainer>(
+									new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
+									new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), Messages.EntriesSection_EntryDescription),
+									new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
+							)
+					),
+					debitColumnManager,
+					creditColumnManager
+			);
 
-		noSearchLabel = new Label(parent, SWT.WRAP);
-		noSearchLabel.setText("No search results available. Start a search from the search dialog...");
-		
-		stackLayout.topControl = noSearchLabel;
-		
-		sc = new ScrolledComposite(parent, SWT.V_SCROLL | SWT.H_SCROLL);
-		
-		rowTracker = new RowSelectionTracker<EntryRowControl>();
-		cellTracker = new FocusCellTracker();
-		tableComposite = new Composite(sc, SWT.NONE);
-		GridLayout layout = new GridLayout(1, false);
-		layout.verticalSpacing = 0;
-		layout.marginWidth = 0;
-		layout.marginHeight = 0;
-		tableComposite.setLayout(layout);
+			/*
+			 * Ensure indexes are set.
+			 */
+			rootBlock.initIndexes(0);
 
-		createTableControls(rootBlock);
-    	
-		sc.setContent(tableComposite);	
-			
-		sc.setExpandHorizontal(true);
-		sc.setExpandVertical(true);
-		sc.setMinSize(tableComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
-		
-		GridData resultData = new GridData(GridData.FILL_BOTH | GridData.GRAB_HORIZONTAL
-				| GridData.GRAB_VERTICAL);
-		tableComposite.setLayoutData(resultData);
-		
-		contributeToActionBars();
-			
-		// Activate the handlers
-		IHandlerService handlerService = (IHandlerService) getSite().getService(IHandlerService.class);
+			stackLayout = new StackLayout();
+			parent.setLayout(stackLayout);
+			this.parent = parent;
 
-		IHandler handler = new DeleteTransactionHandler(rowTracker);
-		handlerService.activateHandler("net.sf.jmoney.deleteTransaction", handler);		
+			noSearchLabel = new Label(parent, SWT.WRAP);
+			noSearchLabel.setText("No search results available. Start a search from the search dialog...");
 
-//		handler = new DuplicateTransactionHandler(rowTracker, entriesControl);
-//		handlerService.activateHandler("net.sf.jmoney.duplicateTransaction", handler);		
+			stackLayout.topControl = noSearchLabel;
 
-		handler = new OpenTransactionDialogHandler(rowTracker);
-		handlerService.activateHandler("net.sf.jmoney.transactionDetails", handler);		
+			sc = new ScrolledComposite(parent, SWT.V_SCROLL | SWT.H_SCROLL);
 
+			rowTracker = new RowSelectionTracker<EntryRowControl>();
+			cellTracker = new FocusCellTracker();
+			tableComposite = new Composite(sc, SWT.NONE);
+			GridLayout layout = new GridLayout(1, false);
+			layout.verticalSpacing = 0;
+			layout.marginWidth = 0;
+			layout.marginHeight = 0;
+			tableComposite.setLayout(layout);
+
+			createTableControls(rootBlock);
+
+			sc.setContent(tableComposite);	
+
+			sc.setExpandHorizontal(true);
+			sc.setExpandVertical(true);
+			sc.setMinSize(tableComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+
+			GridData resultData = new GridData(GridData.FILL_BOTH | GridData.GRAB_HORIZONTAL
+					| GridData.GRAB_VERTICAL);
+			tableComposite.setLayoutData(resultData);
+
+			contributeToActionBars();
+
+			// Activate the handlers
+			IHandlerService handlerService = (IHandlerService) getSite().getService(IHandlerService.class);
+
+			IHandler handler = new DeleteTransactionHandler(rowTracker);
+			handlerService.activateHandler("net.sf.jmoney.deleteTransaction", handler);		
+
+			//		handler = new DuplicateTransactionHandler(rowTracker, entriesControl);
+			//		handlerService.activateHandler("net.sf.jmoney.duplicateTransaction", handler);		
+
+			handler = new OpenTransactionDialogHandler(rowTracker);
+			handlerService.activateHandler("net.sf.jmoney.transactionDetails", handler);		
+		}
 	}
 
 	private void createTableControls(Block<EntryData, EntryRowControl> rootBlock) {
@@ -184,29 +189,29 @@ public class SearchView extends ViewPart {
 			public void rowDeselected(
 					BaseEntryRowControl<EntryData, ?> rowControl) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void scrollToShowRow(
 					BaseEntryRowControl<EntryData, ?> rowControl) {
 				// TODO Auto-generated method stub
-				
+
 			}
 
 			@Override
 			public void setCurrentRow(EntryData input,
 					EntryData uncommittedEntryData) {
 				// TODO Auto-generated method stub
-				
+
 			}};
-		
-		for (Entry entry: entries) {
-			EntryData entryData = new EntryData(entry, entry.getDataManager());
-			EntryRowControl row = new EntryRowControl(tableComposite, SWT.NONE, tableWrapper, rootBlock, rowTracker, cellTracker);
-			row.setContent(entryData);
-			row.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-		}
+
+			for (Entry entry: entries) {
+				EntryData entryData = new EntryData(entry, entry.getDataManager());
+				EntryRowControl row = new EntryRowControl(tableComposite, SWT.NONE, tableWrapper, rootBlock, rowTracker, cellTracker);
+				row.setContent(entryData);
+				row.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+			}
 	}
 
 	@Override
@@ -218,7 +223,7 @@ public class SearchView extends ViewPart {
 	private void setEntries(List<Entry> entries) {
 		this.entries = entries;
 		if (tableComposite != null) {
-			
+
 			/*
 			 * there may be a selected row in the previous search that has
 			 * unsaved changes. the following call will clear the selection only
@@ -249,14 +254,14 @@ public class SearchView extends ViewPart {
 		 */
 		searchHistory.remove(search);
 		searchHistory.add(0, search);
-		
+
 		setEntries(search.getEntries());
-		
+
 		fSearchAgainAction.setEnabled(true);
 		fSearchHistoryDropDownAction.setEnabled(true);
-		
+
 		this.setContentDescription(search.getTooltip());
-		
+
 		stackLayout.topControl = sc;
 		parent.layout(false);
 	}
@@ -268,30 +273,30 @@ public class SearchView extends ViewPart {
 	public List<IEntrySearch> getQueries() {
 		return searchHistory;
 	}
-	
+
 	public IEntrySearch getCurrentSearch() {
 		return searchHistory.get(0);
 	}
-	
+
 	public void removeAllSearches() {
 		searchHistory.clear();
-		
+
 		/*
 		 * Despite what the javadoc says, passing the empty string seems
 		 * to cause the content description to be removed from the view.
 		 */
 		setContentDescription("");
-		
+
 		// TODO: Is this correct?
 		setEntries(new ArrayList<Entry>());
-		
+
 		stackLayout.topControl = noSearchLabel;
 		parent.layout(false);
 
 		fSearchAgainAction.setEnabled(false);
 		fSearchHistoryDropDownAction.setEnabled(false);
 	}
-	
+
 	public void removeSearches(List<IEntrySearch> removedEntries) {
 		searchHistory.removeAll(removedEntries);		
 	}
