@@ -47,14 +47,12 @@ public class AccountsContentProvider implements ITreeContentProvider {
 	}
 
 	public Object getParent(Object element) {
-		// TODO: This is not correct
-		if (element instanceof TreeNode) {
-			return ((TreeNode)element).getParent();
+		if (element instanceof IDynamicTreeNode) {
+			return sessionManager;
 		} else if (element instanceof Account) {
 			Account parentAccount = ((Account)element).getParent();
 			if (parentAccount == null) {
-				return TreeNode.getTreeNode(
-						(element instanceof CapitalAccount) ? AccountsNode.ID : CategoriesNode.ID);
+				return (element instanceof CapitalAccount) ? accountsTreeNode : categoriesTreeNode;
 			} else {
 				return parentAccount;
 			}
