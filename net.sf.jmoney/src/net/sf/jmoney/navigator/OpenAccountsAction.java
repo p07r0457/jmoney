@@ -27,7 +27,7 @@ import org.eclipse.ui.navigator.INavigatorContentService;
 public class OpenAccountsAction extends BaseSelectionListenerAction {
 
 	public OpenAccountsAction() {
-		super(Messages.OpenAccountsAction_Text + " XXX"); //$NON-NLS-1$
+		super(Messages.OpenAccountsAction_Text);
 		setToolTipText(Messages.OpenAccountsAction_ToolTipText);
 	}
 

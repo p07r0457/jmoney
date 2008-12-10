@@ -50,9 +50,9 @@ public class AccountsActionProvider extends CommonActionProvider {
 
 	private DrillDownAdapter drillDownAdapter;
 
-	private Vector<Action> newAccountActions = new Vector<Action>();
-	private Action newCategoryAction;
-	private Action deleteAccountAction;
+	private Vector<BaseSelectionListenerAction> newAccountActions = new Vector<BaseSelectionListenerAction>();
+	private BaseSelectionListenerAction newCategoryAction;
+	private BaseSelectionListenerAction deleteAccountAction;
 
 	private boolean fHasContributedToViewMenu = false;
 
@@ -82,22 +82,27 @@ public class AccountsActionProvider extends CommonActionProvider {
 		// TODO: move selection stuff into the actions.
 		Object selectedObject = selection.getFirstElement();
 		if (selectedObject != null) { // Needed???
-
-			if (selectedObject == TreeNode.getTreeNode(AccountsNode.ID)
-					|| selectedObject instanceof CapitalAccount) {
-				for (Action newAccountAction : newAccountActions) {
-					manager.add(newAccountAction);
-				}
-			}
-
-			if (selectedObject == TreeNode.getTreeNode(CategoriesNode.ID)
-					|| selectedObject instanceof IncomeExpenseAccount) {
-				manager.add(newCategoryAction);
-			}
-
-			if (selectedObject instanceof Account) {
-				manager.add(deleteAccountAction);
-			}
+//
+//			if (selectedObject == TreeNode.getTreeNode(AccountsNode.ID)
+//					|| selectedObject instanceof CapitalAccount) {
+//				for (Action newAccountAction : newAccountActions) {
+//					manager.add(newAccountAction);
+//				}
+//			}
+//
+//			if (selectedObject == TreeNode.getTreeNode(CategoriesNode.ID)
+//					|| selectedObject instanceof IncomeExpenseAccount) {
+//				manager.add(newCategoryAction);
+//			}
+//
+//			if (selectedObject instanceof Account) {
+//				manager.add(deleteAccountAction);
+//			}
+		for (Action newAccountAction : newAccountActions) {
+			manager.add(newAccountAction);
+		}
+		manager.add(newCategoryAction);
+		manager.add(deleteAccountAction);
 
 			manager.add(new Separator());
 
@@ -176,7 +181,18 @@ public class AccountsActionProvider extends CommonActionProvider {
 
 			String tooltip = NLS.bind(Messages.AccountsActionProvider_CreateNewAccount, messageArgs);
 
-			Action newAccountAction = new BaseSelectionListenerAction(text) {
+			BaseSelectionListenerAction newAccountAction = new BaseSelectionListenerAction(text) {
+				@Override
+				protected boolean updateSelection(IStructuredSelection selection) {
+					if (selection.size() != 1) {
+						return false;
+					}
+					Object selectedObject = selection.getFirstElement();
+					return 
+					selectedObject instanceof AccountsNode
+					|| selectedObject instanceof CapitalAccount;
+				}
+				
 				@Override
 				public void run() {
 					CapitalAccount account = null;
@@ -211,6 +227,7 @@ public class AccountsActionProvider extends CommonActionProvider {
 					.getSharedImages().getImageDescriptor(
 							ISharedImages.IMG_OBJS_INFO_TSK));
 
+			getActionSite().getStructuredViewer().addSelectionChangedListener(newAccountAction);
 			newAccountActions.add(newAccountAction);
 		}
 
@@ -222,6 +239,17 @@ public class AccountsActionProvider extends CommonActionProvider {
 		String tooltip = NLS.bind(Messages.AccountsActionProvider_CreateNewAccount, messageArgs);
 
 		newCategoryAction = new BaseSelectionListenerAction(text) {
+			@Override
+			protected boolean updateSelection(IStructuredSelection selection) {
+				if (selection.size() != 1) {
+					return false;
+				}
+				Object selectedObject = selection.getFirstElement();
+				return 
+				selectedObject instanceof CategoriesNode
+				|| selectedObject instanceof IncomeExpenseAccount;
+			}
+
 			@Override
 			public void run() {
 				IncomeExpenseAccount account = null;
@@ -249,12 +277,21 @@ public class AccountsActionProvider extends CommonActionProvider {
 		};
 
 		newCategoryAction.setToolTipText(tooltip);
-
 		newCategoryAction.setImageDescriptor(PlatformUI.getWorkbench()
 				.getSharedImages().getImageDescriptor(
 						ISharedImages.IMG_OBJS_INFO_TSK));
+		getActionSite().getStructuredViewer().addSelectionChangedListener(newCategoryAction);
 
 		deleteAccountAction = new BaseSelectionListenerAction(Messages.AccountsActionProvider_DeleteAccount) {
+			@Override
+			protected boolean updateSelection(IStructuredSelection selection) {
+				if (selection.size() != 1) {
+					return false;
+				}
+				Object selectedObject = selection.getFirstElement();
+				return selectedObject instanceof Account;
+			}
+
 			@Override
 			public void run() {
 				Account account = null;
@@ -306,6 +343,7 @@ public class AccountsActionProvider extends CommonActionProvider {
 		deleteAccountAction.setImageDescriptor(PlatformUI.getWorkbench()
 				.getSharedImages().getImageDescriptor(
 						ISharedImages.IMG_TOOL_DELETE));
+		getActionSite().getStructuredViewer().addSelectionChangedListener(deleteAccountAction);
 	}
 
 }
