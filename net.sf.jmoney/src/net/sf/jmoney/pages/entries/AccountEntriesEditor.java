@@ -221,7 +221,7 @@ public class AccountEntriesEditor extends EditorPart {
     			}
     		});
         } else {
-        	final CategoryEntriesSection fEntriesSection = new CategoryEntriesSection(form.getBody(), (IncomeExpenseAccount)account, filter, toolkit);
+        	final CategoryEntriesSection fEntriesSection = new CategoryEntriesSection(form.getBody(), (IncomeExpenseAccount)account, filter, toolkit, handlerService);
             fEntriesSection.getSection().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 //            managedForm.addPart(fEntriesSection);
 //            fEntriesSection.initialize(managedForm);

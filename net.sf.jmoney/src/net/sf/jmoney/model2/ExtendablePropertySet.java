@@ -30,6 +30,7 @@ import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
 
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 
 public class ExtendablePropertySet<E extends ExtendableObject> extends PropertySet<E> {
@@ -343,10 +344,15 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	 * @return the icon associated with objects that implement
 	 * 			this property set.
 	 */
+	// TODO remove this method and use getImageDescriptor only.
 	public Image getIcon() {
 		if (iconImage == null)
 			iconImage = JMoneyPlugin.createImage(iconFileName);
 		return iconImage;
+	}
+
+	public ImageDescriptor getImageDescriptor() {
+		return JMoneyPlugin.createImageDescriptor(iconFileName);
 	}
 
 	/**

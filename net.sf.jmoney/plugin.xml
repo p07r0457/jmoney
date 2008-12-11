@@ -163,28 +163,6 @@ items to an existing menu or toolbar.
 			</description>
 		</wizard>
 	</extension>
- 
-
-<!-- Update Actions -->
-   <extension
-         point="org.eclipse.ui.actionSets">
-      <actionSet
-            label="%UpdateActionSet.label"
-            visible="true"
-            id="net.sf.jmoney.softwareUpdates">
-         <menu
-               label="%UpdateActionSet.menu.label"
-               path="help/group.updates"
-               id="net.sf.jmoney.updateMenu">
-            <separator
-                  name="group0">
-            </separator>
-            <separator
-                  name="group1">
-            </separator>
-         </menu>
-      </actionSet>
-   </extension>
 
    <extension
          point="org.eclipse.help.toc">
@@ -421,23 +399,7 @@ items to an existing menu or toolbar.
       </actionProvider>
       </navigatorContent>
    </extension>
-   <extension
-         point="org.eclipse.ui.popupMenus">
-      <objectContribution
-            id="net.sf.jmoney.extendableObjectContribution"
-            objectClass="net.sf.jmoney.model2.Account">
-         <action
-               class="net.sf.jmoney.popup.actions.DeleteAccountAction"
-               enablesFor="1"
-               icon="icons/delete_obj.gif"
-               id="net.sf.jmoney.action.deleteAction"
-               label="%MainFrame.deleteAccount"
-               menubarPath="group.edit"
-               tooltip="Deletes the selected account">
-         </action>
-      </objectContribution>
-   </extension>
-   
+
 	<extension point="org.eclipse.ui.navigator.viewer">
 	  <viewerContentBinding viewerId="net.sf.jmoney.navigationView">
 	    <includes>
