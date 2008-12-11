@@ -17,13 +17,13 @@ public class ExtendableObjectPropertySource implements IPropertySource {
 	/**
 	 * If we return a value that implements IPropertySource then the property
 	 * sheet will allow the user to edit the properties of the value but it will
-	 * not allow the user to change to property value itself to a different object.
-	 * ExtendableObject implements IPropertySource (though an adapter), and this is
-	 * not the behavior we want because the value is really a 'reference', not an
-	 * 'embedded' object.
+	 * not allow the user to change the property value itself to reference a
+	 * different object. ExtendableObject implements IPropertySource (though an
+	 * adapter), and this is not the behavior we want because the value is
+	 * really a 'reference', not an 'embedded' object.
 	 * 
-	 * To avoid this behavior, we wrap ExtendableObject objects in a class that hides
-	 * the IPropertySource interface.
+	 * To avoid this behavior, we wrap ExtendableObject objects in a class that
+	 * hides the IPropertySource interface.
 	 */
 	public class Wrapper {
 
