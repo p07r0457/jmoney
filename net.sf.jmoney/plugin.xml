@@ -187,13 +187,6 @@ items to an existing menu or toolbar.
    <extension 
    		 point="org.eclipse.ui.views">
       <view
-            id="net.sf.jmoney.views.NavigationView"
-            name="Navigation"
-            icon="icons/accounts.gif"
-            class="net.sf.jmoney.views.NavigationView">
-      </view>
-      <view
-            category="net.sf.jmoney.viewCategory"
             class="net.sf.jmoney.navigator.JMoneyCommonNavigator"
             icon="icons/filenav_nav.gif"
             id="net.sf.jmoney.navigationView"
