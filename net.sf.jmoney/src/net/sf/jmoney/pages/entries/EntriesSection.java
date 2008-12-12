@@ -45,10 +45,12 @@ import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.entrytable.SingleOtherEntryPropertyBlock;
 import net.sf.jmoney.entrytable.VerticalBlock;
 import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.resources.Messages;
@@ -68,7 +70,7 @@ import org.eclipse.ui.handlers.IHandlerService;
  */
 public class EntriesSection extends SectionPart implements IEntriesContent {
 
-	private CurrencyAccount account;
+	private Account account;
 	private EntriesFilter filter;
 	private IHandlerService handlerService;
 
@@ -78,7 +80,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
     
     private Block<EntryData, ? super EntryRowControl> rootBlock;
     
-    public EntriesSection(Composite parent, CurrencyAccount account, EntriesFilter filter, FormToolkit toolkit, IHandlerService handlerService) {
+    public EntriesSection(Composite parent, Account account, EntriesFilter filter, FormToolkit toolkit, IHandlerService handlerService) {
         super(parent, toolkit, Section.TITLE_BAR);
         getSection().setText(Messages.EntriesSection_Text);
         this.account = account;
@@ -120,9 +122,12 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		 */
 		IndividualBlock<EntryData, RowControl> transactionDateColumn = PropertyBlock.createTransactionColumn(TransactionInfo.getDateAccessor());
 
-		CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(account.getCurrency());
-		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(account.getCurrency());
-    	CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(account.getCurrency());
+		if (account instanceof CurrencyAccount) {
+			CurrencyAccount currencyAccount = (CurrencyAccount)account;
+
+		CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(currencyAccount.getCurrency());
+		CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(currencyAccount.getCurrency());
+    	CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(currencyAccount.getCurrency());
 		
 		rootBlock = new HorizontalBlock<EntryData, EntryRowControl>(
 				transactionDateColumn,
@@ -144,7 +149,29 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 				creditColumnManager,
 				balanceColumnManager
 		);
-
+		} else {
+			IncomeExpenseAccount categoryAccount = (IncomeExpenseAccount)account;
+			
+			CellBlock<EntryData, BaseEntryRowControl> debitColumnManager = DebitAndCreditColumns.createDebitColumn(categoryAccount.getCurrency());
+			CellBlock<EntryData, BaseEntryRowControl> creditColumnManager = DebitAndCreditColumns.createCreditColumn(categoryAccount.getCurrency());
+	    	CellBlock<EntryData, BaseEntryRowControl> balanceColumnManager = new BalanceColumn(categoryAccount.getCurrency());
+			
+			rootBlock = new HorizontalBlock<EntryData, EntryRowControl>(
+					transactionDateColumn,
+					PropertyBlock.createEntryColumn(EntryInfo.getMemoAccessor(), Messages.CategoryEntriesSection_EntryDescription),
+					new OtherEntriesBlock(
+							new HorizontalBlock<Entry, ISplitEntryContainer>(
+									new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
+									new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor()),
+									new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
+							)
+					),
+					debitColumnManager,
+					creditColumnManager,
+					balanceColumnManager
+			);
+		}
+		
 		// Create the table control.
 	    IRowProvider<EntryData> rowProvider = new ReusableRowProvider(rootBlock);
 		RowSelectionTracker<EntryRowControl> rowTracker = new RowSelectionTracker<EntryRowControl>();
@@ -210,7 +237,12 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 	 * @see net.sf.jmoney.pages.entries.IEntriesContent#getStartBalance()
 	 */
 	public long getStartBalance() {
-        return account.getStartBalance();
+		if (account instanceof CurrencyAccount) {
+			CurrencyAccount currencyAccount = (CurrencyAccount)account;
+			return currencyAccount.getStartBalance();
+		} else {
+			return 0;
+		}
 	}
 
 	public Entry createNewEntry(Transaction newTransaction) {

@@ -360,19 +360,17 @@ items to an existing menu or toolbar.
             name="Accounts Content"
             priority="high">
          <triggerPoints>
-            <or>
                <instanceof
                      value="net.sf.jmoney.model2.DatastoreManager">
                </instanceof>
-               <instanceof
-                     value="net.sf.jmoney.model2.Account">
-               </instanceof>
-            </or>
          </triggerPoints>
          <possibleChildren>
             <or>
                <instanceof
-                     value="net.sf.jmoney.model2.DatastoreManager">
+                     value="net.sf.jmoney.views.AccountsNode">
+               </instanceof>
+               <instanceof
+                     value="net.sf.jmoney.views.CategoriesNode">
                </instanceof>
                <instanceof
                      value="net.sf.jmoney.model2.Account">

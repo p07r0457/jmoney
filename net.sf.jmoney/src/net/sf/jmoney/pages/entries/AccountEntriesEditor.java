@@ -203,17 +203,13 @@ public class AccountEntriesEditor extends EditorPart {
         
         fEntriesFilterSection = new EntriesFilterSection(form.getBody(), filter, allEntryDataObjects, toolkit);
         fEntriesFilterSection.getSection().setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
-//        managedForm.addPart(fEntriesFilterSection);
-//        fEntriesFilterSection.initialize(managedForm);
         
 		// Get the handler service and pass it on so that handlers can be activated as appropriate
 		IHandlerService handlerService = (IHandlerService) getSite().getService(IHandlerService.class);
 
 		if (account instanceof CurrencyAccount) {
-        	final EntriesSection fEntriesSection = new EntriesSection(form.getBody(), (CurrencyAccount)account, filter, toolkit, handlerService);
+        	final EntriesSection fEntriesSection = new EntriesSection(form.getBody(), account, filter, toolkit, handlerService);
             fEntriesSection.getSection().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-//            managedForm.addPart(fEntriesSection);
-//            fEntriesSection.initialize(managedForm);
 
             filter.addPropertyChangeListener(new PropertyChangeListener() {
     			public void propertyChange(PropertyChangeEvent event) {
@@ -221,10 +217,9 @@ public class AccountEntriesEditor extends EditorPart {
     			}
     		});
         } else {
-        	final CategoryEntriesSection fEntriesSection = new CategoryEntriesSection(form.getBody(), (IncomeExpenseAccount)account, filter, toolkit, handlerService);
+//        	final CategoryEntriesSection fEntriesSection = new CategoryEntriesSection(form.getBody(), (IncomeExpenseAccount)account, filter, toolkit, handlerService);
+        	final EntriesSection fEntriesSection = new EntriesSection(form.getBody(), account, filter, toolkit, handlerService);
             fEntriesSection.getSection().setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-//            managedForm.addPart(fEntriesSection);
-//            fEntriesSection.initialize(managedForm);
 
             filter.addPropertyChangeListener(new PropertyChangeListener() {
     			public void propertyChange(PropertyChangeEvent event) {
