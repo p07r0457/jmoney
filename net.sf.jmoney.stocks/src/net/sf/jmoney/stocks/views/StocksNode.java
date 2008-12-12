@@ -25,38 +25,36 @@ package net.sf.jmoney.stocks.views;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Commodity;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.stocks.model.Stock;
 import net.sf.jmoney.views.IDynamicTreeNode;
 
 public class StocksNode implements IDynamicTreeNode {
 
-    public static final String ID = "net.sf.jmoney.stocks.stocks"; //$NON-NLS-1$
+	private DatastoreManager sessionManager;
+	
+	public StocksNode(DatastoreManager sessionManager) {
+		this.sessionManager = sessionManager;
+	}
 
 	public boolean hasChildren() {
-		Session session = JMoneyPlugin.getDefault().getSession();
-		if (session != null) {
-			for (Commodity commodity: session.getCommodityCollection()) {
-				if (commodity instanceof Stock) {
-					return true;
-				}
+		Session session = sessionManager.getSession();
+		for (Commodity commodity: session.getCommodityCollection()) {
+			if (commodity instanceof Stock) {
+				return true;
 			}
-			return false;
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	public Collection<Object> getChildren() {
-		Session session = JMoneyPlugin.getDefault().getSession();
+		Session session = sessionManager.getSession();
 		ArrayList<Object> children = new ArrayList<Object>();
-		if (session != null) {
-			for (Commodity commodity: session.getCommodityCollection()) {
-				if (commodity instanceof Stock) {
-					children.add(commodity);
-				}
+		for (Commodity commodity: session.getCommodityCollection()) {
+			if (commodity instanceof Stock) {
+				children.add(commodity);
 			}
 		}
 		return children;

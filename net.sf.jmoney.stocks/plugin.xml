@@ -5,19 +5,48 @@
    <extension
          point="net.sf.jmoney.pages">
          
-      <node
-          id="stocks"
-	      label="Stocks"
-    	  position="300"
-    	  class="net.sf.jmoney.stocks.views.StocksNode">
-      </node>
-
       <pages
             class="net.sf.jmoney.stocks.pages.StockEntriesPage"
             extendable-property-set="net.sf.jmoney.stocks.stockAccount"
             id="entries"
             position="1">
       </pages>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.navigator.viewer">
+      <viewer
+            viewerId="net.sf.jmoney.navigationView">
+      </viewer>
+      <viewerContentBinding
+            viewerId="net.sf.jmoney.navigationView">
+         <includes>
+            <contentExtension
+                  isRoot="true"
+                  pattern="net.sf.jmoney.stocks.navigator.stocksContent">
+            </contentExtension>
+         </includes>
+      </viewerContentBinding>
+   </extension>
+
+   <extension
+         point="org.eclipse.ui.navigator.navigatorContent">
+      <navigatorContent
+            activeByDefault="true"
+            contentProvider="net.sf.jmoney.stocks.navigator.StocksContentProvider"
+            icon="icons/accounts.gif"
+            id="net.sf.jmoney.stocks.navigator.stocksContent"
+            labelProvider="net.sf.jmoney.stocks.navigator.StocksLabelProvider"
+            name="Stocks Content"
+            priority="low">
+         <triggerPoints>
+            <or>
+               <instanceof
+                     value="net.sf.jmoney.model2.DatastoreManager">
+               </instanceof>
+            </or>
+         </triggerPoints>
+      </navigatorContent>
    </extension>
 
    <extension

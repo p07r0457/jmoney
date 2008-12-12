@@ -8,7 +8,8 @@ Bundle-Localization: plugin
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.ui.forms,
- net.sf.jmoney
+ net.sf.jmoney,
+ org.eclipse.ui.navigator
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: JMoney.sf.net
 Export-Package: net.sf.jmoney.stocks.model
