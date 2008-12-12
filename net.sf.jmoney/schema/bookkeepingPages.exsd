@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Schema file written by PDE -->
-<schema targetNamespace="net.sf.jmoney">
+<schema targetNamespace="net.sf.jmoney" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
-      <appInfo>
+      <appinfo>
          <meta.schema plugin="net.sf.jmoney" id="pages" name="Bookkeeping Pages"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          Add a page to an editor.  
          A page may be specific to any object type that is listed
@@ -23,9 +23,13 @@
    </annotation>
 
    <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element />
+         </appinfo>
+      </annotation>
       <complexType>
          <sequence>
-            <element ref="node" minOccurs="0" maxOccurs="unbounded"/>
             <element ref="pages" minOccurs="0" maxOccurs="unbounded"/>
          </sequence>
          <attribute name="point" type="string" use="required">
@@ -102,102 +106,46 @@ Pages will be ordered according to this value.
       </complexType>
    </element>
 
-   <element name="node">
-      <complexType>
-         <attribute name="id" type="string">
-            <annotation>
-               <documentation>
-                  The id of the node.
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="label" type="string">
-            <annotation>
-               <documentation>
-                  The label to be displayed in the navigation tree.
-     If a node already exists with the same id but the
-     label is different then a separate node will be shown.
-     Selecting either node will cause the same pages to
-     be shown.
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="icon" type="string">
-            <annotation>
-               <documentation>
-                  The icon to be displayed in the navigation
-                  view.
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="parent" type="string">
-            <annotation>
-               <documentation>
-                  The id of the parent node.
-     If this attribute is empty or is not specified
-     then the node added to the root node.
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="position" type="integer">
-            <annotation>
-               <documentation>
-                  A number in the range 0 to 1000.
-                  Nodes with the same parent are sorted according
-                  to this number.
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="class" type="string">
-            <annotation>
-               <documentation>
-                  Class of object that must implement IDynamicTreeNode.  Use this attribute if this node has child nodes that are dynamically determined at runtime.  This attribute is typically used when objects from the datastore are listed in the navigation view.
-               </documentation>
-            </annotation>
-         </attribute>
-      </complexType>
-   </element>
-
    <annotation>
-      <appInfo>
+      <appinfo>
          <meta.section type="since"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          [Enter the first release in which this extension point appears.]
       </documentation>
    </annotation>
 
    <annotation>
-      <appInfo>
+      <appinfo>
          <meta.section type="examples"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          [Enter extension point usage example here.]
       </documentation>
    </annotation>
 
    <annotation>
-      <appInfo>
+      <appinfo>
          <meta.section type="apiInfo"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          [Enter API information here.]
       </documentation>
    </annotation>
 
    <annotation>
-      <appInfo>
+      <appinfo>
          <meta.section type="implementation"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          [Enter information about supplied implementation of this extension point.]
       </documentation>
    </annotation>
 
    <annotation>
-      <appInfo>
+      <appinfo>
          <meta.section type="copyright"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          Copyright (c) 2004 Nigel Westbury (westbury@users.sourceforge.net)
       </documentation>
