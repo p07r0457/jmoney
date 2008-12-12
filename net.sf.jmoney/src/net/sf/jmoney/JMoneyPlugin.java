@@ -32,31 +32,20 @@ import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-import java.util.Vector;
 
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyInfo;
-import net.sf.jmoney.model2.CurrentSessionChangeListener;
 import net.sf.jmoney.model2.DatastoreManager;
-import net.sf.jmoney.model2.ISessionChangeFirer;
 import net.sf.jmoney.model2.Propagator;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.SessionChangeFirerListener;
-import net.sf.jmoney.model2.SessionChangeListener;
 import net.sf.jmoney.views.TreeNode;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -82,8 +71,6 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	
 //    private DatastoreManager sessionManager = null;
 
-    private Vector<CurrentSessionChangeListener> sessionChangeListeners = new Vector<CurrentSessionChangeListener>();
-
     /**
 	 * A context that is active if a session is open and inactive if no session
 	 * is open. This context is used to set the enabled state of menu and
@@ -91,23 +78,6 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	 */
 	private IContextActivation sessionOpenContext = null;
 	  
-    // Create a listener that listens for changes to the new session.
-    private SessionChangeFirerListener sessionChangeFirerListener =
-    	new SessionChangeFirerListener() {
-    		public void sessionChanged(ISessionChangeFirer firer) {
-    	        if (!sessionChangeListeners.isEmpty()) {
-    	        	// Take a copy of the listener list.  By doing this we
-    	        	// allow listeners to safely add or remove listeners.
-    	        	SessionChangeListener listenerArray[] = new SessionChangeListener[sessionChangeListeners.size()];
-    	        	sessionChangeListeners.copyInto(listenerArray);
-    	        	for (SessionChangeListener listener: listenerArray) {
-    	        		firer.fire(listener);
-    	        	}
-    	        }
-    			
-    		}
-    	};
-
     /**
 	 * The constructor.
 	 */
@@ -420,31 +390,6 @@ public class JMoneyPlugin extends AbstractUIPlugin {
          * able to undo it.
          */
         session.setDefaultCurrency(currency);
-    }
-
-	/**
-	 * Adds a change listener.
-	 * <P>
-	 * The listener is active only for as long as the given control exists.  When the
-	 * given control is disposed, the listener is removed and will receive no more
-	 * notifications.
-	 * <P>
-	 * This method is generally used when a listener is used to update contents in a
-	 * control.  Typically multiple controls are updated by a listener and the parent
-	 * composite control is passed to this method.
-	 * 
-	 * @param listener
-	 * @param control
-	 */
-	public void addSessionChangeListener(final CurrentSessionChangeListener listener, Control control) {
-        sessionChangeListeners.add(listener);
-        
-		// Remove the listener when the given control is disposed.
-		control.addDisposeListener(new DisposeListener() {
-			public void widgetDisposed(DisposeEvent e) {
-				sessionChangeListeners.remove(listener);
-			}
-		});
     }
 
     // Preferences

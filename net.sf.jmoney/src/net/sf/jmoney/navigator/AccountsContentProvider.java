@@ -14,7 +14,6 @@ import net.sf.jmoney.model2.SessionChangeListener;
 import net.sf.jmoney.views.AccountsNode;
 import net.sf.jmoney.views.CategoriesNode;
 import net.sf.jmoney.views.IDynamicTreeNode;
-import net.sf.jmoney.views.TreeNode;
 
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -162,14 +161,6 @@ public class AccountsContentProvider implements ITreeContentProvider {
 			if (newParent instanceof Account) {
 				viewer.refresh(newParent, false);
 			}
-		}
-
-		public void sessionReplaced(Session oldSession, Session newSession) {
-			// Update the viewer (if new session is null then the
-			// viewer will not be visible but it is good to release the
-			// references to the account objects in the dead session).
-			viewer.refresh(TreeNode.getTreeNode(AccountsNode.ID), false);
-			viewer.refresh(TreeNode.getTreeNode(CategoriesNode.ID), false);
 		}
 	}
 

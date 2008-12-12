@@ -26,20 +26,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.eclipse.ui.IWorkbenchWindow;
-
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.AccountInfo;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.CurrentSessionChangeListener;
 import net.sf.jmoney.model2.DatastoreManager;
-import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.ListPropertyAccessor;
-import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.SessionChangeAdapter;
 
 /**
  * @author Administrateur
