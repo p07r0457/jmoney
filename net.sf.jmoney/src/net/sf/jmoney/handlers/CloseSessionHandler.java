@@ -9,8 +9,10 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.ui.services.IEvaluationService;
 
 public class CloseSessionHandler extends AbstractHandler {
 
@@ -36,6 +38,14 @@ public class CloseSessionHandler extends AbstractHandler {
 				} catch (WorkbenchException e) {
 					throw new ExecutionException("Workbench exception occured while closing window.", e); //$NON-NLS-1$
 				}
+
+				/*
+				 * The state of the 'isSessionOpen' property has changed, so we
+				 * force a re-evaluation which will update any UI items whose
+				 * state depends on this property.
+				 */
+				IEvaluationService service = (IEvaluationService)PlatformUI.getWorkbench().getService(IEvaluationService.class);
+				service.requestEvaluation("net.sf.jmoney.core.isSessionOpen");
 			}
 		}
 

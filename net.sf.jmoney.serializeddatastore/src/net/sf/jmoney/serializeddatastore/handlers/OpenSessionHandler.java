@@ -20,8 +20,10 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.ui.services.IEvaluationService;
 
 /**
  * Shows the given perspective. If no perspective is specified in the
@@ -85,6 +87,15 @@ public final class OpenSessionHandler extends AbstractHandler {
 			 * in this window (i.e. if we did not close the previous page above).
 			 */
 			window.openPage(newSessionManager);
+			
+			/*
+			 * The state of the 'isSessionOpen' property may have changed, so we
+			 * force a re-evaluation which will update any UI items whose
+			 * state depends on this property.
+			 */
+			IEvaluationService service = (IEvaluationService)PlatformUI.getWorkbench().getService(IEvaluationService.class);
+			service.requestEvaluation("net.sf.jmoney.core.isSessionOpen");
+
 		} catch (WorkbenchException e) {
 			ErrorDialog.openError(window.getShell(),
 					"Open Session failed", e

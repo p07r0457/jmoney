@@ -2,21 +2,6 @@
 <?eclipse version="3.0"?>
 <plugin>
 
-     <extension
-         point="net.sf.jmoney.pages">
-      <node
-          id="currencyNode"
-	      label="%NavigationTreeModel.currencies"
-    	  icon="icons/currencies.gif"
-    	  position="210">
-      </node>
-      <pages
-            node="net.sf.jmoney.currencypage.currencyNode"
-            class="net.sf.jmoney.currencypage.CurrencyPage"
-            id="currencies">
-      </pages>
-   </extension>
-
    <extension
          point="org.eclipse.ui.editors">
       <editor
@@ -38,11 +23,9 @@
     <handler
           class="net.sf.jmoney.currencypage.OpenEditorHandler"
           commandId="net.sf.jmoney.commands.openCurrencies">
-       <enabledWhen>
-          <with variable="activeContexts">
-             <iterate operator="or">
-                <equals value="net.sf.jmoney.sessionOpen"/>
-             </iterate>
+        <enabledWhen>
+          <with variable="activeWorkbenchWindow">
+		   <test property="net.sf.jmoney.core.isSessionOpen"/>
           </with>
        </enabledWhen>
     </handler>

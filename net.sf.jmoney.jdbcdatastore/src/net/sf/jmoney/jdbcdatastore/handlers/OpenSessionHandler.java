@@ -10,8 +10,10 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.ui.services.IEvaluationService;
 
 /**
  * Shows the given perspective. If no perspective is specified in the
@@ -45,6 +47,14 @@ public final class OpenSessionHandler extends AbstractHandler {
 						.getMessage(), e.getStatus());
 				throw new ExecutionException("Session could not be opened.", e); //$NON-NLS-1$
 			}
+
+			/*
+			 * The state of the 'isSessionOpen' property may have changed, so we
+			 * force a re-evaluation which will update any UI items whose
+			 * state depends on this property.
+			 */
+			IEvaluationService service = (IEvaluationService)PlatformUI.getWorkbench().getService(IEvaluationService.class);
+			service.requestEvaluation("net.sf.jmoney.core.isSessionOpen");
 		}
 		
 		return null;

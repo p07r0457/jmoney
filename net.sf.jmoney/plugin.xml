@@ -417,4 +417,15 @@ items to an existing menu or toolbar.
       </linkHelper>
    </extension>
 
+
+  <extension point="org.eclipse.core.expressions.propertyTesters">
+   <propertyTester
+    	 namespace="net.sf.jmoney.core"
+       id="net.sf.jmoney.core.SessionTester"
+       properties="isSessionOpen"
+       type="org.eclipse.ui.IWorkbenchWindow"
+       class="net.sf.jmoney.SessionTester">
+     </propertyTester>
+  </extension>
+
 </plugin>

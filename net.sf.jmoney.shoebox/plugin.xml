@@ -4,21 +4,6 @@
 
    <extension-point id="templates" name="Shoebox Transaction Templates" schema="schema/shoeboxTemplates.exsd"/>
 
-     <extension
-         point="net.sf.jmoney.pages">
-      <node
-          id="shoeboxNode"
-	      label="%navigationTreeLabel"
-    	  icon="icons/shoebox.gif"
-    	  position="250">
-      </node>
-      <pages
-            node="net.sf.jmoney.shoebox.shoeboxNode"
-            class="net.sf.jmoney.shoebox.ShoeboxPage"
-            id="editor">
-      </pages>
-   </extension>
-
 <extension point="org.eclipse.ui.commands">
     <command
           id="net.sf.jmoney.commands.openShoebox"
@@ -30,10 +15,8 @@
     <handler
           commandId="net.sf.jmoney.commands.openShoebox">
         <enabledWhen>
-          <with variable="activeContexts">
-             <iterate operator="or">
-                <equals value="net.sf.jmoney.sessionOpen"/>
-             </iterate>
+          <with variable="activeWorkbenchWindow">
+		   <test property="net.sf.jmoney.core.isSessionOpen"/>
           </with>
        </enabledWhen>
         <class

@@ -10,7 +10,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.forms,
  org.eclipse.ui.intro,
  org.eclipse.ui.navigator,
- org.eclipse.ui.views
+ org.eclipse.ui.views,
+ org.eclipse.core.expressions
 Export-Package: net.sf.jmoney,
  net.sf.jmoney.actions,
  net.sf.jmoney.entrytable,
