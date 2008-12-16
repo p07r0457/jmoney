@@ -20,6 +20,7 @@ import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.CurrencyInfo;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
@@ -259,7 +260,14 @@ public class CurrencyEditor extends EditorPart {
 	public void createPartControl(Composite parent) {
 		FormToolkit toolkit = new FormToolkit(Display.getCurrent());
 		
-		this.session = JMoneyPlugin.getDefault().getSession();
+		/*
+		 * Get the session for this editor from the workbench page input.
+		 * It should not be possible to open this editor on a page with null
+		 * input (no session set) because the command is not enabled if no
+		 * session is set. 
+		 */
+		DatastoreManager manager = (DatastoreManager)getSite().getPage().getInput();
+		session = manager.getSession();
 
 		Composite container = toolkit.createComposite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
