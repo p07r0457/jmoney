@@ -46,6 +46,8 @@ public class PaypalAccount extends CurrencyAccount {
 
 	protected IObjectKey paypalFeesAccountKey;
 
+	protected IObjectKey donationAccountKey;
+
 	/**
 	 * The full constructor for a PaypalAccount object.  This constructor is called
 	 * only by the datastore when loading data from the datastore.  The properties
@@ -57,7 +59,7 @@ public class PaypalAccount extends CurrencyAccount {
 	 */
 	public PaypalAccount(
 			IObjectKey objectKey, 
-			ListKey<?> parent,
+			ListKey<? super PaypalAccount> parent,
 			String name,
 			IListManager<CapitalAccount> subAccounts,
 			String abbreviation,
@@ -68,6 +70,7 @@ public class PaypalAccount extends CurrencyAccount {
 			IObjectKey transferCreditCardAccountKey,
 			IObjectKey saleAndPurchaseAccountKey,
 			IObjectKey paypalFeesAccountKey,
+			IObjectKey donationAccountKey,
 			IValues extensionValues) { 
 		super(objectKey, parent, name, subAccounts, abbreviation, comment, currencyKey, startBalance, extensionValues);
 		
@@ -75,6 +78,7 @@ public class PaypalAccount extends CurrencyAccount {
         this.transferCreditCardAccountKey = transferCreditCardAccountKey;
         this.saleAndPurchaseAccountKey = saleAndPurchaseAccountKey;
         this.paypalFeesAccountKey = paypalFeesAccountKey;
+        this.donationAccountKey = donationAccountKey;
 	}
 
 	/**
@@ -96,6 +100,7 @@ public class PaypalAccount extends CurrencyAccount {
         this.transferCreditCardAccountKey = null;
         this.saleAndPurchaseAccountKey = null;
         this.paypalFeesAccountKey = null;
+        this.donationAccountKey = null;
 	}
 
 	// TODO: remove this.  If we could get the property set, typed
@@ -161,5 +166,19 @@ public class PaypalAccount extends CurrencyAccount {
 
 		// Notify the change manager.
 		processPropertyChange(PaypalAccountInfo.getPaypalFeesAccountAccessor(), oldAccount, paypalFeesAccount);
+	}
+
+	public IncomeExpenseAccount getDonationAccount() {
+        return donationAccountKey == null
+        ? null
+        		: (IncomeExpenseAccount)donationAccountKey.getObject();
+	}
+
+	public void setDonationAccount(IncomeExpenseAccount donationAccount) {
+		IncomeExpenseAccount oldAccount = getDonationAccount();
+		donationAccountKey = donationAccount.getObjectKey();
+
+		// Notify the change manager.
+		processPropertyChange(PaypalAccountInfo.getDonationAccountAccessor(), oldAccount, donationAccount);
 	}
 }

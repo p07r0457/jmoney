@@ -60,17 +60,15 @@ public class PaypalAccountInfo implements IPropertySetInfo {
 
 	private static ExtendablePropertySet<PaypalAccount> propertySet = PropertySet.addDerivedFinalPropertySet(PaypalAccount.class, Messages.PaypalAccountInfo_ObjectDescription, CurrencyAccountInfo.getPropertySet(), new IExtendableObjectConstructors<PaypalAccount>() { //$NON-NLS-1$
 
-		@SuppressWarnings("unchecked")
-		public PaypalAccount construct(IObjectKey objectKey, ListKey parentKey) {
+		public PaypalAccount construct(IObjectKey objectKey, ListKey<? super PaypalAccount> parentKey) {
 			return new PaypalAccount(
 					objectKey, 
 					parentKey
 			);
 		}
 
-		@SuppressWarnings("unchecked")
 		public PaypalAccount construct(IObjectKey objectKey,
-				ListKey parentKey, IValues values) {
+				ListKey<? super PaypalAccount> parentKey, IValues values) {
 			return new PaypalAccount(
 					objectKey, 
 					parentKey, 
@@ -84,6 +82,7 @@ public class PaypalAccountInfo implements IPropertySetInfo {
 					values.getReferencedObjectKey(PaypalAccountInfo.getTransferCreditCardAccountAccessor()),
 					values.getReferencedObjectKey(PaypalAccountInfo.getSaleAndPurchaseAccountAccessor()),
 					values.getReferencedObjectKey(PaypalAccountInfo.getPaypalFeesAccountAccessor()),
+					values.getReferencedObjectKey(PaypalAccountInfo.getDonationAccountAccessor()),
 					values
 			);
 		}
@@ -93,6 +92,7 @@ public class PaypalAccountInfo implements IPropertySetInfo {
 	private static ReferencePropertyAccessor<BankAccount> transferCreditCardAccountAccessor = null;
 	private static ReferencePropertyAccessor<IncomeExpenseAccount> saleAndPurchaseAccountAccessor = null;
 	private static ReferencePropertyAccessor<IncomeExpenseAccount> paypalFeesAccountAccessor = null;
+	private static ReferencePropertyAccessor<IncomeExpenseAccount> donationAccountAccessor = null;
 
     public PropertySet<PaypalAccount> registerProperties() {
     	
@@ -104,7 +104,7 @@ public class PaypalAccountInfo implements IPropertySetInfo {
 		
         IReferenceControlFactory<PaypalAccount,BankAccount> creditCardAccountControlFactory = new AccountControlFactory<PaypalAccount,BankAccount>() {
 			public IObjectKey getObjectKey(PaypalAccount parentObject) {
-				return parentObject.transferBankAccountKey;
+				return parentObject.transferCreditCardAccountKey;
 			}
 		};
 		
@@ -120,10 +120,17 @@ public class PaypalAccountInfo implements IPropertySetInfo {
 			}
 		};
 		
+        IReferenceControlFactory<PaypalAccount,IncomeExpenseAccount> donationAccountControlFactory = new AccountControlFactory<PaypalAccount,IncomeExpenseAccount>() {
+			public IObjectKey getObjectKey(PaypalAccount parentObject) {
+				return parentObject.donationAccountKey;
+			}
+		};
+		
 		transferBankAccountAccessor       = propertySet.addProperty("transferBank", Messages.PaypalAccountInfo_TransferBankAccount, BankAccount.class, 2, 70,  bankAccountControlFactory, null); //$NON-NLS-1$
 		transferCreditCardAccountAccessor = propertySet.addProperty("transferCreditCard", Messages.PaypalAccountInfo_TransferCreditCardAccount, BankAccount.class, 2, 70,  creditCardAccountControlFactory, null); //$NON-NLS-1$
 		saleAndPurchaseAccountAccessor    = propertySet.addProperty("saleAndPurchaseAccount", Messages.PaypalAccountInfo_SaleAndPurchaseAccount, IncomeExpenseAccount.class, 2, 70,  saleAndPurchaseAccountControlFactory, null); //$NON-NLS-1$
 		paypalFeesAccountAccessor         = propertySet.addProperty("paypalFeesAccount", Messages.PaypalAccountInfo_PaypalFeesAccount, IncomeExpenseAccount.class, 2, 70,  paypalFeesAccountControlFactory, null); //$NON-NLS-1$
+		donationAccountAccessor           = propertySet.addProperty("donationAccount", Messages.PaypalAccountInfo_DonationAccount, IncomeExpenseAccount.class, 2, 70,  donationAccountControlFactory, null); //$NON-NLS-1$
 		
 		return propertySet;
 	}
@@ -149,5 +156,9 @@ public class PaypalAccountInfo implements IPropertySetInfo {
 
 	public static ReferencePropertyAccessor<IncomeExpenseAccount> getPaypalFeesAccountAccessor() {
 		return paypalFeesAccountAccessor;
+	}	
+
+	public static ReferencePropertyAccessor<IncomeExpenseAccount> getDonationAccountAccessor() {
+		return donationAccountAccessor;
 	}	
 }

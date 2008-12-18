@@ -9,6 +9,7 @@ public class Messages extends NLS {
 	public static String PaypalAccountInfo_TransferCreditCardAccount;
 	public static String PaypalAccountInfo_SaleAndPurchaseAccount;
 	public static String PaypalAccountInfo_PaypalFeesAccount;
+	public static String PaypalAccountInfo_DonationAccount;
 	public static String TransferAccountsPage_PageTitle;
 	public static String TransferAccountsPage_PageMessage;
 	public static String PaypalFeesPage_PageTitle;
