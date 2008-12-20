@@ -7,7 +7,6 @@ import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.AccountsNode;
 import net.sf.jmoney.views.CategoriesNode;
-import net.sf.jmoney.views.IDynamicTreeNode;
 import net.sf.jmoney.views.TreeNode;
 
 import org.eclipse.jface.viewers.ILabelProvider;
