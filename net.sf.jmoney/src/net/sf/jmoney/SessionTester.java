@@ -1,7 +1,7 @@
 package net.sf.jmoney;
 
-import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.expressions.PropertyTester;
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.ui.IWorkbenchWindow;
 
 /**

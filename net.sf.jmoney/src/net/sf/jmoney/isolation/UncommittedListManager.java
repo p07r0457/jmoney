@@ -29,7 +29,6 @@ import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.ListKey;
-import net.sf.jmoney.resources.Messages;
 
 /**
  * This is a special implementation of the IListManager interface. It is used

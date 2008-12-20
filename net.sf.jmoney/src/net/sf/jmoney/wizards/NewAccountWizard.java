@@ -51,7 +51,6 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWizard;
-import org.eclipse.ui.PlatformUI;
 
 public class NewAccountWizard extends Wizard implements IWorkbenchWizard {
 	
