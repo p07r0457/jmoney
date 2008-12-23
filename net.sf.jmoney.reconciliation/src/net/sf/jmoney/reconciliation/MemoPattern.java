@@ -81,7 +81,7 @@ public final class MemoPattern extends ExtendableObject {
      */
 	public MemoPattern(
 			IObjectKey objectKey,
-			ListKey    parentKey,
+			ListKey<? super MemoPattern> parentKey,
 			int        orderingIndex,
 			String     pattern,
     		String     check,
@@ -122,7 +122,7 @@ public final class MemoPattern extends ExtendableObject {
      */
 	public MemoPattern(
 			IObjectKey objectKey,
-    		ListKey    parentKey) {
+    		ListKey<? super MemoPattern> parentKey) {
 		super(objectKey, parentKey);
 
 		this.orderingIndex = 0;

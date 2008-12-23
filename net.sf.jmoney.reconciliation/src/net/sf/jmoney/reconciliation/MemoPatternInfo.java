@@ -56,12 +56,12 @@ public class MemoPatternInfo implements IPropertySetInfo {
 	
 	private static ExtendablePropertySet<MemoPattern> propertySet = PropertySet.addBaseFinalPropertySet(MemoPattern.class, "Account Import Entry Pattern", new IExtendableObjectConstructors<MemoPattern>() {
 
-		public MemoPattern construct(IObjectKey objectKey, ListKey parentKey) {
+		public MemoPattern construct(IObjectKey objectKey, ListKey<? super MemoPattern> parentKey) {
 			return new MemoPattern(objectKey, parentKey);
 		}
 
 		public MemoPattern construct(IObjectKey objectKey,
-				ListKey parentKey, IValues values) {
+				ListKey<? super MemoPattern> parentKey, IValues values) {
 			return new MemoPattern(
 					objectKey, 
 					parentKey, 
@@ -85,7 +85,7 @@ public class MemoPatternInfo implements IPropertySetInfo {
 	private static ScalarPropertyAccessor<String> memoAccessor = null;
 	private static ReferencePropertyAccessor<Currency> incomeExpenseCurrencyAccessor = null;
 
-	public PropertySet registerProperties() {
+	public PropertySet<MemoPattern> registerProperties() {
 		IPropertyControlFactory<Integer> integerControlFactory = new IntegerControlFactory();
 
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
