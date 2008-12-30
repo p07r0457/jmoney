@@ -120,7 +120,7 @@ public class PaypalAccount extends CurrencyAccount {
 
 	public void setTransferBank(BankAccount transferBankAccount) {
 		BankAccount oldAccount = getTransferBank();
-		transferBankAccountKey = transferBankAccount.getObjectKey();
+		transferBankAccountKey = (transferBankAccount == null) ? null : transferBankAccount.getObjectKey();
 
 		// Notify the change manager.
 		processPropertyChange(PaypalAccountInfo.getTransferBankAccountAccessor(), oldAccount, transferBankAccount);
@@ -134,7 +134,7 @@ public class PaypalAccount extends CurrencyAccount {
 
 	public void setTransferCreditCard(BankAccount transferCreditCardAccount) {
 		BankAccount oldAccount = getTransferCreditCard();
-		transferCreditCardAccountKey = transferCreditCardAccount.getObjectKey();
+		transferCreditCardAccountKey = (transferCreditCardAccount == null) ? null : transferCreditCardAccount.getObjectKey();
 
 		// Notify the change manager.
 		processPropertyChange(PaypalAccountInfo.getTransferCreditCardAccountAccessor(), oldAccount, transferCreditCardAccount);
@@ -148,7 +148,7 @@ public class PaypalAccount extends CurrencyAccount {
 
 	public void setSaleAndPurchaseAccount(IncomeExpenseAccount saleAndPurchaseAccount) {
 		IncomeExpenseAccount oldAccount = getSaleAndPurchaseAccount();
-		saleAndPurchaseAccountKey = saleAndPurchaseAccount.getObjectKey();
+		saleAndPurchaseAccountKey = (saleAndPurchaseAccount == null) ? null : saleAndPurchaseAccount.getObjectKey();
 
 		// Notify the change manager.
 		processPropertyChange(PaypalAccountInfo.getSaleAndPurchaseAccountAccessor(), oldAccount, saleAndPurchaseAccount);
@@ -162,7 +162,7 @@ public class PaypalAccount extends CurrencyAccount {
 
 	public void setPaypalFeesAccount(IncomeExpenseAccount paypalFeesAccount) {
 		IncomeExpenseAccount oldAccount = getPaypalFeesAccount();
-		paypalFeesAccountKey = paypalFeesAccount.getObjectKey();
+		paypalFeesAccountKey = (paypalFeesAccount == null) ? null : paypalFeesAccount.getObjectKey();
 
 		// Notify the change manager.
 		processPropertyChange(PaypalAccountInfo.getPaypalFeesAccountAccessor(), oldAccount, paypalFeesAccount);
@@ -176,7 +176,7 @@ public class PaypalAccount extends CurrencyAccount {
 
 	public void setDonationAccount(IncomeExpenseAccount donationAccount) {
 		IncomeExpenseAccount oldAccount = getDonationAccount();
-		donationAccountKey = donationAccount.getObjectKey();
+		donationAccountKey = (donationAccount == null) ? null : donationAccount.getObjectKey();
 
 		// Notify the change manager.
 		processPropertyChange(PaypalAccountInfo.getDonationAccountAccessor(), oldAccount, donationAccount);
