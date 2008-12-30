@@ -280,7 +280,8 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 		        } else if (row.type.equals("eBay Payment Sent")
 		        		|| row.type.equals("eBay Payment Received")
 		        		|| row.type.equals("Payment Received")
-		        		|| row.type.equals("Payment Sent")) {
+		        		|| row.type.equals("Payment Sent")
+		        		|| row.type.equals("Web Accept Payment Sent")) {
 
 		        	if (row.status.equals("Refunded")) {
 		        		/*
@@ -427,13 +428,15 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 		        	if (paypalAccount.getDonationAccount() == null) {
 		        		throw new UnexpectedDataException("A donation has been found in the imported data.  However, no category was set for donations.  Please go to the Paypal account properties and select a category to be used for donations.");
 		        	}
-		        	createTransaction(row.date, row.grossAmount, "donation sent", paypalAccount.getDonationAccount(), "transfer to Paypal");
-		        } else if (row.type.equals("Web Accept Payment Sent")) {
+		        	
+		        	// Donations do not have memos set, so the payee name is used as the memo in the
+		        	// expense category entry.
+		        	createTransaction(row, "donation sent", paypalAccount.getDonationAccount(), row.payeeName);
 		        } else if (row.type.equals("Add Funds from a Bank Account")) {
 		        	if (paypalAccount.getTransferBank() == null) {
 		        		throw new UnexpectedDataException("A bank account transfer has been found in the imported data.  However, no bank account has been set in the properties for this Paypal account.");
 		        	}
-		        	createTransaction(row.date, row.grossAmount, "transfer from bank", paypalAccount.getTransferBank(), "transfer to Paypal");
+		        	createTransaction(row, "transfer from bank", paypalAccount.getTransferBank(), "transfer to Paypal");
 		        } else if (row.type.equals("Update to eCheck Sent")) {
 		        	// Updates do not involve a financial transaction
 		        	// so nothing to import.
@@ -447,7 +450,7 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 		        	if (paypalAccount.getSaleAndPurchaseAccount() == null) {
 		        		throw new UnexpectedDataException("An eCheck entry has been found in the imported data.  However, no sale and purchase account has been set in the properties for this Paypal account.");
 		        	}
-		        	createTransaction(row.date, row.grossAmount, "payment by transfer", paypalAccount.getSaleAndPurchaseAccount(), "transfer from Paypal");
+		        	createTransaction(row, "payment by transfer", paypalAccount.getSaleAndPurchaseAccount(), "transfer from Paypal");
 		        } else if (row.type.equals("Express Checkout Payment Sent")) {
 		        	if (paypalAccount.getSaleAndPurchaseAccount() == null) {
 		        		throw new UnexpectedDataException("An 'Express Checkout' entry has been found in the imported data.  However, no sale and purchase account has been set in the properties for this Paypal account.");
@@ -473,18 +476,18 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 
 		        		createRefundTransaction(row, match);
 		        	} else {
-			        	createTransaction(row.date, row.grossAmount, row.payeeName, paypalAccount.getSaleAndPurchaseAccount(), row.payeeName + " - Paypal payment");
+			        	createTransaction(row, row.payeeName, paypalAccount.getSaleAndPurchaseAccount(), row.payeeName + " - Paypal payment");
 		        	}
 		        } else if (row.type.equals("Charge From Credit Card")) {
 		        	if (paypalAccount.getTransferCreditCard() == null) {
 		        		throw new UnexpectedDataException("A credit card charge has been found in the imported data.  However, no credit card account has been set in the properties for this Paypal account.");
 		        	}
-		        	createTransaction(row.date, row.grossAmount, "payment from credit card", paypalAccount.getTransferCreditCard(), "transfer to Paypal");
+		        	createTransaction(row, "payment from credit card", paypalAccount.getTransferCreditCard(), "transfer to Paypal");
 		        } else if (row.type.equals("Credit to Credit Card")) {
 		        	if (paypalAccount.getTransferCreditCard() == null) {
 		        		throw new UnexpectedDataException("A credit card refund has been found in the imported data.  However, no credit card account has been set in the properties for this Paypal account.");
 		        	}
-		        	createTransaction(row.date, row.grossAmount, "refund to credit card", paypalAccount.getTransferCreditCard(), "refund from Paypal");
+		        	createTransaction(row, "refund to credit card", paypalAccount.getTransferCreditCard(), "refund from Paypal");
 		        } else {
 //		        	throw new UnexpectedData("type", type);
 					MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Unable to read CSV file", "Entry found with unknown type: '" + row.type + "'.");
@@ -679,19 +682,20 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 		return null;
 	}
 
-	private void createTransaction(Date date, Long grossAmount, String paypalAccountMemo, Account otherAccount, String otherAccountMemo) {
+	private void createTransaction(Row row, String paypalAccountMemo, Account otherAccount, String otherAccountMemo) {
 		Transaction trans = session.createTransaction();
-		trans.setDate(date);
+		trans.setDate(row.date);
 		
 		PaypalEntry mainEntry = trans.createEntry().getExtension(PaypalEntryInfo.getPropertySet(), true);
 		mainEntry.setAccount(paypalAccount);
-		mainEntry.setAmount(grossAmount);
+		mainEntry.setAmount(row.grossAmount);
 		mainEntry.setMemo(paypalAccountMemo);
-		mainEntry.setValuta(date);
+		mainEntry.setValuta(row.date);
+    	mainEntry.setPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor(), row.transactionId);
 		
 		Entry otherEntry = trans.createEntry();
 		otherEntry.setAccount(otherAccount);
-		otherEntry.setAmount(-grossAmount);
+		otherEntry.setAmount(-row.grossAmount);
 		otherEntry.setMemo(otherAccountMemo);
 	}
 
