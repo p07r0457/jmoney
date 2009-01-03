@@ -60,7 +60,7 @@ public class PaypalAccountInfo implements IPropertySetInfo {
 
 	private static ExtendablePropertySet<PaypalAccount> propertySet = PropertySet.addDerivedFinalPropertySet(PaypalAccount.class, Messages.PaypalAccountInfo_ObjectDescription, CurrencyAccountInfo.getPropertySet(), new IExtendableObjectConstructors<PaypalAccount>() { //$NON-NLS-1$
 
-		public PaypalAccount construct(IObjectKey objectKey, ListKey<? super PaypalAccount> parentKey) {
+		public PaypalAccount construct(IObjectKey objectKey, ListKey parentKey) {
 			return new PaypalAccount(
 					objectKey, 
 					parentKey
@@ -68,7 +68,7 @@ public class PaypalAccountInfo implements IPropertySetInfo {
 		}
 
 		public PaypalAccount construct(IObjectKey objectKey,
-				ListKey<? super PaypalAccount> parentKey, IValues values) {
+				ListKey parentKey, IValues values) {
 			return new PaypalAccount(
 					objectKey, 
 					parentKey, 
