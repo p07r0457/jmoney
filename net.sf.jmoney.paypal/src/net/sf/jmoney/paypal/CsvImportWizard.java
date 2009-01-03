@@ -440,6 +440,15 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 		        				}
 		        			}
 
+		        			if (row.memo.length() == 0) {
+		        				// Certain transactions don't have memos, so we fill one in
+				        		if (row.type.equals("Payment Received")) {
+				        			row.memo = row.payeeName + " - gross payment";
+				        		}
+				        		if (row.type.equals("Payment Sent")) {
+				        			row.memo = row.payeeName + " - payment";
+				        		}
+		        			}
 		        			createCategoryEntry(trans, row, paypalAccount.getSaleAndPurchaseAccount());
 		        		}
 		        		assertValid(trans);
@@ -587,10 +596,12 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
     	
     	Currency currency = paypalAccount.getCurrency();
     	String separator = "";
-    	long baseAmount = -row.netAmount;
+    	long baseAmount = lineItemEntry.getAmount();
     	String memo = row.memo;
     	
-		if (row.quantityString.length() != 0 && !row.quantityString.equals("1")) {
+		if (row.quantityString.length() != 0 
+				&& !row.quantityString.equals("0")
+				&& !row.quantityString.equals("1")) {
 			memo = memo + " x" + row.quantityString;
 		}
 		
@@ -713,8 +724,7 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 			row.quantityString = nextLine[32];
 			row.balance = getAmount(nextLine[34]);
 
-	        DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
-	        Date date;
+	        DateFormat df = new SimpleDateFormat("MM/dd/yy");
 			try {
 				row.date = df.parse(dateString);
 			} catch (ParseException e) {
@@ -783,6 +793,9 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 		String parts [] = amountString.replaceAll(",", "").split("\\.");
 		long amount = Long.parseLong(parts[0]) * 100;
 		if (parts.length > 1) {
+			if (parts[1].length() == 1) {
+				parts[1] += "0"; 
+			}
 			amount += Long.parseLong(parts[1]);
 		}
 		return negate ? -amount : amount;

@@ -65,10 +65,10 @@ public class CsvImportWizardPage extends WizardPage  {
 		Label label = new Label(composite, SWT.WRAP);
 		label.setText(
 				"The selected CSV file will be imported.  As you have not selected an account into which the import is to be made, " +
-				"a bank account called 'Paypal' must exist and the data will be imported into that account. " +
-				"The file must have been downloaded from Paypal for this import to work.  To download from Paypal, choose 'Comma Separated Values'." +
-				"You should also check the box to get itemized entries. " +
-				"If entries have already been imported, this import will not create duplicates.");
+				"a single Paypal account must exist and the data will be imported into that account. " +
+				"The file must have been downloaded from Paypal for this import to work.  To download from Paypal, choose 'Comma Delimited - All Activity'." +
+				"You should also check the box 'Include shopping cart details' at the bottom to get itemized entries. " +
+				"If entries have already been imported, this import will create duplicates but this needs to be fixed by incorporating this better into the reconciliation plug-in.");
 		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gd.horizontalSpan = 2;
 		gd.widthHint = 600;
