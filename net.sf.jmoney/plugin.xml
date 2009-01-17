@@ -122,7 +122,7 @@ items to an existing menu or toolbar.
 -->
 
 <extension point="org.eclipse.ui.menus">
-     <menuContribution locationURI="menu:file?after=sessionGroup">
+     <menuContribution locationURI="menu:file?after=closeSessionGroup">
         <command
               commandId="net.sf.jmoney.closeSession"/>
      </menuContribution>

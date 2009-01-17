@@ -223,6 +223,14 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
 
         menu.add(new Separator("sessionGroup")); //$NON-NLS-1$
 
+        /*
+         * This group is used only so that we can add the 'close session' command
+         * at this position.  We should be able to just add the menu item here,
+         * but I cannot get that to work, so we add the group here and then add
+         * the 'close session' to this group declaratively in plugin.xml. 
+         */
+        menu.add(new Separator("closeSessionGroup")); //$NON-NLS-1$
+
         menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 
         menu.add(new Separator());

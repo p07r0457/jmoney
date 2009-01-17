@@ -202,85 +202,18 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     }
     
     /**
-     * Sets the Session object.  The session object contains the accounting
-     * data so this method will replace the accounting data in the framework
-     * with a new set of accounting data.  This method is normally called
-     * only by plug-ins that implement a datastore when accounting data
-     * is loaded.
-     *
-     * To avoid doing too much work and user input before setting the new 
-     * session, only to find that the
-     * user does not want to close the previous session, plug-in actions
-     * that expect to set a new session should call canClose on the previous
-     * session before preparing the new session.  It is the caller's
-     * responsibility to ensure that
-     * both canClose() and close() are called on the previous session.
-     * This method will not close any previously set session.
+     * Initializes a new session with stuff that all sessions must have.
      */
-    // TODO: Clean this up.  It doesn't set the session manager anymore,
-    // but sort of initializes it.
-    public void setSessionManager(DatastoreManager newSessionManager) {
-        // It is up to the caller to ensure that the previous session
-        // has been closed.
-
-//        if (sessionManager == newSessionManager)
-//            return;
-//        DatastoreManager oldSessionManager = sessionManager;
-//        sessionManager = newSessionManager;
-        
+    public void initializeNewSession(DatastoreManager newSessionManager) {
     	/*
-		 * JMoney depends on having at least one currency, which must also be
-		 * set as the default currency. If there is no default currency then
-		 * this must be a new datastore and we must set a default currency.
-		 */
-//        if (newSessionManager != null) {
-        	if (newSessionManager.getSession().getDefaultCurrency() == null) {
-        		initSystemCurrency(getSession());
-        	}
-//        }
-
-        // It is possible, tho I can't think why, that a listener who
-        // we tell of a change in the current session will modify either
-        // the old or the new session.
-        // The correct way of handling this is:
-        // - if a change is made to the old session then only those
-        //   listeners that have not been told of the change of session
-        //   should be told.
-        // - if a change is made to the new session then only those
-        //	 listeners that have already been told of the change of session
-        //   (including the listener that made the change) should be told
-        //   of the change.
-        // This code handles this correctly.
-        
-        // We do not support the scenario where a listener replaces the
-        // session itself while being notified of a change in the session.
-        // Any attempt to do this will cause an exception to be thrown.
-        // TODO: Throw this exception.
-        
-        // If a listener adds a further listener then the correct
-        // way of handling this is for the new listener to start
-        // recieving change notifications immediately.  This includes
-        // changes made to the session by the listener that had added
-        // the new listener and also changes made by other listeners that
-        // had not, at the time the new listener had been created,
-        // been notified of the change in the current session.
-
-        // TODO: Implement the above or decide on a design and what
-        // restrictions we impose.
-        
-//        if (!sessionChangeListeners.isEmpty()) {
-//        	// Take a copy of the listener list.  By doing this we
-//        	// allow listeners to safely add or remove listeners.
-//        	CurrentSessionChangeListener listenerArray[] = new CurrentSessionChangeListener[sessionChangeListeners.size()];
-//        	sessionChangeListeners.copyInto(listenerArray);
-//        	for (int i = 0; i < listenerArray.length; i++) {
-//        		listenerArray[i].sessionReplaced(
-//        				oldSessionManager == null ? null : oldSessionManager.getSession(), 
-//        				newSessionManager == null ? null : newSessionManager.getSession()
-//        		);
-//        	}
-//        }
-	}
+    	 * JMoney depends on having at least one currency, which must also be
+    	 * set as the default currency. If there is no default currency then
+    	 * this must be a new datastore and we must set a default currency.
+    	 */
+    	if (newSessionManager.getSession().getDefaultCurrency() == null) {
+    		initSystemCurrency(newSessionManager.getSession());
+    	}
+    }
 
     /**
      * Get the corresponding ISO currency for "code". If "session" already
