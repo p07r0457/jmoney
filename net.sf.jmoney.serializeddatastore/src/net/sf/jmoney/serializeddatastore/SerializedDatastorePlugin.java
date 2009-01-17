@@ -27,7 +27,6 @@ import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Session;
 
@@ -239,9 +238,8 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * 			or if the current session was created by
 	 * 			another plug-in that also implements a datastore.
 	 */
-	public static boolean checkSessionImplementation(IWorkbenchWindow window) {
-		DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
-		if (sessionManager == null) {
+	public static boolean checkSessionImplementation(DatastoreManager datastoreManager, IWorkbenchWindow window) {
+		if (datastoreManager == null) {
 			MessageDialog dialog =
 				new MessageDialog(
 						window.getShell(), 
@@ -252,7 +250,7 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 						new String[] { IDialogConstants.OK_LABEL }, 0);
 			dialog.open();
 			return false;
-		} else if (sessionManager instanceof SessionManager) {
+		} else if (datastoreManager instanceof SessionManager) {
 			return true;
 		} else {
 			MessageDialog dialog =

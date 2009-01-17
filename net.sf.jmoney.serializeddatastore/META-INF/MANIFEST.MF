@@ -11,7 +11,6 @@ Require-Bundle: org.eclipse.ui,
 Export-Package: net.sf.jmoney.gui,
  net.sf.jmoney.model,
  net.sf.jmoney.serializeddatastore,
- net.sf.jmoney.serializeddatastore.actions,
  net.sf.jmoney.serializeddatastore.formats
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: JMoney.sf.net

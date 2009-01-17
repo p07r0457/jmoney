@@ -15,65 +15,76 @@
                name="In New Window"
                optional="true">
          </commandParameter>
+         <commandParameter
+               id="net.sf.jmoney.serializeddatastore.openSession.newSession"
+               name="Create New Session"
+               optional="true">
+         </commandParameter>
       </command>
+    <command
+            defaultHandler="net.sf.jmoney.serializeddatastore.handlers.SaveSessionHandler"
+            id="net.sf.jmoney.serializeddatastore.saveSession"
+            name="Save Session"/>
+    <command
+            defaultHandler="net.sf.jmoney.serializeddatastore.handlers.SaveSessionAsHandler"
+            id="net.sf.jmoney.serializeddatastore.saveSessionAs"
+            name="Save Session As"/>
    </extension>
 
-   <extension
-         point="org.eclipse.ui.actionSets">
-      <actionSet
-            label="Sample Action Set"
-            visible="true"
-            id="net.sf.jmoney.serializeddatastore.actionSet">
-
-         <action
-               label="%MainFrame.new"
-               icon="icons/New16.gif"
-               tooltip="New Session"
-               class="net.sf.jmoney.serializeddatastore.actions.NewSessionAction"
-               menubarPath="file/fileGroup"
-               toolbarPath="fileGroup"
-               id="net.sf.jmoney.serializeddatastore.actions.NewSession">
-         </action>
-         <action
-               label="%MainFrame.open"
-               icon="icons/Open16.gif"
-               tooltip="Open Session..."
-               class="net.sf.jmoney.serializeddatastore.actions.OpenSessionAction"
-               menubarPath="file/fileGroup"
-               toolbarPath="fileGroup"
-               id="net.sf.jmoney.serializeddatastore.actions.OpenSession">
-         </action>
-         <action
-               label="%MainFrame.save"
-               icon="icons/Save16.gif"
-               tooltip="Save Session"
-               class="net.sf.jmoney.serializeddatastore.actions.SaveSessionAction"
-               menubarPath="file/fileGroup"
-               toolbarPath="fileGroup"
-               id="net.sf.jmoney.serializeddatastore.actions.SaveSession">
-         </action>
-         <action
-               label="%MainFrame.saveAs"
-               icon="icons/SaveAs16.gif"
-               tooltip="Save Session As"
-               class="net.sf.jmoney.serializeddatastore.actions.SaveSessionAsAction"
-               menubarPath="file/fileGroup"
-               toolbarPath="fileGroup"
-               id="net.sf.jmoney.serializeddatastore.actions.SaveSessionAs">
-         </action>
-      </actionSet>
-   </extension>
-
+<!--
+Note that we use 'before' as the placement.  This ensures that
+the menu items are added in the same order as specified here.
+If we were to use 'after', we would see the menu in reverse order.
+-->
    <extension point="org.eclipse.ui.menus">
-     <menuContribution locationURI="menu:file?after=sessionGroup">
+     <menuContribution
+           locationURI="menu:file?after=sessionGroup">
+        <separator
+              name="net.sf.jmoney.serializeddatastore.sessionGroup"
+              visible="true">
+        </separator>
+     </menuContribution>
+
+     <menuContribution locationURI="menu:file?before=net.sf.jmoney.serializeddatastore.sessionGroup">
         <command
               commandId="net.sf.jmoney.serializeddatastore.openSession"
+               icon="icons/New16.gif"
+              label="New Session...">
+                         <parameter
+                 name="net.sf.jmoney.serializeddatastore.openSession.newSession"
+                 value="true">
+           </parameter>
+        </command>
+              
+     </menuContribution>
+
+     <menuContribution locationURI="menu:file?before=net.sf.jmoney.serializeddatastore.sessionGroup">
+        <command
+              commandId="net.sf.jmoney.serializeddatastore.openSession"
+               icon="icons/New16.gif"
+              label="New Session in New Window...">
+           <parameter
+                 name="net.sf.jmoney.serializeddatastore.openSession.newSession"
+                 value="true">
+           </parameter>
+           <parameter
+                 name="net.sf.jmoney.serializeddatastore.openSession.newWindow"
+                 value="true">
+           </parameter>
+        </command>
+     </menuContribution>
+
+     <menuContribution locationURI="menu:file?before=net.sf.jmoney.serializeddatastore.sessionGroup">
+        <command
+              commandId="net.sf.jmoney.serializeddatastore.openSession"
+               icon="icons/Open16.gif"
               label="Open Session..."/>
      </menuContribution>
 
-     <menuContribution locationURI="menu:file?after=sessionGroup">
+     <menuContribution locationURI="menu:file?before=net.sf.jmoney.serializeddatastore.sessionGroup">
         <command
               commandId="net.sf.jmoney.serializeddatastore.openSession"
+               icon="icons/Open16.gif"
               label="Open Session in New Window...">
            <parameter
                  name="net.sf.jmoney.serializeddatastore.openSession.newWindow"
@@ -81,6 +92,21 @@
            </parameter>
         </command>
      </menuContribution>
+
+     <menuContribution locationURI="menu:file?before=net.sf.jmoney.serializeddatastore.sessionGroup">
+        <command
+              commandId="net.sf.jmoney.serializeddatastore.saveSession"
+               icon="icons/Save16.gif"
+              label="%MainFrame.save"/>
+     </menuContribution>
+
+     <menuContribution locationURI="menu:file?before=net.sf.jmoney.serializeddatastore.sessionGroup">
+        <command
+              commandId="net.sf.jmoney.serializeddatastore.saveSessionAs"
+               icon="icons/SaveAs16.gif"
+              label="%MainFrame.saveAs"/>
+     </menuContribution>
+
    </extension>
 
    <extension

@@ -26,10 +26,28 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.services.IEvaluationService;
 
 /**
- * Shows the given perspective. If no perspective is specified in the
- * parameters, then this opens the perspective selection dialog.
- * 
- * @since 3.1
+ * Opens a new session.  The command has two boolean parameters, so
+ * this handler is really handling four different commands.
+ * <P>
+ * The parameters are:
+ * <UL>
+ * <LI>
+ * net.sf.jmoney.serializeddatastore.openSession.newWindow
+ * <BR>
+ * 		true if the session is to be opened in a new window
+ * <BR>
+ * 		false if the session is to be opened in the current window,
+ * 			first closing any session that may already be open in
+ * 			the current window
+ * </LI><LI> 
+ * net.sf.jmoney.serializeddatastore.openSession.newSession
+ * <BR>
+ * 		true if a new session is to be created
+ * <BR>
+ * 		false if an existing session is to be opened from file,
+ * 			in which case the user will be prompted for the file name
+ * </LI>
+ * </UL>
  */
 public final class OpenSessionHandler extends AbstractHandler {
 
@@ -45,9 +63,15 @@ public final class OpenSessionHandler extends AbstractHandler {
 	}
 
 	/**
-	 * True/false value to open the perspective in a new window.
+	 * True/false value to open the session in a new window.
 	 */
 	private static final String PARAMETER_NEW_WINDOW = "net.sf.jmoney.serializeddatastore.openSession.newWindow"; //$NON-NLS-1$
+
+	/**
+	 * True/false value to create a new session
+	 * (rather than open one from a file)
+	 */
+	private static final String PARAMETER_NEW_SESSION = "net.sf.jmoney.serializeddatastore.openSession.newSession"; //$NON-NLS-1$
 
 	public final Object execute(final ExecutionEvent event)
 			throws ExecutionException {
@@ -55,6 +79,7 @@ public final class OpenSessionHandler extends AbstractHandler {
 
 		final Map parameters = event.getParameters();
 		final String newWindow = (String) parameters.get(PARAMETER_NEW_WINDOW);
+		final String newSession = (String) parameters.get(PARAMETER_NEW_SESSION);
 
 		if (newWindow == null || newWindow.equalsIgnoreCase("false")) { //$NON-NLS-1$
 			if (!JMoneyPlugin.getDefault().saveOldSession(window)) {
@@ -69,16 +94,21 @@ public final class OpenSessionHandler extends AbstractHandler {
 			IWorkbenchPage activePage = window.getActivePage();
 			activePage.close();
 		}
-		
+
 		try {
-			SessionManager newSessionManager = openSession(window);
-			if (newSessionManager == null) {
-				return null;
+			SessionManager newSessionManager;
+			if (newSession != null && newSession.equalsIgnoreCase("true")) { //$NON-NLS-1$
+	            newSessionManager = SerializedDatastorePlugin.getDefault().newSession();
+			} else {
+				newSessionManager = openSession(window);
+				if (newSessionManager == null) {
+					return null;
+				}
 			}
 			
 			// This call needs to be cleaned up, but is still needed
 			// to ensure a default currency is set.
-			JMoneyPlugin.getDefault().setSessionManager(newSessionManager);
+			JMoneyPlugin.getDefault().initializeNewSession(newSessionManager);
 
 			/*
 			 * This call will open the session in the current window if there
