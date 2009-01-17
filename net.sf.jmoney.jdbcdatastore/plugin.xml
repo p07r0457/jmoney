@@ -12,10 +12,19 @@
    </extension>
 
    <extension point="org.eclipse.ui.menus">
-     <menuContribution locationURI="menu:file?after=sessionGroup">
+     <menuContribution
+           locationURI="menu:file?after=sessionGroup">
+        <separator
+              name="net.sf.jmoney.jdbcdatastore.sessionGroup"
+              visible="true">
+        </separator>
+     </menuContribution>
+
+     <menuContribution locationURI="menu:file?after=net.sf.jmoney.jdbcdatastore.sessionGroup">
         <command
               commandId="net.sf.jmoney.jdbcdatastore.openSession"
-              label="Open Session..."/>
+               icon="icons/database.gif"
+              label="Open Database..."/>
      </menuContribution>
      
      <menuContribution locationURI="toolbar:main?after=openEditors">

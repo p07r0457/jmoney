@@ -35,7 +35,7 @@ public final class OpenSessionHandler extends AbstractHandler {
 			if (sessionManager != null) {
 				// This call needs to be cleaned up, but is still needed
 				// to ensure a default currency is set.
-				JMoneyPlugin.getDefault().setSessionManager(sessionManager);
+				JMoneyPlugin.getDefault().initializeNewSession(sessionManager);
 
 			}
 
