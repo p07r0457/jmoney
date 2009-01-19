@@ -13,7 +13,7 @@ public class SessionTester extends PropertyTester {
 
 	public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
 		IWorkbenchWindow window = (IWorkbenchWindow)receiver;
-		if ("isSessionOpen".equals(property)) {
+		if ("isSessionOpen".equals(property)) { //$NON-NLS-1$
 			Object input = window.getActivePage().getInput();
 
 			return expectedValue == null

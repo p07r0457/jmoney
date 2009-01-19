@@ -22,9 +22,9 @@ public class AccountsLabelProvider extends LabelProvider implements ILabelProvid
 		if (element instanceof TreeNode) {
 			return ((TreeNode)element).getImage();
 		} else if (element instanceof AccountsNode) {
-			return JMoneyPlugin.createImage("icons/accounts.gif");
+			return JMoneyPlugin.createImage("icons/accounts.gif"); //$NON-NLS-1$
 		} else if (element instanceof CategoriesNode) {
-			return JMoneyPlugin.createImage("icons/category.gif");
+			return JMoneyPlugin.createImage("icons/category.gif"); //$NON-NLS-1$
 		} else if (element instanceof ExtendableObject) {
 			ExtendableObject extendableObject = (ExtendableObject)element;
 			return PropertySet.getPropertySet(extendableObject.getClass()).getIcon();

@@ -45,7 +45,7 @@ public class CloseSessionHandler extends AbstractHandler {
 				 * state depends on this property.
 				 */
 				IEvaluationService service = (IEvaluationService)PlatformUI.getWorkbench().getService(IEvaluationService.class);
-				service.requestEvaluation("net.sf.jmoney.core.isSessionOpen");
+				service.requestEvaluation("net.sf.jmoney.core.isSessionOpen"); //$NON-NLS-1$
 			}
 		}
 

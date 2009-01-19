@@ -92,6 +92,7 @@ public class Messages extends NLS {
 	public static String EntryInfo_Description;
 	public static String EntryInfo_Memo;
 	public static String EntryInfo_Valuta;
+	public static String ExtendableObjectPropertySource_0;
 	public static String ForeignCurrencyDialog_Close;
 	public static String ForeignCurrencyDialog_Credit;
 	public static String ForeignCurrencyDialog_Debit;

@@ -48,7 +48,7 @@ public class JMoneyPerspective implements IPerspectiveFactory {
         //bottom.addView(ERROR_LOG_VIEW_ID);
 
         layout.addShowViewShortcut(JMoneyCommonNavigator.ID);
-        layout.addShowViewShortcut("org.eclipse.ui.views.PropertySheet");
+        layout.addShowViewShortcut("org.eclipse.ui.views.PropertySheet"); //$NON-NLS-1$
         layout.addShowViewShortcut(ERROR_LOG_VIEW_ID);
 
         layout.addNewWizardShortcut("net.sf.jmoney.wizards.new.bankaccount"); //$NON-NLS-1$

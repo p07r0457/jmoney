@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.sf.jmoney.resources.Messages;
+
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.swt.widgets.Composite;
@@ -102,7 +104,7 @@ public class ExtendableObjectPropertySource implements IPropertySource {
 				}
 
 				public String getDescription() {
-					return "description for " + accessor.displayName;
+					return Messages.ExtendableObjectPropertySource_0 + accessor.displayName;
 				}
 
 				public String getDisplayName() {
