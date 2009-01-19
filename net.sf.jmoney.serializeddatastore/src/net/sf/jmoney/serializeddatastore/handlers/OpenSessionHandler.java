@@ -124,11 +124,11 @@ public final class OpenSessionHandler extends AbstractHandler {
 			 * state depends on this property.
 			 */
 			IEvaluationService service = (IEvaluationService)PlatformUI.getWorkbench().getService(IEvaluationService.class);
-			service.requestEvaluation("net.sf.jmoney.core.isSessionOpen");
+			service.requestEvaluation("net.sf.jmoney.core.isSessionOpen"); //$NON-NLS-1$
 
 		} catch (WorkbenchException e) {
 			ErrorDialog.openError(window.getShell(),
-					"Open Session failed", e
+					Messages.OpenSessionHandler_OpenSessionFailed, e
 					.getMessage(), e.getStatus());
 			throw new ExecutionException("Session could not be opened.", e); //$NON-NLS-1$
 		} catch (OpenSessionException e) {

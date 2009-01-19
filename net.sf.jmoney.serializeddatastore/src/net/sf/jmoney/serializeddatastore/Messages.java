@@ -21,6 +21,7 @@ public class Messages extends NLS {
 	public static String JMoneyXmlFormat_WriteErrorTitle;
 	public static String OpenSessionAction_ErrorMessage;
 	public static String OpenSessionAction_ErrorTitle;
+	public static String OpenSessionHandler_OpenSessionFailed;
 	public static String RootCategory_CategoryName;
 	public static String SerializedDatastorePlugin_MessageMenu;
 	public static String SerializedDatastorePlugin_MessageNoSession;

@@ -48,8 +48,10 @@ If we were to use 'after', we would see the menu in reverse order.
      <menuContribution locationURI="menu:file?before=net.sf.jmoney.serializeddatastore.sessionGroup">
         <command
               commandId="net.sf.jmoney.serializeddatastore.openSession"
-               icon="icons/New16.gif"
-              label="New Session...">
+              icon="icons/New16.gif"
+              label="%MainFrame.new.label"
+              mnemonic="%MainFrame.new.mnemonic"
+              tooltip="%MainFrame.new.tooltip">
                          <parameter
                  name="net.sf.jmoney.serializeddatastore.openSession.newSession"
                  value="true">
@@ -61,8 +63,10 @@ If we were to use 'after', we would see the menu in reverse order.
      <menuContribution locationURI="menu:file?before=net.sf.jmoney.serializeddatastore.sessionGroup">
         <command
               commandId="net.sf.jmoney.serializeddatastore.openSession"
-               icon="icons/New16.gif"
-              label="New Session in New Window...">
+              icon="icons/New16.gif"
+              label="%MainFrame.newInWin.label"
+              mnemonic="%MainFrame.newInWin.mnemonic"
+              tooltip="%MainFrame.newInWin.tooltip">
            <parameter
                  name="net.sf.jmoney.serializeddatastore.openSession.newSession"
                  value="true">
@@ -77,15 +81,19 @@ If we were to use 'after', we would see the menu in reverse order.
      <menuContribution locationURI="menu:file?before=net.sf.jmoney.serializeddatastore.sessionGroup">
         <command
               commandId="net.sf.jmoney.serializeddatastore.openSession"
-               icon="icons/Open16.gif"
-              label="Open Session..."/>
+              icon="icons/Open16.gif"
+              label="%MainFrame.open.label"
+              mnemonic="%MainFrame.open.mnemonic"
+              tooltip="%MainFrame.open.tooltip"/>
      </menuContribution>
 
      <menuContribution locationURI="menu:file?before=net.sf.jmoney.serializeddatastore.sessionGroup">
         <command
               commandId="net.sf.jmoney.serializeddatastore.openSession"
-               icon="icons/Open16.gif"
-              label="Open Session in New Window...">
+              icon="icons/Open16.gif"
+              label="%MainFrame.openInWin.label"
+              mnemonic="%MainFrame.openInWin.mnemonic"
+              tooltip="%MainFrame.openInWin.tooltip">
            <parameter
                  name="net.sf.jmoney.serializeddatastore.openSession.newWindow"
                  value="true">
@@ -96,15 +104,17 @@ If we were to use 'after', we would see the menu in reverse order.
      <menuContribution locationURI="menu:file?before=net.sf.jmoney.serializeddatastore.sessionGroup">
         <command
               commandId="net.sf.jmoney.serializeddatastore.saveSession"
-               icon="icons/Save16.gif"
-              label="%MainFrame.save"/>
+              icon="icons/Save16.gif"
+              label="%MainFrame.save"
+              mnemonic="%MainFrame.save.mnemonic"/>
      </menuContribution>
 
      <menuContribution locationURI="menu:file?before=net.sf.jmoney.serializeddatastore.sessionGroup">
         <command
               commandId="net.sf.jmoney.serializeddatastore.saveSessionAs"
-               icon="icons/SaveAs16.gif"
-              label="%MainFrame.saveAs"/>
+              icon="icons/SaveAs16.gif"
+              label="%MainFrame.saveAs"
+              mnemonic="%MainFrame.saveAs.mnemonic"/>
      </menuContribution>
 
    </extension>
