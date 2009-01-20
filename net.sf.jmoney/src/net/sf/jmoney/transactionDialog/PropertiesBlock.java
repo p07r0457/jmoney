@@ -144,6 +144,7 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 
 			if (entry.getAccount() != null) {
 				for (ScalarPropertyAccessor accessor : EntryInfo.getPropertySet().getScalarProperties3()) {
+					// Be sure not to include the three properties that have their own columns
 					if (accessor != EntryInfo.getAccountAccessor()
 							&& accessor != EntryInfo.getMemoAccessor()
 							&& accessor != EntryInfo.getAmountAccessor()
@@ -158,9 +159,9 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 				ScalarPropertyAccessor accessor, Account account) {
 			// TODO Push this into the metadata.
 			if (account instanceof CapitalAccount) {
-				return true;
+				return !accessor.getName().equals("net.sf.jmoney.paypal.entryProperties.itemUrl");
 			} else {
-				return false;
+				return accessor.getName().equals("net.sf.jmoney.paypal.entryProperties.itemUrl");
 			}
 		}
 

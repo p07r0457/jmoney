@@ -1,21 +1,22 @@
 package net.sf.jmoney.handlers;
 
-import net.sf.jmoney.JMoneyPlugin;
-import net.sf.jmoney.model2.DatastoreManager;
-import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.resources.Messages;
+import net.sf.jmoney.views.SessionEditorInputFactory;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IPersistableElement;
 
+/**
+ * This input is used for any editor which does not need input, the input to
+ * the editor really being the session which is the input to the window page.
+ * <P>
+ * Therefore this input has no fields.
+ */
 public class SessionEditorInput implements IEditorInput, IPersistableElement {
 
-    protected IMemento memento;
-    
-	public SessionEditorInput(Session session, IMemento memento) {
-		this.memento = memento;
+	public SessionEditorInput() {
 	}
 
 	public boolean exists() {
@@ -24,12 +25,10 @@ public class SessionEditorInput implements IEditorInput, IPersistableElement {
 	}
 
 	public ImageDescriptor getImageDescriptor() {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	public String getName() {
-		// TODO Auto-generated method stub
 		return Messages.SessionEditorInput_Name;
 	}
 
@@ -43,77 +42,39 @@ public class SessionEditorInput implements IEditorInput, IPersistableElement {
     }
 
 	public String getToolTipText() {
-		// TODO Auto-generated method stub
 		return Messages.SessionEditorInput_ToolTipText;
 	}
 
 	public Object getAdapter(Class adapter) {
-		// TODO Auto-generated method stub
 		return null;
 	}
-    /* (non-Javadoc)
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
+
     @Override
     public boolean equals(Object obj) {
-	if (obj == this) {
-	    return true;
-	}
+    	if (obj instanceof SessionEditorInput) {
+    		return true;
+    	}
 
-	if (obj instanceof SessionEditorInput) {
-	    return true; // TODO: check same session?
-	}
-
-	return false;
+    	return false;
     }
 
-    /* (non-Javadoc)
-     * @see java.lang.Object#hashCode()
-     */
     @Override	
     public int hashCode() {
-    	// TODO: look at session?
         return SessionEditorInput.class.hashCode();
     }
 
-    /**
-     * @return The input object for this editor
-     */
-    public Session getSession() {
-        return null; //session;
-    }
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.IPersistableElement#getFactoryId()
-	 */
 	public String getFactoryId() {
-		return "net.sf.jmoney.sessionEditor"; //$NON-NLS-1$
+		return SessionEditorInputFactory.ID;
 	}
 
 	/**
 	 * @param memento
 	 */
 	public void saveState(IMemento memento) {
-		// Views and editors can be restored in any order, and
-		// all must be able to be restored independently of the
-		// others.  Therefore the session memento must be saved in the memento 
-		// for every view and editor.
+		/*
+		 * We save the part name and icon so that they appear correctly
+		 * in the tab after a restore and before the editor is activated.
+		 */
 		
-    	// Save the details of the session.
-    	DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
-		if (sessionManager != null) {
-			IMemento sessionMemento = memento.createChild("session"); //$NON-NLS-1$
-			IPersistableElement pe = (IPersistableElement)sessionManager.getAdapter(IPersistableElement.class);
-			sessionMemento.putString("currentSessionFactoryId", pe.getFactoryId()); //$NON-NLS-1$
-			pe.saveState(sessionMemento.createChild("currentSession")); //$NON-NLS-1$
-		}
-		
-	}
-
-	/**
-	 * @return
-	 */
-	public IMemento getMemento() {
-		return memento;
 	}
 }

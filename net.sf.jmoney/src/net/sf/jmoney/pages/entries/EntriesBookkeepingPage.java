@@ -24,7 +24,7 @@ package net.sf.jmoney.pages.entries;
 
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.resources.Messages;
-import net.sf.jmoney.views.NodeEditor;
+import net.sf.jmoney.views.AccountEditor;
 
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -39,7 +39,7 @@ public class EntriesBookkeepingPage implements IBookkeepingPageFactory {
     /* (non-Javadoc)
      * @see net.sf.jmoney.IBookkeepingPage#createPages(java.lang.Object, org.eclipse.swt.widgets.Composite)
      */
-	public void createPages(NodeEditor editor, IEditorInput input, IMemento memento) throws PartInitException {
+	public void createPages(AccountEditor editor, IEditorInput input, IMemento memento) throws PartInitException {
 		IEditorPart formPage = new AccountEntriesEditor();
 		editor.addPage(formPage, Messages.EntriesBookkeepingPage_Label);
     }

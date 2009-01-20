@@ -22,54 +22,45 @@
 
 package net.sf.jmoney.views;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.AccountInfo;
 import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.PropertySetNotFoundException;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.ui.IElementFactory;
 import org.eclipse.ui.IMemento;
 
-public class NodeEditorFactory implements IElementFactory {
+public class AccountEditorInputFactory implements IElementFactory {
+	public static final String ID = "net.sf.jmoney.accountEditor"; //$NON-NLS-1$
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IElementFactory#createElement(org.eclipse.ui.IMemento)
 	 * 
 	 */
 	// While debugging this code, one can inspect the memento data
-	// in the file runtime-workspace\.metadata\.plugins\org.eclipse.ui.workbench\workbench.xml.
+	// in the file <runtime-workspace>\.metadata\.plugins\org.eclipse.ui.workbench\workbench.xml.
 	public IAdaptable createElement(IMemento memento) {
-		// Get the session from the data in the memento.
-		Session session = JMoneyPlugin.openSession(memento.getChild("session")); //$NON-NLS-1$
-		if (session == null) {
-			// null indicates the element could not be re-created.
+		// Only account object are supported here.
+		String fullAccountName = memento.getString("account"); //$NON-NLS-1$
+		String accountName = memento.getString("label"); //$NON-NLS-1$
+		String propertySetId = memento.getString("propertySet"); //$NON-NLS-1$
+
+		ExtendablePropertySet<? extends Account> propertySet;
+		try {
+			propertySet = AccountInfo.getPropertySet().getDerivedPropertySet(propertySetId);
+		} catch (PropertySetNotFoundException e) {
+			/*
+			 * The property set is no longer valid. This could happen if the
+			 * plug-in that added the property set (account type) is no longer
+			 * installed. We return null which means the editor will not be
+			 * restored.
+			 */
 			return null;
 		}
 		
-		// See if the node is a TreeNode.
-		String nodeId = memento.getString("treeNode"); //$NON-NLS-1$
-		if (nodeId != null) {
-			TreeNode node = TreeNode.getTreeNode(nodeId);
-			if (node != null) {
-				return new NodeEditorInput(node, node.getLabel(), node.getImage(), node.getPageFactories(), memento);
-			}
-		}
-		
-		// See if the node is an account.
-		String fullAccountName = memento.getString("account"); //$NON-NLS-1$
 		if (fullAccountName != null) {
-			Account account = JMoneyPlugin.getDefault().getSession().getAccountByFullName(fullAccountName);
-			if (account != null) {
-   				ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(account.getClass());
-				return new NodeEditorInput(
-						account, 
-						account.toString(), 
-						propertySet.getIcon(), 
-						propertySet.getPageFactories(), 
-						memento);
-			}
+			return new AccountEditorInput(fullAccountName, accountName, propertySet, memento);
 		}
 		
 		// null indicates the element could not be re-created.

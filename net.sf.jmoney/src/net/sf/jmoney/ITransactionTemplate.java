@@ -27,6 +27,7 @@ import java.util.Collection;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.Session;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -86,6 +87,7 @@ public interface ITransactionTemplate {
 	/**
 	 * 
 	 * @param parent
+	 * @param session 
 	 * @param expandedControls true if speed of user entry is more important,
 	 * 			false if conservation of screen space is more important.
 	 * 			For example, a list box may be appropriate when expandedControls
@@ -96,7 +98,7 @@ public interface ITransactionTemplate {
 	 * 			by the user 
 	 * @return
 	 */
-	Control createControl(Composite parent, boolean expandedControls, Account account, Collection<IObjectKey> ourEntryList);
+	Control createControl(Composite parent, Session session, boolean expandedControls, Account account, Collection<IObjectKey> ourEntryList);
 
 	void init(IMemento memento);
 	void saveState(IMemento memento);

@@ -86,8 +86,18 @@
       <command
             name="%Commands.viewTransactionDetails"
             id="net.sf.jmoney.transactionDetails"/>
+      <command
+            name="Open Editor"
+            id="net.sf.jmoney.openEditor"
+            defaultHandler="net.sf.jmoney.handlers.OpenEditorHandler">
+	            <commandParameter
+               id="net.sf.jmoney.openEditor.editorId"
+               name="Editor Id"
+               optional="false">
+         </commandParameter>
+      </command>
    </extension>
-   
+	   
    <extension point="org.eclipse.ui.bindings">
       <key
             commandId="net.sf.jmoney.newTransaction"
@@ -197,22 +207,22 @@ items to an existing menu or toolbar.
    <extension
          point="org.eclipse.ui.editors">
       <editor
-            id="net.sf.jmoney.genericEditor"
-            name="Generic Node Editor"
-            icon="icons/sample.gif"
-            class="net.sf.jmoney.views.NodeEditor">
+            id="net.sf.jmoney.accountEditor"
+            name="Account Editor"
+            icon="icons/account.gif"
+            class="net.sf.jmoney.views.AccountEditor">
       </editor>
    </extension>
 
    <extension
          point="org.eclipse.ui.elementFactories">
         <factory 
-           id ="net.sf.jmoney.nodeEditor" 
-           class="net.sf.jmoney.views.NodeEditorFactory">
+           id ="net.sf.jmoney.accountEditor" 
+           class="net.sf.jmoney.views.AccountEditorInputFactory">
         </factory> 
         <factory 
            id ="net.sf.jmoney.sessionEditor" 
-           class="net.sf.jmoney.views.SessionEditorFactory">
+           class="net.sf.jmoney.views.SessionEditorInputFactory">
         </factory> 
    </extension>
 
@@ -411,7 +421,7 @@ items to an existing menu or toolbar.
          </selectionEnablement>
          <editorInputEnablement>
             <instanceof
-                  value="net.sf.jmoney.views.NodeEditorInput">
+                  value="net.sf.jmoney.views.AccountEditorInput">
             </instanceof>
          </editorInputEnablement>
       </linkHelper>

@@ -1,17 +1,11 @@
 package net.sf.jmoney.navigator;
 
-import java.util.Vector;
-
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.PageEntry;
-import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.resources.Messages;
-import net.sf.jmoney.views.NodeEditorInput;
+import net.sf.jmoney.views.AccountEditor;
+import net.sf.jmoney.views.AccountEditorInput;
 
-import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.graphics.Image;
@@ -36,14 +30,7 @@ public class OpenAccountsAction extends BaseSelectionListenerAction {
 		IStructuredSelection selection = super.getStructuredSelection();
 		for (Object selectedObject: selection.toArray()) {
 			if (selectedObject instanceof Account) {
-				ExtendableObject extendableObject = (ExtendableObject)selectedObject;
-				ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(extendableObject.getClass());
-				Vector<PageEntry> pageFactories = propertySet.getPageFactories();
-
-
-				Assert.isTrue(!pageFactories.isEmpty());
-
-
+				Account account = (Account)selectedObject;
 
 				final IWorkbenchPart dse = PlatformUI.getWorkbench()
 				.getActiveWorkbenchWindow().getActivePage()
@@ -53,22 +40,16 @@ public class OpenAccountsAction extends BaseSelectionListenerAction {
 					INavigatorContentService contentService = navigator.getNavigatorContentService();
 					String description = contentService.createCommonDescriptionProvider().getDescription(selectedObject);
 					ILabelProvider labelProvider = contentService.createCommonLabelProvider();
-					String label = labelProvider.getText(selectedObject);
 					Image image = labelProvider.getImage(selectedObject);
 					navigator.getViewSite().getActionBars().getStatusLineManager().setMessage(image, description);
 
-
+					
 					// Create an editor for this node (or active if an editor
 					// is already open).
 					try {
-						IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-						IEditorInput editorInput = new NodeEditorInput(selectedObject,
-								label /*labelProvider.getText(selectedObject) */,
-								image /*labelProvider.getImage(selectedObject) */,
-								pageFactories,
-								null);
-						window.getActivePage().openEditor(editorInput,
-						"net.sf.jmoney.genericEditor"); //$NON-NLS-1$
+						IWorkbenchWindow window = navigator.getViewSite().getWorkbenchWindow();
+						IEditorInput editorInput = new AccountEditorInput(account);
+						window.getActivePage().openEditor(editorInput, AccountEditor.ID);
 					} catch (PartInitException e) {
 						JMoneyPlugin.log(e);
 					}

@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.model2;
 
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.ui.IWorkbenchWindow;
 
 /**
@@ -32,7 +33,7 @@ import org.eclipse.ui.IWorkbenchWindow;
  * There will always be one SessionManager object for each Session
  * object.
  */
-public abstract class DatastoreManager extends DataManager {
+public abstract class DatastoreManager extends DataManager implements IAdaptable {
 
     /** Returns a brief description of the data in the session.
      * This description should be, for example, the file name or the name

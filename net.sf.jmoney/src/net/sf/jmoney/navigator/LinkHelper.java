@@ -1,6 +1,8 @@
 package net.sf.jmoney.navigator;
 
-import net.sf.jmoney.views.NodeEditorInput;
+import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.views.AccountEditorInput;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -16,18 +18,22 @@ public class LinkHelper implements ILinkHelper {
             return;
         }
         Object element = selection.getFirstElement();
+        if (element instanceof Account) {
+        	Account account = (Account)element;
 
-        IEditorInput procInput = new NodeEditorInput(element, null, null, null, null);
-        IEditorPart editor = page.findEditor(procInput);
-        if (editor != null) {
-        	page.bringToTop(editor);
+        	IEditorInput procInput = new AccountEditorInput(account);
+        	IEditorPart editor = page.findEditor(procInput);
+        	if (editor != null) {
+        		page.bringToTop(editor);
+        	}
         }
 	}
 
 	public IStructuredSelection findSelection(IEditorInput input) {
-        if (input instanceof NodeEditorInput) {
-            Object element = ((NodeEditorInput)input).getNode();
-            return new StructuredSelection(element);
+        if (input instanceof AccountEditorInput) {
+            String accountName = ((AccountEditorInput)input).getFullAccountName();
+            Account account = JMoneyPlugin.getDefault().getSession().getAccountByFullName(accountName);	
+            return new StructuredSelection(account);
         }
         return StructuredSelection.EMPTY;
  	}

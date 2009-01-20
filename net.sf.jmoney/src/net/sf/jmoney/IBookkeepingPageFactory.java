@@ -22,7 +22,7 @@
 
 package net.sf.jmoney;
 
-import net.sf.jmoney.views.NodeEditor;
+import net.sf.jmoney.views.AccountEditor;
 
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IMemento;
@@ -44,5 +44,5 @@ public interface IBookkeepingPageFactory {
 	 * 			when the page was last closed.  If no prior state
 	 * 			is available then <code>memento</code> will be null.
 	 */
-	void createPages(NodeEditor editor, IEditorInput input, IMemento memento) throws PartInitException;
+	void createPages(AccountEditor editor, IEditorInput input, IMemento memento) throws PartInitException;
 }

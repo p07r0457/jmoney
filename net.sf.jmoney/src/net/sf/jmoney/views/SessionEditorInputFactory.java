@@ -22,16 +22,15 @@
 
 package net.sf.jmoney.views;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.handlers.SessionEditorInput;
-import net.sf.jmoney.model2.Session;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.ui.IElementFactory;
 import org.eclipse.ui.IMemento;
 
-public class SessionEditorFactory implements IElementFactory {
-
+public class SessionEditorInputFactory implements IElementFactory {
+	public static final String ID = "net.sf.jmoney.sessionEditor"; //$NON-NLS-1$
+	
 	/* (non-Javadoc)
 	 * @see org.eclipse.ui.IElementFactory#createElement(org.eclipse.ui.IMemento)
 	 * 
@@ -39,13 +38,10 @@ public class SessionEditorFactory implements IElementFactory {
 	// While debugging this code, one can inspect the memento data
 	// in the file runtime-workspace\.metadata\.plugins\org.eclipse.ui.workbench\workbench.xml.
 	public IAdaptable createElement(IMemento memento) {
-		// Get the session from the data in the memento.
-		Session session = JMoneyPlugin.openSession(memento.getChild("session")); //$NON-NLS-1$
-		if (session == null) {
-			// null indicates the element could not be re-created.
-			return null;
-		}
-		
-		return new SessionEditorInput(session, memento);
+		/*
+		 * This input represents the current session for the window page,
+		 * so there is no state in it.
+		 */
+		return new SessionEditorInput();
 	}
 }

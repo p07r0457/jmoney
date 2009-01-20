@@ -24,11 +24,11 @@ package net.sf.jmoney.views;
 
 import java.util.Vector;
 
-import net.sf.jmoney.IBookkeepingPage;
 import net.sf.jmoney.IBookkeepingPageFactory;
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.AccountInfo;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.PageEntry;
@@ -53,22 +53,31 @@ import org.eclipse.ui.operations.UndoRedoActionGroup;
  * 
  * @author Johann Gyger
  */
-public class NodeEditor extends FormEditor {
-
-    protected Object navigationTreeNode;
+public class AccountEditor extends FormEditor {
+	// A bit of a kludge.  We have two ids.  This ensures the icon
+	// is always correct, because for a non-active editor the icon
+	// comes from the editor declaration in plugin.xml.
+	public static final String ID = "net.sf.jmoney.accountEditor";  //$NON-NLS-1$
+//	public static final String CATEGORY_ID = "net.sf.jmoney.categoryEditor";
+	
+//    protected Object navigationTreeNode;
     protected Vector<PageEntry> pageListeners;
 
     protected SessionChangeListener accountNameChangeListener = null;
+
+	private DatastoreManager sessionManager;
+
+	private Account account;
     
     /* (non-Javadoc)
      * @see org.eclipse.ui.forms.editor.FormEditor#addPages()
      */
     @Override	
     protected void addPages() {
-        NodeEditorInput cInput = (NodeEditorInput)this.getEditorInput();
+        AccountEditorInput cInput = (AccountEditorInput)this.getEditorInput();
         IMemento memento = cInput.getMemento();
         
-        IBookkeepingPage pages [] = new IBookkeepingPage[pageListeners.size()];
+//        IBookkeepingPage pages [] = new IBookkeepingPage[pageListeners.size()];
         
     	for (int i = 0; i < pageListeners.size(); i++) {
     		PageEntry entry = pageListeners.get(i);
@@ -83,7 +92,7 @@ public class NodeEditor extends FormEditor {
     		}
     	}
     	
-    	cInput.pages = pages;
+//    	cInput.pages = pages;
     	
 //    	try {
 //			addPage(new AccountEntriesEditor(), getEditorInput());
@@ -104,11 +113,11 @@ public class NodeEditor extends FormEditor {
     	// because the controls no longer exist.
     	// We indicate this situation by clearing out the list
     	// of pages.
-        NodeEditorInput cInput = (NodeEditorInput)this.getEditorInput();
-    	cInput.pages = null;
+//        NodeEditorInput cInput = (NodeEditorInput)this.getEditorInput();
+//    	cInput.pages = null;
 
     	if (accountNameChangeListener != null) {
-    		((Account)cInput.getNode()).getDataManager().removeChangeListener(accountNameChangeListener);
+    		sessionManager.removeChangeListener(accountNameChangeListener);
     	}
 
     	super.dispose();
@@ -121,9 +130,15 @@ public class NodeEditor extends FormEditor {
     public void init(IEditorSite site, IEditorInput input) throws PartInitException {
         super.init(site, input);
 
-        final NodeEditorInput cInput = (NodeEditorInput) input;
+        final AccountEditorInput cInput = (AccountEditorInput) input;
 
-        navigationTreeNode = cInput.getNode();
+        sessionManager = (DatastoreManager)site.getPage().getInput();
+        
+        account = sessionManager.getSession().getAccountByFullName(cInput.getFullAccountName());
+        if (account == null) {
+        	throw new PartInitException("Account no longer exists");
+        }
+        
     	pageListeners = cInput.getPageListeners();
 
        	setPartName(cInput.getName());
@@ -134,22 +149,18 @@ public class NodeEditor extends FormEditor {
 		 * We must listen for changes in the name and update the title accordingly.
 		 * This ensures the title changes when the account name is edited.
 		 */
-		if (cInput.getNode() instanceof Account) {
-			final Account account = (Account)cInput.getNode();
-			accountNameChangeListener = new SessionChangeAdapter() {
-				@Override
-				public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
-					if (changedObject == account
-							&& propertyAccessor == AccountInfo.getNameAccessor()) {
-				       	setPartName(account.getName());
-					}
+		accountNameChangeListener = new SessionChangeAdapter() {
+			@Override
+			public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor propertyAccessor, Object oldValue, Object newValue) {
+				if (changedObject == account
+						&& propertyAccessor == AccountInfo.getNameAccessor()) {
+					setPartName(account.getName());
 				}
-			};
-			account.getDataManager().addChangeListener(accountNameChangeListener);
-		}
-		
+			}
+		};
+		account.getDataManager().addChangeListener(accountNameChangeListener);
+
 		ActionGroup ag = new UndoRedoActionGroup(
-//				getSite(), 
 				site, 
 				getSite().getWorkbenchWindow().getWorkbench().getOperationSupport().getUndoContext(),
 				true);
@@ -183,33 +194,28 @@ public class NodeEditor extends FormEditor {
 	/**
 	 * @return
 	 */
-	public Object getSelectedObject() {
-		return navigationTreeNode;
-	}
+//	public Object getSelectedObject() {
+//		return navigationTreeNode;
+//	}
 
 	/**
 	 * @param extendableObject
 	 */
-	public static void openEditor(IWorkbenchWindow window, ExtendableObject extendableObject) {
-		ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(extendableObject.getClass());
-		Vector<PageEntry> pages = propertySet.getPageFactories();
+	public static void openEditor(IWorkbenchWindow window, Account account) {
+		ExtendablePropertySet<? extends Account> propertySet = PropertySet.getPropertySet(account.getClass());
 		
-		// Create an editor for this node (or active if an editor
-		// is already open).  However, if no pages are registered for this
-		// node then do nothing.
-		if (!pages.isEmpty()) {
+		// Create an editor for this account
 			try {
-				IEditorInput editorInput = new NodeEditorInput(extendableObject,
-						extendableObject.toString(),
-						propertySet.getIcon(),
-						pages,
+				IEditorInput editorInput = new AccountEditorInput(
+						account.getFullAccountName(),
+						account.getName(),
+						propertySet,
 						null);
 				window.getActivePage().openEditor(editorInput,
 				"net.sf.jmoney.genericEditor"); //$NON-NLS-1$
 			} catch (PartInitException e) {
 				JMoneyPlugin.log(e);
 			}
-		}
 	}
 
 	public void addPage(IEditorPart editor, String label) throws PartInitException {

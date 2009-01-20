@@ -29,17 +29,16 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.isolation.TransactionManager;
 
 import org.eclipse.core.commands.operations.IUndoContext;
 import org.eclipse.core.commands.operations.UndoContext;
-import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.ui.PlatformUI;
 
 /**
  * Holds the fields that will be saved in a file.
  */
-public class Session extends ExtendableObject implements IAdaptable {
+public class Session extends ExtendableObject {
 
     IObjectKey defaultCurrencyKey;
     
@@ -339,36 +338,6 @@ public class Session extends ExtendableObject implements IAdaptable {
 	    return foundAccount;
 	}
 
-	/**
-	 * Certain operations may be executed more efficiently by the datastore.
-	 * For example, if the datastore is implemented on top of a database and
-	 * we need to get an account balance, it is far more efficient to submit 
-	 * a statement of the form "select sum(amount) from entries where account = ?"
-	 * to the database than to iterate through the entries, a process that
-	 * requires constructing each entry from data in the database.
-	 * <P>
-	 * Datastores may optionally implement any adapter interface.
-	 * A datastore does not have to implement an adapter interface.  Therefore
-	 * all consumers must provide an alternative algorithm for obtaining the
-	 * same results.
-	 * <P>
-	 * These interfaces are obtained as adapters for two reasons:
-	 * <OL>
-	 * <LI>The implementation is optional
-	 *     </LI>
-	 * <LI>More importantly, new types of queries may be added by plug-ins.
-	 *     The datastore plug-ins may not even know about such queries.
-	 *     </LI>
-	 * </OL>
-	 */
-	public Object getAdapter(Class adapter) {
-		// Pass the request on to the session manager.
-		// The SessionManager object is implemented by the datastore plug-in
-		// and therefore can provide a set of interface implementations that
-		// are optimized for the datastore.
-		return getDataManager().getAdapter(adapter);
-	}
-	
     public class NoAccountFoundException extends Exception {
 		private static final long serialVersionUID = -6022196945540827504L;
 	}
@@ -399,7 +368,7 @@ public class Session extends ExtendableObject implements IAdaptable {
 		if (this.getDataManager() instanceof TransactionManager) {
 			return undoContext;
 		} else {
-			return JMoneyPlugin.getDefault().getWorkbench().getOperationSupport().getUndoContext();
+			return PlatformUI.getWorkbench().getOperationSupport().getUndoContext();
 		}
 	}
 }

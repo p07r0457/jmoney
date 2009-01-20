@@ -12,14 +12,17 @@ import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CurrencyAccount;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.resources.Messages;
-import net.sf.jmoney.views.NodeEditorInput;
+import net.sf.jmoney.views.AccountEditorInput;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
@@ -56,11 +59,16 @@ public class AccountEntriesEditor extends EditorPart {
 		
 		setSite(site);
 		setInput(input);
-		
+
+		DatastoreManager sessionManager = (DatastoreManager)site.getPage().getInput();
+
     	// Set the account that this page is viewing and editing.
-		NodeEditorInput input2 = (NodeEditorInput)input;
-    	account = (Account) input2.getNode();
-        
+		AccountEditorInput accountEditorInput = (AccountEditorInput)input;
+		account = sessionManager.getSession().getAccountByFullName(accountEditorInput.getFullAccountName());
+		if (account == null) {
+			throw new PartInitException("Account " + accountEditorInput.getFullAccountName() + " no longer exists.");
+		}
+		
         // Create our own transaction manager.
         // This ensures that uncommitted changes
     	// made by this page are isolated from datastore usage outside

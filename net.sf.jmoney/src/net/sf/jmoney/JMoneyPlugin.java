@@ -319,56 +319,6 @@ public class JMoneyPlugin extends AbstractUIPlugin {
     }
 
 	/**
-	 * Given a memento containing the data needed to open a session,
-	 * return the session.  If the session is already open
-	 * then return the session, otherwise the session is opened
-	 * by this method and returned.
-	 *  
-	 * @param memento
-	 * @return
-	 */
-	public static Session openSession(IMemento memento) {
-		// Don't need this anymore, but check if there is other stuff
-		// we can clean out as well as this code.
-//		if (memento != null) {
-//			// This is a kludge.  Only one session can be open at a time,
-//			// therefore all views that need a session will save the same
-//			// data in the session memento.  Therefore, if a session is open,
-//			// just return that.  We know it is the right session.
-//			if (getDefault().getSession() != null) {
-//				return getDefault().getSession();
-//			}
-//			
-//			String factoryId = memento.getString("currentSessionFactoryId");  //$NON-NLS-1$
-//			if (factoryId != null && factoryId.length() != 0) {
-//				// Search for the factory.
-//				IExtensionRegistry registry = Platform.getExtensionRegistry();
-//				for (IConfigurationElement element: registry.getConfigurationElementsFor("org.eclipse.ui.elementFactories")) { //$NON-NLS-1$
-//					if (element.getName().equals("factory")) { //$NON-NLS-1$
-//						if (element.getAttribute("id").equals(factoryId)) { //$NON-NLS-1$
-//							try {
-//								ISessionFactory listener = (ISessionFactory)element.createExecutableExtension("class"); //$NON-NLS-1$
-//
-//								// Create and initialize the session object from 
-//								// the data stored in the memento.
-//								listener.openSession(memento.getChild("currentSession")); //$NON-NLS-1$
-//								return getDefault().getSession();
-//							} catch (CoreException e) {
-//								// Could not create the factory given by the 'class' attribute
-//								// Log the error and start JMoney with no open session.
-//								e.printStackTrace();
-//							}
-//							break;
-//						}
-//					}
-//				}
-//			}
-//		}
-		
-    	return null;
-	}
-
-	/**
 	 * Helper method to compare two objects.  Either or both
 	 * the objects may be null.  If both objects are null,
 	 * they are considered equal.

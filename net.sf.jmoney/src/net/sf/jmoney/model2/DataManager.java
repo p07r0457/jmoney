@@ -26,7 +26,6 @@ import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Vector;
 
-import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.widgets.Control;
@@ -38,7 +37,7 @@ import org.eclipse.swt.widgets.Control;
  * of data committed to a datastore and is also extended by TransactionManager
  * to manage a view of uncommitted data.
  */
-public abstract class DataManager implements IAdaptable {
+public abstract class DataManager {
 	
     private Vector<WeakReference<SessionChangeListener>> sessionChangeListenerRefs = new Vector<WeakReference<SessionChangeListener>>();
 

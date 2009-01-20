@@ -1,13 +1,12 @@
 package net.sf.jmoney.handlers;
 
+import java.util.Map;
+
 import net.sf.jmoney.JMoneyPlugin;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExecutableExtension;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -23,12 +22,10 @@ import org.eclipse.ui.PlatformUI;
  * 
  * <pre>
  * &lt;handler
- *           commandId=&quot;net.sf.jmoney.commands.openShoebox&quot;&gt;
+ *           commandId=&quot;net.sf.jmoney.commands.openXxx&quot;&gt;
  *         &lt;enabledWhen&gt;
- *           &lt;with variable=&quot;activeContexts&quot;&gt;
- *              &lt;iterate operator=&quot;or&quot;&gt;
- *                 &lt;equals value=&quot;net.sf.jmoney.sessionOpen&quot;/&gt;
- *              &lt;/iterate&gt;
+ *           &lt;with variable=&quot;activeWorkbenchWindow&quot;&gt;
+ *                 &lt;test property=&quot;net.sf.jmoney.core.isSessionOpen&quot;/&gt;
  *           &lt;/with&gt;
  *        &lt;/enabledWhen&gt;
  *         &lt;class
@@ -39,26 +36,31 @@ import org.eclipse.ui.PlatformUI;
  *     &lt;/handler&gt;
  * </pre>
  */
-public class OpenEditorHandler extends AbstractHandler implements IExecutableExtension {
+public class OpenEditorHandler extends AbstractHandler {
 
-	private String editorId;
+	private static final String PARAMETER_EDITOR_ID = "net.sf.jmoney.openEditor.editorId";
 
-	public void setInitializationData(IConfigurationElement config,
-			String propertyName, Object data) throws CoreException {
-		for (IConfigurationElement classElements : config.getChildren("class")) { //$NON-NLS-1$
-			for (IConfigurationElement parameterElements : classElements.getChildren("parameter")) { //$NON-NLS-1$
-				String parameterName = parameterElements.getAttribute("name"); //$NON-NLS-1$
-				if (parameterName.equals("editorId")) {	 //$NON-NLS-1$
-					editorId = parameterElements.getAttribute("value"); //$NON-NLS-1$
-				}
-			}
-		}
-	}
+	//	private String editorId;
+
+	//	public void setInitializationData(IConfigurationElement config,
+	//			String propertyName, Object data) throws CoreException {
+	//		for (IConfigurationElement classElements : config.getChildren("class")) { //$NON-NLS-1$
+	//			for (IConfigurationElement parameterElements : classElements.getChildren("parameter")) { //$NON-NLS-1$
+	//				String parameterName = parameterElements.getAttribute("name"); //$NON-NLS-1$
+	//				if (parameterName.equals("editorId")) {	 //$NON-NLS-1$
+	//					editorId = parameterElements.getAttribute("value"); //$NON-NLS-1$
+	//				}
+	//			}
+	//		}
+	//	}
 
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		final Map parameters = event.getParameters();
+		final String editorId = (String) parameters.get(PARAMETER_EDITOR_ID);
+
 		try {
 			IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-			IEditorInput editorInput = new SessionEditorInput(JMoneyPlugin.getDefault().getSession(), null);
+			IEditorInput editorInput = new SessionEditorInput();
 			window.getActivePage().openEditor(editorInput, editorId);
 		} catch (PartInitException e) {
 			JMoneyPlugin.log(e);

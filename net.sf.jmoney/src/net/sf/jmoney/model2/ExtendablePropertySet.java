@@ -266,11 +266,32 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	}
 
 	/**
+	 * Given a property set id of the property set that is derived from this
+	 * property set, return the property set.
+	 * <P>
+	 * This method will give the same result as the static method
+	 * PropertySet.getExtendablePropertySet provided that the id is for a
+	 * property set that is derived from this property set. If the id is for a
+	 * property set that is not derived from this property set then null will be
+	 * returned. The advantage of using this method is that the returned
+	 * property set is parameterized with &lt;? extends E>.
+	 * @throws PropertySetNotFoundException 
+	 */
+	public ExtendablePropertySet<? extends E> getDerivedPropertySet(String propertySetId) throws PropertySetNotFoundException {
+		for (ExtendablePropertySet<? extends E> propertySet : derivedPropertySets.values()) {
+			if (propertySet.getId().equals(propertySetId)) {
+				return propertySet;
+			}
+		}
+		throw new PropertySetNotFoundException(propertySetId);
+	}
+	
+	/**
 	 * Given a class of an object, returns the property
 	 * set for that object.  The class passed to this method
 	 * must be the class of an ExtendableObject that either is
 	 * the implementation object for this property set or is
-	 * extended from the implemetation class.  The class must be
+	 * extended from the implementation class.  The class must be
 	 * a final class (i.e. a class of an actual object instance,
 	 * not an abstract class).
 	 * 

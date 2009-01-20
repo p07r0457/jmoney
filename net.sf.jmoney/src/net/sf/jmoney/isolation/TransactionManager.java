@@ -744,14 +744,6 @@ public class TransactionManager extends DataManager {
 		}
 	}
 
-	public Object getAdapter(Class adapter) {
-		// It is possible to implement query interfaces that execute
-		// an optimized query against the committed datastore and then
-		// adjusts the results with the uncommitted changes.
-		// However, none are currently implemented.
-		return null;
-	}
-
 	private class ModifiedAccountEntriesList extends AbstractCollection<Entry> {
 		
 		Account account;
