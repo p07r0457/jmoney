@@ -23,7 +23,7 @@
 package net.sf.jmoney.stocks.pages;
 
 import net.sf.jmoney.IBookkeepingPageFactory;
-import net.sf.jmoney.views.NodeEditor;
+import net.sf.jmoney.views.AccountEditor;
 
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -35,7 +35,7 @@ import org.eclipse.ui.PartInitException;
  */
 public class StockEntriesPage implements IBookkeepingPageFactory {
 
-	public void createPages(NodeEditor editor, IEditorInput input,
+	public void createPages(AccountEditor editor, IEditorInput input,
 			IMemento memento) throws PartInitException {
 		IEditorPart entriesEditor = new StockEntriesEditor();
 		editor.addPage(entriesEditor, "Entries");

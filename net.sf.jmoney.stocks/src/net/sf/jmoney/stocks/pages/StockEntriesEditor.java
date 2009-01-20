@@ -1,7 +1,8 @@
 package net.sf.jmoney.stocks.pages;
 
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.stocks.model.StockAccount;
-import net.sf.jmoney.views.NodeEditorInput;
+import net.sf.jmoney.views.AccountEditorInput;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.layout.GridData;
@@ -32,8 +33,9 @@ public class StockEntriesEditor extends EditorPart {
 		setInput(input);
 		
     	// Set the account that this page is viewing and editing.
-		NodeEditorInput input2 = (NodeEditorInput)input;
-    	account = (StockAccount) input2.getNode();
+		AccountEditorInput input2 = (AccountEditorInput)input;
+        DatastoreManager sessionManager = (DatastoreManager)site.getPage().getInput();
+        account = (StockAccount)sessionManager.getSession().getAccountByFullName(input2.getFullAccountName());
 	}
 
 	@Override
