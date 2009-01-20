@@ -90,7 +90,7 @@ public class ShoeboxEditor extends EditorPart {
         // This ensures that uncommitted changes
     	// made by this page are isolated from datastore usage outside
     	// of this page.
-		DatastoreManager sessionManager = JMoneyPlugin.getDefault().getSessionManager();
+		DatastoreManager sessionManager = (DatastoreManager)getSite().getPage().getInput();
 		session = sessionManager.getSession();
 
 //        transactionManager = new TransactionManager(sessionManager);
@@ -297,7 +297,7 @@ public class ShoeboxEditor extends EditorPart {
 
 					TabItem tabItem = new TabItem(tabFolder, SWT.NULL);
 					tabItem.setText(transactionType.getDescription());
-					tabItem.setControl(transactionType.createControl(tabFolder, true, null, ourEntryList));
+					tabItem.setControl(transactionType.createControl(tabFolder, session, true, null, ourEntryList));
 
 //					int positionNumber = 800;
 //					if (position != null) {

@@ -79,7 +79,6 @@ public class TransferTemplate implements ITransactionTemplate {
 	    Session session;
 	    
 		public TransferTemplate() {
-			session = JMoneyPlugin.getDefault().getSession();
 		}
 
 		public String getDescription() {
@@ -90,8 +89,9 @@ public class TransferTemplate implements ITransactionTemplate {
 			return account == null || account instanceof CapitalAccount;
 		}
 		
-		public Control createControl(Composite parent, boolean expandedControls, Account account, Collection<IObjectKey> ourEntryList) {
+		public Control createControl(Composite parent, Session session, boolean expandedControls, Account account, Collection<IObjectKey> ourEntryList) {
 			this.account = account;
+			this.session = session;
 			
 			Composite areaComposite = new Composite(parent, SWT.NULL);
 			areaComposite.setLayout(new GridLayout(1, false));

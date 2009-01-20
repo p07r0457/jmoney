@@ -90,8 +90,6 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
     
     public SimpleTransactionTemplate(boolean isIncome) {
 		this.isIncome = isIncome;
-		
-		session = JMoneyPlugin.getDefault().getSession();
 	}
 
 	public String getDescription() {
@@ -102,8 +100,9 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
 		return true;
 	}
 	
-	public Control createControl(Composite parent, boolean expandedControls, Account account, Collection<IObjectKey> ourEntryList) {
+	public Control createControl(Composite parent, Session session, boolean expandedControls, Account account, Collection<IObjectKey> ourEntryList) {
 		this.account = account;
+		this.session = session;
 		
 		Composite areaComposite = new Composite(parent, SWT.NULL);
 		areaComposite.setLayout(new GridLayout(1, false));
