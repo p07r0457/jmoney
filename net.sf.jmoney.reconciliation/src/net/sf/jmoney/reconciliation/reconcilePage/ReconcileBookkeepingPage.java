@@ -23,7 +23,7 @@
 package net.sf.jmoney.reconciliation.reconcilePage;
 
 import net.sf.jmoney.IBookkeepingPageFactory;
-import net.sf.jmoney.views.NodeEditor;
+import net.sf.jmoney.views.AccountEditor;
 
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
@@ -39,7 +39,7 @@ import org.eclipse.ui.PartInitException;
  */
 public class ReconcileBookkeepingPage implements IBookkeepingPageFactory {
 
-	public void createPages(NodeEditor editor, IEditorInput input,
+	public void createPages(AccountEditor editor, IEditorInput input,
 			IMemento memento) throws PartInitException {
 		IEditorPart formPage = new ReconcileEditor();
 		editor.addPage(formPage, "Reconcile");

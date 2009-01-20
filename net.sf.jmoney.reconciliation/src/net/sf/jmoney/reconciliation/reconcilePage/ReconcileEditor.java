@@ -23,7 +23,9 @@ import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CurrencyAccount;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -39,7 +41,7 @@ import net.sf.jmoney.reconciliation.ReconciliationAccount;
 import net.sf.jmoney.reconciliation.ReconciliationAccountInfo;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
-import net.sf.jmoney.views.NodeEditorInput;
+import net.sf.jmoney.views.AccountEditorInput;
 
 import org.eclipse.core.commands.IHandler;
 import org.eclipse.core.runtime.CoreException;
@@ -119,8 +121,9 @@ public class ReconcileEditor extends EditorPart {
 		setInput(input);
 		
     	// Set the account that this page is viewing and editing.
-		NodeEditorInput input2 = (NodeEditorInput)input;
-		CurrencyAccount baseAccount = (CurrencyAccount) input2.getNode();
+		AccountEditorInput input2 = (AccountEditorInput)input;
+        DatastoreManager sessionManager = (DatastoreManager)site.getPage().getInput();
+        Account baseAccount = sessionManager.getSession().getAccountByFullName(input2.getFullAccountName());
 		account = baseAccount.getExtension(ReconciliationAccountInfo.getPropertySet(), true);
         
         // Create our own transaction manager.
