@@ -4,41 +4,27 @@
 
    <extension-point id="templates" name="Shoebox Transaction Templates" schema="schema/shoeboxTemplates.exsd"/>
 
-<extension point="org.eclipse.ui.commands">
-    <command
-          id="net.sf.jmoney.commands.openShoebox"
-          name="Open Receipt Entry Editor">
-    </command>
-</extension>
-
-<extension point="org.eclipse.ui.handlers">
-    <handler
-          commandId="net.sf.jmoney.commands.openShoebox">
-        <enabledWhen>
-          <with variable="activeWorkbenchWindow">
-		   <test property="net.sf.jmoney.core.isSessionOpen"/>
-          </with>
-       </enabledWhen>
-        <class
-              class="net.sf.jmoney.handlers.OpenEditorHandler">
-   <parameter name="editorId" 
-                          value="net.sf.jmoney.shoebox.editor"/>
-        </class>
-    </handler>
-</extension>
-
 <extension point="org.eclipse.ui.menus">
      <menuContribution locationURI="menu:navigate?after=openEditors">
-        <command commandId="net.sf.jmoney.commands.openShoebox"
+        <command commandId="net.sf.jmoney.command.openEditor"
                  label="%navigationTreeLabel"
                  icon="icons/shoebox.gif"
                  tooltip="Open Receipt Entry Editor">
+           <parameter
+                 name="net.sf.jmoney.openEditor.editorId"
+                 value="net.sf.jmoney.shoebox.editor">
+           </parameter>
         </command>
      </menuContribution>
      <menuContribution locationURI="toolbar:main?after=openEditors">
-        <command commandId="net.sf.jmoney.commands.openShoebox"
+        <command commandId="net.sf.jmoney.command.openEditor"
                  icon="icons/shoebox.gif"
-                 tooltip="Open Receipt Entry Editor" />
+                 tooltip="Open Receipt Entry Editor">
+           <parameter
+                 name="net.sf.jmoney.openEditor.editorId"
+                 value="net.sf.jmoney.shoebox.editor">
+           </parameter>
+        </command>
      </menuContribution>
 </extension>
  
