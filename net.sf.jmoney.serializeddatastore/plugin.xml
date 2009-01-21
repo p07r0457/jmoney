@@ -22,14 +22,37 @@
          </commandParameter>
       </command>
     <command
-            defaultHandler="net.sf.jmoney.serializeddatastore.handlers.SaveSessionHandler"
             id="net.sf.jmoney.serializeddatastore.saveSession"
             name="Save Session"/>
     <command
-            defaultHandler="net.sf.jmoney.serializeddatastore.handlers.SaveSessionAsHandler"
             id="net.sf.jmoney.serializeddatastore.saveSessionAs"
             name="Save Session As"/>
    </extension>
+
+<extension point="org.eclipse.ui.handlers">
+    <handler
+          commandId="net.sf.jmoney.serializeddatastore.saveSession">
+        <enabledWhen>
+          <with variable="activeWorkbenchWindow">
+		   <test property="net.sf.jmoney.core.isSessionOpen"/>
+          </with>
+       </enabledWhen>
+        <class
+              class="net.sf.jmoney.serializeddatastore.handlers.SaveSessionHandler">
+        </class>
+    </handler>
+    <handler
+          commandId="net.sf.jmoney.serializeddatastore.saveSessionAs">
+        <enabledWhen>
+          <with variable="activeWorkbenchWindow">
+		   <test property="net.sf.jmoney.core.isSessionOpen"/>
+          </with>
+       </enabledWhen>
+        <class
+              class="net.sf.jmoney.serializeddatastore.handlers.SaveSessionAsHandler">
+        </class>
+    </handler>
+</extension>
 
 <!--
 Note that we use 'before' as the placement.  This ensures that
