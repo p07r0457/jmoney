@@ -88,8 +88,7 @@
             id="net.sf.jmoney.transactionDetails"/>
       <command
             name="Open Editor"
-            id="net.sf.jmoney.openEditor"
-            defaultHandler="net.sf.jmoney.handlers.OpenEditorHandler">
+            id="net.sf.jmoney.command.openEditor">
 	            <commandParameter
                id="net.sf.jmoney.openEditor.editorId"
                name="Editor Id"
@@ -98,6 +97,20 @@
       </command>
    </extension>
 	   
+<extension point="org.eclipse.ui.handlers">
+    <handler
+          commandId="net.sf.jmoney.command.openEditor">
+        <enabledWhen>
+          <with variable="activeWorkbenchWindow">
+		   <test property="net.sf.jmoney.core.isSessionOpen"/>
+          </with>
+       </enabledWhen>
+        <class
+              class="net.sf.jmoney.handlers.OpenEditorHandler">
+        </class>
+    </handler>
+</extension>
+
    <extension point="org.eclipse.ui.bindings">
       <key
             commandId="net.sf.jmoney.newTransaction"

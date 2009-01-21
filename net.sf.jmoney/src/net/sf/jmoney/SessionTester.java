@@ -2,6 +2,7 @@ package net.sf.jmoney;
 
 import org.eclipse.core.expressions.PropertyTester;
 import org.eclipse.core.runtime.Assert;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 
 /**
@@ -14,7 +15,14 @@ public class SessionTester extends PropertyTester {
 	public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
 		IWorkbenchWindow window = (IWorkbenchWindow)receiver;
 		if ("isSessionOpen".equals(property)) { //$NON-NLS-1$
-			Object input = window.getActivePage().getInput();
+			/*
+			 * Although there is always a page for each window, this method
+			 * can be called during the transition after the previous page
+			 * was closed and before the new page was created.  We must therefore
+			 * guard against the situation where there is no page.
+			 */
+			IWorkbenchPage page = window.getActivePage();
+			Object input = page == null ? null : page.getInput();
 
 			return expectedValue == null
 			? (input != null)
