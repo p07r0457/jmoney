@@ -94,6 +94,7 @@ public class SearchView extends ViewPart {
 		manager.add(fSearchHistoryDropDownAction);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void createPartControl(Composite parent) {
 		DatastoreManager manager = (DatastoreManager)getSite().getPage().getInput();
