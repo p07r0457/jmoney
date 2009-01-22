@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.reconciliation;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountControlFactory;
 import net.sf.jmoney.fields.CurrencyControlFactory;
 import net.sf.jmoney.fields.IntegerControlFactory;
@@ -40,6 +39,9 @@ import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ReferencePropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.reconciliation.resources.Messages;
+
+import org.eclipse.osgi.util.NLS;
 
 /**
  * This class is a listener class to the net.sf.jmoney.fields
@@ -104,11 +106,11 @@ public class MemoPatternInfo implements IPropertySetInfo {
 
 		orderingIndexAccessor = propertySet.addProperty("orderingIndex", "Ordering Index",                                    Integer.class,1, 20,  integerControlFactory, null);
 		patternAccessor       = propertySet.addProperty("pattern",       "Pattern",                                           String.class, 2, 50,  textControlFactory,    null);
-		checkAccessor         = propertySet.addProperty("check",         JMoneyPlugin.getResourceString("Entry.check"),       String.class, 2, 50,  textControlFactory,    null);
-		descriptionAccessor   = propertySet.addProperty("description",   JMoneyPlugin.getResourceString("Entry.description"), String.class, 5, 100, textControlFactory,    null);
-		accountAccessor       = propertySet.addProperty("account",       JMoneyPlugin.getResourceString("Entry.category"),    Account.class,2, 70,  accountControlFactory, null);
-		memoAccessor          = propertySet.addProperty("memo",          JMoneyPlugin.getResourceString("Entry.memo"),        String.class, 5, 100, textControlFactory,    null);
-		incomeExpenseCurrencyAccessor = propertySet.addProperty("incomeExpenseCurrency",    JMoneyPlugin.getResourceString("Entry.currency"), Currency.class, 2, 70, currencyControlFactory, null);
+		checkAccessor         = propertySet.addProperty("check",         NLS.bind(Messages.MemoPatternInfo_EntryCheck, null),       String.class, 2, 50,  textControlFactory,    null);
+		descriptionAccessor   = propertySet.addProperty("description",   NLS.bind(Messages.MemoPatternInfo_EntryDescription, null), String.class, 5, 100, textControlFactory,    null);
+		accountAccessor       = propertySet.addProperty("account",       NLS.bind(Messages.MemoPatternInfo_EntryCategory, null),    Account.class,2, 70,  accountControlFactory, null);
+		memoAccessor          = propertySet.addProperty("memo",          NLS.bind(Messages.MemoPatternInfo_EntryMemo, null),        String.class, 5, 100, textControlFactory,    null);
+		incomeExpenseCurrencyAccessor = propertySet.addProperty("incomeExpenseCurrency",    NLS.bind(Messages.MemoPatternInfo_EntryCurrency, null), Currency.class, 2, 70, currencyControlFactory, null);
 		
 		return propertySet;
 	}

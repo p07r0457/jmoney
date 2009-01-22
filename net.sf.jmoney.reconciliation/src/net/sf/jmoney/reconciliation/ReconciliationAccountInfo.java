@@ -22,7 +22,6 @@
 
 package net.sf.jmoney.reconciliation;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.AccountControlFactory;
 import net.sf.jmoney.fields.CheckBoxControlFactory;
 import net.sf.jmoney.model2.CurrencyAccountInfo;
@@ -39,6 +38,9 @@ import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ReferencePropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.reconciliation.resources.Messages;
+
+import org.eclipse.osgi.util.NLS;
 
 /**
  * Provides the metadata for the extra properties added to each
@@ -82,8 +84,8 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 		};
 	
 		reconcilableAccessor = propertySet.addProperty("reconcilable", ReconciliationPlugin.getResourceString("Account.isReconcilable"), Boolean.class, 1, 5, new CheckBoxControlFactory(), null);
-		patternsAccessor = propertySet.addPropertyList("patterns", JMoneyPlugin.getResourceString("<not used???>"), MemoPatternInfo.getPropertySet(), patternListGetter);
-		defaultCategoryAccessor = propertySet.addProperty("defaultCategory", ReconciliationPlugin.getResourceString("Account.defaultCategory"), IncomeExpenseAccount.class, 1, 20, accountControlFactory, null);
+		patternsAccessor = propertySet.addPropertyList("patterns", NLS.bind(Messages.ReconciliationAccountInfo_Patterns, null), MemoPatternInfo.getPropertySet(), patternListGetter);
+		defaultCategoryAccessor = propertySet.addProperty("defaultCategory", NLS.bind(Messages.ReconciliationAccountInfo_Patterns, null), IncomeExpenseAccount.class, 1, 20, accountControlFactory, null);
 		
 		return propertySet;
 	}
