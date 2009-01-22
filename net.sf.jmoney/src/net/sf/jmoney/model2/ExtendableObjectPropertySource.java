@@ -64,7 +64,7 @@ public class ExtendableObjectPropertySource implements IPropertySource {
 					
 					CellEditor editor = new CellEditor() {
 
-						private IPropertyControl control = null;
+						private IPropertyControl<ExtendableObject> control = null;
 						
 						@Override
 						protected Control createControl(Composite parent) {
@@ -198,8 +198,8 @@ public class ExtendableObjectPropertySource implements IPropertySource {
 //		setPropertyValue2(accessorMap.get(id), value);
 	}
 
-	private <V> void setPropertyValue2(ScalarPropertyAccessor<V> accessor, Object value) {
-		extendableObject.setPropertyValue(accessor, (V)accessor.getClass().cast(value));
-
-	}
+//	private <V> void setPropertyValue2(ScalarPropertyAccessor<V> accessor, Object value) {
+//		extendableObject.setPropertyValue(accessor, (V)accessor.getClass().cast(value));
+//
+//	}
 }

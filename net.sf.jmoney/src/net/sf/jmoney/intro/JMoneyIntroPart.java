@@ -28,8 +28,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Vector;
 
-import net.sf.jmoney.JMoneyPlugin;
-
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
@@ -165,10 +163,10 @@ public class JMoneyIntroPart extends IntroPart {
 			gnuCashButton.setText("GnuCash");
 			
 			otherFileFormatButton = new Button(container, SWT.CHECK);
-			otherFileFormatButton.setText(JMoneyPlugin.getResourceString("Intro.checkBoxOtherFormat")); //$NON-NLS-1$
+			otherFileFormatButton.setText("OtherFormat");
 			
 			databaseButton = new Button(container, SWT.CHECK);
-			databaseButton.setText(JMoneyPlugin.getResourceString("Intro.checkBoxDatabase")); //$NON-NLS-1$
+			databaseButton.setText("Database");
 			
 			setControl(container);
 		}
