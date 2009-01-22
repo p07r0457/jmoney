@@ -23,7 +23,6 @@
 
 package net.sf.jmoney.paypal;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrencyAccount;
@@ -32,6 +31,9 @@ import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ListKey;
+import net.sf.jmoney.paypal.resources.Messages;
+
+import org.eclipse.osgi.util.NLS;
 
 /**
  * The data model for an bank account.
@@ -94,7 +96,7 @@ public class PaypalAccount extends CurrencyAccount {
 		super(objectKey, parent);
 		
 		// Overwrite the default name with our own default name.
-		this.name = JMoneyPlugin.getResourceString("Account.newAccount");
+		this.name = NLS.bind(Messages.PaypalAccount_NewAccount, null);
 		
         this.transferBankAccountKey = null;
         this.transferCreditCardAccountKey = null;

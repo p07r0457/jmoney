@@ -14,6 +14,7 @@ public class Messages extends NLS {
 	public static String TransferAccountsPage_PageMessage;
 	public static String PaypalFeesPage_PageTitle;
 	public static String PaypalFeesPage_PageMessage;
+	public static String PaypalAccount_NewAccount;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
