@@ -2,10 +2,9 @@ package net.sf.jmoney.stocks.navigator;
 
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.stocks.resources.Messages;
 import net.sf.jmoney.stocks.model.Stock;
+import net.sf.jmoney.stocks.resources.Messages;
 import net.sf.jmoney.stocks.views.StocksNode;
-import net.sf.jmoney.views.TreeNode;
 
 import org.eclipse.jface.viewers.ILabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
