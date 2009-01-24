@@ -15,6 +15,7 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.FileDialog;
@@ -116,7 +117,11 @@ public final class OpenSessionHandler extends AbstractHandler {
 			 * will open the page in a new window if there is already a page
 			 * in this window (i.e. if we did not close the previous page above).
 			 */
-			window.openPage(newSessionManager);
+			IWorkbenchPage newPage = window.openPage(newSessionManager);
+			
+			//Update the title
+			String productName = Platform.getProduct().getName();
+			newPage.getWorkbenchWindow().getShell().setText(productName+" - "+newSessionManager.getBriefDescription());
 			
 			/*
 			 * The state of the 'isSessionOpen' property may have changed, so we
