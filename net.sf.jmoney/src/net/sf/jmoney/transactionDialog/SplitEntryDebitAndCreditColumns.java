@@ -22,7 +22,9 @@
 
 package net.sf.jmoney.transactionDialog;
 
+import net.sf.jmoney.entrytable.CellFocusListener;
 import net.sf.jmoney.entrytable.EntryData;
+import net.sf.jmoney.entrytable.ICellControl2;
 import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.SplitEntryRowControl;
@@ -54,7 +56,7 @@ import org.eclipse.swt.widgets.Text;
  */
 class SplitEntryDebitAndCreditColumns extends IndividualBlock<Entry, SplitEntryRowControl> {
 
-	private class DebitAndCreditCellControl implements IPropertyControl<Entry> {
+	private class DebitAndCreditCellControl implements ICellControl2<Entry> {
 		private Text textControl;
 		private Entry entry = null;
 		
@@ -213,6 +215,12 @@ class SplitEntryDebitAndCreditColumns extends IndividualBlock<Entry, SplitEntryR
 	public IPropertyControl<Entry> createCellControl(Composite parent, RowControl rowControl, SplitEntryRowControl coordinator) {
     	
 		final Text textControl = new Text(parent, SWT.TRAIL);
+
+		ICellControl2<Entry> cellControl = new DebitAndCreditCellControl(textControl); 
+
+		FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
+		textControl.addFocusListener(controlFocusListener);
+
 		textControl.addTraverseListener(new TraverseListener() {
 			public void keyTraversed(TraverseEvent e) {
 				switch (e.detail) {
@@ -231,7 +239,7 @@ class SplitEntryDebitAndCreditColumns extends IndividualBlock<Entry, SplitEntryR
 			}
 		});
 		
-    	return new DebitAndCreditCellControl(textControl);
+    	return cellControl;
 	}
 
 	public int compare(EntryData entryData1, EntryData entryData2) {
