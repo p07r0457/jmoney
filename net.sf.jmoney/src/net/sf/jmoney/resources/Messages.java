@@ -18,6 +18,7 @@ public class Messages extends NLS {
 	public static String AccountsLabelProvider_DefaultDescription;
 	public static String AccountsLabelProvider_DefaultText;
 	public static String AccountsLabelProvider_Image;
+	public static String AccountsLabelProvider_IncomeExpenseAccountDescription;
 	public static String AccountsLabelProvider_TreeNodeDescription;
 	public static String AmountControlFactory_None;
 	public static String BalanceColumn_Name;
