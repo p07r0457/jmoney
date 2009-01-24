@@ -73,7 +73,7 @@
       <command
             defaultHandler="net.sf.jmoney.handlers.CloseSessionHandler"
             id="net.sf.jmoney.closeSession"
-            name="Close Session"/>
+            name="%Commands.closeSession"/>
       <command
             name="%Commands.newTransaction"
             id="net.sf.jmoney.newTransaction"/>
