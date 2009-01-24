@@ -19,7 +19,7 @@
       </node>
       <pages
             class="net.sf.jmoney.oda.pages.IncomeExpenseDetailPage"
-            node="net.sf.jmoney.oda.birtIncomeAndExpenses"
+            extendable-property-set="net.sf.jmoney.categoryAccount"
             id="birtIncomeAndExpensesPage">
       </pages>
    </extension>
