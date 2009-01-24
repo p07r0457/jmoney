@@ -27,6 +27,7 @@ public class Messages extends NLS {
 	public static String SerializedDatastorePlugin_MessageNoSession;
 	public static String SerializedDatastorePlugin_SaveProblem;
 	public static String SessionManager_ErrorMessage;
+	public static String SessionManager_FileNotDefined;
 	public static String SessionManager_InvalidFileName;
 	public static String SessionManager_OverwriteExistingFile;
 	public static String SessionManager_OverwriteTitle;
