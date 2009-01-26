@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Vector;
 
 import net.sf.jmoney.ITransactionTemplate;
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.CellBlock;
@@ -35,6 +34,7 @@ import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
+import net.sf.jmoney.shoebox.resources.Messages;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -239,7 +239,7 @@ public class ShoeboxEditor extends EditorPart {
 				new OtherEntriesBlock(
 						new HorizontalBlock<Entry, ISplitEntryContainer>(
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
-								new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), JMoneyPlugin.getResourceString("Entry.description")),
+								new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), Messages.ShoeboxEditor_EntryDescription),
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
 						)
 				),
