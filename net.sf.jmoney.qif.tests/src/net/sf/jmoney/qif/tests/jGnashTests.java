@@ -1,3 +1,4 @@
+package net.sf.jmoney.qif.tests;
 
 import static org.junit.Assert.assertEquals;
 
