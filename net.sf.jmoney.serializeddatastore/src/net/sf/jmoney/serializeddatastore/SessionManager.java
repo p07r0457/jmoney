@@ -284,14 +284,12 @@ public class SessionManager extends DatastoreManager {
 	public String getBriefDescription() {
 		if (sessionFile == null) {
 			return Messages.SessionManager_FileNotDefined;
-		} else {
-			String result = null;
-			try {
-				result = sessionFile.getCanonicalPath();
-			} catch (IOException ioe) {
-				result = null;
-			}
-			return result;
+		}
+		
+		try {
+			return sessionFile.getCanonicalPath();
+		} catch (IOException ioe) {
+			return Messages.SessionManager_FileNotDefined;
 		}
 	}
 
