@@ -47,7 +47,8 @@ public class AllTests {
 		/*
 		 * @see junit.runner.TestCollector#collectTests()
 		 */
-		public Enumeration collectTests() {
+		@SuppressWarnings("unchecked")
+		public Enumeration<String> collectTests() {
 			final Vector<String> tests = new Vector<String>();
 			try {
 				Enumeration entries = Platform.getBundle(PLUGIN_NAME)
@@ -128,10 +129,11 @@ public class AllTests {
 	 * @param suite
 	 *            the suite to add the tests to
 	 */
+	@SuppressWarnings("unchecked")
 	private static void addTestsToSuite(TestCollector collector, TestSuite suite) {
-		Enumeration e = collector.collectTests();
+		Enumeration<String> e = collector.collectTests();
 		while (e.hasMoreElements()) {
-			String name = (String) e.nextElement();
+			String name = e.nextElement();
 			try {
 				suite.addTestSuite(Class.forName(name));
 			} catch (ClassNotFoundException e1) {
