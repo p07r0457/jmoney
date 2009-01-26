@@ -4,6 +4,7 @@
 
      <extension
          point="net.sf.jmoney.pages">
+<!--         
       <node
             id="birtReportsNode"
             label="Birt Reports"
@@ -17,6 +18,7 @@
             parent="net.sf.jmoney.oda.birtReportsNode"
             position="100">
       </node>
+-->      
       <pages
             class="net.sf.jmoney.oda.pages.IncomeExpenseDetailPage"
             extendable-property-set="net.sf.jmoney.categoryAccount"
