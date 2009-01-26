@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.entrytable.BalanceColumn;
 import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
@@ -64,6 +63,7 @@ import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
+import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.stocks.model.Stock;
 import net.sf.jmoney.stocks.model.StockAccount;
 import net.sf.jmoney.stocks.model.StockControl;
@@ -524,7 +524,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		final Block<EntryData, BaseEntryRowControl> customTransactionColumn = new OtherEntriesBlock(
 				new HorizontalBlock<Entry, ISplitEntryContainer>(
 						new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
-						new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), JMoneyPlugin.getResourceString("Entry.description")),
+						new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor(), Messages.EntriesSection_EntryDescription),
 						new SingleOtherEntryPropertyBlock(EntryInfo.getAmountAccessor())
 				)
 		);
