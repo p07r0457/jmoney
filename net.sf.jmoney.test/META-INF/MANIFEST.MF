@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: JMoney Test Plug-in
-Bundle-SymbolicName: net.sf.jmoney.test;singleton:=true
+Bundle-SymbolicName: net.sf.jmoney.test
 Bundle-Version: 1.0.0
-Bundle-ClassPath: test.jar
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-Vendor: JMoney.sf.net
 Export-Package: net.sf.jmoney,
  net.sf.jmoney.test
@@ -12,4 +12,3 @@ Require-Bundle: org.junit,
  org.eclipse.ui,
  net.sf.jmoney,
  net.sf.jmoney.serializeddatastore
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
