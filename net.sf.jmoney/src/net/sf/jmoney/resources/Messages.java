@@ -173,9 +173,6 @@ public class Messages extends NLS {
 	public static String TransactionInfo_Date;
 	public static String TransactionInfo_Description;
 	public static String TransactionInfo_Entry;
-	public static String WizardContainer_Maximize;
-	public static String WizardContainer_NotImplemented;
-	public static String WizardContainer_Standby;
 	public static String WizardPropertyPage_ErrorNameEmpty;
 	public static String WizardPropertyPage_ErrorSameAsDefaultName;
 	static {

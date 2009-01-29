@@ -41,6 +41,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.ContributionItemFactory;
+import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.menus.CommandContributionItem;
@@ -61,6 +62,9 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     private IAction preferencesAction;
     private IAction introAction;
     private IAction aboutAction;
+    private IWorkbenchAction showHelpAction;
+    private IWorkbenchAction searchHelpAction;
+    private IWorkbenchAction dynamicHelpAction;
 
     private ContributionItem newTransactionItem;
     private ContributionItem deleteTransactionItem;
@@ -122,6 +126,15 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
         
         redoAction = ActionFactory.REDO.create(window);
         register(redoAction);
+        
+        showHelpAction = ActionFactory.HELP_CONTENTS.create(window);
+        register(showHelpAction);
+
+        searchHelpAction = ActionFactory.HELP_SEARCH.create(window);
+        register(searchHelpAction);
+
+        dynamicHelpAction = ActionFactory.DYNAMIC_HELP.create(window);
+        register(dynamicHelpAction);
         
         if (window.getWorkbench().getIntroManager().hasIntro()) {
             introAction = ActionFactory.INTRO.create(window);
@@ -333,6 +346,10 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
         menu.add(new Separator());
         menu.add(new GroupMarker(IWorkbenchActionConstants.HELP_START));
         menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
+        menu.add(new Separator());
+        menu.add(showHelpAction);
+        menu.add(searchHelpAction);
+        menu.add(dynamicHelpAction);
         menu.add(new Separator());
         menu.add(aboutAction);
         menu.add(new GroupMarker(IWorkbenchActionConstants.HELP_END));    

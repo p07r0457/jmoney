@@ -19,16 +19,40 @@
                value="JMoney RCP"/>
          <property
                name="aboutText"
-               value="JMoney RCP&#x0A;&#x0A;Version: 1.0pre2 (20070728)&#x0A;&#x0A;(c) Copyright JMoney contributors and others 2000, 2006.  All rights reserved.&#x0A;Visit http://jmoney.sourceforge.net&#x0A;&#x0A;This product includes software developed by the&#x0A;Eclipse Foundation http://www.eclipse.org/"/>
+               value="JMoney RCP&#x0A;&#x0A;Version: 1.0pre3 (20090126)&#x0A;&#x0A;(c) Copyright JMoney contributors and others 2000, 2008.  All rights reserved.&#x0A;Visit http://jmoney.sourceforge.net&#x0A;&#x0A;This product includes software developed by the&#x0A;Eclipse Foundation http://www.eclipse.org/"/>
          <property
                name="aboutImage"
                value="icons/JMoney128.gif"/>
          <property
                name="preferenceCustomization"
                value="plugin_customization.ini"/>
+	      <property
+	            name="introTitle"
+	            value="Welcome to JMoney"/>
+	      <property
+	            name="introBrandingImage"
+	            value="product:jmoney.png"/>
+	      <property
+	            name="introBrandingImageText"
+	            value="JMoney.sf.net"/>
+		  <property
+				name="introDescription-firststeps"
+				value="This introduction will help you get started using JMoney. If you are already familiar with JMoney, you may close this intro. If you have used JMoney before it was switched over to be Eclipse based version then you can open your JMX files as before and, despite a different look, you should have little difficulty using this new version of JMoney."/>
          <property
                name="windowImages"
                value="icons/JMoney16.gif,icons/JMoney32.gif,icons/JMoney128.gif"/>
+         <property
+               name="startupForegroundColor"
+               value="000000">
+         </property>
+         <property
+               name="startupMessageRect"
+               value="7,252,445,20">
+         </property>
+         <property
+               name="startupProgressRect"
+               value="5,275,445,15">
+         </property>
       </product>          
    </extension>
     
@@ -44,15 +68,18 @@
    </extension>
    
 	<extension point="org.eclipse.ui.intro">
-		<intro
-      		icon="icons/JMoney16.gif"
-      		class="net.sf.jmoney.intro.JMoneyIntroPart"
-      		id="net.sf.jmoney.intro"/>
 		<introProductBinding 
 			productId="net.sf.jmoney.product"
-			introId="net.sf.jmoney.intro"/>
+			introId="org.eclipse.ui.intro.universal"/>
 	</extension>
 
+    <extension
+         point="org.eclipse.ui.intro.configExtension">
+      <configExtension
+            configId="org.eclipse.ui.intro.universalConfig"
+            content="$nl$/intro/firststepsExtensionContent.xml"/>  
+   </extension>
+   
 	<extension
           point="org.eclipse.core.runtime.preferences">
 		<initializer class="net.sf.jmoney.JMoneyPreferenceInitializer"/>
@@ -173,6 +200,7 @@ items to an existing menu or toolbar.
               commandId="net.sf.jmoney.transactionDetails"
               icon="icons/view_transaction.GIF"/>
      </menuContribution>
+
 </extension>
 
 	<extension point="org.eclipse.ui.newWizards">
@@ -186,17 +214,6 @@ items to an existing menu or toolbar.
 			</description>
 		</wizard>
 	</extension>
-
-   <extension
-         point="org.eclipse.help.toc">
-      <toc
-            file="toc.xml">
-      </toc>
-      <toc
-            file="testToc.xml"
-            primary="true">
-      </toc>
-   </extension>
 
    <extension
          point="org.eclipse.ui.preferencePages">
