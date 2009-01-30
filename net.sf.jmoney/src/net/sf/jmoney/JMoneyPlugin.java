@@ -136,13 +136,18 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 		}
 	}
 
+	/**
+	 * Given the name of an image file in the icons directory of
+	 * this bundle, creates an image descriptor.  This method does
+	 * not use a cache but will create a new descriptor on each call.
+	 * 
+	 * @param name
+	 * @return
+	 */
 	public static ImageDescriptor createImageDescriptor(String name) {
-		// Make above call this, or remove above
-//		String iconPath = "icons/";
-		String iconPath = ""; //$NON-NLS-1$
 		try {
-			URL installURL = getDefault().getBundle().getEntry("/"); //$NON-NLS-1$
-			URL url = new URL(installURL, iconPath + name);
+			URL installURL = getDefault().getBundle().getEntry("icons/"); //$NON-NLS-1$
+			URL url = new URL(installURL, name);
 			return ImageDescriptor.createFromURL(url);
 		} catch (MalformedURLException e) {
 			// should not happen

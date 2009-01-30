@@ -345,6 +345,11 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	 * @param iconFileName
 	 */
 	public void setIcon(String iconFileName) {
+		// TODO: This method is all wrong and must be re-written.
+		// This method is not going to work because other plug-ins
+		// may be calling this with icons from that other plug-in,
+		// but the icon name set here is used to fetch the icon from
+		// the core plug-in's bundle.  That is not going to work.
 		this.iconFileName = iconFileName;
 	}
 

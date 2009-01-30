@@ -97,7 +97,7 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 		// that is controlled by the derived class type.  This has not
 		// been designed yet, so for time being we have nothing to do.
 		
-		propertySet.setIcon("icons/category.gif"); //$NON-NLS-1$
+		propertySet.setIcon("category.gif"); //$NON-NLS-1$
 		
 		return propertySet;
 	}

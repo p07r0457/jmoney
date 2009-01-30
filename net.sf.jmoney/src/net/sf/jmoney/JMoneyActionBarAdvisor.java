@@ -148,22 +148,22 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
         
 		newTransactionItem = createContributionItemFromCommand(
 				"net.sf.jmoney.newTransaction", //$NON-NLS-1$
-				"icons/new_entry.gif", //$NON-NLS-1$
+				"new_entry.gif", //$NON-NLS-1$
 				Messages.JMoneyActionBarAdvisor_NewTransactionToolTipText);
 
 		deleteTransactionItem = createContributionItemFromCommand(
 				"net.sf.jmoney.deleteTransaction", //$NON-NLS-1$
-				"icons/delete_entry.gif", //$NON-NLS-1$
+				"delete_entry.gif", //$NON-NLS-1$
 				Messages.JMoneyActionBarAdvisor_DeleteTransactionToolTipText);
 
 		duplicateTransactionItem = createContributionItemFromCommand(
 				"net.sf.jmoney.duplicateTransaction", //$NON-NLS-1$
-				"icons/duplicate_entry.gif", //$NON-NLS-1$
+				"duplicate_entry.gif", //$NON-NLS-1$
 				Messages.JMoneyActionBarAdvisor_DuplicateTransactionToolTipText);
 
 		viewTransactionItem = createContributionItemFromCommand(
 				"net.sf.jmoney.transactionDetails", //$NON-NLS-1$
-				"icons/view_transaction.gif", //$NON-NLS-1$
+				"view_transaction.gif", //$NON-NLS-1$
 				Messages.JMoneyActionBarAdvisor_TransactionDetailsToolTipText);
     }
 
@@ -301,7 +301,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
      * Creates and returns the Reports menu.
      */
     private MenuManager createReportsMenu() {
-        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuReportsName, JMoneyPlugin.createImageDescriptor("icons/report.gif"), "reports");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuReportsName, JMoneyPlugin.createImageDescriptor("report.gif"), "reports");  //$NON-NLS-1$//$NON-NLS-2$
         menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         return menu;
     }
@@ -310,7 +310,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
      * Creates and returns the Charts menu.
      */
     private MenuManager createChartsMenu() {
-        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuChartsName, JMoneyPlugin.createImageDescriptor("icons/chart.gif"), "charts");  //$NON-NLS-1$//$NON-NLS-2$ //$NON-NLS-3$
+        MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuChartsName, JMoneyPlugin.createImageDescriptor("chart.gif"), "charts");  //$NON-NLS-1$//$NON-NLS-2$
         menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         return menu;
     }
