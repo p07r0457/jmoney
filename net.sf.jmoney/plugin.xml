@@ -180,25 +180,25 @@ items to an existing menu or toolbar.
      <menuContribution locationURI="menu:edit?after=additions">
         <command
               commandId="net.sf.jmoney.newTransaction"
-              icon="icons/new_entry.GIF"/>
+              icon="icons/new_entry.gif"/>
      </menuContribution>
 
      <menuContribution locationURI="menu:edit?after=additions">
         <command
               commandId="net.sf.jmoney.deleteTransaction"
-              icon="icons/delete_entry.GIF"/>
+              icon="icons/delete_entry.gif"/>
      </menuContribution>
 
      <menuContribution locationURI="menu:edit?after=additions">
         <command
               commandId="net.sf.jmoney.duplicateTransaction"
-              icon="icons/duplicate_entry.GIF"/>
+              icon="icons/duplicate_entry.gif"/>
      </menuContribution>
 
      <menuContribution locationURI="menu:navigate?after=openEditors">
         <command
               commandId="net.sf.jmoney.transactionDetails"
-              icon="icons/view_transaction.GIF"/>
+              icon="icons/view_transaction.gif"/>
      </menuContribution>
 
 </extension>
