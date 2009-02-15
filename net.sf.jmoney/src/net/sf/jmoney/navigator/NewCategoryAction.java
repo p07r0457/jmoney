@@ -8,7 +8,7 @@ import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.views.CategoriesNode;
-import net.sf.jmoney.wizards.NewAccountWizard;
+import net.sf.jmoney.wizards.NewIncomeExpenseAccountWizard;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -59,7 +59,7 @@ class NewCategoryAction extends BaseSelectionListenerAction {
 			? (IncomeExpenseAccount)selectedObject
 					: null;
 
-		NewAccountWizard wizard = new NewAccountWizard(session, account);
+		NewIncomeExpenseAccountWizard wizard = new NewIncomeExpenseAccountWizard(session, account);
 		WizardDialog dialog = new WizardDialog(shell, wizard);
 		dialog.setPageSize(600, 300);
 		int result = dialog.open();

@@ -206,6 +206,15 @@ items to an existing menu or toolbar.
 	<extension point="org.eclipse.ui.newWizards">
 		<wizard
         category="net.sf.jmoney.wizards.newAccounts"
+        class="net.sf.jmoney.wizards.NewIncomeExpenseAccountWizard"
+        id="net.sf.jmoney.wizards.new.categoryaccount"
+        name="Category">
+			<description>
+				Create a new Income or Expense Account. 
+			</description>
+		</wizard>
+		<wizard
+        category="net.sf.jmoney.wizards.newAccounts"
         class="net.sf.jmoney.wizards.NewAccountWizard"
         id="net.sf.jmoney.wizards.new.bankaccount"
         name="Bank Account">

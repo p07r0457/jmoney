@@ -23,6 +23,8 @@
 package net.sf.jmoney;
 
 import net.sf.jmoney.navigator.JMoneyCommonNavigator;
+import net.sf.jmoney.wizards.NewAccountWizard;
+import net.sf.jmoney.wizards.NewIncomeExpenseAccountWizard;
 
 import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
@@ -50,7 +52,8 @@ public class JMoneyPerspective implements IPerspectiveFactory {
         layout.addShowViewShortcut("org.eclipse.ui.views.PropertySheet"); //$NON-NLS-1$
         layout.addShowViewShortcut(ERROR_LOG_VIEW_ID);
 
-        layout.addNewWizardShortcut("net.sf.jmoney.wizards.new.bankaccount"); //$NON-NLS-1$
+        layout.addNewWizardShortcut(NewAccountWizard.ID);
+        layout.addNewWizardShortcut(NewIncomeExpenseAccountWizard.ID);
     }
 
 }

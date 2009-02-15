@@ -30,10 +30,9 @@ import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.isolation.UncommittedObjectKey;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.AccountInfo;
-import net.sf.jmoney.model2.BankAccountInfo;
-import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.DatastoreManager;
-import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.resources.Messages;
@@ -52,10 +51,8 @@ import org.eclipse.ui.INewWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 
-public class NewAccountWizard extends Wizard implements INewWizard {
-	public static final String ID = "net.sf.jmoney.wizards.new.bankaccount"; //$NON-NLS-1$
-	
-	private ExtendablePropertySet<? extends Account> accountPropertySet;
+public class NewIncomeExpenseAccountWizard extends Wizard implements INewWizard {
+	public static final String ID = "net.sf.jmoney.wizards.new.categoryaccount"; //$NON-NLS-1$
 
 	private TransactionManager transactionManager;
 	
@@ -68,44 +65,35 @@ public class NewAccountWizard extends Wizard implements INewWizard {
 
 	/**
 	 * Default version used from plugin.xml.
-	 * TODO: Need to have a separate class for each type of account.
-	 * 
 	 */
-	public NewAccountWizard() {
+	public NewIncomeExpenseAccountWizard() {
 		this.setWindowTitle(Messages.NewAccountWizard_WindowTitleCategory);
 		this.setHelpAvailable(true);
-//		PlatformUI.getWorkbench().getHelpSystem().setHelp(this.getContainer(), "net.sf.jmoney.help.newAccountDialogId");
 	}
 
 	/**
 	 * 
-	 * @param finalPropertySet the property set object of the class
-	 * 		of account to create 
+	 * @param session
 	 * @param parentAccount the parent account or null if this is to be
 	 * 		a top level account 
 	 */
-	public NewAccountWizard(Session session, CapitalAccount parentAccount, ExtendablePropertySet<? extends CapitalAccount> accountPropertySet) {
-		this();
-		
-		this.accountPropertySet = accountPropertySet;
-		
-		createAccount(session, parentAccount, accountPropertySet);
+	public NewIncomeExpenseAccountWizard(Session session, IncomeExpenseAccount parentAccount) {
+		this(); 
+		createAccount(session, parentAccount);
 	}
 
-	private void createAccount(Session session, CapitalAccount parentAccount,
-			ExtendablePropertySet<? extends CapitalAccount> accountPropertySet) {
+	private void createAccount(Session session,	IncomeExpenseAccount parentAccount) {
 		transactionManager = new TransactionManager(session.getDataManager());
 		
-		CapitalAccount parentAccount2 = transactionManager.getCopyInTransaction(parentAccount);
+		IncomeExpenseAccount parentAccount2 = transactionManager.getCopyInTransaction(parentAccount);
 		if (parentAccount2 == null) {
 			Session session2 = transactionManager.getSession();
-			newUncommittedAccount = session2.createAccount(accountPropertySet);
+			newUncommittedAccount = session2.createAccount(IncomeExpenseAccountInfo.getPropertySet());
 		} else {
-			newUncommittedAccount = parentAccount2.createSubAccount(accountPropertySet);
+			newUncommittedAccount = parentAccount2.createSubAccount();
 		}
 	}
 	
-
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		IWorkbenchWindow window = workbench.getActiveWorkbenchWindow();
 		DatastoreManager datastoreManager = (DatastoreManager)window.getActivePage().getInput();
@@ -116,14 +104,12 @@ public class NewAccountWizard extends Wizard implements INewWizard {
 		
 		Session session = datastoreManager.getSession();
 
-		this.accountPropertySet = BankAccountInfo.getPropertySet();
-		
 		/*
 		 * We could get the parent account from the selection.  However it seems to cause less confusion
 		 * if the account is created as a top level account whenever this wizard is invoked from the 'new...'
 		 * drop-down.
 		 */
-		createAccount(session, null, BankAccountInfo.getPropertySet());
+		createAccount(session, null);
 	}
 	
 	@Override
@@ -131,7 +117,7 @@ public class NewAccountWizard extends Wizard implements INewWizard {
 	{
 		// Show the page that prompts for all the property values.
 		Set<ScalarPropertyAccessor<?>> excludedProperties = new HashSet<ScalarPropertyAccessor<?>>(); 
-		WizardPage propertyPage = new WizardPropertyPage("propertyPage", Messages.NewAccountWizard_PropertyPageTitle, Messages.NewAccountWizard_PropertyPageMessage, newUncommittedAccount, accountPropertySet, AccountInfo.getNameAccessor(), excludedProperties); //$NON-NLS-1$
+		WizardPage propertyPage = new WizardPropertyPage("propertyPage", Messages.NewAccountWizard_PropertyPageTitle, Messages.NewAccountWizard_PropertyPageMessage, newUncommittedAccount, IncomeExpenseAccountInfo.getPropertySet(), AccountInfo.getNameAccessor(), excludedProperties); //$NON-NLS-1$
 		addPage(propertyPage);
 
 		WizardPage summaryPage = new SummaryPage("summaryPage"); //$NON-NLS-1$

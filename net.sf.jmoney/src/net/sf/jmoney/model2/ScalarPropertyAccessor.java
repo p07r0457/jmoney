@@ -349,7 +349,7 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 	 * @param parent
 	 * @return An interface to a wrapper class.
 	 */
-	@SuppressWarnings("unchecked")
+//	@SuppressWarnings("unchecked")  // Don't suppress this one, the warning is legitimate
 	public IPropertyControl<ExtendableObject> createPropertyControl(Composite parent) {
 		/*
 		 * When a PropertyAccessor object is created, it is provided with an
