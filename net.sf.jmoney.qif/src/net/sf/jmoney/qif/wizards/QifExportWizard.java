@@ -35,7 +35,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Locale;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrencyAccount;
@@ -55,6 +54,7 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IImportWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
+import net.sf.jmoney.model2.DatastoreManager;
 
 /**
  * A wizard to import data from a QIF file.
@@ -94,14 +94,12 @@ public class QifExportWizard extends Wizard implements IImportWizard {
 	 */
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		this.window = workbench.getActiveWorkbenchWindow();
-
-		this.
-		session = JMoneyPlugin.getDefault().getSession();
 		
-		// Original JMoney disabled the import menu items when no
+		// Original JMoney disabled the export menu items when no
 		// session was open.  I don't know how to do that in Eclipse,
 		// so we display a message instead.
-		if (session == null) {
+		DatastoreManager sessionManager = (DatastoreManager)window.getActivePage().getInput();
+		if (sessionManager == null) {
 	        MessageDialog waitDialog =
 				new MessageDialog(
 						window.getShell(), 
