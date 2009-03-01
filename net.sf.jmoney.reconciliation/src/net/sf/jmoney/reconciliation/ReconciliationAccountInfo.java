@@ -60,6 +60,7 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 			return new ReconciliationAccount(
 					extendedObject, 
 					values.getScalarValue(getReconcilableAccessor()),
+					values.getScalarValue(getAmountNegatedAccessor()),
 					values.getListManager(extendedObject.getObjectKey(), getPatternsAccessor()),
 					values.getReferencedObjectKey(getDefaultCategoryAccessor()) 
 			);
@@ -67,6 +68,7 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 	});
 	
 	private static ScalarPropertyAccessor<Boolean> reconcilableAccessor = null;
+	private static ScalarPropertyAccessor<Boolean> amountNegatedAccessor = null;
 	private static ReferencePropertyAccessor<IncomeExpenseAccount> defaultCategoryAccessor = null;
 	private static ListPropertyAccessor<MemoPattern> patternsAccessor = null;
 	
@@ -84,6 +86,7 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 		};
 	
 		reconcilableAccessor = propertySet.addProperty("reconcilable", ReconciliationPlugin.getResourceString("Account.isReconcilable"), Boolean.class, 1, 5, new CheckBoxControlFactory(), null);
+		amountNegatedAccessor = propertySet.addProperty("amountNegated", ReconciliationPlugin.getResourceString("Account.isAmountNegated"), Boolean.class, 1, 5, new CheckBoxControlFactory(), null);
 		patternsAccessor = propertySet.addPropertyList("patterns", NLS.bind(Messages.ReconciliationAccountInfo_Patterns, null), MemoPatternInfo.getPropertySet(), patternListGetter);
 		defaultCategoryAccessor = propertySet.addProperty("defaultCategory", NLS.bind(Messages.ReconciliationAccountInfo_Patterns, null), IncomeExpenseAccount.class, 1, 20, accountControlFactory, null);
 		
@@ -102,6 +105,13 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 	 */
 	public static ScalarPropertyAccessor<Boolean> getReconcilableAccessor() {
 		return reconcilableAccessor;
+	}
+
+	/**
+	 * @return
+	 */
+	public static ScalarPropertyAccessor<Boolean> getAmountNegatedAccessor() {
+		return amountNegatedAccessor;
 	}
 
 	/**

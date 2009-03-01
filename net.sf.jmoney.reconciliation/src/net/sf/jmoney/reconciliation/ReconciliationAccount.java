@@ -40,6 +40,8 @@ public class ReconciliationAccount extends CurrencyAccountExtension {
 	
 	protected boolean reconcilable = false;
 	
+	protected boolean amountNegated = false;
+	
 	protected IListManager<MemoPattern> patterns;
 	
 	IObjectKey defaultCategoryKey = null;
@@ -62,11 +64,13 @@ public class ReconciliationAccount extends CurrencyAccountExtension {
 	 */
 	public ReconciliationAccount(
 			ExtendableObject extendedObject,
-			boolean reconcilable, 
+			boolean reconcilable,
+			boolean amountNegated, 
 			IListManager<MemoPattern> patterns,
 			IObjectKey defaultCategoryKey) {
 		super(extendedObject);
 		this.reconcilable = reconcilable;
+		this.amountNegated = amountNegated;
 		this.patterns = patterns;
 		this.defaultCategoryKey = defaultCategoryKey;
 	}
@@ -77,6 +81,16 @@ public class ReconciliationAccount extends CurrencyAccountExtension {
 	 */
 	public boolean isReconcilable() {
 		return reconcilable;
+	}
+	
+	/**
+	 * Usually a positive amount in the QIF file indicates a credit and a negative
+	 * amount indicates a debit.  However Citibank USA reverse this for their credit
+	 * cards.  If this flag is set on then positive amounts in the QIF file are assumed
+	 * to be debits and negative amounts credits.
+	 */
+	public boolean isAmountNegated() {
+		return amountNegated;
 	}
 	
 	/**
@@ -98,6 +112,15 @@ public class ReconciliationAccount extends CurrencyAccountExtension {
 		boolean oldReconcilable = this.reconcilable;
 		this.reconcilable = reconcilable;
 		processPropertyChange(ReconciliationAccountInfo.getReconcilableAccessor(), new Boolean(oldReconcilable), new Boolean(reconcilable));
+	}
+	
+	/**
+	 * Sets the flag to indicate amounts in the QIF import files are negated.
+	 */
+	public void setAmountNegated(boolean amountNegated) {
+		boolean oldAmountNegated = this.amountNegated;
+		this.amountNegated = amountNegated;
+		processPropertyChange(ReconciliationAccountInfo.getAmountNegatedAccessor(), new Boolean(oldAmountNegated), new Boolean(amountNegated));
 	}
 	
 	/**

@@ -123,7 +123,22 @@ public class QifImport implements IBankStatementSource {
 					if (line.length() >= 1) {
 						switch (line.charAt(0)) {
 						case 'T':
-							entryData.setAmount(parseAmount(line, account.getCurrency()));
+							/*
+							 * Citicard have positive numbers for charges and
+							 * negative numbers for payments and refunds.
+							 * Citicard seemed to reverse the sign to this
+							 * convention sometime around October 2008.
+							 * 
+							 * We therefore have a boolean property in each
+							 * currency account to indicate if the amount in the
+							 * QIF files should be reversed.
+							 */
+							long amount = parseAmount(line, account.getCurrency());
+							if (account.getPropertyValue(ReconciliationAccountInfo.getAmountNegatedAccessor())) {
+								entryData.setAmount(-amount);
+							} else {
+								entryData.setAmount(amount);
+							}
 							break;
 						case 'D':
 							entryDate = parseDate(line);
