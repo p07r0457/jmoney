@@ -85,7 +85,7 @@ public class AccountEditorInput implements IEditorInput, IPersistableElement {
     	// This method is never called.
     	// TODO: figure out when this method is supposed to be called
     	// and what we should return here.
-    	return propertySet.getImageDescriptor();
+    	return propertySet.getIconImageDescriptor();
     }
 
     /* (non-Javadoc)
@@ -95,11 +95,12 @@ public class AccountEditorInput implements IEditorInput, IPersistableElement {
     	return accountName;
     }
     
-    // Or should we be using getImageDescriptor???
-    // Because the editor input is created only when the editor is created,
-    // this is not a performance issue.
+    /*
+     * Returns the image for the account.  This is a cached image and must not
+     * be disposed.
+     */
     public Image getImage() {
-    	return propertySet.getIcon();
+    	return propertySet.getIconImage();
     }
     
     /* (non-Javadoc)

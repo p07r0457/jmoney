@@ -30,7 +30,7 @@ public class AccountsLabelProvider extends LabelProvider implements
 		} else if (element instanceof ExtendableObject) {
 			ExtendableObject extendableObject = (ExtendableObject) element;
 			return PropertySet.getPropertySet(extendableObject.getClass())
-					.getIcon();
+					.getIconImage();
 		} else {
 			throw new RuntimeException(Messages.AccountsLabelProvider_Image);
 		}

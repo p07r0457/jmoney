@@ -36,7 +36,7 @@ class NewCategoryAction extends BaseSelectionListenerAction {
 
 		setText(NLS.bind(Messages.AccountsActionProvider_NewAccount, messageArgs));
 		setToolTipText(NLS.bind(Messages.AccountsActionProvider_CreateNewAccount, messageArgs));
-		setImageDescriptor(IncomeExpenseAccountInfo.getPropertySet().getImageDescriptor());
+		setImageDescriptor(IncomeExpenseAccountInfo.getPropertySet().getIconImageDescriptor());
 	}
 
 	@Override

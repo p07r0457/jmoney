@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.model2;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.MultiTextControlFactory;
 import net.sf.jmoney.fields.TextControlFactory;
 import net.sf.jmoney.resources.Messages;
@@ -65,7 +66,7 @@ public class CapitalAccountInfo implements IPropertySetInfo {
 		abbreviationAccessor = propertySet.addProperty("abbreviation", Messages.CapitalAccountInfo_Abbreviation, String.class, 5, 70, textControlFactory, null); //$NON-NLS-1$
 		commentAccessor      = propertySet.addProperty("comment", Messages.CapitalAccountInfo_Comment, String.class, 5, 150, commentControlFactory, null); //$NON-NLS-1$
 		
-		propertySet.setIcon("account.gif"); //$NON-NLS-1$
+		propertySet.setIcon(JMoneyPlugin.createImageDescriptor("account.gif")); //$NON-NLS-1$
 		
 		return propertySet;
 	}

@@ -32,6 +32,8 @@ import net.sf.jmoney.JMoneyPlugin;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
 
 public class ExtendablePropertySet<E extends ExtendableObject> extends PropertySet<E> {
 
@@ -67,11 +69,18 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	protected String objectDescription;
 
 	/**
-	 * This field is valid for extendable property sets only
+	 * This field is valid for extendable property sets only.
+	 * <P>
+	 * This field is never null. A null image descriptor may be passed during
+	 * construction if this is not a base extendable object, but when a null
+	 * image is passed the image will be derived from the base class.
 	 */
-	protected String iconFileName = null;
+	private ImageDescriptor iconImageDescriptor = null;
 
-	/** cached value */
+	/**
+	 * This image is created when first needed and kept throughout the lifetime
+	 * of the application.
+	 */
 	private Image iconImage = null;
 
 	/**
@@ -114,7 +123,7 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 		
 		this.derivable = (constructors == null);
 		this.objectDescription = objectDescription;
-		this.iconFileName = null;
+		this.iconImageDescriptor = null;
 
 		extensionPropertySets = new HashMap<String, ExtensionPropertySet<?>>();
 	}
@@ -148,61 +157,12 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 			for (ExtendablePropertySet<? super E> base = this; base != null; base = base.getBasePropertySet()) {
 				base.derivedPropertySets.put(classOfObject, this);
 			}
-/*
-			// Build the list of properties that are passed to
-			// the 'new object' constructor and another list that
-			// are passed to the 're-instantiating' constructor.
-
-			constructorProperties = new Vector<PropertyAccessor>();
-			defaultConstructorProperties = new Vector<PropertyAccessor>();
-*/			
 		}
 
 		if (basePropertySet != null) {
 			basePropertySet.directlyDerivedPropertySets.add(this);
 		}
-/*		
-		// We need to be able to iterate through property sets
-		// starting at the base property set and continuing through
-		// derived property sets until we get to this property set.
-		// To do this, we first build a list of the base property sets
-		// and we can then iterate through these property sets in
-		// reverse order.
-		Vector<ExtendablePropertySet> basePropertySets = new Vector<ExtendablePropertySet>();
-		for (ExtendablePropertySet base = getBasePropertySet(); base != null; base = base.getBasePropertySet()) {
-			basePropertySets.add(base);
-		}
 
-		// Add the appropriate properties from the base classes to
-		// the constructorParameters and defaultConstructorParameters arrays.
-		int parameterIndex = 3;
-
-		for (int i = basePropertySets.size()-1; i >= 0; i--) {
-			ExtendablePropertySet<?> base = basePropertySets.get(i);
-
-			for (PropertyAccessor propertyAccessor: base.properties) {
-				if (!isDerivable()) {
-					constructorProperties.add(propertyAccessor);
-					if (propertyAccessor.isList()) {
-						defaultConstructorProperties.add(propertyAccessor);
-					}
-				}
-
-				parameterIndex++;
-			}
-		}
-
-		// Process the properties in this property set.
-		for (PropertyAccessor propertyAccessor: properties) {
-			propertyAccessor.setIndexIntoConstructorParameters(parameterIndex++);
-			if (!isDerivable()) {
-				constructorProperties.add(propertyAccessor);
-				if (propertyAccessor.isList()) {
-					defaultConstructorProperties.add(propertyAccessor);
-				}
-			}
-		}
-*/
 		/*
 		 * Set the icon associated with this property set. The icon will already
 		 * have been set in any property set for which an icon is specifically
@@ -211,12 +171,12 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 		 * property sets until we find a non-null icon.
 		 * 
 		 * This must be done here and not in the constructor because the calling
-		 * code must have a change to set an icon before this code is executed.
+		 * code must have a chance to set an icon before this code is executed.
 		 */
-		if (iconFileName == null) {
+		if (iconImageDescriptor == null) {
 			for (ExtendablePropertySet base = getBasePropertySet(); base != null; base = base.getBasePropertySet()) {
-				if (base.getIconFileName() != null) {
-					iconFileName = base.getIconFileName();
+				if (base.iconImageDescriptor != null) {
+					iconImageDescriptor = base.iconImageDescriptor;
 					break;
 				}
 			}
@@ -342,20 +302,10 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	 * used or, if there is no base class, no icon will be shown
 	 * for objects of this class.
 	 *   
-	 * @param iconFileName
+	 * @param iconImageDescriptor
 	 */
-	public void setIcon(String iconFileName) {
-		// TODO: This method is all wrong and must be re-written.
-		// This method is not going to work because other plug-ins
-		// may be calling this with icons from that other plug-in,
-		// but the icon name set here is used to fetch the icon from
-		// the core plug-in's bundle.  That is not going to work.
-		this.iconFileName = iconFileName;
-	}
-
-	/** used internally */
-	String getIconFileName() {
-		return iconFileName;
+	public void setIcon(ImageDescriptor iconImageDescriptor) {
+		this.iconImageDescriptor = iconImageDescriptor;
 	}
 
 	/**
@@ -371,14 +321,26 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	 * 			this property set.
 	 */
 	// TODO remove this method and use getImageDescriptor only.
-	public Image getIcon() {
-		if (iconImage == null)
-			iconImage = JMoneyPlugin.createImage(iconFileName);
+	public Image getIconImage() {
+		if (iconImage == null) {
+			if (iconImageDescriptor != null) {
+				iconImage = iconImageDescriptor.createImage();
+			} else {
+				iconImage = PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_ELEMENT);
+			}
+		}
 		return iconImage;
 	}
 
-	public ImageDescriptor getImageDescriptor() {
-		return JMoneyPlugin.createImageDescriptor(iconFileName);
+	public ImageDescriptor getIconImageDescriptor() {
+		if (iconImageDescriptor == null) {
+			/*
+			 * No object from which this object directly or indirectly
+			 * extends has an icon. Use a default one.
+			 */
+			iconImageDescriptor = PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_OBJ_ELEMENT);
+		}
+		return iconImageDescriptor;
 	}
 
 	/**

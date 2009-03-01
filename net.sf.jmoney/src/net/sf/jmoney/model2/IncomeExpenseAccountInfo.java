@@ -22,6 +22,7 @@
 
 package net.sf.jmoney.model2;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.CheckBoxControlFactory;
 import net.sf.jmoney.fields.CurrencyControlFactory;
 import net.sf.jmoney.resources.Messages;
@@ -97,7 +98,7 @@ public class IncomeExpenseAccountInfo implements IPropertySetInfo {
 		// that is controlled by the derived class type.  This has not
 		// been designed yet, so for time being we have nothing to do.
 		
-		propertySet.setIcon("category.gif"); //$NON-NLS-1$
+		propertySet.setIcon(JMoneyPlugin.createImageDescriptor("category.gif")); //$NON-NLS-1$
 		
 		return propertySet;
 	}
