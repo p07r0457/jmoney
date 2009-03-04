@@ -428,7 +428,7 @@ public abstract class EntriesTable<T extends EntryData> extends Composite {
 				updateFollowingValues(balanceRefreshStartPoint, balanceRefreshStartAmount);
 
 				if (index != originalIndex) {
-					table.refreshContent();
+					table.moveRow(originalIndex, index);
 				} else {
 					// TODO: Test to see if the amount has changed, and update the following
 					// rows only if so (as the balances will have changed).

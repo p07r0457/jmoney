@@ -22,7 +22,9 @@
 
 package net.sf.jmoney.entrytable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.swt.SWT;
@@ -38,6 +40,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Slider;
 
 public class VirtualRowTable<T extends EntryData> extends Composite implements ICompositeTable<T> {
@@ -109,7 +112,7 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 	 * update each other.  For example, if page down is pressed in this
 	 * content pane then the slider must be updated, but if the slider is
 	 * dragged then this content pane must be updated.
-	 * 
+	 * <P>
 	 * This class listens to the slider for changes.  However, if this content pane
 	 * updates the slider then we don't want the listener to process the change.
 	 * We can avoid this from happened if this class always sets the new position
@@ -182,8 +185,6 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 		for (EntryData entryData: rows.keySet()) {
 			rows.get(entryData).refreshBalance();
 		}
-		// TODO Auto-generated method stub
-		
 	}
 
 	// TODO: Verify first parameter needed.
@@ -945,6 +946,39 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 	}
 
 	/**
+	 * This method moves a row up or down the screen to another position.
+	 * This would happen when a property is changed and that affects the
+	 * position of the entry in the sort order.
+	 * <P>
+	 * The movement is animated, meaning the control is moved continuously over
+	 * the period of about 0.5 seconds to its new position and at the same time
+	 * the intervening controls are moved in the opposite direction.  This is done
+	 * because when controls jump to another position, the user does not know
+	 * what is going on.
+	 * <P>
+	 * The screen is not scrolled, meaning controls above and below
+	 * the affected area do not move.  Technically the scroll bar
+	 * might have to be adjusted if the controls are not all the same
+	 * height, but the amount would be so small that we don't bother.
+	 * <P>
+	 * If the moved control's new position is off the visible area then
+	 * the animation will adjust the speed of its movement so that it
+	 * moves to a position just off the screen.  This is so because otherwise
+	 * if the new control's position was a long long way away then it
+	 * would move so fast that the user would not see the movement.
+	 * 
+	 * @param originalIndex 
+	 * @param newIndex 
+	 */
+	public void moveRow(int originalIndex, int newIndex) {
+		if (newIndex < originalIndex) {
+			new MoveRowUpProcessor(originalIndex, newIndex).moveRow();
+		} else {
+			new MoveRowDownProcessor(originalIndex, newIndex).moveRow();
+		}
+	}
+
+	/**
 	 * This method is called when an attempt to leave the selected row fails.
 	 * We want to be sure that the selected row becomes visible because
 	 * the user needs to correct the errors in the row.
@@ -1016,6 +1050,401 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 
 		int rowIndex = contentProvider.indexOf(rowControl.getContent());
 		scrollToGivenFix(rowIndex, rowTop);
+	}
+
+	private class MoveRowProcessor {
+		int originalIndex;
+		int newIndex;
+
+		public MoveRowProcessor(int originalIndex, int newIndex) {
+			this.originalIndex = originalIndex;
+			this.newIndex = newIndex;
+		}
+
+		int topOf(Control control) {
+			return control.getLocation().y;
+		}
+		
+		int bottomOf(Control control) {
+			return control.getLocation().y + control.getSize().y;
+		}
+
+		/**
+		 * Move the given control from the starting location to the ending location.  At the same time
+		 * move all the intermediate controls by the given amount (which will always be in the opposite
+		 * direction and by an amount equal to the height of the first given control).
+		 * 
+		 * @param movingRow
+		 * @param startLocation
+		 * @param endLocation
+		 * @param intermediateRows
+		 * @param moveDelta
+		 */
+		void moveControl(final Control movingControl, final int startLocation, final int endLocation, final List<Control> intermediateControls, final int moveDelta) {
+			final int numberOfSteps = 20;
+
+			// Ensure movingRow is on top	
+			movingControl.moveAbove(null); 
+			
+			movingControl.setLocation(0, startLocation); 
+			
+			/*
+			 * We start a thread that sets up each of ten positions
+			 * and then runs a process on the UI thread to reflect that
+			 * position.  Note that if the UI thread can't keep up then
+			 * some positions may be skipped.  This ensures the correct
+			 * speed is kept.
+			 */
+			final Display display = Display.getCurrent();
+			new Thread() {
+				@Override
+				public void run() {
+					int position = 0;
+					int deltaRemaining = moveDelta;
+					int deltaRemaining2 = endLocation - startLocation;
+					do {
+						final int delta = deltaRemaining / (numberOfSteps - position); 
+						final int delta2 = deltaRemaining2 / (numberOfSteps - position);
+						
+						display.asyncExec(new Runnable() {
+							@Override
+							public void run() {
+								// The intermediate controls
+								for (Control intermediateControl : intermediateControls) {
+									int y = intermediateControl.getLocation().y;
+									intermediateControl.setLocation(0, y + delta); 
+								}
+								
+								// The moving control
+								int y = movingControl.getLocation().y;
+								movingControl.setLocation(0, y + delta2); 
+							}
+						});
+
+						deltaRemaining -= delta;
+						deltaRemaining2 -= delta2;
+						
+						try {
+							sleep(500);  // was 100
+						} catch (InterruptedException e) {
+							return;
+						}
+
+						position++;
+					} while (position < numberOfSteps);
+				}
+			}.start();
+		}
+		
+	}
+	
+	private class MoveRowUpProcessor extends MoveRowProcessor {
+
+		public MoveRowUpProcessor(int originalIndex, int newIndex) {
+			super(originalIndex, newIndex);
+			assert(newIndex < originalIndex);
+		}
+
+		/** 
+		 * @param originalIndex
+		 * @param newIndex
+		 */
+		private void moveRow() {
+			// TODO: this is not correct.  Might be, for example, a selected row.
+			int bottomVisibleRow = topVisibleRow + rows.size() - 1;
+			
+			/*
+			 * The movingRow might never be visible.  However if it
+			 * is moving from below the visible area to above the visible
+			 * area then we need to know its height (as that is the amount
+			 * by which the visible controls will scroll), which means we
+			 * must create it.
+			 * 
+			 * If the moving control is below the visible area and remains below,
+			 * or is above and remains above, then we don't really need to
+			 * know the height of the control.  However it is simpler to create
+			 * it anyway as it is not worth optimizing these rare cases.
+			 */
+			Control movingRow = getRowControlFromPreMoveIndex(originalIndex);
+			int movingRowHeight = movingRow.getSize().y;
+
+			/*
+			 * If a control is outside the visible area during the entire movement
+			 * then there is no need to create the control.
+			 * 
+			 * We move both lowerIntermediate and upperIntermediate inwards (towards
+			 * each other) as needed to cut out controls that are never visible.
+			 */
+			
+			/*
+			 * The lower bound (bottom of the visible area) is never visible if it
+			 * is not visible at the start of the movement.  This is because the intermediate controls
+			 * are moving downwards. 
+			 */
+			int lowerIntermediate = originalIndex - 1;
+			if (lowerIntermediate > bottomVisibleRow) {
+				lowerIntermediate = bottomVisibleRow;
+			}
+			
+			/*
+			 * An intermediate control is never visible if the bottom of the control is still at or
+			 * above the top of the screen after it has been scrolled down by <code>movingRowHeight</code>.
+			 * 
+			 *  Note that this code may result in the creation of new controls.  These controls
+			 *  will initially be positioned such that they are not visible.  They will all
+			 *  become visible during the scrolling process.
+			 */
+			int topmostIntermediate = newIndex;
+			int upperIntermediate = topmostIntermediate;
+			{
+				int index = topVisibleRow;
+				Control intermediateRow = getRowControlFromPreMoveIndex(index);
+				int y = topOf(intermediateRow);
+				while (index > topmostIntermediate && y > -movingRowHeight) {
+					if (y <= -movingRowHeight) {
+						// We have reached the topmost control that will be visible
+						// after the move, so we can stop here.
+						break;
+					}
+
+					index--;
+
+					intermediateRow = getRowControlFromPreMoveIndex(index);
+					int height = intermediateRow.getSize().y;
+					y -= height;
+					intermediateRow.setLocation(0, y);
+
+					upperIntermediate = index;
+				}
+			}
+
+			/*
+			 * At this point, lowerIntermediate is the upper of the last
+			 * row being moved or the last row that would be at least partially
+			 * above the bottom of the visible area at any time during the scroll.
+			 * It may be a row that is above the top of the visible area.
+			 * 
+			 * Likewise, upperIntermediate is the lower of the first
+			 * row being moved or the first row that would be at least partially
+			 * below the top of the visible area at any time during the scroll.
+			 * It may be a row that is below the bottom of the visible area.
+			 * 
+			 * Because of the conditions not checked, upperIntermediate may in
+			 * fact be below lowerIntermediate.  Such a condition indicates that
+			 * lowerIntermediate is above the top of the visible area or upperIntermediate
+			 * is below the bottom of the visible area.  Either way, we have nothing to
+			 * scroll.
+			 */
+			if (upperIntermediate > lowerIntermediate) {
+				return;
+			}
+
+			/*
+			 * The moving control may be moving well above the visible area, or may be
+			 * moving from well below the visible area.  However we want to show the user
+			 * its movement and don't want it to move so fast for a short time that it
+			 * may be visible.  We therefore act as though it is moving from just outside
+			 * the visible area.
+			 */
+			int startLocation = bottomOf(getRowControlFromPreMoveIndex(lowerIntermediate));
+			int endLocation = topOf(getRowControlFromPreMoveIndex(upperIntermediate));
+
+			/*
+			 * Now we know the range of intermediate controls that need
+			 * to be moved.
+			 * 
+			 * It may not really be necessary to build a list of these.
+			 * We could just pass on the lower and upper bounds and let
+			 * everyone fetch these from the content provider, but just
+			 * in case the content provider is not too efficient....
+			 */
+			List<Control> intermediateRows = new ArrayList<Control>();
+			for (int index = upperIntermediate; index <= lowerIntermediate; index++) {
+//				T entryData = contentProvider.getElement(index);
+//				Control intermediateRow = rows.get(entryData);
+				Control intermediateRow = getRowControlFromPreMoveIndex(index);
+				intermediateRows.add(intermediateRow);
+			}
+			
+			moveControl(movingRow, startLocation, endLocation, intermediateRows, movingRowHeight);
+		}
+		
+		/**
+		 * This method must be called after the content has been updated.
+		 * However, that makes it confusing here when we are getting the control
+		 * for a given index prior to doing the moves.  The controls are located in
+		 * their pre-move positions, but the index to be used to get a control must
+		 * be the post-movement index.
+		 * 
+		 * To help avoid this confusion, this method is given an index and will return
+		 * the row that was at that index before the rows were moved.
+		 */
+		Control getRowControlFromPreMoveIndex(int index) {
+			if (index < newIndex) {
+				return getRowControl(index);
+			} else if (index < originalIndex) {
+				return getRowControl(index + 1);
+			} else if (index == originalIndex) {
+				return getRowControl(newIndex);
+			} else {
+				return getRowControl(index);
+			}
+		}
+		
+	}
+
+	private class MoveRowDownProcessor extends MoveRowProcessor {
+
+		public MoveRowDownProcessor(int originalIndex, int newIndex) {
+			super(originalIndex, newIndex);
+			assert(newIndex > originalIndex);
+		}
+
+		/** 
+		 * @param originalIndex
+		 * @param newIndex
+		 */
+		private void moveRow() {
+			// TODO: this is not correct.  Might be, for example, a selected row.
+			int bottomVisibleRow = topVisibleRow + rows.size() - 1;
+			
+			/*
+			 * The movingRow might never be visible.  However if it
+			 * is moving from below the visible area to above the visible
+			 * area then we need to know its height (as that is the amount
+			 * by which the visible controls will scroll), which means we
+			 * must create it.
+			 * 
+			 * If the moving control is below the visible area and remains below,
+			 * or is above and remains above, then we don't really need to
+			 * know the height of the control.  However it is simpler to create
+			 * it anyway as it is not worth optimizing these rare cases.
+			 */
+			Control movingRow = getRowControlFromPreMoveIndex(originalIndex);
+			int movingRowHeight = movingRow.getSize().y;
+
+			/*
+			 * If a control is outside the visible area during the entire movement
+			 * then there is no need to create the control.
+			 * 
+			 * We move both lowerIntermediate and upperIntermediate inwards (towards
+			 * each other) as needed to cut out controls that are never visible.
+			 */
+			
+			/*
+			 * The upper bound (top of the visible area) is never visible if it
+			 * is not visible at the start of the movement.  This is because the intermediate controls
+			 * are moving upwards. 
+			 */
+			int upperIntermediate = originalIndex + 1;
+			if (upperIntermediate < topVisibleRow) {
+				upperIntermediate = topVisibleRow;
+			}
+			
+			/*
+			 * An intermediate control is never visible if the top of the control is still at or
+			 * below the bottom of the screen after it has been scrolled up by <code>movingRowHeight</code>.
+			 * 
+			 *  Note that this code may result in the creation of new controls.  These controls
+			 *  will initially be positioned such that they are not visible.  They will all
+			 *  become visible during the scrolling process.
+			 */
+			int bottommostIntermediate = newIndex;
+			int lowerIntermediate = bottommostIntermediate;
+			{
+				int index = bottomVisibleRow;
+				Control intermediateRow = getRowControlFromPreMoveIndex(index);
+				int y = bottomOf(intermediateRow);
+				while (index < bottommostIntermediate && y < clientAreaSize.y + movingRowHeight) {
+					if (y >= clientAreaSize.y + movingRowHeight) {
+						// We have reached the bottommost control that will be visible
+						// after the move, so we can stop here.
+						break;
+					}
+
+					index++;
+
+					intermediateRow = getRowControlFromPreMoveIndex(index);
+					int height = intermediateRow.getSize().y;
+					y += height;
+					intermediateRow.setLocation(0, y);
+
+					lowerIntermediate = index;
+				}
+			}
+
+			/*
+			 * At this point, lowerIntermediate is the upper of the last
+			 * row being moved or the last row that would be at least partially
+			 * above the bottom of the visible area at any time during the scroll.
+			 * It may be a row that is above the top of the visible area.
+			 * 
+			 * Likewise, upperIntermediate is the lower of the first
+			 * row being moved or the first row that would be at least partially
+			 * below the top of the visible area at any time during the scroll.
+			 * It may be a row that is below the bottom of the visible area.
+			 * 
+			 * Because of the conditions not checked, upperIntermediate may in
+			 * fact be below lowerIntermediate.  Such a condition indicates that
+			 * lowerIntermediate is above the top of the visible area or upperIntermediate
+			 * is below the bottom of the visible area.  Either way, we have nothing to
+			 * scroll.
+			 */
+			if (upperIntermediate > lowerIntermediate) {
+				return;
+			}
+
+			/*
+			 * The moving control may be moving well above the visible area, or may be
+			 * moving from well below the visible area.  However we want to show the user
+			 * its movement and don't want it to move so fast for a short time that it
+			 * may be visible.  We therefore act as though it is moving from just outside
+			 * the visible area.
+			 */
+			int startLocation = topOf(getRowControlFromPreMoveIndex(upperIntermediate)) - movingRowHeight;
+			int endLocation = bottomOf(getRowControlFromPreMoveIndex(lowerIntermediate)) - movingRowHeight;
+
+			/*
+			 * Now we know the range of intermediate controls that need
+			 * to be moved.
+			 * 
+			 * It may not really be necessary to build a list of these.
+			 * We could just pass on the lower and upper bounds and let
+			 * everyone fetch these from the content provider, but just
+			 * in case the content provider is not too efficient....
+			 */
+			List<Control> intermediateRows = new ArrayList<Control>();
+			for (int index = upperIntermediate; index <= lowerIntermediate; index++) {
+//				T entryData = contentProvider.getElement(index);
+//				Control intermediateRow = rows.get(entryData);
+				Control intermediateRow = getRowControlFromPreMoveIndex(index);
+				intermediateRows.add(intermediateRow);
+			}
+			
+			moveControl(movingRow, startLocation, endLocation, intermediateRows, -movingRowHeight);
+		}
+		
+		/**
+		 * This method must be called after the content has been updated.
+		 * However, that makes it confusing here when we are getting the control
+		 * for a given index prior to doing the moves.  The controls are located in
+		 * their pre-move positions, but the index to be used to get a control must
+		 * be the post-movement index.
+		 * 
+		 * To help avoid this confusion, this method is given an index and will return
+		 * the row that was at that index before the rows were moved.
+		 */
+		private Control getRowControlFromPreMoveIndex(int index) {
+			if (index < originalIndex) {
+				return getRowControl(index);
+			} else if (index == originalIndex) {
+				return getRowControl(newIndex);
+			} else if (index <= newIndex) {
+				return getRowControl(index - 1);
+			} else {
+				return getRowControl(index);
+			}
+		}
 	}
 }
 
