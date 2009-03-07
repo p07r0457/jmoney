@@ -18,7 +18,7 @@ public class StocksLabelProvider extends LabelProvider implements ILabelProvider
 	public Image getImage(Object element) {
 		if (element instanceof ExtendableObject) {
 			ExtendableObject extendableObject = (ExtendableObject)element;
-			return PropertySet.getPropertySet(extendableObject.getClass()).getIcon();
+			return PropertySet.getPropertySet(extendableObject.getClass()).getIconImage();
 		}
 		return null;
 	}
