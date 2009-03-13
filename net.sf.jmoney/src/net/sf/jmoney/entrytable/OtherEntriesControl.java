@@ -133,7 +133,7 @@ public class OtherEntriesControl extends Composite {
 	private Control createDownArrowButton() {
 		downArrowButton = new Button(this, SWT.NO_TRIM);
 		if (downArrowImage == null) {
-			ImageDescriptor descriptor = JMoneyPlugin.createImageDescriptor("icons/comboArrow.gif"); //$NON-NLS-1$
+			ImageDescriptor descriptor = JMoneyPlugin.createImageDescriptor("comboArrow.gif"); //$NON-NLS-1$
 			downArrowImage = descriptor.createImage();
 		}
 		downArrowButton.setImage(downArrowImage);
