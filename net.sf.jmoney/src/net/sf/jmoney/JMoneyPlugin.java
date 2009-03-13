@@ -124,11 +124,17 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 	}
 
 	public static Image createImage(String name) {
+		//control for icons
+		String finalName = name;
+		if(!name.startsWith("icons/")){//$NON-NLS-1$
+			finalName = "icons/"+finalName;//$NON-NLS-1$
+		}
 //		String iconPath = "icons/";
 		String iconPath = ""; //$NON-NLS-1$
 		try {
 			URL installURL = getDefault().getBundle().getEntry("/"); //$NON-NLS-1$
-			URL url = new URL(installURL, iconPath + name);
+			//URL url = new URL(installURL, iconPath + name);
+			URL url = new URL(installURL, finalName);
 			return ImageDescriptor.createFromURL(url).createImage();
 		} catch (MalformedURLException e) {
 			// should not happen
