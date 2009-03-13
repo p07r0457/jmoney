@@ -128,7 +128,7 @@ public class DateControl extends DateComposite {
 		
 		button = new Button(this, SWT.DOWN);
 		if (threeDotsImage == null) {
-			ImageDescriptor descriptor = JMoneyPlugin.createImageDescriptor("icons/dots_button.gif"); //$NON-NLS-1$
+			ImageDescriptor descriptor = JMoneyPlugin.createImageDescriptor("dots_button.gif"); //$NON-NLS-1$
 			threeDotsImage = descriptor.createImage();
 		}
 		button.setImage(threeDotsImage);
