@@ -1,6 +1,5 @@
 package net.sf.jmoney.serializeddatastore.handlers;
 
-
 import java.io.File;
 import java.util.Map;
 
@@ -27,27 +26,21 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.services.IEvaluationService;
 
 /**
- * Opens a new session.  The command has two boolean parameters, so
- * this handler is really handling four different commands.
+ * Opens a new session. The command has two boolean parameters, so this handler
+ * is really handling four different commands.
  * <P>
  * The parameters are:
  * <UL>
  * <LI>
- * net.sf.jmoney.serializeddatastore.openSession.newWindow
- * <BR>
- * 		true if the session is to be opened in a new window
- * <BR>
- * 		false if the session is to be opened in the current window,
- * 			first closing any session that may already be open in
- * 			the current window
- * </LI><LI> 
- * net.sf.jmoney.serializeddatastore.openSession.newSession
- * <BR>
- * 		true if a new session is to be created
- * <BR>
- * 		false if an existing session is to be opened from file,
- * 			in which case the user will be prompted for the file name
- * </LI>
+ * net.sf.jmoney.serializeddatastore.openSession.newWindow <BR>
+ * true if the session is to be opened in a new window <BR>
+ * false if the session is to be opened in the current window, first closing any
+ * session that may already be open in the current window</LI>
+ * <LI>
+ * net.sf.jmoney.serializeddatastore.openSession.newSession <BR>
+ * true if a new session is to be created <BR>
+ * false if an existing session is to be opened from file, in which case the
+ * user will be prompted for the file name</LI>
  * </UL>
  */
 public final class OpenSessionHandler extends AbstractHandler {
@@ -69,78 +62,89 @@ public final class OpenSessionHandler extends AbstractHandler {
 	private static final String PARAMETER_NEW_WINDOW = "net.sf.jmoney.serializeddatastore.openSession.newWindow"; //$NON-NLS-1$
 
 	/**
-	 * True/false value to create a new session
-	 * (rather than open one from a file)
+	 * True/false value to create a new session (rather than open one from a
+	 * file)
 	 */
 	private static final String PARAMETER_NEW_SESSION = "net.sf.jmoney.serializeddatastore.openSession.newSession"; //$NON-NLS-1$
 
 	public final Object execute(final ExecutionEvent event)
 			throws ExecutionException {
-		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
+		IWorkbenchWindow window = HandlerUtil
+				.getActiveWorkbenchWindowChecked(event);
 
 		final Map parameters = event.getParameters();
 		final String newWindow = (String) parameters.get(PARAMETER_NEW_WINDOW);
-		final String newSession = (String) parameters.get(PARAMETER_NEW_SESSION);
+		final String newSession = (String) parameters
+				.get(PARAMETER_NEW_SESSION);
 
 		if (newWindow == null || newWindow.equalsIgnoreCase("false")) { //$NON-NLS-1$
 			if (!JMoneyPlugin.getDefault().saveOldSession(window)) {
 				/*
-				 * Cancelled by user or the save failed.  If the save
-				 * failed the user will have been notified, so we
-				 * simply exit here.
+				 * Cancelled by user or the save failed. If the save failed the
+				 * user will have been notified, so we simply exit here.
 				 */
 				return null;
 			}
 
 			IWorkbenchPage activePage = window.getActivePage();
-			activePage.close();
+			try {
+				activePage.close();
+			} catch (RuntimeException re) {
+				System.out.println("OpenSessionHandler : " + re.getMessage());
+			}
 		}
 
 		try {
 			SessionManager newSessionManager;
 			if (newSession != null && newSession.equalsIgnoreCase("true")) { //$NON-NLS-1$
-	            newSessionManager = SerializedDatastorePlugin.getDefault().newSession();
+				newSessionManager = SerializedDatastorePlugin.getDefault()
+						.newSession();
 			} else {
 				newSessionManager = openSession(window);
 				if (newSessionManager == null) {
 					return null;
 				}
 			}
-			
+
 			// This call needs to be cleaned up, but is still needed
 			// to ensure a default currency is set.
 			JMoneyPlugin.getDefault().initializeNewSession(newSessionManager);
 
 			/*
-			 * This call will open the session in the current window if there
-			 * is no page (i.e. if we closed the previous page above), or it
-			 * will open the page in a new window if there is already a page
-			 * in this window (i.e. if we did not close the previous page above).
+			 * This call will open the session in the current window if there is
+			 * no page (i.e. if we closed the previous page above), or it will
+			 * open the page in a new window if there is already a page in this
+			 * window (i.e. if we did not close the previous page above).
 			 */
 			IWorkbenchPage newPage = window.openPage(newSessionManager);
-			
-			//Update the title
+
+			// Update the title
 			String productName = Platform.getProduct().getName();
-			newPage.getWorkbenchWindow().getShell().setText(productName+" - "+newSessionManager.getBriefDescription());
-			
+			newPage.getWorkbenchWindow().getShell().setText(
+					productName + " - "
+							+ newSessionManager.getBriefDescription());
+
 			/*
 			 * The state of the 'isSessionOpen' property may have changed, so we
-			 * force a re-evaluation which will update any UI items whose
-			 * state depends on this property.
+			 * force a re-evaluation which will update any UI items whose state
+			 * depends on this property.
 			 */
-			IEvaluationService service = (IEvaluationService)PlatformUI.getWorkbench().getService(IEvaluationService.class);
+			IEvaluationService service = (IEvaluationService) PlatformUI
+					.getWorkbench().getService(IEvaluationService.class);
 			service.requestEvaluation("net.sf.jmoney.core.isSessionOpen"); //$NON-NLS-1$
 
 		} catch (WorkbenchException e) {
 			ErrorDialog.openError(window.getShell(),
 					Messages.OpenSessionHandler_OpenSessionFailed, e
-					.getMessage(), e.getStatus());
+							.getMessage(), e.getStatus());
 			throw new ExecutionException("Session could not be opened.", e); //$NON-NLS-1$
 		} catch (OpenSessionException e) {
-			MessageDialog.openError(window.getShell(), Messages.OpenSessionAction_ErrorTitle, Messages.OpenSessionAction_ErrorMessage);
+			MessageDialog.openError(window.getShell(),
+					Messages.OpenSessionAction_ErrorTitle,
+					Messages.OpenSessionAction_ErrorMessage);
 			throw new ExecutionException("Session could not be opened.", e); //$NON-NLS-1$
 		}
-		
+
 		return null;
 	}
 
@@ -150,46 +154,54 @@ public final class OpenSessionHandler extends AbstractHandler {
 	 * @return the session, or null if user canceled
 	 * @throws OpenSessionException
 	 */
-	private SessionManager openSession(IWorkbenchWindow window) throws OpenSessionException {
+	private SessionManager openSession(IWorkbenchWindow window)
+			throws OpenSessionException {
 		FileDialog dialog = new FileDialog(window.getShell());
-		dialog.setFilterExtensions(SerializedDatastorePlugin.getFilterExtensions());
+		dialog.setFilterExtensions(SerializedDatastorePlugin
+				.getFilterExtensions());
 		dialog.setFilterNames(SerializedDatastorePlugin.getFilterNames());
 		String fileName = dialog.open();
 
 		if (fileName != null) {
 			File sessionFile = new File(fileName);
 
-			IConfigurationElement elements[] = SerializedDatastorePlugin.getElements(fileName);
+			IConfigurationElement elements[] = SerializedDatastorePlugin
+					.getElements(fileName);
 
 			if (elements.length == 0) {
 				/*
 				 * The user has entered an extension that is not recognized.
 				 */
-				 throw new OpenSessionException();
+				throw new OpenSessionException();
 			}
 
 			// TODO: It is possible that multiple plug-ins may
-			// use the same file extension.  There are two possible
+			// use the same file extension. There are two possible
 			// approaches to this: either ask the user which is
 			// the format of the file, or we try to load the file
-			// using each in turn until one works. 
+			// using each in turn until one works.
 
 			// For time being, we simply use the first entry.
 			IFileDatastore fileDatastore;
 			String fileFormatId;
 			try {
-				fileDatastore = (IFileDatastore)elements[0].createExecutableExtension("class"); //$NON-NLS-1$
-				fileFormatId = elements[0].getDeclaringExtension().getNamespaceIdentifier() + '.' + elements[0].getAttribute("id"); //$NON-NLS-1$
+				fileDatastore = (IFileDatastore) elements[0]
+						.createExecutableExtension("class"); //$NON-NLS-1$
+				fileFormatId = elements[0].getDeclaringExtension()
+						.getNamespaceIdentifier()
+						+ '.' + elements[0].getAttribute("id"); //$NON-NLS-1$
 			} catch (CoreException e) {
 				throw new OpenSessionException(e);
 			}
 
-			SessionManager sessionManager = new SessionManager(fileFormatId, fileDatastore, sessionFile);
-			boolean isGoodFileRead = fileDatastore.readSession(sessionFile, sessionManager, window);
+			SessionManager sessionManager = new SessionManager(fileFormatId,
+					fileDatastore, sessionFile);
+			boolean isGoodFileRead = fileDatastore.readSession(sessionFile,
+					sessionManager, window);
 			if (!isGoodFileRead) {
 				throw new OpenSessionException();
 			}
-			
+
 			return sessionManager;
 		} else {
 			return null;
