@@ -9,6 +9,7 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.WorkbenchException;
@@ -32,9 +33,19 @@ public class CloseSessionHandler extends AbstractHandler {
 			if (sessionManager.canClose(window)) {
 				sessionManager.close();
 				
-				// Replace page with one that has null input.
+				/*
+				 * Replace page with one that has null input.
+				 * 
+				 * The Eclipse workbench does not allow us to close the active
+				 * page. We have to clear the window's active page first and
+				 * then we can close it.
+				 */
 				try {
-					window.getActivePage().close();
+					IWorkbenchPage page = window.getActivePage();
+					if (page != null) {
+						window.setActivePage(null);
+						page.close();
+					}
 					window.openPage(null);
 					//Update title
 					String productName = Platform.getProduct().getName();
