@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Schema file written by PDE -->
-<schema targetNamespace="net.sf.jmoney.serializeddatastore">
+<schema targetNamespace="net.sf.jmoney.serializeddatastore" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
-      <appInfo>
+      <appinfo>
          <meta.schema plugin="net.sf.jmoney.serializeddatastore" id="filestores" name="File Storage Formats"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          The net.sf.jmoney.serializeddatastore plug-in is a
 JMoney datastore implementation that stores the
@@ -25,6 +25,11 @@ file open dialog can open any of the supported file types.
    </annotation>
 
    <element name="extension">
+      <annotation>
+         <appinfo>
+            <meta.element />
+         </appinfo>
+      </annotation>
       <complexType>
          <sequence>
             <element ref="file-format" minOccurs="1" maxOccurs="unbounded"/>
@@ -65,7 +70,7 @@ file open dialog can open any of the supported file types.
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="file-pattern" type="string">
+         <attribute name="file-pattern" type="string" use="required">
             <annotation>
                <documentation>
                   The file pattern used for this file format.
@@ -81,31 +86,34 @@ of file types.
                </documentation>
             </annotation>
          </attribute>
-         <attribute name="class" type="string">
+         <attribute name="class" type="string" use="required">
             <annotation>
                <documentation>
                   The name of a class that implements the IFileDatastore
 interface.  This class provides implementations of the
 methods to open and to save the file.
                </documentation>
+               <appinfo>
+                  <meta.attribute kind="java" basedOn=":net.sf.jmoney.serializeddatastore.IFileDatastore"/>
+               </appinfo>
             </annotation>
          </attribute>
       </complexType>
    </element>
 
    <annotation>
-      <appInfo>
+      <appinfo>
          <meta.section type="since"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          1.0
       </documentation>
    </annotation>
 
    <annotation>
-      <appInfo>
+      <appinfo>
          <meta.section type="examples"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          &lt;extension
          point=&quot;net.sf.jmoney.filestores&quot;&gt;
@@ -117,27 +125,27 @@ methods to open and to save the file.
    </annotation>
 
    <annotation>
-      <appInfo>
+      <appinfo>
          <meta.section type="apiInfo"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          [Enter API information here.]
       </documentation>
    </annotation>
 
    <annotation>
-      <appInfo>
+      <appinfo>
          <meta.section type="implementation"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          [Enter information about supplied implementation of this extension point.]
       </documentation>
    </annotation>
 
    <annotation>
-      <appInfo>
+      <appinfo>
          <meta.section type="copyright"/>
-      </appInfo>
+      </appinfo>
       <documentation>
          Copyright (c) 2004 Nigel Westbury (westbury@users.sourceforge.net)
       </documentation>
