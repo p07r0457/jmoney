@@ -192,7 +192,7 @@ public class SessionManager extends DatastoreManager {
 				 */
 				MessageDialog.openError(window.getShell(),
 						Messages.SessionManager_InvalidFileName,
-						Messages.SessionManager_ErrorMessage);
+						Messages.SessionManager_UnknownFileExtension);
 				return;
 			}
 
@@ -289,7 +289,7 @@ public class SessionManager extends DatastoreManager {
 		try {
 			return sessionFile.getCanonicalPath();
 		} catch (IOException ioe) {
-			return Messages.SessionManager_FileNotDefined;
+			return sessionFile.getAbsolutePath();
 		}
 	}
 
