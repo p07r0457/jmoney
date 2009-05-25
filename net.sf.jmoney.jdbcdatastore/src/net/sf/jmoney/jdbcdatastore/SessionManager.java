@@ -300,9 +300,23 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	
 	@Override
 	public String getBriefDescription() {
-		// TODO: improve this implementation to give more
-		// details of the database.
-		return "JDBC database";
+		/*
+		 * Return the catalog name. This is used to identify the database so the
+		 * user can be sure of the database to which this JMoney window is
+		 * connected. It may be possible that two databases have the same
+		 * catalog name, but that is unlikely and the catalog name is more user
+		 * friendly than the URL.
+		 */
+		try {
+			return connection.getCatalog();
+		} catch (SQLException e) {
+			/*
+			 * All drivers should return the catalog name.  If not, though,
+			 * return the URL.  This is a less user friendly name, but will
+			 * identify the database.   
+			 */
+			return url;
+		}
 	}
 
 	private IPersistableElement persistableElement 

@@ -7,6 +7,7 @@ import net.sf.jmoney.jdbcdatastore.JDBCDatastorePlugin;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -36,7 +37,6 @@ public final class OpenSessionHandler extends AbstractHandler {
 				// This call needs to be cleaned up, but is still needed
 				// to ensure a default currency is set.
 				JMoneyPlugin.getDefault().initializeNewSession(sessionManager);
-
 			}
 
 			try {
@@ -47,6 +47,12 @@ public final class OpenSessionHandler extends AbstractHandler {
 						.getMessage(), e.getStatus());
 				throw new ExecutionException("Session could not be opened.", e); //$NON-NLS-1$
 			}
+
+			// Update the title
+			String productName = Platform.getProduct().getName();
+			window.getShell().setText(
+					productName + " - "
+							+ sessionManager.getBriefDescription());
 
 			/*
 			 * The state of the 'isSessionOpen' property may have changed, so we
