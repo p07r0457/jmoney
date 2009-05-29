@@ -98,6 +98,11 @@ If we were to use 'after', we would see the menu in reverse order.
                  name="net.sf.jmoney.serializeddatastore.openSession.newWindow"
                  value="true">
            </parameter>
+        <visibleWhen>
+          <with variable="activeWorkbenchWindow">
+		   <test property="net.sf.jmoney.core.isSessionOpen"/>
+          </with>
+       </visibleWhen>
         </command>
      </menuContribution>
 
@@ -121,6 +126,11 @@ If we were to use 'after', we would see the menu in reverse order.
                  name="net.sf.jmoney.serializeddatastore.openSession.newWindow"
                  value="true">
            </parameter>
+        <visibleWhen>
+          <with variable="activeWorkbenchWindow">
+		   <test property="net.sf.jmoney.core.isSessionOpen"/>
+          </with>
+       </visibleWhen>
         </command>
      </menuContribution>
 
