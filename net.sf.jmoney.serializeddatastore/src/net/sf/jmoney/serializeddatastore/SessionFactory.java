@@ -25,6 +25,7 @@ package net.sf.jmoney.serializeddatastore;
 import java.io.File;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.serializeddatastore.handlers.OpenSessionException;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.Platform;
@@ -32,12 +33,6 @@ import org.eclipse.ui.IElementFactory;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.IWorkbenchWindow;
 
-/**
- * Our sample action implements workbench action delegate. The action proxy will
- * be created by the workbench and shown in the UI. When the user tries to use
- * the action, this delegate will be created and execution will be delegated to
- * it.
- */
 public class SessionFactory implements IElementFactory {
 
 	/*
@@ -68,26 +63,41 @@ public class SessionFactory implements IElementFactory {
 			// which will have the effect of starting JMoney with no open
 			// session. If the read fails then the readSession method is
 			// responsible for displaying an appropriate message to the user.
-			boolean isGoodFileRead = fileDatastore.readSession(sessionFile,
-					sessionManager, window);
-			if (isGoodFileRead) {
-				return sessionManager;
-			} else {
-				// Null indicates the element could not be re-created.
+			try {
+				boolean isGoodFileRead = fileDatastore.readSession(sessionFile,
+						sessionManager, window);
+				if (isGoodFileRead) {
+					return sessionManager;
+				} else {
+					/*
+					 * A false return value indicates the operation was canceled
+					 * by the user. In that case, we return null which will
+					 * simply mean the session is not restored.
+					 */
+					return null;
+				}
+			} catch (OpenSessionException e) {
+				/*
+				 * This exception indicates the element could not be re-created.
+				 * Perhaps the file has been deleted, renamed, or moved.
+				 */
 				return null;
 			}
 		} else {
-			// No file name is set. This can happen if the workbench was last
-			// closed with a session that had never been saved. Although the
-			// user would have been prompted to save the session when the
-			// workbench closed, the user must have pressed the 'no' button. We
-			// create a new empty session.
-
+			/*
+			 * No file name is set. This should not happen. Even if the
+			 * workbench was last closed with a session that had never been
+			 * saved, the user would have been prompted to save the session when
+			 * the workbench closed, at which point the user either had to enter
+			 * a file name or cancel the save. If the save was canceled then no
+			 * memento should have been saved.
+			 * 
+			 * In any case we certainly don't want to restore anything.
+			 */
 			// TODO decide if this is really right. Surely we wouldn't have
 			// saved anything in the memento if the last session had no file
-			// name
-			// because it had never been saved.
-			return SerializedDatastorePlugin.getDefault().newSession();
+			// name because it had never been saved.
+			return null;
 		}
 	}
 }

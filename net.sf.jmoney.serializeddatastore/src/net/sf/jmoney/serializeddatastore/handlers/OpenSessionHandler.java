@@ -14,6 +14,7 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -43,18 +44,7 @@ import org.eclipse.ui.services.IEvaluationService;
  * user will be prompted for the file name</LI>
  * </UL>
  */
-public final class OpenSessionHandler extends AbstractHandler {
-
-	private class OpenSessionException extends Exception {
-		private static final long serialVersionUID = 1L;
-
-		public OpenSessionException() {
-		}
-
-		public OpenSessionException(Exception e) {
-			super(e);
-		}
-	}
+public class OpenSessionHandler extends AbstractHandler {
 
 	/**
 	 * True/false value to open the session in a new window.
@@ -137,12 +127,36 @@ public final class OpenSessionHandler extends AbstractHandler {
 			ErrorDialog.openError(window.getShell(),
 					Messages.OpenSessionHandler_OpenSessionFailed, e
 							.getMessage(), e.getStatus());
-			throw new ExecutionException("Session could not be opened.", e); //$NON-NLS-1$
+			throw new ExecutionException("Session could not be opened. " + e.getLocalizedMessage(), e); //$NON-NLS-1$
 		} catch (OpenSessionException e) {
 			MessageDialog.openError(window.getShell(),
 					Messages.OpenSessionAction_ErrorTitle,
-					Messages.OpenSessionAction_ErrorMessage);
+					e.getMessage());
 			throw new ExecutionException("Session could not be opened.", e); //$NON-NLS-1$
+		} finally {
+			/*
+			 * Regardless of any exception that may have been thrown, we cannot leave the workbench
+			 * window without a page.  That looks silly and other code assumes we always have a page.
+			 */
+			if (window.getActivePage() == null) {
+				try {
+					window.openPage(null);
+					//Update title
+					String productName = Platform.getProduct().getName();
+					window.getShell().setText(productName);
+				} catch (WorkbenchException e) {
+					throw new ExecutionException("Workbench exception occured while closing window.", e); //$NON-NLS-1$
+				}
+
+				/*
+				 * The state of the 'isSessionOpen' property may have changed, so we
+				 * force a re-evaluation which will update any UI items whose state
+				 * depends on this property.
+				 */
+				IEvaluationService service = (IEvaluationService) PlatformUI
+				.getWorkbench().getService(IEvaluationService.class);
+				service.requestEvaluation("net.sf.jmoney.core.isSessionOpen"); //$NON-NLS-1$
+			}
 		}
 
 		return null;
@@ -172,7 +186,7 @@ public final class OpenSessionHandler extends AbstractHandler {
 				/*
 				 * The user has entered an extension that is not recognized.
 				 */
-				throw new OpenSessionException();
+				throw new OpenSessionException(Messages.SessionManager_UnknownFileExtension);
 			}
 
 			// TODO: It is possible that multiple plug-ins may
@@ -199,7 +213,7 @@ public final class OpenSessionHandler extends AbstractHandler {
 			boolean isGoodFileRead = fileDatastore.readSession(sessionFile,
 					sessionManager, window);
 			if (!isGoodFileRead) {
-				throw new OpenSessionException();
+				throw new OperationCanceledException();
 			}
 
 			return sessionManager;

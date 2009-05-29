@@ -177,16 +177,6 @@ public class SerializedDatastorePlugin extends AbstractUIPlugin {
 	 * @return a collection of IConfigurationElement objects
 	 */
 	public static IConfigurationElement[] getElements(String fileName) {
-/*
-		String fileExtension = null;
-        for (int i=fileName.length()-1; i>=0; i--) {
-        	if (fileName.charAt(i) == '.') {
-        		fileExtension = fileName.substring(i+1);
-        		break;
-        	}
-        }
-*/        
-		
 		IExtensionRegistry registry = Platform.getExtensionRegistry();
 		Vector<IConfigurationElement> matchingElements = new Vector<IConfigurationElement>();
 		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.serializeddatastore.filestores")) { //$NON-NLS-1$

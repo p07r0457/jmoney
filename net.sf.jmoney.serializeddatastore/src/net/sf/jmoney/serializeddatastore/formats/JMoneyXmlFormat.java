@@ -60,11 +60,12 @@ import javax.xml.transform.stream.StreamResult;
 
 import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.AccountInfo;
 import net.sf.jmoney.model2.BankAccount;
 import net.sf.jmoney.model2.BankAccountInfo;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
+import net.sf.jmoney.model2.CurrencyInfo;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtendablePropertySet;
@@ -121,6 +122,48 @@ public class JMoneyXmlFormat implements IFileDatastore {
 	static {
 		dateFormat.applyPattern("yyyy.MM.dd"); //$NON-NLS-1$
 	}
+
+	/**
+	 * Interface to generate id and idref values for objects.
+	 */
+	interface IdGenerator {
+		/**
+		 * This method should be called only once for a given object. If it is
+		 * called more than once for the same object, this method MAY return a
+		 * different id.
+		 */
+		String generateId(ExtendableObject object);
+	}
+	
+	class GenericIdGenerator implements IdGenerator {
+		private String prefix;
+		private int nextId = 1;
+		
+		public GenericIdGenerator(String prefix) {
+			this.prefix = prefix;
+		}
+
+		public String generateId(ExtendableObject object) {
+			return prefix + new Integer(nextId++).toString();
+		}
+	}
+	
+	class CurrencyIdGenerator implements IdGenerator {
+		
+		public String generateId(ExtendableObject object) {
+			return ((Currency)object).getCode();
+		}
+	}
+	
+	/**
+	 * Maps property sets to IdGenerator implementations that generate the ids
+	 * for objects in that property set.
+	 * 
+	 * Only property sets that may be referenced will be in this map. This
+	 * ensures that ids are generated only for object classes that may be
+	 * referenced, thus avoiding unnecessary ids from being written out.
+	 */
+	Map<ExtendablePropertySet, IdGenerator> idGenerators = new HashMap<ExtendablePropertySet, IdGenerator>();
 
 	/**
 	 * Read session from file. The session is set as the open session in the
@@ -182,17 +225,22 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				}
 			}
 		} catch (InterruptedException e) {
-			// If the user inturrupted the read then no error message is
-			// displayed.
-			// Currently this cannot happen because the cancel button is not
-			// enabled in the progress dialog, but if the cancel button is
-			// enabled
-			// then we do nothing here, leaving the previous session, if any,
-			// open.
+			/*
+			 * If the user interrupted the read then no error message is
+			 * displayed. Currently this cannot happen because the cancel button
+			 * is not enabled in the progress dialog, but if the cancel button
+			 * is enabled then we do nothing here, leaving the previous session,
+			 * if any, open.
+			 */
 			return false;
 		} catch (Throwable ex) {
 			JMoneyPlugin.log(ex);
-			fileReadError(sessionFile, window);
+
+			String message = MessageFormat.format(
+					Messages.JMoneyXmlFormat_ReadErrorMessage, sessionFile.getPath());
+			String title = Messages.JMoneyXmlFormat_ReadErrorTitle;
+			MessageDialog.openError(window.getShell(), title, message);
+
 			return false;
 		}
 
@@ -312,8 +360,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		SAXParserFactory factory = SAXParserFactory.newInstance();
 		try {
 			try {
-				idToCommodityMap = new HashMap<String, Object>();
-				idToAccountMap = new HashMap<String, Object>();
+				idToObjectMap = new HashMap<String, SimpleObjectKey>();
 				currentSAXEventProcessor = null;
 
 				factory.setValidating(false);
@@ -449,8 +496,11 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					}
 				}
 
+				// The session object is not likely to have an id, but pass
+				// it anyway just for completeness.
+				String id = attributes.getValue("id"); //$NON-NLS-1$
 				currentSAXEventProcessor = new ObjectProcessor(sessionManager,
-						null, null, SessionInfo.getPropertySet());
+						null, null, SessionInfo.getPropertySet(), id);
 			} else {
 				currentSAXEventProcessor.startElement(uri, localName,
 						attributes);
@@ -627,6 +677,10 @@ public class JMoneyXmlFormat implements IFileDatastore {
 
 		/**
 		 * Key to the object being parsed by this ObjectProcessor.
+		 * 
+		 * Saved key of objects that might be referenced from other objects. The key is created
+		 * and added to the 'id to key' map before the object itself is created.  We save the key
+		 * here so when the object is later created we can set the object into it.
 		 */
 		SimpleObjectKey objectKey;
 
@@ -644,14 +698,6 @@ public class JMoneyXmlFormat implements IFileDatastore {
 
 		Set<ExtensionPropertySet<?>> nonDefaultExtensions = new HashSet<ExtensionPropertySet<?>>();
 
-		/**
-		 * Saved id of objects that are Currency or Account objects. This id is
-		 * saved so that when the object is later created, it can be added to a
-		 * map.
-		 */
-		Map<String, Object> map;
-		String id;
-
 		Object value;
 
 		/**
@@ -665,12 +711,22 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 */
 		@SuppressWarnings("unchecked")
 		ObjectProcessor(SessionManager sessionManager, ObjectProcessor parent,
-				ListKey listKey, ExtendablePropertySet<?> propertySet) {
+				ListKey listKey, ExtendablePropertySet<?> propertySet, String id) {
 			super(sessionManager, parent);
 			this.listKey = listKey;
 			this.propertySet = propertySet;
 
-			objectKey = new SimpleObjectKey(sessionManager);
+			/*
+			 * Create the object key now and put it in the id map, unless the object key has already
+			 * been created because it was referenced by a previous idref.
+			 * 
+			 * Either way, the object will be set into the key later.
+			 */
+			objectKey = idToObjectMap.get(id);
+			if (objectKey == null) {
+				objectKey = new SimpleObjectKey(sessionManager);
+				idToObjectMap.put(id, objectKey);
+			}
 
 			for (ListPropertyAccessor propertyAccessor : propertySet
 					.getListProperties3()) {
@@ -693,14 +749,6 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		 */
 		@Override
 		public void startElement(String uri, String localName, Attributes atts) {
-			// Kludge: "memo" is now used for both accounts and categories.
-			// This can be removed once all old xml format files have been
-			// updated.
-			String myLocalName = localName;
-			if (localName.equals("description")) { //$NON-NLS-1$
-				myLocalName = "memo"; //$NON-NLS-1$
-			}
-
 			// We set propertyAccessor to be the property accessor
 			// for the property whose value is contained in this
 			// element. This property may be a scalar or a list
@@ -734,11 +782,11 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					// Search this property set and base property sets,
 					// but exclude extensions.
 					propertyAccessor = propertySet
-							.getPropertyAccessorGivenLocalNameAndExcludingExtensions(myLocalName);
+							.getPropertyAccessorGivenLocalNameAndExcludingExtensions(localName);
 				} else {
 					ExtensionPropertySet<?> propertySet = PropertySet
 							.getExtensionPropertySet(namespace);
-					propertyAccessor = propertySet.getProperty(myLocalName);
+					propertyAccessor = propertySet.getProperty(localName);
 				}
 			} catch (PropertySetNotFoundException e) {
 				// The property no longer exists.
@@ -762,9 +810,6 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				return;
 			}
 
-			map = null;
-			id = null;
-
 			if (propertyAccessor.isScalar()) {
 				Class propertyClass = ((ScalarPropertyAccessor<?>) propertyAccessor)
 						.getClassOfValueObject();
@@ -772,32 +817,26 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				// See if the 'idref' attribute is specified.
 				String idref = atts.getValue("idref"); //$NON-NLS-1$
 				if (idref != null) {
-					Object value;
-
-					if (propertyClass == Currency.class) {
-						value = idToCommodityMap.get(idref);
-					} else if (propertyClass == Account.class) {
-						value = idToAccountMap.get(idref);
-					} else {
-						throw new RuntimeException("bad XML file"); //$NON-NLS-1$
+					SimpleObjectKey value = idToObjectMap.get(idref);
+					if (value == null) {
+						value = new SimpleObjectKey(sessionManager);
+						idToObjectMap.put(idref, value);
 					}
 
-					// Process this element.
-					// Although we already have all the data we need
-					// from the start element, we still need a processor
-					// to process it.
-					// Ideally we should create another processor which
-					// gives errors if there is any additional data.
-
-					// We pass the value to the processor so that it can pass
-					// the value
-					// back to us! (That is the design - it is up to the inner
-					// processor
-					// to supply the value. It just so happens in the case of an
-					// idref
-					// that we know the value before we even create the inner
-					// processor).
-
+					/*
+					 * Process this element.
+					 * 
+					 * Although we already have all the data we need from the
+					 * start element, we still need a processor to process it.
+					 * Ideally we should create another processor which gives
+					 * errors if there is any additional data.
+					 * 
+					 * We pass the value to the processor so that it can pass
+					 * the value back to us! (That is the design - it is up to
+					 * the inner processor to supply the value. It just so
+					 * happens in the case of an idref that we know the value
+					 * before we even create the inner processor).
+					 */
 					currentSAXEventProcessor = new IgnoreElementProcessor(
 							sessionManager, this, value);
 				} else {
@@ -844,21 +883,11 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					actualPropertySet = typedPropertySet;
 				}
 
-				// Save the id and appropriate map for this object so that the
-				// object can be added to the map later when the object is
-				// created.
-				if (Commodity.class.isAssignableFrom(propertyClass)) {
-					map = idToCommodityMap;
-					id = atts.getValue("id"); //$NON-NLS-1$
-				} else if (Account.class.isAssignableFrom(propertyClass)) {
-					map = idToAccountMap;
-					id = atts.getValue("id"); //$NON-NLS-1$
-				}
-
 				SimpleListManager list = (SimpleListManager) propertyValueMap
 						.get(propertyAccessor);
+				String id = atts.getValue("id"); //$NON-NLS-1$
 				currentSAXEventProcessor = new ObjectProcessor(sessionManager,
-						this, list.getListKey(), actualPropertySet);
+						this, list.getListKey(), actualPropertySet, id);
 			}
 		}
 
@@ -904,8 +933,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				public IObjectKey getReferencedObjectKey(
 						ReferencePropertyAccessor<?> propertyAccessor) {
 					if (propertyValueMap.containsKey(propertyAccessor)) {
-						return ((ExtendableObject) propertyValueMap
-								.get(propertyAccessor)).getObjectKey();
+						return (IObjectKey)propertyValueMap.get(propertyAccessor);
 					} else {
 						return null;
 					}
@@ -987,13 +1015,6 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				SimpleListManager list = (SimpleListManager) propertyValueMap
 						.get(propertyAccessor);
 				list.add(value);
-
-				// For Currency and Account objects, we also add to a map so
-				// that
-				// references can be resolved.
-				if (map != null) {
-					map.put(id, value);
-				}
 			}
 
 			/*
@@ -1240,11 +1261,11 @@ public class JMoneyXmlFormat implements IFileDatastore {
 	 */
 	Map<PropertySet, String> namespaceMap;
 	int accountId;
-	Map<Account, String> accountIdMap;
+	
+	Map<ExtendableObject, String> objectToIdMap;
 
 	// Used for reading
-	Map<String, Object> idToCommodityMap;
-	Map<String, Object> idToAccountMap;
+	Map<String, SimpleObjectKey> idToObjectMap;
 
 	/**
 	 * Current event processor. A stack of event processors is maintained as the
@@ -1334,6 +1355,26 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			File sessionFile, IProgressMonitor monitor) throws IOException,
 			SAXException, TransformerConfigurationException {
 
+		/*
+		 * Initialize our id generator map
+		 */
+		IdGenerator genericGenerator = new GenericIdGenerator("id");
+		for (ExtendablePropertySet<?> propertySet: PropertySet.getAllExtendablePropertySets()) {
+			for (ScalarPropertyAccessor propertyAccessor : propertySet.getScalarProperties2()) {
+				if (ExtendableObject.class.isAssignableFrom(propertyAccessor.getClassOfValueType())) {
+					
+					// KLUDGE: Don't use generic for any objects derived from the account type
+					if (!Account.class.isAssignableFrom(propertyAccessor.getClassOfValueType())) {
+						idGenerators.put(PropertySet.getPropertySet(propertyAccessor.getClassOfValueType()), genericGenerator);
+					}
+				}
+			}
+		}
+		
+		// Add a couple of special case ones
+		idGenerators.put(AccountInfo.getPropertySet(), new GenericIdGenerator("account"));
+		idGenerators.put(CurrencyInfo.getPropertySet(), new CurrencyIdGenerator());
+
 		FileOutputStream fout = new FileOutputStream(sessionFile);
 
 		// If the extension is 'xml' then no compression is used.
@@ -1348,7 +1389,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 
 		namespaceMap = new HashMap<PropertySet, String>();
 		accountId = 1;
-		accountIdMap = new HashMap<Account, String>();
+		objectToIdMap = new HashMap<ExtendableObject, String>();
 
 		StreamResult streamResult = new StreamResult(bout);
 		SAXTransformerFactory tf = (SAXTransformerFactory) SAXTransformerFactory
@@ -1411,14 +1452,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			}
 		}
 
-		String id = null;
-		if (object instanceof Currency) {
-			id = ((Currency) object).getCode();
-		} else if (object instanceof Account) {
-			id = "account" + new Integer(accountId++).toString(); //$NON-NLS-1$
-			accountIdMap.put((Account) object, id);
-		}
-
+		String id = getId(propertySet, object);
 		if (id != null) {
 			atts.addAttribute("", "", "id", "CDATA", id); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
@@ -1463,7 +1497,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 			}
 		}
 
-		for (ScalarPropertyAccessor<?> propertyAccessor : propertySet
+		for (ScalarPropertyAccessor propertyAccessor : propertySet
 				.getScalarProperties3()) {
 			PropertySet<?> propertySet2 = propertyAccessor.getPropertySet();
 			if (!propertySet2.isExtension()
@@ -1489,13 +1523,9 @@ public class JMoneyXmlFormat implements IFileDatastore {
 				if (value != null) {
 					atts.clear();
 
-					String idref = null;
-					if (propertyAccessor.getClassOfValueObject() == Currency.class) {
-						idref = ((Currency) value).getCode();
-					} else if (value instanceof Account) {
-						idref = accountIdMap.get(value);
-					}
-					if (idref != null) {
+					if (value instanceof ExtendableObject) {
+						ExtendablePropertySet ps = PropertySet.getPropertySet(propertyAccessor.getClassOfValueType());
+						String idref = getId(ps, (ExtendableObject)value);
 						atts.addAttribute("", "", "idref", "CDATA", idref); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 					}
 
@@ -1508,7 +1538,7 @@ public class JMoneyXmlFormat implements IFileDatastore {
 					}
 					hd.startElement("", "", qName, atts); //$NON-NLS-1$ //$NON-NLS-2$
 
-					if (idref == null) {
+					if (!(value instanceof ExtendableObject)) {
 						String text;
 						if (value instanceof Date) {
 							Date date = (Date) value;
@@ -1527,15 +1557,22 @@ public class JMoneyXmlFormat implements IFileDatastore {
 		hd.endElement("", "", elementName); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	/**
-	 * This method is used when reading a session.
-	 */
-	public void fileReadError(File file, IWorkbenchWindow window) {
-		String message = MessageFormat.format(
-				Messages.JMoneyXmlFormat_ReadErrorMessage, file.getPath());
-		String title = Messages.JMoneyXmlFormat_ReadErrorTitle;
+	private String getId(ExtendablePropertySet<?> propertySet,
+			ExtendableObject object) {
+		String id = objectToIdMap.get(object);
+		if (id == null) { 
+			ExtendablePropertySet basePropertySet = propertySet;
+			while (basePropertySet != null && !idGenerators.containsKey(basePropertySet)) {
+				basePropertySet = basePropertySet.getBasePropertySet();
+			}
 
-		MessageDialog.openError(window.getShell(), title, message);
+			if (basePropertySet != null) {
+				IdGenerator generator = idGenerators.get(basePropertySet);
+				id = generator.generateId(object);
+				objectToIdMap.put(object, id);
+			}
+		}
+		return id;
 	}
 
 	/**

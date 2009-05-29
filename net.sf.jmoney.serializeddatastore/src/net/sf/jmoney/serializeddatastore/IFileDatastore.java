@@ -23,13 +23,14 @@ package net.sf.jmoney.serializeddatastore;
 
 import java.io.File;
 
+import net.sf.jmoney.serializeddatastore.handlers.OpenSessionException;
+
 import org.eclipse.ui.IWorkbenchWindow;
 
 /**
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
- *
- * @author Nigel Westbury
+ * Interface that must be implemented by all classes referenced by the 'class'
+ * attribute of the 'file-format' element in the 'net.sf.serializeddatastore.filestores'
+ * extension point.
  */
 public interface IFileDatastore {
 
@@ -46,10 +47,10 @@ public interface IFileDatastore {
 	 * an appropriate error message if the file cannot be read.
 	 * 
 	 * @return true if the file was successfully read and the session was set in
-	 *         the given session manager, false if the user cancelled the
-	 *         operation or if a failure occurred
+	 *         the given session manager, false if the user canceled the
+	 *         operation
 	 */
-	boolean readSession(File sessionFile, SessionManager sessionManager, IWorkbenchWindow window);
+	boolean readSession(File sessionFile, SessionManager sessionManager, IWorkbenchWindow window) throws OpenSessionException;
     
     /**
      * Write data to a file
