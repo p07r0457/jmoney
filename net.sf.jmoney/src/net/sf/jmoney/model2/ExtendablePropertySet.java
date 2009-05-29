@@ -579,16 +579,18 @@ public class ExtendablePropertySet<E extends ExtendableObject> extends PropertyS
 	}
 	
 	/**
-	 * This method should be used only by plug-ins that implement
-	 * a datastore.
+	 * This method should be used only by plug-ins that implement a datastore.
 	 * 
-	 * @param constructorParameters an array of values to be passed to
-	 * 		the constructor.  If an extendable object is being constructed
-	 * 		then the first three elements of this array must be the
-	 * 		object key, the extension map, and the parent object key.
-	 * @return A newly constructed object, constructed from the given
-	 * 		parameters.  This object may be an ExtendableObject or
-	 * 		may be an ExtensionObject.
+	 * @param objectKey
+	 *            key to the object, which cannot be null
+	 * @param parentKey
+	 *            key to the list that contains this object
+	 * @param values
+	 *            an implementation of the IValues interface which can provide
+	 *            the values for all the scalar properties in the object
+	 *            (ExtendableObjects, pojos, and intrinsic properties)
+	 * @return A newly constructed ExtendableObject, constructed from the given
+	 *         parameters
 	 */
 	public E constructImplementationObject(IObjectKey objectKey, ListKey<? super E> parentKey, IValues values) {
 		return constructors.construct(objectKey, parentKey, values);
