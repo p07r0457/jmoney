@@ -30,6 +30,7 @@ import java.util.Vector;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Session;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
@@ -50,7 +51,6 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.IMemento;
 
 
 /**
@@ -295,12 +295,12 @@ public class AccountControl<A extends Account> extends AccountComposite<A> {
 	}	
 
     @Override	
-	public void init(IMemento memento) {
+	public void init(IDialogSettings section) {
 		// No state to restore
 	}
 
     @Override	
-	public void saveState(IMemento memento) {
+	public void saveState(IDialogSettings section) {
 		// No state to save
 	}
 

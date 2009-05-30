@@ -41,8 +41,11 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -52,7 +55,6 @@ import org.eclipse.swt.widgets.TabFolder;
 import org.eclipse.swt.widgets.TabItem;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
-import org.eclipse.ui.IMemento;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.EditorPart;
 
@@ -110,6 +112,7 @@ public class ShoeboxEditor extends EditorPart {
 	@Override
 	public void doSave(IProgressMonitor monitor) {
 		// Will never be called because editor is never dirty.
+		System.out.println("here");
 	}
 
 	@Override
@@ -208,7 +211,7 @@ public class ShoeboxEditor extends EditorPart {
 		scrolled.setLayoutData(scrolledData);
 		
 		Composite topLevelControl = new Composite(scrolled, SWT.NONE);
-		
+
 		GridData resultData = new GridData(GridData.FILL_BOTH | GridData.GRAB_HORIZONTAL
 				| GridData.GRAB_VERTICAL);
 				
@@ -269,13 +272,6 @@ public class ShoeboxEditor extends EditorPart {
 
 		Point s = topLevelControl.computeSize(SWT.DEFAULT, SWT.DEFAULT);
 		scrolled.setMinSize(s);
-
-		// init from the memento
-//		init(memento);
-		
-		// Set up the context menus.
-//		makeActions();
-//		hookContextMenu(fEditor.getSite());
 	}
 	
 	private Control createTabbedArea(Composite parent) {
@@ -313,13 +309,39 @@ public class ShoeboxEditor extends EditorPart {
 			}
 		}
 		
+		final IDialogSettings section = getSettings();
+		
+		initState(section);
+		
+		tabFolder.addDisposeListener(new DisposeListener() {
+			public void widgetDisposed(DisposeEvent e) {
+				saveState(section);
+			}
+		});
+		
         return tabFolder;
 	}
 
-	public void saveState(IMemento memento) {
+	private IDialogSettings getSettings() {
+		IDialogSettings workbenchSettings = ShoeboxPlugin.getDefault().getDialogSettings();
+		IDialogSettings section = workbenchSettings.getSection("ShoeboxEditor");//$NON-NLS-1$
+		if (section == null) {
+			section = workbenchSettings.addNewSection("ShoeboxEditor");//$NON-NLS-1$
+		}
+		return section;
+	}
+
+	private void initState(IDialogSettings section) {
 		for (String id: transactionTypes.keySet()) {
 			ITransactionTemplate transactionType = transactionTypes.get(id);
-			transactionType.saveState(memento.createChild("template", id));
+			transactionType.init(section.getSection(id));
+		}
+	}
+
+	private void saveState(IDialogSettings section) {
+		for (String id: transactionTypes.keySet()) {
+			ITransactionTemplate transactionType = transactionTypes.get(id);
+			transactionType.saveState(section.addNewSection(id));
 		}
 	}
 	

@@ -22,8 +22,8 @@
 
 package net.sf.jmoney.fields;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IMemento;
 
 public abstract class TextComposite extends Composite {
 	public TextComposite(Composite parent, int style) {
@@ -33,6 +33,6 @@ public abstract class TextComposite extends Composite {
 	public abstract String getText();
 	public abstract void setText(String text);
 	public abstract void rememberChoice();
-	public abstract void init(IMemento memento);
-	public abstract void saveState(IMemento memento);
+	public abstract void init(IDialogSettings section);
+	public abstract void saveState(IDialogSettings section);
 }

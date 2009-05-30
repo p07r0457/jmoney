@@ -24,8 +24,8 @@ package net.sf.jmoney.fields;
 
 import net.sf.jmoney.model2.Account;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IMemento;
 
 public abstract class AccountComposite<A extends Account> extends Composite {
 	
@@ -36,6 +36,6 @@ public abstract class AccountComposite<A extends Account> extends Composite {
 	public abstract A getAccount();
 	public abstract void setAccount(A account);
 	public abstract void rememberChoice();
-	public abstract void init(IMemento memento);
-	public abstract void saveState(IMemento memento);
+	public abstract void init(IDialogSettings section);
+	public abstract void saveState(IDialogSettings section);
 }

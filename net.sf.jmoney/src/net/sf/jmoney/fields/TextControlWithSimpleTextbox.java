@@ -23,11 +23,11 @@
 package net.sf.jmoney.fields;
 
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.IMemento;
 
 public class TextControlWithSimpleTextbox extends TextComposite {
 	protected Text textbox;
@@ -54,12 +54,12 @@ public class TextControlWithSimpleTextbox extends TextComposite {
     }
 
     @Override	
-	public void init(IMemento memento) {
+	public void init(IDialogSettings section) {
 		// No state to restore
 	}
 
     @Override	
-	public void saveState(IMemento memento) {
+	public void saveState(IDialogSettings section) {
 		// No state to save
 	}
 }

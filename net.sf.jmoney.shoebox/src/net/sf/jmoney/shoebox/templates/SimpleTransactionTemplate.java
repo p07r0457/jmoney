@@ -46,6 +46,7 @@ import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -57,7 +58,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.ui.IMemento;
 
 /**
  * The base class for both the income transaction template
@@ -256,20 +256,20 @@ public abstract class SimpleTransactionTemplate implements ITransactionTemplate 
         return buttonArea;
 	}
 
-	public void init(IMemento memento) {
-		if (memento != null) {
-	    	accountControl.init(memento.getChild("account"));
-	    	categoryControl.init(memento.getChild("category"));
-	        memoControl.init(memento.getChild("memo"));
-	        descriptionControl.init(memento.getChild("description"));
+	public void init(IDialogSettings section) {
+		if (section != null) {
+	    	accountControl.init(section.getSection("account"));
+	    	categoryControl.init(section.getSection("category"));
+	        memoControl.init(section.getSection("memo"));
+	        descriptionControl.init(section.getSection("description"));
 		}
 	}
 	
-    public void saveState(IMemento memento) {
-    	accountControl.saveState(memento.createChild("account"));
-    	categoryControl.saveState(memento.createChild("category"));
-        memoControl.saveState(memento.createChild("memo"));
-        descriptionControl.saveState(memento.createChild("description"));
+    public void saveState(IDialogSettings section) {
+    	accountControl.saveState(section.addNewSection("account"));
+    	categoryControl.saveState(section.addNewSection("category"));
+        memoControl.saveState(section.addNewSection("memo"));
+        descriptionControl.saveState(section.addNewSection("description"));
     }
     
 	public void addTransaction(Collection<IObjectKey> ourEntryList) {

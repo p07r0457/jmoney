@@ -24,11 +24,11 @@ package net.sf.jmoney.fields;
 
 import java.util.LinkedList;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IMemento;
 
 public class TextControlWithMruCombo extends TextComposite {
 
@@ -74,11 +74,10 @@ public class TextControlWithMruCombo extends TextComposite {
 	}
 
     @Override	
-	public void init(IMemento memento) {
-		if (memento != null) {
-			IMemento [] mruTextMementos = memento.getChildren("mruText"); //$NON-NLS-1$
-			for (int i = 0; i < mruTextMementos.length; i++) {
-				String text = mruTextMementos[i].getString("text"); //$NON-NLS-1$
+	public void init(IDialogSettings section) {
+		if (section != null) {
+			String [] mruTextMementos = section.getArray("mruText"); //$NON-NLS-1$
+			for (String text : mruTextMementos) {
 	    		recentlyUsedList.addLast(text);
 	    		combo.add(text);
 			}
@@ -86,9 +85,7 @@ public class TextControlWithMruCombo extends TextComposite {
 	}
 
     @Override	
-	public void saveState(IMemento memento) {
-		for (String text: recentlyUsedList) {
-			memento.createChild("mruText").putString("text", text); //$NON-NLS-1$ //$NON-NLS-2$
-		}
+	public void saveState(IDialogSettings section) {
+		section.put("mruText", recentlyUsedList.toArray(new String[0])); //$NON-NLS-1$
 	}
 }

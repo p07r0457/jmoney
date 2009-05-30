@@ -44,6 +44,7 @@ import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -55,7 +56,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.ui.IMemento;
 
 /**
  * The implementation class for a transaction template that
@@ -239,20 +239,20 @@ public class TransferTemplate implements ITransactionTemplate {
 	        return buttonArea;
 		}
 
-		public void init(IMemento memento) {
-			if (memento != null) {
-		    	sourceAccountControl.init(memento.getChild("account1"));
-		    	destinationAccountControl.init(memento.getChild("account2"));
-		        sourceMemoControl.init(memento.getChild("memo1"));
-		        destinationMemoControl.init(memento.getChild("memo2"));
+		public void init(IDialogSettings section) {
+			if (section != null) {
+		    	sourceAccountControl.init(section.getSection("account1"));
+		    	destinationAccountControl.init(section.getSection("account2"));
+		        sourceMemoControl.init(section.getSection("memo1"));
+		        destinationMemoControl.init(section.getSection("memo2"));
 			}
 		}
 		
-	    public void saveState(IMemento memento) {
-	    	sourceAccountControl.saveState(memento.createChild("account1"));
-	    	destinationAccountControl.saveState(memento.createChild("account2"));
-	        sourceMemoControl.saveState(memento.createChild("memo1"));
-	        destinationMemoControl.saveState(memento.createChild("memo2"));
+	    public void saveState(IDialogSettings section) {
+	    	sourceAccountControl.saveState(section.addNewSection("account1"));
+	    	destinationAccountControl.saveState(section.addNewSection("account2"));
+	        sourceMemoControl.saveState(section.addNewSection("memo1"));
+	        destinationMemoControl.saveState(section.addNewSection("memo2"));
 	    }
 
 	    public void addTransaction(Collection<IObjectKey> ourEntryList) {

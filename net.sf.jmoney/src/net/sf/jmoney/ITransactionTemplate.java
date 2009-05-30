@@ -29,9 +29,9 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.Session;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.ui.IMemento;
 
 /**
  * Interface that must be implemented by all implementations of a transaction
@@ -100,6 +100,6 @@ public interface ITransactionTemplate {
 	 */
 	Control createControl(Composite parent, Session session, boolean expandedControls, Account account, Collection<IObjectKey> ourEntryList);
 
-	void init(IMemento memento);
-	void saveState(IMemento memento);
+	void init(IDialogSettings section);
+	void saveState(IDialogSettings section);
 }

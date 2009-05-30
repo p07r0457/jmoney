@@ -25,10 +25,10 @@ package net.sf.jmoney.fields;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Session;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.ui.IMemento;
 
 public class AccountControlUsingTextbox<A extends Account> extends AccountComposite<A> {
 	protected AccountControl<A> accountControl;
@@ -55,12 +55,12 @@ public class AccountControlUsingTextbox<A extends Account> extends AccountCompos
     }
 
     @Override	
-	public void init(IMemento memento) {
+	public void init(IDialogSettings section) {
 		// No state to restore
 	}
 
     @Override	
-	public void saveState(IMemento memento) {
+	public void saveState(IDialogSettings section) {
 		// No state to save
 	}
 }

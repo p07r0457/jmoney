@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Session;
 
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -34,7 +35,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.List;
-import org.eclipse.ui.IMemento;
 
 public class AccountControlWithMruList<A extends Account> extends AccountComposite<A> {
 	protected Session session;
@@ -103,11 +103,10 @@ public class AccountControlWithMruList<A extends Account> extends AccountComposi
 	}
 
     @Override	
-	public void init(IMemento memento) {
-		if (memento != null) {
-			IMemento [] mruAccountMementos = memento.getChildren("mruAccount"); //$NON-NLS-1$
-			for (int i = 0; i < mruAccountMementos.length; i++) {
-				String fullAccountName = mruAccountMementos[i].getString("name"); //$NON-NLS-1$
+	public void init(IDialogSettings section) {
+		if (section != null) {
+			String [] mruAccountNames = section.getArray("mruAccount"); //$NON-NLS-1$
+			for (String fullAccountName : mruAccountNames) {
 				Account account = session.getAccountByFullName(fullAccountName);
 				if (accountClass.isInstance(account)) {
 					recentlyUsedList.addLast(accountClass.cast(account));
@@ -118,9 +117,12 @@ public class AccountControlWithMruList<A extends Account> extends AccountComposi
 	}
 
 	@Override
-	public void saveState(IMemento memento) {
+	public void saveState(IDialogSettings section) {
+		String [] mruAccountNames = new String[recentlyUsedList.size()];
+		int i = 0;
 		for (Account account: recentlyUsedList) {
-			memento.createChild("mruAccount").putString("name", account.getFullAccountName()); //$NON-NLS-1$ //$NON-NLS-2$
+			mruAccountNames[i++] = account.getFullAccountName();
 		}
+		section.put("mruAccount", mruAccountNames); //$NON-NLS-1$
 	}
 }
