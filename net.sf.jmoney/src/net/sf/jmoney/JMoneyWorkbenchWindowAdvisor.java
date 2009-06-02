@@ -22,6 +22,10 @@
 
 package net.sf.jmoney;
 
+import net.sf.jmoney.model2.DatastoreManager;
+
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
@@ -52,6 +56,30 @@ public class JMoneyWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 		configurer.setShowCoolBar(true);
 		configurer.setShowStatusLine(true);
+	}
+
+	@Override
+	public void postWindowRestore() {
+		/*
+		 * The title of a window should show a brief description of the input.
+		 * This is set whenever a session is opened by the code that processed the
+		 * action or handler that opened the session.  However in the case where
+		 * a session is restored as a part of workbench restore, the title must be
+		 * set here.
+		 */
+		IWorkbenchWindow window = getWindowConfigurer().getWindow();
+		DatastoreManager sessionManager = (DatastoreManager)window.getActivePage().getInput();
+		
+		/*
+		 * It is possible we are restoring a workbench window that has no session opened in it.
+		 * In such a situation, the input will be null and we want to leave the title as it is
+		 * with just the product name.
+		 */
+		if (sessionManager != null) {
+			String productName = Platform.getProduct().getName();
+			window.getShell().setText(
+					productName + " - "	+ sessionManager.getBriefDescription());
+		}
 	}
 
 }
