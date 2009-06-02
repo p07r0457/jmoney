@@ -6,6 +6,7 @@ import net.sf.jmoney.resources.Messages;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.runtime.AssertionFailedException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
@@ -44,7 +45,16 @@ public class CloseSessionHandler extends AbstractHandler {
 					IWorkbenchPage page = window.getActivePage();
 					if (page != null) {
 						window.setActivePage(null);
-						page.close();
+						try {
+							page.close();
+						} catch (AssertionFailedException e) {
+							/*
+							 * Sometimes the page close fails with an assertion exception.  It seems the
+							 * Eclipse platform is asserting that a part is not active when the part is
+							 * active.  It is not clear why this is when the page itself is not
+							 * active.
+							 */
+						}
 					}
 					window.openPage(null);
 					//Update title
