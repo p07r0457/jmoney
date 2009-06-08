@@ -13,6 +13,8 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Transaction.EntryCollection;
 import net.sf.jmoney.stocks.model.Stock;
 import net.sf.jmoney.stocks.model.StockAccount;
+import net.sf.jmoney.stocks.model.StockEntry;
+import net.sf.jmoney.stocks.model.StockEntryInfo;
 import net.sf.jmoney.stocks.pages.StockEntryRowControl.TransactionType;
 
 import org.eclipse.core.runtime.Assert;
@@ -73,6 +75,7 @@ public class StockEntryData extends EntryData {
 		 * no selection will be set in the transaction type combo.
 		 */
 		if (getEntry().getTransaction().getEntryCollection().size() == 1) {
+			mainEntry = getEntry().getTransaction().getEntryCollection().iterator().next();
 			transactionType = null;
 		} else {
 
@@ -215,6 +218,8 @@ public class StockEntryData extends EntryData {
 		if (purchaseOrSaleEntry == null) {
 			purchaseOrSaleEntry = entries.createEntry();
 			purchaseOrSaleEntry.setAccount(account);
+			StockEntry stockEntry = purchaseOrSaleEntry.getExtension(StockEntryInfo.getPropertySet(), true);
+			stockEntry.setStockChange(true);
 		}
 
 		// Commission, tax 1, and tax 2 entries may be null in this transaction type.
@@ -424,7 +429,7 @@ public class StockEntryData extends EntryData {
 		}
 		
 		BigDecimal price = null;
-		if (totalCash != 0 && !totalShares.equals(BigDecimal.valueOf(0))) {
+		if (totalCash != 0 && totalShares.compareTo(BigDecimal.ZERO) != 0) {
 			/*
 			 * Either we gain cash and lose stock, or we lose cash and gain
 			 * stock. Hence we need to negate to get a positive value.
