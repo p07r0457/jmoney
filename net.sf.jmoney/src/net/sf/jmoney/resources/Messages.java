@@ -29,6 +29,7 @@ public class Messages extends NLS {
 	public static String BankAccountInfo_MinimalBalance;
 	public static String BaseEntryRowControl_BalanceError;
 	public static String BaseEntryRowControl_CategoryError;
+	public static String BaseEntryRowControl_CommodityInfoError;
 	public static String BaseEntryRowControl_CurrencyError;
 	public static String BaseEntryRowControl_DateError;
 	public static String BaseEntryRowControl_Discard;

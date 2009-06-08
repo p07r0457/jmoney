@@ -450,6 +450,11 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 						Messages.BaseEntryRowControl_CategoryError, null);
 			}
 
+			if (entry.getCommodity() == null) {
+				throw new InvalidUserEntryException(
+						Messages.BaseEntryRowControl_CommodityInfoError, null);
+			}
+
 			if (entry.getAccount() instanceof IncomeExpenseAccount) {
 				IncomeExpenseAccount incomeExpenseAccount = (IncomeExpenseAccount)entry.getAccount();
 				if (incomeExpenseAccount.isMultiCurrency()
@@ -498,6 +503,16 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 		}
 	}
 
+	/**
+	 * This method allows derived classes to:
+	 * - add extra validation
+	 * - perform clean-up on the transaction, such as removing
+	 * 		entries with zero amounts (but note that the transaction
+	 * 		should remain intact for further editing, because the commit
+	 * 		may not go ahead for whatever reason.
+	 * 
+	 * @throws InvalidUserEntryException
+	 */
 	protected abstract void specificValidation()
 			throws InvalidUserEntryException;
 
