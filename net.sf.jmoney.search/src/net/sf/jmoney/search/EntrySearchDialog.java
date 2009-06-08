@@ -83,9 +83,9 @@ public class EntrySearchDialog extends Dialog {
 			} catch (SearchException e) {
 				throw new RuntimeException(e);
 			}
-
-			super.buttonPressed(buttonId);
 		}
+
+		super.buttonPressed(buttonId);
 	}
 
 	@Override
