@@ -226,9 +226,6 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 		
 		rowCount--;
 		adjustVerticalScrollBar();
-		
-		// Refresh the display.
-		scrollToSliderPosition();
 
 		refreshBalancesOfAllRows();
 	}
@@ -250,11 +247,6 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 	public void insertRow(int index) {
 		rowCount++;
 		adjustVerticalScrollBar();
-		
-		// Refresh the display.
-		scrollToSliderPosition();
-		
-		refreshBalancesOfAllRows();
 	}
 
 	/**
@@ -296,6 +288,12 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 				}
 
 				clientAreaSize = newSize;
+				
+				/*
+				 * Adjust the vertical scroller (make it invisible if all the rows
+				 * fit in the client area, or change the thumb bar height)
+				 */
+				adjustVerticalScrollBar();
 
 				/*
 				 * Refresh. This method refreshes the display according to the
@@ -304,12 +302,6 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 				 * could potentially change the preferred height of each row.
 				 */
 				scrollToSliderPosition();
-				
-				/*
-				 * Adjust the vertical scroller (make it invisible if all the rows
-				 * fit in the client area, or change the thumb bar height)
-				 */
-				adjustVerticalScrollBar();
 			}
 		});
 		
@@ -335,7 +327,10 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 
 	/*
 	 * Adjust the vertical scroller (make it invisible if all the rows
-	 * fit in the client area, or change the thumb bar height)
+	 * fit in the client area, or change the thumb bar height).
+	 * 
+	 * Once that is done, adjust the scrolled area to match the scroll
+	 * bar.
 	 */
 	protected void adjustVerticalScrollBar() {
 		/*
@@ -356,6 +351,20 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 			vSlider.setThumb((int)(vSlider.getMaximum() * clientAreaSize.y / heightAllRows));
 			vSlider.setVisible(true);
 		}
+		
+		/*
+		 * If the thumb control height is changed, the range of values
+		 * for the scroll bar position will also change.  We refresh our
+		 * cache of the scroll bar position.  This must be done before calling
+		 * scrollToSliderPosition.
+		 */
+		sliderPosition = vSlider.getSelection();
+		
+		/*
+		 * After adjusting the height of the scroller thumb, we now adjust
+		 * the scrolled area so that it matches the scroll bar.
+		 */
+		scrollToSliderPosition();
 	}
 
 	/**
@@ -404,7 +413,6 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 		 * This is a little bit complex, but I think this code is correct.
 		 */
 
-//		System.out.println("-----------------");
 		for (int rowIndex = topVisibleRow; rowIndex < topVisibleRow + rows.size(); rowIndex++) {
 			Rectangle bounds = getRowControl(rowIndex).getBounds();
 
@@ -450,7 +458,6 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 	 *            positioned, relative to the top of the visible client area
 	 */
 	private void scrollViewToGivenFix(int anchorRowIndex, int anchorRowPosition) {
-
 		/*
 		 * Save the previous set of visible rows.  In a small scroll, a lot of the rows
 		 * that were previously visible will remain visible, so we keep these controls.
@@ -602,7 +609,6 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 
 	void setTopRow(int topRow) {
 		scrollToGivenFix(topRow, 0);
-
 	}
 
 	private void setBottomRow(int bottomRow) {
@@ -784,6 +790,12 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 		if (anchorRowNumber == rowCount) {
 			scrollViewToGivenFix(anchorRowNumber, clientAreaSize.y);
 		} else {
+			// TODO: We have a problem here.  If a row has just been deleted, and this
+			// method is being called from the deleteRow method, then anchorRowNumber
+			// may in fact not be valid.  It could potentially cause an 'out of bounds'
+			// exception, but is in any case incorrect.  The anchorRowNumber in the
+			// following call must be within the range given by the content provider
+			// but it is not always.
 			BaseEntryRowControl anchorRowControl = getRowControl(anchorRowNumber);
 			int anchorRowHeight = anchorRowControl.getSize().y;
 			int anchorRowPosition = (int)(portion * clientAreaSize.y - anchorRowHeight * rowRemainder);
@@ -1201,12 +1213,6 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 				Control intermediateRow = getRowControlFromPreMoveIndex(index);
 				int y = topOf(intermediateRow);
 				while (index > topmostIntermediate && y > -movingRowHeight) {
-					if (y <= -movingRowHeight) {
-						// We have reached the topmost control that will be visible
-						// after the move, so we can stop here.
-						break;
-					}
-
 					index--;
 
 					intermediateRow = getRowControlFromPreMoveIndex(index);
@@ -1356,12 +1362,6 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 				Control intermediateRow = getRowControlFromPreMoveIndex(index);
 				int y = bottomOf(intermediateRow);
 				while (index < bottommostIntermediate && y < clientAreaSize.y + movingRowHeight) {
-					if (y >= clientAreaSize.y + movingRowHeight) {
-						// We have reached the bottommost control that will be visible
-						// after the move, so we can stop here.
-						break;
-					}
-
 					index++;
 
 					intermediateRow = getRowControlFromPreMoveIndex(index);
