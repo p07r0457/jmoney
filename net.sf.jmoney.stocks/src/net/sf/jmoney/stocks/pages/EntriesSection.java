@@ -155,7 +155,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					}
 				});
 				
-				return new IPropertyControl<StockEntryData>() {
+				ICellControl2<StockEntryData> cellControl = new ICellControl2<StockEntryData>() {
 
 					public Control getControl() {
 						return control;
@@ -192,7 +192,27 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						// TODO Auto-generated method stub
 						
 					}
+
+					public void setSelected() {
+						control.setBackground(RowControl.selectedCellColor);
+					}
+
+					public void setUnselected() {
+						control.setBackground(null);
+					}
 				};
+				
+				FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
+
+				/*
+				 * The control may in fact be a composite control, in which case the
+				 * composite control itself will never get the focus. Only the child
+				 * controls will get the focus, so we add the listener recursively
+				 * to all child controls.
+				 */
+				control.addFocusListener(controlFocusListener);
+
+				return cellControl;
 			}
 		};  
 
@@ -244,7 +264,6 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						if (data.isPurchaseOrSale()) {
 							Entry entry = data.getPurchaseOrSaleEntry();
 							StockEntry stockEntry = entry.getExtension(StockEntryInfo.getPropertySet(), true);
-							stockEntry.setStockChange(true);
 							stockEntry.setStock(stock);
 						} else if (data.isDividend()) {
 							Entry entry = data.getDividendEntry();
@@ -328,15 +347,22 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					}
 
 					public void load(StockEntryData data) {
-						/*
-						 * The price is calculated, not stored in the model. A
-						 * method in the EntryData object is provided to do this
-						 * calculation.
-						 */
 						assert(data.isPurchaseOrSale());
-						BigDecimal bPrice = data.calculatePrice();
-						if (bPrice != null) {
-							long lPrice = bPrice.movePointRight(4).longValue(); 
+						// TODO:This is a bit funny.  We are passed the data object but
+						// the co-ordinator is keeping track of the share price?
+						setControlValue(coordinator.getSharePrice());
+						
+						// Listen for changes in the stock price
+						coordinator.addStockPriceChangeListener(new IPropertyChangeListener<BigDecimal>() {
+							public void propertyChanged(BigDecimal newValue) {
+								setControlValue(newValue);
+							}
+						});
+					}
+
+					private void setControlValue(BigDecimal sharePrice) {
+						if (sharePrice != null) {
+							long lPrice = sharePrice.movePointRight(4).longValue(); 
 							control.setText(account.getPriceFormatter().format(lPrice));
 						} else {
 							control.setText("");
