@@ -192,18 +192,27 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 				}
 			}
 
-			entry.setAmount(newEntryAmount);
-
-			/* Tell the co-ordinator about this change. This enables
-			 * the row control to update other controls based on this
-			 * change.
-			 * 
-			 * Note that the row control cannot get these changes by listening
-			 * to model changes because it needs to do processing only
-			 * when the user changed the properties, and it would then
-			 * have no way of knowing where the change came from.
+			/*
+			 * We specifically don't notify changes to the coordinator if the amount is
+			 * the same.  This is because some 'smart' entries may calculate values
+			 * (e.g. a stock entry might do this).  If the coordinator thinks the user
+			 * has entered a value then that prevents the coordinator from updating the
+			 * value with updated calculated values.
 			 */
-			coordinator.amountChanged();
+			if (newEntryAmount != entry.getAmount()) {
+				entry.setAmount(newEntryAmount);
+
+				/*
+				 * Tell the coordinator about this change. This enables the row
+				 * control to update other controls based on this change.
+				 * 
+				 * Note that the row control cannot get these changes by
+				 * listening to model changes because it needs to do processing
+				 * only when the user changed the properties, and it would then
+				 * have no way of knowing where the change came from.
+				 */
+				coordinator.amountChanged();
+			}
 		}
 
 		// TODO: Remove this
