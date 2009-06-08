@@ -158,7 +158,18 @@ public interface IBankStatementSource {
    				text += "type=" + type;
    			}
    			if (name != null) {
-   				text += "name=" + name;
+   				/*
+   				 * This is a bit of a hack, but if there is no payee then
+   				 * we use the name as the payee.  The reason for this is that
+   				 * Citiards.com put the reference under 'name' if OFX but it comes out
+   				 * as the payee if QIF.  We want to be able to use the same matching
+   				 * rules regardless of which format the user used.
+   				 */
+   				if (payee == null) {
+   	   				text += "payee=" + name;
+   				} else {
+   					text += "name=" + name;
+   				}
    			}
    			if (payee != null) {
    				text += "payee=" + payee;
