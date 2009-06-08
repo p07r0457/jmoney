@@ -2,6 +2,7 @@ package net.sf.jmoney.stocks.pages;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.List;
 
 import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
@@ -33,12 +34,12 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	 * true if the user has manually edited the withholding tax, false
 	 * if no amount has been entered or the amount was calculated
 	 */
-	private boolean withholdingTaxManuallyEdited = false;
+//	private boolean withholdingTaxManuallyEdited = false;
 
 	/**
 	 * The share price currently shown to the user, or null if
 	 * this is a new entry and no share price has been entered.
-	 * 
+	 * <P>
 	 * This is saved here (not fetched each time) because we often
 	 * update other fields when fields are updated in order to keep
 	 * the transaction balanced.  We need to know the previous price,
@@ -47,29 +48,64 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	 */
 	private BigDecimal sharePrice;
 
-	private boolean commissionManuallyEdited = false;
+	/**
+	 * true if this is a new transaction and the user has not manually entered
+	 * the withholding tax (any amount shown being a value automatically
+	 * calculated from other values in the transaction), false if this was not a
+	 * new transaction or the user typed the amount of withholding tax
+	 */
+	private boolean withholdingTaxIsFluid = true;
 
-	private boolean tax1RatesManuallyEdited = false;
+	private boolean quantityIsFluid = true;
 
-	private boolean tax2RatesToBeCalculated = false;
+	private boolean sharePriceIsFluid = true;
 
-	private boolean netAmountManuallyEdited = false;
+	private boolean commissionIsFluid = true;
 
-	@SuppressWarnings("unchecked")
+	private boolean tax1RatesIsFluid = true;
+
+	private boolean tax2RatesIsFluid = true;
+
+	private boolean netAmountIsFluid = true;
+
+	private List<IPropertyChangeListener<BigDecimal>> stockPriceListeners = new ArrayList<IPropertyChangeListener<BigDecimal>>();
+
 	public StockEntryRowControl(final Composite parent, int style, VirtualRowTable rowTable, Block<StockEntryData, ? super StockEntryRowControl> rootBlock, final RowSelectionTracker selectionTracker, final FocusCellTracker focusCellTracker) {
 		super(parent, style, rowTable, rootBlock, selectionTracker, focusCellTracker);
 		init(this, this, rootBlock);
 	}
 	
 	@Override
-	public void setContent(StockEntryData committedEntryData) {
-		super.setContent(committedEntryData);
-		if (committedEntryData == null) {
-			// TODO: Is there a better way of seeing if there is a tax table?
-			StockAccount stockAccount = (StockAccount)uncommittedEntryData.getEntry().getAccount();
-			tax2RatesToBeCalculated = (stockAccount.getTax2Account() != null && stockAccount.getTax2Rates() != null);
+	public void setInput(StockEntryData inputEntryData) {
+		if (inputEntryData.getTransactionType() == null) {
+			/*
+			 * This is a new transaction so start with everything fluid.
+			 */
 		} else {
-			tax2RatesToBeCalculated = false;
+			/*
+			 * This is an existing transaction.  Entries are fluid only if they are
+			 * not applicable for the current transaction type.  So only if the user
+			 * changes the transaction type will any values be updated with calculated values.
+			 */
+			netAmountIsFluid = false;
+
+			switch (inputEntryData.getTransactionType()) {
+			case Buy:
+			case Sell:
+				quantityIsFluid = false;
+				sharePriceIsFluid = false;
+				commissionIsFluid = false;
+				tax1RatesIsFluid = false;
+				tax2RatesIsFluid = false;
+				break;
+			case Dividend:
+				withholdingTaxIsFluid = false;
+				break;
+			case Transfer:
+				break;
+			case Other:
+				break;
+			}
 		}
 		
 		if (uncommittedEntryData.isPurchaseOrSale()) {
@@ -87,6 +123,13 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 				}
 			}
 		});
+
+		/*
+		 * This must be called after we have set our own stuff up.  The reason
+		 * being that this call loads controls (such as the stock price control).
+		 * These controls will not load correctly if this object is not set up.
+		 */
+		super.setInput(inputEntryData);
 	}
 	
 	/*
@@ -117,6 +160,10 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 
 	@Override
 	public void amountChanged() {
+		netAmountIsFluid = false;
+		
+		StockAccount account = (StockAccount)getUncommittedEntryData().getEntry().getAccount();
+		
 		Entry entry = uncommittedEntryData.getEntry();
 		switch (uncommittedEntryData.getTransactionType()) {
 		case Buy:
@@ -126,12 +173,31 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 			 * because it is hard to calculate backwards from this.  The rates tables
 			 * are all based on the gross amount.  Also, there may be a number of
 			 * calculated commissions and taxes and we would not know which to adjust.
-			 * Therefore we leave the transaction unbalanced and force the user to
+			 * Therefore in most cases we leave the transaction unbalanced and force the user to
 			 * correct it when the transaction is saved.
+			 * 
+			 * However, if there are no commission or taxes for the commodity type in this
+			 * account then we can calculate backwards.
 			 */
+			if (uncommittedEntryData.getCommissionEntry() == null
+					&& uncommittedEntryData.getTax1Entry() == null
+					&& uncommittedEntryData.getTax2Entry() == null) {
+
+				if (quantityIsFluid && !sharePriceIsFluid) {
+					BigDecimal grossAmount = new BigDecimal(uncommittedEntryData.getEntry().getAmount()).movePointLeft(2);
+					BigDecimal quantity = grossAmount.divide(sharePrice);
+					uncommittedEntryData.getPurchaseOrSaleEntry().setAmount(quantity.movePointRight(3).longValue());
+				}
+
+				if (sharePriceIsFluid && !quantityIsFluid) {
+					BigDecimal grossAmount = new BigDecimal(uncommittedEntryData.getEntry().getAmount()).movePointLeft(2);
+					BigDecimal quantity = new BigDecimal(uncommittedEntryData.getPurchaseOrSaleEntry().getAmount());
+					sharePrice = grossAmount.divide(quantity);
+				}
+			}
 			break;
 		case Dividend:
-			if (!withholdingTaxManuallyEdited) {
+			if (withholdingTaxIsFluid) {
 				long rate = 30L;
 				long tax = entry.getAmount() * rate / (100 - rate);
 				uncommittedEntryData.getWithholdingTaxEntry().setAmount(-tax);
@@ -162,6 +228,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 
 	public void quantityChanged() {
 		assert(uncommittedEntryData.isPurchaseOrSale());
+		quantityIsFluid = false;
 		
 		/*
 		 * If the share price has been entered then we can calculate the gross amount
@@ -182,7 +249,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 
 	public void commissionChanged() {
 		assert(uncommittedEntryData.isPurchaseOrSale());
-		commissionManuallyEdited = true;
+		commissionIsFluid = false;
 		
 		/*
 		 * If both the share price and the quantity have been entered then we
@@ -195,7 +262,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 
 	public void tax1Changed() {
 		assert(uncommittedEntryData.isPurchaseOrSale());
-		tax1RatesManuallyEdited = true;
+		tax1RatesIsFluid = false;
 		
 		/*
 		 * If both the share price and the quantity have been entered then we
@@ -208,7 +275,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 
 	public void tax2Changed() {
 		assert(uncommittedEntryData.isPurchaseOrSale());
-		tax2RatesToBeCalculated = false;
+		tax2RatesIsFluid = false;
 		
 		/*
 		 * If both the share price and the quantity have been entered then we
@@ -222,6 +289,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	public void sharePriceChanged(BigDecimal sharePrice) {
 		assert(uncommittedEntryData.isPurchaseOrSale());
 		this.sharePrice = sharePrice;
+		sharePriceIsFluid = false;
 
 		/*
 		 * If we know the share quantity then we can calculate the gross amount
@@ -257,15 +325,15 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 			(uncommittedEntryData.getTransactionType() == TransactionType.Buy)
 			? account.getBuyCommissionRates()
 					: account.getSellCommissionRates();
-		if (account.getCommissionAccount() != null && commissionRates != null && !commissionManuallyEdited) {
+		if (account.getCommissionAccount() != null && commissionRates != null && commissionIsFluid) {
 			uncommittedEntryData.getCommissionEntry().setAmount(commissionRates.calculateRate(grossAmount));
 		}
 		
-		if (account.getTax1Account() != null && account.getTax1Rates() != null && !tax1RatesManuallyEdited) {
+		if (account.getTax1Account() != null && account.getTax1Rates() != null && tax1RatesIsFluid) {
 			uncommittedEntryData.getTax1Entry().setAmount(account.getTax1Rates().calculateRate(grossAmount));
 		}
 		
-		if (tax2RatesToBeCalculated) {
+		if (account.getTax2Account() != null && account.getTax2Rates() != null && tax2RatesIsFluid) {
 			uncommittedEntryData.getTax2Entry().setAmount(account.getTax2Rates().calculateRate(grossAmount));
 		}
 		
@@ -273,7 +341,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	}
 
 	private void updateNetAmount() {
-		if (!netAmountManuallyEdited) {
+		if (netAmountIsFluid) {
 			// TODO: Can we clean this up a little?  Stock quantities are to three decimal places,
 			// (long value is number of thousanths) hence why we shift the long value three places.
 			long lQuantity = uncommittedEntryData.getPurchaseOrSaleEntry().getAmount();
@@ -301,5 +369,24 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	protected void specificValidation() throws InvalidUserEntryException {
 		// TODO: We should remove this method and call the EntryData method directly.
 		uncommittedEntryData.specificValidation();
+	}
+
+	public BigDecimal getSharePrice() {
+		return sharePrice;
+	}
+
+	public void setSharePrice(BigDecimal sharePrice) {
+		if (!sharePrice.equals(this.sharePrice)) {
+			this.sharePrice = sharePrice;
+			for (IPropertyChangeListener<BigDecimal> listener : stockPriceListeners) {
+				listener.propertyChanged(sharePrice);
+			}
+		}
+	}
+
+	public void addStockPriceChangeListener(
+			IPropertyChangeListener<BigDecimal> listener) {
+		stockPriceListeners.add(listener);
+		
 	}
 }
