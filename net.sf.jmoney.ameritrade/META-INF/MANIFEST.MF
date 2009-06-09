@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Ameritrade Plug-in
+Bundle-SymbolicName: net.sf.jmoney.ameritrade;singleton:=true
+Bundle-Version: 1.0.0
+Bundle-ClassPath: .,
+ lib/opencsv-1.8.jar,
+ lib/junit.jar
+Bundle-Activator: net.sf.jmoney.ameritrade.Activator
+Bundle-Localization: plugin
+Eclipse-LazyStart: true
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ net.sf.jmoney,
+ net.sf.jmoney.stocks
