@@ -36,6 +36,7 @@ public class Messages extends NLS {
 	public static String BaseEntryRowControl_ErrorTitle;
 	public static String BaseEntryRowControl_NewTransaction;
 	public static String BaseEntryRowControl_TransactionChanges;
+	public static String BaseEntryRowControl_ZeroAmountError;
 	public static String CapitalAccount_Name;
 	public static String CapitalAccountInfo_Abbreviation;
 	public static String CapitalAccountInfo_Comment;

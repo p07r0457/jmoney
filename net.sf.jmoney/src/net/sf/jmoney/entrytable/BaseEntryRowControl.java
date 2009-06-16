@@ -455,6 +455,11 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 						Messages.BaseEntryRowControl_CommodityInfoError, null);
 			}
 
+			if (entry.getAmount() == 0) {
+				throw new InvalidUserEntryException(
+						Messages.BaseEntryRowControl_ZeroAmountError, null);
+			}
+
 			if (entry.getAccount() instanceof IncomeExpenseAccount) {
 				IncomeExpenseAccount incomeExpenseAccount = (IncomeExpenseAccount)entry.getAccount();
 				if (incomeExpenseAccount.isMultiCurrency()

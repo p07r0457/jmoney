@@ -487,13 +487,31 @@ public class TransactionDialog extends Dialog {
 
 			if (amounts.size() == 2) {
 				List<Map.Entry<Commodity, Long>> a = new ArrayList<Map.Entry<Commodity, Long>>(amounts.entrySet());
-				String message = MessageFormat.format(Messages.TransactionDialog_Message,
-						a.get(0).getKey().getName(),
-						a.get(1).getKey().getName(),
-						a.get(0).getValue(),
-						a.get(1).getValue()
-				);
-				messageArea.updateText(message, IMessageProvider.INFORMATION);
+
+				Commodity commodity1 = a.get(0).getKey();
+				Commodity commodity2 = a.get(1).getKey();
+				long amount1 = a.get(0).getValue();
+				long amount2 = a.get(1).getValue();
+
+				if (amount1 >= 0 && amount2 >=0) {
+					messageArea.updateText("A net gain has occurred!", IMessageProvider.ERROR);
+				} else if (amount1 <= 0 && amount2 <=0) {
+					messageArea.updateText("A net loss has occurred!", IMessageProvider.ERROR);
+				} else {
+					amount1 = Math.abs(amount1);
+					amount2 = Math.abs(amount2);
+					
+					long worthOfCommodity1 = amount2 * commodity1.getScaleFactor() / amount1;
+					long worthOfCommodity2 = amount1 * commodity2.getScaleFactor() / amount2;
+					
+					String message = MessageFormat.format(Messages.TransactionDialog_Message,
+							commodity1.getName(),
+							commodity2.getName(),
+							commodity2.format(worthOfCommodity1),
+							commodity1.format(worthOfCommodity2)
+					);
+					messageArea.updateText(message, IMessageProvider.INFORMATION);
+				}
 			} else {
 //				messageArea.clearErrorMessage();    ?????
 				messageArea.restoreTitle();
