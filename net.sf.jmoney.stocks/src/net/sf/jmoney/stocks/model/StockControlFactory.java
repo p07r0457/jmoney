@@ -21,20 +21,22 @@ public abstract class StockControlFactory<P> extends PropertyControlFactory<Stoc
 		
 		return new IPropertyControl<ExtendableObject>() {
 
+			private ExtendableObject fObject;
+
 			public Control getControl() {
 				return control;
 			}
 
 			public void load(ExtendableObject object) {
-				// TODO Auto-generated method stub
-
+		        fObject = object;
+		        
 		        control.setSession(object.getSession(), propertyAccessor.getClassOfValueObject());
 		        control.setStock(object.getPropertyValue(propertyAccessor));
-	}
+			}
 
 			public void save() {
-				// TODO Auto-generated method stub
-
+				Stock stock = control.getStock();
+				fObject.setPropertyValue(propertyAccessor, stock);
 			}};
 	}
 
