@@ -239,11 +239,19 @@ public abstract class ExtendableObject implements IAdaptable {
 		// Notify the change manager.
 		getSession().getChangeManager().processPropertyUpdate(this, propertyAccessor, oldValue, newValue);
 
-		// Fire an event for this change.
+		/*
+		 * Fire an event for this change.
+		 * 
+		 * This method is called only when a property change is initially made.
+		 * This method is not called when a transaction is being committed and
+		 * thus the change is being applied to a base transaction. Therefore we
+		 * also call performFinish.
+		 */
 		getDataManager().fireEvent(
             	new ISessionChangeFirer() {
             		public void fire(SessionChangeListener listener) {
             			listener.objectChanged(ExtendableObject.this, propertyAccessor, oldValue, newValue);
+            			listener.performRefresh();
             		}
            		});
 	}
