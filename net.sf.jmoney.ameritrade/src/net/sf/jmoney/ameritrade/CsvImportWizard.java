@@ -229,14 +229,32 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 			// These should probably be in preferences rather than forcing
 			// the account names to these hard coded values.
 			
-			StockAccount accountOutside = (StockAccount)session.getAccountByShortName("Ameritrade");
-			StockAccount account = transactionManager.getCopyInTransaction(accountOutside);
-			
-			Account interestAccountOutside = session.getAccountByShortName("Interest - Ameritrade");
-			Account interestAccount = transactionManager.getCopyInTransaction(interestAccountOutside);
+			StockAccount account;
+			try {
+				StockAccount accountOutside = (StockAccount)session.getAccountByShortName("Ameritrade");
+				account = transactionManager.getCopyInTransaction(accountOutside);
+			} catch (NoAccountFoundException e) {
+				MessageDialog.openError(window.getShell(), "Account not Set Up", "No stock account exists called 'Ameritrade'");
+				throw e; 
+			}
 
-			Account expensesAccountOutside = session.getAccountByShortName("Stock - Expenses (US)");
-			Account expensesAccount = transactionManager.getCopyInTransaction(expensesAccountOutside);
+			Account interestAccount;
+			try {
+				Account interestAccountOutside = session.getAccountByShortName("Interest - Ameritrade");
+				interestAccount = transactionManager.getCopyInTransaction(interestAccountOutside);
+			} catch (NoAccountFoundException e) {
+				MessageDialog.openError(window.getShell(), "Account not Set Up", "No stock account exists called 'Interest - Ameritrade'");
+				throw e; 
+			}
+
+			Account expensesAccount;
+			try {
+				Account expensesAccountOutside = session.getAccountByShortName("Stock - Expenses (US)");
+				expensesAccount = transactionManager.getCopyInTransaction(expensesAccountOutside);
+			} catch (NoAccountFoundException e) {
+				MessageDialog.openError(window.getShell(), "Account not Set Up", "No stock account exists called 'Stock - Expenses (US)'");
+				throw e; 
+			}
 
 			Pattern patternAdr;
 			Pattern patternForeignTax;
