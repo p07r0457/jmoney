@@ -1,8 +1,26 @@
 package net.sf.jmoney.entrytable;
 
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
+
 public class RowSelectionTracker<R extends RowControl> {
 
 	private R currentRowControl = null;
+	
+	private DisposeListener disposeListener = new DisposeListener() {
+		@Override
+		public void widgetDisposed(DisposeEvent e) {
+			/*
+			 * The current row control has been disposed. When that happens
+			 * there is no row selected.
+			 */
+			if (e.widget != currentRowControl) {
+				throw new RuntimeException("Something is wrong.");
+			}
+			currentRowControl = null;
+		}
+		
+	};
 	
 	public R getSelectedRow() {
 		return currentRowControl;
@@ -25,12 +43,16 @@ public class RowSelectionTracker<R extends RowControl> {
 				if (!currentRowControl.canDepart()) {
 					return false;
 				}
+				
+				currentRowControl.removeDisposeListener(disposeListener);
 			}
 			
 			currentRowControl = row;
 			
 			if (row != null) {
 				row.arrive();  // Causes the selection colors etc.  Focus is already set.
+				
+				row.addDisposeListener(disposeListener);
 			}
 		}
 		return true;
