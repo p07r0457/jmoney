@@ -205,14 +205,15 @@ public class SearchView extends ViewPart {
 					EntryData uncommittedEntryData) {
 				// TODO Auto-generated method stub
 
-			}};
-
-			for (Entry entry: entries) {
-				EntryData entryData = new EntryData(entry, entry.getDataManager());
-				EntryRowControl row = new EntryRowControl(tableComposite, SWT.NONE, tableWrapper, rootBlock, rowTracker, cellTracker);
-				row.setContent(entryData);
-				row.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
 			}
+		};
+
+		for (Entry entry: entries) {
+			EntryData entryData = new EntryData(entry, entry.getDataManager());
+			EntryRowControl row = new EntryRowControl(tableComposite, SWT.NONE, tableWrapper, rootBlock, rowTracker, cellTracker);
+			row.setContent(entryData);
+			row.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		}
 	}
 
 	@Override
