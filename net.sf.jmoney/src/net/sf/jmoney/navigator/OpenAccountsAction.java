@@ -43,9 +43,10 @@ public class OpenAccountsAction extends BaseSelectionListenerAction {
 					Image image = labelProvider.getImage(selectedObject);
 					navigator.getViewSite().getActionBars().getStatusLineManager().setMessage(image, description);
 
-					
-					// Create an editor for this node (or active if an editor
-					// is already open).
+					/*
+					 * Create an editor for this node (or active if an editor is
+					 * already open).
+					 */
 					try {
 						IWorkbenchWindow window = navigator.getViewSite().getWorkbenchWindow();
 						IEditorInput editorInput = new AccountEditorInput(account);

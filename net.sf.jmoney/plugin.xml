@@ -122,6 +122,9 @@
                optional="false">
          </commandParameter>
       </command>
+      <command
+            name="%Commands.selectAndOpenAccount"
+            id="net.sf.jmoney.selectAndOpenAccount"/>
    </extension>
 	   
 <extension point="org.eclipse.ui.handlers">
@@ -134,6 +137,17 @@
        </enabledWhen>
         <class
               class="net.sf.jmoney.handlers.OpenEditorHandler">
+        </class>
+    </handler>
+    <handler
+          commandId="net.sf.jmoney.selectAndOpenAccount">
+        <enabledWhen>
+          <with variable="activeWorkbenchWindow">
+		   <test property="net.sf.jmoney.core.isSessionOpen"/>
+          </with>
+       </enabledWhen>
+        <class
+              class="net.sf.jmoney.handlers.OpenAccountHandler">
         </class>
     </handler>
 </extension>
@@ -154,6 +168,10 @@
       <key
             commandId="net.sf.jmoney.transactionDetails"
             sequence="M1+I"
+            schemeId="net.sf.jmoney.accountingAcceleratorConfiguration" />
+      <key
+            commandId="net.sf.jmoney.selectAndOpenAccount"
+            sequence="M1+A"
             schemeId="net.sf.jmoney.accountingAcceleratorConfiguration" />
       <scheme
             id="net.sf.jmoney.accountingAcceleratorConfiguration"
@@ -199,6 +217,11 @@ items to an existing menu or toolbar.
         <command
               commandId="net.sf.jmoney.transactionDetails"
               icon="icons/view_transaction.gif"/>
+     </menuContribution>
+
+     <menuContribution locationURI="menu:navigate?after=openEditors">
+        <command
+              commandId="net.sf.jmoney.selectAndOpenAccount"/>
      </menuContribution>
 
 </extension>
