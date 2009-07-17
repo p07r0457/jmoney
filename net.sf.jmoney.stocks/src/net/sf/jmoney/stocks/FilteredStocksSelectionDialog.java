@@ -62,7 +62,7 @@ import org.eclipse.ui.model.WorkbenchLabelProvider;
  */
 public class FilteredStocksSelectionDialog extends FilteredItemsSelectionDialog {
 
-	private static final String DIALOG_SETTINGS = "org.eclipse.ui.dialogs.FilteredResourcesSelectionDialog"; //$NON-NLS-1$
+	private static final String DIALOG_SETTINGS = "org.eclipse.ui.dialogs.FilteredStocksSelectionDialog"; //$NON-NLS-1$
 
 	private static final String HIDE_STOCK_NO_LONGER_OWNED = "HideSoldStock"; //$NON-NLS-1$
 
@@ -314,7 +314,7 @@ public class FilteredStocksSelectionDialog extends FilteredItemsSelectionDialog 
 	}
 
 	/**
-	 * Sets the derived flag on the ResourceFilter instance
+	 * Sets flag on the StockNoLongerOwnedFilter instance
 	 */
 	private class HideSoldStockAction extends Action {
 
@@ -438,22 +438,11 @@ public class FilteredStocksSelectionDialog extends FilteredItemsSelectionDialog 
 
 		private boolean isFilterHidingSoldStock = false;
 
-		/**
-		 * Creates new ResourceFilter instance
-		 * 
-		 * @param container
-		 * @param isHidingSoldStock
-		 *            flag which determine showing derived elements
-		 * @param typeMask
-		 */
 		public StockNoLongerOwnedFilter(boolean isHidingSoldStock) {
 			super();
 			this.isFilterHidingSoldStock = isHidingSoldStock;
 		}
 
-		/**
-		 * Creates new ResourceFilter instance
-		 */
 		public StockNoLongerOwnedFilter() {
 			super();
 			this.isFilterHidingSoldStock = isHidingSoldStock;
@@ -461,8 +450,6 @@ public class FilteredStocksSelectionDialog extends FilteredItemsSelectionDialog 
 
 		/**
 		 * @param item
-		 *            Must be instance of IResource, otherwise
-		 *            <code>false</code> will be returned.
 		 * @see org.eclipse.ui.dialogs.FilteredItemsSelectionDialog.ItemsFilter#isConsistentItem(java.lang.Object)
 		 */
 		@Override
