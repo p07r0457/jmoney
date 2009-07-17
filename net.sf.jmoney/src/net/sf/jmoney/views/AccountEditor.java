@@ -77,45 +77,21 @@ public class AccountEditor extends FormEditor {
         AccountEditorInput cInput = (AccountEditorInput)this.getEditorInput();
         IMemento memento = cInput.getMemento();
         
-//        IBookkeepingPage pages [] = new IBookkeepingPage[pageListeners.size()];
-        
     	for (int i = 0; i < pageListeners.size(); i++) {
     		PageEntry entry = pageListeners.get(i);
     		String pageId = entry.getPageId();
     		IBookkeepingPageFactory pageListener = entry.getPageFactory();
     		try {
-    			/*IBookkeepingPage page =*/ pageListener.createPages(this, cInput, memento==null?null:memento.getChild(pageId));
-//    			pages.add(page);
+    			pageListener.createPages(this, cInput, memento==null?null:memento.getChild(pageId));
     		} catch (PartInitException e) {
     			e.printStackTrace();
     			// Silently miss out this page
     		}
     	}
-    	
-//    	cInput.pages = pages;
-    	
-//    	try {
-//			addPage(new AccountEntriesEditor(), getEditorInput());
-//		} catch (PartInitException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
     }
 
     @Override	
     public void dispose() {
-    	// When the editor is disposed, let the editor input
-    	// know that there is no editor open.  This is necessary
-    	// because the input is kept around by Eclipse even when the
-    	// editor is closed and kept in a Most Recently Used list.
-    	// This list is persisted in the workbench memento, but the
-    	// editor input must not try to persist the values of the controls
-    	// because the controls no longer exist.
-    	// We indicate this situation by clearing out the list
-    	// of pages.
-//        NodeEditorInput cInput = (NodeEditorInput)this.getEditorInput();
-//    	cInput.pages = null;
-
     	if (accountNameChangeListener != null) {
     		sessionManager.removeChangeListener(accountNameChangeListener);
     	}
@@ -190,13 +166,6 @@ public class AccountEditor extends FormEditor {
     public boolean isSaveAsAllowed() {
         return false;
     }
-
-	/**
-	 * @return
-	 */
-//	public Object getSelectedObject() {
-//		return navigationTreeNode;
-//	}
 
 	/**
 	 * @param extendableObject
