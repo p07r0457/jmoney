@@ -50,7 +50,7 @@ protected Commodity(
 }
 
 	/**
-	 * @return the name of the currency.
+	 * @return the name of the currency or commodity.
 	 */
 	public String getName() {
 		return name;
