@@ -93,25 +93,15 @@ import org.eclipse.ui.handlers.IHandlerService;
 public class EntriesSection extends SectionPart implements IEntriesContent {
 
 	private StockAccount account;
-	private IHandlerService handlerService;
 
     private EntriesTable<StockEntryData> fEntriesControl;
     
     private Block<StockEntryData, StockEntryRowControl> rootBlock;
     
-    public EntriesSection(Composite parent, StockAccount account, FormToolkit toolkit, IHandlerService handlerService) {
+    public EntriesSection(Composite parent, final StockAccount account, FormToolkit toolkit, IHandlerService handlerService) {
         super(parent, toolkit, ExpandableComposite.TITLE_BAR);
         getSection().setText("All Entries");
         this.account = account;
-        this.handlerService = handlerService;
-        createClient(toolkit);
-    }
-
-    public void refreshEntryList() {
-    	fEntriesControl.refreshEntryList();
-    }
-
-    protected void createClient(FormToolkit toolkit) {
     	
 		/*
 		 * Setup the layout structure of the header and rows.
@@ -729,6 +719,10 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
         getSection().setClient(fEntriesControl);
         toolkit.paintBordersFor(fEntriesControl);
         refresh();
+    }
+
+    public void refreshEntryList() {
+    	fEntriesControl.refreshEntryList();
     }
 
     /**

@@ -14,6 +14,20 @@
    </extension>
 
    <extension
+         point="org.eclipse.ui.commands">
+      <command
+            name="%Commands.showStockDetails"
+            id="net.sf.jmoney.stock.showStockDetails"/>
+   </extension>
+	   
+<extension point="org.eclipse.ui.menus">
+     <menuContribution locationURI="menu:navigate?after=openEditors">
+        <command
+              commandId="net.sf.jmoney.stock.showStockDetails"/>
+     </menuContribution>
+
+</extension>
+   <extension
          point="org.eclipse.ui.navigator.viewer">
       <viewer
             viewerId="net.sf.jmoney.navigationView">

@@ -10,6 +10,8 @@ import org.osgi.framework.BundleContext;
  * The main plugin class to be used in the desktop.
  */
 public class StocksPlugin extends AbstractUIPlugin {
+	public static final String PLUGIN_ID = "net.sf.jmoney.stocks";
+
 	//The shared instance.
 	private static StocksPlugin plugin;
 	//Resource bundle.
