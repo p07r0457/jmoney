@@ -205,15 +205,13 @@ public class ShoeboxEditor extends EditorPart {
 		scrolled.setExpandHorizontal(true);
 		scrolled.setExpandVertical(true);
 		
-		GridData scrolledData = new GridData(GridData.FILL_BOTH | GridData.GRAB_HORIZONTAL
-				| GridData.GRAB_VERTICAL);
+		GridData scrolledData = new GridData(SWT.FILL, SWT.FILL, true, true);
 				
 		scrolled.setLayoutData(scrolledData);
 		
 		Composite topLevelControl = new Composite(scrolled, SWT.NONE);
 
-		GridData resultData = new GridData(GridData.FILL_BOTH | GridData.GRAB_HORIZONTAL
-				| GridData.GRAB_VERTICAL);
+		GridData resultData = new GridData(SWT.FILL, SWT.FILL, true, true);
 				
 		topLevelControl.setLayoutData(resultData);
 		
