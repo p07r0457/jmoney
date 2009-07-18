@@ -62,8 +62,12 @@ import org.eclipse.swt.widgets.Label;
  */
 class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 	
-	public PropertiesBlock() {
+	// TODO We should not really have this field.  We should use listeners or something, not sure what.
+	TransactionDialog transactionDialog;
+	
+	public PropertiesBlock(TransactionDialog transactionDialog) {
 		super(400, 20);
+		this.transactionDialog = transactionDialog;
 	}
 	
 	// TODO: remove entry parameter from this method.
@@ -127,6 +131,14 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 								c = c.getParent();
 							} while (c != null);
 //			    	        shell.pack();
+							transactionDialog.refreshScrolling();
+							
+							c = propertiesControl;
+							do {
+								c.layout(true);
+								c = c.getParent();
+							} while (c != null);
+							
 						}
 					}
 				}

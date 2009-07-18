@@ -57,9 +57,11 @@ import org.eclipse.jface.dialogs.DialogMessageArea;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IMessageProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.FocusAdapter;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -100,6 +102,11 @@ public class TransactionDialog extends Dialog {
 	private Block<Entry, SplitEntryRowControl> rootBlock;
 
 	private Transaction transaction;
+
+	private ScrolledComposite scrolled;
+	
+	/** This needs to be a field only because it is the contents of the scrolled composite */
+	private Control entriesTable;
 
 	/**
 	 * Note that an Entry object is passed, not a Transaction object as one might
@@ -176,10 +183,13 @@ public class TransactionDialog extends Dialog {
         if (!mismatchedCommodities) {
         	newEntry.setAmount(-totalAmount);
         }
-        
-		createEntryRow(newEntry);
 
-        getShell().pack(true);
+        // Should be in listener but there is some problem with the comparison
+        // on the transaction.  TODO debug this
+		createEntryRow(newEntry);
+//
+//		refreshScrolling();
+//        getShell().pack(true);
 	}
 
 	private void deleteSplit() {
@@ -187,7 +197,8 @@ public class TransactionDialog extends Dialog {
 		rowControl.dispose();
 		transaction.deleteEntry(rowControl.getInput());
 
-		getShell().pack(true);
+//		refreshScrolling();
+//		getShell().pack(true);
 	}
 	
 	private void adjustAmount() {
@@ -250,7 +261,22 @@ public class TransactionDialog extends Dialog {
 		
 		transactionManager.addChangeListener(new SessionChangeAdapter() {
 			@Override
+			public void objectCreated(ExtendableObject newObject) {
+				if (newObject instanceof Entry) {
+					Entry newEntry = (Entry)newObject;
+					// Comparison on transaction does not work - different objects
+					// for some reason. 
+//					if (newEntry.getTransaction() == transaction) {
+//						createEntryRow(newEntry);
+//					}
+				}
+			}
+
+			@Override
 			public void performRefresh() {
+				refreshScrolling();
+		        getShell().pack(true);
+
 				updateErrorMessage();
 			}
 		}, composite);
@@ -268,7 +294,14 @@ public class TransactionDialog extends Dialog {
 		
 		// Create the table area
 		GridData tableData = new GridData(SWT.FILL, SWT.FILL, true, true);
-		createEntriesTable(composite).setLayoutData(tableData);
+//		GridData tableData = new GridData(300, 300);
+		tableData.minimumWidth = 200;
+		tableData.minimumHeight = 200;
+		createScrollableEntriesTable(composite).setLayoutData(tableData);
+
+		// Create the table area
+//		GridData tableData = new GridData(SWT.FILL, SWT.FILL, true, true);
+//		createEntriesTable(composite).setLayoutData(tableData);
 
 		applyDialogFont(composite);
 		return composite;
@@ -410,6 +443,49 @@ public class TransactionDialog extends Dialog {
 		}
 	}
 
+	private Control createScrollableEntriesTable(Composite parent) {
+		scrolled = new ScrolledComposite(parent, SWT.V_SCROLL | SWT.H_SCROLL);
+
+		GridData resultData = new GridData(SWT.DEFAULT, 200);
+		resultData.heightHint = 200;
+		
+		GridData resultData2 = new GridData(SWT.DEFAULT, 200);
+		resultData2.heightHint = 200;
+		
+		entriesTable = createEntriesTable(scrolled);
+		entriesTable.setLayoutData(resultData);
+		
+		entriesTable.setLayoutData(resultData2);
+		
+		scrolled.setContent(entriesTable);
+        
+		scrolled.setExpandHorizontal(true);
+		scrolled.setExpandVertical(true);
+		
+		Point preferredSize = entriesTable.computeSize(SWT.DEFAULT, SWT.DEFAULT, false);
+		scrolled.setMinSize(preferredSize);
+		
+		return scrolled;
+	}
+	
+	/**
+	 * this method should be called when the total height of all entries in the
+	 * table changes. this could happen when entries are added or deleted and it
+	 * could happen if the preferred height of an entry changes (perhaps because
+	 * the account was changed which resulted in more or fewer properties being
+	 * applicable to the entry).
+	 */
+	public void refreshScrolling() {
+		Point preferredSize = entriesTable.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+		scrolled.setMinSize(preferredSize);
+	
+		preferredSize = scrolled.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+		if (preferredSize.y > 400) {
+			preferredSize.y = 400;
+		}
+		scrolled.setLayoutData(new GridData(preferredSize.x, preferredSize.y));
+	}
+	
 	private Control createEntriesTable(Composite parent) {
 		
 		/*
@@ -422,7 +498,7 @@ public class TransactionDialog extends Dialog {
 		rootBlock = new HorizontalBlock<Entry, SplitEntryRowControl>(
 								new SingleOtherEntryPropertyBlock(EntryInfo.getAccountAccessor()),
 								new SingleOtherEntryPropertyBlock(EntryInfo.getMemoAccessor()),
-								new PropertiesBlock(), 
+								new PropertiesBlock(this), 
 								debitColumnManager,
 								creditColumnManager
 		);
