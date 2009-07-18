@@ -41,8 +41,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.text.ITextSelection;
-import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StyledString;
 import org.eclipse.jface.viewers.DelegatingStyledCellLabelProvider.IStyledLabelProvider;
@@ -51,7 +49,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IMemento;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.FilteredItemsSelectionDialog;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
@@ -197,33 +194,6 @@ public class FilteredStocksSelectionDialog extends FilteredItemsSelectionDialog 
 	@Override
 	protected Control createExtendedContentArea(Composite parent) {
 		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.window.Window#open()
-	 */
-	@Override
-	public int open() {
-		if (getInitialPattern() == null) {
-			IWorkbenchWindow window = PlatformUI.getWorkbench()
-					.getActiveWorkbenchWindow();
-			if (window != null) {
-				ISelection selection = window.getSelectionService()
-						.getSelection();
-				if (selection instanceof ITextSelection) {
-					String text = ((ITextSelection) selection).getText();
-					if (text != null) {
-						text = text.trim();
-						if (text.length() > 0) {
-							setInitialPattern(text);
-						}
-					}
-				}
-			}
-		}
-		return super.open();
 	}
 
 	/**

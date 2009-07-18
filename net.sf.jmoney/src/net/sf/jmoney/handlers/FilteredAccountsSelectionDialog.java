@@ -36,7 +36,6 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StyledString;
@@ -165,33 +164,6 @@ public class FilteredAccountsSelectionDialog extends FilteredItemsSelectionDialo
 	@Override
 	protected Control createExtendedContentArea(Composite parent) {
 		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.jface.window.Window#open()
-	 */
-	@Override
-	public int open() {
-		if (getInitialPattern() == null) {
-			IWorkbenchWindow window = PlatformUI.getWorkbench()
-					.getActiveWorkbenchWindow();
-			if (window != null) {
-				ISelection selection = window.getSelectionService()
-						.getSelection();
-				if (selection instanceof ITextSelection) {
-					String text = ((ITextSelection) selection).getText();
-					if (text != null) {
-						text = text.trim();
-						if (text.length() > 0) {
-							setInitialPattern(text);
-						}
-					}
-				}
-			}
-		}
-		return super.open();
 	}
 
 	/**

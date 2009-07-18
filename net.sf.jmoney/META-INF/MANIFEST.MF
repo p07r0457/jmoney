@@ -15,8 +15,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.intro.universal,
  org.eclipse.ui.views.log,
  org.eclipse.help,
- org.eclipse.help.ui,
- org.eclipse.jface.text
+ org.eclipse.help.ui
 Export-Package: net.sf.jmoney,
  net.sf.jmoney.actions,
  net.sf.jmoney.entrytable,

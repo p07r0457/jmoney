@@ -10,8 +10,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.forms,
  net.sf.jmoney,
  org.eclipse.ui.navigator,
- org.eclipse.core.expressions,
- org.eclipse.jface.text
+ org.eclipse.core.expressions
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: JMoney.sf.net
 Export-Package: net.sf.jmoney.stocks.model
