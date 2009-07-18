@@ -1036,7 +1036,7 @@ public class VirtualRowTable<T extends EntryData> extends Composite implements I
 	}
 
 	/**
-	 * This method should be called when the height of a row may have changed.
+	 * This method should be called when the preferred height of a row may have changed.
 	 * <P>
 	 * The changed row will most likely also be the selected row. However, it is
 	 * possible that it is not. We keep the top of the selected row at the same
