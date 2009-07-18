@@ -7,6 +7,7 @@ Bundle-Activator: net.sf.jmoney.search.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  net.sf.jmoney,
- net.sf.jmoney.jdbcdatastore;resolution:=optional
+ net.sf.jmoney.jdbcdatastore;resolution:=optional,
+ org.eclipse.core.expressions
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
