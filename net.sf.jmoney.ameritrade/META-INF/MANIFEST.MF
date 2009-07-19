@@ -8,8 +8,9 @@ Bundle-ClassPath: .,
  lib/junit.jar
 Bundle-Activator: net.sf.jmoney.ameritrade.Activator
 Bundle-Localization: plugin
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  net.sf.jmoney,
  net.sf.jmoney.stocks
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6

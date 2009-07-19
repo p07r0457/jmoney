@@ -4,7 +4,7 @@
 
 	<extension point="org.eclipse.ui.importWizards">
 		<wizard id="net.sf.jmoney.ameritrade.ImportWizard"
-			name="Ameritrade (CSV) Import"
+			name="%importWizard.name"
 			class="net.sf.jmoney.ameritrade.CsvImportWizard">
 			<description>
 				Import data from CSV file downloaded from Ameritrade. 
