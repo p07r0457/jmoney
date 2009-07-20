@@ -107,6 +107,8 @@ public class TransactionDialog extends Dialog {
 	
 	/** This needs to be a field only because it is the contents of the scrolled composite */
 	private Control entriesTable;
+	
+	protected Map<Entry, RowControl> rowControlMap = new HashMap<Entry, RowControl>();
 
 	/**
 	 * Note that an Entry object is passed, not a Transaction object as one might
@@ -156,13 +158,14 @@ public class TransactionDialog extends Dialog {
 	}
 
 	private void newSplit() {
-		Entry newEntry = topEntry.getTransaction().createEntry();
-
-		// If all entries so far are in the same currency then set the
-		// amount of the new entry to be the amount that takes the balance
-		// to zero.  If we cannot determine the currency because the user
-		// has not yet entered the necessary data, assume that the currencies
-		// are all the same.
+		/*
+		 * If all entries so far are in the same currency then set the amount of
+		 * the new entry to be the amount that takes the balance to zero. If we
+		 * cannot determine the currency because the user has not yet entered
+		 * the necessary data, assume that the currencies are all the same.
+		 * 
+		 * Note that this must be done before we create the new entry.
+		 */
 		Commodity commodity = null;
    		boolean mismatchedCommodities = false;
    		long totalAmount = 0;
@@ -180,25 +183,16 @@ public class TransactionDialog extends Dialog {
         	totalAmount += entry.getAmount();
         }
         
+		Entry newEntry = topEntry.getTransaction().createEntry();
+
         if (!mismatchedCommodities) {
         	newEntry.setAmount(-totalAmount);
         }
-
-        // Should be in listener but there is some problem with the comparison
-        // on the transaction.  TODO debug this
-		createEntryRow(newEntry);
-//
-//		refreshScrolling();
-//        getShell().pack(true);
 	}
 
 	private void deleteSplit() {
 		SplitEntryRowControl rowControl = rowTracker.getSelectedRow();
-		rowControl.dispose();
 		transaction.deleteEntry(rowControl.getInput());
-
-//		refreshScrolling();
-//		getShell().pack(true);
 	}
 	
 	private void adjustAmount() {
@@ -264,20 +258,61 @@ public class TransactionDialog extends Dialog {
 			public void objectCreated(ExtendableObject newObject) {
 				if (newObject instanceof Entry) {
 					Entry newEntry = (Entry)newObject;
-					// Comparison on transaction does not work - different objects
-					// for some reason. 
-//					if (newEntry.getTransaction() == transaction) {
-//						createEntryRow(newEntry);
-//					}
+					if (newEntry.getTransaction() == transaction) {
+						createEntryRow(newEntry);
+					}
+					
+					layoutTable();
+				}
+			}
+
+			// May be objectDestroyed should be called???  However that method is not
+			// called when an entry is deleted outside a transaction.
+			@Override
+			public void objectRemoved(ExtendableObject deletedObject) {
+				RowControl rowControl = rowControlMap.remove(deletedObject);
+				if (rowControl != null) {
+					rowControl.dispose();
+					
+					// There is a bug here.  The problem is that this method is called
+					// before the entry is removed from the datastore.  That is by design
+					// because once an object is removed from the datastore it is no longer
+					// valid, so the code to process the delete cannot do stuff like get
+					// the parent.  However, the code to update the error message and stuff
+					// (which is called in the following call) will not work correctly because
+					// it will still see the deleted entry.
+					// 
+					// There are two solutions:
+					// 1. This code here should pass down the deleted entry so that the deletion
+					//   can be taken into account.
+					// 2. The framework should be changed so that the entry is not returned in the
+					// 		parent list but one can still follow references AWAY from the deleted
+					//		object so that code can know where the object used to exist and what
+					//		was in the object.
+					//
+					// 2. is probably better, but may be involved.
+					
+					layoutTable();
 				}
 			}
 
 			@Override
-			public void performRefresh() {
+			public void objectChanged(ExtendableObject changedObject, ScalarPropertyAccessor changedProperty, Object oldValue, Object newValue) {
+				// This may be overkill, but for time being do a full layout when any property changes.
+				// In particular, changing the account type will change the height of the row.
+				layoutTable();
+			}
+			
+			private void layoutTable() {
 				refreshScrolling();
-		        getShell().pack(true);
 
 				updateErrorMessage();
+				
+				// This must be called if the error message has changed, because otherwise
+				// the message may be truncated.  It still seems to get a little bit
+				// truncated.
+				getShell().layout(true);
+		        getShell().pack(true);
 			}
 		}, composite);
 		
@@ -294,14 +329,9 @@ public class TransactionDialog extends Dialog {
 		
 		// Create the table area
 		GridData tableData = new GridData(SWT.FILL, SWT.FILL, true, true);
-//		GridData tableData = new GridData(300, 300);
 		tableData.minimumWidth = 200;
 		tableData.minimumHeight = 200;
 		createScrollableEntriesTable(composite).setLayoutData(tableData);
-
-		// Create the table area
-//		GridData tableData = new GridData(SWT.FILL, SWT.FILL, true, true);
-//		createEntriesTable(composite).setLayoutData(tableData);
 
 		applyDialogFont(composite);
 		return composite;
@@ -352,7 +382,6 @@ public class TransactionDialog extends Dialog {
 				public void focusGained(FocusEvent e) {
 					final ICellControl2<?> previousFocus = cellTracker.getFocusCell();
 					if (cellControl == previousFocus) {
-						System.out.println("here"); //$NON-NLS-1$
 						/*
 						 * The focus has changed to a different control as far as SWT is
 						 * concerned, but the focus is still within the same cell
@@ -416,7 +445,7 @@ public class TransactionDialog extends Dialog {
 								 * The row selection change was rejected so restore the original cell selection.
 								 */
 	
-								// This needs to be sorted out, but is not high priority because row depatures
+								// This needs to be sorted out, but is not high priority because row departures
 								// rarely (never) fail in this dialog.
 //								rowTracker.getSelectedRow().scrollToShowRow();
 								
@@ -517,17 +546,18 @@ public class TransactionDialog extends Dialog {
 		
 		for (Entry entry: topEntry.getTransaction().getEntryCollection()) {
 			createEntryRow(entry);
-//			rowControls.put(entry, row);
 		}
 			
 	    
 		return tableComposite;
 	}
 
-	private void createEntryRow(final Entry entry) {
-		SplitEntryRowControl row = new SplitEntryRowControl(tableComposite, SWT.NONE, rootBlock, false, rowTracker, cellTracker);
-		row.setInput(entry);
-		row.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+	private void createEntryRow(Entry entry) {
+		SplitEntryRowControl rowControl = new SplitEntryRowControl(tableComposite, SWT.NONE, rootBlock, false, rowTracker, cellTracker);
+		rowControl.setInput(entry);
+		rowControl.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+		
+		rowControlMap.put(entry, rowControl);
 	}
 
 	/**
