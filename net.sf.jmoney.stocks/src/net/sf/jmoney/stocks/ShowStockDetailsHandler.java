@@ -61,12 +61,33 @@ public class ShowStockDetailsHandler extends AbstractHandler {
 			Object[] result = dialog.getResult();
 			for (Object selectedObject : result) {
 				Stock stock = (Stock) selectedObject;
-				IEditorPart stockDetailsEditor = new StockDetailsEditor(stock);
-				try {
-					editor.addPage(stockDetailsEditor, stock.getName());
-				} catch (PartInitException e) {
-					throw new ExecutionException("Cannot create editor for " + stock.getName() + " details", e);
+				
+				/*
+				 * This may not be the best way.  Inputs are not set for the editors within
+				 * the multi-page editor, so they all match the input for the containing editor.
+				 * We then look through and test the class implementation.
+				 */
+				IEditorPart stockDetailsEditor = null;
+				IEditorPart [] editors = editor.findEditors(editor.getEditorInput());
+				for (IEditorPart childEditor : editors) {
+					if (childEditor instanceof StockDetailsEditor) {
+						StockDetailsEditor eachEditor = (StockDetailsEditor) childEditor;
+						if (eachEditor.getStock() == stock) {
+							stockDetailsEditor = eachEditor;
+							break;
+						}
+					}
 				}
+				if (stockDetailsEditor == null) {
+					stockDetailsEditor = new StockDetailsEditor(stock);
+					try {
+						editor.addPage(stockDetailsEditor, stock.getName());
+					} catch (PartInitException e) {
+						throw new ExecutionException("Cannot create editor for " + stock.getName() + " details", e);
+					}
+				}
+
+				editor.setActiveEditor(stockDetailsEditor);
 			}
 		}
 		
