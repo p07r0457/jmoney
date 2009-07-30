@@ -22,10 +22,12 @@
 
 package net.sf.jmoney.stocks.pages;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.fields.DateControl;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.stocks.ShowStockDetailsHandler;
@@ -49,52 +51,33 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerComparator;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.forms.SectionPart;
-import org.eclipse.ui.forms.widgets.ExpandableComposite;
 import org.eclipse.ui.forms.widgets.FormToolkit;
 import org.eclipse.ui.forms.widgets.ScrolledForm;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.part.EditorPart;
 
 public class StockBalancesEditor extends EditorPart {
+	static public final String ID = "net.sf.jmoney.stocks.stockBalancesEditor";
 
 	private AccountEditor accountEditor;
-	
-	public class ShowDetailsAction extends Action {
-
-		private ISelectionProvider selectionProvider;
-		
-		public ShowDetailsAction(ISelectionProvider selectionProvider) {
-			super("Show Stock Activity");
-			this.selectionProvider = selectionProvider;
-		}
-
-		@Override
-		public void run() {
-			IStructuredSelection selection = (IStructuredSelection)selectionProvider.getSelection();
-			Object element = selection.getFirstElement();
-			if (element instanceof StockWrapper) {
-				Stock stock = ((StockWrapper)element).stock;
-				try {
-					ShowStockDetailsHandler.showStockDetails(accountEditor, stock);
-				} catch (PartInitException e) {
-					JMoneyPlugin.log(e);
-				}
-			}
-		}
-	}
-
-	static public final String ID = "net.sf.jmoney.stocks.stockBalancesEditor";
 	
 	/**
 	 * The account being shown in this page.
@@ -111,9 +94,13 @@ public class StockBalancesEditor extends EditorPart {
 		
 	}
 	
-	private Map<Stock, StockWrapper> totals = new HashMap<Stock, StockWrapper>();
+	private Map<Stock, StockWrapper> totals;
 
 	private TableViewer balancesViewer;
+
+	private Button zeroBalanceCheckbox;
+
+	private DateControl balanceDateControl;
 
 	/**
 	 * Currently this editor can be created only when given an AccountEditor.
@@ -165,28 +152,49 @@ public class StockBalancesEditor extends EditorPart {
 	public void createPartControl(Composite parent) {
         FormToolkit toolkit = new FormToolkit(parent.getDisplay());
     	ScrolledForm form = toolkit.createScrolledForm(parent);
-        form.getBody().setLayout(new GridLayout());
+        form.getBody().setLayout(new FillLayout());
         
 		// Get the handler service and pass it on so that handlers can be activated as appropriate
 		IHandlerService handlerService = (IHandlerService) getSite().getService(IHandlerService.class);
 
-		
-		SectionPart section = new SectionPart(form.getBody(), toolkit, ExpandableComposite.TITLE_BAR);
-        section.getSection().setText("All Balances");
-        section.getSection().setLayoutData(new GridData(GridData.FILL_BOTH));
+        Composite contents = createContents(form.getBody());
 
-        Composite contents = createContents(section.getSection());
+        final ViewerFilter hideZeroBalancesFilter = new ViewerFilter() {
+			@Override
+			public boolean select(Viewer viewer, Object parentElement, Object element) {
+				StockWrapper wrapper = (StockWrapper)element;
+				return wrapper.total != 0;
+			}
+		};
         
+		balanceDateControl.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				Date balanceDate = balanceDateControl.getDate();
+				if (balanceDate != null) {
+					calculateTotals();
+				}
+			}
+		});
+
+        zeroBalanceCheckbox.addSelectionListener(new SelectionAdapter() {
+        	@Override
+			public void widgetSelected(SelectionEvent e) {
+        		if (zeroBalanceCheckbox.getSelection()) {
+        			balancesViewer.removeFilter(hideZeroBalancesFilter);
+        		} else {
+        			balancesViewer.addFilter(hideZeroBalancesFilter);
+        		}
+			}
+		});
+
+        balanceDateControl.setDate(new Date());
+		calculateTotals();
+		
 		// Activate the handlers
 //		IHandler handler = new NewTransactionHandler(rowTracker, fEntriesControl);
 //		handlerService.activateHandler("net.sf.jmoney.newTransaction", handler);		
 
-        section.getSection().setClient(contents);
         toolkit.paintBordersFor(contents);
-        section.refresh();  // ?????
-
-        
-        
         
         form.setText("Investment Account Balances");
 	}
@@ -195,13 +203,23 @@ public class StockBalancesEditor extends EditorPart {
 		Composite composite = new Composite(parent, SWT.None);
 		composite.setLayout(new GridLayout());
 
+		createConfigurationControls(composite);
+		
 		Control table = createTable(composite);
 		table.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		
+		return composite;
+	}
+
+	private void calculateTotals() {
+		Date asOf = balanceDateControl.getDate();
+		
+		totals = new HashMap<Stock, StockWrapper>();
+
 		for (Entry entry : account.getEntries()) {
-			StockEntry entry2 = entry.getExtension(StockEntryInfo.getPropertySet(), false);
-			if (entry2 != null) {
-				if (entry2.isStockChange()) {
+			if (!entry.getTransaction().getDate().after(asOf)) {
+				StockEntry entry2 = entry.getExtension(StockEntryInfo.getPropertySet(), false);
+				if (entry2 != null && entry2.isStockChange()) {
 					Stock stock = entry2.getStock();
 					StockWrapper stockWrapper = totals.get(stock);
 					if (stockWrapper == null) {
@@ -215,15 +233,41 @@ public class StockBalancesEditor extends EditorPart {
 		}
 		
 		balancesViewer.setInput(totals.values());
+	}
+
+	private Control createConfigurationControls(Composite parent) {
+		Composite composite = new Composite(parent, SWT.NONE);
+		composite.setLayout(new GridLayout(5, false));
+		
+		createDateControl(composite);
+		createShowZeroBalanceCheckbox(composite);
 		
 		return composite;
 	}
 
-	private Control createTable(Composite parent) {
-		Composite casesComposite = new Composite(parent, SWT.NONE);
-		casesComposite.setLayout(new GridLayout());
+	private Control createDateControl(Composite parent) {
+		Composite composite = new Composite(parent, SWT.NONE);
+		composite.setLayout(new GridLayout(5, false));
+		
+		new Label(composite, SWT.NONE).setText("Balance as of:");
+		
+		balanceDateControl = new DateControl(composite);
+		
+		return composite;
+	}
 
-		balancesViewer = new TableViewer(casesComposite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
+	private Control createShowZeroBalanceCheckbox(Composite parent) {
+		zeroBalanceCheckbox = new Button(parent, SWT.CHECK);
+		zeroBalanceCheckbox.setText("Show Stock with Zero Balance");
+		
+		return zeroBalanceCheckbox;
+	}
+
+	private Control createTable(Composite parent) {
+		Composite composite = new Composite(parent, SWT.NONE);
+		composite.setLayout(new GridLayout());
+
+		balancesViewer = new TableViewer(composite, SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
 		
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gridData.widthHint = 300;
@@ -281,11 +325,35 @@ public class StockBalancesEditor extends EditorPart {
 		Menu menu = menuMgr.createContextMenu(control);
 		control.setMenu(menu);		
 		
-		return casesComposite;
+		return composite;
 	}
 
 	@Override
 	public void setFocus() {
 		// Don't bother to do anything.  User can select as required.
+	}
+	
+	public class ShowDetailsAction extends Action {
+
+		private ISelectionProvider selectionProvider;
+		
+		public ShowDetailsAction(ISelectionProvider selectionProvider) {
+			super("Show Stock Activity");
+			this.selectionProvider = selectionProvider;
+		}
+
+		@Override
+		public void run() {
+			IStructuredSelection selection = (IStructuredSelection)selectionProvider.getSelection();
+			Object element = selection.getFirstElement();
+			if (element instanceof StockWrapper) {
+				Stock stock = ((StockWrapper)element).stock;
+				try {
+					ShowStockDetailsHandler.showStockDetails(accountEditor, stock);
+				} catch (PartInitException e) {
+					JMoneyPlugin.log(e);
+				}
+			}
+		}
 	}
 }
