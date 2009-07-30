@@ -51,7 +51,7 @@ public class StockEntriesPage implements IBookkeepingPageFactory {
 		IEditorPart entriesEditor = new StockEntriesEditor();
 		editor.addPage(entriesEditor, "Entries");
 		
-		IEditorPart balancesEditor = new StockBalancesEditor();
+		IEditorPart balancesEditor = new StockBalancesEditor(editor);
 		editor.addPage(balancesEditor, "Balances");
 		
 		AccountEditorInput input2 = (AccountEditorInput)input;

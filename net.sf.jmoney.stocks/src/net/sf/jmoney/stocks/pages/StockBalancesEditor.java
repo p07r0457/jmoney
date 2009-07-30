@@ -25,19 +25,25 @@ package net.sf.jmoney.stocks.pages;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.stocks.ShowStockDetailsHandler;
 import net.sf.jmoney.stocks.model.Stock;
 import net.sf.jmoney.stocks.model.StockAccount;
 import net.sf.jmoney.stocks.model.StockEntry;
 import net.sf.jmoney.stocks.model.StockEntryInfo;
+import net.sf.jmoney.views.AccountEditor;
 import net.sf.jmoney.views.AccountEditorInput;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellLabelProvider;
+import org.eclipse.jface.viewers.ISelectionProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -62,6 +68,32 @@ import org.eclipse.ui.part.EditorPart;
 
 public class StockBalancesEditor extends EditorPart {
 
+	private AccountEditor accountEditor;
+	
+	public class ShowDetailsAction extends Action {
+
+		private ISelectionProvider selectionProvider;
+		
+		public ShowDetailsAction(ISelectionProvider selectionProvider) {
+			super("Show Stock Activity");
+			this.selectionProvider = selectionProvider;
+		}
+
+		@Override
+		public void run() {
+			IStructuredSelection selection = (IStructuredSelection)selectionProvider.getSelection();
+			Object element = selection.getFirstElement();
+			if (element instanceof StockWrapper) {
+				Stock stock = ((StockWrapper)element).stock;
+				try {
+					ShowStockDetailsHandler.showStockDetails(accountEditor, stock);
+				} catch (PartInitException e) {
+					JMoneyPlugin.log(e);
+				}
+			}
+		}
+	}
+
 	static public final String ID = "net.sf.jmoney.stocks.stockBalancesEditor";
 	
 	/**
@@ -82,6 +114,18 @@ public class StockBalancesEditor extends EditorPart {
 	private Map<Stock, StockWrapper> totals = new HashMap<Stock, StockWrapper>();
 
 	private TableViewer balancesViewer;
+
+	/**
+	 * Currently this editor can be created only when given an AccountEditor.
+	 * This editor is a child editor of the AccountEditor (a multi-page editor),
+	 * though this class does not make that assumption.  The AccountEditor is used
+	 * for certain actions such as opening stock details pages.
+	 * 
+	 * @param editor
+	 */
+	public StockBalancesEditor(AccountEditor accountEditor) {
+		this.accountEditor = accountEditor;
+	}
 
 	@Override
 	public void init(IEditorSite site, IEditorInput input)
@@ -221,14 +265,15 @@ public class StockBalancesEditor extends EditorPart {
 			@Override
 			public void update(ViewerCell cell) {
 				StockWrapper stockWrapper = (StockWrapper)cell.getElement();
-				cell.setText(Long.toString(stockWrapper.total));
+				cell.setText(stockWrapper.stock.format(stockWrapper.total));
 			}
 		});
 
 		// Create the pop-up menu
 		MenuManager menuMgr = new MenuManager();
-		// TODO implement this action
-//		menuMgr.add(new ShowDetailsAction(getSite().getWorkbenchWindow(), balancesViewer));
+		// TODO We are making assumptions about where this editor is placed when
+		// we make the following cast to AccountEditor.  Can this be cleaned up?
+		menuMgr.add(new ShowDetailsAction(balancesViewer));
 		menuMgr.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		getSite().registerContextMenu(menuMgr, balancesViewer);
 			
