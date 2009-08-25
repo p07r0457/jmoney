@@ -171,7 +171,7 @@
             schemeId="net.sf.jmoney.accountingAcceleratorConfiguration" />
       <key
             commandId="net.sf.jmoney.selectAndOpenAccount"
-            sequence="M1+A"
+            sequence="M1+M2+A"
             schemeId="net.sf.jmoney.accountingAcceleratorConfiguration" />
       <scheme
             id="net.sf.jmoney.accountingAcceleratorConfiguration"
