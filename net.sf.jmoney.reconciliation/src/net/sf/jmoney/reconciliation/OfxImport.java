@@ -187,6 +187,14 @@ public class OfxImport implements IBankStatementSource {
 				}
 				parts[1] = parts[1].substring(0, parts[1].length() - 1);
 			}
+			if (parts[1].length() == 1) {
+				/*
+				 * Some banks (e.g. Citibank) only put one digit after the
+				 * decimal place if the second digit is zero (number of pennies
+				 * is divisible by ten).
+				 */
+				parts[1] = parts[1] + "0";
+			}
 			if (data.startsWith("-")) {
 				amount -= Integer.parseInt(parts[1]);
 			} else {
