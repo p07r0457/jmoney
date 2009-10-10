@@ -53,12 +53,14 @@ public class StockInfo implements IPropertySetInfo {
 					objectKey, 
 					parentKey, 
 					values.getScalarValue(CommodityInfo.getNameAccessor()),
+					values.getScalarValue(StockInfo.getCusipAccessor()),
 					values.getScalarValue(StockInfo.getSymbolAccessor()),
 					values.getScalarValue(StockInfo.getNominalValueAccessor()),
 					values);
 		}
 	});
 
+	private static ScalarPropertyAccessor<String> cusipAccessor;
 	private static ScalarPropertyAccessor<String> symbolAccessor;
 	private static ScalarPropertyAccessor<String> nominalValueAccessor;
 	
@@ -66,6 +68,7 @@ public class StockInfo implements IPropertySetInfo {
 
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 
+		cusipAccessor = propertySet.addProperty("cusip", StocksPlugin.getResourceString("PropertyDesc.cusip"), String.class, 2, 20, textControlFactory, null);
 		symbolAccessor = propertySet.addProperty("symbol", StocksPlugin.getResourceString("PropertyDesc.symbol"), String.class, 2, 20, textControlFactory, null);
 		nominalValueAccessor = propertySet.addProperty("nominalValue", StocksPlugin.getResourceString("PropertyDesc.nominalValue"), String.class, 2, 20, textControlFactory, null);
 		
@@ -78,6 +81,13 @@ public class StockInfo implements IPropertySetInfo {
 	public static ExtendablePropertySet<Stock> getPropertySet() {
 		return propertySet;
 	}
+
+	/**
+	 * @return
+	 */
+	public static ScalarPropertyAccessor<String> getCusipAccessor() {
+		return cusipAccessor;
+	}	
 
 	/**
 	 * @return

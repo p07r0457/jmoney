@@ -41,6 +41,7 @@ public class Stock extends Commodity {
 		numberFormat.setMinimumFractionDigits(0);
 	}
 	
+	private String cusip;
 	private String symbol;
 	private String nominalValue;
 	
@@ -52,11 +53,13 @@ public class Stock extends Commodity {
 			IObjectKey objectKey,
 			ListKey parentKey,
 			String name,
+			String cusip,
 			String symbol,
 			String nominalValue,
 			IValues extensionValues) {
 		super(objectKey, parentKey, name, extensionValues);
 
+		this.cusip = cusip;
 		this.symbol = symbol;
 		this.nominalValue = nominalValue;
 	}
@@ -78,6 +81,14 @@ public class Stock extends Commodity {
 		return "net.sf.jmoney.stocks.stock";
 	}
 	
+	/**
+	 * @return the 9 digit CUSIP if a US security or the CINS (one letter
+	 *         followed by 8 digits) if a non-US security
+	 */
+	public String getCusip() {
+		return cusip;
+	}
+	
 	public String getSymbol() {
 		return symbol;
 	}
@@ -89,6 +100,19 @@ public class Stock extends Commodity {
 		return nominalValue;
 	}
 	
+	/**
+	 * @param cusip
+	 *            the 9 digit CUSIP if a US security or the CINS (one letter
+	 *            followed by 8 digits) if a non-US security
+	 */
+	public void setCusip(String cusip) {
+		String oldCusip = this.cusip;
+		this.cusip = cusip;
+
+		// Notify the change manager.
+		processPropertyChange(StockInfo.getCusipAccessor(), oldCusip, cusip);
+	}
+
 	public void setSymbol(String symbol) {
 		String oldSymbol = this.symbol;
 		this.symbol = symbol;
