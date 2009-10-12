@@ -229,15 +229,20 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						 * - If this is a purchase or sale, then the stock will be set as the commodity
 						 * for one of the entries.  We find this entry.
 						 * - If this is a dividend payment then the stock will be set as an additional
-						 * field in the dividend category. 
+						 * field in the dividend category.
+						 * 
+						 * Note that controls are re-used, so we must be sure to explicitly enable the controls
+						 * because we may be re-using a control that has been disabled.
 						 */
 						Stock stock;
 						if (data.isPurchaseOrSale()) {
 							Entry entry = data.getPurchaseOrSaleEntry();
 							stock = (Stock)entry.getCommodity();
+							control.setEnabled(true);
 						} else if (data.isDividend()) {
 							Entry entry = data.getDividendEntry();
 							stock = entry.getPropertyValue(StockEntryInfo.getStockAccessor());
+							control.setEnabled(true);
 						} else {
 							stock = null;
 							control.setEnabled(false);
