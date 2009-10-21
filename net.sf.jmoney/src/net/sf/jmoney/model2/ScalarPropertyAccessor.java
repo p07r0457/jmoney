@@ -312,16 +312,13 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 			Object value = theGetMethod.invoke(invocationTarget, (Object [])null);
 			return classOfValueObject.cast(value);
 		} catch (InvocationTargetException e) {
-			// TODO Process this properly
-			e.printStackTrace();
-			throw new RuntimeException("Plugin error"); //$NON-NLS-1$
+			throw new RuntimeException("Plugin error", e); //$NON-NLS-1$
 		} catch (Exception e) {
 			// IllegalAccessException and IllegalArgumentException exceptions should
 			// not be possible here because the method was checked
 			// for correct access rights and parameters during initialization.
 			// Therefore throw a runtime exception.
-			e.printStackTrace();
-			throw new RuntimeException("internal error"); //$NON-NLS-1$
+			throw new RuntimeException("internal error", e); //$NON-NLS-1$
 		}
 	}
 
@@ -330,16 +327,13 @@ public class ScalarPropertyAccessor<V> extends PropertyAccessor {
 			Object parameters[] = new Object[] { value };
 			theSetMethod.invoke(invocationTarget, parameters);
 		} catch (InvocationTargetException e) {
-			// TODO Process this properly
-			e.getCause().printStackTrace();
-			throw new RuntimeException("Plugin error"); //$NON-NLS-1$
+			throw new RuntimeException("Plugin error", e); //$NON-NLS-1$
 		} catch (Exception e) {
 			// IllegalAccessException and IllegalArgumentException exceptions should
 			// not be possible here because the method was checked
 			// for correct access rights and parameters during initialization.
 			// Therefore throw a runtime exception.
-			e.printStackTrace();
-			throw new RuntimeException("internal error"); //$NON-NLS-1$
+			throw new RuntimeException("internal error", e); //$NON-NLS-1$
 		}
 	}
 
