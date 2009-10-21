@@ -97,7 +97,7 @@ public class StocksContentProvider implements ITreeContentProvider {
 
 		@Override	
 		public void objectRemoved(final ExtendableObject deletedObject) {
-			if (deletedObject instanceof Account) {
+			if (deletedObject instanceof Stock) {
 				/*
 				 * This listener method is called before the object is deleted.
 				 * This allows listener methods to access the deleted object and
