@@ -22,32 +22,28 @@
 
 package net.sf.jmoney.model2;
 
-
 /**
- * This is a helper class that makes it a little easier for
- * a plug-in to extend the CurrencyAccount object.
- *  
- * To add fields and methods to a CurrencyAccount object, one should
- * derive a class from CurrencyAccountExtension.  This mechanism
- * allows multiple extensions to a CurrencyAccount object to be added
- * and maintained at runtime.
- *
- * @author  Nigel Westbury
+ * This is a helper class that makes it a little easier for a plug-in to extend
+ * the CurrencyAccount object.
+ * <P>
+ * To add fields and methods to a CurrencyAccount object, one should derive a
+ * class from CurrencyAccountExtension. This mechanism allows multiple
+ * extensions to a CurrencyAccount object to be added and maintained at runtime.
+ * <P>
+ * All extensions to CurrencyAccount objects implement the same methods that are
+ * in the CurrencyAccount object. This is for convenience so the consumer can
+ * get a single object that supports both the original CurrencyAccount methods
+ * and the extension methods. All CurrencyAccount methods are passed on to the
+ * CurrencyAccount object.
+ * 
+ * @author Nigel Westbury
  */
-public abstract class CurrencyAccountExtension extends AccountExtension {
+public abstract class CurrencyAccountExtension extends CapitalAccountExtension {
     
-    public CurrencyAccountExtension(ExtendableObject extendedObject) {
+    public CurrencyAccountExtension(CurrencyAccount extendedObject) {
     	super(extendedObject);
     }
 
-    /*
-	 * All extensions to CurrencyAccount objects implement the same methods that
-	 * are in the CurrencyAccount object. This is for convenience so the
-	 * comsumer can get a single object that supports both the original
-	 * CurrencyAccount methods and the extension methods. All CurrencyAccount
-	 * methods are passed on to the CurrencyAccount object.
-	 */
-    
 	public Currency getCurrency() {
 		return getBaseObject().getCurrency();
 	}
