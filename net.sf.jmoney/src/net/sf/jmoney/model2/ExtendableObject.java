@@ -247,6 +247,8 @@ public abstract class ExtendableObject implements IAdaptable {
 		 * thus the change is being applied to a base transaction. Therefore we
 		 * also call performFinish.
 		 */
+		// TODO above comment is not true.  This is called when a nested data manager
+		// is committing property changes to us.
 		getDataManager().fireEvent(
             	new ISessionChangeFirer() {
             		public void fire(SessionChangeListener listener) {
