@@ -7,6 +7,7 @@
    <extension-point id="propagators" name="Property Propagators" schema="schema/propagators.exsd"/>
    <extension-point id="datastores" name="Datastore Implementations" schema="schema/datastores.exsd"/>
    <extension-point id="validators" name="Change Validators" schema="schema/validators.exsd"/>
+   <extension-point id="dropHandlers" name="Imports Dropped Files" schema="schema/dropHandlers.exsd"/>
 
    <extension
       point="org.eclipse.core.runtime.products"

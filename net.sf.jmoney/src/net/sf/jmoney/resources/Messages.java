@@ -177,6 +177,7 @@ public class Messages extends NLS {
 	public static String TransactionInfo_Entry;
 	public static String WizardPropertyPage_ErrorNameEmpty;
 	public static String WizardPropertyPage_ErrorSameAsDefaultName;
+	public static String MalformedPlugin_BadExtensionClass;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
