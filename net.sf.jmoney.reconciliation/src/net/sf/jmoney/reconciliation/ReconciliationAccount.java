@@ -22,7 +22,7 @@
 
 package net.sf.jmoney.reconciliation;
 
-import net.sf.jmoney.model2.CurrencyAccountExtension;
+import net.sf.jmoney.model2.CapitalAccountExtension;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.IObjectKey;
@@ -30,13 +30,13 @@ import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ObjectCollection;
 
 /**
- * An extension object that extends BankAccount objects.
+ * An extension object that extends CapitalAccount objects.
  * This extension object maintains the values of the properties
  * that have been added by this plug-in.
  * 
  * @author Nigel Westbury
  */
-public class ReconciliationAccount extends CurrencyAccountExtension {
+public class ReconciliationAccount extends CapitalAccountExtension {
 	
 	protected boolean reconcilable = false;
 	

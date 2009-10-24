@@ -19,7 +19,7 @@
       <extension-property-set
       	id="accountProperties"
           info-class="net.sf.jmoney.reconciliation.ReconciliationAccountInfo"
-	      extendable-property-set="net.sf.jmoney.currencyAccount">
+	      extendable-property-set="net.sf.jmoney.capitalAccount">
       </extension-property-set>
       
       <extension-property-set
@@ -50,6 +50,42 @@
            description="A Financial Exchange File (*.OFX or *.QFX)" 
            class="net.sf.jmoney.reconciliation.OfxImport">
         </statement-source> 
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="popup:org.eclipse.ui.popup.any">
+         <command
+               commandId="net.sf.jmoney.reconciliation.openImportPatternsHandler"
+               label="Open Import Patterns..."
+               style="push">
+            <visibleWhen>
+               <with
+                     variable="activeMenuSelection">
+                  <and>
+                     <count
+                           value="1">
+                     </count>
+                     <iterate
+                           operator="and">
+                        <instanceof
+                              value="net.sf.jmoney.model2.CapitalAccount">
+                        </instanceof>
+                     </iterate>
+                  </and>
+               </with>
+            </visibleWhen>
+         </command>
+      </menuContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            defaultHandler="net.sf.jmoney.reconciliation.navigator.OpenImporterOptionsHandler"
+            id="net.sf.jmoney.reconciliation.openImportPatternsHandler"
+            name="Open Import Patterns">
+      </command>
    </extension>
 
 </plugin>

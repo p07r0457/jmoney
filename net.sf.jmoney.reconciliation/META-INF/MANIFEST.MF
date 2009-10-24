@@ -5,7 +5,8 @@ Bundle-SymbolicName: net.sf.jmoney.reconciliation; singleton:=true
 Bundle-Version: 1.0.0
 Bundle-Activator: net.sf.jmoney.reconciliation.ReconciliationPlugin
 Export-Package: net.sf.jmoney.reconciliation,
- net.sf.jmoney.reconciliation.reconcilePage
+ net.sf.jmoney.reconciliation.reconcilePage,
+ net.sf.jmoney.reconciliation.utilities
 Require-Bundle: net.sf.jmoney,
  org.eclipse.core.runtime,
  org.eclipse.ui,

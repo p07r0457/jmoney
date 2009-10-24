@@ -24,7 +24,7 @@ package net.sf.jmoney.reconciliation;
 
 import net.sf.jmoney.fields.AccountControlFactory;
 import net.sf.jmoney.fields.CheckBoxControlFactory;
-import net.sf.jmoney.model2.CurrencyAccountInfo;
+import net.sf.jmoney.model2.CapitalAccountInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionPropertySet;
 import net.sf.jmoney.model2.IExtensionObjectConstructors;
@@ -43,14 +43,14 @@ import net.sf.jmoney.reconciliation.resources.Messages;
 import org.eclipse.osgi.util.NLS;
 
 /**
- * Provides the metadata for the extra properties added to each
- * currency account by this plug-in.
+ * Provides the metadata for the extra properties added to each capital account
+ * by this plug-in.
  * 
  * @author Nigel Westbury
  */
 public class ReconciliationAccountInfo implements IPropertySetInfo {
 
-	private static ExtensionPropertySet<ReconciliationAccount> propertySet = PropertySet.addExtensionPropertySet(ReconciliationAccount.class, CurrencyAccountInfo.getPropertySet(), new IExtensionObjectConstructors<ReconciliationAccount>() {
+	private static ExtensionPropertySet<ReconciliationAccount> propertySet = PropertySet.addExtensionPropertySet(ReconciliationAccount.class, CapitalAccountInfo.getPropertySet(), new IExtensionObjectConstructors<ReconciliationAccount>() {
 
 		public ReconciliationAccount construct(ExtendableObject extendedObject) {
 			return new ReconciliationAccount(extendedObject);

@@ -86,7 +86,7 @@ import org.eclipse.swt.widgets.Table;
  * 
  * @author Nigel Westbury
  */
-class ImportOptionsDialog extends Dialog {
+public class ImportOptionsDialog extends Dialog {
 	
 	private TransactionManager transactionManager;
 	

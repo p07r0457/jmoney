@@ -3,13 +3,9 @@ package net.sf.jmoney.reconciliation.reconcilePage;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 import java.util.TimeZone;
 import java.util.Vector;
-import java.util.regex.Matcher;
 
 import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.DeleteTransactionHandler;
@@ -23,24 +19,22 @@ import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.ExtendableObject;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.IBankStatementSource;
-import net.sf.jmoney.reconciliation.MemoPattern;
 import net.sf.jmoney.reconciliation.ReconciliationAccount;
 import net.sf.jmoney.reconciliation.ReconciliationAccountInfo;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
+import net.sf.jmoney.reconciliation.utilities.ImportMatcher;
 import net.sf.jmoney.views.AccountEditorInput;
 
 import org.eclipse.core.commands.IHandler;
@@ -88,7 +82,7 @@ public class ReconcileEditor extends EditorPart {
 	/**
 	 * The account being shown in this page.
 	 */
-	protected ReconciliationAccount account = null;
+	protected CurrencyAccount account = null;
 	
 	protected Vector<CellBlock> allEntryDataObjects = new Vector<CellBlock>();
 
@@ -123,8 +117,7 @@ public class ReconcileEditor extends EditorPart {
     	// Set the account that this page is viewing and editing.
 		AccountEditorInput input2 = (AccountEditorInput)input;
         DatastoreManager sessionManager = (DatastoreManager)site.getPage().getInput();
-        Account baseAccount = sessionManager.getSession().getAccountByFullName(input2.getFullAccountName());
-		account = baseAccount.getExtension(ReconciliationAccountInfo.getPropertySet(), true);
+        account = (CurrencyAccount)sessionManager.getSession().getAccountByFullName(input2.getFullAccountName());
         
         // Create our own transaction manager.
         // This ensures that uncommitted changes
@@ -158,7 +151,7 @@ public class ReconcileEditor extends EditorPart {
 	}
 
     public CurrencyAccount getAccount() {
-    	return account.getBaseObject();
+    	return account;
     }
 
     public BankStatement getStatement() {
@@ -218,7 +211,7 @@ public class ReconcileEditor extends EditorPart {
     	final ScrolledForm form = toolkit.createScrolledForm(parent);
         form.getBody().setLayout(new GridLayout(2, false));
         
-        fStatementsSection = new StatementsSection(form.getBody(), toolkit, account.getBaseObject());
+        fStatementsSection = new StatementsSection(form.getBody(), toolkit, account);
         GridData data = new GridData(SWT.LEFT, SWT.FILL, false, true);
         data.verticalSpan = 2;
         fStatementsSection.getSection().setLayoutData(data);
@@ -336,9 +329,11 @@ public class ReconcileEditor extends EditorPart {
 			}
 		}		  
 
+		final ReconciliationAccount reconciliationAccount = account.getExtension(ReconciliationAccountInfo.getPropertySet(), true);
+
 		importButton.addListener(SWT.Selection, new Listener() {
 			public void handleEvent(Event event) {
-				if (!account.isReconcilable()) {
+				if (!reconciliationAccount.isReconcilable()) {
 			        MessageBox diag = new MessageBox(getSite().getShell());
 			        diag.setText("Feature not Available");
 			        diag.setMessage("Before you can import entries from your bank's servers, you must first set the rules for the initial categories for the imported entries.  Press the 'Options...' button to set this up.");
@@ -379,7 +374,7 @@ public class ReconcileEditor extends EditorPart {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				ImportOptionsDialog messageBox = 
-					new ImportOptionsDialog(getSite().getShell(), account);
+					new ImportOptionsDialog(getSite().getShell(), reconciliationAccount);
 				messageBox.open();
 			}
 		});
@@ -520,7 +515,7 @@ public class ReconcileEditor extends EditorPart {
 		BankStatement priorStatement = fStatementsSection.getPriorStatement(statement);
 		Date defaultStartDate = null;
 		if (priorStatement != null && !priorStatement.isNumber()) {
-			Calendar oneDayLater = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+			Calendar oneDayLater = Calendar.getInstance();
 			oneDayLater.setTime(priorStatement.getStatementDate());
 			oneDayLater.add(Calendar.DAY_OF_MONTH, 1);
 			defaultStartDate = oneDayLater.getTime();
@@ -534,21 +529,10 @@ public class ReconcileEditor extends EditorPart {
 			 * the entire import as a single change for undo/redo purposes.
 			 */
 			TransactionManager transactionManager = new TransactionManager(account.getDataManager());
-			CurrencyAccount accountInTransaction = transactionManager.getCopyInTransaction(account.getBaseObject());
-			IncomeExpenseAccount defaultCategoryInTransaction = accountInTransaction.getPropertyValue(ReconciliationAccountInfo.getDefaultCategoryAccessor());
+			CurrencyAccount accountInTransaction = transactionManager.getCopyInTransaction((account));
 			Session sessionInTransaction = accountInTransaction.getSession();
 
-			/*
-			 * Get the patterns sorted into order.  It is important that we test patterns in the
-			 * correct order because an entry may match both a general pattern and a more specific
-			 * pattern.
-			 */
-			List<MemoPattern> sortedPatterns = new ArrayList<MemoPattern>(account.getPatternCollection());
-			Collections.sort(sortedPatterns, new Comparator<MemoPattern>(){
-				public int compare(MemoPattern arg1, MemoPattern arg2) {
-					return arg1.getOrderingIndex() - arg2.getOrderingIndex();
-				}
-			});
+			ImportMatcher matcher = new ImportMatcher(accountInTransaction.getExtension(ReconciliationAccountInfo.getPropertySet(), true));
 			
 			entryLoop: for (IBankStatementSource.EntryData entryData: importedEntries) {
 				/*
@@ -578,7 +562,7 @@ public class ReconcileEditor extends EditorPart {
 				 * charged every day or two)
 				 */
 				Collection<Entry> possibleMatches = new ArrayList<Entry>();
-				for (Entry entry : account.getBaseObject().getEntries()) {
+				for (Entry entry : account.getEntries()) {
 					if (entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor()) == null
 							&& entry.getAmount() == entryData.amount) {
 						System.out.println("amount: " + entryData.amount);
@@ -666,60 +650,8 @@ public class ReconcileEditor extends EditorPart {
 		   		 * use the values for memo, description etc. from the pattern.
 		   		 */
 				String text = entryData.getTextToMatch();
-		   		for (MemoPattern pattern: sortedPatterns) {
-		   			Matcher m = pattern.getCompiledPattern().matcher(text);
-		   			System.out.println(pattern.getPattern() + ", " + text);
-		   			if (m.matches()) {
-		   				/*
-		   				 * Group zero is the entire string and the groupCount method
-		   				 * does not include that group, so there is really one more group
-		   				 * than the number given by groupCount.
-		   				 */
-		   				Object [] args = new Object[m.groupCount()+1];
-		   				for (int i = 0; i <= m.groupCount(); i++) {
-		   					args[i] = m.group(i);
-		   				}
-		   				
-		   				// TODO: What effect does the locale have in the following?
-		   				if (pattern.getCheck() != null) {
-		   					entry1.setCheck(
-		   							new java.text.MessageFormat(
-		   									pattern.getCheck(), 
-		   									java.util.Locale.US)
-		   							.format(args));
-		   				}
-		   				
-		   				if (pattern.getMemo() != null) {
-		   					entry1.setMemo(
-		   							new java.text.MessageFormat(
-		   									pattern.getMemo(), 
-		   									java.util.Locale.US)
-		   							.format(args));
-		   				}
-		   				
-		   				if (pattern.getDescription() != null) {
-		       				entry2.setMemo(
-		       						new java.text.MessageFormat(
-		       								pattern.getDescription(), 
-		       								java.util.Locale.US)
-		       								.format(args));
-		   				}
-		   				
-		           		entry2.setAccount(transactionManager.getCopyInTransaction(pattern.getAccount()));
-		           		
-		           		break;
-		   			}
-		   		}
-		   		
-		   		// If nothing matched, set the default account but no 
-		   		// other property.
-		   		if (entry2.getAccount() == null) {
-		   			entry2.setAccount(defaultCategoryInTransaction);
-					entry1.setMemo(entryData.getDefaultMemo());
-					entry2.setMemo(entryData.getDefaultDescription());
-					
-		   		}
-		   		
+				matcher.matchAndFill(text, entry1, entry2, entryData.getDefaultMemo(), entryData.getDefaultDescription());
+				
 		   		entryData.assignPropertyValues(transaction, entry1, entry2);
 			}
 			
