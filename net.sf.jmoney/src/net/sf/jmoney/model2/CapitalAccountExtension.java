@@ -41,7 +41,7 @@ package net.sf.jmoney.model2;
  */
 public abstract class CapitalAccountExtension extends AccountExtension {
     
-    public CapitalAccountExtension(CapitalAccount extendedObject) {
+    public CapitalAccountExtension(ExtendableObject extendedObject) {
     	super(extendedObject);
     }
 
