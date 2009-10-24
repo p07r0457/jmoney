@@ -150,6 +150,18 @@ public class TransactionManager extends DataManager {
 	@SuppressWarnings("unused")
 	private boolean insideTransaction = false;
 
+	/**
+	 * This listener is used to listen for changes in the base session. By
+	 * listening for such changes, we ensure that our view of the session is
+	 * kept up to date with changes.
+	 * <P>
+	 * Note that we must keep a reference to this listener for as long as this
+	 * transaction manager exists. The reason for this is that the listener is
+	 * kept as a weak reference by the base transaction manager. We don't want
+	 * it to be garbage collected as long as this transaction manager exists.
+	 */
+	private MySessionChangeListener baseSessionChangeListener = new MySessionChangeListener();
+
     /**
 	 * Construct a transaction manager for use with the given session.
 	 * The transaction manager does not become the active transaction
@@ -168,14 +180,13 @@ public class TransactionManager extends DataManager {
 		this.uncommittedSession = getCopyInTransaction(baseDataManager.getSession());
 		
 		/*
-		 * Listen for changes to the base data.  Note that
-		 * a weak reference is maintained to this listener
-		 * so we don't have to worry about removing the listener,
-		 * which is just as well because this object may be left
-		 * for the garbage collector without knowing when it is
-		 * no longer being used.
+		 * Listen for changes to the base data. Note that a weak reference is
+		 * maintained to this listener so we don't have to worry about removing
+		 * the listener, which is just as well because this transaction manager
+		 * may be left for the garbage collector without knowing when it is no
+		 * longer being used.
 		 */
-		baseDataManager.addChangeListenerWeakly(new MySessionChangeListener());
+		baseDataManager.addChangeListenerWeakly(baseSessionChangeListener);
 	}
 
 	/**
@@ -383,7 +394,7 @@ public class TransactionManager extends DataManager {
 		for (Map.Entry<IObjectKey, ModifiedObject> mapEntry: modifiedObjects.entrySet()) {
 			IObjectKey committedKey = mapEntry.getKey();
 			ModifiedObject newValuesMap = mapEntry.getValue();
-			
+	
 			if (!newValuesMap.isDeleted()) {
 				Map<ScalarPropertyAccessor, Object> propertyMap = newValuesMap.getMap();
 /* Actually this does not work.  We must go through the setters because we are 'outside' the datastore.
@@ -956,7 +967,13 @@ public class TransactionManager extends DataManager {
 			 * a result of a change in this view of another property.
 			 * All sorts of possibilities to consider. 
 			 */
-			// TODO Implement this method
+
+			// TODO For the time being, this does, but it is imperfect.
+			ExtendableObject extendableObject = getCopyInTransaction(changedObject);
+			if (newValue instanceof ExtendableObject) {
+				newValue = getCopyInTransaction((ExtendableObject)newValue);
+			}
+			extendableObject.setPropertyValue(changedProperty, newValue);
 		}
 
 		public void objectRemoved(ExtendableObject deletedObject) {
