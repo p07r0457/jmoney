@@ -8,7 +8,7 @@ public interface IQifImporter {
 	/**
 	 * When the user imports a QIF file, the file is first parsed into
 	 * an object that contains the complete contents of the QIF file.
-	 * This object is then passed to all extensions that know how to import\
+	 * This object is then passed to all extensions that know how to import
 	 * a part of the QIF file.
 	 * 
 	 * For example, if a plug-in is written to implement memorized transactions

@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.MalformedPluginException;
@@ -45,7 +44,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -89,14 +87,10 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 		// so we display a message instead.
 		DatastoreManager sessionManager = (DatastoreManager)window.getActivePage().getInput();
 		if (sessionManager == null) {
-			MessageDialog waitDialog = new MessageDialog(
+			MessageDialog.openError(
 					window.getShell(),
 					"Disabled Action Selected",
-					null, // accept the default window icon
-					"You cannot import data into an accounting session unless you have a session open.  You must first open a session or create a new session.",
-					MessageDialog.INFORMATION,
-					new String[] { IDialogConstants.OK_LABEL }, 0);
-			waitDialog.open();
+					"You cannot import data into an accounting session unless you have a session open.  You must first open a session or create a new session.");
 			return;
 		}
 
