@@ -30,7 +30,6 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Currency;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -107,14 +106,6 @@ public class OfxImporter {
 
 			Session sessionOutsideTransaction = sessionManager.getSession();
 
-			SimpleElement currencyElement = rootElement.findElement("CURDEF");
-			Currency currency = null;
-			if (currencyElement != null) {
-				// found a default currency to use
-				String currencyCode = currencyElement.getTrimmedText();
-				currency = Currency.getInstance(currencyCode);
-			}
-
 			SimpleElement statementResultElement = rootElement.getDescendant("INVSTMTMSGSRSV1", "INVSTMTTRNRS", "INVSTMTRS");
 
 			SimpleElement accountFromElement = statementResultElement.getDescendant("INVACCTFROM");
@@ -138,6 +129,29 @@ public class OfxImporter {
 						"No Matching Account Found",
 						"The OFX file contains data for brokerage account number " + accountNumber + ".  However no stock account exists with such an account number.  You probably need to set the account number property for the appropriate account.");
 				return;
+			}
+
+			/*
+			 * If the OFX file specifies the currency for its entries, check
+			 * that the currency matches the currency configured in JMoney for
+			 * the account.
+			 */
+			SimpleElement currencyElement = rootElement.findElement("CURDEF");
+			if (currencyElement != null) {
+				String currencyCode = currencyElement.getTrimmedText();
+				if (account.getCurrency().getCode().equals(currencyCode)) {
+					MessageDialog.openError(
+							window.getShell(),
+							"Currency Mismatch",
+							MessageFormat.format(
+									"A currency mismatch prevents the import.  The OFX file indicates it contains entries in {0} but the {2} account uses {1}.",
+									currencyCode,
+									account.getCurrency().getCode(),
+									account.getName()
+							)
+					);
+					return;
+				}
 			}
 			
 			if (account.getDividendAccount() == null) {
@@ -440,6 +454,8 @@ public class OfxImporter {
 
 						String units = transactionElement.getString("UNITS");
 
+						// TODO check that the unit price matches the price that would be
+						// calculated from the other values?
 						String unitPrice = transactionElement.getString("UNITPRICE");
 
 						long commission = transactionElement.getAmount("COMMISSION", 0);

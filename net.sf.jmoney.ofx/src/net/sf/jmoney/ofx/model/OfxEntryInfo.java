@@ -32,7 +32,6 @@ import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.PropertyControlFactory;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.ofx.Activator;
 import net.sf.jmoney.ofx.resources.Messages;
 
 import org.eclipse.swt.SWT;

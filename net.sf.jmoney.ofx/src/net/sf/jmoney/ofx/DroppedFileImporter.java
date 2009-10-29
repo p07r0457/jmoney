@@ -24,9 +24,9 @@ package net.sf.jmoney.ofx;
 
 import java.io.File;
 
-import org.eclipse.ui.IWorkbenchWindow;
-
 import net.sf.jmoney.IDroppedFileImporter;
+
+import org.eclipse.ui.IWorkbenchWindow;
 
 public class DroppedFileImporter implements IDroppedFileImporter {
 
