@@ -223,7 +223,7 @@ public class StockEntryData extends EntryData {
 		}
 
 		// Commission, tax 1, and tax 2 entries may be null in this transaction type.
-		// They are created when needed to connect the controls.
+		// They are created when needed if non-zero amounts are entered.
 
 		// TODO: What is our strategy on changing values to keep
 		// the transaction balanced.  Quicken has a dialog box that
@@ -342,58 +342,135 @@ public class StockEntryData extends EntryData {
 	}
 
 	/**
-	 * @return the entry in the transaction that contains the commission, or
-	 *         null if this is not a purchase or sale transaction or if no
-	 *         commission account is configured for this stock account because
-	 *         commissions are never charged on any purchases or sales in this
-	 *         account, but never null if a commission can be entered for this
-	 *         entry even if none has been
+	 * @return the commission amount in a purchase or sale transaction if a
+	 *         commission account is configured for the account, being zero if
+	 *         no entry exists in the transaction in the commission account
 	 */
-	public Entry getCommissionEntry() {
+	public long getCommission() {
 		assert(isPurchaseOrSale());
+		assert(account.getCommissionAccount() != null);
 		
-		if (commissionEntry == null && account.getCommissionAccount() != null) {
-			commissionEntry = getEntry().getTransaction().createEntry();
-			commissionEntry.setAccount(account.getCommissionAccount());
+		if (commissionEntry == null) {
+			return 0;
+		} else {
+			return commissionEntry.getAmount();
 		}
+	}
 
-		return commissionEntry;
+	public void setCommission(long commission) {
+		assert(isPurchaseOrSale());
+		assert(account.getTax1Account() != null);
+		
+		if (commission == 0) {
+			if (commissionEntry != null) {
+				getEntry().getTransaction().getEntryCollection().remove(commissionEntry);
+				commissionEntry = null;
+			}
+		} else {
+			if (commissionEntry == null) {
+				commissionEntry = getEntry().getTransaction().createEntry();
+				commissionEntry.setAccount(account.getTax1Account());
+			}
+			commissionEntry.setAmount(commission);
+		}
+	}
+
+	public void addCommissionChangeListener(IPropertyChangeListener<Long> listener) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void removeCommissionChangeListener(IPropertyChangeListener<Long> listener) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	/**
-	 * @return the entry in the transaction that represents the
-	 * 		tax 1 amount, or null if this is not a purchase or sale
-	 * 		transaction or if no tax 1 is configured for the account,
-	 * 		but never null if a tax 1 amount could be entered for this
-	 * 		entry even if none has been
+	 * @return the tax 1 amount in a purchase or sale transaction if a tax 1 is
+	 *         configured for the account, being zero if no entry exists in the
+	 *         transaction in the tax 1 account
 	 */
-	public Entry getTax1Entry() {
+	public long getTax1Amount() {
 		assert(isPurchaseOrSale());
+		assert(account.getTax1Account() != null);
 		
-		if (tax1Entry == null && account.getTax1Account() != null) {
-			tax1Entry = getEntry().getTransaction().createEntry();
-			tax1Entry.setAccount(account.getTax1Account());
+		if (tax1Entry == null) {
+			return 0;
+		} else {
+			return tax1Entry.getAmount();
 		}
+	}
 
-		return tax1Entry;
+	public void setTax1Amount(long tax1Amount) {
+		assert(isPurchaseOrSale());
+		assert(account.getTax1Account() != null);
+		
+		if (tax1Amount == 0) {
+			if (tax1Entry != null) {
+				getEntry().getTransaction().getEntryCollection().remove(tax1Entry);
+				tax1Entry = null;
+			}
+		} else {
+			if (tax1Entry == null) {
+				tax1Entry = getEntry().getTransaction().createEntry();
+				tax1Entry.setAccount(account.getTax1Account());
+			}
+			tax1Entry.setAmount(tax1Amount);
+		}
+	}
+
+	public void addTax1ChangeListener(IPropertyChangeListener<Long> listener) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void removeTax1ChangeListener(IPropertyChangeListener<Long> listener) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	/**
-	 * @return the entry in the transaction that represents the
-	 * 		tax 2 amount, or null if this is not a purchase or sale
-	 * 		transaction or if no tax 2 is configured for the account,
-	 * 		but never null if a tax 2 amount could be entered for this
-	 * 		entry even if none has been
+	 * @return the tax 2 amount in a purchase or sale transaction if a tax 2 is
+	 *         configured for the account, being zero if no entry exists in the
+	 *         transaction in the tax 2 account
 	 */
-	public Entry getTax2Entry() {
+	public long getTax2Amount() {
 		assert(isPurchaseOrSale());
+		assert(account.getTax2Account() != null);
 		
-		if (tax2Entry == null && account.getTax2Account() != null) {
-			tax2Entry = getEntry().getTransaction().createEntry();
-			tax2Entry.setAccount(account.getTax2Account());
+		if (tax2Entry == null) {
+			return 0;
+		} else {
+			return tax2Entry.getAmount();
 		}
+	}
 
-		return tax2Entry;
+	public void setTax2Amount(long tax2Amount) {
+		assert(isPurchaseOrSale());
+		assert(account.getTax2Account() != null);
+		
+		if (tax2Amount == 0) {
+			if (tax2Entry != null) {
+				getEntry().getTransaction().getEntryCollection().remove(tax2Entry);
+				tax2Entry = null;
+			}
+		} else {
+			if (tax2Entry == null) {
+				tax2Entry = getEntry().getTransaction().createEntry();
+				tax2Entry.setAccount(account.getTax2Account());
+			}
+			tax2Entry.setAmount(tax2Amount);
+		}
+	}
+
+	public void addTax2ChangeListener(IPropertyChangeListener<Long> listener) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void removeTax2ChangeListener(IPropertyChangeListener<Long> listener) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	/**

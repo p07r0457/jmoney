@@ -81,6 +81,8 @@ import org.eclipse.core.commands.IHandler;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -557,49 +559,215 @@ public class StockDetailsEditor extends EditorPart {
 		List<Block<? super StockEntryData, ? super StockEntryRowControl>> expenseColumns = new ArrayList<Block<? super StockEntryData, ? super StockEntryRowControl>>();
 		
 		if (account.getCommissionAccount() != null) {
-			IndividualBlock<StockEntryData, StockEntryRowControl> commissionColumn = new PropertyBlock<StockEntryData, StockEntryRowControl>(EntryInfo.getAmountAccessor(), "commission", "Commission") {
-				@Override
-				public ExtendableObject getObjectContainingProperty(StockEntryData data) {
-					return data.getCommissionEntry();
-				}
+			IndividualBlock<StockEntryData, StockEntryRowControl> commissionColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Commission", EntryInfo.getAmountAccessor().getMinimumWidth(), EntryInfo.getAmountAccessor().getWeight()) {
 
 				@Override
-				public void fireUserChange(StockEntryRowControl rowControl) {
-					rowControl.commissionChanged();
+				public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
+					final Text control = new Text(parent, SWT.RIGHT);
+
+					final ICellControl2<StockEntryData> cellControl = new ICellControl2<StockEntryData>() {
+
+						private StockEntryData data;						
+						
+						public Control getControl() {
+							return control;
+						}
+
+						public void load(final StockEntryData data) {
+							this.data = data;
+							
+							assert(data.isPurchaseOrSale());
+							setControlValue(data.getCommission());
+
+							// Listen for changes in the amount
+							final IPropertyChangeListener<Long> listener = new IPropertyChangeListener<Long>() {
+								public void propertyChanged(Long newValue) {
+									setControlValue(newValue);
+								}
+							};
+							
+							data.addCommissionChangeListener(listener);
+							
+							control.addDisposeListener(new DisposeListener() {
+								public void widgetDisposed(DisposeEvent e) {
+									data.removeCommissionChangeListener(listener);
+								}
+							});
+						}
+
+						private void setControlValue(Long commission) {
+							if (commission != null) {
+								// Format the commission amount using the appropriate currency object as the formatter. 
+								control.setText(account.getCommissionAccount().getCurrency().format(commission));
+							} else {
+								control.setText("");
+							}
+						}
+
+						public void save() {
+							// Parse the commission amount using the appropriate currency object as the parser. 
+							long amount = account.getCommissionAccount().getCurrency().parse(control.getText());
+							data.setCommission(amount);
+						}
+
+						public void setSelected() {
+							control.setBackground(RowControl.selectedCellColor);
+						}
+
+						public void setUnselected() {
+							control.setBackground(null);
+						}
+					};
+
+					FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
+					control.addFocusListener(controlFocusListener);
+
+					return cellControl;
+
 				}
-			};		
+			};  
 			expenseColumns.add(commissionColumn);
 		}
 		
 		if (account.getTax1Name() != null) {
-			IndividualBlock<StockEntryData, StockEntryRowControl> tax1Column = new PropertyBlock<StockEntryData, StockEntryRowControl>(EntryInfo.getAmountAccessor(), "tax1", account.getTax1Name()) {
-				@Override
-				public ExtendableObject getObjectContainingProperty(StockEntryData data) {
-					return data.getTax1Entry();
-				}
-				
-				@Override
-				public void fireUserChange(StockEntryRowControl rowControl) {
-					rowControl.tax1Changed();
-				}
+			IndividualBlock<StockEntryData, StockEntryRowControl> tax1Column = new IndividualBlock<StockEntryData, StockEntryRowControl>(account.getTax1Name(), 60, 1) {
 
-			};
+				@Override
+				public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
+					final Text control = new Text(parent, SWT.RIGHT);
+
+					final ICellControl2<StockEntryData> cellControl = new ICellControl2<StockEntryData>() {
+
+						private StockEntryData data;						
+						
+						public Control getControl() {
+							return control;
+						}
+
+						public void load(final StockEntryData data) {
+							this.data = data;
+							
+							assert(data.isPurchaseOrSale());
+							setControlValue(data.getTax1Amount());
+
+							// Listen for changes in the amount
+							final IPropertyChangeListener<Long> listener = new IPropertyChangeListener<Long>() {
+								public void propertyChanged(Long newValue) {
+									setControlValue(newValue);
+								}
+							};
+							
+							data.addTax1ChangeListener(listener);
+							
+							control.addDisposeListener(new DisposeListener() {
+								public void widgetDisposed(DisposeEvent e) {
+									data.removeTax1ChangeListener(listener);
+								}
+							});
+						}
+
+						private void setControlValue(Long tax1Amount) {
+							if (tax1Amount != null) {
+								// Format the amount using the appropriate currency object as the formatter. 
+								control.setText(account.getTax1Account().getCurrency().format(tax1Amount));
+							} else {
+								control.setText("");
+							}
+						}
+
+						public void save() {
+							// Parse the amount using the appropriate currency object as the parser. 
+							long amount = account.getTax1Account().getCurrency().parse(control.getText());
+							data.setTax1Amount(amount);
+						}
+
+						public void setSelected() {
+							control.setBackground(RowControl.selectedCellColor);
+						}
+
+						public void setUnselected() {
+							control.setBackground(null);
+						}
+					};
+
+					FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
+					control.addFocusListener(controlFocusListener);
+
+					return cellControl;
+
+				}
+			};  
 			expenseColumns.add(tax1Column);
 		}
 		
 		if (account.getTax2Name() != null) {
-			IndividualBlock<StockEntryData, StockEntryRowControl> tax2Column = new PropertyBlock<StockEntryData, StockEntryRowControl>(EntryInfo.getAmountAccessor(), "tax2", account.getTax2Name()) {
-				@Override
-				public ExtendableObject getObjectContainingProperty(StockEntryData data) {
-					return data.getTax2Entry();
-				}
-				
-				@Override
-				public void fireUserChange(StockEntryRowControl rowControl) {
-					rowControl.tax2Changed();
-				}
+			IndividualBlock<StockEntryData, StockEntryRowControl> tax2Column = new IndividualBlock<StockEntryData, StockEntryRowControl>(account.getTax2Name(), 60, 1) {
 
-			};
+				@Override
+				public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
+					final Text control = new Text(parent, SWT.RIGHT);
+
+					final ICellControl2<StockEntryData> cellControl = new ICellControl2<StockEntryData>() {
+
+						private StockEntryData data;						
+						
+						public Control getControl() {
+							return control;
+						}
+
+						public void load(final StockEntryData data) {
+							this.data = data;
+							
+							assert(data.isPurchaseOrSale());
+							setControlValue(data.getTax2Amount());
+
+							// Listen for changes in the amount
+							final IPropertyChangeListener<Long> listener = new IPropertyChangeListener<Long>() {
+								public void propertyChanged(Long newValue) {
+									setControlValue(newValue);
+								}
+							};
+							
+							data.addTax2ChangeListener(listener);
+							
+							control.addDisposeListener(new DisposeListener() {
+								public void widgetDisposed(DisposeEvent e) {
+									data.removeTax2ChangeListener(listener);
+								}
+							});
+						}
+
+						private void setControlValue(Long tax2Amount) {
+							if (tax2Amount != null) {
+								// Format the amount using the appropriate currency object as the formatter. 
+								control.setText(account.getTax2Account().getCurrency().format(tax2Amount));
+							} else {
+								control.setText("");
+							}
+						}
+
+						public void save() {
+							// Parse the amount using the appropriate currency object as the parser. 
+							long amount = account.getTax2Account().getCurrency().parse(control.getText());
+							data.setTax2Amount(amount);
+						}
+
+						public void setSelected() {
+							control.setBackground(RowControl.selectedCellColor);
+						}
+
+						public void setUnselected() {
+							control.setBackground(null);
+						}
+					};
+
+					FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
+					control.addFocusListener(controlFocusListener);
+
+					return cellControl;
+
+				}
+			};  
 			expenseColumns.add(tax2Column);
 		}
 		

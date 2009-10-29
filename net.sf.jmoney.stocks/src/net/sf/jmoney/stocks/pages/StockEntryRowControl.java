@@ -31,12 +31,6 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	private ArrayList<ITransactionTypeChangeListener> transactionTypeChangeListeners = new ArrayList<ITransactionTypeChangeListener>();
 	
 	/**
-	 * true if the user has manually edited the withholding tax, false
-	 * if no amount has been entered or the amount was calculated
-	 */
-//	private boolean withholdingTaxManuallyEdited = false;
-
-	/**
 	 * The share price currently shown to the user, or null if
 	 * this is a new entry and no share price has been entered.
 	 * <P>
@@ -168,20 +162,21 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 		switch (uncommittedEntryData.getTransactionType()) {
 		case Buy:
 		case Sell:
-			/**
-			 * The user would not usually enter the net amount for the transaction
-			 * because it is hard to calculate backwards from this.  The rates tables
-			 * are all based on the gross amount.  Also, there may be a number of
-			 * calculated commissions and taxes and we would not know which to adjust.
-			 * Therefore in most cases we leave the transaction unbalanced and force the user to
-			 * correct it when the transaction is saved.
+			/*
+			 * The user would not usually enter the net amount for the
+			 * transaction because it is hard to calculate backwards from this.
+			 * The rates tables are all based on the gross amount. Also, there
+			 * may be a number of calculated commissions and taxes and we would
+			 * not know which to adjust. Therefore in most cases we leave the
+			 * transaction unbalanced and force the user to correct it when the
+			 * transaction is saved.
 			 * 
-			 * However, if there are no commission or taxes for the commodity type in this
-			 * account then we can calculate backwards.
+			 * However, if there are no commission or taxes configured for the
+			 * commodity type in this account then we can calculate backwards.
 			 */
-			if (uncommittedEntryData.getCommissionEntry() == null
-					&& uncommittedEntryData.getTax1Entry() == null
-					&& uncommittedEntryData.getTax2Entry() == null) {
+			if (account.getCommissionAccount() == null
+					&& account.getTax1Account() == null
+					&& account.getTax2Account() == null) {
 
 				if (quantityIsFluid && !sharePriceIsFluid) {
 					BigDecimal grossAmount = new BigDecimal(uncommittedEntryData.getEntry().getAmount()).movePointLeft(2);
@@ -326,15 +321,15 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 			? account.getBuyCommissionRates()
 					: account.getSellCommissionRates();
 		if (account.getCommissionAccount() != null && commissionRates != null && commissionIsFluid) {
-			uncommittedEntryData.getCommissionEntry().setAmount(commissionRates.calculateRate(grossAmount));
+			uncommittedEntryData.setCommission(commissionRates.calculateRate(grossAmount));
 		}
 		
 		if (account.getTax1Account() != null && account.getTax1Rates() != null && tax1RatesIsFluid) {
-			uncommittedEntryData.getTax1Entry().setAmount(account.getTax1Rates().calculateRate(grossAmount));
+			uncommittedEntryData.setTax1Amount(account.getTax1Rates().calculateRate(grossAmount));
 		}
 		
 		if (account.getTax2Account() != null && account.getTax2Rates() != null && tax2RatesIsFluid) {
-			uncommittedEntryData.getTax2Entry().setAmount(account.getTax2Rates().calculateRate(grossAmount));
+			uncommittedEntryData.setTax2Amount(account.getTax2Rates().calculateRate(grossAmount));
 		}
 		
 		updateNetAmount();
@@ -349,17 +344,9 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 			BigDecimal grossAmount1 = sharePrice.multiply(quantity);
 			long amount = grossAmount1.movePointRight(2).longValue();
 			
-			if (uncommittedEntryData.getCommissionEntry() != null) {
-				amount += uncommittedEntryData.getCommissionEntry().getAmount();
-			}
-			
-			if (uncommittedEntryData.getTax1Entry() != null) {
-				amount += uncommittedEntryData.getTax1Entry().getAmount();
-			}
-			
-			if (uncommittedEntryData.getTax2Entry() != null) {
-				amount += uncommittedEntryData.getTax2Entry().getAmount();
-			}
+			amount += uncommittedEntryData.getCommission();
+			amount += uncommittedEntryData.getTax1Amount();
+			amount += uncommittedEntryData.getTax2Amount();
 
 			uncommittedEntryData.getEntry().setAmount(-amount);
 		}
