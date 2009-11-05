@@ -548,13 +548,73 @@ public class StockDetailsEditor extends EditorPart {
 			}
 		};  
 
-		
-		final IndividualBlock<StockEntryData, RowControl> withholdingTaxColumn = new PropertyBlock<StockEntryData, RowControl>(EntryInfo.getAmountAccessor(), "withholdingTax", "Withholding Tax") {
+		final IndividualBlock<StockEntryData, StockEntryRowControl> withholdingTaxColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Commission", EntryInfo.getAmountAccessor().getMinimumWidth(), EntryInfo.getAmountAccessor().getWeight()) {
+
 			@Override
-			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
-				return data.getWithholdingTaxEntry();
+			public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
+				final Text control = new Text(parent, SWT.RIGHT);
+
+				final ICellControl2<StockEntryData> cellControl = new ICellControl2<StockEntryData>() {
+
+					private StockEntryData data;						
+					
+					public Control getControl() {
+						return control;
+					}
+
+					public void load(final StockEntryData data) {
+						this.data = data;
+						
+						assert(data.isPurchaseOrSale());
+						setControlValue(data.getCommission());
+
+						// Listen for changes in the amount
+						final IPropertyChangeListener<Long> listener = new IPropertyChangeListener<Long>() {
+							public void propertyChanged(Long newValue) {
+								setControlValue(newValue);
+							}
+						};
+						
+						data.addCommissionChangeListener(listener);
+						
+						control.addDisposeListener(new DisposeListener() {
+							public void widgetDisposed(DisposeEvent e) {
+								data.removeCommissionChangeListener(listener);
+							}
+						});
+					}
+
+					private void setControlValue(Long commission) {
+						if (commission != null) {
+							// Format the commission amount using the appropriate currency object as the formatter. 
+							control.setText(account.getCommissionAccount().getCurrency().format(commission));
+						} else {
+							control.setText("");
+						}
+					}
+
+					public void save() {
+						// Parse the commission amount using the appropriate currency object as the parser. 
+						long amount = account.getCommissionAccount().getCurrency().parse(control.getText());
+						data.setCommission(amount);
+					}
+
+					public void setSelected() {
+						control.setBackground(RowControl.selectedCellColor);
+					}
+
+					public void setUnselected() {
+						control.setBackground(null);
+					}
+				};
+
+				FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
+				control.addFocusListener(controlFocusListener);
+
+				return cellControl;
+
 			}
-		};		
+		};  
 
 		List<Block<? super StockEntryData, ? super StockEntryRowControl>> expenseColumns = new ArrayList<Block<? super StockEntryData, ? super StockEntryRowControl>>();
 		

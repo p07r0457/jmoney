@@ -195,9 +195,9 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 			if (withholdingTaxIsFluid) {
 				long rate = 30L;
 				long tax = entry.getAmount() * rate / (100 - rate);
-				uncommittedEntryData.getWithholdingTaxEntry().setAmount(-tax);
+				uncommittedEntryData.setWithholdingTax(-tax);
 			}
-			long dividend = entry.getAmount() + uncommittedEntryData.getWithholdingTaxEntry().getAmount();
+			long dividend = entry.getAmount() + uncommittedEntryData.getWithholdingTax();
 			uncommittedEntryData.getDividendEntry().setAmount(-dividend);
 			break;
 		case Transfer:

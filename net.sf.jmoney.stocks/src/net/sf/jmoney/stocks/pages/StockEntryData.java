@@ -314,23 +314,49 @@ public class StockEntryData extends EntryData {
 	}
 
 	/**
-	 * 
-	 * @return the entry that represents the withholding tax, or null if the
-	 *         withholding tax is not applicable to this transaction
-	 *         (transaction is not a dividend transaction or no withholding tax
-	 *         account has been set for the account) but never null if a
-	 *         withholding tax amount could be entered for this entry even if
-	 *         none has been
+	 * @return the withholding tax amount in a dividend transaction if a
+	 *         withholding tax account is configured for the account, being zero if
+	 *         no entry exists in the transaction in the withholding tax account
 	 */
-	public Entry getWithholdingTaxEntry() {
-		assert(transactionType == TransactionType.Dividend);
+	public long getWithholdingTax() {
+		assert(isDividend());
+		assert(account.getWithholdingTaxAccount() != null);
 		
-		if (withholdingTaxEntry == null && account.getWithholdingTaxAccount() != null) {
-			withholdingTaxEntry = getEntry().getTransaction().createEntry();
-			withholdingTaxEntry.setAccount(account.getWithholdingTaxAccount());
+		if (withholdingTaxEntry == null) {
+			return 0;
+		} else {
+			return withholdingTaxEntry.getAmount();
 		}
-		return withholdingTaxEntry;
 	}
+
+	public void setWithholdingTax(long withholdingTax) {
+		assert(isDividend());
+		assert(account.getTax1Account() != null);
+		
+		if (withholdingTax == 0) {
+			if (withholdingTaxEntry != null) {
+				getEntry().getTransaction().getEntryCollection().remove(withholdingTaxEntry);
+				withholdingTaxEntry = null;
+			}
+		} else {
+			if (withholdingTaxEntry == null) {
+				withholdingTaxEntry = getEntry().getTransaction().createEntry();
+				withholdingTaxEntry.setAccount(account.getTax1Account());
+			}
+			withholdingTaxEntry.setAmount(withholdingTax);
+		}
+	}
+
+	public void addWithholdingTaxChangeListener(IPropertyChangeListener<Long> listener) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void removeWithholdingTaxChangeListener(IPropertyChangeListener<Long> listener) {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 	/**
 	 * @return the entry in the transaction that represents the gain or loss in

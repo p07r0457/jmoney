@@ -30,6 +30,8 @@ import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.CellFocusListener;
 import net.sf.jmoney.entrytable.DebitAndCreditColumns;
 import net.sf.jmoney.entrytable.DeleteTransactionHandler;
+import net.sf.jmoney.entrytable.CutTransactionHandler;
+import net.sf.jmoney.entrytable.PasteCombineTransactionHandler;
 import net.sf.jmoney.entrytable.DuplicateTransactionHandler;
 import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
@@ -470,13 +472,80 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		};  
 
 		
-		final IndividualBlock<StockEntryData, RowControl> withholdingTaxColumn = new PropertyBlock<StockEntryData, RowControl>(EntryInfo.getAmountAccessor(), "withholdingTax", "Withholding Tax") {
-			@Override
-			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
-				return data.getWithholdingTaxEntry();
-			}
-		};		
+//		final IndividualBlock<StockEntryData, RowControl> withholdingTaxColumn = new PropertyBlock<StockEntryData, RowControl>(EntryInfo.getAmountAccessor(), "withholdingTax", "Withholding Tax") {
+//			@Override
+//			public ExtendableObject getObjectContainingProperty(StockEntryData data) {
+//				return data.getWithholdingTaxEntry();
+//			}
+//		};		
+		final IndividualBlock<StockEntryData, StockEntryRowControl> withholdingTaxColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Commission", EntryInfo.getAmountAccessor().getMinimumWidth(), EntryInfo.getAmountAccessor().getWeight()) {
 
+			@Override
+			public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
+				final Text control = new Text(parent, SWT.RIGHT);
+
+				final ICellControl2<StockEntryData> cellControl = new ICellControl2<StockEntryData>() {
+
+					private StockEntryData data;						
+					
+					public Control getControl() {
+						return control;
+					}
+
+					public void load(final StockEntryData data) {
+						this.data = data;
+						
+						assert(data.isPurchaseOrSale());
+						setControlValue(data.getCommission());
+
+						// Listen for changes in the amount
+						final IPropertyChangeListener<Long> listener = new IPropertyChangeListener<Long>() {
+							public void propertyChanged(Long newValue) {
+								setControlValue(newValue);
+							}
+						};
+						
+						data.addCommissionChangeListener(listener);
+						
+						control.addDisposeListener(new DisposeListener() {
+							public void widgetDisposed(DisposeEvent e) {
+								data.removeCommissionChangeListener(listener);
+							}
+						});
+					}
+
+					private void setControlValue(Long commission) {
+						if (commission != null) {
+							// Format the commission amount using the appropriate currency object as the formatter. 
+							control.setText(account.getCommissionAccount().getCurrency().format(commission));
+						} else {
+							control.setText("");
+						}
+					}
+
+					public void save() {
+						// Parse the commission amount using the appropriate currency object as the parser. 
+						long amount = account.getCommissionAccount().getCurrency().parse(control.getText());
+						data.setCommission(amount);
+					}
+
+					public void setSelected() {
+						control.setBackground(RowControl.selectedCellColor);
+					}
+
+					public void setUnselected() {
+						control.setBackground(null);
+					}
+				};
+
+				FocusListener controlFocusListener = new CellFocusListener<RowControl>(rowControl, cellControl);
+				control.addFocusListener(controlFocusListener);
+
+				return cellControl;
+
+			}
+		};  
+		
 		List<Block<? super StockEntryData, ? super StockEntryRowControl>> expenseColumns = new ArrayList<Block<? super StockEntryData, ? super StockEntryRowControl>>();
 		
 		if (account.getCommissionAccount() != null) {
@@ -888,6 +957,12 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 		handler = new OpenTransactionDialogHandler(rowTracker);
 		handlerService.activateHandler("net.sf.jmoney.transactionDetails", handler);		
+
+		handler = new CutTransactionHandler(rowTracker);
+		handlerService.activateHandler("net.sf.jmoney.cutTransaction", handler);		
+
+		handler = new PasteCombineTransactionHandler(rowTracker);
+		handlerService.activateHandler("net.sf.jmoney.pasteCombineTransaction", handler);		
 
         getSection().setClient(fEntriesControl);
         toolkit.paintBordersFor(fEntriesControl);
