@@ -39,6 +39,7 @@ import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Propagator;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.views.TreeNode;
 
 import org.eclipse.core.runtime.IStatus;
@@ -62,6 +63,10 @@ public class JMoneyPlugin extends AbstractUIPlugin {
 
 	//The shared instance.
 	private static JMoneyPlugin plugin;
+
+	// Bit of a hack, used for cut and paste of transactions
+	public static Transaction cutTransaction = null;
+	
 	//Resource bundle.
 	@Deprecated
 	private ResourceBundle resourceBundle;

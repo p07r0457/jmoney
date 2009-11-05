@@ -112,6 +112,12 @@
             name="%Commands.duplicateTransaction"
             id="net.sf.jmoney.duplicateTransaction"/>
       <command
+            name="%Commands.cutTransaction"
+            id="net.sf.jmoney.cutTransaction"/>
+      <command
+            name="%Commands.pasteCombineTransaction"
+            id="net.sf.jmoney.pasteCombineTransaction"/>
+      <command
             name="%Commands.viewTransactionDetails"
             id="net.sf.jmoney.transactionDetails"/>
       <command
@@ -212,6 +218,16 @@ items to an existing menu or toolbar.
         <command
               commandId="net.sf.jmoney.duplicateTransaction"
               icon="icons/duplicate_entry.gif"/>
+     </menuContribution>
+
+     <menuContribution locationURI="menu:edit?after=additions">
+        <command
+              commandId="net.sf.jmoney.cutTransaction"/>
+     </menuContribution>
+
+     <menuContribution locationURI="menu:edit?after=additions">
+        <command
+              commandId="net.sf.jmoney.pasteCombineTransaction"/>
      </menuContribution>
 
      <menuContribution locationURI="menu:navigate?after=openEditors">

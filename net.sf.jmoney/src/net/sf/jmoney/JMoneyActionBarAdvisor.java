@@ -69,6 +69,8 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     private ContributionItem newTransactionItem;
     private ContributionItem deleteTransactionItem;
     private ContributionItem duplicateTransactionItem;
+    private ContributionItem cutTransactionItem;
+    private ContributionItem pasteCombineTransactionItem;
     private ContributionItem viewTransactionItem;
 
     public JMoneyActionBarAdvisor(IActionBarConfigurer configurer) {
@@ -160,6 +162,16 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
 				"net.sf.jmoney.duplicateTransaction", //$NON-NLS-1$
 				"duplicate_entry.gif", //$NON-NLS-1$
 				Messages.JMoneyActionBarAdvisor_DuplicateTransactionToolTipText);
+
+		cutTransactionItem = createContributionItemFromCommand(
+				"net.sf.jmoney.cutTransaction", //$NON-NLS-1$
+				"delete_entry.gif", //$NON-NLS-1$
+				"Mark the selected transaction so it can be combined with another.");
+
+		pasteCombineTransactionItem = createContributionItemFromCommand(
+				"net.sf.jmoney.pasteCombineTransaction", //$NON-NLS-1$
+				"delete_entry.gif", //$NON-NLS-1$
+				"Paste entries from the cut transaction into this one, and delete the cut transaction.");
 
 		viewTransactionItem = createContributionItemFromCommand(
 				"net.sf.jmoney.transactionDetails", //$NON-NLS-1$
@@ -258,7 +270,7 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
     }   
 
     /**
-     * Creates and returns the File menu.
+     * Creates and returns the Edit menu.
      */
     private MenuManager createEditMenu() {
         MenuManager menu = new MenuManager(Messages.JMoneyActionBarAdvisor_MenuEditName, IWorkbenchActionConstants.M_EDIT);
@@ -271,6 +283,8 @@ public class JMoneyActionBarAdvisor extends ActionBarAdvisor {
         menu.add(newTransactionItem);
         menu.add(deleteTransactionItem);
         menu.add(duplicateTransactionItem);
+        menu.add(cutTransactionItem);
+        menu.add(pasteCombineTransactionItem);
     	
         menu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
         menu.add(new GroupMarker(IWorkbenchActionConstants.FILE_END));
