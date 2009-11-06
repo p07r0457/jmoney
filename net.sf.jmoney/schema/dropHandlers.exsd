@@ -1,27 +1,32 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Schema file written by PDE -->
-<schema targetNamespace="net.sf.jmoney">
+<schema targetNamespace="net.sf.jmoney" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appInfo>
-         <meta.schema plugin="net.sf.jmoney" id="templates" name="Templates for Receipt Data Entry Tabs"/>
+         <meta.schema plugin="net.sf.jmoney" id="dropHandlers" name="Editor Drop Area Handlers"/>
       </appInfo>
       <documentation>
-         The shoebox plug-in is designed to provide a quick way of
-         entering receipts that have all been jumbled together in
-         your purse, wallet, or shoebox.  Tabs are provided at the
-         bottom that contain fields for each type of transaction.
-         
-         If you find yourself repeatedly entering the same type of
-         transaction then you might want to create a tab that is designed
-         to allow rapid entry of that particular type of transaction.
-         This extension point allows you to contribute your tab.
+         JMoney allows files to be dropped in the editor area.
+This is an easy way to import files.
+
+This method of importing data should generally only be used if all
+the necessary information is in the file.  For example, if the file
+contains bank account entries then information that allows the account
+to be determined must be in the file.  OFX files contain the account number,
+so this can be used to determine account into which the entries are imported.
+There is no context such as the current selection available.
       </documentation>
    </annotation>
 
    <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
       <complexType>
          <sequence>
-            <element ref="template" minOccurs="1" maxOccurs="unbounded"/>
+            <element ref="filetype" minOccurs="1" maxOccurs="unbounded"/>
          </sequence>
          <attribute name="point" type="string" use="required">
             <annotation>
@@ -47,30 +52,22 @@
       </complexType>
    </element>
 
-   <element name="template">
+   <element name="filetype">
       <complexType>
-         <attribute name="id" type="string">
+         <attribute name="extension" type="string">
             <annotation>
                <documentation>
-                  The id of the template contribution.
-               </documentation>
-            </annotation>
-         </attribute>
-         <attribute name="position" type="string">
-            <annotation>
-               <documentation>
-                  A number in the range 0 to 1000.
-                  Templates are ordered in the tab control according to this number.
+                  A file extension that can be handled by this drop handler.
                </documentation>
             </annotation>
          </attribute>
          <attribute name="class" type="string" use="required">
             <annotation>
                <documentation>
-                  Class of object that must implement ITransactionTemplate.
+                  Class of object that must implement IDroppedFileImporter.
                </documentation>
                <appInfo>
-                  <meta.attribute kind="java" basedOn=":net.sf.jmoney.ITransactionTemplate"/>
+                  <meta.attribute kind="java" basedOn=":net.sf.jmoney.IDroppedFileImporter."/>
                </appInfo>
             </annotation>
          </attribute>
@@ -92,9 +89,9 @@
       </appInfo>
       <documentation>
          &lt;extension
-         point=&quot;net.sf.jmoney.shoebox.templates&quot;&gt;
+         point=&quot;net.sf.jmoney.dropHandlers&quot;&gt;
       &lt;session
-            class=&quot;[class implementing ISessionManagement]&quot;&gt;
+            class=&quot;[class implementing IDroppedFileImporter]&quot;&gt;
       &lt;/session&gt;
    &lt;/extension&gt;
       </documentation>
@@ -123,7 +120,7 @@
          <meta.section type="copyright"/>
       </appInfo>
       <documentation>
-         Copyright (c) 2008 Nigel Westbury (westbury@users.sourceforge.net)
+         Copyright (c) 2006 Nigel Westbury (westbury@users.sourceforge.net)
       </documentation>
    </annotation>
 
