@@ -139,7 +139,7 @@ public class OfxImporter {
 			SimpleElement currencyElement = rootElement.findElement("CURDEF");
 			if (currencyElement != null) {
 				String currencyCode = currencyElement.getTrimmedText();
-				if (account.getCurrency().getCode().equals(currencyCode)) {
+				if (!account.getCurrency().getCode().equals(currencyCode)) {
 					MessageDialog.openError(
 							window.getShell(),
 							"Currency Mismatch",
@@ -433,7 +433,8 @@ public class OfxImporter {
 					 * harder to perform pattern matching on the memo field. We
 					 * therefore replace these with '<stock name>', '<ticker>', etc.
 					 */
-					memo = memo.replace(stock.getName().toUpperCase(), "<stock name>");
+//					memo = memo.replace(stock.getName().toUpperCase(), "<stock name>");
+					memo = memo.replace(stock.getName().toUpperCase(), "");
 					if (stock.getSymbol() != null) {
 						memo.replace(stock.getSymbol(), "<ticker>");
 					}
@@ -444,8 +445,17 @@ public class OfxImporter {
 					transaction.setDate(tradeDate);
 					firstEntry.setValuta(settleDate);
 
-					long total = transactionElement.getAmount("TOTAL");
-					firstEntry.setAmount(total);
+					/*
+					 * TOTAL applies to all transaction types except JRNLSEC.  These
+					 * transaction types are used, for example, when one stock is replaced
+					 * by another due to a re-org or something.  We mustn't attempt to fetch
+					 * the total because there isn't one and we would get an exception.
+					 */
+					long total = 0;
+					if (!transactionElement.getTagName().startsWith("JRNLSEC")) {
+						total = transactionElement.getAmount("TOTAL");
+						firstEntry.setAmount(total);
+					}
 
 					firstEntry.setMemo(memo);
 
@@ -508,20 +518,26 @@ public class OfxImporter {
 							System.out.println(elementXml);
 							throw new RuntimeException("unknown element: " + transactionElement.getTagName());
 						}
-					} else if (transactionElement.getTagName().equals("INCOME")) {
+					} else if (transactionElement.getTagName().equals("INCOME")
+							|| transactionElement.getTagName().equals("REINVEST")) {
+						
+						String reinvestMemo = "";
+						
 						String incomeType = transactionElement.getString("INCOMETYPE");
 						if ("DIV".equals(incomeType)) {
 							StockEntry dividendEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 							dividendEntry.setAccount(account.getDividendAccount());
 							dividendEntry.setAmount(-total);
-							dividendEntry.setMemo("divdend");
+							dividendEntry.setMemo("dividend");
 							dividendEntry.setStock(stock);
+							reinvestMemo = " dividend";
 						} else if ("CGLONG".equals(incomeType)) {
 							StockEntry dividendEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 							dividendEntry.setAccount(account.getDividendAccount());
 							dividendEntry.setAmount(-total);
 							dividendEntry.setMemo("capitial gains distribution - long term");
 							dividendEntry.setStock(stock);
+							reinvestMemo = " capital gains";
 						} else {
 							/*
 							 * It might be "INTEREST", "MISC" or perhaps some other
@@ -541,6 +557,70 @@ public class OfxImporter {
 									toTitleCase(memo));
 							matcher.matchAndFill(textToMatch, firstEntry, otherEntry, toTitleCase(memo), defaultDescription);
 						}
+						
+						/*
+						 * If this is 'REINVEST' then we create a separate purchase transaction.
+						 */
+						if (transactionElement.getTagName().equals("REINVEST")) {
+							Transaction reinvestTransaction = session.createTransaction();
+							Entry firstReinvestEntry = reinvestTransaction.createEntry();
+							firstReinvestEntry.setAccount(account);
+							firstReinvestEntry.setPropertyValue(OfxEntryInfo.getFitidAccessor(), fitid);
+
+							reinvestTransaction.setDate(tradeDate);
+							firstReinvestEntry.setValuta(settleDate);
+
+							firstReinvestEntry.setAmount(-total);
+
+							firstReinvestEntry.setMemo("re-invest" + reinvestMemo);
+
+							String units = transactionElement.getString("UNITS");
+
+							/*
+							 * Wells Fargo specifies a unit price of zero for
+							 * re-invested gains. However we don't look at the unit
+							 * price because we just store the currency cost and the
+							 * number of share bought anyway.
+							 */
+
+							Long quantity = stock.parse(units);
+
+							StockEntry buyEntry = reinvestTransaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
+							buyEntry.setAccount(account);
+							buyEntry.setAmount(quantity);
+							buyEntry.setStock(stock);
+							buyEntry.setStockChange(true);
+						}
+					} else if (transactionElement.getTagName().startsWith("JRNLSEC")) {
+						/*
+						 * We move the shares back into the same account, which is not correct
+						 * but it makes it easy for the user to manually edit the entry.
+						 */
+						// TODO think of something better
+						
+						String units = transactionElement.getString("UNITS");
+
+						/*
+						 * Wells Fargo specifies a unit price of zero for
+						 * re-invested gains. However we don't look at the unit
+						 * price because we just store the currency cost and the
+						 * number of share bought anyway.
+						 */
+
+						Long quantity = stock.parse(units);
+
+						StockEntry firstStockEntry = firstEntry.getExtension(StockEntryInfo.getPropertySet(), true);
+						
+						firstStockEntry.setAmount(-quantity);
+						firstStockEntry.setStock(stock);
+						firstStockEntry.setStockChange(true);
+
+						StockEntry buyEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
+						buyEntry.setAccount(account);
+						buyEntry.setAmount(-quantity);
+						buyEntry.setStock(stock);
+						buyEntry.setStockChange(true);
+						
 					} else {
 						System.out.println("unknown element: " + transactionElement.getTagName());
 						String elementXml = transactionElement.toXMLString(0);
