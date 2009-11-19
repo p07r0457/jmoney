@@ -173,9 +173,9 @@ public class TransactionDialog extends Dialog {
         	if (commodity == null) {
         		// No commodity yet determined, so set to the commodity for
         		// this entry, if any.
-        		commodity = entry.getCommodity(); 
+        		commodity = entry.getCommodityInternal(); 
         	} else {
-        		if (!commodity.equals(entry.getCommodity())) {
+        		if (!commodity.equals(entry.getCommodityInternal())) {
         			mismatchedCommodities = true;
         			break;
         		}
@@ -191,6 +191,12 @@ public class TransactionDialog extends Dialog {
 	}
 
 	private void deleteSplit() {
+		/*
+		 * One of the controls in the deleted row will have the focus.
+		 * We set this to null as the control will not longer exist.
+		 */
+		cellTracker.setFocusCell(null);
+		
 		SplitEntryRowControl rowControl = rowTracker.getSelectedRow();
 		transaction.deleteEntry(rowControl.getInput());
 	}
@@ -582,7 +588,7 @@ public class TransactionDialog extends Dialog {
 			Map<Commodity, Long> amounts = new HashMap<Commodity, Long>();
 
 			for (Entry entry: transaction.getEntryCollection()) {
-				Commodity commodity = entry.getCommodity();
+				Commodity commodity = entry.getCommodityInternal();
 				Long previousAmount = amounts.get(commodity);
 				if (previousAmount == null) {
 					amounts.put(commodity, entry.getAmount());
