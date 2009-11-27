@@ -60,6 +60,15 @@
                </instanceof>
             </or>
          </triggerPoints>
+         <possibleChildren>
+               <instanceof
+                     value="net.sf.jmoney.stocks.model.Stock">
+               </instanceof>
+         </possibleChildren>
+      <actionProvider
+            class="net.sf.jmoney.stocks.navigator.StocksActionProvider"
+            id="net.sf.jmoney.stocks.stocksActionProvider">
+      </actionProvider>
       </navigatorContent>
    </extension>
 
