@@ -45,6 +45,7 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
+import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 import oracle.xml.parser.v2.DOMParser;
@@ -356,7 +357,15 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
 			if (accountType == BANKACCTTYPE) {
 				CapitalAccount parent = (CapitalAccount) getAccountFromGUID(parentGUID);
 
-				session.deleteAccount(child);
+				try {
+					session.deleteAccount(child);
+				} catch (ReferenceViolationException e) {
+					/*
+					 * The account can't be deleted because there are references to it.
+					 * This probably can never happen.
+					 */
+					throw new RuntimeException("Internal Error", e);
+				}
 				CapitalAccount newChild = parent
 						.createSubAccount(BankAccountInfo.getPropertySet());
 				accountsGUIDTable.remove(childGUID);
@@ -368,7 +377,15 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
 			} else {
 				IncomeExpenseAccount parent = (IncomeExpenseAccount) getAccountFromGUID(parentGUID);
 
-				session.deleteAccount(child);
+				try {
+					session.deleteAccount(child);
+				} catch (ReferenceViolationException e) {
+					/*
+					 * The account can't be deleted because there are references to it.
+					 * This probably can never happen.
+					 */
+					throw new RuntimeException("Internal Error", e);
+				}
 				IncomeExpenseAccount newChild = parent.createSubAccount();
 				newChild.setCurrency(session.getDefaultCurrency());
 				accountsGUIDTable.remove(childGUID);
@@ -827,12 +844,12 @@ public final class GnucashXML implements FileFormat, IRunnableWithProgress {
 
 		e = doc.createElement("split:value");
 		String s = entry.getAmount() + "/"
-				+ entry.getCommodity().getScaleFactor();
+				+ entry.getCommodityInternal().getScaleFactor();
 		e.appendChild(doc.createTextNode(s));
 		entryElement.appendChild(e);
 
 		e = doc.createElement("split:quantity");
-		s = entry.getAmount() + "/" + entry.getCommodity().getScaleFactor();
+		s = entry.getAmount() + "/" + entry.getCommodityInternal().getScaleFactor();
 		e.appendChild(doc.createTextNode(s));
 		entryElement.appendChild(e);
 
