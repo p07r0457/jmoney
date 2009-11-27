@@ -96,7 +96,7 @@ public class EntriesInAccountFetcher implements IFetcher {
 				Object getValue() {
 					Object value = currentObject.getPropertyValue(property);
 					if (property == EntryInfo.getAmountAccessor()) {
-						Commodity commodity = ((Entry)currentObject).getCommodity();
+						Commodity commodity = ((Entry)currentObject).getCommodityInternal();
 						return ((Long)value).doubleValue() / commodity.getScaleFactor();
 					} else {
 						return value;
@@ -121,7 +121,7 @@ public class EntriesInAccountFetcher implements IFetcher {
 					} else {
 						Object value = currentObject.getPropertyValue(property);
 						if (property == EntryInfo.getAmountAccessor()) {
-							Commodity commodity = ((Entry)currentObject).getCommodity();
+							Commodity commodity = ((Entry)currentObject).getCommodityInternal();
 							return ((Long)value).doubleValue() / commodity.getScaleFactor();
 						} else {
 							return value;
