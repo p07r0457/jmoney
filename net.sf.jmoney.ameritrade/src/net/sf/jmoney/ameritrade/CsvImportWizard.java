@@ -121,22 +121,20 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 			return date;
 		}
 
-		public void createTransaction(Session sessionInTransaction, Account account) {
+		public void createTransaction(Session sessionInTransaction, StockAccount account) {
         	Transaction trans = sessionInTransaction.createTransaction();
         	trans.setDate(date);
         	
         	StockEntry originalSharesEntry = trans.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
         	originalSharesEntry.setAccount(account);
         	originalSharesEntry.setAmount(-originalQuantity);
-        	originalSharesEntry.setStock(originalStock);
-        	originalSharesEntry.setStockChange(true);
+        	originalSharesEntry.setCommodity(originalStock);
         	originalSharesEntry.setMemo("mandatory exchange");
         	
         	StockEntry newSharesEntry = trans.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
         	newSharesEntry.setAccount(account);
         	newSharesEntry.setAmount(newQuantity);
-        	newSharesEntry.setStock(newStock);
-        	newSharesEntry.setStockChange(true);
+        	newSharesEntry.setCommodity(newStock);
         	newSharesEntry.setMemo("mandatory exchange");
         	
         	if (fractionalSharesAmount != 0) {
@@ -144,8 +142,8 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
             	fractionalEntry.setAccount(account);
             	fractionalEntry.setAmount(fractionalSharesAmount);
             	fractionalEntry.setValuta(fractionalSharesDate);
+            	fractionalEntry.setCommodity(account.getCurrency());
             	fractionalEntry.setStock(newStock);
-            	fractionalEntry.setStockChange(false);
             	fractionalEntry.setMemo("cash in lieu of fractional shares");
         	} else {
         		// We must have a currency entry in the account in order to see an entry.
@@ -350,8 +348,7 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 		        		saleEntry.setAmount(-quantity);
 		        	}
 		        	
-		        	saleEntry.setStock(stock);
-		        	saleEntry.setStockChange(true);
+		        	saleEntry.setCommodity(stock);
 		        	
 		        	if (commission != null) {
 		        		StockEntry commissionEntry = trans.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
