@@ -24,6 +24,7 @@ import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeAdapter;
@@ -386,7 +387,7 @@ public class CurrencyEditor extends EditorPart {
 				CapitalAccount a = (CapitalAccount)account;
 				for (Iterator<Entry> iter2 = a.getEntries().iterator(); iter2.hasNext(); ) {
 					Entry entry = iter2.next();
-					Commodity commodity = entry.getCommodity();
+					Commodity commodity = entry.getCommodityInternal();
 					if (commodity instanceof Currency) {
 						usedCurrencies.add((Currency)commodity);
 					}
@@ -674,7 +675,18 @@ public class CurrencyEditor extends EditorPart {
 				if (!usedCurrencies.contains(currencyData.currency)
 						&& !currencyData.currency.equals(session.getDefaultCurrency())) {
 					data.add(currencyData);
-					session.deleteCommodity(currencyData.currency);
+					try {
+						session.deleteCommodity(currencyData.currency);
+					} catch (ReferenceViolationException e) {
+						/*
+						 * Shouldn't happen because we have checked for use of
+						 * this currency. This exception could potentially
+						 * happen if third-party plug-ins have extended the
+						 * model, in which case we probably will need to think
+						 * about how we can be more user-friendly.
+						 */
+						throw new RuntimeException("This is an unlikely error and should not happen unless plug-ins are doing something complicated.", e);
+					}
 					currencyData.currency = null;
 				} else {
 					MessageDialog dialog = new MessageDialog(
@@ -706,7 +718,18 @@ public class CurrencyEditor extends EditorPart {
 			if (!usedCurrencies.contains(currencyData.currency)
 					&& !currencyData.currency.equals(session.getDefaultCurrency())) {
 				data.add(currencyData);
-				session.deleteCommodity(currencyData.currency);
+				try {
+					session.deleteCommodity(currencyData.currency);
+				} catch (ReferenceViolationException e) {
+					/*
+					 * Shouldn't happen because we have checked for use of
+					 * this currency. This exception could potentially
+					 * happen if third-party plug-ins have extended the
+					 * model, in which case we probably will need to think
+					 * about how we can be more user-friendly.
+					 */
+					throw new RuntimeException("This is an unlikely error and should not happen unless plug-ins are doing something complicated.", e);
+				}
 				currencyData.currency = null;
 			}
 		}
