@@ -44,6 +44,8 @@ import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
+import net.sf.jmoney.model2.Session.NoAccountFoundException;
+import net.sf.jmoney.model2.Session.SeveralAccountsFoundException;
 import net.sf.jmoney.ofx.model.OfxEntryInfo;
 import net.sf.jmoney.ofx.parser.SimpleDOMParser;
 import net.sf.jmoney.ofx.parser.SimpleElement;
@@ -130,6 +132,16 @@ public class OfxImporter {
 						"The OFX file contains data for brokerage account number " + accountNumber + ".  However no stock account exists with such an account number.  You probably need to set the account number property for the appropriate account.");
 				return;
 			}
+
+			StockAccount worthlessStockAccountOutsideTransaction;
+			try {
+				worthlessStockAccountOutsideTransaction = (StockAccount)sessionOutsideTransaction.getAccountByShortName("worthless stock and options");
+			} catch (SeveralAccountsFoundException e) {
+				throw new RuntimeException(e);
+			} catch (NoAccountFoundException e) {
+				throw new RuntimeException(e);
+			}
+			StockAccount worthlessStockAccount = transactionManager.getCopyInTransaction(worthlessStockAccountOutsideTransaction);
 
 			/*
 			 * If the OFX file specifies the currency for its entries, check
@@ -446,15 +458,20 @@ public class OfxImporter {
 					firstEntry.setValuta(settleDate);
 
 					/*
-					 * TOTAL applies to all transaction types except JRNLSEC.  These
+					 * TOTAL applies to all transaction types except JRNLSEC, CLOSUREOPT and TRANSFER.  JRNLSEC
 					 * transaction types are used, for example, when one stock is replaced
-					 * by another due to a re-org or something.  We mustn't attempt to fetch
+					 * by another due to a re-org or something.  CLOSUREOPT is used when options expire worthless, TRANSFER is used when stock is moved
+					 * in or out of the account so there is no currency amount involved.  We mustn't attempt to fetch
 					 * the total because there isn't one and we would get an exception.
 					 */
 					long total = 0;
-					if (!transactionElement.getTagName().startsWith("JRNLSEC")) {
+					if (!transactionElement.getTagName().startsWith("JRNLSEC")
+							&& !transactionElement.getTagName().startsWith("CLOSUREOPT")
+							&& !transactionElement.getTagName().startsWith("TRANSFER")) {
 						total = transactionElement.getAmount("TOTAL");
 						firstEntry.setAmount(total);
+					} else {
+						System.out.println("here");
 					}
 
 					firstEntry.setMemo(memo);
@@ -499,19 +516,20 @@ public class OfxImporter {
 							saleEntry.setAmount(quantity);
 						}
 
-						saleEntry.setStock(stock);
-						saleEntry.setStockChange(true);
-
-
+						saleEntry.setCommodity(stock);
 
 						if (transactionElement.getTagName().equals("BUYMF")) {
 							// Mutual fund purchase
 						} else if (transactionElement.getTagName().equals("BUYSTOCK")) {
 							// Stock purchase
+						} else if (transactionElement.getTagName().equals("BUYOTHER")) {
+							// Exchange traded fund purchase?
 						} else if (transactionElement.getTagName().equals("SELLMF")) {
 							// Mutual fund sale
 						} else if (transactionElement.getTagName().equals("SELLSTOCK")) {
 							// Stock sale
+						} else if (transactionElement.getTagName().equals("SELLOTHER")) {
+							// Exchange traded fund sale?
 						} else {
 							System.out.println("unknown element: " + transactionElement.getTagName());
 							String elementXml = transactionElement.toXMLString(0);
@@ -570,7 +588,7 @@ public class OfxImporter {
 							reinvestTransaction.setDate(tradeDate);
 							firstReinvestEntry.setValuta(settleDate);
 
-							firstReinvestEntry.setAmount(-total);
+							firstReinvestEntry.setAmount(total);
 
 							firstReinvestEntry.setMemo("re-invest" + reinvestMemo);
 
@@ -588,10 +606,71 @@ public class OfxImporter {
 							StockEntry buyEntry = reinvestTransaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 							buyEntry.setAccount(account);
 							buyEntry.setAmount(quantity);
-							buyEntry.setStock(stock);
-							buyEntry.setStockChange(true);
+							buyEntry.setCommodity(stock);
 						}
-					} else if (transactionElement.getTagName().startsWith("JRNLSEC")) {
+					} else if (transactionElement.getTagName().equals("TRANSFER")) {
+						String units = transactionElement.getString("UNITS");
+						Long quantity = stock.parse(units);
+
+						/*
+						 * Wells Fargo create TRANSFER entries with a quantity of zero.
+						 * It is not known why these are created so we ignore any transfers
+						 * with a zero quantity.
+						 */
+						if (quantity != 0) {
+							/*
+							 * JMoney does not allow stuff to just appear or
+							 * disappear. Every credit must have a corresponding
+							 * debit. Ideally we should probably have a special
+							 * account that is used when we don't know where
+							 * shares came from or where they went. However for
+							 * the time being we move the shares back into the
+							 * same account, which is not correct but it makes
+							 * it easy for the user to manually edit the entry.
+							 */							
+							StockEntry firstStockEntry = firstEntry.getExtension(StockEntryInfo.getPropertySet(), true);
+							
+							firstStockEntry.setAmount(quantity);
+							firstStockEntry.setCommodity(stock);
+
+							StockEntry otherStockEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
+							otherStockEntry.setAccount(account);
+							otherStockEntry.setAmount(-quantity);
+							otherStockEntry.setCommodity(stock);
+						}
+					} else if (transactionElement.getTagName().equals("CLOSUREOPT")) {
+						/*
+						 * Options have expired worthless.  This is a rare case where we
+						 * really do want assets to disappear into oblivion without a corresponding
+						 * account to receive the assets.  We have two choices.  We either create a pseudo-account
+						 * to receive the options or we relax our rule and create a transaction with a single entry.
+						 * The problem with the first approach is that we have to understand that shares transferred
+						 * to this special account are consider to be worthless.  We don't want reports to show that
+						 * we still own them.  We could solve that one by the idea of ring-fenced accounts when producing
+						 * reports, or just consider the account to be an expense account.
+						 */
+						
+						String units = transactionElement.getString("UNITS");
+
+						/*
+						 * Wells Fargo specifies a unit price of zero for
+						 * re-invested gains. However we don't look at the unit
+						 * price because we just store the currency cost and the
+						 * number of shares bought anyway.
+						 */
+
+						Long quantity = stock.parse(units);
+
+						StockEntry firstStockEntry = firstEntry.getExtension(StockEntryInfo.getPropertySet(), true);
+						
+						firstStockEntry.setAmount(quantity);
+						firstStockEntry.setCommodity(stock);
+
+						StockEntry otherStockEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
+						otherStockEntry.setAccount(worthlessStockAccount);
+						otherStockEntry.setAmount(-quantity);
+						otherStockEntry.setCommodity(stock);
+					} else if (transactionElement.getTagName().equals("JRNLSEC")) {
 						/*
 						 * We move the shares back into the same account, which is not correct
 						 * but it makes it easy for the user to manually edit the entry.
@@ -611,16 +690,13 @@ public class OfxImporter {
 
 						StockEntry firstStockEntry = firstEntry.getExtension(StockEntryInfo.getPropertySet(), true);
 						
-						firstStockEntry.setAmount(-quantity);
-						firstStockEntry.setStock(stock);
-						firstStockEntry.setStockChange(true);
+						firstStockEntry.setAmount(quantity);
+						firstStockEntry.setCommodity(stock);
 
-						StockEntry buyEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
-						buyEntry.setAccount(account);
-						buyEntry.setAmount(-quantity);
-						buyEntry.setStock(stock);
-						buyEntry.setStockChange(true);
-						
+						StockEntry otherStockEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
+						otherStockEntry.setAccount(account);
+						otherStockEntry.setAmount(-quantity);
+						otherStockEntry.setCommodity(stock);
 					} else {
 						System.out.println("unknown element: " + transactionElement.getTagName());
 						String elementXml = transactionElement.toXMLString(0);

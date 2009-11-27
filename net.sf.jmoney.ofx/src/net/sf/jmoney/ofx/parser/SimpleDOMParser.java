@@ -31,12 +31,19 @@ public class SimpleDOMParser {
 		// skip xml declaration or DocTypes
 		skipPrologs();
 
+		// remove the prepend or trailing white spaces
+		String currentTag = readTag();
 		while (true) {
 			int index;
 			String tagName;
 
-			// remove the prepend or trailing white spaces
-			String currentTag = readTag().trim();
+			/**
+			 * Sometimes we have to peek ahead to the next tag but then find it is a tag
+			 * we want to leave for the next time around this loop.  In that case, it
+			 * is set in this variable.
+			 */
+			String nextTag = null;
+
 			if (currentTag.startsWith("</")) {
 				// close tag
 				tagName = currentTag.substring(2, currentTag.length()-1);
@@ -147,8 +154,20 @@ public class SimpleDOMParser {
 				// read the text between the open and close tag
 				if (!isTagClosed) {
 					element.setText(readText());
-					if (!element.isEmptyText())
+					
+					if (!element.isEmptyText()) {
+						// There may or may not be a close tag
+						nextTag = readTag();
+						if (nextTag.startsWith("</")) {
+							// close tag
+							String nextTagName = nextTag.substring(2, nextTag.length()-1);
+							if (nextTagName.equals(tagName)) {
+								// Set to null as this is no longer a pre-fetched tag
+								nextTag = null;
+							}
+						}
 						isTagClosed=true;
+					}
 				}
 
 				// add new element as a child element of
@@ -168,6 +187,13 @@ public class SimpleDOMParser {
 					return element;
 				}
 			}
+
+			// get tag for next time around
+				if (nextTag != null) {
+					currentTag = nextTag;
+				} else {
+					currentTag = readTag();
+				}
 		}
 	}
 
@@ -233,6 +259,13 @@ public class SimpleDOMParser {
 		}
 	}
 
+	/**
+	 * 
+	 * @return the contents of the stream (excluding preceding whitespace) up to and including the first '>' character,
+	 * 			being a string that starts with '<' and ends with '>' 
+	 * @throws IOException if the next character (excluding whitespace) is
+	 * 			not '<'
+	 */
 	private String readTag() throws IOException {
 		skipWhitespace();
 

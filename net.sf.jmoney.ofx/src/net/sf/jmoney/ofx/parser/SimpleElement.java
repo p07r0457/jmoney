@@ -12,6 +12,9 @@ import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.widgets.Display;
+
 /**
  * <code>SimpleElement</code> is the only node type for simplified DOM model.
  */
@@ -224,14 +227,30 @@ public class SimpleElement {
 		long amount = Integer.parseInt(parts[0]) * 100;
 		if (parts.length > 1) {
 			
-			// QFX seems to put extra zeroes at the end.
-			// (or at least hsabank.com does)
-			// Remove them to get a length of two.
+			/* QFX seems to put extra zeroes at the end.
+			 (or at least hsabank.com does)
+			 Remove them to get a length of two.
+			 
+			 Even worse, though, is Wells Fargo bank.  They have been known to put lots
+			 of nines at the end, such as 69299.9999 when they mean 69300.00.  Therefore
+			 if all the additional digits are nines then we round up.
+			 */
+			boolean zeroFound = false;
+			boolean nineFound = false;
 			while (parts[1].length() > 2) {
-				if (parts[1].charAt(parts[1].length()-1) != '0') {
-					throw new RuntimeException("Extra digits and they are not zeroes");
+				if (parts[1].charAt(parts[1].length()-1) == '0' && !nineFound) {
+					parts[1] = parts[1].substring(0, parts[1].length() - 1);
+					zeroFound = true;
+				} else if (parts[1].charAt(parts[1].length()-1) == '9' && !zeroFound) {
+					parts[1] = parts[1].substring(0, parts[1].length() - 1);
+					nineFound = true;
+				} else {
+					// TODO use a multi-status for this so the user gets all warnings at one
+					// time.
+					MessageDialog.openWarning(Display.getDefault().getActiveShell(), "Bad Data", "An amount of " + data +" was found.  Extra digits must be either all zeroes or all nines.  Extra digits have been truncated but you should verify the accuracy of this entry.");
+					parts[1] = parts[1].substring(0, 2);
+//					throw new RuntimeException("Extra digits and they are not zeroes or all nines");
 				}
-				parts[1] = parts[1].substring(0, parts[1].length() - 1);
 			}
 			if (parts[1].length() == 1) {
 				/*
@@ -241,10 +260,14 @@ public class SimpleElement {
 				 */
 				parts[1] = parts[1] + "0";
 			}
+			int fractionalPart = Integer.parseInt(parts[1]);
+			if (nineFound) {
+				fractionalPart++;
+			}
 			if (data.startsWith("-")) {
-				amount -= Integer.parseInt(parts[1]);
+				amount -= fractionalPart;
 			} else {
-				amount += Integer.parseInt(parts[1]);
+				amount += fractionalPart;
 			}
 		}
 //		long amount = CurrencyParser.double2long(currency, Double
