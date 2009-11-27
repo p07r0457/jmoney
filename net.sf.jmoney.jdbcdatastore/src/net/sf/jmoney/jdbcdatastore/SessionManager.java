@@ -62,6 +62,7 @@ import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.PropertyAccessor;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ReferencePropertyAccessor;
+import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionInfo;
@@ -889,14 +890,13 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * from the database.
 	 * 
 	 * @param objectKey
-     * @return true if the object was deleted, false if the object
-     * 				was not not deleted because there are references to it
-     * 				in the database
+	 * @throws ReferenceViolationException if there are references to this
+	 * 				object that prevent this object from being deleted
      * @throws RuntimeException if either an SQLException occurs or if
      * 				the object did not exist in the database or if some
      * 				other integrity violation was found in the database
 	 */
-	public boolean deleteFromDatabase(IDatabaseRowKey objectKey) {
+	public void deleteFromDatabase(IDatabaseRowKey objectKey) throws ReferenceViolationException {
 		ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(objectKey.getObject().getClass()); 
 		
 		/*
@@ -949,28 +949,25 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 					/*
 					 * An attempt has been made to delete an object that has
 					 * references to it. This particular error, unlike all other
-					 * SQL errors, is treated as a valid result, not an error.
+					 * SQL errors, must throw a specific checked exception.
 					 * This is because the caller may legitimately attempt to
 					 * delete such rows because this saves the caller from
 					 * having to check for references itself (not a trivial
 					 * task, so why not let the database do the check).
 					 */
-					return false;
+					throw new ReferenceViolationException(propertySet2, e.getMessage());
 				}
-				// TODO Handle this properly
-				e.printStackTrace();
-				throw new RuntimeException("internal error");
+
+				throw new RuntimeException("internal error", e);
 			}
 		}
-		
-		return true;
 	}
 
 	/**
 	 * This method deletes the child elements of a given object (objects
 	 * contained in list properties of the given object). This method is
 	 * recursive, so all descendant objects are deleted.
-	 * 
+	 * <P>
 	 * We could have used ON DELETE CASCADE to delete these objects. However,
 	 * not all databases fully support this. For example, Microsoft SQL Server
 	 * does not support ON DELETE CASCADE when a column in a table is
@@ -981,8 +978,9 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 * @param rowId
 	 * @param extendableObject
 	 * @param propertySet
+	 * @throws ReferenceViolationException 
 	 */
-	private void deleteListElements(IDatabaseRowKey objectKey) {
+	private void deleteListElements(IDatabaseRowKey objectKey) throws ReferenceViolationException {
 		ExtendableObject extendableObject = objectKey.getObject();
 		ExtendablePropertySet<?> propertySet = PropertySet.getPropertySet(extendableObject.getClass());
 		
