@@ -131,7 +131,7 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 		 */
 	}
 
-	public boolean deleteElement(E extendableObject) {
+	public void deleteElement(E extendableObject) {
 		// If an account is removed then we
 		// clear out the list.
 		if (extendableObject instanceof Account) {
@@ -153,6 +153,9 @@ public class SimpleListManager<E extends ExtendableObject> extends Vector<E> imp
 		// be saved.  Mark the session as modified now.
 		sessionManager.setModified();
 		
-		return remove(extendableObject);
+		boolean found = remove(extendableObject);
+		if (!found) {
+			throw new RuntimeException("object not in list when it was expected to be in list");
+		}
 	}
 }
