@@ -16,6 +16,7 @@ import net.sf.jmoney.model2.ExtensionPropertySet;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertyAccessor;
+import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionInfo;
@@ -134,7 +135,15 @@ public class CopierPlugin extends AbstractUIPlugin {
     	/*
     	 * Now we can delete the previous default currency.
     	 */
-    	newSessionInTrans.deleteCommodity(previousDefaultCurrency);
+    	try {
+			newSessionInTrans.deleteCommodity(previousDefaultCurrency);
+		} catch (ReferenceViolationException e) {
+			/*
+			 * If we can't delete the previous default currency because of references
+			 * that we haven't dealt with, leave it.
+			 */
+			throw new RuntimeException("Internal error", e);
+		}
     	
     	transaction.commit();
     }
