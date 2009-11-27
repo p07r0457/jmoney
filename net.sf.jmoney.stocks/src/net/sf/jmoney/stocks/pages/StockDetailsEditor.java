@@ -32,6 +32,7 @@ import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.CellFocusListener;
+import net.sf.jmoney.entrytable.CutTransactionHandler;
 import net.sf.jmoney.entrytable.DebitAndCreditColumns;
 import net.sf.jmoney.entrytable.DeleteTransactionHandler;
 import net.sf.jmoney.entrytable.DuplicateTransactionHandler;
@@ -47,6 +48,7 @@ import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.NewTransactionHandler;
 import net.sf.jmoney.entrytable.OpenTransactionDialogHandler;
 import net.sf.jmoney.entrytable.OtherEntriesBlock;
+import net.sf.jmoney.entrytable.PasteCombineTransactionHandler;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
@@ -320,7 +322,7 @@ public class StockDetailsEditor extends EditorPart {
 						Stock stock;
 						if (data.isPurchaseOrSale()) {
 							Entry entry = data.getPurchaseOrSaleEntry();
-							stock = (Stock)entry.getCommodity();
+							stock = (Stock)entry.getCommodityInternal();
 						} else if (data.isDividend()) {
 							Entry entry = data.getDividendEntry();
 							stock = entry.getPropertyValue(StockEntryInfo.getStockAccessor());
@@ -503,7 +505,7 @@ public class StockDetailsEditor extends EditorPart {
 					}
 
 					private IAmountFormatter getFormatter() {
-						IAmountFormatter formatter = data.getPurchaseOrSaleEntry().getCommodity();
+						IAmountFormatter formatter = data.getPurchaseOrSaleEntry().getCommodityInternal();
 						if (formatter == null) {
 							/*
 							 * The user has not yet selected the stock. As the
@@ -1012,7 +1014,7 @@ public class StockDetailsEditor extends EditorPart {
 				 */
 				Collection<Entry> entries = new ArrayList<Entry>();
 				for (Entry entry : account.getEntries()) {
-					if (entry.getCommodity() == stock) {
+					if (entry.getCommodityInternal() == stock) {
 						entries.add(entry);
 					}
 				}
@@ -1026,7 +1028,7 @@ public class StockDetailsEditor extends EditorPart {
 				 * to the given stock.
 				 */
 				return account == entry.getAccount()
-					&& entry.getCommodity() == stock;
+					&& entry.getCommodityInternal() == stock;
 			}
 
 			/* (non-Javadoc)
@@ -1090,6 +1092,12 @@ public class StockDetailsEditor extends EditorPart {
 
 		handler = new OpenTransactionDialogHandler(rowTracker);
 		handlerService.activateHandler("net.sf.jmoney.transactionDetails", handler);		
+
+		handler = new CutTransactionHandler(rowTracker);
+		handlerService.activateHandler("net.sf.jmoney.cutTransaction", handler);		
+
+		handler = new PasteCombineTransactionHandler(rowTracker);
+		handlerService.activateHandler("net.sf.jmoney.pasteCombineTransaction", handler);		
 
 		return composite;
 	}

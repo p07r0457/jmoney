@@ -10,6 +10,7 @@ import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.Transaction.EntryCollection;
 import net.sf.jmoney.stocks.model.Stock;
 import net.sf.jmoney.stocks.model.StockAccount;
@@ -106,12 +107,12 @@ public class StockEntryData extends EntryData {
 					}
 					tax2Entry = entry;
 				} else if (entry.getAccount() == account) {
-					if (entry.getCommodity() instanceof Stock) {
+					if (entry.getCommodityInternal() instanceof Stock) {
 						if (purchaseOrSaleEntry != null) {
 							unknownTransactionType = true;
 						}
 						purchaseOrSaleEntry = entry;
-					} else if (entry.getCommodity() instanceof Currency) {  //TODO: check for actual currency of account.
+					} else if (entry.getCommodityInternal() instanceof Currency) {  //TODO: check for actual currency of account.
 						if (mainEntry != null) {
 							unknownTransactionType = true;
 						}
@@ -219,7 +220,16 @@ public class StockEntryData extends EntryData {
 			purchaseOrSaleEntry = entries.createEntry();
 			purchaseOrSaleEntry.setAccount(account);
 			StockEntry stockEntry = purchaseOrSaleEntry.getExtension(StockEntryInfo.getPropertySet(), true);
-			stockEntry.setStockChange(true);
+			
+			/*
+			 * If this was an transaction connected with a stock but did not
+			 * involve an entry that changed the amount of a stock (e.g. a
+			 * dividend entry) then we want to use that stock as the stock that
+			 * is now being bought or sold.  Otherwise we set the commodity to
+			 * null (we can't leave it as a currency because that would result
+			 * in an invalid transaction).
+			 */
+			stockEntry.setCommodity(stockEntry.getStock());
 		}
 
 		// Commission, tax 1, and tax 2 entries may be null in this transaction type.
@@ -335,7 +345,12 @@ public class StockEntryData extends EntryData {
 		
 		if (withholdingTax == 0) {
 			if (withholdingTaxEntry != null) {
-				getEntry().getTransaction().getEntryCollection().remove(withholdingTaxEntry);
+				try {
+					getEntry().getTransaction().getEntryCollection().deleteElement(withholdingTaxEntry);
+				} catch (ReferenceViolationException e) {
+					// This should not happen because entries are never referenced
+					throw new RuntimeException("Internal error", e);
+				}
 				withholdingTaxEntry = null;
 			}
 		} else {
@@ -389,7 +404,12 @@ public class StockEntryData extends EntryData {
 		
 		if (commission == 0) {
 			if (commissionEntry != null) {
-				getEntry().getTransaction().getEntryCollection().remove(commissionEntry);
+				try {
+					getEntry().getTransaction().getEntryCollection().deleteElement(commissionEntry);
+				} catch (ReferenceViolationException e) {
+					// This should not happen because entries are never referenced
+					throw new RuntimeException("Internal error", e);
+				}
 				commissionEntry = null;
 			}
 		} else {
@@ -433,7 +453,12 @@ public class StockEntryData extends EntryData {
 		
 		if (tax1Amount == 0) {
 			if (tax1Entry != null) {
-				getEntry().getTransaction().getEntryCollection().remove(tax1Entry);
+				try {
+					getEntry().getTransaction().getEntryCollection().deleteElement(tax1Entry);
+				} catch (ReferenceViolationException e) {
+					// This should not happen because entries are never referenced
+					throw new RuntimeException("Internal error", e);
+				}
 				tax1Entry = null;
 			}
 		} else {
@@ -477,7 +502,12 @@ public class StockEntryData extends EntryData {
 		
 		if (tax2Amount == 0) {
 			if (tax2Entry != null) {
-				getEntry().getTransaction().getEntryCollection().remove(tax2Entry);
+				try {
+					getEntry().getTransaction().getEntryCollection().deleteElement(tax2Entry);
+				} catch (ReferenceViolationException e) {
+					// This should not happen because entries are never referenced
+					throw new RuntimeException("Internal error", e);
+				}
 				tax2Entry = null;
 			}
 		} else {
@@ -526,7 +556,7 @@ public class StockEntryData extends EntryData {
 
 		long totalCash = 0;
 		for (Entry eachEntry: getEntry().getTransaction().getEntryCollection()) {
-			if (eachEntry.getCommodity() instanceof Currency) {
+			if (eachEntry.getCommodityInternal() instanceof Currency) {
 				totalCash += eachEntry.getAmount();
 			}
 		}

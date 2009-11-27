@@ -30,6 +30,11 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.fields.DateControl;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ListPropertyAccessor;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
+import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.stocks.ShowStockDetailsHandler;
 import net.sf.jmoney.stocks.model.Stock;
 import net.sf.jmoney.stocks.model.StockAccount;
@@ -102,6 +107,62 @@ public class StockBalancesEditor extends EditorPart {
 
 	private DateControl balanceDateControl;
 
+	private SessionChangeAdapter sessionListener = new SessionChangeAdapter() {
+		@Override
+		public void objectChanged(ExtendableObject changedObject,
+				ScalarPropertyAccessor changedProperty, Object oldValue,
+				Object newValue) {
+			if (changedObject instanceof Entry) {
+				Entry changedEntry = (Entry)changedObject;
+				if (changedEntry.getAccount() == account
+						&& changedEntry.getCommodityInternal() instanceof Stock 
+						&& changedProperty == EntryInfo.getAmountAccessor()) {
+				
+				}
+			}
+			
+		}
+
+		@Override
+		public void objectCreated(ExtendableObject newObject) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void objectDestroyed(ExtendableObject deletedObject) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void objectInserted(ExtendableObject newObject) {
+			// TODO Auto-generated method stub
+			System.out.println("here");
+		}
+
+		@Override
+		public void objectMoved(ExtendableObject movedObject,
+				ExtendableObject originalParent, ExtendableObject newParent,
+				ListPropertyAccessor originalParentListProperty,
+				ListPropertyAccessor newParentListProperty) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void objectRemoved(ExtendableObject deletedObject) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void performRefresh() {
+			// TODO Auto-generated method stub
+			calculateTotals();
+		}
+	};
+	
 	/**
 	 * Currently this editor can be created only when given an AccountEditor.
 	 * This editor is a child editor of the AccountEditor (a multi-page editor),
@@ -125,6 +186,14 @@ public class StockBalancesEditor extends EditorPart {
 		AccountEditorInput input2 = (AccountEditorInput)input;
         DatastoreManager sessionManager = (DatastoreManager)site.getPage().getInput();
         account = (StockAccount)sessionManager.getSession().getAccountByFullName(input2.getFullAccountName());
+        
+        sessionManager.addChangeListener(sessionListener);
+	}
+
+	@Override
+	public void dispose() {
+        DatastoreManager sessionManager = (DatastoreManager)getSite().getPage().getInput();
+        sessionManager.removeChangeListener(sessionListener);
 	}
 
 	@Override
@@ -219,8 +288,8 @@ public class StockBalancesEditor extends EditorPart {
 		for (Entry entry : account.getEntries()) {
 			if (!entry.getTransaction().getDate().after(asOf)) {
 				StockEntry entry2 = entry.getExtension(StockEntryInfo.getPropertySet(), false);
-				if (entry2 != null && entry2.isStockChange()) {
-					Stock stock = entry2.getStock();
+				if (entry2 != null && entry2.getCommodity() instanceof Stock) {
+					Stock stock = (Stock)entry2.getCommodity();
 					StockWrapper stockWrapper = totals.get(stock);
 					if (stockWrapper == null) {
 						stockWrapper = new StockWrapper(stock);

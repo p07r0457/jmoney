@@ -29,7 +29,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	}
 
 	private ArrayList<ITransactionTypeChangeListener> transactionTypeChangeListeners = new ArrayList<ITransactionTypeChangeListener>();
-	
+
 	/**
 	 * The share price currently shown to the user, or null if
 	 * this is a new entry and no share price has been entered.
@@ -68,7 +68,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 		super(parent, style, rowTable, rootBlock, selectionTracker, focusCellTracker);
 		init(this, this, rootBlock);
 	}
-	
+
 	@Override
 	public void setInput(StockEntryData inputEntryData) {
 		if (inputEntryData.getTransactionType() == null) {
@@ -101,13 +101,13 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 				break;
 			}
 		}
-		
+
 		if (uncommittedEntryData.isPurchaseOrSale()) {
 			sharePrice = uncommittedEntryData.calculatePrice();
 		} else {
 			sharePrice = null;
 		}
-		
+
 		this.addTransactionTypeChangeListener(new ITransactionTypeChangeListener() {
 			public void transactionTypeChanged() {
 				if (uncommittedEntryData.isPurchaseOrSale()) {
@@ -125,7 +125,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 		 */
 		super.setInput(inputEntryData);
 	}
-	
+
 	/*
 	 * Notify listeners when the transaction type (purchase, sale, dividend etc.)
 	 * changes.
@@ -135,7 +135,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 			listener.transactionTypeChanged();
 		}
 	}
-	
+
 	public void addTransactionTypeChangeListener(ITransactionTypeChangeListener listener) {
 		transactionTypeChangeListeners.add(listener);
 	}
@@ -155,76 +155,88 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	@Override
 	public void amountChanged() {
 		netAmountIsFluid = false;
-		
+
 		StockAccount account = (StockAccount)getUncommittedEntryData().getEntry().getAccount();
-		
+
 		Entry entry = uncommittedEntryData.getEntry();
-		switch (uncommittedEntryData.getTransactionType()) {
-		case Buy:
-		case Sell:
+
+		TransactionType transactionType = uncommittedEntryData.getTransactionType();
+		if (transactionType == null) {
 			/*
-			 * The user would not usually enter the net amount for the
-			 * transaction because it is hard to calculate backwards from this.
-			 * The rates tables are all based on the gross amount. Also, there
-			 * may be a number of calculated commissions and taxes and we would
-			 * not know which to adjust. Therefore in most cases we leave the
-			 * transaction unbalanced and force the user to correct it when the
-			 * transaction is saved.
+			 * The user has not yet entered enough information into the transaction
+			 * to guess the transaction type.  In particular, the user has not selected
+			 * the transaction type.
 			 * 
-			 * However, if there are no commission or taxes configured for the
-			 * commodity type in this account then we can calculate backwards.
+			 * We have already set the net amount to be no longer fluid.  There is nothing to do in this case.
 			 */
-			if (account.getCommissionAccount() == null
-					&& account.getTax1Account() == null
-					&& account.getTax2Account() == null) {
+		} else {
+			switch (transactionType) {
+			case Buy:
+			case Sell:
+				/*
+				 * The user would not usually enter the net amount for the
+				 * transaction because it is hard to calculate backwards from this.
+				 * The rates tables are all based on the gross amount. Also, there
+				 * may be a number of calculated commissions and taxes and we would
+				 * not know which to adjust. Therefore in most cases we leave the
+				 * transaction unbalanced and force the user to correct it when the
+				 * transaction is saved.
+				 * 
+				 * However, if there are no commission or taxes configured for the
+				 * commodity type in this account then we can calculate backwards.
+				 */
+				if (account.getCommissionAccount() == null
+						&& account.getTax1Account() == null
+						&& account.getTax2Account() == null) {
 
-				if (quantityIsFluid && !sharePriceIsFluid) {
-					BigDecimal grossAmount = new BigDecimal(uncommittedEntryData.getEntry().getAmount()).movePointLeft(2);
-					BigDecimal quantity = grossAmount.divide(sharePrice);
-					uncommittedEntryData.getPurchaseOrSaleEntry().setAmount(quantity.movePointRight(3).longValue());
-				}
+					if (quantityIsFluid && !sharePriceIsFluid) {
+						BigDecimal grossAmount = new BigDecimal(uncommittedEntryData.getEntry().getAmount()).movePointLeft(2);
+						BigDecimal quantity = grossAmount.divide(sharePrice);
+						uncommittedEntryData.getPurchaseOrSaleEntry().setAmount(quantity.movePointRight(3).longValue());
+					}
 
-				if (sharePriceIsFluid && !quantityIsFluid) {
-					BigDecimal grossAmount = new BigDecimal(uncommittedEntryData.getEntry().getAmount()).movePointLeft(2);
-					BigDecimal quantity = new BigDecimal(uncommittedEntryData.getPurchaseOrSaleEntry().getAmount());
-					sharePrice = grossAmount.divide(quantity);
+					if (sharePriceIsFluid && !quantityIsFluid) {
+						BigDecimal grossAmount = new BigDecimal(uncommittedEntryData.getEntry().getAmount()).movePointLeft(2);
+						BigDecimal quantity = new BigDecimal(uncommittedEntryData.getPurchaseOrSaleEntry().getAmount());
+						sharePrice = grossAmount.divide(quantity);
+					}
 				}
-			}
-			break;
-		case Dividend:
-			if (withholdingTaxIsFluid) {
-				long rate = 30L;
-				long tax = entry.getAmount() * rate / (100 - rate);
-				uncommittedEntryData.setWithholdingTax(-tax);
-			}
-			long dividend = entry.getAmount() + uncommittedEntryData.getWithholdingTax();
-			uncommittedEntryData.getDividendEntry().setAmount(-dividend);
-			break;
-		case Transfer:
-			uncommittedEntryData.getTransferEntry().setAmount(-entry.getAmount());
-			break;
-		case Other:
-			// If there are two entries in the transaction and
-			// if both entries have accounts in the same currency or
-			// one or other account is not known or one or other account
-			// is a multi-currency account then we set the amount in
-			// the other entry to be the same but opposite signed amount.
-			if (entry.getTransaction().hasTwoEntries()) {
-				Entry otherEntry = entry.getTransaction().getOther(entry);
-				Commodity commodity1 = entry.getCommodity();
-				Commodity commodity2 = otherEntry.getCommodity();
-				if (commodity1 == null || commodity2 == null || commodity1.equals(commodity2)) {
-					otherEntry.setAmount(-entry.getAmount());
+				break;
+			case Dividend:
+				if (withholdingTaxIsFluid) {
+					long rate = 30L;
+					long tax = entry.getAmount() * rate / (100 - rate);
+					uncommittedEntryData.setWithholdingTax(-tax);
 				}
+				long dividend = entry.getAmount() + uncommittedEntryData.getWithholdingTax();
+				uncommittedEntryData.getDividendEntry().setAmount(-dividend);
+				break;
+			case Transfer:
+				uncommittedEntryData.getTransferEntry().setAmount(-entry.getAmount());
+				break;
+			case Other:
+				// If there are two entries in the transaction and
+				// if both entries have accounts in the same currency or
+				// one or other account is not known or one or other account
+				// is a multi-currency account then we set the amount in
+				// the other entry to be the same but opposite signed amount.
+				if (entry.getTransaction().hasTwoEntries()) {
+					Entry otherEntry = entry.getTransaction().getOther(entry);
+					Commodity commodity1 = entry.getCommodityInternal();
+					Commodity commodity2 = otherEntry.getCommodityInternal();
+					if (commodity1 == null || commodity2 == null || commodity1.equals(commodity2)) {
+						otherEntry.setAmount(-entry.getAmount());
+					}
+				}
+				break;
 			}
-			break;
 		}
 	}
 
 	public void quantityChanged() {
 		assert(uncommittedEntryData.isPurchaseOrSale());
 		quantityIsFluid = false;
-		
+
 		/*
 		 * If the share price has been entered then we can calculate the gross amount
 		 * and we can fill in any commission and tax deductions for which we
@@ -237,7 +249,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 		 */
 		if (sharePrice != null) {
 
-//		if (sharePriceManuallyEdited) {
+			//		if (sharePriceManuallyEdited) {
 			calculateExpenses();
 		}
 	}
@@ -245,7 +257,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	public void commissionChanged() {
 		assert(uncommittedEntryData.isPurchaseOrSale());
 		commissionIsFluid = false;
-		
+
 		/*
 		 * If both the share price and the quantity have been entered then we
 		 * can update the gross amount based on the new amount of this expense.
@@ -258,7 +270,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	public void tax1Changed() {
 		assert(uncommittedEntryData.isPurchaseOrSale());
 		tax1RatesIsFluid = false;
-		
+
 		/*
 		 * If both the share price and the quantity have been entered then we
 		 * can update the gross amount based on the new amount of this expense.
@@ -271,7 +283,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	public void tax2Changed() {
 		assert(uncommittedEntryData.isPurchaseOrSale());
 		tax2RatesIsFluid = false;
-		
+
 		/*
 		 * If both the share price and the quantity have been entered then we
 		 * can update the gross amount based on the new amount of this expense.
@@ -313,26 +325,26 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 		long quantity = uncommittedEntryData.getPurchaseOrSaleEntry().getAmount();
 		BigDecimal grossAmount1 = sharePrice.multiply(BigDecimal.valueOf(quantity).movePointLeft(3));
 		long grossAmount = grossAmount1.movePointRight(2).longValue();
-		
+
 		StockAccount account = (StockAccount)getUncommittedEntryData().getEntry().getAccount();
-		
+
 		RatesTable commissionRates = 
 			(uncommittedEntryData.getTransactionType() == TransactionType.Buy)
 			? account.getBuyCommissionRates()
 					: account.getSellCommissionRates();
-		if (account.getCommissionAccount() != null && commissionRates != null && commissionIsFluid) {
-			uncommittedEntryData.setCommission(commissionRates.calculateRate(grossAmount));
-		}
-		
-		if (account.getTax1Account() != null && account.getTax1Rates() != null && tax1RatesIsFluid) {
-			uncommittedEntryData.setTax1Amount(account.getTax1Rates().calculateRate(grossAmount));
-		}
-		
-		if (account.getTax2Account() != null && account.getTax2Rates() != null && tax2RatesIsFluid) {
-			uncommittedEntryData.setTax2Amount(account.getTax2Rates().calculateRate(grossAmount));
-		}
-		
-		updateNetAmount();
+			if (account.getCommissionAccount() != null && commissionRates != null && commissionIsFluid) {
+				uncommittedEntryData.setCommission(commissionRates.calculateRate(grossAmount));
+			}
+
+			if (account.getTax1Account() != null && account.getTax1Rates() != null && tax1RatesIsFluid) {
+				uncommittedEntryData.setTax1Amount(account.getTax1Rates().calculateRate(grossAmount));
+			}
+
+			if (account.getTax2Account() != null && account.getTax2Rates() != null && tax2RatesIsFluid) {
+				uncommittedEntryData.setTax2Amount(account.getTax2Rates().calculateRate(grossAmount));
+			}
+
+			updateNetAmount();
 	}
 
 	private void updateNetAmount() {
@@ -343,7 +355,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 			BigDecimal quantity = BigDecimal.valueOf(lQuantity).movePointLeft(3);
 			BigDecimal grossAmount1 = sharePrice.multiply(quantity);
 			long amount = grossAmount1.movePointRight(2).longValue();
-			
+
 			amount += uncommittedEntryData.getCommission();
 			amount += uncommittedEntryData.getTax1Amount();
 			amount += uncommittedEntryData.getTax2Amount();
@@ -374,6 +386,6 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 	public void addStockPriceChangeListener(
 			IPropertyChangeListener<BigDecimal> listener) {
 		stockPriceListeners.add(listener);
-		
+
 	}
 }

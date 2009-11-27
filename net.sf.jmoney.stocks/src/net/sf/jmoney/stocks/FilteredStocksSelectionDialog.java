@@ -113,8 +113,8 @@ public class FilteredStocksSelectionDialog extends FilteredItemsSelectionDialog 
 		for (Entry entry : account.getEntries()) {
 			StockEntry entry2 = entry.getExtension(StockEntryInfo.getPropertySet(), false);
 			if (entry2 != null) {
-				if (entry2.isStockChange()) {
-					Stock stock = entry2.getStock();
+				if (entry2.getCommodity() instanceof Stock) {
+					Stock stock = (Stock)entry2.getCommodity();
 					StockSummary stockWrapper = totals.get(stock);
 					if (stockWrapper == null) {
 						stockWrapper = new StockSummary();

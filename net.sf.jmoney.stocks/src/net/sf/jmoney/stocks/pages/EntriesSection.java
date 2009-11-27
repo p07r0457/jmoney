@@ -241,7 +241,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						Stock stock;
 						if (data.isPurchaseOrSale()) {
 							Entry entry = data.getPurchaseOrSaleEntry();
-							stock = (Stock)entry.getCommodity();
+							stock = (Stock)entry.getCommodityInternal();
 							control.setEnabled(true);
 						} else if (data.isDividend()) {
 							Entry entry = data.getDividendEntry();
@@ -426,7 +426,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					}
 
 					private IAmountFormatter getFormatter() {
-						IAmountFormatter formatter = data.getPurchaseOrSaleEntry().getCommodity();
+						IAmountFormatter formatter = data.getPurchaseOrSaleEntry().getCommodityInternal();
 						if (formatter == null) {
 							/*
 							 * The user has not yet selected the stock. As the
@@ -985,7 +985,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		 */
 		Collection<Entry> entries = new ArrayList<Entry>();
 		for (Entry entry : account.getEntries()) {
-			if (entry.getCommodity() == account.getCurrency()) {
+			if (entry.getCommodityInternal() == account.getCurrency()) {
 				entries.add(entry);
 			}
 		}
@@ -1000,7 +1000,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 		 * as top level entries in the table.
 		 */
 		return account == entry.getAccount()
-			&& entry.getCommodity() == account.getCurrency();
+			&& entry.getCommodityInternal() == account.getCurrency();
 	}
 
 	/* (non-Javadoc)

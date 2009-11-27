@@ -235,15 +235,17 @@ public class StockAccount extends CapitalAccount {
 	@Override
 	public Commodity getCommodity(Entry entry) {
 		/*
-		 * If a stock is set for an entry in a stock account then the
-		 * entry represents a gain or loss of stock in the account.
-		 * Note that the same field may also be set in income and expense accounts
-		 * (such as a dividend account) and in those cases the stock does not
-		 * represent a change in the amount of stock.
+		 * If a stock is set as the commodity for an entry in a stock account
+		 * then the entry represents a gain or loss of stock in the account.
+		 * Note that the stock field may be set in income and expense accounts
+		 * (such as a dividend account) and in those cases the entry does not
+		 * represent a change in the amount of stock, only that it is associated
+		 * with that stock.
 		 */
-		StockEntry stockEntry = entry.getExtension(StockEntryInfo.getPropertySet(), false);
-		if (stockEntry != null && stockEntry.isStockChange()) {
-			return stockEntry.getStock();
+		// TODO: remove this test at some time because getCommodity should never
+		// return null.
+		if (entry.getCommodity() != null) {
+			return entry.getCommodity();
 		} else {
 			return getCurrency();
 		}
