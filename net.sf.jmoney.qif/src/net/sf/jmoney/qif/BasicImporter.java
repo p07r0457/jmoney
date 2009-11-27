@@ -17,6 +17,7 @@ import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
+import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.qif.parser.QifAccount;
@@ -261,12 +262,36 @@ public class BasicImporter implements IQifImporter {
 									entry.setCheck(oldOtherEntry.getCheck());
 									entry.setValuta(oldOtherEntry.getValuta());
 
-									session.deleteTransaction(oldTransaction);
+									try {
+										session.deleteTransaction(oldTransaction);
+									} catch (ReferenceViolationException e) {
+										/*
+										 * Neither transactions nor entries or any other object type
+										 * contained in a transaction can have references to them. Therefore
+										 * this exception should not happen. It is possible that third-party
+										 * plug-ins might extend the model in a way that could cause this
+										 * exception, in which case we probably will need to think about how
+										 * we can be more user-friendly.
+										 */
+										throw new RuntimeException("This is an unlikely error and should not happen unless plug-ins are doing something complicated.", e);
+									}
 								}
 							} else {
 								// Delete the transaction that we have created,
 								// leaving only the existing transaction.
-								session.deleteTransaction(transaction);
+								try {
+									session.deleteTransaction(transaction);
+								} catch (ReferenceViolationException e) {
+									/*
+									 * Neither transactions nor entries or any other object type
+									 * contained in a transaction can have references to them. Therefore
+									 * this exception should not happen. It is possible that third-party
+									 * plug-ins might extend the model in a way that could cause this
+									 * exception, in which case we probably will need to think about how
+									 * we can be more user-friendly.
+									 */
+									throw new RuntimeException("This is an unlikely error and should not happen unless plug-ins are doing something complicated.", e);
+								}
 
 								// We must stop processing because this transaction
 								// is now dead.
