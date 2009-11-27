@@ -184,8 +184,8 @@ public class ShoeboxEditor extends EditorPart {
 				 * control is used for more general purposes. In this case, the
 				 * currency is not set and so the user must enter it.
 				 */
-				if (entryInTransaction.getCommodity() instanceof Currency) {
-					otherEntry.setIncomeExpenseCurrency((Currency)entryInTransaction.getCommodity());
+				if (entryInTransaction.getCommodityInternal() instanceof Currency) {
+					otherEntry.setIncomeExpenseCurrency((Currency)entryInTransaction.getCommodityInternal());
 				}
 				
 				return entryInTransaction;
