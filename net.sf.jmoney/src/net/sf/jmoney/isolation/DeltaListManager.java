@@ -35,6 +35,7 @@ import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
+import net.sf.jmoney.model2.ReferenceViolationException;
 
 /**
  * This is a special implementation of the IListManager interface. It is used
@@ -164,7 +165,11 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		return extendableObject;
 	}
 
-	public boolean deleteElement(E extendableObject) {
+	/**
+	 * ReferenceViolationException is never thrown by this method.  It will be thrown
+	 * when an attempt is made to commit the transaction.
+	 */
+	public void deleteElement(E extendableObject) throws ReferenceViolationException {
 		boolean isRemoved;
 		
 		UncommittedObjectKey uncommittedKey = (UncommittedObjectKey)extendableObject.getObjectKey();
@@ -184,33 +189,33 @@ public class DeltaListManager<E extends ExtendableObject> extends AbstractCollec
 		}
 		
 		
-		if (isRemoved) {
-			/*
-			 * Ensure this object is in the transaction manager's list of lists
-			 * that have changes.
-			 */
-			transactionManager.modifiedLists.add(this);
-			
-			/*
-			 * Add this object to the map so that it is indicated as having been
-			 * deleted. (But if we are deleting an object that was created in
-			 * this same transaction and has never been committed then we must
-			 * not add to the list).
-			 */
-			// TODO: This code may not be necessary.  It is probably better to flag the object itself
-			// when an object is deleted.
-			IObjectKey committedObjectKey = ((UncommittedObjectKey)extendableObject.getObjectKey()).getCommittedObjectKey();
-			if (committedObjectKey != null) {
-				ModifiedObject modifiedObject = transactionManager.modifiedObjects.get(committedObjectKey);
-				if (modifiedObject == null) {
-					modifiedObject = new ModifiedObject();
-					transactionManager.modifiedObjects.put(committedObjectKey, modifiedObject);
-				}
-				modifiedObject.setDeleted();
-			}
+		if (!isRemoved) {
+			throw new RuntimeException("Element not in list");
 		}
 		
-		return isRemoved;
+		/*
+		 * Ensure this object is in the transaction manager's list of lists
+		 * that have changes.
+		 */
+		transactionManager.modifiedLists.add(this);
+
+		/*
+		 * Add this object to the map so that it is indicated as having been
+		 * deleted. (But if we are deleting an object that was created in
+		 * this same transaction and has never been committed then we must
+		 * not add to the list).
+		 */
+		// TODO: This code may not be necessary.  It is probably better to flag the object itself
+		// when an object is deleted.
+		IObjectKey committedObjectKey = ((UncommittedObjectKey)extendableObject.getObjectKey()).getCommittedObjectKey();
+		if (committedObjectKey != null) {
+			ModifiedObject modifiedObject = transactionManager.modifiedObjects.get(committedObjectKey);
+			if (modifiedObject == null) {
+				modifiedObject = new ModifiedObject();
+				transactionManager.modifiedObjects.put(committedObjectKey, modifiedObject);
+			}
+			modifiedObject.setDeleted();
+		}
 	}
 
 	public void moveElement(E extendableObject, IListManager originalListManager) {

@@ -98,7 +98,7 @@ public class ForeignCurrencyDialog {
 		Entry entry2 = item.getOtherEntry();
 		Object[] messageArgs = new Object[] {
 				entry1.getAmount() > 0 ? Messages.ForeignCurrencyDialog_Credit : Messages.ForeignCurrencyDialog_Debit,
-				entry1.getCommodity().format(Math.abs(entry1.getAmount())),
+				entry1.getCommodityInternal().format(Math.abs(entry1.getAmount())),
 				entry1.getAccount().getName(), entry2.getAccount().getName() };
 
 		label1
@@ -111,7 +111,7 @@ public class ForeignCurrencyDialog {
 		label1.setLayoutData(gd);
 
 		Label label2 = new Label(transactionArea, SWT.NONE);
-		Object[] messageArgs2 = new Object[] { entry2.getCommodity().getName() };
+		Object[] messageArgs2 = new Object[] { entry2.getCommodityInternal().getName() };
 		label2.setText(NLS.bind(Messages.ForeignCurrencyDialog_Question, messageArgs2));
 
 		final IPropertyControl propertyControl = EntryInfo.getAmountAccessor()

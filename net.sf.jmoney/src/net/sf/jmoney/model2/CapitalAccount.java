@@ -229,10 +229,10 @@ public abstract class CapitalAccount extends Account {
 	/**
 	 * Delete a sub-account of this account.  This method is
 	 * identical to calling 
-	 * <code>getSubAccountCollection().remove(subAccount)</code>.
+	 * <code>getSubAccountCollection().deleteElement(subAccount)</code>.
 	 */
-	boolean deleteSubAccount(CapitalAccount subAccount) {
-		return getSubAccountCollection().remove(subAccount);
+	void deleteSubAccount(CapitalAccount subAccount) throws ReferenceViolationException {
+		getSubAccountCollection().deleteElement(subAccount);
 	}
 
 	/**

@@ -82,11 +82,14 @@ public class UncommittedListManager<E extends ExtendableObject> extends Vector<E
 	}
 
 	/*
-	 * This method is used only if a nested transaction manager is commitinsg
+	 * This method is used only if a nested transaction manager is committing
 	 * its changes into this transaction manager.
 	 */
-	public boolean deleteElement(E extendableObject) {
-		return remove(extendableObject);
+	public void deleteElement(E extendableObject) {
+		boolean found = remove(extendableObject);
+		if (!found) {
+			throw new RuntimeException("internal error - element not in list");
+		}
 	}
 
 	public void moveElement(E extendableObject, IListManager originalListManager) {

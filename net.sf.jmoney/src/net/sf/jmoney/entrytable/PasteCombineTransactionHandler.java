@@ -7,6 +7,7 @@ import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
+import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.ExtendableObject;
@@ -86,7 +87,16 @@ public class PasteCombineTransactionHandler extends AbstractHandler {
 					// are no Entry list properties defined in any known plug-ins.
 
 					Transaction cutTransaction = transactionManager.getCopyInTransaction(JMoneyPlugin.cutTransaction); 
-					cutTransaction.getSession().deleteTransaction(cutTransaction);
+					try {
+						cutTransaction.getSession().deleteTransaction(cutTransaction);
+					} catch (ReferenceViolationException e) {
+						/*
+						 * This should not happen because we are in a
+						 * transaction. This exception is not thrown until the
+						 * changes are committed to the data-store.
+						 */
+						throw new RuntimeException("Should not happen", e);
+					}
 
 					JMoneyPlugin.cutTransaction = null;
 				}

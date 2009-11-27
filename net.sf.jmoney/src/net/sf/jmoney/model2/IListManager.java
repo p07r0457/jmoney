@@ -56,20 +56,22 @@ public interface IListManager<E extends ExtendableObject> extends Collection<E> 
 	<F extends E> F createNewElement(ExtendablePropertySet<F> propertySet, IValues values);
 	
 	/**
-	 * Deletes the given object from this list.  Because objects are 'owned' by the
-	 * lists, removing it from the list means deleting the object altogether from
-	 * the datastore.
-	 *
-	 * This method should fail if there are references to the object.  However,
-	 * this is expensive to enforce, so it may not fail.  If the underlying datastore
-	 * is a relational database and foreign key constraints have been defined
-	 * then the database will cause a failure.
+	 * Deletes the given object from this list. Because objects are 'owned' by
+	 * the lists, removing it from the list means deleting the object altogether
+	 * from the data-store.
+	 * <P>
+	 * This method should return <code>false</code> if there are references to
+	 * the object. If the data-store is backed by a relational database then it
+	 * is cheaper to attempt the delete, catch the foreign key constraint
+	 * violation, and return <code>false</code>. If the data-store is serialized
+	 * to/from a file then the implementation must check for references before
+	 * attempting the delete.
 	 * 
 	 * @param extendableObject
-	 * @return true if the element was deleted, false if it could not be deleted because
-	 * 			there were references to it
+	 * @return true if the element was deleted, false if it could not be deleted
+	 *         because there were references to it
 	 */
-	boolean deleteElement(E extendableObject);
+	void deleteElement(E extendableObject) throws ReferenceViolationException;
 	
 	/**
 	 * Moves the given object into this list, removing it from its

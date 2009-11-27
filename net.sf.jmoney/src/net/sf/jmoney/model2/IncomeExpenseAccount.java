@@ -154,7 +154,7 @@ public class IncomeExpenseAccount extends Account {
 			return getCurrency();
 		} else {
 			// This is a multi-currency account, so we look to the entry.
-			return entry.getIncomeExpenseCurrency();
+			return entry.getCommodity();
 		}
 	}
 

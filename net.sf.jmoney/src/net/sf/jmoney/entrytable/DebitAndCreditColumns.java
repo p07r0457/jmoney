@@ -131,7 +131,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 			 * currency for this entry, in which case use the default
 			 * currency for this entry table.
 			 */
-			Commodity commodityForFormatting = entry.getCommodity();
+			Commodity commodityForFormatting = entry.getCommodityInternal();
 			if (commodityForFormatting == null) {
 				commodityForFormatting = commodity;
 			}
@@ -159,7 +159,7 @@ public class DebitAndCreditColumns extends IndividualBlock<EntryData, BaseEntryR
 			 * currency for this entry, in which case use the default
 			 * currency for this entry table.
 			 */
-			Commodity commodityForFormatting = entry.getCommodity();
+			Commodity commodityForFormatting = entry.getCommodityInternal();
 			if (commodityForFormatting == null) {
 				commodityForFormatting = commodity;
 			}

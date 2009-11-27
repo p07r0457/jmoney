@@ -97,6 +97,7 @@ public class EntryInfo implements IPropertySetInfo {
 					values.getScalarValue(EntryInfo.getValutaAccessor()),
 					values.getScalarValue(EntryInfo.getMemoAccessor()),
 					values.getScalarValue(EntryInfo.getAmountAccessor()),
+					values.getReferencedObjectKey(EntryInfo.getCommodityAccessor()),
 					values.getScalarValue(EntryInfo.getCreationAccessor()),
 					values.getReferencedObjectKey(EntryInfo.getIncomeExpenseCurrencyAccessor()),
 					values 
@@ -110,6 +111,7 @@ public class EntryInfo implements IPropertySetInfo {
 	private static ScalarPropertyAccessor<Date> valutaAccessor = null;
 	private static ScalarPropertyAccessor<String> memoAccessor = null;
 	private static ScalarPropertyAccessor<Long> amountAccessor = null;
+	private static ReferencePropertyAccessor<Commodity> commodityAccessor = null;
 	private static ScalarPropertyAccessor<Long> creationAccessor = null;
 	private static ReferencePropertyAccessor<Currency> incomeExpenseCurrencyAccessor = null;
 
@@ -128,7 +130,7 @@ public class EntryInfo implements IPropertySetInfo {
 				// If not enough information has yet been set to determine
 				// the currency of the amount in this entry, return
 				// the default currency.
-	    	    Commodity commodity = ((Entry) object).getCommodity();
+	    	    Commodity commodity = ((Entry) object).getCommodityInternal();
 	    	    if (commodity == null) {
 	    	    	commodity = ((Entry) object).getSession().getDefaultCurrency();
 	    	    }
@@ -150,16 +152,16 @@ public class EntryInfo implements IPropertySetInfo {
 		        			}
 		        			// Has the account property changed?
 		        			if (changedObject.equals(entry) && changedProperty == EntryInfo.getAccountAccessor()) {
-		        				editor.updateCommodity(entry.getCommodity());	
+		        				editor.updateCommodity(entry.getCommodityInternal());	
 		        			}
 		        			// Has the currency property of the account changed?
 		        			if (changedObject ==  entry.getAccount() && changedProperty == CurrencyAccountInfo.getCurrencyAccessor()) {
-		        				editor.updateCommodity(entry.getCommodity());	
+		        				editor.updateCommodity(entry.getCommodityInternal());	
 		        			}
 		        			// If any property in the commodity object changed then
 		        			// the format of the amount might also change.
-		        			if (changedObject ==  entry.getCommodity()) {
-		        				editor.updateCommodity(entry.getCommodity());	
+		        			if (changedObject ==  entry.getCommodityInternal()) {
+		        				editor.updateCommodity(entry.getCommodityInternal());	
 		        			}
 		        			
 		        			// TODO: All the above tests are still not complete.
@@ -218,6 +220,12 @@ public class EntryInfo implements IPropertySetInfo {
 			}
 		};
 
+		IReferenceControlFactory<Entry,Commodity> commodityControlFactory = new CommodityControlFactory<Entry>() {
+			public IObjectKey getObjectKey(Entry parentObject) {
+				return parentObject.commodityKey;
+			}
+		};
+		
 		IReferenceControlFactory<Entry,Currency> currencyControlFactory = new CurrencyControlFactory<Entry>() {
 			public IObjectKey getObjectKey(Entry parentObject) {
 				return parentObject.incomeExpenseCurrencyKey;
@@ -247,6 +255,7 @@ public class EntryInfo implements IPropertySetInfo {
 		valutaAccessor      = propertySet.addProperty("valuta",Messages.EntryInfo_Valuta,Date.class, 0, 74,  dateControlFactory, onlyIfCurrencyAccount); //$NON-NLS-1$
 		memoAccessor        = propertySet.addProperty("memo",Messages.EntryInfo_Memo,String.class, 5, 100, textControlFactory, null); //$NON-NLS-1$
 		amountAccessor      = propertySet.addProperty("amount",Messages.EntryInfo_Amount,Long.class, 2, 70,  amountControlFactory, null); //$NON-NLS-1$
+		commodityAccessor   = propertySet.addProperty("commodity","Commodity",Commodity.class, 2, 70, commodityControlFactory, null); //$NON-NLS-1$
 		creationAccessor    = propertySet.addProperty("creation",Messages.EntryInfo_Creation,Long.class, 0, 70,  creationControlFactory, null); //$NON-NLS-1$
 		incomeExpenseCurrencyAccessor = propertySet.addProperty("incomeExpenseCurrency",Messages.EntryInfo_Currency,Currency.class, 2, 70, currencyControlFactory, onlyIfIncomeExpenseAccount); //$NON-NLS-1$
 		
@@ -293,6 +302,13 @@ public class EntryInfo implements IPropertySetInfo {
 	 */
 	public static ScalarPropertyAccessor<Long> getAmountAccessor() {
 		return amountAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static ReferencePropertyAccessor<Commodity> getCommodityAccessor() {
+		return commodityAccessor;
 	}	
 
 	/**

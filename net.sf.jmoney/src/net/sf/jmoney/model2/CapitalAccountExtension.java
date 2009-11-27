@@ -74,8 +74,8 @@ public abstract class CapitalAccountExtension extends AccountExtension {
 		return getBaseObject().createSubAccount(propertySet);
 	}
         
-	boolean deleteSubAccount(CapitalAccount subAccount) {
-		return getBaseObject().deleteSubAccount(subAccount);
+	void deleteSubAccount(CapitalAccount subAccount) throws ReferenceViolationException {
+		getBaseObject().deleteSubAccount(subAccount);
 	}
 
 	// This does some casting - perhaps this is not needed

@@ -108,10 +108,6 @@ public abstract class Account extends ExtendableObject implements Comparable<Acc
 		return all;
 	}
 
-	boolean deleteSubAccount(Account subAccount) {
-		return getSubAccountCollection().remove(subAccount);
-	}
-	
 	/**
 	 * Get the entries in the account.
 	 * 

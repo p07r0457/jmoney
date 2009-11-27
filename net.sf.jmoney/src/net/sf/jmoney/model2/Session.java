@@ -268,36 +268,37 @@ public class Session extends ExtendableObject {
 		return getTransactionCollection().createNewElement(TransactionInfo.getPropertySet());
 	}
 	
-    public boolean deleteCommodity(Commodity commodity) {
-   		return getCommodityCollection().remove(commodity);
+    public void deleteCommodity(Commodity commodity) throws ReferenceViolationException {
+   		getCommodityCollection().deleteElement(commodity);
     }
 
-    /**
-     * Removes the specified account from this collection,
-     * if it is present.
-     * <P>
-     * Note that accounts may be sub-accounts.  Only top
-     * level accounts are in this session's account list.
-     * Sub-accounts must be removed by calling the 
-     * <code>removeSubAccount</code> method on the parent account.
-     * 
-     * @param account Account to be removed from this collection.
-     * 				This parameter may not be null.
-     * @return true if the account was present, false if the account
-     * 				was not present in the collection.
-     */
-    public boolean deleteAccount(Account account) {
+	/**
+	 * Helper method to delete the given account.
+	 * <P>
+	 * Note that accounts may be sub-accounts. Only top level accounts are in
+	 * this session's account list. Sub-accounts must be removed by removing
+	 * from the list of sub-accounts of the parent account.
+	 * 
+	 * @param account
+	 *            account to be removed from this collection, must not be null
+	 * @return true if the account was present, false if the account was not
+	 *         present in the collection
+	 */
+    public void deleteAccount(Account account) throws ReferenceViolationException {
         Account parent = account.getParent();
         if (parent == null) {
-        	return getAccountCollection().remove(account);
+        	getAccountCollection().deleteElement(account);
+        } else if (parent instanceof IncomeExpenseAccount) {
+        	// Pass the request on to the parent account.
+    		((IncomeExpenseAccount)parent).getSubAccountCollection().deleteElement((IncomeExpenseAccount)account);
         } else {
         	// Pass the request on to the parent account.
-            return parent.deleteSubAccount(account);
+    		((CapitalAccount)parent).getSubAccountCollection().deleteElement((CapitalAccount)account);
         }
     }
 
-   	public boolean deleteTransaction(Transaction transaction) {
-   		return getTransactionCollection().remove(transaction);
+   	public void deleteTransaction(Transaction transaction) throws ReferenceViolationException {
+   		getTransactionCollection().deleteElement(transaction);
     }
     
 	public ChangeManager getChangeManager() {

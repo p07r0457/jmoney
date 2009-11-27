@@ -450,7 +450,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 						Messages.BaseEntryRowControl_CategoryError, null);
 			}
 
-			if (entry.getCommodity() == null) {
+			if (entry.getCommodityInternal() == null) {
 				throw new InvalidUserEntryException(
 						Messages.BaseEntryRowControl_CommodityInfoError, null);
 			}
@@ -463,7 +463,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 			if (entry.getAccount() instanceof IncomeExpenseAccount) {
 				IncomeExpenseAccount incomeExpenseAccount = (IncomeExpenseAccount)entry.getAccount();
 				if (incomeExpenseAccount.isMultiCurrency()
-						&& entry.getIncomeExpenseCurrency() == null) {
+						&& entry.getCommodity() == null) {
 					throw new InvalidUserEntryException(
 							NLS
 									.bind(
@@ -474,8 +474,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 			}
 
 			if (commodity == null) {
-				commodity = entry.getCommodity();
-			} else if (!commodity.equals(entry.getCommodity())) {
+				commodity = entry.getCommodityInternal();
+			} else if (!commodity.equals(entry.getCommodityInternal())) {
 				mixedCommodities = true;
 			}
 
@@ -583,8 +583,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	 */
 	private void copyData(Entry sourceEntry, Entry targetEntry) {
 		targetEntry.setMemo(sourceEntry.getMemo());
-		targetEntry.setIncomeExpenseCurrency(transactionManager
-				.getCopyInTransaction(sourceEntry.getIncomeExpenseCurrency()));
+		targetEntry.setCommodity(transactionManager
+				.getCopyInTransaction(sourceEntry.getCommodity()));
 		targetEntry.setAmount(sourceEntry.getAmount());
 	}
 

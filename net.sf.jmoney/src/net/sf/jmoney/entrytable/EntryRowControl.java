@@ -60,8 +60,8 @@ public class EntryRowControl extends BaseEntryRowControl<EntryData, EntryRowCont
 		Entry entry = uncommittedEntryData.getEntry();
 		if (entry.getTransaction().hasTwoEntries()) {
 			Entry otherEntry = entry.getTransaction().getOther(entry);
-			Commodity commodity1 = entry.getCommodity();
-			Commodity commodity2 = otherEntry.getCommodity();
+			Commodity commodity1 = entry.getCommodityInternal();
+			Commodity commodity2 = otherEntry.getCommodityInternal();
 			if (commodity1 == null || commodity2 == null || commodity1.equals(commodity2)) {
 				otherEntry.setAmount(-entry.getAmount());
 			}
@@ -85,7 +85,7 @@ public class EntryRowControl extends BaseEntryRowControl<EntryData, EntryRowCont
 		if (!uncommittedEntryData.hasSplitEntries()
 				&& uncommittedEntryData.getEntry().getAmount() != 0
 				&& uncommittedEntryData.getOtherEntry().getAmount() == 0
-				&& uncommittedEntryData.getOtherEntry().getCommodity() != uncommittedEntryData.getEntry().getCommodity()) {
+				&& uncommittedEntryData.getOtherEntry().getCommodityInternal() != uncommittedEntryData.getEntry().getCommodityInternal()) {
 			ForeignCurrencyDialog dialog = new ForeignCurrencyDialog(
 					getShell(),
 					uncommittedEntryData);

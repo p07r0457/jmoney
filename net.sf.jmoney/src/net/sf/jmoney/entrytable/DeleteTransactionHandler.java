@@ -5,6 +5,7 @@ package net.sf.jmoney.entrytable;
 
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.resources.Messages;
 
@@ -39,11 +40,15 @@ public class DeleteTransactionHandler extends AbstractHandler {
     			// so we can undo it.  A more efficient way would be to make the change
     			// in a callback.
 
-    			TransactionManager transactionManager = new TransactionManager(selectedEntry.getDataManager());
-    			Entry selectedEntry2 = transactionManager.getCopyInTransaction(selectedEntry); 
-    			Transaction transaction = selectedEntry2.getTransaction();
-    			transaction.getSession().deleteTransaction(transaction);
-    			transactionManager.commit("Delete Transaction"); //$NON-NLS-1$
+				try {
+	    			TransactionManager transactionManager = new TransactionManager(selectedEntry.getDataManager());
+	    			Entry selectedEntry2 = transactionManager.getCopyInTransaction(selectedEntry); 
+	    			Transaction transaction = selectedEntry2.getTransaction();
+	    			transaction.getSession().deleteTransaction(transaction);
+	    			transactionManager.commit("Delete Transaction"); //$NON-NLS-1$
+				} catch (ReferenceViolationException e) {
+					MessageDialog.openError(shell, "Delete Failed", "There are references to this transaction or to entries within this transaction.  Unfortunately there is no easy way to find where the transaction is referenced.");
+				}
     		}
 		} else {
 			MessageDialog.openInformation(shell, Messages.EntriesTable_InformationTitle, Messages.EntriesTable_MessageDelete);

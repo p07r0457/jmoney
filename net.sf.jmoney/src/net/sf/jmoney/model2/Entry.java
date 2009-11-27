@@ -46,6 +46,15 @@ public final class Entry extends ExtendableObject {
 	
 	protected long amount = 0;
 	
+	/**
+	 * The currency or commodity represented by the amount in this entry,
+	 * which may be null only if the account contains only a single currency
+	 * or commodity
+	 * <P>
+	 * Element: Commodity
+	 */
+	protected IObjectKey commodityKey = null; 
+	
 	protected String memo = null;
 	
 	/**
@@ -81,6 +90,7 @@ public final class Entry extends ExtendableObject {
     		Date       valuta,
     		String     memo,
     		long       amount,
+    		IObjectKey commodityKey,
     		long       creation,
     		IObjectKey incomeExpenseCurrencyKey,
     		IValues extensionValues) {
@@ -95,6 +105,7 @@ public final class Entry extends ExtendableObject {
 		this.valuta = valuta;
 		this.accountKey = accountKey;
 		this.amount = amount;
+		this.commodityKey = commodityKey;
 		this.memo = memo;
 		this.incomeExpenseCurrencyKey = incomeExpenseCurrencyKey;
 	}
@@ -126,6 +137,7 @@ public final class Entry extends ExtendableObject {
 		this.valuta = null;
 		this.accountKey = null;
 		this.amount = 0;
+		this.commodityKey = null;
 		this.memo = null;
 		this.incomeExpenseCurrencyKey = null;
 	}
@@ -226,6 +238,19 @@ public final class Entry extends ExtendableObject {
 	}
 	
 	/**
+	 * Returns the commodity in which the amount in this entry is denominated.
+	 * This property may be null only if the account contains only a single
+	 * currency or commodity.
+	 */
+	public Commodity getCommodity() {
+		if (commodityKey == null) {
+			return null;
+		} else {
+			return (Commodity)commodityKey.getObject();
+		}
+	}
+
+	/**
 	 * Returns the memo.
 	 */
 	public String getMemo() {
@@ -236,7 +261,7 @@ public final class Entry extends ExtendableObject {
 	 * @return The commodity for this entry, or null if not enough
 	 * 			information has been set to determine the commodity.
 	 */
-	public Commodity getCommodity() {
+	public Commodity getCommodityInternal() {
 		if (getAccount() == null) {
 			return null;
 		} else {
@@ -325,6 +350,32 @@ public final class Entry extends ExtendableObject {
 		processPropertyChange(EntryInfo.getMemoAccessor(), oldMemo, memo);
 	}
 	
+	/**
+	 * Sets the currency in which the amount in this entry is denominated.
+	 * This property is applicable if and only if the account for this entry
+	 * is an IncomeExpenseAccount and the multi-currency property in the account
+	 * is set.
+	 */
+	public void setCommodity(Commodity commodity) {
+		Commodity oldCommodity =
+			commodityKey == null
+			? null
+					: (Commodity)commodityKey.getObject();
+		
+		// TODO: This is not efficient.  Better would be to pass
+		// an object key as the old value to the property change
+		// method.  Then the object is materialized only if
+		// necessary.
+		commodityKey =
+			commodity == null
+			? null
+					: commodity.getObjectKey();
+		
+		
+		// Notify the change manager.
+		processPropertyChange(EntryInfo.getCommodityAccessor(), oldCommodity, commodity);
+	}
+
 	/**
 	 * Sets the currency in which the amount in this entry is denominated.
 	 * This property is applicable if and only if the account for this entry

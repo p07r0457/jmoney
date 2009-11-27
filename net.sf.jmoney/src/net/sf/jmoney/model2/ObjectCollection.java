@@ -171,21 +171,28 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 		throw new UnsupportedOperationException();
 	}
 	
-	/**
-	 * Removes an object from the collection.  This method ensures that listeners
-	 * are notified as appropriate.
-	 * 
-	 * @return true if the object existed in this collection,
-	 * 			false if the object was not in the collection
-	 */
-	// TODO: rename to DeleteElement.
 	public boolean remove(Object object) {
-		if (!(object instanceof ExtendableObject)) {
-			return false;
-		}
-		
-		ExtendableObject extendableObject = (ExtendableObject)object;
-		
+		/*
+		 * The Collection methods that mutate the collection should not be
+		 * used.  Use instead createNewElement, deleteElement, and moveElement.
+		 */
+		throw new UnsupportedOperationException();
+	}
+	
+	/**
+	 * Removes an object from the collection. Because this collection 'owns' the
+	 * object, this results in the object being deleted. This method ensures
+	 * that listeners are notified as appropriate.
+	 * 
+	 * @return true if the object was deleted, false if the object had
+	 *         references to it and so the object could not be deleted
+	 * @throws ReferenceViolationException
+	 *             if the object cannot be deleted because there are
+	 *             references to it
+	 * @throws RuntimeException
+	 *             if the object does not exist in the collection
+	 */
+	public void deleteElement(E extendableObject) throws ReferenceViolationException {
 		if (extendableObject.getDataManager() != listKey.getParentKey().getDataManager()) {
     		throw new RuntimeException("Invalid call to remove.  The object passed does not belong to the data manager that is the base data manager of this collection."); //$NON-NLS-1$
 		}
@@ -194,33 +201,29 @@ public class ObjectCollection<E extends ExtendableObject> implements Collection<
 		 * Check that the object is in the list.  It is in this list if the parent
 		 * object is the same and the list property is the same.
 		 */
-		if (extendableObject.parentKey.equals(listKey)) {
-			final E objectToRemove = listKey.getListPropertyAccessor().getElementPropertySet().getImplementationClass().cast(extendableObject);
-
-			/*
-			 * Deletion events are fired before the object is removed from the
-			 * datastore. This is necessary because listeners processing the
-			 * object deletion may need to fetch information about the object
-			 * from the datastore.
-			 */
-			listKey.getParentKey().getDataManager().fireEvent(
-					new ISessionChangeFirer() {
-						public void fire(SessionChangeListener listener) {
-							listener.objectRemoved(objectToRemove);
-						}
-					});
-			
-			// Notify the change manager.
-			listKey.getParentKey().getSession().getChangeManager().processObjectDeletion(listKey.getParentKey().getObject(), listKey.getListPropertyAccessor(), objectToRemove);
-			
-			boolean found = listManager.deleteElement(objectToRemove);
-			Assert.isTrue(found);
-			
-			return true;
+		if (!extendableObject.parentKey.equals(listKey)) {
+			throw new RuntimeException("Passed object is not in the list.");
 		}
+		
+		final E objectToRemove = listKey.getListPropertyAccessor().getElementPropertySet().getImplementationClass().cast(extendableObject);
 
-		// Object was not in the collection
-		return false;
+		/*
+		 * Deletion events are fired before the object is removed from the
+		 * datastore. This is necessary because listeners processing the
+		 * object deletion may need to fetch information about the object
+		 * from the datastore.
+		 */
+		listKey.getParentKey().getDataManager().fireEvent(
+				new ISessionChangeFirer() {
+					public void fire(SessionChangeListener listener) {
+						listener.objectRemoved(objectToRemove);
+					}
+				});
+
+		// Notify the change manager.
+		listKey.getParentKey().getSession().getChangeManager().processObjectDeletion(listKey.getParentKey().getObject(), listKey.getListPropertyAccessor(), objectToRemove);
+
+		listManager.deleteElement(objectToRemove);
 	}
 	
 	public boolean containsAll(Collection<?> arg0) {

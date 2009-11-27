@@ -76,6 +76,14 @@ public abstract class EntryExtension extends ExtensionObject {
 		getBaseObject().setAmount(anAmount);
 	}
 	
+	public void setCommodity(Commodity commodity) {
+		getBaseObject().setCommodity(commodity);
+	}
+	
+	public Commodity getCommodity() {
+		return getBaseObject().getCommodity();
+	}
+	
 	public Transaction getTransaction() {
 		return getBaseObject().getTransaction();
 	}

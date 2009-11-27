@@ -5,8 +5,7 @@ package net.sf.jmoney.navigator;
 
 import net.sf.jmoney.model2.AbstractDataOperation;
 import net.sf.jmoney.model2.Account;
-import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.resources.Messages;
 
@@ -15,6 +14,7 @@ import org.eclipse.core.commands.operations.IOperationHistory;
 import org.eclipse.core.commands.operations.IUndoableOperation;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
@@ -51,20 +51,15 @@ class DeleteAccountAction extends BaseSelectionListenerAction {
 				session, "delete account") { //$NON-NLS-1$
 			@Override
 			public IStatus execute() throws ExecutionException {
-				if (account.getParent() != null) {
-					if (account.getParent() instanceof CapitalAccount) {
-						((CapitalAccount) account.getParent())
-						.getSubAccountCollection().remove(
-								account);
-					} else {
-						((IncomeExpenseAccount) account
-								.getParent())
-								.getSubAccountCollection().remove(
-										account);
-					}
-				} else {
+				try {
 					session.deleteAccount(account);
+				} catch (ReferenceViolationException e) {
+					MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Delete Failed", "The account is in use.  "
+							+ "The reference is a reference to this account in its capacity as a '" + e.getPropertySet().getObjectDescription()
+							+ "'.  Further information: " + e.getSqlErrorMessage());
+					return Status.CANCEL_STATUS;
 				}
+
 				return Status.OK_STATUS;
 			}
 		};

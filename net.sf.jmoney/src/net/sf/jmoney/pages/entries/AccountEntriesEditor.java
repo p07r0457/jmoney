@@ -192,7 +192,7 @@ public class AccountEntriesEditor extends EditorPart {
         			if (!data.hasSplitEntries()) {
         				Entry entry = data.getOtherEntry();
         				if (entry.getAccount() instanceof IncomeExpenseAccount
-        						&& !JMoneyPlugin.areEqual(entry.getCommodity(), ((CurrencyAccount)account).getCurrency())) {
+        						&& !JMoneyPlugin.areEqual(entry.getCommodityInternal(), ((CurrencyAccount)account).getCurrency())) {
         					return entry;
         				}
         			}

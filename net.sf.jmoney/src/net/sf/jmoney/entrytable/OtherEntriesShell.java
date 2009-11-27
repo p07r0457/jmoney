@@ -170,10 +170,10 @@ public class OtherEntriesShell {
 			long total = 0;
 			Commodity commodity = null;
 			for (Entry entry: transaction.getEntryCollection()) {
-				if (entry.getCommodity() != null) {
+				if (entry.getCommodityInternal() != null) {
     				if (commodity == null) {
-    					commodity = entry.getCommodity();
-    				} else if (!commodity.equals(entry.getCommodity())) {
+    					commodity = entry.getCommodityInternal();
+    				} else if (!commodity.equals(entry.getCommodityInternal())) {
     					// We have entries with mismatching commodities set.
     					// This means there is an exchange of one commodity
     					// for another so we do not expect the total amount
@@ -205,8 +205,8 @@ public class OtherEntriesShell {
 			// are being listed, but may be possible if this entries list
 			// control is used for more general purposes.  In this case,
 			// the currency is not set and so the user must enter it.
-			if (entryData.getEntry().getCommodity() instanceof Currency) {
-    			newEntry.setIncomeExpenseCurrency((Currency)entryData.getEntry().getCommodity());
+			if (entryData.getEntry().getCommodityInternal() instanceof Currency) {
+    			newEntry.setIncomeExpenseCurrency((Currency)entryData.getEntry().getCommodityInternal());
 			}
 			
        		// Select the new entry in the entries list.
