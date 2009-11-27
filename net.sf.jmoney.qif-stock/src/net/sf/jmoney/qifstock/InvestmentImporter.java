@@ -14,6 +14,7 @@ import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.IncomeExpenseAccountInfo;
+import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.qif.IQifImporter;
@@ -200,8 +201,7 @@ public class InvestmentImporter implements IQifImporter {
 	        		saleEntry.setAmount(-quantity);
 	        	}
 	        	
-	        	saleEntry.setStock(stock);
-	        	saleEntry.setStockChange(true);
+	        	saleEntry.setCommodity(stock);
 			} else if (qifTransaction.getAction().equals("Buy") || qifTransaction.getAction().equals("Sell")) {
 				if (qifTransaction.getAction().equals("Sell")) {
 					firstEntry.setAmount(amount);
@@ -224,8 +224,7 @@ public class InvestmentImporter implements IQifImporter {
 	        		saleEntry.setAmount(-quantity);
 	        	}
 	        	
-	        	saleEntry.setStock(stock);
-	        	saleEntry.setStockChange(true);
+	        	saleEntry.setCommodity(stock);
 	        	
 	        	BigDecimal c = new BigDecimal(9.99);
 	        	
@@ -299,15 +298,13 @@ public class InvestmentImporter implements IQifImporter {
 //		        }
 
 		        StockEntry firstEntryAsStock = firstEntry.getExtension(StockEntryInfo.getPropertySet(), true);
-	        	firstEntryAsStock.setStock(stock);
-	        	firstEntryAsStock.setStockChange(true);
+	        	firstEntryAsStock.setCommodity(stock);
 	        	firstEntryAsStock.setAmount(quantity);
 
 	        	StockEntry otherEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 	        	otherEntry.setAccount(stockSplitAccount);
         		otherEntry.setAmount(-quantity);
-	        	otherEntry.setStock(stock);
-	        	otherEntry.setStockChange(true);
+	        	otherEntry.setCommodity(stock);
 			} else {
 				System.out.println("unknown type");
 			}
@@ -409,12 +406,36 @@ public class InvestmentImporter implements IQifImporter {
 									entry.setCheck(oldOtherEntry.getCheck());
 									entry.setValuta(oldOtherEntry.getValuta());
 
-									session.deleteTransaction(oldTransaction);
+									try {
+										session.deleteTransaction(oldTransaction);
+									} catch (ReferenceViolationException e) {
+										/*
+										 * Neither transactions nor entries or any other object type
+										 * contained in a transaction can have references to them. Therefore
+										 * this exception should not happen. It is possible that third-party
+										 * plug-ins might extend the model in a way that could cause this
+										 * exception, in which case we probably will need to think about how
+										 * we can be more user-friendly.
+										 */
+										throw new RuntimeException("This is an unlikely error and should not happen unless plug-ins are doing something complicated.", e);
+									}
 								}
 							} else {
 								// Delete the transaction that we have created,
 								// leaving only the existing transaction.
-								session.deleteTransaction(transaction);
+								try {
+									session.deleteTransaction(transaction);
+								} catch (ReferenceViolationException e) {
+									/*
+									 * Neither transactions nor entries or any other object type
+									 * contained in a transaction can have references to them. Therefore
+									 * this exception should not happen. It is possible that third-party
+									 * plug-ins might extend the model in a way that could cause this
+									 * exception, in which case we probably will need to think about how
+									 * we can be more user-friendly.
+									 */
+									throw new RuntimeException("This is an unlikely error and should not happen unless plug-ins are doing something complicated.", e);
+								}
 
 								// We must stop processing because this transaction
 								// is now dead.
