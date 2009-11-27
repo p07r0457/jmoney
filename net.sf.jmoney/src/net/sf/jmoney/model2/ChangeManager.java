@@ -172,13 +172,13 @@ public class ChangeManager {
 		}
 	}
 
-	class ChangeEntry_Insert extends ChangeEntry {
+	class ChangeEntry_Insert<E extends ExtendableObject> extends ChangeEntry {
 		private KeyProxy parentKeyProxy;
-		private ListPropertyAccessor<?> owningListProperty;
+		private ListPropertyAccessor<E> owningListProperty;
 		private KeyProxy objectKeyProxy;
 
 		ChangeEntry_Insert(KeyProxy parentKeyProxy,
-				ListPropertyAccessor<?> owningListProperty,
+				ListPropertyAccessor<E> owningListProperty,
 				KeyProxy objectKeyProxy) {
 			this.parentKeyProxy = parentKeyProxy;
 			this.owningListProperty = owningListProperty;
@@ -188,11 +188,20 @@ public class ChangeManager {
 		@Override
 		void undo() {
 			// Delete the object.
-			ExtendableObject object = objectKeyProxy.key.getObject(); // efficient???
+			E object = (E)objectKeyProxy.key.getObject(); // efficient???
 			ExtendableObject parent = parentKeyProxy.key.getObject();
 
 			// Delete the object from the datastore.
-			parent.getListPropertyValue(owningListProperty).remove(object);
+			try {
+				parent.getListPropertyValue(owningListProperty).deleteElement(object);
+			} catch (ReferenceViolationException e) {
+				/*
+				 * This should not happen because we are going back to a state that we
+				 * were in before.  The object was created, and now we are un-doing that create,
+				 * we are deleting the object.  It can't possibly have references to it.
+				 */
+				throw new RuntimeException("Internal error", e);
+			}
 		}
 	}
 

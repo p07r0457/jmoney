@@ -49,6 +49,7 @@ import net.sf.jmoney.model2.ListPropertyAccessor;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ReferencePropertyAccessor;
+import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.SessionChangeListener;
@@ -522,14 +523,7 @@ public class TransactionManager extends DataManager {
 		 * Step 2: Delete the deleted objects
 		 */
 		for (DeltaListManager<?> modifiedList: modifiedLists) {
-
-			ExtendableObject parent = modifiedList.committedParent;
-			
-			for (IObjectKey objectKeyToDelete: modifiedList.getDeletedObjects()) {
-				ExtendableObject objectToDelete = objectKeyToDelete.getObject();
-				fireDestroyEvents(objectToDelete);
-				parent.getListPropertyValue(modifiedList.listAccessor).remove(objectToDelete);
-			}
+			deleteObjectsInList(modifiedList);
 		}
 		
 		baseDataManager.commitTransaction();
@@ -546,6 +540,31 @@ public class TransactionManager extends DataManager {
 		}
 		modifiedLists.clear();
 		modifiedObjects.clear();
+	}
+
+	private <E extends ExtendableObject> void deleteObjectsInList(DeltaListManager<E> modifiedList) {
+		ExtendableObject parent = modifiedList.committedParent;
+		
+		for (IObjectKey objectKeyToDelete: modifiedList.getDeletedObjects()) {
+			E objectToDelete = (E)objectKeyToDelete.getObject();
+			fireDestroyEvents(objectToDelete);
+			try {
+				parent.getListPropertyValue(modifiedList.listAccessor).deleteElement(objectToDelete);
+			} catch (ReferenceViolationException e) {
+				/*
+				 * We are trying to delete something that has references to it.
+				 * 
+				 * We really need to pass back this error so it can be handled by the code that started this
+				 * commit in a user-friendly way.  However that means every commit needs to catch this exception
+				 * which is a lot of places.  We therefore convert it to a runtime exception here.  Unfortunately
+				 * this means the users don't get a friendly message.
+				 * 
+				 * Ideally we should perhaps check for references when changes are made within the transaction.
+				 * However that would be a lot of work.
+				 */
+				throw new RuntimeException("Attempt to delete an object that has references", e);
+			}
+		}
 	}
 
 	private void fireDestroyEvents(final ExtendableObject objectToDelete) {

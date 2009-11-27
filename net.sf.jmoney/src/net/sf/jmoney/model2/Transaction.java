@@ -87,8 +87,8 @@ public class Transaction extends ExtendableObject {
     	return new EntryCollection(entries, this, TransactionInfo.getEntriesAccessor());
     }
     
-    public boolean deleteEntry(Entry entry) {
-    	return new EntryCollection(entries, this, TransactionInfo.getEntriesAccessor()).deleteEntry(entry);
+    public void deleteEntry(Entry entry) {
+    	new EntryCollection(entries, this, TransactionInfo.getEntriesAccessor()).deleteEntry(entry);
     }
     
     // Some helper methods:
@@ -151,8 +151,16 @@ public class Transaction extends ExtendableObject {
 	    /**
 	     * Identical to <code>remove</remove> but tighter typing
 		 */
-		public boolean deleteEntry(Entry entry) {
-	    	return remove(entry);
+		public void deleteEntry(Entry entry) {
+	    	try {
+				deleteElement(entry);
+			} catch (ReferenceViolationException e) {
+				/*
+				 * There are no known properties that reference entries, so this
+				 * exception cannot happen.
+				 */
+				throw new RuntimeException("Internal error", e);
+			}
 		}
 
 	    /**
