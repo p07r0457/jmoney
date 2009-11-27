@@ -54,6 +54,7 @@ import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.IPropertyControl;
+import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
@@ -215,8 +216,8 @@ public class StatementSection extends SectionPart {
 				 * control is used for more general purposes. In this case, the
 				 * currency is not set and so the user must enter it.
 				 */
-				if (entryInTransaction.getCommodity() instanceof Currency) {
-					otherEntry.setIncomeExpenseCurrency((Currency)entryInTransaction.getCommodity());
+				if (entryInTransaction.getCommodityInternal() instanceof Currency) {
+					otherEntry.setIncomeExpenseCurrency((Currency)entryInTransaction.getCommodityInternal());
 				}
 				
 				return entryInTransaction;
@@ -631,7 +632,19 @@ public class StatementSection extends SectionPart {
 		 * these should be reversed in the UI so that the user does not get warnings
 		 * when the committed entry is deleted.
 		 */
-		sourceTransaction.getSession().deleteTransaction(sourceTransaction);
+		try {
+			sourceTransaction.getSession().deleteTransaction(sourceTransaction);
+		} catch (ReferenceViolationException e) {
+			/*
+			 * Neither transactions nor entries or any other object type
+			 * contained in a transaction can have references to them. Therefore
+			 * this exception should not happen. It is possible that third-party
+			 * plug-ins might extend the model in a way that could cause this
+			 * exception, in which case we probably will need to think about how
+			 * we can be more user-friendly.
+			 */
+			throw new RuntimeException("This is an unlikely error and should not happen unless plug-ins are doing something complicated.", e);
+		}
 		
 		return true;
 	}
