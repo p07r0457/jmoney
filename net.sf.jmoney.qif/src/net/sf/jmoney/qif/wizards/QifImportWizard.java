@@ -54,8 +54,8 @@ import org.eclipse.ui.IWorkbenchWindow;
 
 /**
  * A wizard to import data from a QIF file.
- * 
- * Currently this wizard if a single page wizard that asks only for the file.
+ * <P>
+ * Currently this wizard is a single page wizard that asks only for the file.
  * This feature is implemented as a wizard because the Eclipse workbench import
  * action requires all import implementations to be wizards.
  */

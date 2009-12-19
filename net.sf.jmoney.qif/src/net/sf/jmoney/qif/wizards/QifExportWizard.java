@@ -38,6 +38,7 @@ import java.util.Locale;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.CurrencyAccount;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.TransactionInfo;
@@ -51,19 +52,18 @@ import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
-import org.eclipse.ui.IImportWizard;
+import org.eclipse.ui.IExportWizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
-import net.sf.jmoney.model2.DatastoreManager;
 
 /**
- * A wizard to import data from a QIF file.
- * 
- * Currently this wizard if a single page wizard that asks only for the file.
+ * A wizard to export data to a QIF file.
+ * <P>
+ * Currently this wizard is a single page wizard that asks only for the file.
  * This feature is implemented as a wizard because the Eclipse workbench import
- * action requires all import implementations to be wizards.
+ * action requires all export implementations to be wizards.
  */
-public class QifExportWizard extends Wizard implements IImportWizard {
+public class QifExportWizard extends Wizard implements IExportWizard {
 	private static SimpleDateFormat df = (SimpleDateFormat)DateFormat.getDateInstance();
 
 	private Calendar calendar = Calendar.getInstance();
