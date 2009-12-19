@@ -26,7 +26,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
+import java.util.AbstractCollection;
 import java.util.Iterator;
 
 import net.sf.jmoney.model2.Entry;
@@ -42,7 +42,7 @@ import net.sf.jmoney.model2.EntryInfo;
  * 
  * @author Nigel Westbury
  */
-public class AccountEntriesList implements Collection<Entry> {
+public class AccountEntriesList extends AbstractCollection<Entry> {
 	SessionManager sessionManager;
 	final IDatabaseRowKey keyOfRequiredPropertyValue;
 	final String tableName;
@@ -56,6 +56,7 @@ public class AccountEntriesList implements Collection<Entry> {
 		columnName = EntryInfo.getAccountAccessor().getLocalName();
 	}
 	
+	@Override
 	public int size() {
 		try {
 			String sql = "SELECT COUNT(*) FROM " + tableName
@@ -77,7 +78,9 @@ public class AccountEntriesList implements Collection<Entry> {
 			throw new RuntimeException("SQL Exception: " + e.getMessage());
 		}
 	}
-	
+
+	// TODO delete this method.  The base class will use the size() method from its default implementation.
+	@Override
 	public boolean isEmpty() {
 		try {
 			String sql =
@@ -99,10 +102,7 @@ public class AccountEntriesList implements Collection<Entry> {
 		}
 	}
 	
-	public boolean contains(Object arg0) {
-		throw new RuntimeException("method not implemented");
-	}
-	
+	@Override
 	public Iterator<Entry> iterator() {
 		ResultSet rs = sessionManager.runWithReconnect(new IRunnableSql<ResultSet>() {
 			public ResultSet execute(Connection connection) throws SQLException {
@@ -126,44 +126,4 @@ public class AccountEntriesList implements Collection<Entry> {
 		 */
 		return new UncachedObjectIterator<Entry>(rs, EntryInfo.getPropertySet(), null, sessionManager);
 	}
-	
-	public Object[] toArray() {
-		throw new RuntimeException("method not implemented");
-	}
-	
-	public <T> T[] toArray(T[] arg0) {
-		throw new RuntimeException("method not implemented");
-	}
-
-	public boolean add(Entry arg0) {
-		// The list is not cached.  
-		// We read from the database every time.
-		// There is therefore nothing to do here.
-		return true;
-	}
-	
-	public boolean remove(Object arg0) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-	
-	public boolean containsAll(Collection<?> arg0) {
-		throw new RuntimeException("method not implemented");
-	}
-	
-	public boolean addAll(Collection<? extends Entry> arg0) {
-		throw new RuntimeException("method not implemented");
-	}
-	
-	public boolean removeAll(Collection<?> arg0) {
-		throw new RuntimeException("method not implemented");
-	}
-	
-	public boolean retainAll(Collection<?> arg0) {
-		throw new RuntimeException("method not implemented");
-	}
-	
-	public void clear() {
-		throw new RuntimeException("method not implemented");
-	}
-}
+}	
