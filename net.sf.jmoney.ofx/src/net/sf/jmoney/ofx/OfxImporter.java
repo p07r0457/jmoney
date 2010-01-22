@@ -52,6 +52,7 @@ import net.sf.jmoney.ofx.parser.SimpleElement;
 import net.sf.jmoney.ofx.parser.TagNotFoundException;
 import net.sf.jmoney.reconciliation.ReconciliationAccountInfo;
 import net.sf.jmoney.reconciliation.utilities.ImportMatcher;
+import net.sf.jmoney.stocks.model.SecurityInfo;
 import net.sf.jmoney.stocks.model.Stock;
 import net.sf.jmoney.stocks.model.StockAccount;
 import net.sf.jmoney.stocks.model.StockEntry;
@@ -753,12 +754,12 @@ public class OfxImporter {
 		
 		ScalarPropertyAccessor<String> securityIdField = null;
 		if ("CUSIP".equals(uniqueIdType)) {
-			securityIdField = StockInfo.getCusipAccessor();
+			securityIdField = SecurityInfo.getCusipAccessor();
 		} else {
 			// We don't recognize the id type, so use the symbol field
 			// and hope it does not conflict with another use of the
 			// symbol field.
-			securityIdField = StockInfo.getSymbolAccessor();
+			securityIdField = SecurityInfo.getSymbolAccessor();
 		}
 
 		if (uniqueId.length() == 0) {
