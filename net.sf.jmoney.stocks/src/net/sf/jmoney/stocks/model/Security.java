@@ -25,11 +25,12 @@ package net.sf.jmoney.stocks.model;
 import java.text.NumberFormat;
 import java.text.ParseException;
 
+import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.ListKey;
 
-public class Stock extends Security {
+public class Security extends Commodity {
 	
 	// This implementation formats all quantities as numbers with three decimal places.
 	private int SCALE_FACTOR = 1000;
@@ -40,57 +41,77 @@ public class Stock extends Security {
 		numberFormat.setMinimumFractionDigits(0);
 	}
 	
-	private String nominalValue;
+	private String cusip;
+	private String symbol;
 	
     /**
      * Constructor used by datastore plug-ins to create
      * a stock object.
      */
-	public Stock(
+	public Security(
 			IObjectKey objectKey,
 			ListKey parentKey,
 			String name,
 			String cusip,
 			String symbol,
-			String nominalValue,
 			IValues extensionValues) {
-		super(objectKey, parentKey, name, cusip, symbol, extensionValues);
+		super(objectKey, parentKey, name, extensionValues);
 
-		this.nominalValue = nominalValue;
+		this.cusip = cusip;
+		this.symbol = symbol;
 	}
 
     /**
      * Constructor used by datastore plug-ins to create
      * a stock object.
      */
-	public Stock(
+	public Security(
 			IObjectKey objectKey,
 			ListKey parentKey) {
 		super(objectKey, parentKey);
 		
-		this.nominalValue = null;
+		this.cusip = null;
+		this.symbol = null;
 	}
 
 	@Override
 	protected String getExtendablePropertySetId() {
-		return "net.sf.jmoney.stocks.stock";
+		return "net.sf.jmoney.stocks.security";
 	}
 	
 	/**
-	 * @return the nominal value.  For example, "ORD 25P"
+	 * @return the 9 digit CUSIP if a US security or the CINS (one letter
+	 *         followed by 8 digits) if a non-US security
 	 */
-	public String getNominalValue() {
-		return nominalValue;
+	public String getCusip() {
+		return cusip;
 	}
 	
-	public void setNominalValue(String nominalValue) {
-		String oldNominalValue = this.nominalValue;
-		this.nominalValue = nominalValue;
+	public String getSymbol() {
+		return symbol;
+	}
+	
+	/**
+	 * @param cusip
+	 *            the 9 digit CUSIP if a US security or the CINS (one letter
+	 *            followed by 8 digits) if a non-US security
+	 */
+	public void setCusip(String cusip) {
+		String oldCusip = this.cusip;
+		this.cusip = cusip;
 
 		// Notify the change manager.
-		processPropertyChange(StockInfo.getNominalValueAccessor(), oldNominalValue, nominalValue);
+		processPropertyChange(SecurityInfo.getCusipAccessor(), oldCusip, cusip);
 	}
-	
+
+	public void setSymbol(String symbol) {
+		String oldSymbol = this.symbol;
+		this.symbol = symbol;
+
+		// Notify the change manager.
+		processPropertyChange(SecurityInfo.getSymbolAccessor(), oldSymbol, symbol);
+	}
+
 	@Override
 	public long parse(String amountString) {
 		Number amount;

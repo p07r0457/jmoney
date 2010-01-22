@@ -31,7 +31,7 @@ import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.ListKey;
 
-public class Bond extends Commodity {
+public class Bond extends Security {
 	
 	private static final int MAX_DECIMALS = 4;
 	private static final short[] SCALE_FACTOR = { 1, 10, 100, 1000, 10000 };
@@ -57,22 +57,24 @@ public class Bond extends Commodity {
 	
     /**
      * Constructor used by datastore plug-ins to create
-     * a stock object.
+     * a bond object.
      */
 	public Bond(
 			IObjectKey objectKey,
 			ListKey parentKey,
 			String name,
+			String cusip,
+			String symbol,
 			IObjectKey currencyKey,
 			long redemptionValue,
 			int interestRate,
 			IValues extensionValues) {
-		super(objectKey, parentKey, name, extensionValues);
+		super(objectKey, parentKey, name, cusip, symbol, extensionValues);
 
 		/*
 		 * The currency for this account is not allowed to be null, because
 		 * users of this class may assume it to be non-null and would not know
-		 * how to handle this account if it were null.
+		 * how to handle this bond if it were null.
 		 * 
 		 * If null is passed, set to the default currency for the session.
 		 * This is guaranteed to be never null.
@@ -89,7 +91,7 @@ public class Bond extends Commodity {
 
     /**
      * Constructor used by datastore plug-ins to create
-     * a stock object.
+     * a bond object.
      */
 	public Bond(
 			IObjectKey objectKey,
@@ -187,4 +189,3 @@ public class Bond extends Commodity {
 		return SCALE_FACTOR[2];
 	}
 }
-

@@ -25,48 +25,30 @@ package net.sf.jmoney.stocks.model;
 import net.sf.jmoney.fields.TextControlFactory;
 import net.sf.jmoney.model2.CommodityInfo;
 import net.sf.jmoney.model2.ExtendablePropertySet;
-import net.sf.jmoney.model2.IExtendableObjectConstructors;
-import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertyControlFactory;
 import net.sf.jmoney.model2.IPropertySetInfo;
-import net.sf.jmoney.model2.IValues;
-import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.stocks.StocksPlugin;
 
 /**
- * The metadata for the Stock class.
+ * The metadata for the Security class.
  *
  * @author Nigel Westbury
  */
-public class StockInfo implements IPropertySetInfo {
+public class SecurityInfo implements IPropertySetInfo {
 	
-	private static ExtendablePropertySet<Stock> propertySet = PropertySet.addDerivedFinalPropertySet(Stock.class, "Stock", SecurityInfo.getPropertySet(), new IExtendableObjectConstructors<Stock>() {
+	private static ExtendablePropertySet<Security> propertySet = PropertySet.addDerivedAbstractPropertySet(Security.class, "Security", CommodityInfo.getPropertySet());
 
-		public Stock construct(IObjectKey objectKey, ListKey parentKey) {
-			return new Stock(objectKey, parentKey);
-		}
-
-		public Stock construct(IObjectKey objectKey, ListKey parentKey, IValues values) {
-			return new Stock(
-					objectKey, 
-					parentKey, 
-					values.getScalarValue(CommodityInfo.getNameAccessor()),
-					values.getScalarValue(SecurityInfo.getCusipAccessor()),
-					values.getScalarValue(SecurityInfo.getSymbolAccessor()),
-					values.getScalarValue(StockInfo.getNominalValueAccessor()),
-					values);
-		}
-	});
-
-	private static ScalarPropertyAccessor<String> nominalValueAccessor;
+	private static ScalarPropertyAccessor<String> cusipAccessor;
+	private static ScalarPropertyAccessor<String> symbolAccessor;
 	
 	public PropertySet registerProperties() {
 
 		IPropertyControlFactory<String> textControlFactory = new TextControlFactory();
 
-		nominalValueAccessor = propertySet.addProperty("nominalValue", StocksPlugin.getResourceString("PropertyDesc.nominalValue"), String.class, 2, 20, textControlFactory, null);
+		cusipAccessor = propertySet.addProperty("cusip", StocksPlugin.getResourceString("PropertyDesc.cusip"), String.class, 2, 20, textControlFactory, null);
+		symbolAccessor = propertySet.addProperty("symbol", StocksPlugin.getResourceString("PropertyDesc.symbol"), String.class, 2, 20, textControlFactory, null);
 		
 		return propertySet;
 	}
@@ -74,14 +56,21 @@ public class StockInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static ExtendablePropertySet<Stock> getPropertySet() {
+	public static ExtendablePropertySet<Security> getPropertySet() {
 		return propertySet;
 	}
 
 	/**
 	 * @return
 	 */
-	public static ScalarPropertyAccessor<String> getNominalValueAccessor() {
-		return nominalValueAccessor;
+	public static ScalarPropertyAccessor<String> getCusipAccessor() {
+		return cusipAccessor;
+	}	
+
+	/**
+	 * @return
+	 */
+	public static ScalarPropertyAccessor<String> getSymbolAccessor() {
+		return symbolAccessor;
 	}	
 }

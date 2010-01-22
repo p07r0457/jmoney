@@ -55,7 +55,7 @@ import org.eclipse.swt.widgets.Composite;
  */
 public class BondInfo implements IPropertySetInfo {
 
-	private static ExtendablePropertySet<Bond> propertySet = PropertySet.addDerivedFinalPropertySet(Bond.class, "Bond", CommodityInfo.getPropertySet(), new IExtendableObjectConstructors<Bond>() {
+	private static ExtendablePropertySet<Bond> propertySet = PropertySet.addDerivedFinalPropertySet(Bond.class, "Bond", SecurityInfo.getPropertySet(), new IExtendableObjectConstructors<Bond>() {
 
 		public Bond construct(IObjectKey objectKey, ListKey parentKey) {
 			return new Bond(objectKey, parentKey);
@@ -66,6 +66,8 @@ public class BondInfo implements IPropertySetInfo {
 					objectKey, 
 					parentKey, 
 					values.getScalarValue(CommodityInfo.getNameAccessor()),
+					values.getScalarValue(SecurityInfo.getCusipAccessor()),
+					values.getScalarValue(SecurityInfo.getSymbolAccessor()),
 					values.getReferencedObjectKey(BondInfo.getCurrencyAccessor()),
 					values.getScalarValue(BondInfo.getRedemptionValueAccessor()),
 					values.getScalarValue(BondInfo.getInterestRateAccessor()), values);
@@ -132,6 +134,13 @@ public class BondInfo implements IPropertySetInfo {
 		redemptionValueAccessor = propertySet.addProperty("redemptionValue", StocksPlugin.getResourceString("PropertyDesc.redemptionValue"), Long.class, 2, 20, amountControlFactory, null);
 		interestRateAccessor = propertySet.addProperty("interestRate", StocksPlugin.getResourceString("PropertyDesc.interestRate"), Integer.class, 1, 15, integerControlFactory, null);
 		
+		return propertySet;
+	}
+
+	/**
+	 * @return
+	 */
+	public static ExtendablePropertySet<Bond> getPropertySet() {
 		return propertySet;
 	}
 

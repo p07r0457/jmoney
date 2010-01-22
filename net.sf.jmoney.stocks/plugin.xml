@@ -75,14 +75,19 @@
    <extension
          point="net.sf.jmoney.fields">
       <extendable-property-set
+      	id="security"
+          info-class="net.sf.jmoney.stocks.model.SecurityInfo"
+          base-property-set="net.sf.jmoney.commodity">
+      </extendable-property-set>
+      <extendable-property-set
       	id="stock"
           info-class="net.sf.jmoney.stocks.model.StockInfo"
-          base-property-set="net.sf.jmoney.commodity">
+          base-property-set="net.sf.jmoney.stocks.security">
       </extendable-property-set>
       <extendable-property-set
       	id="bond"
           info-class="net.sf.jmoney.stocks.model.BondInfo"
-          base-property-set="net.sf.jmoney.commodity">
+          base-property-set="net.sf.jmoney.stocks.security">
       </extendable-property-set>
       <extendable-property-set
       	id="stockAccount"
