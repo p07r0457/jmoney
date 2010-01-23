@@ -73,6 +73,9 @@ public class JMoneyWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		configurer.setShowCoolBar(true);
 		configurer.setShowStatusLine(true);
 
+		// JMoney has only one perspective, but other plug-ins may add more
+		configurer.setShowPerspectiveBar(true);
+
         // Allow files to be dropped into the JMoney editor area
     	configurer.addEditorAreaTransfer(FileTransfer.getInstance());
     	
