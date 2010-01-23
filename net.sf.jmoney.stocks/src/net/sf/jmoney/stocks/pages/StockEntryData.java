@@ -229,7 +229,7 @@ public class StockEntryData extends EntryData {
 			 * null (we can't leave it as a currency because that would result
 			 * in an invalid transaction).
 			 */
-			stockEntry.setCommodity(stockEntry.getStock());
+			stockEntry.setCommodity(stockEntry.getSecurity());
 		}
 
 		// Commission, tax 1, and tax 2 entries may be null in this transaction type.

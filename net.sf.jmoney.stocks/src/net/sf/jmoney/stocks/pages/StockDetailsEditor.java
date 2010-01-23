@@ -71,9 +71,10 @@ import net.sf.jmoney.model2.SessionChangeListener;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.resources.Messages;
+import net.sf.jmoney.stocks.model.Security;
+import net.sf.jmoney.stocks.model.SecurityControl;
 import net.sf.jmoney.stocks.model.Stock;
 import net.sf.jmoney.stocks.model.StockAccount;
-import net.sf.jmoney.stocks.model.StockControl;
 import net.sf.jmoney.stocks.model.StockEntry;
 import net.sf.jmoney.stocks.model.StockEntryInfo;
 import net.sf.jmoney.stocks.pages.StockEntryRowControl.TransactionType;
@@ -298,7 +299,7 @@ public class StockDetailsEditor extends EditorPart {
 
 			@Override
 			public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
-				final StockControl<Stock> control = new StockControl<Stock>(parent, null, Stock.class);
+				final SecurityControl<Security> control = new SecurityControl<Security>(parent, null, Security.class);
 				
 				ICellControl2<StockEntryData> cellControl = new ICellControl2<StockEntryData>() {
 					private StockEntryData data;
@@ -319,33 +320,33 @@ public class StockDetailsEditor extends EditorPart {
 						 * - If this is a dividend payment then the stock will be set as an additional
 						 * field in the dividend category. 
 						 */
-						Stock stock;
+						Security security;
 						if (data.isPurchaseOrSale()) {
 							Entry entry = data.getPurchaseOrSaleEntry();
-							stock = (Stock)entry.getCommodityInternal();
+							security = (Stock)entry.getCommodityInternal();
 						} else if (data.isDividend()) {
 							Entry entry = data.getDividendEntry();
-							stock = entry.getPropertyValue(StockEntryInfo.getStockAccessor());
+							security = entry.getPropertyValue(StockEntryInfo.getSecurityAccessor());
 						} else {
-							stock = null;
+							security = null;
 							control.setEnabled(false);
 						}
 						
-				        control.setSession(data.getEntry().getSession(), Stock.class);
+				        control.setSession(data.getEntry().getSession(), Security.class);
 						
-						control.setStock(stock);
+						control.setSecurity(security);
 					}
 
 					public void save() {
-						Stock stock = control.getStock();
+						Security security = control.getSecurity();
 					
 						if (data.isPurchaseOrSale()) {
 							Entry entry = data.getPurchaseOrSaleEntry();
 							StockEntry stockEntry = entry.getExtension(StockEntryInfo.getPropertySet(), true);
-							stockEntry.setStock(stock);
+							stockEntry.setSecurity(security);
 						} else if (data.isDividend()) {
 							Entry entry = data.getDividendEntry();
-							entry.setPropertyValue(StockEntryInfo.getStockAccessor(), stock);
+							entry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), security);
 						}
 					}
 
@@ -383,17 +384,17 @@ public class StockDetailsEditor extends EditorPart {
 						 * to a purchase.  The entry will now show a purchase of stock in Bar
 						 * company.
 						 */
-						Stock stock = control.getStock();
+						Security security = control.getSecurity();
 						if (coordinator.getUncommittedEntryData().isPurchaseOrSale()) {
 							Entry entry = coordinator.getUncommittedEntryData().getPurchaseOrSaleEntry();
-							entry.setPropertyValue(StockEntryInfo.getStockAccessor(), stock);
+							entry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), security);
 							control.setEnabled(true);
 						} else if (coordinator.getUncommittedEntryData().isDividend()) {
 							Entry entry = coordinator.getUncommittedEntryData().getDividendEntry();
-							entry.setPropertyValue(StockEntryInfo.getStockAccessor(), stock);
+							entry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), security);
 							control.setEnabled(true);
 						} else {
-							stock = null;
+							security = null;
 							control.setEnabled(false);
 						}
 					}

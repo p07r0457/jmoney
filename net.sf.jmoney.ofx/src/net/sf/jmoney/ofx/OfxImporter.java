@@ -491,7 +491,7 @@ public class OfxImporter {
 							StockEntry commissionEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 							commissionEntry.setAccount(account.getCommissionAccount());
 							commissionEntry.setAmount(commission);
-							commissionEntry.setStock(stock);
+							commissionEntry.setSecurity(stock);
 						}
 
 						long fees = transactionElement.getAmount("FEES", 0);
@@ -499,7 +499,7 @@ public class OfxImporter {
 							StockEntry feesEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 							feesEntry.setAccount(account.getTax1Account());
 							feesEntry.setAmount(fees);
-							feesEntry.setStock(stock);
+							feesEntry.setSecurity(stock);
 						}
 
 						if (units == null) {
@@ -548,14 +548,14 @@ public class OfxImporter {
 							dividendEntry.setAccount(account.getDividendAccount());
 							dividendEntry.setAmount(-total);
 							dividendEntry.setMemo("dividend");
-							dividendEntry.setStock(stock);
+							dividendEntry.setSecurity(stock);
 							reinvestMemo = " dividend";
 						} else if ("CGLONG".equals(incomeType)) {
 							StockEntry dividendEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 							dividendEntry.setAccount(account.getDividendAccount());
 							dividendEntry.setAmount(-total);
 							dividendEntry.setMemo("capitial gains distribution - long term");
-							dividendEntry.setStock(stock);
+							dividendEntry.setSecurity(stock);
 							reinvestMemo = " capital gains";
 						} else {
 							/*

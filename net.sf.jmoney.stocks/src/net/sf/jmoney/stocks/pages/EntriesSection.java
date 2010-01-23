@@ -28,10 +28,9 @@ import net.sf.jmoney.entrytable.BaseEntryRowControl;
 import net.sf.jmoney.entrytable.Block;
 import net.sf.jmoney.entrytable.CellBlock;
 import net.sf.jmoney.entrytable.CellFocusListener;
+import net.sf.jmoney.entrytable.CutTransactionHandler;
 import net.sf.jmoney.entrytable.DebitAndCreditColumns;
 import net.sf.jmoney.entrytable.DeleteTransactionHandler;
-import net.sf.jmoney.entrytable.CutTransactionHandler;
-import net.sf.jmoney.entrytable.PasteCombineTransactionHandler;
 import net.sf.jmoney.entrytable.DuplicateTransactionHandler;
 import net.sf.jmoney.entrytable.EntriesTable;
 import net.sf.jmoney.entrytable.EntryData;
@@ -45,6 +44,7 @@ import net.sf.jmoney.entrytable.IndividualBlock;
 import net.sf.jmoney.entrytable.NewTransactionHandler;
 import net.sf.jmoney.entrytable.OpenTransactionDialogHandler;
 import net.sf.jmoney.entrytable.OtherEntriesBlock;
+import net.sf.jmoney.entrytable.PasteCombineTransactionHandler;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
@@ -66,9 +66,10 @@ import net.sf.jmoney.model2.SessionChangeListener;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.resources.Messages;
+import net.sf.jmoney.stocks.model.Security;
+import net.sf.jmoney.stocks.model.SecurityControl;
 import net.sf.jmoney.stocks.model.Stock;
 import net.sf.jmoney.stocks.model.StockAccount;
-import net.sf.jmoney.stocks.model.StockControl;
 import net.sf.jmoney.stocks.model.StockEntry;
 import net.sf.jmoney.stocks.model.StockEntryInfo;
 import net.sf.jmoney.stocks.pages.StockEntryRowControl.TransactionType;
@@ -214,7 +215,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 			@Override
 			public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
-				final StockControl<Stock> control = new StockControl<Stock>(parent, null, Stock.class);
+				final SecurityControl<Security> control = new SecurityControl<Security>(parent, null, Security.class);
 				
 				ICellControl2<StockEntryData> cellControl = new ICellControl2<StockEntryData>() {
 					private StockEntryData data;
@@ -238,35 +239,35 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						 * Note that controls are re-used, so we must be sure to explicitly enable the controls
 						 * because we may be re-using a control that has been disabled.
 						 */
-						Stock stock;
+						Security security;
 						if (data.isPurchaseOrSale()) {
 							Entry entry = data.getPurchaseOrSaleEntry();
-							stock = (Stock)entry.getCommodityInternal();
+							security = (Stock)entry.getCommodityInternal();
 							control.setEnabled(true);
 						} else if (data.isDividend()) {
 							Entry entry = data.getDividendEntry();
-							stock = entry.getPropertyValue(StockEntryInfo.getStockAccessor());
+							security = entry.getPropertyValue(StockEntryInfo.getSecurityAccessor());
 							control.setEnabled(true);
 						} else {
-							stock = null;
+							security = null;
 							control.setEnabled(false);
 						}
 						
-				        control.setSession(data.getEntry().getSession(), Stock.class);
+				        control.setSession(data.getEntry().getSession(), Security.class);
 						
-						control.setStock(stock);
+						control.setSecurity(security);
 					}
 
 					public void save() {
-						Stock stock = control.getStock();
+						Security security = control.getSecurity();
 					
 						if (data.isPurchaseOrSale()) {
 							Entry entry = data.getPurchaseOrSaleEntry();
 							StockEntry stockEntry = entry.getExtension(StockEntryInfo.getPropertySet(), true);
-							stockEntry.setStock(stock);
+							stockEntry.setSecurity(security);
 						} else if (data.isDividend()) {
 							Entry entry = data.getDividendEntry();
-							entry.setPropertyValue(StockEntryInfo.getStockAccessor(), stock);
+							entry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), security);
 						}
 					}
 
@@ -304,17 +305,17 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						 * to a purchase.  The entry will now show a purchase of stock in Bar
 						 * company.
 						 */
-						Stock stock = control.getStock();
+						Security security = control.getSecurity();
 						if (coordinator.getUncommittedEntryData().isPurchaseOrSale()) {
 							Entry entry = coordinator.getUncommittedEntryData().getPurchaseOrSaleEntry();
-							entry.setPropertyValue(StockEntryInfo.getStockAccessor(), stock);
+							entry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), security);
 							control.setEnabled(true);
 						} else if (coordinator.getUncommittedEntryData().isDividend()) {
 							Entry entry = coordinator.getUncommittedEntryData().getDividendEntry();
-							entry.setPropertyValue(StockEntryInfo.getStockAccessor(), stock);
+							entry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), security);
 							control.setEnabled(true);
 						} else {
-							stock = null;
+							security = null;
 							control.setEnabled(false);
 						}
 					}

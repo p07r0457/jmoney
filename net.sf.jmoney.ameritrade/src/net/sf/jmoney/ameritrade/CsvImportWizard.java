@@ -143,7 +143,7 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
             	fractionalEntry.setAmount(fractionalSharesAmount);
             	fractionalEntry.setValuta(fractionalSharesDate);
             	fractionalEntry.setCommodity(account.getCurrency());
-            	fractionalEntry.setStock(newStock);
+            	fractionalEntry.setSecurity(newStock);
             	fractionalEntry.setMemo("cash in lieu of fractional shares");
         	} else {
         		// We must have a currency entry in the account in order to see an entry.
@@ -354,21 +354,21 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 		        		StockEntry commissionEntry = trans.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 		        		commissionEntry.setAccount(account.getCommissionAccount());
 		        		commissionEntry.setAmount(commission);
-		        		commissionEntry.setStock(stock);
+		        		commissionEntry.setSecurity(stock);
 		        	}
 		        	
 		        	if (totalSalesFee != 0) {
 		        		StockEntry entry = trans.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 		        		entry.setAccount(account.getTax1Account());
 		        		entry.setAmount(totalSalesFee);
-		        		entry.setStock(stock);
+		        		entry.setSecurity(stock);
 		        	}
 		        	
 		        	if (totalRedemptionFee != 0) {
 		        		StockEntry entry = trans.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 		        		entry.setAccount(account.getTax2Account());
 		        		entry.setAmount(totalRedemptionFee);
-		        		entry.setStock(stock);
+		        		entry.setSecurity(stock);
 		        	}
 		        	
 		        } else if (memo.startsWith("QUALIFIED DIVIDEND ")) {
@@ -384,7 +384,7 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 		        	otherEntry.setAccount(account.getDividendAccount());
 		        	otherEntry.setMemo("qualified");
 	        		otherEntry.setAmount(-total);
-	        		otherEntry.setStock(stock); 
+	        		otherEntry.setSecurity(stock); 
 		        } else if (memo.equals("W-8 WITHHOLDING") || memo.equals("BACKUP WITHHOLDING (W-9)")) {
 		        	Transaction trans = sessionInTransaction.createTransaction();
 		        	trans.setDate(date);
@@ -462,7 +462,7 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 		        	otherEntry.setAccount(expensesAccount);
 		        	otherEntry.setMemo("Foreign tax withheld???");
 	        		otherEntry.setAmount(-total);
-	        		otherEntry.setStock(stock);
+	        		otherEntry.setSecurity(stock);
 		        } else if ((matcher = patternAdr.matcher(memo)).matches()) {
 		        	Transaction trans = sessionInTransaction.createTransaction();
 		        	trans.setDate(date);
@@ -476,7 +476,7 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 		        	otherEntry.setAccount(expensesAccount);
 		        	otherEntry.setMemo("ADR fee");
 	        		otherEntry.setAmount(-total);
-	        		otherEntry.setStock(stock);
+	        		otherEntry.setSecurity(stock);
 		        } else {
 					MessageDialog.openError(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Unable to read CSV file", "Entry found with unknown memo: '" + memo + "'.");
 		        }

@@ -13,11 +13,11 @@ import org.eclipse.swt.widgets.Control;
  * @param <P>
  * 		the class of objects that contain this property
  */
-public abstract class StockControlFactory<P> extends PropertyControlFactory<Stock> implements IReferenceControlFactory<P, Stock> {
+public abstract class SecurityControlFactory<P> extends PropertyControlFactory<Security> implements IReferenceControlFactory<P, Security> {
 
-	public IPropertyControl createPropertyControl(Composite parent, final ScalarPropertyAccessor<Stock> propertyAccessor) {
+	public IPropertyControl createPropertyControl(Composite parent, final ScalarPropertyAccessor<Security> propertyAccessor) {
 
-		final StockControl<Stock> control = new StockControl<Stock>(parent, null, Stock.class);
+		final SecurityControl<Security> control = new SecurityControl<Security>(parent, null, Security.class);
 		
 		return new IPropertyControl<ExtendableObject>() {
 
@@ -31,16 +31,16 @@ public abstract class StockControlFactory<P> extends PropertyControlFactory<Stoc
 		        fObject = object;
 		        
 		        control.setSession(object.getSession(), propertyAccessor.getClassOfValueObject());
-		        control.setStock(object.getPropertyValue(propertyAccessor));
+		        control.setSecurity(object.getPropertyValue(propertyAccessor));
 			}
 
 			public void save() {
-				Stock stock = control.getStock();
+				Security stock = control.getSecurity();
 				fObject.setPropertyValue(propertyAccessor, stock);
 			}};
 	}
 
-	public Stock getDefaultValue() {
+	public Security getDefaultValue() {
 		return null;
 	}
 

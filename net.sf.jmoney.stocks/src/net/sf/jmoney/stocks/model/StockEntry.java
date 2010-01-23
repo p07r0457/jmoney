@@ -43,13 +43,13 @@ public class StockEntry extends EntryExtension {
 	private boolean stockChange = false;
 	
 	/**
-	 * The commodity (Stock or Bond) involved in this entry.
-	 * <P> 
-	 * Do we use this field for dividend payments, where no change
-	 * in stock amounts is involved but we do want to associate the
-	 * cash amount with a stock?
+	 * The security (Stock or Bond) involved in this entry.
+	 * <P>
+	 * This property is used for entries such as dividend payments, where no
+	 * change the amount of the security is involved but we do want to associate
+	 * the cash amount with a security.
 	 */
-	protected IObjectKey stockKey = null;
+	protected IObjectKey securityKey = null;
 	
 	/**
 	 * The date on which the deal was made.  On some stock
@@ -79,10 +79,10 @@ public class StockEntry extends EntryExtension {
 	 * This constructor is called by the datastore to construct
 	 * the extension objects when loading data.
 	 */
-	public StockEntry(ExtendableObject extendedObject, boolean stockChange, IObjectKey stockKey, Date bargainDate) {
+	public StockEntry(ExtendableObject extendedObject, boolean stockChange, IObjectKey securityKey, Date bargainDate) {
 		super(extendedObject);
 		this.stockChange = stockChange;
-		this.stockKey = stockKey;
+		this.securityKey = securityKey;
 		this.bargainDate = bargainDate;
 	}
 	
@@ -107,27 +107,36 @@ public class StockEntry extends EntryExtension {
 	}
 	
 	/**
-	 * Gets the stock involved in this entry.
+	 * Gets the security involved in this entry.
+	 * <P>
+	 * This property is used for entries such as dividend payments, where no
+	 * change the amount of the security is involved but we do want to associate
+	 * the cash amount with a security.
 	 * 
-	 * @return An object of type Stock or Bond.
-	 * 		Null will be returned if no value has previously
-	 * 		been set.
+	 * @return An object of type Stock or Bond, or null if this entry does not
+	 * 		represent a dividend or other entry that is associated with a security
+	 * 		but does not involve a gain or loss in the amount of that security in
+	 * 		the account
 	 */
-	public Stock getStock() {
-		return stockKey == null ? null : (Stock)stockKey.getObject();
+	public Security getSecurity() {
+		return securityKey == null ? null : (Security)securityKey.getObject();
 	}
 	
 	/**
-	 * Sets the stock involved in this entry.
+	 * Sets the security involved in this entry.
+	 * <P>
+	 * This property is used for entries such as dividend payments, where no
+	 * change the amount of the security is involved but we do want to associate
+	 * the cash amount with a security.
 	 * 
-	 * @param stock An object of type Stock or Bond.
+	 * @param security An object of type Stock or Bond.
 	 */
-	public void setStock(Stock stock) {
-		Stock oldStock = getStock();
-		this.stockKey = (stock == null) ? null : stock.getObjectKey();
+	public void setSecurity(Security security) {
+		Security oldSecurity = getSecurity();
+		this.securityKey = (security == null) ? null : security.getObjectKey();
 
 		// Notify the change manager.
-		processPropertyChange(StockEntryInfo.getStockAccessor(), oldStock, stock);
+		processPropertyChange(StockEntryInfo.getSecurityAccessor(), oldSecurity, security);
 	}
 
 	/**

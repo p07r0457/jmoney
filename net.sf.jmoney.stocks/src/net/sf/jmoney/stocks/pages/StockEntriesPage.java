@@ -22,15 +22,11 @@
 
 package net.sf.jmoney.stocks.pages;
 
-import java.util.ArrayList;
-
 import net.sf.jmoney.IBookkeepingPageFactory;
-import net.sf.jmoney.entrytable.OpenTransactionDialogHandler;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.stocks.ShowStockDetailsHandler;
 import net.sf.jmoney.stocks.model.Stock;
-import net.sf.jmoney.stocks.model.StockAccount;
 import net.sf.jmoney.views.AccountEditor;
 import net.sf.jmoney.views.AccountEditorInput;
 

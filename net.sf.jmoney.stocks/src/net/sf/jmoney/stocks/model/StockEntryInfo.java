@@ -71,29 +71,29 @@ public class StockEntryInfo implements IPropertySetInfo {
 			return new StockEntry(
 					extendedObject, 
 					values.getScalarValue(getStockChangeAccessor()),
-					values.getReferencedObjectKey(getStockAccessor()),
+					values.getReferencedObjectKey(getSecurityAccessor()),
 					values.getScalarValue(getBargainDateAccessor())
 			);
 		}
 	});
 	
 	private static ScalarPropertyAccessor<Boolean> stockChangeAccessor;
-	private static ReferencePropertyAccessor<Stock> stockAccessor;
+	private static ReferencePropertyAccessor<Security> securityAccessor;
 	private static ScalarPropertyAccessor<Date> bargainDateAccessor;
 	
 	public PropertySet registerProperties() {
 		IPropertyControlFactory<Boolean> booleanPropertyControlFactory = new CheckBoxControlFactory();
 
-		IReferenceControlFactory<StockEntry,Stock> stockPropertyControlFactory = new StockControlFactory<StockEntry>() {
+		IReferenceControlFactory<StockEntry,Security> securityPropertyControlFactory = new SecurityControlFactory<StockEntry>() {
 			public IObjectKey getObjectKey(StockEntry parentObject) {
-				return parentObject.stockKey;
+				return parentObject.securityKey;
 			}
 		};
 		
 		IPropertyControlFactory<Date> datePropertyControlFactory = new DateControlFactory();
 		
 		stockChangeAccessor = propertySet.addProperty("stockChange", "Stock Acquisition/Disposal", Boolean.class, 0, 15, booleanPropertyControlFactory, null);
-		stockAccessor = propertySet.addProperty("stock", "Stock", Stock.class, 2, 20, stockPropertyControlFactory, null);
+		securityAccessor = propertySet.addProperty("security", "Security", Security.class, 2, 20, securityPropertyControlFactory, null);
 		bargainDateAccessor = propertySet.addProperty("bargainDate", "Bargain Date", Date.class, 0, 20, datePropertyControlFactory, null);
 		
 		return propertySet;
@@ -116,8 +116,8 @@ public class StockEntryInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static ReferencePropertyAccessor<Stock> getStockAccessor() {
-		return stockAccessor;
+	public static ReferencePropertyAccessor<Security> getSecurityAccessor() {
+		return securityAccessor;
 	}	
 
 	/**

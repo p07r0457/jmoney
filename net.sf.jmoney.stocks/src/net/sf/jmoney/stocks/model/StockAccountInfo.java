@@ -49,20 +49,10 @@ import net.sf.jmoney.stocks.StocksPlugin;
 import org.eclipse.swt.widgets.Composite;
 
 /**
- * @author Nigel
- *
- * This class is a listener class to the net.sf.jmoney.fields
- * extension point.  It implements an extension.
- * <P>
- * This extension registers the CapitalAccount properties.  By registering
- * the properties, every one can know how to display, edit, and store
- * the properties.
- * <P>
- * These properties are supported in the JMoney base code, so everyone
- * including plug-ins will know about these properties.  However, to
- * follow the Eclipse paradigm (every one should be treated equal,
- * including oneself), these are registered through the same extension
- * point that plug-ins must also use to register their properties.
+ * This class implements an extension to the net.sf.jmoney.fields
+ * extension point.  It registers the StockAccount model class.
+ * 
+ * @author Nigel Westbury 
  */
 public class StockAccountInfo implements IPropertySetInfo {
 

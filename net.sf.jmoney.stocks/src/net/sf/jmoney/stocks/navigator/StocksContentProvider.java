@@ -1,6 +1,5 @@
 package net.sf.jmoney.stocks.navigator;
 
-import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.CommodityInfo;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ExtendableObject;

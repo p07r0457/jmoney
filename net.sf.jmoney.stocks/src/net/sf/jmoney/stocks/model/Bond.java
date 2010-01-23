@@ -25,7 +25,6 @@ package net.sf.jmoney.stocks.model;
 import java.text.NumberFormat;
 import java.text.ParseException;
 
-import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IValues;

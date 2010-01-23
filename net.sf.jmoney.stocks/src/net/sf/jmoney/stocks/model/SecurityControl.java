@@ -56,29 +56,29 @@ import org.eclipse.swt.widgets.Text;
 
 
 /**
- * A control for selecting a stock.
- * 
+ * A control for selecting a security (such as a stock or a bond).
+ * <P>
  * This control contains both a text box and a list box that appears when the
  * text box gains focus.
  * 
  * @author Nigel Westbury
  */
-public class StockControl<A extends Stock> extends Composite {
+public class SecurityControl<A extends Security> extends Composite {
 
 	Text textControl;
 	
 	private Session session;
-	private Class<A> stockClass;
+	private Class<A> securityClass;
 	
     /**
-     * List of stocks put into stock list.
+     * List of securities put into security list.
      */
-    private Vector<A> allStock;
+    private Vector<A> allSecurities;
     
 	/**
-	 * Currently selected stock, or null if no stock selected
+	 * Currently selected security, or null if no security selected
 	 */
-	private A stock;
+	private A security;
 	
 	private Vector<SelectionListener> listeners = new Vector<SelectionListener>();
 	
@@ -86,10 +86,10 @@ public class StockControl<A extends Stock> extends Composite {
 	 * @param parent
 	 * @param style
 	 */
-	public StockControl(final Composite parent, Session session, final Class<A> stockClass) {
+	public SecurityControl(final Composite parent, Session session, final Class<A> securityClass) {
 		super(parent, SWT.NONE);
 		this.session = session;
-		this.stockClass = stockClass;
+		this.securityClass = securityClass;
 
 		setBackgroundMode(SWT.INHERIT_FORCE);
 		
@@ -102,7 +102,7 @@ public class StockControl<A extends Stock> extends Composite {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.keyCode == SWT.ARROW_DOWN) {
-					openStockShell(parent, stockClass);
+					openSecuritiesShell(parent, securityClass);
 				}
 				
 			}
@@ -118,15 +118,15 @@ public class StockControl<A extends Stock> extends Composite {
 //
 //			@Override
 //			public void focusGained(FocusEvent e) {
-//				System.out.println("stock text control has gained focus");
-//				openStockShell(parent, stockClass);
+//				System.out.println("security text control has gained focus");
+//				openSecuritiesShell(parent, securityClass);
 //			}
 //
 //		});
 	}
 
-	private void openStockShell(final Composite parent,
-			final Class<A> stockClass) {
+	private void openSecuritiesShell(final Composite parent,
+			final Class<A> securityClass) {
 		final Shell parentShell = parent.getShell();
 
 		final Shell shell = new Shell(parent.getShell(), SWT.ON_TOP);
@@ -136,12 +136,12 @@ public class StockControl<A extends Stock> extends Composite {
         final List listControl = new List(shell, SWT.SINGLE | SWT.V_SCROLL);
         listControl.setLayoutData(new RowData(SWT.DEFAULT, 100));
 
-        Button addStockButton = new Button(shell, SWT.PUSH);
-        addStockButton.setText("Add New Stock...");
-        addStockButton.addSelectionListener(new SelectionAdapter() {
+        Button addSecurityButton = new Button(shell, SWT.PUSH);
+        addSecurityButton.setText("Add New Stock...");
+        addSecurityButton.addSelectionListener(new SelectionAdapter() {
         	@Override
 			public void widgetSelected(SelectionEvent e) {
-				NewStockWizard wizard = new NewStockWizard(StockControl.this.session);
+				NewStockWizard wizard = new NewStockWizard(SecurityControl.this.session);
 				System.out.println(shell.isDisposed() + ", " + shell.getDisplay());
 				WizardDialog dialog = new WizardDialog(shell, wizard);
 				dialog.setPageSize(600, 300);
@@ -151,7 +151,7 @@ public class StockControl<A extends Stock> extends Composite {
 					 * Having created the new stock, set it as the
 					 * selected stock in this control.
 					 */
-	    	        setStock(stockClass.cast(wizard.getNewStock()));
+	    	        setSecurity(securityClass.cast(wizard.getNewStock()));
 				}
 			}
         });
@@ -159,22 +159,22 @@ public class StockControl<A extends Stock> extends Composite {
         // Important we use the field for the session and stockClass.  We do not use the parameters
         // (the parameters may be null, but fields should always have been set by
         // the time control gets focus).
-        allStock = new Vector<A>();
-        addStocks("", StockControl.this.session.getCommodityCollection(), listControl, StockControl.this.stockClass);
+        allSecurities = new Vector<A>();
+        addSecurities("", SecurityControl.this.session.getCommodityCollection(), listControl, SecurityControl.this.securityClass);
         
 //        shell.setSize(listControl.computeSize(SWT.DEFAULT, listControl.getItemHeight()*10));
         
-        // Set the currently set stock into the list control.
-        listControl.select(allStock.indexOf(stock));
+        // Set the currently set security into the list control.
+        listControl.select(allSecurities.indexOf(security));
         
         listControl.addSelectionListener(
         		new SelectionAdapter() {
         		    @Override	
 					public void widgetSelected(SelectionEvent e) {
 						int selectionIndex = listControl.getSelectionIndex();
-						stock = allStock.get(selectionIndex);
-						textControl.setText(stock.getName());
-						fireStockChangeEvent();
+						security = allSecurities.get(selectionIndex);
+						textControl.setText(security.getName());
+						fireSecurityChangeEvent();
 					}
         		});
 
@@ -194,8 +194,8 @@ public class StockControl<A extends Stock> extends Composite {
 					
 					/*
 					 * 
-					 Starting at the currently selected stock,
-					 search for a stock starting with these characters.
+					 Starting at the currently selected security,
+					 search for a security starting with these characters.
 					 */
 					int startIndex = listControl.getSelectionIndex();
 					if (startIndex == -1) {
@@ -205,22 +205,22 @@ public class StockControl<A extends Stock> extends Composite {
 					int match = -1;
 					int i = startIndex;
 					do {
-						if (allStock.get(i).getName().toUpperCase().startsWith(pattern)) {
+						if (allSecurities.get(i).getName().toUpperCase().startsWith(pattern)) {
 							match = i;
 							break;
 						}
 						
 						i++;
-						if (i == allStock.size()) {
+						if (i == allSecurities.size()) {
 							i = 0;
 						}
 					} while (i != startIndex);
 					
 					if (match != -1) {
-						stock = allStock.get(match);
+						security = allSecurities.get(match);
 						listControl.select(match);
 						listControl.setTopIndex(match);
-						textControl.setText(stock.getName());
+						textControl.setText(security.getName());
 					}
 					
 					e.doit = false;
@@ -275,30 +275,30 @@ public class StockControl<A extends Stock> extends Composite {
         });
 	}
 
-	private void fireStockChangeEvent() {
+	private void fireSecurityChangeEvent() {
 		for (SelectionListener listener: listeners) {
 			listener.widgetSelected(null);
 		}
 	}
 	
-	private void addStocks(String prefix, Collection<? extends Commodity> stocks, List listControl, Class<A> stockClass) {
-    	Vector<A> matchingStocks = new Vector<A>();
-        for (Commodity stock: stocks) {
-        	if (stockClass.isAssignableFrom(stock.getClass())) {
-        		matchingStocks.add(stockClass.cast(stock));
+	private void addSecurities(String prefix, Collection<? extends Commodity> securities, List listControl, Class<A> securityClass) {
+    	Vector<A> matchingSecurities = new Vector<A>();
+        for (Commodity security: securities) {
+        	if (securityClass.isAssignableFrom(security.getClass())) {
+        		matchingSecurities.add(securityClass.cast(security));
         	}
         }
 		
-		// Sort the stocks by name.
-		Collections.sort(matchingStocks, new Comparator<Stock>() {
-			public int compare(Stock stock1, Stock stock2) {
-				return stock1.getName().compareTo(stock2.getName());
+		// Sort the securities by name.
+		Collections.sort(matchingSecurities, new Comparator<Security>() {
+			public int compare(Security security1, Security security2) {
+				return security1.getName().compareTo(security2.getName());
 			}
 		});
 		
-		for (A matchingStock: matchingStocks) {
-    		allStock.add(matchingStock);
-			listControl.add(prefix + matchingStock.getName());
+		for (A matchingSecurity: matchingSecurities) {
+    		allSecurities.add(matchingSecurity);
+			listControl.add(prefix + matchingSecurity.getName());
 		}
         
     }
@@ -306,22 +306,22 @@ public class StockControl<A extends Stock> extends Composite {
     /**
 	 * @param object
 	 */
-	public void setStock(A stock) {
-		this.stock = stock;
+	public void setSecurity(A security) {
+		this.security = security;
 
-		if (stock == null) {
+		if (security == null) {
 			textControl.setText("");
 		} else {
-			textControl.setText(stock.getName());
+			textControl.setText(security.getName());
 		}
 	}
 
 	/**
-	 * @return the stock, or null if no stock has been set in
+	 * @return the security, or null if no security has been set in
 	 * 				the control
 	 */
-	public A getStock() {
-		return stock;
+	public A getSecurity() {
+		return security;
 	}
 
 	/**
@@ -349,8 +349,8 @@ public class StockControl<A extends Stock> extends Composite {
 	 * then be called to set the session before the control is used (i.e. before
 	 * the control gets focus).
 	 */
-	public void setSession(Session session, Class<A> stockClass) {
+	public void setSession(Session session, Class<A> securityClass) {
 		this.session = session;
-		this.stockClass = stockClass;
+		this.securityClass = securityClass;
 	}
 }

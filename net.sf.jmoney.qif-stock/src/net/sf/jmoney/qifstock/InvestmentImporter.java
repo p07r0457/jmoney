@@ -232,13 +232,13 @@ public class InvestmentImporter implements IQifImporter {
 	        		StockEntry commissionEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 	        		commissionEntry.setAccount(account.getCommissionAccount());
 					commissionEntry.setAmount(adjustAmount(qifTransaction.getCommission().min(c), currency));
-	        		commissionEntry.setStock(stock);
+	        		commissionEntry.setSecurity(stock);
 
 	        		if (qifTransaction.getCommission().compareTo(new BigDecimal(9.99)) > 0) {
 		        		StockEntry salesFeeEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 		        		salesFeeEntry.setAccount(account.getTax1Account());
 						salesFeeEntry.setAmount(adjustAmount(qifTransaction.getCommission().subtract(c), currency));
-		        		salesFeeEntry.setStock(stock);
+		        		salesFeeEntry.setSecurity(stock);
 		        	}
 	        	}
 	        	
@@ -251,7 +251,7 @@ public class InvestmentImporter implements IQifImporter {
 		        // Find the security
 		        String security = qifTransaction.getSecurity();
 		        Stock stock = findStock(session, security);		        
-				dividendEntry.setStock(stock);
+				dividendEntry.setSecurity(stock);
 			} else if (qifTransaction.getAction().equals("IntInc")) {
 				firstEntry.setAmount(amount);
 				Entry interestEntry = transaction.createEntry();
