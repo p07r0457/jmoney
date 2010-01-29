@@ -16,7 +16,7 @@ import org.eclipse.ui.navigator.ICommonMenuConstants;
 import org.eclipse.ui.navigator.ICommonViewerWorkbenchSite;
 import org.eclipse.ui.operations.UndoRedoActionGroup;
 
-public class StocksActionProvider extends CommonActionProvider {
+public class SecuritiesActionProvider extends CommonActionProvider {
 
 	private BaseSelectionListenerAction deleteStockAction;
 
@@ -79,7 +79,7 @@ public class StocksActionProvider extends CommonActionProvider {
 	}
 
 	private void makeActions(final Session session) {
-		deleteStockAction = new DeleteStockAction(session);
+		deleteStockAction = new DeleteSecurityAction(session);
 		getActionSite().getStructuredViewer().addSelectionChangedListener(deleteStockAction);
 	}
 }

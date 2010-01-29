@@ -27,22 +27,26 @@ import java.util.Collection;
 
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.DatastoreManager;
+import net.sf.jmoney.model2.ExtendablePropertySet;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.stocks.model.Security;
 import net.sf.jmoney.stocks.model.Stock;
 import net.sf.jmoney.views.IDynamicTreeNode;
 
-public class StocksNode implements IDynamicTreeNode {
+public class SecuritiesTypeNode implements IDynamicTreeNode {
 
 	private DatastoreManager sessionManager;
+	private ExtendablePropertySet<? extends Security> propertySet;
 	
-	public StocksNode(DatastoreManager sessionManager) {
+	public SecuritiesTypeNode(DatastoreManager sessionManager, ExtendablePropertySet<? extends Security> propertySet) {
 		this.sessionManager = sessionManager;
+		this.propertySet = propertySet;
 	}
 
 	public boolean hasChildren() {
 		Session session = sessionManager.getSession();
 		for (Commodity commodity: session.getCommodityCollection()) {
-			if (commodity instanceof Stock) {
+			if (commodity.getClass() == propertySet.getImplementationClass()) {
 				return true;
 			}
 		}
@@ -53,11 +57,15 @@ public class StocksNode implements IDynamicTreeNode {
 		Session session = sessionManager.getSession();
 		ArrayList<Object> children = new ArrayList<Object>();
 		for (Commodity commodity: session.getCommodityCollection()) {
-			if (commodity instanceof Stock) {
+			if (commodity.getClass() == propertySet.getImplementationClass()) {
 				children.add(commodity);
 			}
 		}
 		return children;
+	}
+
+	public String getLabel() {
+		return propertySet.getObjectDescription();
 	}
 }
 

@@ -1,13 +1,20 @@
 package net.sf.jmoney.stocks.navigator;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import net.sf.jmoney.model2.CommodityInfo;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ExtendablePropertySet;
+import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.SessionChangeAdapter;
 import net.sf.jmoney.model2.SessionChangeListener;
+import net.sf.jmoney.stocks.model.Security;
+import net.sf.jmoney.stocks.model.SecurityInfo;
 import net.sf.jmoney.stocks.model.Stock;
-import net.sf.jmoney.stocks.views.StocksNode;
+import net.sf.jmoney.stocks.views.SecuritiesTypeNode;
 import net.sf.jmoney.views.IDynamicTreeNode;
 
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -15,19 +22,17 @@ import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Display;
 
-public class StocksContentProvider implements ITreeContentProvider {
+public class SecuritiesContentProvider implements ITreeContentProvider {
 
 	private DatastoreManager sessionManager;
 	
-	private Object stocksTreeNode;
+	private Map<ExtendablePropertySet<? extends Security>, Object> securitiesTypeTreeNodes = new HashMap<ExtendablePropertySet<? extends Security>, Object>();
 
 	private SessionChangeListener listener = null;
 	
 	public Object[] getChildren(Object parentElement) {
 		if (parentElement instanceof DatastoreManager) {
-			return new Object[] {
-					stocksTreeNode
-			};
+			return securitiesTypeTreeNodes.values().toArray();
 		}
 		if (parentElement instanceof IDynamicTreeNode) {
 			return ((IDynamicTreeNode)parentElement).getChildren().toArray();
@@ -38,8 +43,10 @@ public class StocksContentProvider implements ITreeContentProvider {
 	public Object getParent(Object element) {
 		if (element instanceof IDynamicTreeNode) {
 			return sessionManager;
-		} else if (element instanceof Stock) {
-			return stocksTreeNode;
+		} else if (element instanceof Security) {
+			Security securityElement = (Security)element;
+			ExtendablePropertySet propertySet = PropertySet.getPropertySet(securityElement.getClass());
+			return securitiesTypeTreeNodes.get(propertySet);
 		}
 		return null;  // Should never happen
 	}
@@ -72,9 +79,15 @@ public class StocksContentProvider implements ITreeContentProvider {
 		 */
 		sessionManager = (DatastoreManager)newInput;
 		if (sessionManager != null) {
-			// Create the node that contain the stocks in this session.
-			stocksTreeNode = new StocksNode(sessionManager); 
-			
+			/*
+			 * Create the nodes that contain the securities, one node for each
+			 * class of security.
+			 */
+			securitiesTypeTreeNodes.clear();
+			for (ExtendablePropertySet<? extends Security> propertySet : SecurityInfo.getPropertySet().getDerivedPropertySets()) {
+				securitiesTypeTreeNodes.put(propertySet, new SecuritiesTypeNode(sessionManager, propertySet)); 
+			}
+		
 			listener = new MyCurrentSessionChangeListener((TreeViewer)viewer);
 			sessionManager.addChangeListener(listener);
 		}
@@ -89,8 +102,11 @@ public class StocksContentProvider implements ITreeContentProvider {
 		
 		@Override	
 		public void objectInserted(ExtendableObject newObject) {
-			if (newObject instanceof Stock) {
-				viewer.insert(stocksTreeNode, newObject, 0);
+			if (newObject instanceof Security) {
+				Security securityElement = (Security)newObject;
+				ExtendablePropertySet propertySet = PropertySet.getPropertySet(securityElement.getClass());
+				Object securitiesTypeTreeNode = securitiesTypeTreeNodes.get(propertySet);
+				viewer.insert(securitiesTypeTreeNode, newObject, 0);
 			}
 		}
 
