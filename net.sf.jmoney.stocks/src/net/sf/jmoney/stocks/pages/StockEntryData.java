@@ -12,7 +12,7 @@ import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.Transaction.EntryCollection;
-import net.sf.jmoney.stocks.model.Stock;
+import net.sf.jmoney.stocks.model.Security;
 import net.sf.jmoney.stocks.model.StockAccount;
 import net.sf.jmoney.stocks.model.StockEntry;
 import net.sf.jmoney.stocks.model.StockEntryInfo;
@@ -107,7 +107,7 @@ public class StockEntryData extends EntryData {
 					}
 					tax2Entry = entry;
 				} else if (entry.getAccount() == account) {
-					if (entry.getCommodityInternal() instanceof Stock) {
+					if (entry.getCommodityInternal() instanceof Security) {
 						if (purchaseOrSaleEntry != null) {
 							unknownTransactionType = true;
 						}

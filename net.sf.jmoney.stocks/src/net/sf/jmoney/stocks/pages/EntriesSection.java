@@ -242,7 +242,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						Security security;
 						if (data.isPurchaseOrSale()) {
 							Entry entry = data.getPurchaseOrSaleEntry();
-							security = (Stock)entry.getCommodityInternal();
+							security = (Security)entry.getCommodityInternal();
 							control.setEnabled(true);
 						} else if (data.isDividend()) {
 							Entry entry = data.getDividendEntry();
