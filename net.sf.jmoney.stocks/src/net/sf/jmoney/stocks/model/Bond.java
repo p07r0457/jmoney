@@ -24,6 +24,7 @@ package net.sf.jmoney.stocks.model;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.Date;
 
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.IObjectKey;
@@ -42,8 +43,9 @@ public class Bond extends Security {
 	 */
 	protected IObjectKey currencyKey;
 
-	private long redemptionValue;
 	private int interestRate;
+	private Date maturityDate;
+	private long redemptionValue;
 	
 	private static void initNumberFormat() {
 		numberFormat = new NumberFormat[MAX_DECIMALS + 1];
@@ -65,8 +67,9 @@ public class Bond extends Security {
 			String cusip,
 			String symbol,
 			IObjectKey currencyKey,
-			long redemptionValue,
 			int interestRate,
+			Date maturityDate,
+			long redemptionValue,
 			IValues extensionValues) {
 		super(objectKey, parentKey, name, cusip, symbol, extensionValues);
 
@@ -84,8 +87,9 @@ public class Bond extends Security {
 			this.currencyKey = objectKey.getSession().getDefaultCurrency().getObjectKey();
 		}
 		
-		this.redemptionValue = redemptionValue;
 		this.interestRate = interestRate;
+		this.maturityDate = maturityDate;
+		this.redemptionValue = redemptionValue;
 	}
 
     /**
@@ -100,8 +104,9 @@ public class Bond extends Security {
 		// Set the currency to the session default currency.
 		this.currencyKey = objectKey.getSession().getDefaultCurrency().getObjectKey();
 		
-		this.redemptionValue = 0;
 		this.interestRate = 0;
+		this.maturityDate = null;
+		this.redemptionValue = 0;
 	}
 
 	@Override
@@ -123,6 +128,36 @@ public class Bond extends Security {
 	}
 
 	/**
+	 * @return the coupon interest rate.
+	 */
+	public int getInterestRate() {
+		return interestRate;
+	}
+	
+	public void setInterestRate(int interestRate) {
+		int oldInterestRate = this.interestRate;
+		this.interestRate = interestRate;
+
+		// Notify the change manager.
+		processPropertyChange(BondInfo.getInterestRateAccessor(), new Integer(oldInterestRate), new Integer(interestRate));
+	}
+	
+	/**
+	 * @return the coupon interest rate.
+	 */
+	public Date getMaturityDate() {
+		return maturityDate;
+	}
+	
+	public void setMaturityDate(Date maturityDate) {
+		Date oldMaturityDate = this.maturityDate;
+		this.maturityDate = maturityDate;
+
+		// Notify the change manager.
+		processPropertyChange(BondInfo.getMaturityDateAccessor(), oldMaturityDate, maturityDate);
+	}
+	
+	/**
 	 * @return the redemption value.
 	 */
 	public long getRedemptionValue() {
@@ -135,21 +170,6 @@ public class Bond extends Security {
 
 		// Notify the change manager.
 		processPropertyChange(BondInfo.getRedemptionValueAccessor(), new Long(oldRedemptionValue), new Long(redemptionValue));
-	}
-	
-	/**
-	 * @return the redemption value.
-	 */
-	public int getInterestRate() {
-		return interestRate;
-	}
-	
-	public void setInterestRate(int interestRate) {
-		int oldInterestRate = this.interestRate;
-		this.interestRate = interestRate;
-
-		// Notify the change manager.
-		processPropertyChange(BondInfo.getInterestRateAccessor(), new Integer(oldInterestRate), new Integer(interestRate));
 	}
 	
 	/**

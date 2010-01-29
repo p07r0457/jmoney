@@ -22,9 +22,12 @@
 
 package net.sf.jmoney.stocks.model;
 
+import java.util.Date;
+
 import net.sf.jmoney.fields.AmountControlFactory;
 import net.sf.jmoney.fields.AmountEditor;
 import net.sf.jmoney.fields.CurrencyControlFactory;
+import net.sf.jmoney.fields.DateControlFactory;
 import net.sf.jmoney.fields.IntegerControlFactory;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.CommodityInfo;
@@ -69,18 +72,24 @@ public class BondInfo implements IPropertySetInfo {
 					values.getScalarValue(SecurityInfo.getCusipAccessor()),
 					values.getScalarValue(SecurityInfo.getSymbolAccessor()),
 					values.getReferencedObjectKey(BondInfo.getCurrencyAccessor()),
+					values.getScalarValue(BondInfo.getInterestRateAccessor()),
+					values.getScalarValue(BondInfo.getMaturityDateAccessor()),
 					values.getScalarValue(BondInfo.getRedemptionValueAccessor()),
-					values.getScalarValue(BondInfo.getInterestRateAccessor()), values);
+					values);
 		}
 	});
 
 	private static ReferencePropertyAccessor<Currency> currencyAccessor;
-	private static ScalarPropertyAccessor<Long> redemptionValueAccessor;
 	private static ScalarPropertyAccessor<Integer> interestRateAccessor;
+	private static ScalarPropertyAccessor<Date> maturityDateAccessor;
+	private static ScalarPropertyAccessor<Long> redemptionValueAccessor;
 
 	public PropertySet registerProperties() {
 
 		IPropertyControlFactory<Integer> integerControlFactory = new IntegerControlFactory();
+
+		IPropertyControlFactory<Date> dateControlFactory = new DateControlFactory();
+
 		IReferenceControlFactory<Bond,Currency> currencyControlFactory = new CurrencyControlFactory<Bond>() {
 			public IObjectKey getObjectKey(Bond parentObject) {
 				return parentObject.currencyKey;
@@ -131,8 +140,9 @@ public class BondInfo implements IPropertySetInfo {
 		};
 
 		currencyAccessor = propertySet.addProperty("currency", StocksPlugin.getResourceString("PropertyDesc.currency"), Currency.class, 2, 20, currencyControlFactory, null);
-		redemptionValueAccessor = propertySet.addProperty("redemptionValue", StocksPlugin.getResourceString("PropertyDesc.redemptionValue"), Long.class, 2, 20, amountControlFactory, null);
 		interestRateAccessor = propertySet.addProperty("interestRate", StocksPlugin.getResourceString("PropertyDesc.interestRate"), Integer.class, 1, 15, integerControlFactory, null);
+		maturityDateAccessor = propertySet.addProperty("maturityDate", StocksPlugin.getResourceString("PropertyDesc.maturityDate"), Date.class, 1, 20, dateControlFactory, null);
+		redemptionValueAccessor = propertySet.addProperty("redemptionValue", StocksPlugin.getResourceString("PropertyDesc.redemptionValue"), Long.class, 2, 20, amountControlFactory, null);
 		
 		return propertySet;
 	}
@@ -154,14 +164,21 @@ public class BondInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static ScalarPropertyAccessor<Long> getRedemptionValueAccessor() {
-		return redemptionValueAccessor;
+	public static ScalarPropertyAccessor<Integer> getInterestRateAccessor() {
+		return interestRateAccessor;
 	}
 
 	/**
 	 * @return
 	 */
-	public static ScalarPropertyAccessor<Integer> getInterestRateAccessor() {
-		return interestRateAccessor;
+	public static ScalarPropertyAccessor<Date> getMaturityDateAccessor() {
+		return maturityDateAccessor;
+	}
+
+	/**
+	 * @return
+	 */
+	public static ScalarPropertyAccessor<Long> getRedemptionValueAccessor() {
+		return redemptionValueAccessor;
 	}
 }
