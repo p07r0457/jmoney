@@ -47,10 +47,10 @@
          point="org.eclipse.ui.navigator.navigatorContent">
       <navigatorContent
             activeByDefault="true"
-            contentProvider="net.sf.jmoney.stocks.navigator.StocksContentProvider"
+            contentProvider="net.sf.jmoney.stocks.navigator.SecuritiesContentProvider"
             icon="icons/accounts.gif"
             id="net.sf.jmoney.stocks.navigator.stocksContent"
-            labelProvider="net.sf.jmoney.stocks.navigator.StocksLabelProvider"
+            labelProvider="net.sf.jmoney.stocks.navigator.SecuritiesLabelProvider"
             name="Stocks Content"
             priority="low">
          <triggerPoints>
@@ -66,7 +66,7 @@
                </instanceof>
          </possibleChildren>
       <actionProvider
-            class="net.sf.jmoney.stocks.navigator.StocksActionProvider"
+            class="net.sf.jmoney.stocks.navigator.SecuritiesActionProvider"
             id="net.sf.jmoney.stocks.stocksActionProvider">
       </actionProvider>
       </navigatorContent>
