@@ -6,8 +6,8 @@ import java.util.Iterator;
 
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.InvalidUserEntryException;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Currency;
-import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ReferenceViolationException;
@@ -118,7 +118,9 @@ public class StockEntryData extends EntryData {
 						}
 						mainEntry = entry;
 					}
-				} else if (entry.getAccount() instanceof CurrencyAccount) {
+				} else if (entry.getAccount() instanceof CapitalAccount
+						&& entry.getAccount() != account
+						&& entry.getCommodityInternal() == account.getCurrency()) {
 					if (transferEntry != null) {
 						unknownTransactionType = true;
 					}

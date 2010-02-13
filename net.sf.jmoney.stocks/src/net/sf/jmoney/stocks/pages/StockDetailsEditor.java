@@ -711,7 +711,7 @@ public class StockDetailsEditor extends EditorPart {
 							this.data = data;
 							
 							assert(data.isPurchaseOrSale());
-							setControlValue(data.getTax1Amount());
+							setControlValue(data.getTax1Amount() == 0 ? null : data.getTax1Amount());
 
 							// Listen for changes in the amount
 							final IPropertyChangeListener<Long> listener = new IPropertyChangeListener<Long>() {
@@ -782,7 +782,7 @@ public class StockDetailsEditor extends EditorPart {
 							this.data = data;
 							
 							assert(data.isPurchaseOrSale());
-							setControlValue(data.getTax2Amount());
+							setControlValue(data.getTax2Amount() == 0 ? null : data.getTax2Amount());
 
 							// Listen for changes in the amount
 							final IPropertyChangeListener<Long> listener = new IPropertyChangeListener<Long>() {
