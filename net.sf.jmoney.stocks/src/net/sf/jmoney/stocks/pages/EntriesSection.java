@@ -68,9 +68,7 @@ import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.resources.Messages;
 import net.sf.jmoney.stocks.model.Security;
 import net.sf.jmoney.stocks.model.SecurityControl;
-import net.sf.jmoney.stocks.model.Stock;
 import net.sf.jmoney.stocks.model.StockAccount;
-import net.sf.jmoney.stocks.model.StockEntry;
 import net.sf.jmoney.stocks.model.StockEntryInfo;
 import net.sf.jmoney.stocks.pages.StockEntryRowControl.TransactionType;
 
@@ -263,8 +261,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					
 						if (data.isPurchaseOrSale()) {
 							Entry entry = data.getPurchaseOrSaleEntry();
-							StockEntry stockEntry = entry.getExtension(StockEntryInfo.getPropertySet(), true);
-							stockEntry.setSecurity(security);
+							entry.setCommodity(security);
 						} else if (data.isDividend()) {
 							Entry entry = data.getDividendEntry();
 							entry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), security);
@@ -427,7 +424,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					}
 
 					private IAmountFormatter getFormatter() {
-						IAmountFormatter formatter = data.getPurchaseOrSaleEntry().getCommodityInternal();
+						IAmountFormatter formatter = data.getPurchaseOrSaleEntry().getCommodity();
 						if (formatter == null) {
 							/*
 							 * The user has not yet selected the stock. As the
@@ -620,7 +617,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 			expenseColumns.add(commissionColumn);
 		}
 		
-		if (account.getTax1Name() != null) {
+		if (account.getTax1Name() != null && account.getTax1Account() != null) {
 			IndividualBlock<StockEntryData, StockEntryRowControl> tax1Column = new IndividualBlock<StockEntryData, StockEntryRowControl>(account.getTax1Name(), 60, 1) {
 
 				@Override
@@ -691,7 +688,7 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 			expenseColumns.add(tax1Column);
 		}
 		
-		if (account.getTax2Name() != null) {
+		if (account.getTax2Name() != null && account.getTax2Account() != null) {
 			IndividualBlock<StockEntryData, StockEntryRowControl> tax2Column = new IndividualBlock<StockEntryData, StockEntryRowControl>(account.getTax2Name(), 60, 1) {
 
 				@Override

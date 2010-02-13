@@ -244,6 +244,13 @@ public class StockAccount extends CapitalAccount {
 		 */
 		// TODO: remove this test at some time because getCommodity should never
 		// return null.
+		
+		// TODO: This method is incorrect.  If this entry is a purchase or sale entry
+		// but the stock has not yet been entered by the user then getCommodity will
+		// return null and so currency will be returned.  This results in the wrong formatter
+		// being used for the share quantity (it will be parsed as though it were a currency
+		// amount).  This issue has been fixed by simply not using this method, but then
+		// why bother to have this method at all?
 		if (entry.getCommodity() != null) {
 			return entry.getCommodity();
 		} else {
