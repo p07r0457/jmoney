@@ -70,14 +70,12 @@ public class StockEntryInfo implements IPropertySetInfo {
 		public StockEntry construct(ExtendableObject extendedObject, IValues values) {
 			return new StockEntry(
 					extendedObject, 
-					values.getScalarValue(getStockChangeAccessor()),
 					values.getReferencedObjectKey(getSecurityAccessor()),
 					values.getScalarValue(getBargainDateAccessor())
 			);
 		}
 	});
 	
-	private static ScalarPropertyAccessor<Boolean> stockChangeAccessor;
 	private static ReferencePropertyAccessor<Security> securityAccessor;
 	private static ScalarPropertyAccessor<Date> bargainDateAccessor;
 	
@@ -92,7 +90,6 @@ public class StockEntryInfo implements IPropertySetInfo {
 		
 		IPropertyControlFactory<Date> datePropertyControlFactory = new DateControlFactory();
 		
-		stockChangeAccessor = propertySet.addProperty("stockChange", "Stock Acquisition/Disposal", Boolean.class, 0, 15, booleanPropertyControlFactory, null);
 		securityAccessor = propertySet.addProperty("security", "Security", Security.class, 2, 20, securityPropertyControlFactory, null);
 		bargainDateAccessor = propertySet.addProperty("bargainDate", "Bargain Date", Date.class, 0, 20, datePropertyControlFactory, null);
 		
@@ -105,13 +102,6 @@ public class StockEntryInfo implements IPropertySetInfo {
 	public static ExtensionPropertySet<StockEntry> getPropertySet() {
 		return propertySet;
 	}
-
-	/**
-	 * @return
-	 */
-	public static ScalarPropertyAccessor<Boolean> getStockChangeAccessor() {
-		return stockChangeAccessor;
-	}	
 
 	/**
 	 * @return

@@ -37,12 +37,6 @@ import net.sf.jmoney.model2.IObjectKey;
 public class StockEntry extends EntryExtension {
 
 	/**
-	 * indicates if this entry represents stock going in or
-	 * out of the account.
-	 */
-	private boolean stockChange = false;
-	
-	/**
 	 * The security (Stock or Bond) involved in this entry.
 	 * <P>
 	 * This property is used for entries such as dividend payments, where no
@@ -52,13 +46,13 @@ public class StockEntry extends EntryExtension {
 	protected IObjectKey securityKey = null;
 	
 	/**
-	 * The date on which the deal was made.  On some stock
-	 * exchanges (for example, the London Stock Exchange)
-	 * this is different from the settlement date on which
-	 * the money and stock is paid or received.
-	 * <P> 
-	 * This property is applicable only if stockChange is set
-	 * to true.
+	 * The date on which the deal was made. On most stock exchanges this is
+	 * different from the settlement date on which the money and stock is paid
+	 * or received.
+	 * <P>
+	 * This property is applicable only if this entry represents a stock
+	 * credited to the account as a result of a purchase or stock debited from
+	 * the account as a result of a sale.
 	 */
 	private Date bargainDate = null;
 
@@ -79,31 +73,10 @@ public class StockEntry extends EntryExtension {
 	 * This constructor is called by the datastore to construct
 	 * the extension objects when loading data.
 	 */
-	public StockEntry(ExtendableObject extendedObject, boolean stockChange, IObjectKey securityKey, Date bargainDate) {
+	public StockEntry(ExtendableObject extendedObject, IObjectKey securityKey, Date bargainDate) {
 		super(extendedObject);
-		this.stockChange = stockChange;
 		this.securityKey = securityKey;
 		this.bargainDate = bargainDate;
-	}
-	
-	/**
-	 * @return true if this entry represents an addition of stock
-	 * 			to the account or a removal of stock from the account,
-	 * 			false if this entry represents anything else, such as
-	 * 			cash dividends going into the account.
-	 */
-	public boolean isStockChange() {
-		return stockChange;
-	}
-	
-	/**
-	 * @param stockChange true if this entry represents an addition of stock
-	 * 			to the account or a removal of stock from the account,
-	 * 			false if this entry represents anything else, such as
-	 * 			cash dividends going into the account.
-	 */
-	public void setStockChange(boolean stockChange) {
-		this.stockChange = stockChange;
 	}
 	
 	/**
