@@ -82,6 +82,7 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.SectionPart;
 import org.eclipse.ui.forms.widgets.ExpandableComposite;
@@ -476,7 +477,46 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 //				return data.getWithholdingTaxEntry();
 //			}
 //		};		
-		final IndividualBlock<StockEntryData, StockEntryRowControl> withholdingTaxColumn = new IndividualBlock<StockEntryData, StockEntryRowControl>("Commission", EntryInfo.getAmountAccessor().getMinimumWidth(), EntryInfo.getAmountAccessor().getWeight()) {
+		final Block<StockEntryData, StockEntryRowControl> withholdingTaxColumn = 
+			
+			// Null does not work as a child of StackBlock so create an empty one.
+			account.getWithholdingTaxAccount() == null ?
+					new CellBlock<StockEntryData, StockEntryRowControl>(0, 0) {
+
+						@Override
+						public IPropertyControl<StockEntryData> createCellControl(
+								Composite parent, RowControl rowControl,
+								StockEntryRowControl coordinator) {
+							
+							final Control control = new Label(parent, SWT.NONE);
+
+							return new IPropertyControl<StockEntryData>() {
+								
+								public Control getControl() {
+									return control;
+								}
+
+								public void load(StockEntryData object) {
+									// Nothing to do
+								}
+
+								public void save() {
+									// Nothing to do
+								}
+							};
+						}
+
+						@Override
+						public void createHeaderControls(Composite parent, StockEntryData entryData) {
+							/*
+							 * We need to create something here because the layout expects the correct
+							 * number of controls.  Create an empty label.
+							 */
+							new Label(parent, SWT.NONE);
+						}
+					}
+			:
+			new IndividualBlock<StockEntryData, StockEntryRowControl>("Withholding Tax", EntryInfo.getAmountAccessor().getMinimumWidth(), EntryInfo.getAmountAccessor().getWeight()) {
 
 			@Override
 			public IPropertyControl<StockEntryData> createCellControl(Composite parent, RowControl rowControl, final StockEntryRowControl coordinator) {
@@ -493,8 +533,8 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					public void load(final StockEntryData data) {
 						this.data = data;
 						
-						assert(data.isPurchaseOrSale());
-						setControlValue(data.getCommission() == 0 ? null : data.getCommission());
+						assert(data.isDividend());
+						setControlValue(data.getWithholdingTax() == 0 ? null : data.getWithholdingTax());
 
 						// Listen for changes in the amount
 						final IPropertyChangeListener<Long> listener = new IPropertyChangeListener<Long>() {
@@ -512,10 +552,10 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						});
 					}
 
-					private void setControlValue(Long commission) {
-						if (commission != null) {
+					private void setControlValue(Long withholdingTax) {
+						if (withholdingTax != null) {
 							// Format the commission amount using the appropriate currency object as the formatter. 
-							control.setText(account.getCommissionAccount().getCurrency().format(commission));
+							control.setText(account.getWithholdingTaxAccount().getCurrency().format(withholdingTax));
 						} else {
 							control.setText("");
 						}
@@ -523,8 +563,8 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 
 					public void save() {
 						// Parse the commission amount using the appropriate currency object as the parser. 
-						long amount = account.getCommissionAccount().getCurrency().parse(control.getText());
-						data.setCommission(amount);
+						long amount = account.getWithholdingTaxAccount().getCurrency().parse(control.getText());
+						data.setWithholdingTax(amount);
 					}
 
 					public void setSelected() {
