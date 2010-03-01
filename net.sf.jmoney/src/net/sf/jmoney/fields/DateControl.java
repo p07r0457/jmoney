@@ -35,7 +35,6 @@ import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Image;
@@ -158,34 +157,31 @@ public class DateControl extends DateComposite {
     	        	// does not require a date to be set).
     	        }
                 
-                swtcal.addSelectionListener(
-                		new SelectionListener() {
-							public void widgetDefaultSelected(SelectionEvent e) {
-								// TODO Auto-generated method stub
-								
-							}
+    	        swtcal.addSelectionListener(
+    	        		new SelectionAdapter() {
+    	        			@Override
+    	        			public void widgetSelected(SelectionEvent e) {
+    	        				Calendar cal = Calendar.getInstance();
 
-							public void widgetSelected(SelectionEvent e) {
-				                Calendar cal = Calendar.getInstance();
-				                
-				                /*
-								 * First reset all fields. Otherwise differences in the time
-								 * part, even if the difference is only milliseconds, will cause
-								 * the date comparisons to fail.
-								 * 
-								 * Note also it is critical that whatever is done here is exactly the
-								 * same as that done in VerySimpleDateFormat, otherwise dates will not
-								 * match.  For example, if you replace clear() here with setTimeInMillis(0)
-								 * then we get a different object (because data other than the date and time
-								 * such as time zone information will be different).
-								 */ 
-				                cal.clear();
-				                
-				                cal.set(swtcal.getYear(), swtcal.getMonth(), swtcal.getDay());
-                				Date date = cal.getTime();
-                				textControl.setText(fDateFormat.format(date));
-							}
-                		});
+    	        				/*
+    	        				 * First reset all fields. Otherwise differences in the time
+    	        				 * part, even if the difference is only milliseconds, will cause
+    	        				 * the date comparisons to fail.
+    	        				 * 
+    	        				 * Note also it is critical that whatever is done here is exactly the
+    	        				 * same as that done in VerySimpleDateFormat, otherwise dates will not
+    	        				 * match.  For example, if you replace clear() here with setTimeInMillis(0)
+    	        				 * then we get a different object (because data other than the date and time
+    	        				 * such as time zone information will be different).
+    	        				 */ 
+    	        				cal.clear();
+
+    	        				cal.set(swtcal.getYear(), swtcal.getMonth(), swtcal.getDay());
+    	        				Date date = cal.getTime();
+    	        				textControl.setText(fDateFormat.format(date));
+    	        			}
+    	        		}
+    	        );
 
     	        shell.pack();
     	        
