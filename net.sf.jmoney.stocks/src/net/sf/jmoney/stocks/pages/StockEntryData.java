@@ -417,7 +417,7 @@ public class StockEntryData extends EntryData {
 		} else {
 			if (commissionEntry == null) {
 				commissionEntry = getEntry().getTransaction().createEntry();
-				commissionEntry.setAccount(account.getTax1Account());
+				commissionEntry.setAccount(account.getCommissionAccount());
 			}
 			commissionEntry.setAmount(commission);
 		}
