@@ -281,6 +281,12 @@ items to an existing menu or toolbar.
             id="net.sf.jmoney.navigationView"
             name="Navigator">
       </view>
+
+      <view
+            id="net.sf.jmoney.FeedbackView"
+            name="Feedback"
+            class="net.sf.jmoney.views.feedback.FeedbackView">
+      </view>
    </extension>
 
    <extension

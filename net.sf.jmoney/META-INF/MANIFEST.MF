@@ -26,6 +26,7 @@ Export-Package: net.sf.jmoney,
  net.sf.jmoney.preferences,
  net.sf.jmoney.resources,
  net.sf.jmoney.views,
+ net.sf.jmoney.views.feedback,
  net.sf.jmoney.wizards
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: JMoney.sf.net

@@ -178,6 +178,12 @@ public class Messages extends NLS {
 	public static String WizardPropertyPage_ErrorNameEmpty;
 	public static String WizardPropertyPage_ErrorSameAsDefaultName;
 	public static String MalformedPlugin_BadExtensionClass;
+	public static String DialogProblemFilter_title;
+	public static String DialogProblemFilter_severityLabel;
+	public static String DialogProblemFilter_severityError;
+	public static String DialogProblemFilter_severityWarning;
+	public static String DialogProblemFilter_sererityInfo;
+	public static String DialogProblemFilter_onOff;
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);
