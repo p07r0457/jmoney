@@ -54,13 +54,8 @@ import org.eclipse.ui.operations.UndoRedoActionGroup;
  * @author Johann Gyger
  */
 public class AccountEditor extends FormEditor {
-	// A bit of a kludge.  We have two ids.  This ensures the icon
-	// is always correct, because for a non-active editor the icon
-	// comes from the editor declaration in plugin.xml.
 	public static final String ID = "net.sf.jmoney.accountEditor";  //$NON-NLS-1$
-//	public static final String CATEGORY_ID = "net.sf.jmoney.categoryEditor";
 	
-//    protected Object navigationTreeNode;
     protected Vector<PageEntry> pageListeners;
 
     protected SessionChangeListener accountNameChangeListener = null;
