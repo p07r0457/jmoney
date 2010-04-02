@@ -172,7 +172,7 @@ public class FeedbackView extends ViewPart {
 					cell.setImage(JMoneyPlugin.createImage("status_info.gif"));
 					break;
 				case IStatus.OK:
-					cell.setImage(null);
+					cell.setImage(JMoneyPlugin.createImage("status_ok.gif"));
 					break;
 				}
 			}

@@ -58,7 +58,7 @@ public class StatusContentProvider implements ITreeContentProvider {
 
 		public boolean hasChildren(Object element) {
 			IStatus status = (IStatus)element;
-			return status.isMultiStatus();
+			return status.getChildren().length != 0;
 		}
 
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) { // do nothing
