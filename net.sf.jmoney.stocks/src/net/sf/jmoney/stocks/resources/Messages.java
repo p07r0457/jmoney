@@ -7,6 +7,7 @@ public class Messages extends NLS {
 
 	public static String NavigationTreeNode_stocks;
 	public static String NavigationTree_stockDescription;
+	public static String SecuritiesActionProvider_DeleteSecurity;
 
 	static {
 		// initialize resource bundle

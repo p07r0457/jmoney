@@ -6,7 +6,7 @@ package net.sf.jmoney.stocks.navigator;
 import net.sf.jmoney.model2.AbstractDataOperation;
 import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.resources.Messages;
+import net.sf.jmoney.stocks.resources.Messages;
 import net.sf.jmoney.stocks.model.Security;
 
 import org.eclipse.core.commands.ExecutionException;
@@ -24,8 +24,8 @@ class DeleteSecurityAction extends BaseSelectionListenerAction {
 	private final Session session;
 
 	DeleteSecurityAction(Session session) {
-		super(Messages.AccountsActionProvider_DeleteAccount);
-		setToolTipText(Messages.AccountsActionProvider_DeleteAccount);
+		super(Messages.SecuritiesActionProvider_DeleteSecurity);
+		setToolTipText(Messages.SecuritiesActionProvider_DeleteSecurity);
 		setImageDescriptor(PlatformUI.getWorkbench().getSharedImages().getImageDescriptor(ISharedImages.IMG_TOOL_DELETE));
 		this.session = session;
 	}
