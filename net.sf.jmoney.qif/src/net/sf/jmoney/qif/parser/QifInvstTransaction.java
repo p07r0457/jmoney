@@ -229,7 +229,6 @@ public class QifInvstTransaction {
 		return transferAccount == null ? null : new QifCategoryLine(transferAccount);
 	}
 
-
 	public BigDecimal getCommission() {
 		return commission;
 	}

@@ -69,11 +69,33 @@ public class BasicImporter implements IQifImporter {
 		}
 	}
 
-	public String importData(QifFile qifFile, Session session) {
+	public String importData(QifFile qifFile, Session session, Account selectedAccount) {
 
 		buildAccountMap(session);
 		buildCategoryMap(session);
 
+		/*
+		 * Import transactions that have no account information.
+		 */
+		if (!qifFile.transactions.isEmpty()) {
+			if (selectedAccount == null) {
+				throw new RuntimeException("No account selected and transactions are listed in the QIF file with no account information.");
+			}
+			
+			if (!(selectedAccount instanceof CurrencyAccount)) {
+				// TODO: process error properly
+				if (QIFPlugin.DEBUG) System.out.println("account is not a currency account");
+				throw new RuntimeException("selected account is not a currency account");
+			}
+
+			CurrencyAccount currencyAccount = (CurrencyAccount)selectedAccount;
+
+			importAccount(session, currencyAccount, qifFile.transactions);
+		}
+		
+		/*
+		 * Import transactions that do have account information.
+		 */
 		for (QifAccount qifAccount : qifFile.accountList) {
 
 			if (qifAccount.getTransactions().size() == 0) {

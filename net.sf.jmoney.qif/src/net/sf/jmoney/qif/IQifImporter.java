@@ -1,7 +1,9 @@
 package net.sf.jmoney.qif;
 
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.qif.parser.QifFile;
+import net.sf.jmoney.qif.parser.QifImportException;
 
 public interface IQifImporter {
 
@@ -22,9 +24,12 @@ public interface IQifImporter {
 	 * 
 	 * @param qifFile
 	 * @param session
+	 * @param account the selected account or null if no single account was selected,
+	 *      may be null but then the import will only succeed if the QIF file contains
+	 *      account information before each transaction list
 	 * @return a string describing what was imported, or null if
 	 * 		nothing was in the file that could be imported by this
 	 * 		implementation.
 	 */
-	String importData(QifFile qifFile, Session session);
+	String importData(QifFile qifFile, Session session, Account account) throws QifImportException;
 }

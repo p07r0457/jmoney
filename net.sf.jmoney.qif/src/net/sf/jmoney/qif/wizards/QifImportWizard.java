@@ -30,6 +30,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.MalformedPluginException;
 import net.sf.jmoney.model2.Session;
@@ -39,6 +40,7 @@ import net.sf.jmoney.qif.parser.AmbiguousDateException;
 import net.sf.jmoney.qif.parser.InvalidQifFileException;
 import net.sf.jmoney.qif.parser.QifDateFormat;
 import net.sf.jmoney.qif.parser.QifFile;
+import net.sf.jmoney.qif.parser.QifImportException;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -66,6 +68,12 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 
 	private Session session;
 
+	/**
+	 * The account selected when the import wizard was started, or null if either no
+	 * account was selected or multiple objects were selected
+	 */
+	private Account account;
+
 	public QifImportWizard() {
 		IDialogSettings workbenchSettings = QIFPlugin.getDefault().getDialogSettings();
 		IDialogSettings section = workbenchSettings.getSection("QifImportWizard");//$NON-NLS-1$
@@ -82,6 +90,19 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		this.window = workbench.getActiveWorkbenchWindow();
 
+		/*
+		 * If the selection is a single account, save the account.  This may be needed
+		 * later because if the QIF file has no account information then the data are
+		 * imported into the selected account.
+		 */
+		account = null;
+		if (selection.size() == 1) {
+			Object selectedElement = selection.getFirstElement();
+			if (selectedElement instanceof Account) {
+				account = (Account)selectedElement;
+			}
+		}
+		
 		// Original JMoney disabled the import menu items when no
 		// session was open. I don't know how to do that in Eclipse,
 		// so we display a message instead.
@@ -94,6 +115,8 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 			return;
 		}
 
+		session = sessionManager.getSession();
+		
 		mainPage = new QifImportWizardPage(window);
 		addPage(mainPage);
 	}
@@ -126,7 +149,7 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 				DateFormat localFormatter = DateFormat.getDateInstance(DateFormat.SHORT);
 				Calendar calendar = Calendar.getInstance(localFormatter.getTimeZone());
 				calendar.clear();
-				calendar.set(2008, 10, 23);
+				calendar.set(2008, Calendar.NOVEMBER, 23);
 				String formatted = localFormatter.format(calendar.getTime());
 
 				QifDateFormat qifDateFormat;
@@ -154,6 +177,11 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 			TransactionManager transactionManager = new TransactionManager(session.getDataManager());
 			Session sessionInTransaction = transactionManager.getSession();
 			
+			Account accountInTransaction = null;
+			if (account != null) {
+				accountInTransaction = transactionManager.getCopyInTransaction(account);
+			}
+			
 			IExtensionRegistry registry = Platform.getExtensionRegistry();
 			for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.qif.importers")) {
 				if (element.getName().equals("importer")) {
@@ -172,7 +200,7 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 
 						IQifImporter importer = (IQifImporter)listener;
 
-						String result = importer.importData(qifFile, sessionInTransaction);
+						String result = importer.importData(qifFile, sessionInTransaction, accountInTransaction);
 						if (result != null) {
 							results.add(result);
 						}
@@ -220,6 +248,8 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 		} catch (IOException e) {
 			MessageDialog.openError(window.getShell(), "Unable to read QIF file", e.getLocalizedMessage());
 		} catch (InvalidQifFileException e) {
+			MessageDialog.openError(window.getShell(), "Unable to import QIF file", e.getLocalizedMessage());
+		} catch (QifImportException e) {
 			MessageDialog.openError(window.getShell(), "Unable to import QIF file", e.getLocalizedMessage());
 		} catch (AmbiguousDateException e) {
 			MessageDialog.openError(window.getShell(), "QIF file has an ambiguous date format that cannot be guessed from your locale.", e.getLocalizedMessage());
