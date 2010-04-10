@@ -186,4 +186,8 @@ public class AccountEditor extends FormEditor {
 		int pageIndex = addPage(editor, getEditorInput());
 		setPageText(pageIndex, label);
 	}
+
+	public Account getAccount() {
+		return account;
+	}
 }

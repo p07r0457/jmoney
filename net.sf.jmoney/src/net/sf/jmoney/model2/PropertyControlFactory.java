@@ -6,7 +6,7 @@ import java.util.Comparator;
  * This class provides a default implementation of some of the methods
  * in the IPropertyControlFactory interface.  Plug-ins do not have to use
  * this class but can instead implement the interface directly.
- * 
+ * <P>
  * This class, like the IPropertyControlFactory interface, is parameterized
  * with the class of values of the property.  However, this class further
  * requires that the class implements the Comparable interface.  This allows
@@ -14,7 +14,7 @@ import java.util.Comparator;
  * If the values of the property are of a class that does not implement Comparable
  * then this helper class cannot be used.
  *  
- * @author Nigel
+ * @author Nigel Westbury
  *
  */
 public abstract class PropertyControlFactory<V extends Comparable<? super V>> implements IPropertyControlFactory<V> {
