@@ -174,7 +174,7 @@ class PropertiesBlock extends CellBlock<Entry, SplitEntryRowControl> {
 				return !accessor.getName().equals("net.sf.jmoney.paypal.entryProperties.itemUrl");
 			} else {
 				return accessor.getName().equals("net.sf.jmoney.paypal.entryProperties.itemUrl")
-				|| accessor.getName().equals("net.sf.jmoney.stocks.entryProperties.stock");
+				|| accessor.getName().equals("net.sf.jmoney.stocks.entryProperties.security");
 			}
 		}
 
