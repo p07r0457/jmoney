@@ -25,6 +25,7 @@ import net.sf.jmoney.qif.parser.QifAccount;
 import net.sf.jmoney.qif.parser.QifCategoryLine;
 import net.sf.jmoney.qif.parser.QifDate;
 import net.sf.jmoney.qif.parser.QifFile;
+import net.sf.jmoney.qif.parser.QifImportException;
 import net.sf.jmoney.qif.parser.QifInvstTransaction;
 import net.sf.jmoney.qif.parser.QifSplitTransaction;
 import net.sf.jmoney.stocks.model.Stock;
@@ -91,11 +92,31 @@ public class InvestmentImporter implements IQifImporter {
 		}
 	}
 
-	public String importData(QifFile qifFile, Session session) {
+	public String importData(QifFile qifFile, Session session, Account selectedAccount) throws QifImportException {
 
 		buildAccountMap(session);
 		buildCategoryMap(session);
 
+		/*
+		 * Import transactions that have no account information.
+		 */
+		if (!qifFile.invstTransactions.isEmpty()) {
+			if (selectedAccount == null) {
+				throw new QifImportException("No account selected and transactions are listed in the QIF file with no account information.");
+			}
+			
+			if (!(selectedAccount instanceof StockAccount)) {
+				throw new QifImportException("The selected account is not a stock account.  This QIF file contains investment transactions and no account information exists in the QIF file for those transactions.  You must therefore select an investment account before importing this QIF file.");
+			}
+
+			StockAccount stockAccount = (StockAccount)selectedAccount;
+
+			importAccount(session, stockAccount, qifFile.invstTransactions);
+		}
+		
+		/*
+		 * Import transactions that do have account information.
+		 */
 		for (QifAccount qifAccount : qifFile.accountList) {
 
 			if (qifAccount.getInvstTransactions().size() == 0) {
@@ -140,16 +161,17 @@ public class InvestmentImporter implements IQifImporter {
 	 * then an entry will have been entered into this account for the transfer amount of that
 	 * split.  If there are multiple transfers in the split then multiple entries will exist
 	 * in this account.  All of those entries and their transactions must be deleted.
+	 * @throws QifImportException 
 	 */
 	private void importAccount(Session session, StockAccount account,
-			List<QifInvstTransaction> transactions) {
+			List<QifInvstTransaction> transactions) throws QifImportException {
 		
 		// TODO: This should come from the account????
 		Currency currency = session.getDefaultCurrency();
 
-		Account miscIncAccount = getCategory("Ameritrade - Misc Income", session);
-		Account interestIncomeAccount = getCategory("Interest - Ameritrade", session);
-		Account stockSplitAccount = getStockAccount("Stock Split - Ameritrade", session);
+		Account miscIncAccount = getCategory("Merrill Lynch - Misc Income", session);
+		Account interestIncomeAccount = getCategory("Interest - Merrill Lynch", session);
+		Account stockSplitAccount = getStockAccount("Stock Split - Merrill Lynch", session);
 		
 		for (QifInvstTransaction qifTransaction : transactions) {
 			// Create a new transaction
@@ -176,6 +198,9 @@ public class InvestmentImporter implements IQifImporter {
 				if (qifTransaction.getAmount() != null) {
 					amount = adjustAmount(qifTransaction.getAmount(), currency);
 					System.out.println("amount: " + amount);
+					if (amount == 1787092) {
+						System.out.println("here");
+					}
 				}
 			}
 			
@@ -185,6 +210,7 @@ public class InvestmentImporter implements IQifImporter {
 			if (qifTransaction.getAction().equals("ShrsIn") || qifTransaction.getAction().equals("ShrsOut")) {
 				// For time being, just do as a purchase or sale for zero.
 				firstEntry.setAmount(0);
+				firstEntry.setCommodity(account.getCurrency());
 				
 		        // Find the security
 		        String security = qifTransaction.getSecurity();
@@ -209,6 +235,8 @@ public class InvestmentImporter implements IQifImporter {
 					firstEntry.setAmount(-amount);
 				}
 				
+				firstEntry.setCommodity(account.getCurrency());
+				
 		        // Find the security
 		        String security = qifTransaction.getSecurity();
 		        Stock stock = findStock(session, security);		        
@@ -226,24 +254,40 @@ public class InvestmentImporter implements IQifImporter {
 	        	
 	        	saleEntry.setCommodity(stock);
 	        	
-	        	BigDecimal c = new BigDecimal(9.99);
-	        	
+//	        	BigDecimal c = new BigDecimal(9.99);
+
 				if (qifTransaction.getCommission() != null) {
+					if (account.getCommissionAccount() == null) {
+						throw new QifImportException("The file contains commission entries.  However no category has been set to hold the commission payments.");
+					}
+					
 	        		StockEntry commissionEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 	        		commissionEntry.setAccount(account.getCommissionAccount());
-					commissionEntry.setAmount(adjustAmount(qifTransaction.getCommission().min(c), currency));
+					commissionEntry.setAmount(adjustAmount(qifTransaction.getCommission(), currency));
 	        		commissionEntry.setSecurity(stock);
-
-	        		if (qifTransaction.getCommission().compareTo(new BigDecimal(9.99)) > 0) {
-		        		StockEntry salesFeeEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
-		        		salesFeeEntry.setAccount(account.getTax1Account());
-						salesFeeEntry.setAmount(adjustAmount(qifTransaction.getCommission().subtract(c), currency));
-		        		salesFeeEntry.setSecurity(stock);
-		        	}
-	        	}
+				}
+//				if (qifTransaction.getCommission() != null) {
+//	        		StockEntry commissionEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
+//	        		commissionEntry.setAccount(account.getCommissionAccount());
+//					commissionEntry.setAmount(adjustAmount(qifTransaction.getCommission().min(c), currency));
+//	        		commissionEntry.setSecurity(stock);
+//
+//	        		if (qifTransaction.getCommission().compareTo(new BigDecimal(9.99)) > 0) {
+//		        		StockEntry salesFeeEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
+//		        		salesFeeEntry.setAccount(account.getTax1Account());
+//						salesFeeEntry.setAmount(adjustAmount(qifTransaction.getCommission().subtract(c), currency));
+//		        		salesFeeEntry.setSecurity(stock);
+//		        	}
+//	        	}
 	        	
 			} else if (qifTransaction.getAction().equals("Div")) {
+				if (account.getDividendAccount() == null) {
+					throw new QifImportException("The file contains dividend entries.  However no category has been set to hold dividend payments");
+				}
+				
 				firstEntry.setAmount(amount);
+				firstEntry.setCommodity(account.getCurrency());
+				
 				StockEntry dividendEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
 				dividendEntry.setAccount(account.getDividendAccount());
 				dividendEntry.setAmount(-amount);
@@ -252,13 +296,46 @@ public class InvestmentImporter implements IQifImporter {
 		        String security = qifTransaction.getSecurity();
 		        Stock stock = findStock(session, security);		        
 				dividendEntry.setSecurity(stock);
+			} else if (qifTransaction.getAction().equals("DivX")) {
+				if (account.getDividendAccount() == null) {
+					throw new QifImportException("The file contains dividend entries.  However no category has been set to hold dividend payments");
+				}
+
+				// Create a zero entry so they appear in this account.  Otherwise there would be absolutely nothing to
+				// associate the dividend with this account.  It would be associated with the stock, but we would not
+				// know it is the particular instance of stock that is held in this account (the same stock could be held
+				// in more than one account).
+				firstEntry.setAmount(0);
+				firstEntry.setCommodity(account.getCurrency());
+				
+		        // Find the security
+		        String security = qifTransaction.getSecurity();
+		        Stock stock = findStock(session, security);		        
+
+		        Entry transferEntry = transaction.createEntry();
+				if (qifTransaction.getTransferAccount() == null) {
+					throw new QifImportException("DivX transaction but no transfer account is in the QIF file.");
+				}
+				transferEntry.setAccount(findCategory(session, qifTransaction.getTransferAccount()));
+				transferEntry.setAmount(amount);
+				transferEntry.setCommodity(account.getCurrency());
+				transferEntry.setMemo("dividend - " + stock.getName());
+				
+				StockEntry dividendEntry = transaction.createEntry().getExtension(StockEntryInfo.getPropertySet(), true);
+				dividendEntry.setAccount(account.getDividendAccount());
+				dividendEntry.setAmount(-amount);
+				dividendEntry.setSecurity(stock);
 			} else if (qifTransaction.getAction().equals("IntInc")) {
 				firstEntry.setAmount(amount);
+				firstEntry.setCommodity(account.getCurrency());
+				
 				Entry interestEntry = transaction.createEntry();
 				interestEntry.setAccount(interestIncomeAccount);
 				interestEntry.setAmount(-amount);
 			} else if (qifTransaction.getAction().equals("MiscInc") || qifTransaction.getAction().equals("XIn")) {
 				firstEntry.setAmount(amount);
+				firstEntry.setCommodity(account.getCurrency());
+				
 				Entry transferEntry = transaction.createEntry();
 				if (qifTransaction.getTransferAccount() == null) {
 					transferEntry.setAccount(miscIncAccount);
@@ -266,8 +343,14 @@ public class InvestmentImporter implements IQifImporter {
 					transferEntry.setAccount(findCategory(session, qifTransaction.getTransferAccount()));
 				}
 				transferEntry.setAmount(-amount);
+				if (transferEntry.getAccount() instanceof StockAccount) {
+					transferEntry.setCommodity(account.getCurrency());
+				}
+				
 			} else if (qifTransaction.getAction().equals("MiscExp") || qifTransaction.getAction().equals("MargInt") || qifTransaction.getAction().equals("XOut")) {
 				firstEntry.setAmount(-amount);
+				firstEntry.setCommodity(account.getCurrency());
+				
 				Entry transferEntry = transaction.createEntry();
 				if (qifTransaction.getTransferAccount() == null) {
 					transferEntry.setAccount(interestIncomeAccount);
@@ -282,6 +365,10 @@ public class InvestmentImporter implements IQifImporter {
 					transferEntry.setMemo(qifTransaction.getMemo());
 				}
 				transferEntry.setAmount(amount);
+				if (transferEntry.getAccount() instanceof StockAccount) {
+					// Same currency is transferred. 
+					transferEntry.setCommodity(account.getCurrency());
+				}
 			} else if (qifTransaction.getAction().equals("ScrIssue")) {
 				// For a stock split, the share arrive as though income paid as share
 				// for an income account.  The entry for the source of the shares is
@@ -306,7 +393,7 @@ public class InvestmentImporter implements IQifImporter {
         		otherEntry.setAmount(-quantity);
 	        	otherEntry.setCommodity(stock);
 			} else {
-				System.out.println("unknown type");
+				throw new QifImportException("Unknown transaction type: " + qifTransaction.getAction());
 			}
 			
 			// Process the category
@@ -546,10 +633,10 @@ public class InvestmentImporter implements IQifImporter {
 			accountMap.put(name, account);
 		}
 
-		if (!(account instanceof StockAccount)) {
+		if (!(account instanceof CapitalAccount)) {
 			// TODO: process error properly
-			if (QIFPlugin.DEBUG) System.out.println("account is not a currency account");
-			throw new RuntimeException("account is not a currency account");
+			if (QIFPlugin.DEBUG) System.out.println("account is not a capital account");
+			throw new RuntimeException("account is not a capital account");
 		}
 		
 		return (StockAccount)account;
