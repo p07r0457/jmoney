@@ -82,15 +82,29 @@ public class Feedback {
 	}
 
 	/**
+	 * This method indicates if the action can be re-executed.  If this one
+	 * overrides this method to return true then you must also override
+	 * executeAgain to perform the action.
+	 * <P>
+	 * This method is intended to be implemented in derived classes.  It is
+	 * not required that this method is implemented in derived classes.
+	 */
+	protected boolean canExecuteAgain() {
+		return false;
+	}
+	
+	/**
 	 * This method re-executes whatever was run to create these errors
 	 * in the first place.
 	 * <P>
 	 * This method will never throw an exception.  Instead an IStatus object
 	 * is set to indicate any errors.
+	 * <P>
+	 * This method is intended to be implemented in derived classes.  It is
+	 * not required that this method is implemented in derived classes.
 	 */
-	public void executeAgain() {
-		// TODO Auto-generated method stub
-		
+	protected IStatus executeAgain() {
+		throw new RuntimeException("canExecuteAgain has been overridden to return true but no implementation of executeAgain was provided.");
 	}
 }
 

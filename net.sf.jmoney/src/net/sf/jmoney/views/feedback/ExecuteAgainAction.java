@@ -24,6 +24,7 @@ package net.sf.jmoney.views.feedback;
 
 import net.sf.jmoney.JMoneyPlugin;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.action.Action;
 
 class ExecuteAgainAction extends Action {
@@ -43,7 +44,7 @@ class ExecuteAgainAction extends Action {
 		 * cannot be re-executed.
 		 */
 		Feedback feedback = fView.getCurrentFeedback();
-		feedback.executeAgain();
-		fView.showResults(feedback);
+		IStatus results = feedback.executeAgain();
+		fView.refreshResults(results);
 	}
 }

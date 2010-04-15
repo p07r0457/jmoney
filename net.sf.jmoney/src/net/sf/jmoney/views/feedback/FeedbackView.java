@@ -228,6 +228,10 @@ public class FeedbackView extends ViewPart {
 		stackComposite.layout(false);
 	}
 
+	public void refreshResults(IStatus rootStatus) {
+		viewer.setInput(rootStatus);
+	}
+	
 	public boolean hasQueries() {
 		return !feedbackHistory.isEmpty();
 	}
