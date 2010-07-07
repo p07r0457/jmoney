@@ -38,22 +38,18 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 
 /**
- * Editor class for account properties that
- * are amounts (an amount of a commodity).  These amounts
- * are formatted according to the type of commodity (usually
- * a currency) held in the account.  The format may therefore
- * change if the user selects a different commodity for the
- * account.  This is thus an example of how one property can
- * be affected by another.  We listen for changes to the
- * currency and re-format as necessary.
+ * Editor class for account properties that are amounts (an amount of a
+ * commodity). These amounts are formatted according to the type of commodity
+ * (usually a currency) held in the account. The format may therefore change if
+ * the user selects a different commodity for the account. This is thus an
+ * example of how one property can be affected by another. We listen for changes
+ * to the currency and re-format as necessary.
  * <P>
  * Note that this class has neither get/set methods for the value being edited
- * and no support for property change listeners.  This is
- * because objects of this class are tied to an CapitalAccount object.  
- * Changes to this
- * object are reflected by this object in the CapitalAccount class objects.  
- * Consumers who are interested in changes to the CapitalAccount class objects should
- * add themselves as listeners to the Session object.
+ * and no support for property change listeners. This is because objects of this
+ * class are tied to a data object. Changes to this object are reflected by this
+ * object in the data object. Consumers who are interested in changes to the
+ * data objects should add themselves as listeners to the Session object.
  * 
  * @author Nigel Westbury
  * @author Johann Gyger

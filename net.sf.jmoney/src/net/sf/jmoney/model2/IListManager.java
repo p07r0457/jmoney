@@ -29,6 +29,8 @@ import java.util.Collection;
  * the sets of values that are the values of a multi-valued
  * property.  For example, the set of all accounts in a session
  * are managed by an object that implements this interface.
+ * 
+ * @param E type of the elements in this list
  */
 public interface IListManager<E extends ExtendableObject> extends Collection<E> {
 
