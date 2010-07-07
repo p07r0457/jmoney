@@ -34,6 +34,7 @@ import net.sf.jmoney.model2.AccountCellEditor;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ObjectCollection;
+import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.reconciliation.MemoPattern;
 import net.sf.jmoney.reconciliation.MemoPatternInfo;
@@ -45,6 +46,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.DialogMessageArea;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IMessageProvider;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.CellLabelProvider;
@@ -511,18 +513,22 @@ public class ImportOptionsDialog extends Dialog {
 			public void widgetSelected(SelectionEvent e) {
 				IStructuredSelection ssel = (IStructuredSelection)viewer.getSelection();
 				if (ssel.size() > 0) {
-					ObjectCollection<MemoPattern> patterns = account.getPatternCollection();
-					for (Iterator<?> iter = ssel.iterator(); iter.hasNext(); ) {
-						MemoPattern pattern = (MemoPattern) iter.next();
-						patterns.remove(pattern);
-					}
+					try {
+						ObjectCollection<MemoPattern> patterns = account.getPatternCollection();
+						for (Iterator<?> iter = ssel.iterator(); iter.hasNext(); ) {
+							MemoPattern pattern = (MemoPattern) iter.next();
+							patterns.deleteElement(pattern);
+						}
 
-					/*
-					 * We have deleted patterns but remaining patterns are
-					 * not affected so labels for the remaining patterns do not
-					 * need updating.
-					 */
-					viewer.refresh(false);
+						/*
+						 * We have deleted patterns but remaining patterns are
+						 * not affected so labels for the remaining patterns do not
+						 * need updating.
+						 */
+						viewer.refresh(false);
+					} catch (ReferenceViolationException e1) {
+						MessageDialog.openError(getShell(), "Pattern in Use", "The pattern cannot be removed because it is in use else where.  " + e1.getLocalizedMessage() + "  The object referencing is " + e1.getPropertySet().getObjectDescription());
+					}
 				}		
 			}
 		});
