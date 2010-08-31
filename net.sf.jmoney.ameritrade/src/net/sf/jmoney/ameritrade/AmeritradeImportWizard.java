@@ -34,6 +34,7 @@ import java.util.regex.PatternSyntaxException;
 
 import net.sf.jmoney.importer.wizards.CsvImportWizard;
 import net.sf.jmoney.importer.wizards.ImportException;
+import net.sf.jmoney.importer.wizards.CsvImportWizard.ImportedColumn;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
@@ -891,6 +892,30 @@ public class AmeritradeImportWizard extends CsvImportWizard {
 		public boolean isDone() {
 			return done;
 		}
+	}
+
+	@Override
+	protected ImportedColumn[] getExpectedColumns() {
+		// TODO update these to be correct
+		return new ImportedColumn [] {
+				column_stockName,
+				column_transDate,
+				column_transRef,
+				column_transType,
+				column_description,
+				column_price,
+				column_originalQty,
+				column_value,
+				column_currency,
+				column_balance,
+				column_sedol
+		};
+	}
+
+
+	@Override
+	protected String getSourceLabel() {
+		return "Ameritrade";
 	}
 
 //	private Stock obtainSecurity(String securityName, String securitySymbol) {
