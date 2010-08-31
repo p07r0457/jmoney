@@ -34,14 +34,13 @@ import java.util.regex.PatternSyntaxException;
 
 import net.sf.jmoney.importer.wizards.CsvImportWizard;
 import net.sf.jmoney.importer.wizards.ImportException;
-import net.sf.jmoney.importer.wizards.CsvImportWizard.ImportedColumn;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.Session.NoAccountFoundException;
 import net.sf.jmoney.model2.Session.SeveralAccountsFoundException;
+import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.stocks.model.Bond;
 import net.sf.jmoney.stocks.model.BondInfo;
 import net.sf.jmoney.stocks.model.Security;
@@ -61,6 +60,19 @@ import org.eclipse.ui.PlatformUI;
  * from Ameritrade.
  */
 public class AmeritradeImportWizard extends CsvImportWizard {
+
+	private ImportedDateColumn column_date                   = new ImportedDateColumn("DATE", new SimpleDateFormat("MM/dd/yyyy"));
+	private ImportedTextColumn column_uniqueId               = new ImportedTextColumn("TRANSACTION ID");
+	private ImportedTextColumn column_description            = new ImportedTextColumn("DESCRIPTION");
+	private ImportedTextColumn column_quantity               = new ImportedTextColumn("QUANTITY");
+	private ImportedTextColumn column_symbol                 = new ImportedTextColumn("SYMBOL");
+	private ImportedTextColumn column_price                  = new ImportedTextColumn("PRICE");
+	private ImportedTextColumn column_commission             = new ImportedTextColumn("COMMISSION");
+	private ImportedTextColumn column_amount                 = new ImportedTextColumn("AMOUNT");
+	private ImportedTextColumn column_salesFee               = new ImportedTextColumn("SALES FEE");
+	private ImportedTextColumn column_shortTermRedemptionFee = new ImportedTextColumn("SHORT-TERM RDM FEE");
+	private ImportedTextColumn column_fundRedemptionFee      = new ImportedTextColumn("FUND REDEMPTION FEE");
+	private ImportedTextColumn column_deferredSalesCharge    = new ImportedTextColumn("DEFERRED SALES CHARGE");
 
 	Pattern patternAdr;
 	Pattern patternForeignTax;
@@ -151,7 +163,7 @@ public class AmeritradeImportWizard extends CsvImportWizard {
 	
 	@Override
 	public void importLine(String[] line) throws ImportException {
-		String dateString = line[0];
+		Date date = column_date.getDate();
 		String uniqueId = line[1];
 		String memo = line[2];
 		String quantityString = line[3];
@@ -164,18 +176,6 @@ public class AmeritradeImportWizard extends CsvImportWizard {
 		String fundRedemptionFee = line[10];
 		String deferredSalesCharge = line[11];
 		
-		Date date;
-        DateFormat df = new SimpleDateFormat("MM/dd/yyyy");
-		try {
-			date = df.parse(dateString);
-		} catch (ParseException e) {
-			throw new ImportException(
-					MessageFormat.format(
-							"A date in format MM/dd/yyyy was expected but '{0}' was found.", 
-							dateString), 
-					e);
-		}
-        
 		/*
 		 * For some extraordinary reason, every entry has the net amount in the 'AMOUNT' column
 		 * except for bond interest entries and the tax withholding entries on bond interest.
@@ -896,19 +896,19 @@ public class AmeritradeImportWizard extends CsvImportWizard {
 
 	@Override
 	protected ImportedColumn[] getExpectedColumns() {
-		// TODO update these to be correct
 		return new ImportedColumn [] {
-				column_stockName,
-				column_transDate,
-				column_transRef,
-				column_transType,
+				column_date,
+				column_uniqueId,
 				column_description,
+				column_quantity,
+				column_symbol,
 				column_price,
-				column_originalQty,
-				column_value,
-				column_currency,
-				column_balance,
-				column_sedol
+				column_commission,
+				column_amount,
+				column_salesFee,
+				column_shortTermRedemptionFee,
+				column_fundRedemptionFee,
+				column_deferredSalesCharge
 		};
 	}
 
