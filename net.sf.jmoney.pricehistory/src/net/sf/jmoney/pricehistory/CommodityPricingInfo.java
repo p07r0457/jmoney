@@ -23,7 +23,7 @@
 package net.sf.jmoney.pricehistory;
 
 import net.sf.jmoney.fields.CurrencyControlFactory;
-import net.sf.jmoney.model2.CapitalAccountInfo;
+import net.sf.jmoney.model2.CommodityInfo;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionPropertySet;
@@ -47,7 +47,7 @@ import net.sf.jmoney.pricehistory.resources.Messages;
  */
 public class CommodityPricingInfo implements IPropertySetInfo {
 
-	private static ExtensionPropertySet<CommodityPricing> propertySet = PropertySet.addExtensionPropertySet(CommodityPricing.class, CapitalAccountInfo.getPropertySet(), new IExtensionObjectConstructors<CommodityPricing>() {
+	private static ExtensionPropertySet<CommodityPricing> propertySet = PropertySet.addExtensionPropertySet(CommodityPricing.class, CommodityInfo.getPropertySet(), new IExtensionObjectConstructors<CommodityPricing>() {
 
 		public CommodityPricing construct(ExtendableObject extendedObject) {
 			return new CommodityPricing(extendedObject);
