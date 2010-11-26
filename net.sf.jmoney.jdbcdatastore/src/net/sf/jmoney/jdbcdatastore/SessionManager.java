@@ -90,6 +90,10 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 
 	private boolean isHsqldb = false;
 	
+	private boolean isDerby = false;
+	
+	private String booleanTypeName = null;
+	
 	private Connection connection;
 	
 	private IDatabaseRowKey sessionKey;
@@ -154,12 +158,16 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		this.connection = DriverManager.getConnection(url, user, password);
 
 		/*
-		 * Set on the flag that indicates if we are operating with a database that
-		 * has non-standard features that affect us.
+		 * Set properties that need special values depending on the database implementation.
 		 */
 		String databaseProductName = connection.getMetaData().getDatabaseProductName();
 		if (databaseProductName.equals("HSQL Database Engine")) {
 			isHsqldb = true;
+			booleanTypeName = "BIT";
+		} else if (databaseProductName.equals("Apache Derby")) {
+			isDerby = true;
+		} else if (databaseProductName.equals("SQL Server")) {
+			booleanTypeName = "BIT";
 		}
 
 		// Create a weak reference map for every base property set.
@@ -392,7 +400,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		for (ExtendablePropertySet<?> propertySet2 = finalPropertySet.getBasePropertySet(); propertySet2 != null; propertySet2 = propertySet2.getBasePropertySet()) {
 			String tableName2 = propertySet2.getId().replace('.', '_');
 			sql += " JOIN " + tableName2
-					+ " ON " + tableName + "._ID = " + tableName2 + "._ID";
+					+ " ON " + tableName + ".\"_ID\" = " + tableName2 + ".\"_ID\"";
 		}
 
 		return sql;
@@ -541,7 +549,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				 * row in the basemost table was inserted.
 				 */
 				if (index != propertySets.size()-1) {
-					columnNames += separator + "_ID";
+					columnNames += separator + "\"_ID\"";
 					columnValues += separator + Integer.toString(rowId);
 					separator = ", ";
 				}
@@ -579,7 +587,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				 */
 				if (propertySet2.getBasePropertySet() == null
 						&& propertySet2.isDerivable()) {
-					columnNames += separator + "_PROPERTY_SET";
+					columnNames += separator + "\"_PROPERTY_SET\"";
 					// Set to the id of the final
 					// (non-derivable) property set for this object.
 					ExtendablePropertySet<?> finalPropertySet = propertySets.get(0); 
@@ -668,7 +676,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 					String sql = "UPDATE "
 						+ originalListKey.getListPropertyAccessor().getElementPropertySet().getId().replace('.', '_')
 						+ " SET " + parentColumnName + "=NULL"
-						+ " WHERE _ID=" + objectKey.getRowId()
+						+ " WHERE \"_ID\"=" + objectKey.getRowId()
 						+ " AND " + parentColumnName + "=" + originalParentKey.getRowId();
 
 					System.out.println(sql);
@@ -689,7 +697,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 					String sql = "UPDATE "
 						+ newListKey.listPropertyAccessor.getElementPropertySet().getId().replace('.', '_')
 						+ " SET " + parentColumnName + "=" + newListKey.parentKey.getRowId()
-						+ " WHERE _ID=" + objectKey.getRowId()
+						+ " WHERE \"_ID\"=" + objectKey.getRowId()
 						+ " AND " + parentColumnName + " IS NULL";
 
 					System.out.println(sql);
@@ -819,7 +827,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			// statement should be executed.
 			
 			if (!separator.equals("")) {
-				sql += updateClauses + " WHERE _ID=" + rowId + whereTerms;
+				sql += updateClauses + " WHERE \"_ID\"=" + rowId + whereTerms;
 				
 				try {
 					System.out.println(sql);
@@ -849,7 +857,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 */
 	// TODO: If we always used prepared statements with parameters
 	// then we may not need this method at all.
-	private static String valueToSQLText(Object value) {
+	private String valueToSQLText(Object value) {
 		String valueString;
 		
 		if (value != null) {
@@ -862,10 +870,15 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				Date date = (Date)value;
 				valueString = '\'' + dateFormat.format(date) + '\'';
 			} else if (value instanceof Boolean) {
-				// MS SQL does not allow true and false,
-				// even though HSQL does.  So we cannot use toString.
 				Boolean bValue = (Boolean)value;
-				valueString = bValue.booleanValue() ? "1" : "0";
+				if (booleanTypeName != null) {
+					// MS SQL does not allow true and false,
+					// even though HSQL does.  So we cannot use toString.
+					valueString = bValue.booleanValue() ? "1" : "0";
+				} else {
+					// CHAR(1) is used
+					valueString = bValue.booleanValue() ? "'T'" : "'F'";
+				}
 			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
 				ExtendableObject extendableObject = (ExtendableObject)value;
 				IDatabaseRowKey key = (IDatabaseRowKey)extendableObject.getObjectKey();
@@ -920,7 +933,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			
 			String sql = "DELETE FROM " 
 				+ propertySet2.getId().replace('.', '_')
-				+ " WHERE _ID = ?";
+				+ " WHERE \"_ID\" = ?";
 			
 			try {
 				System.out.println(sql);
@@ -1424,7 +1437,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			ColumnInfo info = new ColumnInfo();
 			info.nature = ColumnNature.PARENT;
 			info.columnName = parentList.getColumnName();
-			info.columnDefinition = "INT DEFAULT NULL NULL";
+			info.columnDefinition = "INT DEFAULT NULL";
 			info.foreignKeyPropertySet = parentList.parentPropertySet;
 			result.add(info);
 		}
@@ -1445,7 +1458,11 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			} else if (valueClass == Character.class) {
 				info.columnDefinition = "CHAR";
 			} else if (valueClass == Boolean.class) {
-				info.columnDefinition = "BIT";
+				if (booleanTypeName == null) {
+					info.columnDefinition = "CHAR(1)";
+				} else {
+					info.columnDefinition = booleanTypeName;
+				}
 			} else if (valueClass == String.class) {
 				/*
 				 * HSQLDB is fine with just VARCHAR, but MS SQL will default the
@@ -1459,8 +1476,12 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				 * better suited for dates without times (MS SQL has SMALLDATETIME
 				 * and HSQLDB has DATE), only DATETIME is standard and should
 				 * be supported by all JDBC implementations.
+				 * 
+				 * Actually Derby does not have DATETIME, it has only DATE, TIME,
+				 * and TIMESTAMP.  So we are going to have to configure this.
 				 */
-				info.columnDefinition = "DATETIME";  
+//				info.columnDefinition = "DATETIME";  
+				info.columnDefinition = "DATE";  
 			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
 				info.columnDefinition = "INT";
 
@@ -1500,10 +1521,17 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 					" DEFAULT " + valueToSQLText(defaultValue);
 			}
 
-			if (propertyAccessor.isNullAllowed()) {
-				info.columnDefinition += " NULL";
-			} else {
+			/*
+			 * Although some databases allow 'NULL' to be specified to indicate
+			 * that the column can have null values, not all databases do.  For example
+			 * Derby version 10.6.2 does not.  The default in all databases is to allow
+			 * null values so we simply do not explicitly specify if the column can
+			 * take null values.
+			 */
+			if (!propertyAccessor.isNullAllowed()) {
 				info.columnDefinition += " NOT NULL";
+//			} else {
+//				info.columnDefinition += " NULL";
 			}
 			result.add(info);
 		}
@@ -1615,10 +1643,26 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			/*
 			 * Check the foreign keys in derived tables that point to the base
 			 * table row.
+			 * 
+			 * We can generally use 'ON CASCADE DELETE' in this situation
+			 * (onDeleteCascade parameter to checkForeignKey is true). This
+			 * means deleting the record from the base table will also delete
+			 * records in any derived tables.
+			 * 
+			 * However, for some very strange reason, Derby requires all foreign
+			 * keys constraints to be 'CASCADE' if the table has any 'CASCADE'
+			 * foreign keys constraints. The foreign keys constraints from an
+			 * object in a list to the object that contains that list cannot be
+			 * CASCADE so therefore, when using Derby, the reference from the
+			 * derived table to a base table cannot be CASCADE either. For this
+			 * reason we use 'ON CASCADE RESTRICT' when using Derby. In
+			 * actuality we always explicitly delete records in the derived
+			 * tables first anyway so this is ok.
 			 */
 			if (propertySet.getBasePropertySet() != null) {
 				String primaryTableName = propertySet.getBasePropertySet().getId().replace('.', '_');
-				checkForeignKey(dmd, stmt, tableName, "_ID", primaryTableName, true);
+				System.out.println(tableName + ", " + primaryTableName);
+				checkForeignKey(dmd, stmt, tableName, "_ID", primaryTableName, !isDerby);
 			}
 
 			/*
@@ -1633,8 +1677,22 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			for (ColumnInfo columnInfo: columnInfos) {
 				if (columnInfo.foreignKeyPropertySet != null) {
 					String primaryTableName = columnInfo.foreignKeyPropertySet.getId().replace('.', '_');
-					// TODO: check if HSQL allows ON CASCADE DELETE with a self-referencing table
-					checkForeignKey(dmd, stmt, tableName, columnInfo.columnName, primaryTableName, false/*columnInfo.nature == ColumnNature.PARENT*/);
+					/*
+					 * For these foreign key constraints we use RESTRICT. We do
+					 * not use CASCADE because that can cause problems in some
+					 * databases. Derby does not support it if there are certain
+					 * cycles such as a table referencing itself. There are
+					 * problems in other database too. We make sure to
+					 * specifically delete any records in any lists inside an
+					 * object before we delete the record for the object.
+					 * 
+					 * Even if the database fully support CASCADE we still could
+					 * not use it. A foreign key may reference not the base-most
+					 * table but a derived table. Using CASCADE would result in
+					 * the record in the derived table being deleted but not the
+					 * record in the base table.
+					 */
+					checkForeignKey(dmd, stmt, tableName, columnInfo.columnName, primaryTableName, false);
 				}
 			}
 		}		
@@ -1664,9 +1722,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 
 				if (columnResultSet.getString("FKCOLUMN_NAME").equalsIgnoreCase(columnName)) {
 
-					// TODO: There seems to be a mixture of _id and _ID.  SQL is not case sensitive
-					// so do a case insensitive comparison.
-					if (columnResultSet.getString("PKCOLUMN_NAME").equalsIgnoreCase("_ID")) {
+					if (columnResultSet.getString("PKCOLUMN_NAME").equals("_ID")) {
 						// Foreign key found, so we are done.
 						return;
 					} else {
@@ -1682,10 +1738,12 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			String sql = 
 				"ALTER TABLE " + tableName
 				+ " ADD FOREIGN KEY (\"" + columnName
-				+ "\") REFERENCES " + primaryTableName + "(_ID)";
+				+ "\") REFERENCES " + primaryTableName + "(\"_ID\")";
 
 			if (onDeleteCascade) {
 				sql += " ON DELETE CASCADE";
+			} else {
+				sql += " ON DELETE RESTRICT";
 			}
 
 			System.out.println(sql);
@@ -1730,10 +1788,14 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		 */
 		String sql = "CREATE TABLE "
 			+ propertySet.getId().replace('.', '_') 
-			+ " (_id INT";
+			+ " (\"_ID\" INT";
 		
 		if (propertySet.getBasePropertySet() == null) {
-			sql += " IDENTITY";
+			if (isDerby) {
+				sql += " NOT NULL GENERATED ALWAYS AS IDENTITY";
+			} else {
+				sql += " IDENTITY";
+			}
 		}
 		
 		sql += " PRIMARY KEY";

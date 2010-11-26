@@ -219,7 +219,7 @@ public class ObjectKey implements IDatabaseRowKey {
 					
 					String sql = "SELECT _PROPERTY_SET FROM "
 						+ basemostPropertySet.getId().replace('.', '_')
-						+ " WHERE _ID = ?";
+						+ " WHERE \"_ID\" = ?";
 					System.out.println(sql);
 					PreparedStatement stmt = sessionManager.getConnection().prepareStatement(sql);
 					try {
@@ -251,7 +251,7 @@ public class ObjectKey implements IDatabaseRowKey {
 				// Build the SQL statement that will return all
 				// the rows from the base and derived tables.
 				String sql = sessionManager.buildJoins(finalPropertySet);
-				sql += " WHERE " + finalPropertySet.getId().replace('.', '_') + "._ID=?";
+				sql += " WHERE " + finalPropertySet.getId().replace('.', '_') + ".\"_ID\"=?";
 
 				System.out.println(sql + " : " + rowId);
 				PreparedStatement stmt = sessionManager.getConnection().prepareStatement(sql);
