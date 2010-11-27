@@ -94,6 +94,10 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	
 	private String booleanTypeName = null;
 	
+	private String dateTypeName = "DATETIME";
+	
+	private String onDeleteRestrict = "ON DELETE RESTRICT";
+	
 	private Connection connection;
 	
 	private IDatabaseRowKey sessionKey;
@@ -166,8 +170,10 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			booleanTypeName = "BIT";
 		} else if (databaseProductName.equals("Apache Derby")) {
 			isDerby = true;
-		} else if (databaseProductName.equals("SQL Server")) {
+			dateTypeName = "DATE";
+		} else if (databaseProductName.equals("Microsoft SQL Server")) {
 			booleanTypeName = "BIT";
+			onDeleteRestrict = "ON DELETE NO ACTION";
 		}
 
 		// Create a weak reference map for every base property set.
@@ -1480,8 +1486,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				 * Actually Derby does not have DATETIME, it has only DATE, TIME,
 				 * and TIMESTAMP.  So we are going to have to configure this.
 				 */
-//				info.columnDefinition = "DATETIME";  
-				info.columnDefinition = "DATE";  
+				info.columnDefinition = dateTypeName;  
 			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
 				info.columnDefinition = "INT";
 
@@ -1743,7 +1748,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 			if (onDeleteCascade) {
 				sql += " ON DELETE CASCADE";
 			} else {
-				sql += " ON DELETE RESTRICT";
+				sql += " " + onDeleteRestrict;
 			}
 
 			System.out.println(sql);
