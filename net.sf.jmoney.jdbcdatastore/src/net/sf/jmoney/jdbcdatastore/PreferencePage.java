@@ -93,22 +93,11 @@ implements IWorkbenchPreferencePage {
 		addField(
 				new StringFieldEditor("password", "Password:", getFieldEditorParent()));
 
-		/*	
-		driver = "org.hsqldb.jdbcDriver";
-		subprotocol = "hsqldb";
-		subprotocolData = "hsql://localhost/accounts";
-		String url = "jdbc:" + subprotocol + ":" + subprotocolData;
-
-		String user = "sa";
-		String password = "";
-		 */	
-
 		addField(
 				new BooleanFieldEditor(
 						"promptEachTime",
 						"Always &prompt for connection details each open",
 						getFieldEditorParent()));
-
 	}
 
 	public void init(IWorkbench workbench) {
