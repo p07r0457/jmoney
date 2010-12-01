@@ -41,6 +41,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -323,7 +324,13 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 		 * friendly than the URL.
 		 */
 		try {
-			return connection.getCatalog();
+			String catalog = connection.getCatalog();
+			if (catalog == null) {
+				// Some databases (e.g. Derby) return null.
+				return url; 
+			} else {
+				return catalog;
+			}
 		} catch (SQLException e) {
 			/*
 			 * All drivers should return the catalog name.  If not, though,
