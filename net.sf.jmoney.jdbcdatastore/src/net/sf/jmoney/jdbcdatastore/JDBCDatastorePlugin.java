@@ -180,8 +180,7 @@ public class JDBCDatastorePlugin extends AbstractUIPlugin {
 								new String[] { IDialogConstants.OK_LABEL }, 0);
 					waitDialog.open();
 			} else {
-				e3.printStackTrace();
-				throw new RuntimeException(e3.getMessage());
+				throw new RuntimeException(e3);
 			}
 		}
 		
