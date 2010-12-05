@@ -30,4 +30,6 @@ import org.eclipse.ui.IWorkbenchWindow;
 public interface IAccountImportWizard extends IWizard {
 
 	void init(IWorkbenchWindow window, Account account);
+
+	AssociationMetadata[] getAssociationMetadata();
 }

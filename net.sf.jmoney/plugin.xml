@@ -523,4 +523,44 @@ items to an existing menu or toolbar.
      </propertyTester>
   </extension>
 
+
+   <extension point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
+      <propertyContributor
+            contributorId="net.sf.jmoney.navigationView">
+         <propertyCategory
+               category="sample">
+         </propertyCategory>
+      </propertyContributor>
+   </extension>
+
+   <extension point="org.eclipse.ui.views.properties.tabbed.propertyTabs">
+      <propertyTabs contributorId="net.sf.jmoney.navigationView">
+         <propertyTab
+            category="sample"
+               id="net.sf.jmoney.core.generalProperties"
+            label="General Properties"/>
+         <propertyTab
+            afterTab="net.sf.jmoney.core.generalProperties"
+            category="sample"
+               id="net.sf.jmoney.core.AdvancedTab"
+            label="Advanced"/>
+      </propertyTabs>
+   </extension>
+
+   <extension point="org.eclipse.ui.views.properties.tabbed.propertySections">
+      <propertySections contributorId="net.sf.jmoney.navigationView">
+         <propertySection
+               class="net.sf.jmoney.propertyPages.PropertiesSection"
+               id="net.sf.jmoney.core.generalproperties"
+               tab="net.sf.jmoney.core.generalProperties">
+            <input type="net.sf.jmoney.model2.ExtendableObject"/>
+         </propertySection>
+         <propertySection
+               class="org.eclipse.ui.views.properties.tabbed.AdvancedPropertySection"
+               id="net.sf.jmoney.core.advancedproperties"
+               tab="net.sf.jmoney.core.AdvancedTab">
+            <input type="net.sf.jmoney.model2.ExtendableObject"/>
+         </propertySection>
+      </propertySections>
+   </extension>
 </plugin>

@@ -65,5 +65,32 @@
               label="Import Tabular Data..."/>
      </menuContribution>
    </extension>
+   
+   <extension point="org.eclipse.ui.views.properties.tabbed.propertyTabs">
+      <propertyTabs contributorId="net.sf.jmoney.navigationView">
+         <propertyTab
+            afterTab="org.eclipse.jmoney.core.generalProperties"
+            category="sample"
+               id="net.sf.jmoney.importer.associations"
+            label="Associated Accounts"/>
+      </propertyTabs>
+   </extension>
 
+   <extension point="org.eclipse.ui.views.properties.tabbed.propertySections">
+      <propertySections contributorId="net.sf.jmoney.navigationView">
+         <propertySection
+               class="net.sf.jmoney.importer.propertyPages.ImportFormatSection"
+               id="net.sf.jmoney.importer.formattype"
+               tab="net.sf.jmoney.importer.associations">
+            <input type="net.sf.jmoney.model2.CapitalAccount"/>
+         </propertySection>
+         <propertySection
+               afterSection="net.sf.jmoney.importer.formattype"
+               class="net.sf.jmoney.importer.propertyPages.AssociationsForImportSection"
+               id="net.sf.jmoney.importer.associations"
+               tab="net.sf.jmoney.importer.associations">
+            <input type="net.sf.jmoney.model2.CapitalAccount"/>
+         </propertySection>
+      </propertySections>
+   </extension>
 </plugin>

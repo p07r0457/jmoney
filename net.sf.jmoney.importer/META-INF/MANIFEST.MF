@@ -9,7 +9,8 @@ Bundle-ClassPath: .,
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  net.sf.jmoney,
- org.eclipse.ui.forms
+ org.eclipse.ui.forms,
+ org.eclipse.ui.views.properties.tabbed
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Export-Package: net.sf.jmoney.importer.model,

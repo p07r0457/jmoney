@@ -8,8 +8,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.navigator.CommonNavigator;
+import org.eclipse.ui.views.properties.IPropertySheetPage;
+import org.eclipse.ui.views.properties.tabbed.ITabbedPropertySheetPageContributor;
+import org.eclipse.ui.views.properties.tabbed.TabbedPropertySheetPage;
 
-public class JMoneyCommonNavigator extends CommonNavigator {
+public class JMoneyCommonNavigator extends CommonNavigator implements ITabbedPropertySheetPageContributor {
 	public static String ID = "net.sf.jmoney.navigationView"; //$NON-NLS-1$
 	
 	/**
@@ -41,4 +44,19 @@ public class JMoneyCommonNavigator extends CommonNavigator {
 			stackLayout.topControl = getCommonViewer().getControl();
 		}
 	}
+
+	@Override	
+	public Object getAdapter(Class adapter) {
+        if (adapter == IPropertySheetPage.class)
+            return new TabbedPropertySheetPage(this);
+        return super.getAdapter(adapter);
+    }
+
+	@Override
+	public String getContributorId() {
+		// The id for the tabbed properties to be shown.
+		// A common convention is to use the site id (in this case, the view id).
+		return getSite().getId();
+	}
+
 }

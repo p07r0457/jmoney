@@ -24,7 +24,6 @@ package net.sf.jmoney.ameritrade;
 
 import java.math.BigDecimal;
 import java.text.DateFormat;
-import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -32,6 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import net.sf.jmoney.importer.wizards.AssociationMetadata;
 import net.sf.jmoney.importer.wizards.CsvImportWizard;
 import net.sf.jmoney.importer.wizards.ImportException;
 import net.sf.jmoney.model2.Account;
@@ -916,6 +916,14 @@ public class AmeritradeImportWizard extends CsvImportWizard {
 	@Override
 	protected String getSourceLabel() {
 		return "Ameritrade";
+	}
+
+	@Override
+	public AssociationMetadata[] getAssociationMetadata() {
+		return new AssociationMetadata[] {
+				new AssociationMetadata("net.sf.jmoney.ameritrade.interest", "Interest Account"),
+				new AssociationMetadata("net.sf.jmoney.ameritrade.expenses", "Expenses Account"),
+		};
 	}
 
 //	private Stock obtainSecurity(String securityName, String securitySymbol) {
