@@ -13,4 +13,5 @@ Bundle-ClassPath: .,
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  net.sf.jmoney,
- net.sf.jmoney.reconciliation
+ net.sf.jmoney.reconciliation,
+ net.sf.jmoney.importer;bundle-version="1.0.0"

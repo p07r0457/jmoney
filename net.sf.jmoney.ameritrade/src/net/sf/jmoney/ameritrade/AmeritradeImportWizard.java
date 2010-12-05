@@ -606,10 +606,22 @@ public class AmeritradeImportWizard extends CsvImportWizard {
 	
 	public interface MultiRowTransaction {
 
+		/**
+		 * 
+		 * @return true if this row was processed, false if this row is not a
+		 * 		part of this transaction and should be separately processed
+		 * 		by the caller
+		 */
 		boolean process(Date date, String memo, String security,
 				String quantityString, long total,
 				Session session, StockAccount account);
 
+		/**
+		 * 
+		 * @return true if this transaction has received all its row and is
+		 * 		ready to be created in the datastore, false if there may be
+		 * 		more rows in this transaction
+		 */
 		boolean isDone();
 
 		void createTransaction(Session session, StockAccount account);
