@@ -217,7 +217,7 @@ public class ObjectKey implements IDatabaseRowKey {
 						basemostPropertySet = basemostPropertySet.getBasePropertySet();
 					}
 					
-					String sql = "SELECT _PROPERTY_SET FROM "
+					String sql = "SELECT \"_PROPERTY_SET\" FROM "
 						+ basemostPropertySet.getId().replace('.', '_')
 						+ " WHERE \"_ID\" = ?";
 					System.out.println(sql);
