@@ -57,8 +57,8 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		DriverDefaultValues[] knownDrivers = new DriverDefaultValues[] {
 				new DriverDefaultValues("org.hsqldb.jdbcDriver", "hsqldb", "file:accounts"),
 				new DriverDefaultValues("org.apache.derby.jdbc.EmbeddedDriver", "derby", "JmoneyAccounts;create=true"),
+				new DriverDefaultValues("net.sourceforge.jtds.jdbc.Driver", "jtds", "sqlserver://localhost/JMoneyAccounts;instance=SQLEXPRESS"),
 		};
-		
 		
 		List<DriverDefaultValues> installedDrivers = new ArrayList<DriverDefaultValues>();
 		for (DriverDefaultValues knownDriver : knownDrivers) {
