@@ -22,7 +22,10 @@
 
 package net.sf.jmoney.importer.wizards;
 
+import java.util.Date;
+
 import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.CurrencyAccount;
 
 import org.eclipse.jface.wizard.IWizard;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -32,4 +35,18 @@ public interface IAccountImportWizard extends IWizard {
 	void init(IWorkbenchWindow window, Account account);
 
 	AssociationMetadata[] getAssociationMetadata();
+
+	/**
+	 * This form is used when in a context where a date range is
+	 * known.  For example when importing a bank statement then by default
+	 * the date range will be restricted to the range of dates covered
+	 * by the bank statement.
+	 * 
+	 * @param workbenchWindow
+	 * @param account
+	 * @param defaultStartDate
+	 * @param defaultEndDate
+	 */
+//	void init(IWorkbenchWindow workbenchWindow, CurrencyAccount account,
+//			Date defaultStartDate, Date defaultEndDate);
 }

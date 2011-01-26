@@ -32,6 +32,16 @@ public class Messages extends NLS {
 	public static String ImportDialog_Title;
 	public static String Error_AccountNotConfigured;
 	
+	public static String MemoPatternInfo_EntryCheck;
+	public static String MemoPatternInfo_EntryDescription;
+	public static String MemoPatternInfo_EntryCategory;
+	public static String MemoPatternInfo_EntryMemo;
+	public static String MemoPatternInfo_EntryCurrency;
+
+	public static String Account_Import;
+	public static String Account_Import_Patterns;
+	public static String Account_Import_DefaultCategory;
+
 	static {
 		// initialize resource bundle
 		NLS.initializeMessages(BUNDLE_NAME, Messages.class);

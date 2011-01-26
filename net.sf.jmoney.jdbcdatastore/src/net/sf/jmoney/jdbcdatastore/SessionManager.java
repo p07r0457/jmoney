@@ -41,7 +41,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -890,7 +889,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 					valueString = bValue.booleanValue() ? "1" : "0";
 				} else {
 					// CHAR(1) is used
-					valueString = bValue.booleanValue() ? "'T'" : "'F'";
+					valueString = bValue.booleanValue() ? "'1'" : "'0'";
 				}
 			} else if (ExtendableObject.class.isAssignableFrom(valueClass)) {
 				ExtendableObject extendableObject = (ExtendableObject)value;
@@ -1038,6 +1037,9 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	public <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, ListKey<? super E> listKey) {
 		E extendableObject = propertySet.constructDefaultImplementationObject(objectKey, listKey);
 		
+		if (extendableObject.getClass().getName().endsWith("Account")) {
+			System.out.println("paypal");
+		}
 		setMaterializedObject(getBasemostPropertySet(propertySet), objectKey.getRowId(), extendableObject);
 		
 		return extendableObject;
@@ -1059,6 +1061,9 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 	 */
 	public <E extends ExtendableObject> E constructExtendableObject(ExtendablePropertySet<E> propertySet, IDatabaseRowKey objectKey, DatabaseListKey<? super E> listKey, IValues values) {
 		E extendableObject = propertySet.constructImplementationObject(objectKey, constructListKey(listKey), values);
+		if (extendableObject.getClass().getName().endsWith("Account")) {
+			System.out.println("paypal");
+		}
 
 		setMaterializedObject(getBasemostPropertySet(propertySet), objectKey.getRowId(), extendableObject);
 		
@@ -1103,6 +1108,14 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				} else if (valueClass == String.class) {
 					return valueClass.cast(rs.getString(columnName));
 				} else if (valueClass == Boolean.class) {
+					if (booleanTypeName == null) {
+						// Type is char(1).  Check '0' or '1', otherwise
+						// the getBoolean won't work.
+						String x = rs.getString(columnName);
+						if (x.equals("T") || x.equals("F")) {
+							System.out.println("old style");
+						}
+					}
 					return valueClass.cast(rs.getBoolean(columnName));
 				} else if (valueClass == Date.class) {
 					return valueClass.cast(rs.getDate(columnName));

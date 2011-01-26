@@ -22,9 +22,9 @@
 
 package net.sf.jmoney.reconciliation.navigator;
 
+import net.sf.jmoney.importer.model.PatternMatcherAccount;
+import net.sf.jmoney.importer.model.PatternMatcherAccountInfo;
 import net.sf.jmoney.model2.CapitalAccount;
-import net.sf.jmoney.reconciliation.ReconciliationAccount;
-import net.sf.jmoney.reconciliation.ReconciliationAccountInfo;
 import net.sf.jmoney.reconciliation.reconcilePage.ImportOptionsDialog;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -47,7 +47,7 @@ public class OpenImporterOptionsHandler extends AbstractHandler {
         		Object element = structuredSelection.getFirstElement();
         		if (element instanceof CapitalAccount) {
         			CapitalAccount account = (CapitalAccount)element;
-        			ReconciliationAccount account2 = account.getExtension(ReconciliationAccountInfo.getPropertySet(), true);
+        			PatternMatcherAccount account2 = account.getExtension(PatternMatcherAccountInfo.getPropertySet(), true);
     				ImportOptionsDialog messageBox = 
     					new ImportOptionsDialog(shell, account2);
     				messageBox.open();

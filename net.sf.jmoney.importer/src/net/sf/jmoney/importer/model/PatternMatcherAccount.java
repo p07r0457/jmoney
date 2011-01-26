@@ -20,10 +20,14 @@
  *
  */
 
-package net.sf.jmoney.reconciliation;
+package net.sf.jmoney.importer.model;
 
 import net.sf.jmoney.model2.CapitalAccountExtension;
 import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.IListManager;
+import net.sf.jmoney.model2.IObjectKey;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.ObjectCollection;
 
 /**
  * An extension object that extends CapitalAccount objects.
@@ -32,17 +36,22 @@ import net.sf.jmoney.model2.ExtendableObject;
  * 
  * @author Nigel Westbury
  */
-public class ReconciliationAccount extends CapitalAccountExtension {
+public class PatternMatcherAccount extends CapitalAccountExtension {
 	
 	protected boolean reconcilable = false;
+	
+	protected IListManager<MemoPattern> patterns;
+	
+	IObjectKey defaultCategoryKey = null;
 	
 	/**
 	 * A default constructor is mandatory for all extension objects.
 	 * The default constructor sets the extension properties to
 	 * appropriate default values.
 	 */
-	public ReconciliationAccount(ExtendableObject extendedObject) {
+	public PatternMatcherAccount(ExtendableObject extendedObject) {
 		super(extendedObject);
+		this.patterns = extendedObject.getObjectKey().constructListManager(PatternMatcherAccountInfo.getPatternsAccessor());
 	}
 	
 	/**
@@ -51,11 +60,15 @@ public class ReconciliationAccount extends CapitalAccountExtension {
 	 * the extension objects when loading data.
 	 * 
 	 */
-	public ReconciliationAccount(
+	public PatternMatcherAccount(
 			ExtendableObject extendedObject,
-			boolean reconcilable) {
+			boolean reconcilable, 
+			IListManager<MemoPattern> patterns,
+			IObjectKey defaultCategoryKey) {
 		super(extendedObject);
 		this.reconcilable = reconcilable;
+		this.patterns = patterns;
+		this.defaultCategoryKey = defaultCategoryKey;
 	}
 	
 	/**
@@ -67,11 +80,41 @@ public class ReconciliationAccount extends CapitalAccountExtension {
 	}
 	
 	/**
+	 * Returns the default income and expense account.
+	 * 
+	 * @return the income and expense account to be given initially
+	 * 			to all entries imported for this account
+	 */
+	public IncomeExpenseAccount getDefaultCategory() {
+        return defaultCategoryKey == null
+		? null
+				: (IncomeExpenseAccount)defaultCategoryKey.getObject();
+	}
+		
+	/**
 	 * Sets the reconcilable flag.
 	 */
 	public void setReconcilable(boolean reconcilable) {
 		boolean oldReconcilable = this.reconcilable;
 		this.reconcilable = reconcilable;
-		processPropertyChange(ReconciliationAccountInfo.getReconcilableAccessor(), new Boolean(oldReconcilable), new Boolean(reconcilable));
+		processPropertyChange(PatternMatcherAccountInfo.getReconcilableAccessor(), new Boolean(oldReconcilable), new Boolean(reconcilable));
+	}
+	
+	/**
+	 * Sets the default category.
+	 */
+	public void setDefaultCategory(IncomeExpenseAccount defaultCategory) {
+        IncomeExpenseAccount oldDefaultCategory = getDefaultCategory();
+        this.defaultCategoryKey = 
+        	defaultCategory == null
+        		? null 
+        		: defaultCategory.getObjectKey();
+
+		// Notify the change manager.
+		processPropertyChange(PatternMatcherAccountInfo.getDefaultCategoryAccessor(), oldDefaultCategory, defaultCategory);
+	}
+
+	public ObjectCollection<MemoPattern> getPatternCollection() {
+		return new ObjectCollection<MemoPattern>(patterns, getBaseObject(), PatternMatcherAccountInfo.getPatternsAccessor());
 	}
 }

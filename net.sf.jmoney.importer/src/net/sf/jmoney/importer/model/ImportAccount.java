@@ -22,10 +22,16 @@
 
 package net.sf.jmoney.importer.model;
 
+import net.sf.jmoney.importer.wizards.IAccountImportWizard;
 import net.sf.jmoney.model2.CapitalAccountExtension;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.IListManager;
 import net.sf.jmoney.model2.ObjectCollection;
+
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
 
 /**
  * An extension object that extends BankAccount objects.
@@ -34,7 +40,7 @@ import net.sf.jmoney.model2.ObjectCollection;
  * 
  * @author Nigel Westbury
  */
-public class ReconciliationAccount extends CapitalAccountExtension {
+public class ImportAccount extends CapitalAccountExtension {
 	
 	protected String importDataExtensionId = null;
 	
@@ -45,9 +51,9 @@ public class ReconciliationAccount extends CapitalAccountExtension {
 	 * The default constructor sets the extension properties to
 	 * appropriate default values.
 	 */
-	public ReconciliationAccount(ExtendableObject extendedObject) {
+	public ImportAccount(ExtendableObject extendedObject) {
 		super(extendedObject);
-		this.associations = extendedObject.getObjectKey().constructListManager(ReconciliationAccountInfo.getAssociationsAccessor());
+		this.associations = extendedObject.getObjectKey().constructListManager(ImportAccountInfo.getAssociationsAccessor());
 	}
 	
 	/**
@@ -56,7 +62,7 @@ public class ReconciliationAccount extends CapitalAccountExtension {
 	 * the extension objects when loading data.
 	 * 
 	 */
-	public ReconciliationAccount(
+	public ImportAccount(
 			ExtendableObject extendedObject,
 			String importDataExtensionId, 
 			IListManager<AccountAssociation> associations) {
@@ -72,10 +78,38 @@ public class ReconciliationAccount extends CapitalAccountExtension {
 	public void setImportDataExtensionId(String importDataExtensionId) {
 		String oldImportDataExtensionId = this.importDataExtensionId;
 		this.importDataExtensionId = importDataExtensionId;
-		processPropertyChange(ReconciliationAccountInfo.getImportDataExtensionIdAccessor(), oldImportDataExtensionId, importDataExtensionId);
+		processPropertyChange(ImportAccountInfo.getImportDataExtensionIdAccessor(), oldImportDataExtensionId, importDataExtensionId);
 	}
 	
 	public ObjectCollection<AccountAssociation> getAssociationCollection() {
-		return new ObjectCollection<AccountAssociation>(associations, getBaseObject(), ReconciliationAccountInfo.getAssociationsAccessor());
+		return new ObjectCollection<AccountAssociation>(associations, getBaseObject(), ImportAccountInfo.getAssociationsAccessor());
+	}
+
+	public IAccountImportWizard getImportWizard() {
+		/*
+		 * The importDataExtensionId property in the account is an id for a configuration element
+		 * in plugin.xml.  This configuration element in turn gives us the id of a suitable import
+		 * wizard.
+		 */
+		if (importDataExtensionId == null) {
+			return null;
+		}
+
+		// Find the wizard by reading the registry.
+		IExtensionRegistry registry = Platform.getExtensionRegistry();
+		for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.importer.importdata")) { //$NON-NLS-1$ $NON-NLS-2$
+			if (element.getName().equals("import-format") //$NON-NLS-1$
+					&& element.getAttribute("id").equals(importDataExtensionId)) { //$NON-NLS-1$
+				try {
+					Object executableExtension = element.createExecutableExtension("class"); //$NON-NLS-1$
+					return  (IAccountImportWizard)executableExtension;
+				} catch (CoreException e) {
+					throw new RuntimeException("Cannot create import wizard for " + getName() + ".", e);
+				}
+			}
+		}
+		
+		// No wizard is configured for this account.
+		return null;
 	}
 }

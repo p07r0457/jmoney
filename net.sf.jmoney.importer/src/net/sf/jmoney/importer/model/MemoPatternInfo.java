@@ -20,7 +20,7 @@
  *
  */
 
-package net.sf.jmoney.reconciliation;
+package net.sf.jmoney.importer.model;
 
 import net.sf.jmoney.fields.AccountControlFactory;
 import net.sf.jmoney.fields.CurrencyControlFactory;
@@ -39,7 +39,7 @@ import net.sf.jmoney.model2.ListKey;
 import net.sf.jmoney.model2.PropertySet;
 import net.sf.jmoney.model2.ReferencePropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.reconciliation.resources.Messages;
+import net.sf.jmoney.importer.resources.Messages;
 
 import org.eclipse.osgi.util.NLS;
 

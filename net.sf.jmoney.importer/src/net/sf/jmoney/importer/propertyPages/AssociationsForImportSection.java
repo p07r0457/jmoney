@@ -6,8 +6,8 @@ import java.util.Map;
 import net.sf.jmoney.fields.AccountControl;
 import net.sf.jmoney.importer.model.AccountAssociation;
 import net.sf.jmoney.importer.model.AccountAssociationInfo;
-import net.sf.jmoney.importer.model.ReconciliationAccount;
-import net.sf.jmoney.importer.model.ReconciliationAccountInfo;
+import net.sf.jmoney.importer.model.ImportAccount;
+import net.sf.jmoney.importer.model.ImportAccountInfo;
 import net.sf.jmoney.importer.wizards.AssociationMetadata;
 import net.sf.jmoney.importer.wizards.IAccountImportWizard;
 import net.sf.jmoney.model2.Account;
@@ -74,7 +74,7 @@ extends AbstractPropertySection {
 		 * Find all associations set in this account and move into a map.
 		 */
 		existingAssociations = new HashMap<String, AccountAssociation>();
-		ReconciliationAccount a = account.getExtension(ReconciliationAccountInfo.getPropertySet(), false);
+		ImportAccount a = account.getExtension(ImportAccountInfo.getPropertySet(), false);
 		if (a != null) {
 			for (AccountAssociation aa : a.getAssociationCollection()) {
 				existingAssociations.put(aa.getId(), aa);
@@ -92,7 +92,7 @@ extends AbstractPropertySection {
 		 * in plugin.xml.  This configuration element in turn gives us the id of a suitable import
 		 * wizard.  We start the given wizard, first setting the account into it.
 		 */
-		String importDataExtensionId = account.getPropertyValue(ReconciliationAccountInfo.getImportDataExtensionIdAccessor());
+		String importDataExtensionId = account.getPropertyValue(ImportAccountInfo.getImportDataExtensionIdAccessor());
 		if (importDataExtensionId == null) {
 			CLabel labelLabel = getWidgetFactory().createCLabel(composite, "The importer for this account does not require any associated accounts.");
 		} else {
@@ -114,7 +114,7 @@ extends AbstractPropertySection {
 
 			Session session = account.getSession();
 
-			final ReconciliationAccount aNotNull = account.getExtension(ReconciliationAccountInfo.getPropertySet(), true);
+			final ImportAccount aNotNull = account.getExtension(ImportAccountInfo.getPropertySet(), true);
 
 			for (final AssociationMetadata association : wizard.getAssociationMetadata()) {
 				getWidgetFactory().createCLabel(composite, association.getLabel() + ":"); //$NON-NLS-1$

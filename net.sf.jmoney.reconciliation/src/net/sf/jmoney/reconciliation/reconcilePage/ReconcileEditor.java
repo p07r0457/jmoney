@@ -1,10 +1,8 @@
 package net.sf.jmoney.reconciliation.reconcilePage;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import java.util.TimeZone;
 import java.util.Vector;
 
 import net.sf.jmoney.entrytable.CellBlock;
@@ -18,6 +16,12 @@ import net.sf.jmoney.entrytable.OtherEntriesPropertyBlock;
 import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
+import net.sf.jmoney.importer.matcher.ImportMatcher;
+import net.sf.jmoney.importer.model.ImportAccount;
+import net.sf.jmoney.importer.model.ImportAccountInfo;
+import net.sf.jmoney.importer.model.PatternMatcherAccount;
+import net.sf.jmoney.importer.model.PatternMatcherAccountInfo;
+import net.sf.jmoney.importer.wizards.IAccountImportWizard;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.DatastoreManager;
@@ -30,11 +34,8 @@ import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.TransactionInfo;
 import net.sf.jmoney.reconciliation.BankStatement;
 import net.sf.jmoney.reconciliation.IBankStatementSource;
-import net.sf.jmoney.reconciliation.ReconciliationAccount;
-import net.sf.jmoney.reconciliation.ReconciliationAccountInfo;
 import net.sf.jmoney.reconciliation.ReconciliationEntryInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
-import net.sf.jmoney.reconciliation.utilities.ImportMatcher;
 import net.sf.jmoney.views.AccountEditorInput;
 
 import org.eclipse.core.commands.IHandler;
@@ -46,6 +47,7 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -329,7 +331,7 @@ public class ReconcileEditor extends EditorPart {
 			}
 		}		  
 
-		final ReconciliationAccount reconciliationAccount = account.getExtension(ReconciliationAccountInfo.getPropertySet(), true);
+		final PatternMatcherAccount reconciliationAccount = account.getExtension(PatternMatcherAccountInfo.getPropertySet(), true);
 
 		importButton.addListener(SWT.Selection, new Listener() {
 			public void handleEvent(Event event) {
@@ -521,7 +523,28 @@ public class ReconcileEditor extends EditorPart {
 			defaultStartDate = oneDayLater.getTime();
 		}
 		
-		Collection<IBankStatementSource.EntryData> importedEntries = statementSource.importEntries(getSite().getShell(), getAccount(), defaultStartDate, defaultEndDate);
+		/*
+		 * Create an import wizard that wraps the import source.
+		 * 
+		 * This wizard is the same wizard that is used when the user selects
+		 * import from the 'Import Tabular Data...' item on the file menu.  
+		 */
+		ImportAccount accountImporterExtension = account.getExtension(ImportAccountInfo.getPropertySet(), true);
+		IAccountImportWizard wizard = accountImporterExtension.getImportWizard();
+		if (wizard == null) {
+			MessageDialog.openError(getSite().getShell(), "Import not Available", "In order to import here, you must set up an import method for this account.  This is done by setting the table structure property of the account.");
+			return;
+		}
+
+		/*
+		 * We listen for entries that have been added to the account and we
+		 * set them to be in this bank statement.
+		 * 
+		 * This is done asynchronously because modifying the model within a
+		 * model change listener is a bad idea.
+		 */
+		
+		Collection<net.sf.jmoney.importer.matcher.EntryData> importedEntries = statementSource.importEntries(getSite().getShell(), getAccount(), defaultStartDate, defaultEndDate);
 		if (importedEntries != null) {
 			/*
 			 * Create a transaction to be used to import the entries.  This allows the entries to
@@ -532,127 +555,11 @@ public class ReconcileEditor extends EditorPart {
 			CurrencyAccount accountInTransaction = transactionManager.getCopyInTransaction((account));
 			Session sessionInTransaction = accountInTransaction.getSession();
 
-			ImportMatcher matcher = new ImportMatcher(accountInTransaction.getExtension(ReconciliationAccountInfo.getPropertySet(), true));
+			ImportMatcher matcher = new ImportMatcher(accountInTransaction.getExtension(PatternMatcherAccountInfo.getPropertySet(), true));
 			
-			entryLoop: for (IBankStatementSource.EntryData entryData: importedEntries) {
-				/*
-				 * First we try auto-matching.
-				 * 
-				 * If we have an auto-match then we don't have to create a new
-				 * transaction at all. We just update a few properties in the
-				 * existing entry.
-				 * 
-				 * An entry auto-matches if:
-				 *  - The amount exactly matches
-				 *  - The entry has no statement set
-				 *  - If a check number is specified in the existing entry then
-				 * it must match a check number in the import (but if no check
-				 * number is in the existing entry, that is ok)
-				 *  - The date must be either exactly equal,
-				 * 
-				 * or it can be up to 10 days in the future but it can only be
-				 * in the future if there is a check number match. This allows,
-				 * say, a check to match that is likely not going to appear till
-				 * a few days later.
-				 * 
-				 * or it can be up to 1 day in the future but only if there
-				 * are no other entries that match. This restriction prevents a
-				 * false match when there are lots of charges for the same
-				 * amount very close together (e.g. consider a cup of coffee
-				 * charged every day or two)
-				 */
-				Collection<Entry> possibleMatches = new ArrayList<Entry>();
-				for (Entry entry : account.getEntries()) {
-					if (entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor()) == null
-							&& entry.getAmount() == entryData.amount) {
-						System.out.println("amount: " + entryData.amount);
-						Date importedDate = (entryData.valueDate != null)
-						? entryData.valueDate
-								: entryData.clearedDate;
-						if (entry.getCheck() == null) {
-							if (entry.getTransaction().getDate().equals(importedDate)) {
-								// Auto-reconcile
-								possibleMatches.add(entry);
-								
-								/*
-								 * Date exactly matched - so we can quit
-								 * searching for other matches. (If user entered
-								 * multiple entries with same check number then
-								 * the user will not be surprised to see an
-								 * arbitrary one being used for the match).
-								 */
-								break;
-							} else {
-								Calendar fiveDaysLater = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-								fiveDaysLater.setTime(entry.getTransaction().getDate());
-								fiveDaysLater.add(Calendar.DAY_OF_MONTH, 5);
-								
-								if ((entryData.check == null || entryData.check.length() == 0) 
-										&& (importedDate.equals(entry.getTransaction().getDate())
-										 || importedDate.after(entry.getTransaction().getDate()))
-										 && importedDate.before(fiveDaysLater.getTime())) {
-									// Auto-reconcile
-									possibleMatches.add(entry);
-								}
-							}
-						} else {
-							// A check number is present
-							Calendar twentyDaysLater = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-							twentyDaysLater.setTime(entry.getTransaction().getDate());
-							twentyDaysLater.add(Calendar.DAY_OF_MONTH, 20);
-							
-							if (entry.getCheck().equals(entryData.check)
-									&& (importedDate.equals(entry.getTransaction().getDate())
-									 || importedDate.after(entry.getTransaction().getDate()))
-									 && importedDate.before(twentyDaysLater.getTime())) {
-								// Auto-reconcile
-								possibleMatches.add(entry);
-								
-								/*
-								 * Check number matched - so we can quit
-								 * searching for other matches. (If user entered
-								 * multiple entries with same check number then
-								 * the user will not be surprised to see an
-								 * arbitrary one being used for the match).
-								 */
-								break;
-							}
-						}
-					}
-				}
-
-				if (possibleMatches.size() == 1) {
-					Entry match = possibleMatches.iterator().next();
-					
-					Entry entryInTrans = transactionManager.getCopyInTransaction(match);
-
-					if (entryData.valueDate == null) {
-						entryInTrans.setValuta(entryData.clearedDate);
-					} else {
-						entryInTrans.setValuta(entryData.valueDate);
-					}
-
-					entryInTrans.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), statement);
-					entryInTrans.setCheck(entryData.check);
-					entryInTrans.setPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor(), entryData.uniqueId);
-
-					continue entryLoop;
-				}
-				
-		   		Transaction transaction = sessionInTransaction.createTransaction();
-		   		Entry entry1 = transaction.createEntry();
-		   		Entry entry2 = transaction.createEntry();
-		   		entry1.setAccount(accountInTransaction);
-		   		entry1.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), statement);
-		   		
-		   		/*
-		   		 * Scan for a match in the patterns.  If a match is found,
-		   		 * use the values for memo, description etc. from the pattern.
-		   		 */
-				String text = entryData.getTextToMatch();
-				matcher.matchAndFill(text, entry1, entry2, entryData.getDefaultMemo(), entryData.getDefaultDescription());
-				
-		   		entryData.assignPropertyValues(transaction, entry1, entry2);
+			for (net.sf.jmoney.importer.matcher.EntryData entryData: importedEntries) {
+				Entry entry = matcher.process(entryData, sessionInTransaction);
+		   		entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), statement);
 			}
 			
 			/*

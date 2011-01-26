@@ -36,6 +36,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.sf.jmoney.importer.matcher.ImportMatcher;
+import net.sf.jmoney.importer.model.PatternMatcherAccountInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
@@ -43,15 +45,13 @@ import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
-import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.model2.Session.NoAccountFoundException;
 import net.sf.jmoney.model2.Session.SeveralAccountsFoundException;
+import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.ofx.model.OfxEntryInfo;
 import net.sf.jmoney.ofx.parser.SimpleDOMParser;
 import net.sf.jmoney.ofx.parser.SimpleElement;
 import net.sf.jmoney.ofx.parser.TagNotFoundException;
-import net.sf.jmoney.reconciliation.ReconciliationAccountInfo;
-import net.sf.jmoney.reconciliation.utilities.ImportMatcher;
 import net.sf.jmoney.stocks.model.SecurityInfo;
 import net.sf.jmoney.stocks.model.Stock;
 import net.sf.jmoney.stocks.model.StockAccount;
@@ -249,7 +249,7 @@ public class OfxImporter {
 			
 			SimpleElement transListElement = statementResultElement.getDescendant("INVTRANLIST");
 
-			ImportMatcher matcher = new ImportMatcher(account.getExtension(ReconciliationAccountInfo.getPropertySet(), true));
+			ImportMatcher matcher = new ImportMatcher(account.getExtension(PatternMatcherAccountInfo.getPropertySet(), true));
 			
 			for (SimpleElement transactionElement : transListElement.getChildElements()) {
 				if (transactionElement.getTagName().equals("DTSTART")) {

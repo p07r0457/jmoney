@@ -38,6 +38,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 import net.sf.jmoney.JMoneyPlugin;
+import net.sf.jmoney.importer.matcher.EntryData;
 import net.sf.jmoney.model2.Currency;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.reconciliation.reconcilePage.ImportStatementDialog;

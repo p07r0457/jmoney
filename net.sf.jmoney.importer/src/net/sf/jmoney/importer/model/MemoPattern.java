@@ -21,7 +21,7 @@
  *
  */
 
-package net.sf.jmoney.reconciliation;
+package net.sf.jmoney.importer.model;
 
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;

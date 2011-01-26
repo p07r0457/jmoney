@@ -5,8 +5,8 @@ import java.util.Map;
 
 import net.sf.jmoney.fields.AccountControl;
 import net.sf.jmoney.importer.model.AccountAssociation;
-import net.sf.jmoney.importer.model.ReconciliationAccount;
-import net.sf.jmoney.importer.model.ReconciliationAccountInfo;
+import net.sf.jmoney.importer.model.ImportAccount;
+import net.sf.jmoney.importer.model.ImportAccountInfo;
 import net.sf.jmoney.importer.wizards.AssociationMetadata;
 import net.sf.jmoney.importer.wizards.IAccountImportWizard;
 import net.sf.jmoney.model2.Account;
@@ -69,7 +69,7 @@ public class ImportFormatSection extends AbstractPropertySection {
 		.createFlatFormComposite(parent);
 		FormData data;
 
-		propertyControl = ReconciliationAccountInfo.getImportDataExtensionIdAccessor().createPropertyControl(composite);
+		propertyControl = ImportAccountInfo.getImportDataExtensionIdAccessor().createPropertyControl(composite);
 		data = new FormData();
 		data.left = new FormAttachment(0, STANDARD_LABEL_WIDTH);
 		data.right = new FormAttachment(100, 0);

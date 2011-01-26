@@ -19,7 +19,7 @@
       
       <extension-property-set
       	id="accountProperties"
-          info-class="net.sf.jmoney.importer.model.ReconciliationAccountInfo"
+          info-class="net.sf.jmoney.importer.model.ImportAccountInfo"
 	      extendable-property-set="net.sf.jmoney.account">
       </extension-property-set>
       
@@ -29,8 +29,18 @@
 	      extendable-property-set="net.sf.jmoney.entry">
       </extension-property-set>
       
+      <extension-property-set
+      	id="accountPropertiesForMatcher"
+          info-class="net.sf.jmoney.importer.model.PatternMatcherAccountInfo"
+	      extendable-property-set="net.sf.jmoney.currencyAccount">
+      </extension-property-set>
+      
       <extendable-property-set
-      	id="pattern"
+      	id="memoPattern"
+          info-class="net.sf.jmoney.importer.model.MemoPatternInfo">
+      </extendable-property-set>
+      <extendable-property-set
+      	id="accountAssociation"
           info-class="net.sf.jmoney.importer.model.AccountAssociationInfo">
       </extendable-property-set>
    </extension>

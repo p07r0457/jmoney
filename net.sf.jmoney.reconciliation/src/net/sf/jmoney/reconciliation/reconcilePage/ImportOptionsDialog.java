@@ -28,6 +28,10 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import net.sf.jmoney.fields.AccountControl;
+import net.sf.jmoney.importer.model.MemoPattern;
+import net.sf.jmoney.importer.model.MemoPatternInfo;
+import net.sf.jmoney.importer.model.PatternMatcherAccount;
+import net.sf.jmoney.importer.model.PatternMatcherAccountInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.AccountCellEditor;
@@ -36,10 +40,6 @@ import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.reconciliation.MemoPattern;
-import net.sf.jmoney.reconciliation.MemoPatternInfo;
-import net.sf.jmoney.reconciliation.ReconciliationAccount;
-import net.sf.jmoney.reconciliation.ReconciliationAccountInfo;
 import net.sf.jmoney.reconciliation.ReconciliationPlugin;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -95,7 +95,7 @@ public class ImportOptionsDialog extends Dialog {
 	/**
 	 * The account for which we are configuring, which is in our own transaction.
 	 */
-	ReconciliationAccount account;
+	PatternMatcherAccount account;
 
 	private DialogMessageArea messageArea;
 
@@ -126,7 +126,7 @@ public class ImportOptionsDialog extends Dialog {
 	 * @param parentShell
 	 *            the parent shell
 	 */
-	public ImportOptionsDialog(Shell parentShell, ReconciliationAccount account) {
+	public ImportOptionsDialog(Shell parentShell, PatternMatcherAccount account) {
 		super(parentShell);
 		/*
 		 * All changes within this dialog are made within a transaction, so canceling
@@ -134,7 +134,7 @@ public class ImportOptionsDialog extends Dialog {
 		 */
 		transactionManager = new TransactionManager(account.getDataManager());
 		ExtendableObject accountInTransaction = transactionManager.getCopyInTransaction(account.getBaseObject()); 
-		this.account = accountInTransaction.getExtension(ReconciliationAccountInfo.getPropertySet(), true);
+		this.account = accountInTransaction.getExtension(PatternMatcherAccountInfo.getPropertySet(), true);
 
 		// Load the error indicator
 		URL installURL = ReconciliationPlugin.getDefault().getBundle().getEntry("/icons/error.gif");
@@ -662,7 +662,7 @@ public class ImportOptionsDialog extends Dialog {
 		 * objects for the account.
 		 */
 		public Object[] getElements(Object input) {
-			ReconciliationAccount account = (ReconciliationAccount)input;
+			PatternMatcherAccount account = (PatternMatcherAccount)input;
 			return account.getPatternCollection().toArray(new MemoPattern[0]);
 		}
 

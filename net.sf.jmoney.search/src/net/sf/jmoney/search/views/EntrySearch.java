@@ -143,35 +143,35 @@ public class EntrySearch implements IEntrySearch {
 			
 			if (startDate != null) {
 				whereClause.append(separator);
-				whereClause.append("date >= ? ");
+				whereClause.append("\"date\" >= ? ");
 				separator = "and ";
 			}
 			
 			if (endDate != null) {
 				whereClause.append(separator);
-				whereClause.append("date <= ? ");
+				whereClause.append("\"date\" <= ? ");
 				separator = "and ";
 			}
 			
 			if (amount != null) {
 				whereClause.append(separator);
-				whereClause.append("abs(amount) = ? ");
+				whereClause.append("abs(\"amount\") = ? ");
 				separator = "and ";
 			}
 			
 			if (memo != null) {
 				whereClause.append(separator);
-				whereClause.append("memo like ? ");
+				whereClause.append("\"memo\" like ? ");
 				separator = "and ";
 			}
 			
 			if (whereClause.length() == 0) {
-				throw new SearchException("Query Failed", "No restriction has been entered.  You must have at least one restriction.");
+				throw new SearchException("Query Failed.  No restriction has been entered.  You must have at least one restriction.", null);
 			}
 			
 			String sql = "SELECT * FROM " + entryTableName +
-				" join " + transactionTableName + " ON net_sf_jmoney_transaction._id = net_sf_jmoney_entry.net_sf_jmoney_transaction_entry" +
-				" WHERE " + whereClause + "order by date";
+				" join " + transactionTableName + " ON net_sf_jmoney_transaction.\"_ID\" = net_sf_jmoney_entry.\"net_sf_jmoney_transaction_entry\"" +
+				" WHERE " + whereClause + "order by \"date\"";
 			
 			SQLEntriesStatement statement = SqlDirectFactory.getEntriesStatement(session, sql);
 
@@ -191,7 +191,7 @@ public class EntrySearch implements IEntrySearch {
 			
 			entries = statement.execute();
 		} catch (SQLException e) {
-			throw new SearchException("SQL Exception", e.getLocalizedMessage());
+			throw new SearchException("An SQL Exception has occured.", e);
 		} catch (NoClassDefFoundError e) {
 			/*
 			 * Search the long way, which is the correct way if the entire
@@ -199,7 +199,7 @@ public class EntrySearch implements IEntrySearch {
 			 * Serialized datastore plug-in), and is the best we can do if some
 			 * other storage mechanism.
 			 */
-			throw new SearchException("Query Failed", "This query has been implemented only for SQL databases.  You are not using an SQL database.  Please implement this feature and try again.");
+			throw new SearchException("Query Failed.  This query has been implemented only for SQL databases.  You are not using an SQL database.  Please implement this feature and try again.", null);
 		}
 	}
 	

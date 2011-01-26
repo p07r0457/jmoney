@@ -80,13 +80,13 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 	protected static final Color selectedRowColor = new Color(Display
 			.getCurrent(), 215, 215, 255);
 
-	private static AudioClip clip;
-	static {
-		IPath path = new Path("icons").append("ding.au"); //$NON-NLS-1$ //$NON-NLS-2$
-		URL url = FileLocator.find(Platform.getBundle(JMoneyPlugin.PLUGIN_ID),
-				path, null);
-		clip = Applet.newAudioClip(url);
-	}
+//	private static AudioClip clip;
+//	static {
+//		IPath path = new Path("icons").append("ding.au"); //$NON-NLS-1$ //$NON-NLS-2$
+//		URL url = FileLocator.find(Platform.getBundle(JMoneyPlugin.PLUGIN_ID),
+//				path, null);
+//		clip = Applet.newAudioClip(url);
+//	}
 
 	private ICompositeTable<T> rowTable;
 
@@ -398,7 +398,7 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 			transactionManager.commit(transactionLabel);
 
 			// Sound the tone
-			clip.play();
+//			clip.play();
 
 			/*
 			 * It may be that this was a new entry not previously committed. If

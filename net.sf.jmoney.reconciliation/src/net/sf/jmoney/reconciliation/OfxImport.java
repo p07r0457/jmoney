@@ -33,6 +33,7 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.Vector;
 
+import net.sf.jmoney.importer.matcher.EntryData;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.reconciliation.parser.SimpleDOMParser;
 import net.sf.jmoney.reconciliation.parser.SimpleElement;

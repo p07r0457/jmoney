@@ -22,25 +22,15 @@
 
 package net.sf.jmoney.reconciliation;
 
-import net.sf.jmoney.fields.AccountControlFactory;
 import net.sf.jmoney.fields.CheckBoxControlFactory;
 import net.sf.jmoney.model2.CapitalAccountInfo;
 import net.sf.jmoney.model2.ExtendableObject;
 import net.sf.jmoney.model2.ExtensionPropertySet;
 import net.sf.jmoney.model2.IExtensionObjectConstructors;
-import net.sf.jmoney.model2.IListGetter;
-import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IPropertySetInfo;
 import net.sf.jmoney.model2.IValues;
-import net.sf.jmoney.model2.IncomeExpenseAccount;
-import net.sf.jmoney.model2.ListPropertyAccessor;
-import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.PropertySet;
-import net.sf.jmoney.model2.ReferencePropertyAccessor;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.reconciliation.resources.Messages;
-
-import org.eclipse.osgi.util.NLS;
 
 /**
  * Provides the metadata for the extra properties added to each capital account
@@ -59,33 +49,15 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 		public ReconciliationAccount construct(ExtendableObject extendedObject, IValues values) {
 			return new ReconciliationAccount(
 					extendedObject, 
-					values.getScalarValue(getReconcilableAccessor()),
-					values.getListManager(extendedObject.getObjectKey(), getPatternsAccessor()),
-					values.getReferencedObjectKey(getDefaultCategoryAccessor()) 
+					values.getScalarValue(getReconcilableAccessor())
 			);
 		}
 	});
 	
 	private static ScalarPropertyAccessor<Boolean> reconcilableAccessor = null;
-	private static ReferencePropertyAccessor<IncomeExpenseAccount> defaultCategoryAccessor = null;
-	private static ListPropertyAccessor<MemoPattern> patternsAccessor = null;
 	
 	public PropertySet registerProperties() {
-		AccountControlFactory<ReconciliationAccount,IncomeExpenseAccount> accountControlFactory = new AccountControlFactory<ReconciliationAccount,IncomeExpenseAccount>() {
-			public IObjectKey getObjectKey(ReconciliationAccount parentObject) {
-				return parentObject.defaultCategoryKey;
-			}
-		};
-
-		IListGetter<ReconciliationAccount, MemoPattern> patternListGetter = new IListGetter<ReconciliationAccount, MemoPattern>() {
-			public ObjectCollection<MemoPattern> getList(ReconciliationAccount parentObject) {
-				return parentObject.getPatternCollection();
-			}
-		};
-	
 		reconcilableAccessor = propertySet.addProperty("reconcilable", ReconciliationPlugin.getResourceString("Account.isReconcilable"), Boolean.class, 1, 5, new CheckBoxControlFactory(), null);
-		patternsAccessor = propertySet.addPropertyList("patterns", NLS.bind(Messages.ReconciliationAccountInfo_Patterns, null), MemoPatternInfo.getPropertySet(), patternListGetter);
-		defaultCategoryAccessor = propertySet.addProperty("defaultCategory", NLS.bind(Messages.ReconciliationAccountInfo_Patterns, null), IncomeExpenseAccount.class, 1, 20, accountControlFactory, null);
 		
 		return propertySet;
 	}
@@ -103,18 +75,4 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 	public static ScalarPropertyAccessor<Boolean> getReconcilableAccessor() {
 		return reconcilableAccessor;
 	}
-
-	/**
-	 * @return
-	 */
-	public static ListPropertyAccessor<MemoPattern> getPatternsAccessor() {
-		return patternsAccessor;
-	}	
-
-	/**
-	 * @return
-	 */
-	public static ReferencePropertyAccessor<IncomeExpenseAccount> getDefaultCategoryAccessor() {
-		return defaultCategoryAccessor;
-	}	
 }

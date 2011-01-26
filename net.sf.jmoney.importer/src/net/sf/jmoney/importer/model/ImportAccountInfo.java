@@ -55,16 +55,16 @@ import org.eclipse.swt.widgets.Control;
  * 
  * @author Nigel Westbury
  */
-public class ReconciliationAccountInfo implements IPropertySetInfo {
+public class ImportAccountInfo implements IPropertySetInfo {
 
-	private static ExtensionPropertySet<ReconciliationAccount> propertySet = PropertySet.addExtensionPropertySet(ReconciliationAccount.class, CapitalAccountInfo.getPropertySet(), new IExtensionObjectConstructors<ReconciliationAccount>() {
+	private static ExtensionPropertySet<ImportAccount> propertySet = PropertySet.addExtensionPropertySet(ImportAccount.class, CapitalAccountInfo.getPropertySet(), new IExtensionObjectConstructors<ImportAccount>() {
 
-		public ReconciliationAccount construct(ExtendableObject extendedObject) {
-			return new ReconciliationAccount(extendedObject);
+		public ImportAccount construct(ExtendableObject extendedObject) {
+			return new ImportAccount(extendedObject);
 		}
 
-		public ReconciliationAccount construct(ExtendableObject extendedObject, IValues values) {
-			return new ReconciliationAccount(
+		public ImportAccount construct(ExtendableObject extendedObject, IValues values) {
+			return new ImportAccount(
 					extendedObject, 
 					values.getScalarValue(getImportDataExtensionIdAccessor()),
 					values.getListManager(extendedObject.getObjectKey(), getAssociationsAccessor()) 
@@ -75,7 +75,7 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 	private static ScalarPropertyAccessor<String> importDataExtensionIdAccessor = null;
 	private static ListPropertyAccessor<AccountAssociation> associationsAccessor = null;
 	
-	public PropertySet<ReconciliationAccount> registerProperties() {
+	public PropertySet<ImportAccount> registerProperties() {
 
 		IPropertyControlFactory<String> importDataControlFactory = new PropertyControlFactory<String>() {
 			@Override
@@ -137,8 +137,8 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 			}
 		};
 
-		IListGetter<ReconciliationAccount, AccountAssociation> associationListGetter = new IListGetter<ReconciliationAccount, AccountAssociation>() {
-			public ObjectCollection<AccountAssociation> getList(ReconciliationAccount parentObject) {
+		IListGetter<ImportAccount, AccountAssociation> associationListGetter = new IListGetter<ImportAccount, AccountAssociation>() {
+			public ObjectCollection<AccountAssociation> getList(ImportAccount parentObject) {
 				return parentObject.getAssociationCollection();
 			}
 		};
@@ -152,7 +152,7 @@ public class ReconciliationAccountInfo implements IPropertySetInfo {
 	/**
 	 * @return
 	 */
-	public static ExtensionPropertySet<ReconciliationAccount> getPropertySet() {
+	public static ExtensionPropertySet<ImportAccount> getPropertySet() {
 		return propertySet;
 	}
 

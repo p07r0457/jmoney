@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.0"?>
 <plugin>
-<!--
 	<extension point="org.eclipse.ui.importWizards">
 		<wizard id="net.sf.jmoney.paypal.ImportWizard"
 			name="%csvImport.name"
@@ -39,14 +38,14 @@
 			</description>
 		</wizard>
 	</extension>
- -->
+
     <extension
          point="net.sf.jmoney.importer.importdata">
 
         <import-format
            id="paypalimport" 
            label="Paypal Data"
-           class="net.sf.jmoney.paypal.AmeritradeImportWizard"/>
+           class="net.sf.jmoney.paypal.PaypalImportWizard"/>
 
    </extension>
 

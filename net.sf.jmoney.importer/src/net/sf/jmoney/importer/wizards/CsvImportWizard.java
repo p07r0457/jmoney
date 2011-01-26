@@ -33,8 +33,8 @@ import java.util.Date;
 
 import net.sf.jmoney.importer.Activator;
 import net.sf.jmoney.importer.model.AccountAssociation;
-import net.sf.jmoney.importer.model.ReconciliationAccount;
-import net.sf.jmoney.importer.model.ReconciliationAccountInfo;
+import net.sf.jmoney.importer.model.ImportAccount;
+import net.sf.jmoney.importer.model.ImportAccountInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Session;
@@ -70,6 +70,8 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 	 * Set when <code>importFile</code> is called.
 	 */
 	private Account accountInsideTransaction;
+
+	private CSVReader reader;
 
 	public CsvImportWizard() {
 		IDialogSettings workbenchSettings = Activator.getDefault().getDialogSettings();
@@ -125,7 +127,7 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 			accountInsideTransaction = transactionManager.getCopyInTransaction(accountOutsideTransaction);
 			setAccount(accountInsideTransaction);
 			
-        	CSVReader reader = new CSVReader(new FileReader(file));
+        	reader = new CSVReader(new FileReader(file));
 
     		/*
     		 * Get the list of expected columns, validate the header row, and set the column indexes
@@ -135,28 +137,51 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
     		 * 
     		 * At this time, however, there is no known requirement for that, so we simply validate that
     		 * the first row contains exactly these columns in this order and set the indexes sequentially.
+    		 * 
+    		 * We trim the text in the header.  This is helpful because some banks add spaces.  For example
+    		 * Paypal puts a space before the text in each header cell.
     		 */
-			String headerRow[] = reader.readNext();
+			String headerRow[] = readHeaderRow();
+			
     		ImportedColumn[] expectedColumns = getExpectedColumns();
     		for (int columnIndex = 0; columnIndex < expectedColumns.length; columnIndex++) {
-    			if (!headerRow[columnIndex].equals(expectedColumns[columnIndex].getName())) {
-    				MessageDialog.openError(getShell(), "Unexpected Data", "Expected '" + expectedColumns[columnIndex].getName()
-    						+ "' in row 1, column " + columnIndex + " but found '" + headerRow[columnIndex] + "'.");
-    				return;
+    			if (expectedColumns[columnIndex] != null) {
+    				if (!headerRow[columnIndex].trim().equals(expectedColumns[columnIndex].getName())) {
+    					MessageDialog.openError(getShell(), "Unexpected Data", "Expected '" + expectedColumns[columnIndex].getName()
+    							+ "' in row 1, column " + columnIndex + " but found '" + headerRow[columnIndex] + "'.");
+    					return;
+    				}
+    				expectedColumns[columnIndex].setColumnIndex(columnIndex);
     			}
-    			
-    			expectedColumns[columnIndex].setColumnIndex(columnIndex);
     		}
 
 			/*
 			 * Read the data
 			 */
 			
-			currentLine = reader.readNext();
-			while (currentLine != null && currentLine.length == expectedColumns.length) {
+			currentLine = readNext();
+			while (currentLine != null) {
+				
+				/*
+				 * If it contains a single empty string then we ignore this line but we don't terminate.
+				 * Nationwide Building Society puts such a line after the header.
+				 */
+				if (currentLine.length == 1 && currentLine[0].isEmpty()) {
+					currentLine = readNext();
+					continue;
+				}
+				
+				/*
+				 * There may be extra columns in the file that we ignore, but if there are
+				 * fewer columns than expected then we can't import the row.
+				 */
+				if (currentLine.length < expectedColumns.length) {
+					break;
+				}
+				
 				importLine(currentLine);
 		        
-		        currentLine = reader.readNext();
+		        currentLine = readNext();
 		    }
 			
 			if (currentLine != null) {
@@ -184,6 +209,35 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 			MessageDialog.openError(window.getShell(), "Errors in the downloaded file", e.getMessage());
 		}
 	}
+
+	/**
+	 * This method reads the header row.
+	 * <P> 
+	 * This default implementation will read the first row.  Implementations may override this
+	 * method to fetch the header columns some other way.  For example the column headers
+	 * may not be in the first row.
+	 *  
+	 * @param reader
+	 * @return
+	 * @throws IOException
+	 * @throws ImportException 
+	 */
+	protected String[] readHeaderRow() throws IOException, ImportException {
+		return readNext();
+	}
+	
+	/**
+	 * This method gets the next row.  It is not normally called
+	 * by derived classes because this class reads each row.  However
+	 * it is available in case derived classes do need to advance
+	 * the row for whatever reason.
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
+	final protected String[] readNext() throws IOException {
+		return reader.readNext();
+	}
 	
 	/**
 	 * Given an id for an account association, returns the account that is associated with the
@@ -195,7 +249,7 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 	 * @return
 	 */
 	protected Account getAssociatedAccount(String id) {
-		ReconciliationAccount a = accountInsideTransaction.getExtension(ReconciliationAccountInfo.getPropertySet(), false);
+		ImportAccount a = accountInsideTransaction.getExtension(ImportAccountInfo.getPropertySet(), false);
 		if (a != null) {
 			for (AccountAssociation aa : a.getAssociationCollection()) {
 				if (aa.getId().equals(id)) {
@@ -264,7 +318,7 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 			} catch (ParseException e) {
 				throw new ImportException(
 						MessageFormat.format(
-								"A date in format d/M/yyyy was expected but '{0}' was found.", 
+								"A date in format d/M/yyyy was expected but {0} was found.", 
 								currentLine[columnIndex]), 
 						e);
 			}
@@ -277,12 +331,20 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 			super(name);
 		}
 		
-		public long getAmount() throws ImportException {
+		public Long getAmount() throws ImportException {
 			String amountString = currentLine[columnIndex];
 			
 			if (amountString.trim().length() == 0) {
-				// Amount cannot be blank
-				throw new ImportException("Amount cannot be blank.");
+				// If amount is blank, return null
+				return null;
+			}
+
+			/*
+			 * If the amount starts with a currency symbol then remove it.
+			 * TODO: check that the currency matches.
+			 */
+			if (amountString.startsWith("£")) {
+				amountString = amountString.substring(1);
 			}
 			
 			// remove any commas
@@ -294,6 +356,27 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 				amount += Long.parseLong(parts[1]);
 			}
 			return amount;
+		}
+	}
+
+	public class ImportedNumberColumn extends ImportedColumn {
+
+		public ImportedNumberColumn(String name) {
+			super(name);
+		}
+		
+		public long getAmount() throws ImportException {
+			String numberString = currentLine[columnIndex];
+			
+			if (numberString.trim().length() == 0) {
+				// Amount cannot be blank
+				throw new ImportException("Number cannot be blank.");
+			}
+			
+			// remove any commas
+			numberString = numberString.replace(",", "");
+			
+			return Long.parseLong(numberString);
 		}
 	}
 
