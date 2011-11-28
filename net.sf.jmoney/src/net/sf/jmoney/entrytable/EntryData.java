@@ -25,8 +25,14 @@ package net.sf.jmoney.entrytable;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.DataManager;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 
 import org.eclipse.core.runtime.Assert;
 
@@ -45,9 +51,9 @@ public class EntryData {
 	 * edit this entry.  However, this entry will be the committed version of
 	 * the entry.
 	 */
-	private Entry entry;
+	private final Entry entry;
 	
-	private DataManager dataManager;
+	private final DataManager dataManager;
 
 	/**
 	 * The balance before this entry is added in, so the balance shown to the
@@ -149,5 +155,69 @@ public class EntryData {
 				}
 			}
 			return otherEntries;
+	}
+
+	public void copyFrom(EntryData sourceEntryData) {
+		Entry selectedEntry = sourceEntryData.getEntry();
+		
+		Entry newEntry = getEntry();
+		TransactionManager transactionManager = (TransactionManager)newEntry.getDataManager();
+		
+//		newEntry.setMemo(selectedEntry.getMemo());
+//		newEntry.setAmount(selectedEntry.getAmount());
+
+		/*
+		 * Copy all values that are numbers, flags, text, or references to accounts or commodities.
+		 * We do not copy dates or statement numbers.
+		 */
+		for (ScalarPropertyAccessor accessor : EntryInfo.getPropertySet().getScalarProperties3()) {
+			Object value = selectedEntry.getPropertyValue(accessor);
+			if (value instanceof Integer
+					|| value instanceof Long
+					|| value instanceof Boolean
+					|| value instanceof String) {
+				newEntry.setPropertyValue(accessor, value);
+			}
+			if (value instanceof Commodity
+					|| value instanceof Account) {
+				newEntry.setPropertyValue(accessor, transactionManager.getCopyInTransaction((ExtendableObject)value));
+			}
+		}
+		
+		/*
+		 * In the bank account entries, the new entry row will always have a second entry created.
+		 * In other entry types such as a stock entry, the new entry row will have only one row.
+		 */
+		Entry thisEntry = getSplitEntries().isEmpty()
+		? null : getOtherEntry();
+
+		for (Entry origEntry: sourceEntryData.getSplitEntries()) {
+			if (thisEntry == null) {
+				thisEntry = getEntry().getTransaction().createEntry();
+			}
+//			thisEntry.setAccount(transactionManager.getCopyInTransaction(origEntry.getAccount()));
+//			thisEntry.setMemo(origEntry.getMemo());
+//			thisEntry.setAmount(origEntry.getAmount());
+			
+			/*
+			 * Copy all values that are numbers, flags, text, or references to accounts or commodities.
+			 * We do not copy dates or statement numbers.
+			 */
+			for (ScalarPropertyAccessor accessor : EntryInfo.getPropertySet().getScalarProperties3()) {
+				Object value = origEntry.getPropertyValue(accessor);
+				if (value instanceof Integer
+						|| value instanceof Long
+						|| value instanceof Boolean
+						|| value instanceof String) {
+					thisEntry.setPropertyValue(accessor, value);
+				}
+				if (value instanceof Commodity
+						|| value instanceof Account) {
+					thisEntry.setPropertyValue(accessor, transactionManager.getCopyInTransaction((ExtendableObject)value));
+				}
+			}
+			
+			thisEntry = null;
+		}
 	}
 }

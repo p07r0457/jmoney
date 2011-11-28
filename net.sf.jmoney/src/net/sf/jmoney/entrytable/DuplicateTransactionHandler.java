@@ -4,7 +4,12 @@
 package net.sf.jmoney.entrytable;
 
 import net.sf.jmoney.isolation.TransactionManager;
+import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
+import net.sf.jmoney.model2.ExtendableObject;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.resources.Messages;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -51,22 +56,7 @@ public class DuplicateTransactionHandler extends AbstractHandler {
 				 */
 
 				BaseEntryRowControl newEntryRowControl = entriesTable.getNewEntryRowControl();
-				Entry newEntry = newEntryRowControl.uncommittedEntryData.getEntry();
-				TransactionManager transactionManager = (TransactionManager)newEntry.getDataManager();
-				
-				newEntry.setMemo(selectedEntry.getMemo());
-				newEntry.setAmount(selectedEntry.getAmount());
-				
-				Entry thisEntry = newEntryRowControl.uncommittedEntryData.getOtherEntry();
-				for (Entry origEntry: selectedRowControl.committedEntryData.getSplitEntries()) {
-					if (thisEntry == null) {
-						thisEntry = newEntryRowControl.uncommittedEntryData.getEntry().getTransaction().createEntry();
-					}
-    				thisEntry.setAccount(transactionManager.getCopyInTransaction(origEntry.getAccount()));
-    				thisEntry.setMemo(origEntry.getMemo());
-    				thisEntry.setAmount(origEntry.getAmount());
-    				thisEntry = null;
-				}
+				newEntryRowControl.uncommittedEntryData.copyFrom(selectedRowControl.committedEntryData);
 				
 				// The 'new entry' row control should be listening for changes to
 				// its uncommitted data, so we have nothing more to do. 
