@@ -195,7 +195,7 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 			 * have been set and should be in a valid state, so we
 			 * can now commit the imported entries to the datastore.
 			 */
-			String transactionDescription = String.format("Import {0} {1}", getSourceLabel(), file.getName());
+			String transactionDescription = MessageFormat.format("Import {0} {1}", getSourceLabel(), file.getName());
 			transactionManager.commit(transactionDescription);									
 
 		} catch (FileNotFoundException e) {
@@ -350,12 +350,23 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 			// remove any commas
 			amountString = amountString.replace(",", "");
 			
+			boolean negate = amountString.startsWith("-");
+			if (negate) {
+				amountString = amountString.substring(1);
+			}
+			
 			String parts [] = amountString.split("\\.");
 			long amount = Long.parseLong(parts[0]) * 100;
 			if (parts.length > 1) {
+				if (parts[1].length() == 1) {
+					parts[1] = parts[1] + "0";
+				}
+				if (parts[1].length() != 2) {
+					throw new ImportException("Unexpected number of digits after point in " + amountString);
+				}
 				amount += Long.parseLong(parts[1]);
 			}
-			return amount;
+			return negate ? -amount : amount;
 		}
 	}
 
