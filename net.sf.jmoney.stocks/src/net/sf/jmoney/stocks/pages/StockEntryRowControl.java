@@ -75,6 +75,12 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 			/*
 			 * This is a new transaction so start with everything fluid.
 			 */
+			quantityIsFluid = true;
+			sharePriceIsFluid = true;
+			commissionIsFluid = true;
+			tax1RatesIsFluid = true;
+			tax2RatesIsFluid = true;
+			netAmountIsFluid = true;
 		} else {
 			/*
 			 * This is an existing transaction.  Entries are fluid only if they are
@@ -83,11 +89,19 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 			 */
 			netAmountIsFluid = false;
 
+			quantityIsFluid = true;
+			sharePriceIsFluid = true;
+			commissionIsFluid = true;
+			tax1RatesIsFluid = true;
+			tax2RatesIsFluid = true;
+
 			switch (inputEntryData.getTransactionType()) {
 			case Buy:
 			case Sell:
 				quantityIsFluid = false;
 				sharePriceIsFluid = false;
+//				System.out.println("commission fluid to false" + this.hashCode());
+//				try { throw new RuntimeException(""); } catch (Exception e) { e.printStackTrace(); }
 				commissionIsFluid = false;
 				tax1RatesIsFluid = false;
 				tax2RatesIsFluid = false;
@@ -152,6 +166,9 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 		return this;
 	}
 
+	/**
+	 * The net amount credited to or debited from the account has changed. 
+	 */
 	@Override
 	public void amountChanged() {
 		netAmountIsFluid = false;
@@ -204,7 +221,7 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 				break;
 			case Dividend:
 				if (withholdingTaxIsFluid) {
-					long rate = 30L;
+					long rate = 0L;
 					long tax = entry.getAmount() * rate / (100 - rate);
 					uncommittedEntryData.setWithholdingTax(-tax);
 				}
@@ -256,6 +273,8 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 
 	public void commissionChanged() {
 		assert(uncommittedEntryData.isPurchaseOrSale());
+//		System.out.println("commission fluid to false (comm changed)" + this.hashCode());
+//		try { throw new RuntimeException(""); } catch (Exception e) { e.printStackTrace(); }
 		commissionIsFluid = false;
 
 		/*
@@ -323,8 +342,12 @@ public class StockEntryRowControl extends BaseEntryRowControl<StockEntryData, St
 		// TODO: Can we clean this up a little?  Stock quantities are to three decimal places,
 		// (long value is number of thousandths) hence why we shift the long value three places.
 		long quantity = uncommittedEntryData.getPurchaseOrSaleEntry().getAmount();
+		if (input.getTransactionType() == TransactionType.Sell) {
+			quantity = -quantity;  // We use positive amounts here, regardless of whether buying or selling
+		}
 		BigDecimal grossAmount1 = sharePrice.multiply(BigDecimal.valueOf(quantity).movePointLeft(3));
-		long grossAmount = grossAmount1.movePointRight(2).longValue();
+		BigDecimal grossAmount2 = grossAmount1.movePointRight(2).setScale(0, BigDecimal.ROUND_HALF_UP);
+		long grossAmount = grossAmount2.longValue();
 
 		StockAccount account = (StockAccount)getUncommittedEntryData().getEntry().getAccount();
 

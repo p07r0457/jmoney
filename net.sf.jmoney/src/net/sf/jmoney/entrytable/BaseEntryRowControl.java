@@ -22,13 +22,9 @@
 
 package net.sf.jmoney.entrytable;
 
-import java.applet.Applet;
-import java.applet.AudioClip;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import net.sf.jmoney.JMoneyPlugin;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.Entry;
@@ -37,10 +33,6 @@ import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Transaction;
 import net.sf.jmoney.resources.Messages;
 
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.osgi.util.NLS;
@@ -372,8 +364,17 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 
 					// Update the controls.
 
-					uncommittedEntryData = createUncommittedEntryData(
-							entryInTransaction, transactionManager);
+					/*
+					 * We create a new EntryData object. This is important so
+					 * that we start over with the 'fluid' fields and other
+					 * stuff. These are reset when we set the input. We reset
+					 * the input to the same value to get the 'fluid' fields
+					 * reset. We are re-using the objects for the new entry, but
+					 * if fields have been set to be not fluid then we must
+					 * ensure they are fluid again. Without this calculated
+					 * values are not being calculated.
+					 */
+					uncommittedEntryData = createUncommittedEntryData(entryInTransaction, transactionManager);
 					uncommittedEntryData
 							.setIndex(committedEntryData.getIndex());
 					uncommittedEntryData.setBalance(committedEntryData
@@ -383,6 +384,8 @@ public abstract class BaseEntryRowControl<T extends EntryData, R extends BaseEnt
 							.values()) {
 						control.load(uncommittedEntryData);
 					}
+
+					this.setInput(uncommittedEntryData);
 
 					return true;
 				} else {

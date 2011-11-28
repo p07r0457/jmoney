@@ -1,5 +1,6 @@
 package net.sf.jmoney.stocks.model;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -259,8 +260,8 @@ class RatesEditorControl extends Composite {
 				RowControls row = new RowControls(middleRow);
 				rows.add(row);
 
-				double percentage = bands.get(0).getPercentage();
-				row.percentageText.setText(Double.toString(percentage));
+				BigDecimal percentage = bands.get(0).getProportion();
+				row.percentageText.setText(percentage.movePointRight(2).toString());
 
 				row.configureAsOnlyRow();
 			} else {
@@ -270,8 +271,8 @@ class RatesEditorControl extends Composite {
 				final RowControls row = new RowControls(middleRow);
 				rows.add(row);
 				
-				double percentage = band.getPercentage();
-				row.percentageText.setText(Double.toString(percentage));
+				BigDecimal percentage = band.getProportion();
+				row.percentageText.setText(percentage.movePointRight(2).toString());
 				
 				if (rowIndex != bands.size()-1) {
 					Band nextBand = bands.get(rowIndex+1);
@@ -362,15 +363,15 @@ class RatesEditorControl extends Composite {
 		
 		ArrayList<Band> bands = new ArrayList<Band>();
 		for (RowControls row: rows) {
-			double percentage;
+			BigDecimal proportion;
 
 			try {
-				percentage = Double.parseDouble(row.percentageText.getText());
+				proportion = new BigDecimal(row.percentageText.getText()).movePointLeft(2);
 			} catch (NumberFormatException e) {
-				percentage = 0.0;
+				proportion = BigDecimal.ZERO;
 			}
 
-			bands.add(new Band(bandStart, percentage));
+			bands.add(new Band(bandStart, proportion));
 
 			try {
 				bandStart = currencyForFormatting.parse(row.upperBoundText.getText());

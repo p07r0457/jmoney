@@ -30,7 +30,7 @@ import net.sf.jmoney.model2.IObjectKey;
 import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.ListKey;
 
-public class Security extends Commodity {
+public abstract class Security extends Commodity {
 	
 	// This implementation formats all quantities as numbers with three decimal places.
 	private int SCALE_FACTOR = 1000;

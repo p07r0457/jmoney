@@ -6,6 +6,7 @@
  */
 package net.sf.jmoney.stocks.model;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,19 +30,19 @@ public class RatesTable {
 	 */
 	static class Band {
 		private long bandStart;
-		private double percentage;
+		private BigDecimal proportion;
 
-		public Band(long bandStart, double percentage) {
+		public Band(long bandStart, BigDecimal proportion) {
 			this.bandStart = bandStart;
-			this.percentage = percentage;
+			this.proportion = proportion;
 		}
 
 		public long getBandStart() {
 			return bandStart;
 		}
 
-		public double getPercentage() {
-			return percentage;
+		public BigDecimal getProportion() {
+			return proportion;
 		}
 	}
 	
@@ -55,7 +56,7 @@ public class RatesTable {
 	 */
 	public RatesTable() {
 		bands = new ArrayList<Band>();
-		bands.add(new Band(0, 0.0));
+		bands.add(new Band(0, BigDecimal.ZERO));
 	}
 	
 	// Construct a rates table from a String object.
@@ -71,9 +72,12 @@ public class RatesTable {
 
         int i = 1;
         while (i < numbers.length) {
+        	if (!stringValue.equals("0;0;0.0")) {
+        		System.out.println("");
+        	}
         	long bandStart = new Long(numbers[i++]).longValue();
-        	double percentage = new Double(numbers[i++]).doubleValue();
-        	Band band = new Band(bandStart, percentage);
+        	BigDecimal proportion = new BigDecimal(numbers[i++]).movePointLeft(2);
+        	Band band = new Band(bandStart, proportion);
         	bands.add(band);
         }
 	}
@@ -89,22 +93,25 @@ public class RatesTable {
 		for (int i = 0; i < bands.size(); i++) {
 			Band band = bands.get(i);
 			result += ";" + band.bandStart;
-			result += ";" + band.percentage;
+			result += ";" + band.proportion;
 		}
 		return result;
 	}
 	
 	public long calculateRate(long amount) {
-		double total = fixedAmount;
+		BigDecimal total = new BigDecimal(fixedAmount);
 		int i = 1;
 		while (i < bands.size() && amount > bands.get(i).getBandStart()) {
-			total += (bands.get(i).getBandStart() - bands.get(i-1).getBandStart()) * bands.get(i-1).getPercentage();
+			BigDecimal bandRange = new BigDecimal(bands.get(i).getBandStart() - bands.get(i-1).getBandStart()).movePointLeft(2);
+			total = total.add(bandRange.multiply(bands.get(i-1).getProportion()));
 			i++;
 		}
 		
-		total += (amount - bands.get(i-1).getBandStart()) * bands.get(i-1).getPercentage();
+		BigDecimal partialBandRange = new BigDecimal(amount - bands.get(i-1).getBandStart()).movePointLeft(2);
+		total = total.add(partialBandRange.multiply(bands.get(i-1).getProportion()));
 
-		return (long)total;
+		BigDecimal total2 = total.movePointRight(2).setScale(0, BigDecimal.ROUND_HALF_UP);
+		return total2.longValue();
 	}
 	
 	public long getFixedAmount() {
