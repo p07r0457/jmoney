@@ -49,10 +49,44 @@ public class ImportMatcher {
    				 * Group zero is the entire string and the groupCount method
    				 * does not include that group, so there is really one more group
    				 * than the number given by groupCount.
+   				 * 
+   				 * This code tidies up the imported text.  Most banks put everything
+   				 * in upper case, so those are converted to mixed case.  Furthermore
+   				 * we replace multiple spaces with a comma followed by a single space.
    				 */
    				Object [] args = new Object[m.groupCount()+1];
    				for (int i = 0; i <= m.groupCount(); i++) {
-   					args[i] = m.group(i);
+   					StringBuffer x = new StringBuffer();
+   					
+   					boolean lastWasLetter = false;
+   					int numberOfSpaces = 0;
+   					for (char y : m.group(i).toCharArray()) {
+   						if (y == ' ') {
+   							numberOfSpaces++;
+   							lastWasLetter = false;
+   						} else {
+   							if (numberOfSpaces > 0) {
+   	   							if (numberOfSpaces > 1) {
+   									x.append(',');
+   	   							}
+								x.append(' ');
+   								numberOfSpaces = 0;
+   							}
+   							
+   							if (Character.isLetter(y)) {
+   								lastWasLetter = true;
+   								if (lastWasLetter) {
+   									x.append(Character.toLowerCase(y));
+   								} else {
+   									x.append(y);
+   								}
+   							} else {
+   								lastWasLetter = false;
+   								x.append(y);
+   							}
+   						}
+   					}
+   					args[i] = x.toString();
    				}
    				
    				// TODO: What effect does the locale have in the following?
