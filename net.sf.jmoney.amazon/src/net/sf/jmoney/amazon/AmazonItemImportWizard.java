@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import net.sf.jmoney.importer.model.ReconciliationEntryInfo;
 import net.sf.jmoney.importer.wizards.CsvImportWizard;
 import net.sf.jmoney.importer.wizards.ImportException;
 import net.sf.jmoney.isolation.TransactionManager;
@@ -126,7 +125,6 @@ public class AmazonItemImportWizard extends CsvImportWizard {
 	@Override
 	public void importLine(String[] line) throws ImportException {
 
-		Date orderDate = column_orderDate.getDate();
 		Date shipmentDate = column_shipmentDate.getDate();
 		String orderId = column_orderId.getText();
 		
@@ -193,25 +191,6 @@ public class AmazonItemImportWizard extends CsvImportWizard {
 			throw new ImportException("No account exists with a name that begins 'Amazon unmatched' and a currency of " + chargedAccount.getCurrency().getName() + ".");
 		}
 
-		
-		/*
-		 * We don't have a unique id.  However we make one up.  This is made
-		 * up from the order id and the product id.  If the same product is ordered
-		 * more than once in the same order then it shows as a single row with a quantity
-		 * of more than one.  We can therefore be sure that we have a unique id.
-		 */
-		String uniqueId = column_orderId.getText() + "~" + column_id.getText();
-
-		/*
-		 * See if an entry already exists with this uniqueId.
-		 */
-		for (Entry entry : account.getEntries()) {
-			if (uniqueId.equals(entry.getPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor()))) {
-				// This row has already been imported so ignore it.
-				return;
-			}
-		}
-		
 		/*
 		 * Look in the unmatched entries account for an entry that matches on order id and shipment date.
 		 */
@@ -228,9 +207,32 @@ public class AmazonItemImportWizard extends CsvImportWizard {
 		
 		// All rows are processed by this
 		if (matchingEntry == null) {
-			currentMultiRowProcessor = new ItemsShippedTransactionUnmatched(shipmentDate, orderId);
+			/*
+			 * We should check the charge account to make sure there is no entries.
+			 * If both the items and the order has already been imported then we should
+			 * find the matching entry in the charge account. 
+			 */
+			for (Entry entry : chargedAccount.getEntries()) {
+				AmazonEntry amazonEntry = entry.getExtension(AmazonEntryInfo.getPropertySet(), false);
+				if (amazonEntry != null) {
+					if (amazonEntry.getOrderId().equals(orderId)
+							&& amazonEntry.getShipmentDate().equals(shipmentDate)) {
+						throw new ImportException("Items for this shipment have already been imported.");
+					}
+				}
+			}
+
+			currentMultiRowProcessor = new ItemsShippedTransactionUnmatched(unmatchedAccount, shipmentDate, orderId);
 		} else {
-			currentMultiRowProcessor = new ItemsShippedTransactionMatched(shipmentDate, orderId, matchingEntry);
+			/*
+			 * We have a matching entry.  Now if the amount is positive then it represents items
+			 * that have not yet been imported, and if the amount is negative then it represents
+			 * the charge account entry that cannot yet be matched.
+			 */
+			if (matchingEntry.getAmount() < 0) {
+				throw new ImportException("Items for this shipment have already been imported.");
+			}
+			currentMultiRowProcessor = new ItemsShippedTransactionMatched(unmatchedAccount, shipmentDate, orderId, matchingEntry);
 		}
 
 		currentMultiRowProcessor.processCurrentRow(session);
@@ -259,27 +261,48 @@ public class AmazonItemImportWizard extends CsvImportWizard {
 	}
 
 	public abstract class ItemsShippedTransaction implements MultiRowTransaction {
+		protected IncomeExpenseAccount unmatchedAccount;
+		protected Date orderDate;
+		protected Date shipmentDate;
+		protected String orderId;
+		protected List<ItemRow> rowItems = new ArrayList<ItemRow>();
 
-		private Date shipmentDate;
-		private String orderId;
-		private List<ShoppingCartRow> rowItems = new ArrayList<ShoppingCartRow>();
-
-		private boolean done = false;
+		protected boolean done = false;
 
 		/**
-		 * Initial constructor called when first "Mandatory Exchange" row found.
+		 * Initial constructor called when first item in a shipment found.
 		 * 
-		 * @param date
+		 * @param shipmentDate
 		 * @param quantity
 		 * @param stock
+		 * @throws ImportException 
 		 */
-		public ItemsShippedTransaction(Date date, String orderId) {
-			this.shipmentDate = date;
+		public ItemsShippedTransaction(IncomeExpenseAccount unmatchedAccount, Date shipmentDate, String orderId) throws ImportException {
+			this.unmatchedAccount = unmatchedAccount;
+			this.orderDate = column_orderDate.getDate();
+			this.shipmentDate = shipmentDate;
 			this.orderId = orderId;
 		}
 
-		private void addItemsToTransaction(Transaction trans) {
-			for (ShoppingCartRow rowItem2 : rowItems) {
+		public boolean processCurrentRow(Session session) throws ImportException {
+			if (orderId.equals(column_orderId.getText())
+					&& shipmentDate.equals(column_shipmentDate.getDate())) {
+				ItemRow item = new ItemRow();
+
+				item.title = column_title.getText();
+				item.id = column_id.getText();
+				item.quantity = column_quantity.getAmount();
+				item.price = column_price.getAmount();
+
+				rowItems.add(item);
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		protected void addItemsToTransaction(Transaction trans) {
+			for (ItemRow rowItem2 : rowItems) {
 				AmazonEntry itemEntry = trans.createEntry().getExtension(AmazonEntryInfo.getPropertySet(), true);
 				itemEntry.setAccount(unknownAmazonPurchaseAccount);
 				itemEntry.setAmount(rowItem2.subtotal);
@@ -287,41 +310,7 @@ public class AmazonItemImportWizard extends CsvImportWizard {
 				itemEntry.setOrderId(orderId);
 				itemEntry.setShipmentDate(shipmentDate);
 				itemEntry.setAsinOrIsbn(rowItem2.id);
-				itemEntry.setPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor(), refund.transactionId);
 			}
-		}
-
-		public boolean processCurrentRow(Session session) throws ImportException {
-
-			ShoppingCartRow item = new ShoppingCartRow();
-			
-			item.title = column_title.getText();
-			item.id = column_id.getText();
-			item.quantity = column_quantity.getAmount();
-			item.price = column_price.getAmount();
-			
-			
-			String rowItemType = column_type.getText();
-			long itemShippingAndHandlingAmount = column_shippingAndHandling.getAmount();
-			
-			if (rowItemType.equals("Shopping Cart Item")) {
-				if (itemShippingAndHandlingAmount != shippingAndHandlingAmount) {
-					throw new ImportException("shipping and handling amounts in different rows in the same transaction do not match.");
-				}
-
-				ShoppingCartRow shoppingCartRow = new ShoppingCartRow();
-				shoppingCartRow.memo = column_memo.getText();
-				shoppingCartRow.grossAmount = column_grossAmount.getAmount();
-				shoppingCartRow.netAmount = column_netAmount.getAmount();
-				shoppingCartRow.insurance = column_insurance.getAmount();
-				shoppingCartRow.salesTax = column_salesTax.getAmount();
-				shoppingCartRow.fee = column_fee.getAmount();
-				shoppingCartRow.url = column_itemUrl.getText();
-				rowItems.add(shoppingCartRow);
-				return true;
-			}
-
-			return false;
 		}
 
 		public boolean isDone() {
@@ -339,43 +328,26 @@ public class AmazonItemImportWizard extends CsvImportWizard {
 
 		private AmazonEntry matchingEntry;
 
-		public ItemsShippedTransactionMatched(Date date, String orderId, AmazonEntry matchingEntry) {
-			super(date, orderId);
+		public ItemsShippedTransactionMatched(IncomeExpenseAccount unmatchedAccount, Date shipmentDate, String orderId, AmazonEntry matchingEntry) throws ImportException {
+			super(unmatchedAccount, shipmentDate, orderId);
 			this.matchingEntry = matchingEntry;
 		}
 		
 		public void createTransaction(Session session) throws ImportException {
+			// Modify the existing transaction
+			Transaction trans = matchingEntry.getTransaction();
+			
+			// TODO worry about shipping and handling and stuff like that.
+			
 			// Distribute the shipping and handling amount
-			distribute(shippingAndHandlingAmount, rowItems);
-			//        	long [] amounts = distribute(row.shippingAndHandlingAmount, rowItems);
-			//        	for (int i = 0; i < rowItems.size(); i++) {
-			//        		rowItems.get(i).shippingAndHandlingAmount = amounts[i];
-			//        	}
-
-			// Start a new transaction
-			Transaction trans = session.createTransaction();
-			trans.setDate(shipmentDate);
-
-			PaypalEntry mainEntry = trans.createEntry().getExtension(PaypalEntryInfo.getPropertySet(), true);
-			mainEntry.setAccount(paypalAccount);
-			mainEntry.setAmount(column_grossAmount.getAmount());
-			mainEntry.setMemo("payment - " + column_payeeName.getText());
-			mainEntry.setMerchantEmail(orderId);
-			mainEntry.setPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor(), column_transactionId.getText());
-
-			long total ] 0;
-			for (ShoppingCartRow rowItem2 : rowItems) {
-				total += rowItem2.subtotal;
-			}
+//			distribute(shippingAndHandlingAmount, rowItems);
 
 			addItemsToTransaction(trans);
 
-			// Create a single income entry with the total amount refunded
-			PaypalEntry lineItemEntry = trans.createEntry().getExtension(PaypalEntryInfo.getPropertySet(), true);
-			lineItemEntry.setAccount(paypalAccount.getSaleAndPurchaseAccount());
-			lineItemEntry.setAmount(-refundAmount);
-			lineItemEntry.setMemo(column_payeeName.getText() + " - amount refunded");
-
+			// Remove the unmatched entry as it is being replaced by
+			// the items.
+			trans.deleteEntry(matchingEntry.getBaseObject());
+			
 			assertValid(trans);
 		}
 
@@ -391,8 +363,8 @@ public class AmazonItemImportWizard extends CsvImportWizard {
 	 */
 	public class ItemsShippedTransactionUnmatched extends ItemsShippedTransaction {
 
-		public ItemsShippedTransactionUnmatched(Date date, String orderId) {
-			super(date, orderId);
+		public ItemsShippedTransactionUnmatched(IncomeExpenseAccount unmatchedAccount, Date date, String orderId) throws ImportException {
+			super(unmatchedAccount, date, orderId);
 		}
 		
 		public void createTransaction(Session session) throws ImportException {
@@ -400,25 +372,19 @@ public class AmazonItemImportWizard extends CsvImportWizard {
 			Transaction trans = session.createTransaction();
 			trans.setDate(orderDate);
 
-			PaypalEntry mainEntry = trans.createEntry().getExtension(PaypalEntryInfo.getPropertySet(), true);
-			mainEntry.setAccount(paypalAccount);
-			mainEntry.setAmount(column_grossAmount.getAmount());
-			mainEntry.setMemo("payment - " + column_payeeName.getText());
-			mainEntry.setMerchantEmail(orderId);
-			mainEntry.setPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor(), column_transactionId.getText());
-
-			long total ] 0;
-			for (ShoppingCartRow rowItem2 : rowItems) {
+			long total = 0;
+			for (ItemRow rowItem2 : rowItems) {
 				total += rowItem2.subtotal;
 			}
 
+			// Create a single entry in the "unmatched entries" account
+			AmazonEntry mainEntry = trans.createEntry().getExtension(AmazonEntryInfo.getPropertySet(), true);
+			mainEntry.setAccount(unmatchedAccount);
+			mainEntry.setAmount(-total);
+			mainEntry.setShipmentDate(shipmentDate);
+			mainEntry.setOrderId(orderId);
+			
 			addItemsToTransaction(trans);
-
-			// Create a single income entry with the total amount refunded
-			PaypalEntry lineItemEntry = trans.createEntry().getExtension(PaypalEntryInfo.getPropertySet(), true);
-			lineItemEntry.setAccount(paypalAccount.getSaleAndPurchaseAccount());
-			lineItemEntry.setAmount(-refundAmount);
-			lineItemEntry.setMemo(column_payeeName.getText() + " - amount refunded");
 
 			assertValid(trans);
 		}
@@ -435,7 +401,7 @@ public class AmazonItemImportWizard extends CsvImportWizard {
 		}
 	}
 
-	public class ShoppingCartRow {
+	public class ItemRow {
 		public String title;
 		public String id;
 		public long quantity;
