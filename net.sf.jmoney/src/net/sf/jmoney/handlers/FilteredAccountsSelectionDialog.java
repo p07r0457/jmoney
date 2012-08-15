@@ -246,11 +246,20 @@ public class FilteredAccountsSelectionDialog extends FilteredItemsSelectionDialo
 
 		for (Account account : sessionManager.getSession().getAccountCollection()) {
 			contentProvider.add(account, itemsFilter);
+			addSubAccounts(contentProvider, itemsFilter, account);
 		}
 
 		if (progressMonitor != null)
 			progressMonitor.done();
 
+	}
+
+	private void addSubAccounts(AbstractContentProvider contentProvider,
+			ItemsFilter itemsFilter, Account parentAccount) {
+		for (Account account : parentAccount.getAllSubAccounts()) {
+			contentProvider.add(account, itemsFilter);
+			addSubAccounts(contentProvider, itemsFilter, account);
+		}
 	}
 
 	/**
