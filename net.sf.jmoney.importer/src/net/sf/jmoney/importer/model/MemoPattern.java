@@ -102,7 +102,7 @@ public final class MemoPattern extends ExtendableObject {
 	
 		if (pattern != null) {
 			try {
-				compiledPattern = Pattern.compile(pattern);
+				compiledPattern = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
 			} catch (PatternSyntaxException e) {
 				compiledPattern = null;
 			}
