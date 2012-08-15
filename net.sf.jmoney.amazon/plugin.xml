@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+
+   <extension
+         point="net.sf.jmoney.importer.importdata">
+
+        <import-format
+           id="amazonimport" 
+           label="Amazon Orders (from CSV file)" 
+           class="net.sf.jmoney.amazon.AmazonOrderImportWizard"/>
+
+   </extension>
+
+</plugin>
