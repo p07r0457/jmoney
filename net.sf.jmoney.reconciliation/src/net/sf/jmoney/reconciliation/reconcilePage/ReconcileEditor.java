@@ -286,6 +286,65 @@ public class ReconcileEditor extends EditorPart {
 			}
 		});
 
+		Button autoReconcileButton = new Button(actionbarContainer, SWT.PUSH);
+		autoReconcileButton.setText("Auto-Reconcile...");
+		autoReconcileButton.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (statement == null) {
+					MessageDialog.openError(getSite().getShell(), "Error", "No statement selected");
+					return;
+				}
+				
+				/*
+				 * Set the default start date to be the first day after the date of the previous
+				 * statement (if any and if statements are dated, not numbered), and the default
+				 * end date to be the date of this statement.
+				 */
+				Date defaultEndDate = 
+					statement.isNumber() ? null : statement.getStatementDate();
+				
+				BankStatement priorStatement = fStatementsSection.getPriorStatement(statement);
+				Date defaultStartDate = null;
+				if (priorStatement != null && !priorStatement.isNumber()) {
+					Calendar oneDayLater = Calendar.getInstance();
+					oneDayLater.setTime(priorStatement.getStatementDate());
+					oneDayLater.add(Calendar.DAY_OF_MONTH, 1);
+					defaultStartDate = oneDayLater.getTime();
+				}
+
+				ImportStatementDialog dialog2 = new ImportStatementDialog(getSite().getShell(), defaultStartDate, defaultEndDate, null);
+				if (dialog2.open() == Dialog.OK) {
+					Date startDate = dialog2.getStartDate();
+					Date endDate = dialog2.getEndDate();
+
+					/*
+					 * Create a transaction to be used to import the entries.  This allows the entries to
+					 * be more efficiently written to the back-end datastore and it also groups
+					 * the entire import as a single change for undo/redo purposes.
+					 */
+					TransactionManager transactionManager = new TransactionManager(account.getDataManager());
+					CurrencyAccount accountInTransaction = transactionManager.getCopyInTransaction((account));
+					Session sessionInTransaction = accountInTransaction.getSession();
+
+					for (Entry entry : account.getEntries()) {
+						if (entry.getPropertyValue(ReconciliationEntryInfo.getStatementAccessor()) == null
+								&& entry.getValuta() != null
+								&& !entry.getValuta().before(startDate)
+								&& !entry.getValuta().after(endDate)){
+							entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), statement);
+						}
+					}
+					
+					/*
+					 * All entries have been reconciled, so we
+					 * can now commit the entries to the datastore.
+					 */
+					transactionManager.commit("Auto-Reconcile to " + statement.toLocalizedString());									
+				}
+			}
+		});
+
 		final ToolBar toolBar =
 			new ToolBar(actionbarContainer, SWT.FLAT);
 		final ToolItem importButton =
