@@ -948,7 +948,7 @@ public class SessionManager extends DatastoreManager implements IEntryQueries {
 				+ " WHERE \"_ID\" = ?";
 			
 			try {
-				System.out.println(sql);
+				System.out.println(sql + " : " + objectKey.getRowId());
 
 				PreparedStatement stmt = getConnection().prepareStatement(sql);
 				try {
