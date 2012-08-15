@@ -11,6 +11,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 
 import net.sf.jmoney.importer.model.MemoPattern;
+import net.sf.jmoney.importer.model.MemoPatternInfo;
 import net.sf.jmoney.importer.model.PatternMatcherAccount;
 import net.sf.jmoney.importer.model.ReconciliationEntryInfo;
 import net.sf.jmoney.model2.Entry;
@@ -50,44 +51,15 @@ public class ImportMatcher {
    				 * does not include that group, so there is really one more group
    				 * than the number given by groupCount.
    				 * 
-   				 * This code tidies up the imported text.  Most banks put everything
-   				 * in upper case, so those are converted to mixed case.  Furthermore
-   				 * we replace multiple spaces with a comma followed by a single space.
+   				 * This code also tidies up the imported text.
    				 */
    				Object [] args = new Object[m.groupCount()+1];
    				for (int i = 0; i <= m.groupCount(); i++) {
-   					StringBuffer x = new StringBuffer();
-   					
-   					boolean lastWasLetter = false;
-   					int numberOfSpaces = 0;
-   					for (char y : m.group(i).toCharArray()) {
-   						if (y == ' ') {
-   							numberOfSpaces++;
-   							lastWasLetter = false;
-   						} else {
-   							if (numberOfSpaces > 0) {
-   	   							if (numberOfSpaces > 1) {
-   									x.append(',');
-   	   							}
-								x.append(' ');
-   								numberOfSpaces = 0;
-   							}
-   							
-   							if (Character.isLetter(y)) {
-   								lastWasLetter = true;
-   								if (lastWasLetter) {
-   									x.append(Character.toLowerCase(y));
-   								} else {
-   									x.append(y);
-   								}
-   							} else {
-   								lastWasLetter = false;
-   								x.append(y);
-   							}
-   						}
-   					}
-   					args[i] = x.toString();
+   					args[i] = convertToMixedCase(m.group(i));
    				}
+   				
+   				
+   				String format = pattern.getPropertyValue(MemoPatternInfo.getCheckAccessor());
    				
    				// TODO: What effect does the locale have in the following?
    				if (pattern.getCheck() != null) {
@@ -126,9 +98,52 @@ public class ImportMatcher {
 		 */
    		if (entry2.getAccount() == null) {
    			entry2.setAccount(account.getDefaultCategory());
-			entry1.setMemo(defaultMemo);
-			entry2.setMemo(defaultDescription);
+			entry1.setMemo(defaultMemo == null ? null : convertToMixedCase(defaultMemo));
+			entry2.setMemo(defaultDescription == null ? null : convertToMixedCase(defaultDescription));
    		}
+	}
+
+	/**
+	 * Most banks put everything This code tidies up the imported text. Most
+	 * banks put everything in upper case, so those are converted to mixed case.
+	 * Furthermore we replace multiple spaces with a comma followed by a single
+	 * space.
+	 * 
+	 * @param uppperCaseText
+	 * @return
+	 */
+	public static String convertToMixedCase(String uppperCaseText) {
+		StringBuffer x = new StringBuffer();
+		
+		boolean lastWasLetter = false;
+		int numberOfSpaces = 0;
+		for (char y : uppperCaseText.toCharArray()) {
+			if (y == ' ') {
+				numberOfSpaces++;
+				lastWasLetter = false;
+			} else {
+				if (numberOfSpaces > 0) {
+					if (numberOfSpaces > 1) {
+						x.append(',');
+					}
+					x.append(' ');
+					numberOfSpaces = 0;
+				}
+				
+				if (Character.isLetter(y)) {
+					if (lastWasLetter) {
+						x.append(Character.toLowerCase(y));
+					} else {
+						x.append(y);
+					}
+					lastWasLetter = true;
+				} else {
+					x.append(y);
+					lastWasLetter = false;
+				}
+			}
+		}
+		return x.toString();
 	}
 
 	/**
