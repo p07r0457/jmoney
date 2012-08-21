@@ -1,27 +1,18 @@
 package net.sf.jmoney.amazon;
 
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.MessageFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
-import net.sf.jmoney.importer.matcher.EntryData;
 import net.sf.jmoney.importer.matcher.ImportMatcher;
-import net.sf.jmoney.importer.model.PatternMatcherAccountInfo;
-import net.sf.jmoney.importer.model.ReconciliationEntryInfo;
-import net.sf.jmoney.importer.wizards.AssociationMetadata;
 import net.sf.jmoney.importer.wizards.CsvImportWizard;
 import net.sf.jmoney.importer.wizards.ImportException;
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.BankAccount;
-import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.Session;
+import net.sf.jmoney.model2.Transaction;
+
+import org.eclipse.ui.IImportWizard;
 
 /**
  * Items are grouped based on order id and shipment date.  A single order may be split into multiple
@@ -43,12 +34,10 @@ import net.sf.jmoney.model2.Session;
  * @author westbury.nigel2
  *
  */
-public class AmazonOrderImportWizard extends CsvImportWizard {
+public class AmazonOrderImportWizard extends CsvImportWizard implements IImportWizard {
 
 	private Session session;
 
-	private BankAccount account;
-	
 	private ImportedDateColumn column_orderDate = new ImportedDateColumn("Order date", new SimpleDateFormat("MM-dd-yyyy"));
 	private ImportedDateColumn column_shipmentDate = new ImportedDateColumn("Shipment date", new SimpleDateFormat("MM-dd-yyyy"));
 	private ImportedTextColumn column_paymentCard = new ImportedTextColumn("Payment - last 4 digits");
@@ -59,29 +48,6 @@ public class AmazonOrderImportWizard extends CsvImportWizard {
 	private ImportedAmountColumn column_promotion = new ImportedAmountColumn("Total Promotions");
 	private ImportedAmountColumn column_totalCharged = new ImportedAmountColumn("Total Charged");
 
-//	Pattern patternCheque;
-//	Pattern patternWithdrawalDate;
-
-//	private ImportMatcher matcher;
-
-//	@Override
-//	protected void setAccount(Account accountInsideTransaction)	throws ImportException {
-//		if (!(accountInsideTransaction instanceof BankAccount)) {
-//			throw new ImportException("Bad configuration: This import can be used for bank accounts only.");
-//		}
-//
-//		this.account = (BankAccount)accountInsideTransaction;
-//		this.session = accountInsideTransaction.getSession();
-//
-//		try {
-//			patternCheque = Pattern.compile("Cheque (\\d\\d\\d\\d\\d\\d)\\.");
-//			patternWithdrawalDate = Pattern.compile("(.*) Withdrawal Date (\\d\\d  [A-Z][a-z][a-z] 20\\d\\d)");
-//		} catch (PatternSyntaxException e) {
-//			throw new RuntimeException("pattern failed", e); 
-//		}
-//
-//		matcher = new ImportMatcher(account.getExtension(PatternMatcherAccountInfo.getPropertySet(), true));
-//	}
 
 	@Override
 	protected void startImport(TransactionManager transactionManager) throws ImportException {
@@ -116,94 +82,76 @@ public class AmazonOrderImportWizard extends CsvImportWizard {
 
 	@Override
 	public void importLine(String[] line) throws ImportException {
-		EntryData entryData = new EntryData();
+		Date shipmentDate = column_shipmentDate.getDate();
+		String orderId = column_orderId.getText();
 
-		Date date = column_orderDate.getDate();
-		
-		if (column_credits.getAmount() != null 
-				&& column_debits.getAmount() == null) {
-			entryData.setAmount(column_credits.getAmount());
-		} else if (column_debits.getAmount() != null 
-				&& column_credits.getAmount() == null) {
-			entryData.setAmount(-column_debits.getAmount());
-		} else {
-			throw new ImportException("One or other of credits or debits must be specified.");
-		}
-
-		/*
-		 * We don't have a unique id.  However we make one up.  This is made
-		 * up from the order id and the product id.  If the same product is ordered
-		 * more than once in the same order then it shows as a single row with a quantity
-		 * of more than one.  We can therefore be sure that we have a unique id.
-		 */
-		String uniqueId = column_orderId.getText() + "~" + column_id.getText();
-
-		/*
-		 * See if an entry already exists with this uniqueId.
-		 */
-		for (Entry entry : account.getEntries()) {
-			if (uniqueId.equals(entry.getPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor()))) {
-				// This row has already been imported so ignore it.
+		String status = column_status.getText();
+		if (!status.equals("Shipped")) {
+			if (status.equals("Cancelled")) {
 				return;
-			}
-		}
-		
-		
-		Matcher chequeMatcher = patternCheque.matcher(column_title.getText());
-		if (chequeMatcher.matches()) {
-			String chequeNumber = chequeMatcher.group(1);
-			entryData.setCheck(chequeNumber);
-			entryData.valueDate = date;
-		} else {
-			String memo = column_title.getText();
-			
-			/*
-			 * Nationwide put a '.' at the end of every memo.  Remove them.
-			 */
-			if (memo.endsWith(".")) {
-				memo = memo.substring(0, memo.length() - 1);
-			}
-			
-			/*
-			 * If the transaction happened on a different day from the date the transaction
-			 * hit the account then this is noted in the memo by appending
-			 * " Withdrawal Date dd  MMM yyyy" to the memo.
-			 */
-			Matcher withdrawalDateMatcher = patternWithdrawalDate.matcher(memo);
-			if (withdrawalDateMatcher.matches()) {
-				String datePart = withdrawalDateMatcher.group(2);
-				
-				DateFormat sf2 = new SimpleDateFormat("dd  MMM yyyy");
-				Date transactionDate;
-				try {
-					transactionDate = sf2.parse(datePart);
-					entryData.valueDate = transactionDate;
-					entryData.clearedDate = date;
-				} catch (ParseException e) {
-					// should not happen, but just ignore the date part if it does
-					entryData.valueDate = date;
-				}
-
-				memo = withdrawalDateMatcher.group(1);
 			} else {
-				entryData.valueDate = date;
+				throw new ImportException("The 'Shipment/order condition' is '" + status + "' but 'Shipped' or 'Cancelled' is expected.");
 			}
-			
-			entryData.setMemo(memo);
 		}
 
-		matcher.process(entryData, session);
-	}
+		/*
+		 * Find the account to which this entry has been charged.
+		 */
+		String lastFourDigits = column_paymentCard.getText();
+		if (lastFourDigits == null || lastFourDigits.length() != 4) {
+			throw new ImportException("Last four digits of payment card not properly specified.");
+		}
 
-	@Override
-	protected String getSourceLabel() {
-		return "Amazon Orders";
-	}
+		BankAccount chargedAccount = AmazonItemImportWizard.findChargeAccount(getShell(), session, lastFourDigits);
 
-	@Override
-	public AssociationMetadata[] getAssociationMetadata() {
-		return new AssociationMetadata[] {
-				new AssociationMetadata("net.sf.jmoney.amazon.holdingaccount", "Holding Account")
-		};
+		IncomeExpenseAccount unmatchedAccount = AmazonItemImportWizard.findUnmatchedAccount(session, chargedAccount.getCurrency());
+
+		/*
+		 * Look in the unmatched entries account for an entry that matches on order id and shipment date.
+		 */
+		AmazonEntry matchingEntry = AmazonItemImportWizard.findMatchingEntry(shipmentDate,	orderId, unmatchedAccount);
+
+		long totalCharged = column_totalCharged.getAmount();
+		
+		long subtotal = column_subtotal.getAmount();
+		long shipping = column_shippingAmount.getAmount();
+		long promotion = column_promotion.getAmount();
+		
+		if (shipping == -promotion) {
+			// Free shipping deal, so just ignore both
+			shipping = 0;
+			promotion = 0;
+		}
+		
+		if (matchingEntry == null) {
+			// Create new transaction
+			
+			Transaction trans = session.createTransaction();
+			trans.setDate(column_orderDate.getDate());
+
+			// Create a single entry in the "unmatched entries" account
+			AmazonEntry unmatchedEntry = trans.createEntry().getExtension(AmazonEntryInfo.getPropertySet(), true);
+			unmatchedEntry.setAccount(unmatchedAccount);
+			unmatchedEntry.setAmount(totalCharged);
+			unmatchedEntry.setShipmentDate(shipmentDate);
+			unmatchedEntry.setOrderId(orderId);
+
+			// Create a single entry in the "unmatched entries" account
+			AmazonEntry chargeAccountEntry = trans.createEntry().getExtension(AmazonEntryInfo.getPropertySet(), true);
+			chargeAccountEntry.setAccount(chargedAccount);
+			chargeAccountEntry.setAmount(-totalCharged);
+			chargeAccountEntry.setShipmentDate(shipmentDate);
+			chargeAccountEntry.setOrderId(orderId);
+		} else {
+			// Replace this entry in this transaction
+			matchingEntry.setAccount(chargedAccount);
+		}
+
+		/*
+		 * We now need to auto-match the new entry in the charge account the same way that any other
+		 * entry would be auto-matched.  This combines the entry if the entry already exists in the
+		 * charge account (typically because transactions have been downloaded from the bank and imported).
+		 */
+		ImportMatcher.autoMatch(chargedAccount);
 	}
 }
