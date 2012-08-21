@@ -1,5 +1,6 @@
 package net.sf.jmoney.search;
 
+import java.util.Calendar;
 import java.util.Date;
 
 import net.sf.jmoney.JMoneyPlugin;
@@ -127,6 +128,14 @@ public class EntrySearchDialog extends Dialog {
 			}
 		});
 
+		/*
+		 * By default set start date to a year ago.  This can reduce the number of
+		 * very old matches by quite a bit.
+		 */
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.YEAR, -1);
+		startDateControl.setDate(cal.getTime());
+		
 		new Label(fieldArea, SWT.NONE).setText("End Date:");
 		endDateControl = new DateControl(fieldArea);
 		endDateControl.addModifyListener(new ModifyListener() {
@@ -143,6 +152,9 @@ public class EntrySearchDialog extends Dialog {
     	memoControl = new Text(fieldArea, SWT.NONE);
     	memoControl.setLayoutData(new GridData(200, SWT.DEFAULT));
 
+    	// Set focus to the amount as that is the most frequently used field
+    	amountControl.setFocus();
+    	
 		applyDialogFont(composite);
 		return composite;
 	}
