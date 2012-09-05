@@ -5,6 +5,20 @@
      <extension-point id="mailimporter" name="Mail Importer" schema="schema/mailimporter.exsd"/>
 
    <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            name="E-Mail Addresses"
+            class="net.sf.jmoney.mail.preferences.MailboxesPreferencePage"
+            id="net.sf.jmoney.mail.mailboxespage">
+      </page>
+      <page
+            name="E-Mail Import Source Mailboxes"
+            class="net.sf.jmoney.mail.preferences.ImportersPreferencePage"
+            id="net.sf.jmoney.mail.importerspage">
+      </page>
+   </extension>
+
+   <extension
          point="org.eclipse.ui.commands">
       <category
             name="Sample Category"
