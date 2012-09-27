@@ -90,9 +90,9 @@ public class CsvImportWizard extends Wizard implements IImportWizard {
 	
 	public CsvImportWizard() {
 		IDialogSettings workbenchSettings = Activator.getDefault().getDialogSettings();
-		IDialogSettings section = workbenchSettings.getSection("CsvImportWizard");//$NON-NLS-1$
+		IDialogSettings section = workbenchSettings.getSection("CsvImportToAccountWizard");//$NON-NLS-1$
 		if (section == null) {
-			section = workbenchSettings.addNewSection("CsvImportWizard");//$NON-NLS-1$
+			section = workbenchSettings.addNewSection("CsvImportToAccountWizard");//$NON-NLS-1$
 		}
 		setDialogSettings(section);
 	}

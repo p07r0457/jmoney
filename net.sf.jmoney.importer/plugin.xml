@@ -7,7 +7,7 @@
 	<extension point="org.eclipse.ui.importWizards">
 		<wizard id="net.sf.jmoney.importer.ImportWizard"
 			name="%importWizard.name"
-			class="net.sf.jmoney.importer.wizards.CsvImportWizard">
+			class="net.sf.jmoney.importer.wizards.CsvImportToAccountWizard">
 			<description>
 				Import data from CSV file downloaded from importer. 
 			</description>

@@ -33,7 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import net.sf.jmoney.importer.wizards.AssociationMetadata;
-import net.sf.jmoney.importer.wizards.CsvImportWizard;
+import net.sf.jmoney.importer.wizards.CsvImportToAccountWizard;
 import net.sf.jmoney.importer.wizards.ImportException;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Currency;
@@ -54,7 +54,7 @@ import org.eclipse.ui.PlatformUI;
  * A wizard to import data from a comma-separated file that has been downloaded
  * from Paypal.
  */
-public class PaypalImportWizard extends CsvImportWizard {
+public class PaypalImportWizard extends CsvImportToAccountWizard {
 
 	// TODO check format of all amount columns
 	// TODO check column names

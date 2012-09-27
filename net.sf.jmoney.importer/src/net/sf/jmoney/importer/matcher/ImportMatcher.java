@@ -14,6 +14,7 @@ import net.sf.jmoney.importer.model.MemoPattern;
 import net.sf.jmoney.importer.model.MemoPatternInfo;
 import net.sf.jmoney.importer.model.PatternMatcherAccount;
 import net.sf.jmoney.importer.model.ReconciliationEntryInfo;
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
@@ -161,28 +162,50 @@ public class ImportMatcher {
 		 * If we have an auto-match then we don't have to create a new
 		 * transaction at all. We just update a few properties in the
 		 * existing entry.
-		 * 
-		 * An entry auto-matches if:
-		 *  - The amount exactly matches
-		 *  - The entry has no unique id set
-		 *  - If a check number is specified in the existing entry then
-		 * it must match a check number in the import (but if no check
-		 * number is in the existing entry, that is ok)
-		 *  - The date must be either exactly equal,
-		 * 
-		 * or it can be up to 10 days in the future but it can only be
-		 * in the future if there is a check number match. This allows,
-		 * say, a check to match that is likely not going to appear till
-		 * a few days later.
-		 * 
-		 * or it can be up to 1 day in the future but only if there
-		 * are no other entries that match. This restriction prevents a
-		 * false match when there are lots of charges for the same
-		 * amount very close together (e.g. consider a cup of coffee
-		 * charged every day or two)
 		 */
+		autoMatch(account.getBaseObject(), entryData);
+		
+   		Transaction transaction = session.createTransaction();
+   		Entry entry1 = transaction.createEntry();
+   		Entry entry2 = transaction.createEntry();
+   		entry1.setAccount(account.getBaseObject());
+   		
+   		/*
+   		 * Scan for a match in the patterns.  If a match is found,
+   		 * use the values for memo, description etc. from the pattern.
+   		 */
+		String text = entryData.getTextToMatch();
+		matchAndFill(text, entry1, entry2, entryData.getDefaultMemo(), entryData.getDefaultDescription());
+		
+   		entryData.assignPropertyValues(transaction, entry1, entry2);
+   		
+   		return entry1;
+	}
+
+	/**
+	 * An entry auto-matches if:
+	 * <UL>
+	 *  <LI>The amount exactly matches</LI>
+	 *  <LI>The entry has no unique id set</LI>
+	 *  <LI>If a check number is specified in the existing entry then
+	 * it must match a check number in the import (but if no check
+	 * number is in the existing entry, that is ok)</LI>
+	 * <LI>The date must be either exactly equal,
+	 * or it can be up to 10 days in the future but it can only be
+	 * in the future if there is a check number match. This allows,
+	 * say, a check to match that is likely not going to appear till
+	 * a few days later.</LI>
+	 * <UL>
+	 * <P>
+	 * or it can be up to 1 day in the future but only if there
+	 * are no other entries that match. This restriction prevents a
+	 * false match when there are lots of charges for the same
+	 * amount very close together (e.g. consider a cup of coffee
+	 * charged every day or two)
+	 */
+	public static Entry autoMatch(CapitalAccount account, net.sf.jmoney.importer.matcher.EntryData entryData) {
 		Collection<Entry> possibleMatches = new ArrayList<Entry>();
-		for (Entry entry : account.getBaseObject().getEntries()) {
+		for (Entry entry : account.getEntries()) {
 			if (entry.getPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor()) == null
 					&& entry.getAmount() == entryData.amount) {
 				System.out.println("amount: " + entryData.amount);
@@ -244,10 +267,6 @@ public class ImportMatcher {
 		if (possibleMatches.size() == 1) {
 			Entry match = possibleMatches.iterator().next();
 			
-			// No, this matcher is not involved with transactions.
-			// It can work in or outside one.
-//			Entry entryInTrans = transactionManager.getCopyInTransaction(match);
-
 			if (entryData.valueDate == null) {
 				match.setValuta(entryData.clearedDate);
 			} else {
@@ -258,22 +277,8 @@ public class ImportMatcher {
 			match.setPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor(), entryData.uniqueId);
 
 			return match;
+		} else {
+			return null;
 		}
-		
-   		Transaction transaction = session.createTransaction();
-   		Entry entry1 = transaction.createEntry();
-   		Entry entry2 = transaction.createEntry();
-   		entry1.setAccount(account.getBaseObject());
-   		
-   		/*
-   		 * Scan for a match in the patterns.  If a match is found,
-   		 * use the values for memo, description etc. from the pattern.
-   		 */
-		String text = entryData.getTextToMatch();
-		matchAndFill(text, entry1, entry2, entryData.getDefaultMemo(), entryData.getDefaultDescription());
-		
-   		entryData.assignPropertyValues(transaction, entry1, entry2);
-   		
-   		return entry1;
 	}
 }

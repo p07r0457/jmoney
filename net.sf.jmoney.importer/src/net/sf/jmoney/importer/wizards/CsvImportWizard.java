@@ -32,16 +32,15 @@ import java.text.ParseException;
 import java.util.Date;
 
 import net.sf.jmoney.importer.Activator;
-import net.sf.jmoney.importer.model.AccountAssociation;
-import net.sf.jmoney.importer.model.ImportAccount;
-import net.sf.jmoney.importer.model.ImportAccountInfo;
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.model2.Account;
+import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.Session;
 
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 
 import au.com.bytecode.opencsv.CSVReader;
@@ -52,45 +51,35 @@ import au.com.bytecode.opencsv.CSVReader;
  * <P>
  * This wizard is a single page wizard that asks only for the file.
  */
-public abstract class CsvImportWizard extends Wizard implements IAccountImportWizard {
+public abstract class CsvImportWizard extends Wizard {
 
-	private IWorkbenchWindow window;
+	protected IWorkbenchWindow window;
 	
-	private Account accountOutsideTransaction;
-
-	private CsvImportWizardPage mainPage;
+	protected CsvImportWizardPage mainPage;
 
 	/**
 	 * The line currently being processed by this wizard, being valid only while the import is
 	 * processing after the 'finish' button is pressed
 	 */
-	private String [] currentLine;
+	protected String [] currentLine;
+
+	protected CSVReader reader;
 
 	/**
-	 * Set when <code>importFile</code> is called.
+	 * This form of the constructor is used when being called from
+	 * the Eclipse 'import' menu. 
 	 */
-	private Account accountInsideTransaction;
-
-	private CSVReader reader;
-
 	public CsvImportWizard() {
 		IDialogSettings workbenchSettings = Activator.getDefault().getDialogSettings();
-		IDialogSettings section = workbenchSettings.getSection("CsvImportWizard");//$NON-NLS-1$
+		IDialogSettings section = workbenchSettings.getSection("CsvImportToAccountWizard");//$NON-NLS-1$
 		if (section == null) {
-			section = workbenchSettings.addNewSection("CsvImportWizard");//$NON-NLS-1$
+			section = workbenchSettings.addNewSection("CsvImportToAccountWizard");//$NON-NLS-1$
 		}
 		setDialogSettings(section);
 	}
 
-
-	/**
-	 * We will cache window object in order to be able to provide parent shell
-	 * for the message dialog.
-	 */
-	@Override
-	public void init(IWorkbenchWindow window, Account account) {
-		this.window = window;
-		this.accountOutsideTransaction = account;
+	public void init(IWorkbench workbench, IStructuredSelection selection) {
+		this.window = workbench.getActiveWorkbenchWindow();
 
 		mainPage = new CsvImportWizardPage(window);
 		addPage(mainPage);
@@ -110,7 +99,12 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 
 	public void importFile(File file) {
 
-		Session session = accountOutsideTransaction.getSession();
+		DatastoreManager datastoreManager = (DatastoreManager)window.getActivePage().getInput();
+		if (datastoreManager == null) {
+			MessageDialog.openError(window.getShell(), "Unavailable", "You must open an accounting session before you can create an account.");
+			return;
+		}
+		Session session = datastoreManager.getSession();
 		
 		try {
 			/*
@@ -119,13 +113,8 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 			 * the entire import as a single change for undo/redo purposes.
 			 */
 			TransactionManager transactionManager = new TransactionManager(session.getDataManager());
-			
-			// Find the appropriate accounts.
-			// These should probably be in preferences rather than forcing
-			// the account names to these hard coded values.
-			
-			accountInsideTransaction = transactionManager.getCopyInTransaction(accountOutsideTransaction);
-			setAccount(accountInsideTransaction);
+
+			startImport(transactionManager);
 			
         	reader = new CSVReader(new FileReader(file));
 
@@ -195,7 +184,7 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 			 * have been set and should be in a valid state, so we
 			 * can now commit the imported entries to the datastore.
 			 */
-			String transactionDescription = MessageFormat.format("Import {0} {1}", getSourceLabel(), file.getName());
+			String transactionDescription = MessageFormat.format("Import {0}", file.getName());
 			transactionManager.commit(transactionDescription);									
 
 		} catch (FileNotFoundException e) {
@@ -239,34 +228,6 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 		return reader.readNext();
 	}
 	
-	/**
-	 * Given an id for an account association, returns the account that is associated with the
-	 * account into which we are importing.
-	 * <P>
-	 * This account is inside the transaction.
-	 * 
-	 * @param id
-	 * @return
-	 */
-	protected Account getAssociatedAccount(String id) {
-		ImportAccount a = accountInsideTransaction.getExtension(ImportAccountInfo.getPropertySet(), false);
-		if (a != null) {
-			for (AccountAssociation aa : a.getAssociationCollection()) {
-				if (aa.getId().equals(id)) {
-					return aa.getAccount();
-				}
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * This method returns a label that describes the source and is suitable for use
-	 * in labels and messages shown to the user.  This will typically be the name of the
-	 * bank or brokerage firm.
-	 */
-	protected abstract String getSourceLabel();
-
 	public abstract class ImportedColumn {
 		
 		/**
@@ -313,14 +274,18 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 		}
 		
 		public Date getDate() throws ImportException {
-			try {
-				return dateFormat.parse(currentLine[columnIndex]);
-			} catch (ParseException e) {
-				throw new ImportException(
-						MessageFormat.format(
-								"A date in format d/M/yyyy was expected but {0} was found.", 
-								currentLine[columnIndex]), 
-						e);
+			if (currentLine[columnIndex].isEmpty()) {
+				return null;
+			} else {
+				try {
+					return dateFormat.parse(currentLine[columnIndex]);
+				} catch (ParseException e) {
+					throw new ImportException(
+							MessageFormat.format(
+									"A date in format d/M/yyyy was expected but {0} was found.", 
+									currentLine[columnIndex]), 
+									e);
+				}
 			}
 		}
 	}
@@ -391,7 +356,7 @@ public abstract class CsvImportWizard extends Wizard implements IAccountImportWi
 		}
 	}
 
-	protected abstract void setAccount(Account accountInsideTransaction) throws ImportException;
+	protected abstract void startImport(TransactionManager transactionManager) throws ImportException;
 
 	protected abstract void importLine(String[] line) throws ImportException;
 

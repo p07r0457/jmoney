@@ -3,12 +3,17 @@ package net.sf.jmoney.amazon;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import net.sf.jmoney.importer.matcher.EntryData;
 import net.sf.jmoney.importer.matcher.ImportMatcher;
 import net.sf.jmoney.importer.wizards.CsvImportWizard;
 import net.sf.jmoney.importer.wizards.ImportException;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.BankAccount;
+import net.sf.jmoney.model2.Entry;
+import net.sf.jmoney.model2.EntryInfo;
 import net.sf.jmoney.model2.IncomeExpenseAccount;
+import net.sf.jmoney.model2.ReferenceViolationException;
+import net.sf.jmoney.model2.ScalarPropertyAccessor;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
 
@@ -123,6 +128,17 @@ public class AmazonOrderImportWizard extends CsvImportWizard implements IImportW
 			promotion = 0;
 		}
 		
+
+		/*
+		 * Auto-match the new entry in the charge account the same way that any other
+		 * entry would be auto-matched.  This combines the entry if the entry already exists in the
+		 * charge account (typically because transactions have been downloaded from the bank and imported).
+		 */
+		EntryData entryData = new EntryData();
+		entryData.amount = -totalCharged;
+		entryData.valueDate = column_shipmentDate.getDate();
+		Entry matchedEntryInChargeAccount = ImportMatcher.autoMatch(chargedAccount, entryData);
+
 		if (matchingEntry == null) {
 			// Create new transaction
 			
@@ -130,28 +146,69 @@ public class AmazonOrderImportWizard extends CsvImportWizard implements IImportW
 			trans.setDate(column_orderDate.getDate());
 
 			// Create a single entry in the "unmatched entries" account
-			AmazonEntry unmatchedEntry = trans.createEntry().getExtension(AmazonEntryInfo.getPropertySet(), true);
-			unmatchedEntry.setAccount(unmatchedAccount);
-			unmatchedEntry.setAmount(totalCharged);
-			unmatchedEntry.setShipmentDate(shipmentDate);
-			unmatchedEntry.setOrderId(orderId);
+			AmazonEntry unmatchedEntry;
 
-			// Create a single entry in the "unmatched entries" account
+			if (matchedEntryInChargeAccount == null) {
+				unmatchedEntry = trans.createEntry().getExtension(AmazonEntryInfo.getPropertySet(), true);
+
+				// Create a single entry in the charge account
 			AmazonEntry chargeAccountEntry = trans.createEntry().getExtension(AmazonEntryInfo.getPropertySet(), true);
 			chargeAccountEntry.setAccount(chargedAccount);
 			chargeAccountEntry.setAmount(-totalCharged);
 			chargeAccountEntry.setShipmentDate(shipmentDate);
 			chargeAccountEntry.setOrderId(orderId);
+			} else {
+				// 
+				if (matchedEntryInChargeAccount.getTransaction().hasMoreThanTwoEntries()) {
+					throw new ImportException("matched entry in charge account has more than one other entry");
+				}
+				
+				Entry otherMatchedEntry = matchedEntryInChargeAccount.getTransaction().getOther(matchedEntryInChargeAccount);
+				// Any checks on the other entry before we delete it?
+				matchedEntryInChargeAccount.getTransaction().deleteEntry(otherMatchedEntry);
+				
+				unmatchedEntry = matchedEntryInChargeAccount.getTransaction().createEntry().getExtension(AmazonEntryInfo.getPropertySet(), true);
+
+				
+			}
+
+			unmatchedEntry.setAccount(unmatchedAccount);
+			unmatchedEntry.setAmount(totalCharged);
+			unmatchedEntry.setShipmentDate(shipmentDate);
+			unmatchedEntry.setOrderId(orderId);
 		} else {
 			// Replace this entry in this transaction
 			matchingEntry.setAccount(chargedAccount);
-		}
+			
+			if (matchedEntryInChargeAccount != null) {
+				if (matchedEntryInChargeAccount.getTransaction().hasMoreThanTwoEntries()) {
+					throw new ImportException("matched entry in charge account has more than one other entry");
+				}
 
-		/*
-		 * We now need to auto-match the new entry in the charge account the same way that any other
-		 * entry would be auto-matched.  This combines the entry if the entry already exists in the
-		 * charge account (typically because transactions have been downloaded from the bank and imported).
-		 */
-		ImportMatcher.autoMatch(chargedAccount);
+				// Copy across the properties
+				for (ScalarPropertyAccessor<?> propertyAccessor : EntryInfo.getPropertySet().getScalarProperties3()) {
+					copyProperty(matchingEntry, matchedEntryInChargeAccount,
+							propertyAccessor);
+				}
+				
+				// Set our own properties
+				matchingEntry.setShipmentDate(shipmentDate);
+				matchingEntry.setOrderId(orderId);
+				
+				// Delete the original transaction from the charge account
+				try {
+					matchedEntryInChargeAccount.getSession().deleteTransaction(matchedEntryInChargeAccount.getTransaction());
+				} catch (ReferenceViolationException e) {
+					throw new ImportException("exception from database", e);
+				}
+			}
+		}
+	}
+
+	private <T> void copyProperty(AmazonEntry destinationEntry,
+			Entry sourceEntry,
+			ScalarPropertyAccessor<T> propertyAccessor) {
+		T value = sourceEntry.getPropertyValue(propertyAccessor);
+		destinationEntry.setPropertyValue(propertyAccessor, value);
 	}
 }

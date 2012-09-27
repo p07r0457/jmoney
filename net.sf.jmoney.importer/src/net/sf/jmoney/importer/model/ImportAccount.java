@@ -109,7 +109,10 @@ public class ImportAccount extends CapitalAccountExtension {
 			}
 		}
 		
-		// No wizard is configured for this account.
+		/*
+		 * The account has an import table structure set but it cannot be found.
+		 * Probably the plug-in is no longer installed.
+		 */
 		return null;
 	}
 }

@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import net.sf.jmoney.importer.wizards.AssociationMetadata;
-import net.sf.jmoney.importer.wizards.CsvImportWizard;
+import net.sf.jmoney.importer.wizards.CsvImportToAccountWizard;
 import net.sf.jmoney.importer.wizards.ImportException;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.Commodity;
@@ -59,7 +59,7 @@ import org.eclipse.ui.PlatformUI;
  * A wizard to import data from a comma-separated file that has been downloaded
  * from Ameritrade.
  */
-public class AmeritradeImportWizard extends CsvImportWizard {
+public class AmeritradeImportWizard extends CsvImportToAccountWizard {
 
 	private ImportedDateColumn column_date                   = new ImportedDateColumn("DATE", new SimpleDateFormat("MM/dd/yyyy"));
 	private ImportedTextColumn column_uniqueId               = new ImportedTextColumn("TRANSACTION ID");

@@ -1,6 +1,7 @@
 package net.sf.jmoney.email;
 
 import java.util.Date;
+import java.util.Set;
 
 import javax.mail.Message;
 
@@ -15,6 +16,16 @@ import net.sf.jmoney.model2.Session;
  */
 public interface IMailReader {
 
+	/**
+	 * Called with message header information to see if this message may
+	 * be of interest.  This allows the caller to fetch the message body
+	 * only for messages that may be of interest.
+	 * 
+	 * @param fromAddresses
+	 * @return
+	 */
+	boolean mayProcessEmail(Set<String> fromAddresses);
+	
 	/**
 	 * Called on a message that may or may not contain
 	 * content that can be extracted.

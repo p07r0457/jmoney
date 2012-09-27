@@ -50,9 +50,19 @@ public class CsvImportHandler extends AbstractHandler {
 		Account account = accountEditor.getAccount();
 
 		ImportAccount accountImporterExtension = account.getExtension(ImportAccountInfo.getPropertySet(), true);
+		
+		/*
+		 * This handler should not have been called if no table structure is set, but check
+		 * anyway.
+		 */
+		if (accountImporterExtension.getImportDataExtensionId() == null) {
+			MessageDialog.openError(shell, "Import not Available", Messages.bind(Messages.Error_AccountNotConfigured, account.getName()));
+			return null;
+		}
+		
 		IAccountImportWizard wizard = accountImporterExtension.getImportWizard();
 		if (wizard == null) {
-			MessageDialog.openError(shell, "Import not Available", Messages.bind(Messages.Error_AccountNotConfigured, account.getName()));
+			MessageDialog.openError(shell, "Import not Available", Messages.bind("The plug-in that imports ''{0}'' is not installed", accountImporterExtension.getImportDataExtensionId()));
 			return null;
 		}
 
