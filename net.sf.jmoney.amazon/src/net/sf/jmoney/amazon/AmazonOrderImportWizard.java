@@ -3,8 +3,9 @@ package net.sf.jmoney.amazon;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import net.sf.jmoney.importer.MatchingEntryFinder;
 import net.sf.jmoney.importer.matcher.EntryData;
-import net.sf.jmoney.importer.matcher.ImportMatcher;
+import net.sf.jmoney.importer.model.ReconciliationEntryInfo;
 import net.sf.jmoney.importer.wizards.CsvImportWizard;
 import net.sf.jmoney.importer.wizards.ImportException;
 import net.sf.jmoney.isolation.TransactionManager;
@@ -137,7 +138,19 @@ public class AmazonOrderImportWizard extends CsvImportWizard implements IImportW
 		EntryData entryData = new EntryData();
 		entryData.amount = -totalCharged;
 		entryData.valueDate = column_shipmentDate.getDate();
-		Entry matchedEntryInChargeAccount = ImportMatcher.autoMatch(chargedAccount, entryData);
+		
+		Date importedDate = (entryData.valueDate != null)
+		? entryData.valueDate
+				: entryData.clearedDate;
+
+		// TODO is the alreadyMatched rule correct?
+		MatchingEntryFinder matchFinder = new MatchingEntryFinder() {
+			@Override
+			protected boolean alreadyMatched(Entry entry) {
+				return entry.getPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor()) != null;
+			}
+		};
+		Entry matchedEntryInChargeAccount = matchFinder.findMatch(chargedAccount, entryData.amount, importedDate, null);
 
 		if (matchingEntry == null) {
 			// Create new transaction
@@ -177,6 +190,11 @@ public class AmazonOrderImportWizard extends CsvImportWizard implements IImportW
 			unmatchedEntry.setShipmentDate(shipmentDate);
 			unmatchedEntry.setOrderId(orderId);
 		} else {
+			// TODO is this line correct?
+			matchingEntry.setValuta(importedDate);
+			// Is there a unique id set?
+			matchingEntry.setPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor(), entryData.uniqueId);
+			
 			// Replace this entry in this transaction
 			matchingEntry.setAccount(chargedAccount);
 			

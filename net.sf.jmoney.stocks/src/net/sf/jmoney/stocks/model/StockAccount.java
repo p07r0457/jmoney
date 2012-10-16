@@ -235,27 +235,13 @@ public class StockAccount extends CapitalAccount {
 	@Override
 	public Commodity getCommodity(Entry entry) {
 		/*
-		 * If a stock is set as the commodity for an entry in a stock account
-		 * then the entry represents a gain or loss of stock in the account.
-		 * Note that the stock field may be set in income and expense accounts
-		 * (such as a dividend account) and in those cases the entry does not
-		 * represent a change in the amount of stock, only that it is associated
-		 * with that stock.
+		 * A stock account can contain both a single currency and stocks.  Like
+		 * all accounts that can contain more than one commodity, all entries is
+		 * the account must have the 'commodity' property set to a non-null value
+		 * (null being allowed only if the entry is in a new transaction that has
+		 * not yet been completed or saved).
 		 */
-		// TODO: remove this test at some time because getCommodity should never
-		// return null.
-		
-		// TODO: This method is incorrect.  If this entry is a purchase or sale entry
-		// but the stock has not yet been entered by the user then getCommodity will
-		// return null and so currency will be returned.  This results in the wrong formatter
-		// being used for the share quantity (it will be parsed as though it were a currency
-		// amount).  This issue has been fixed by simply not using this method, but then
-		// why bother to have this method at all?
-		if (entry.getCommodity() != null) {
-			return entry.getCommodity();
-		} else {
-			return getCurrency();
-		}
+		return entry.getCommodity();
 	}
 	
 	/**

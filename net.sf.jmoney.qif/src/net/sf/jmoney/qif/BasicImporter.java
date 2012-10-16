@@ -90,7 +90,7 @@ public class BasicImporter implements IQifImporter {
 
 			CurrencyAccount currencyAccount = (CurrencyAccount)selectedAccount;
 
-			importAccount(session, currencyAccount, qifFile.transactions);
+			importAccount(session, currencyAccount, qifFile.transactions, false);
 		}
 		
 		/*
@@ -118,7 +118,7 @@ public class BasicImporter implements IQifImporter {
 			CurrencyAccount currencyAccount = (CurrencyAccount)account;
 			currencyAccount.setStartBalance(qifAccount.startBalance);
 
-			importAccount(session, currencyAccount, qifAccount.getTransactions());
+			importAccount(session, currencyAccount, qifAccount.getTransactions(), true);
 		}
 
 		return "some transactions";
@@ -151,9 +151,14 @@ public class BasicImporter implements IQifImporter {
 	 * then an entry will have been entered into this account for the transfer amount of that
 	 * split.  If there are multiple transfers in the split then multiple entries will exist
 	 * in this account.  All of those entries and their transactions must be deleted.
+	 * 
+	 * @param useQuickenCategories true if this is an import of entries with account information
+	 * 			in which case a category is expected in the QIF file and will be used, false if
+	 * 			this is an import of entries downloaded from a bank with no account information
+	 * 			in which case no category is expected and auto-matching will be used
 	 */
 	private void importAccount(Session session, CurrencyAccount account,
-			List<QifTransaction> transactions) {
+			List<QifTransaction> transactions, boolean useQuickenCategories) {
 		
 		// TODO: This should come from the account????
 		Currency currency = session.getDefaultCurrency();
@@ -180,38 +185,58 @@ public class BasicImporter implements IQifImporter {
 
 				secondEntry.setAmount(-amount);
 
-				Account category = findCategory(session, qifTransaction.getCategory());
-				secondEntry.setAccount(category);
-				if (category instanceof CapitalAccount) {
-					// isTransfer = true;
-				} else {
-					IncomeExpenseAccount incomeExpenseCategory = (IncomeExpenseAccount)category;
-					if (incomeExpenseCategory.isMultiCurrency()) {
-						secondEntry.setIncomeExpenseCurrency(currency);
+				if (useQuickenCategories) {
+					QifCategoryLine categoryLine = qifTransaction.getCategory();
+					if (categoryLine == null) {
+						throw new RuntimeException("When transactions are listed in the QIF file with account information, there must be category information.");
+					}
+					Account category = findCategory(session, categoryLine);
+					secondEntry.setAccount(category);
+
+					if (category instanceof CapitalAccount) {
+						// isTransfer = true;
 					} else {
-						// Quicken categories are (I think) always multi-currency.
-						// This means that under the quicken model, all expenses are
-						// in the same currency as the account from which the expense came.
-						// For example, I am visiting a customer in Europe and I incur a
-						// business expense in Euro, but I charge to my US dollar billed
-						// credit card.  Under the JMoney model, the expense category for the
-						// client can be set to 'Euro only' and the actual cost in Euro may 
-						// be entered, resulting an expense report for the European client that
-						// has all amounts in Euro exactly matching the reciepts.
-						// The Quicken model, however, is problematic.  The expense shows
-						// up in US dollars.  The report may translate at some exchange rate,
-						// but the amounts on the expense report will then not match the
-						// reciepts.
-						// This gives us a problem in this import.  If the currency of the
-						// bank account does not match the currency of the category then we do
-						// not have sufficient information.  Quicken only gives us the amount
-						// in the currency of the bank account.
-						if (!incomeExpenseCategory.getCurrency().equals(currency)) {
-							// TODO: resolve this.  For time being, the amount is set even though
-							// the currency is different, thus assuming an exchange rate of
-							// one to one.
+						IncomeExpenseAccount incomeExpenseCategory = (IncomeExpenseAccount)category;
+						if (incomeExpenseCategory.isMultiCurrency()) {
+							secondEntry.setIncomeExpenseCurrency(currency);
+						} else {
+							/*
+							 * Quicken categories are (I think) always
+							 * multi-currency. This means that under the quicken
+							 * model, all expenses are in the same currency as the
+							 * account from which the expense came. For example, I
+							 * am visiting a customer in Europe and I incur a
+							 * business expense in Euro, but I charge to my US
+							 * dollar billed credit card. Under the JMoney model,
+							 * the expense category for the client can be set to
+							 * 'Euro only' and the actual cost in Euro may be
+							 * entered, resulting in an expense report for the European
+							 * client that has all amounts in Euro exactly matching
+							 * the receipts. The Quicken model, however, is
+							 * problematic. The expense shows up in US dollars. The
+							 * report may translate at some exchange rate, but the
+							 * amounts on the expense report will then not match the
+							 * receipts.
+							 * 
+							 * This gives us a problem in this import. If the
+							 * currency of the bank account does not match the
+							 * currency of the category then we do not have
+							 * sufficient information. Quicken only gives us the
+							 * amount in the currency of the bank account.
+							 */
+							if (!incomeExpenseCategory.getCurrency().equals(currency)) {
+								// TODO: resolve this.  For time being, the amount is set even though
+								// the currency is different, thus assuming an exchange rate of
+								// one to one.
+							}
 						}
 					}
+				} else {
+					if (qifTransaction.getCategory() != null) {
+						throw new RuntimeException("When transactions are listed in the QIF file with no account information (downloaded from bank), there must not be any category information.");
+					}
+					// TODO: Auto-import here
+					IncomeExpenseAccount category = getCategory("Unknown Category", session);
 				}
 			}	
 

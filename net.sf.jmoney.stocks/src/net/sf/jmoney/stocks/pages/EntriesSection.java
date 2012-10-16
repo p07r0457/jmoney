@@ -73,6 +73,8 @@ import net.sf.jmoney.stocks.model.StockEntryInfo;
 import net.sf.jmoney.stocks.pages.StockEntryRowControl.TransactionType;
 
 import org.eclipse.core.commands.IHandler;
+import org.eclipse.core.databinding.observable.value.IValueChangeListener;
+import org.eclipse.core.databinding.observable.value.ValueChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.events.DisposeEvent;
@@ -371,7 +373,8 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						 * saved and also because other values may need to be
 						 * adjusted as a result of the new share price.
 						 */
-						coordinator.sharePriceChanged(new BigDecimal(amount).movePointLeft(4));
+						coordinator.setSharePrice(new BigDecimal(amount).movePointLeft(4));
+//						coordinator.sharePriceChanged(new BigDecimal(amount).movePointLeft(4));
 					}
 
 					public void setSelected() {
@@ -437,14 +440,15 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 					public void save() {
 						IAmountFormatter formatter = getFormatter();
 						long quantity = formatter.parse(control.getText());
-						if (data.getTransactionType() == TransactionType.Sell) {
-							quantity = -quantity;
-						}
-						
-						Entry entry = data.getPurchaseOrSaleEntry();
-						entry.setAmount(quantity);
-						
-						coordinator.quantityChanged();
+//						if (data.getTransactionType() == TransactionType.Sell) {
+//							quantity = -quantity;
+//						}
+
+						data.setQuantity(quantity);
+//						Entry entry = data.getPurchaseOrSaleEntry();
+//						entry.setAmount(quantity);
+//						
+//						coordinator.quantityChanged();
 					}
 
 					public void setSelected() {
@@ -530,17 +534,17 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 						setControlValue(data.getWithholdingTax() == 0 ? null : data.getWithholdingTax());
 
 						// Listen for changes in the amount
-						final IPropertyChangeListener<Long> listener = new IPropertyChangeListener<Long>() {
-							public void propertyChanged(Long newValue) {
-								setControlValue(newValue);
+						final IValueChangeListener<Long> listener = new IValueChangeListener<Long>() {
+							public void handleValueChange(ValueChangeEvent<Long> event) {
+								setControlValue(event.diff.getNewValue());
 							}
 						};
 						
-						data.addCommissionChangeListener(listener);
+						data.commission().addValueChangeListener(listener);
 						
 						control.addDisposeListener(new DisposeListener() {
 							public void widgetDisposed(DisposeEvent e) {
-								data.removeCommissionChangeListener(listener);
+								data.commission().removeValueChangeListener(listener);
 							}
 						});
 					}
@@ -601,17 +605,17 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 							setControlValue(data.getCommission());
 
 							// Listen for changes in the amount
-							final IPropertyChangeListener<Long> listener = new IPropertyChangeListener<Long>() {
-								public void propertyChanged(Long newValue) {
-									setControlValue(newValue);
+							final IValueChangeListener<Long> listener = new IValueChangeListener<Long>() {
+								public void handleValueChange(ValueChangeEvent<Long> event) {
+									setControlValue(event.diff.getNewValue());
 								}
 							};
 							
-							data.addCommissionChangeListener(listener);
+							data.commission().addValueChangeListener(listener);
 							
 							control.addDisposeListener(new DisposeListener() {
 								public void widgetDisposed(DisposeEvent e) {
-									data.removeCommissionChangeListener(listener);
+									data.commission().removeValueChangeListener(listener);
 								}
 							});
 						}
@@ -672,17 +676,17 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 							setControlValue(data.getTax1Amount() == 0 ? null : data.getTax1Amount());
 
 							// Listen for changes in the amount
-							final IPropertyChangeListener<Long> listener = new IPropertyChangeListener<Long>() {
-								public void propertyChanged(Long newValue) {
-									setControlValue(newValue);
+							final IValueChangeListener<Long> listener = new IValueChangeListener<Long>() {
+								public void handleValueChange(ValueChangeEvent<Long> event) {
+									setControlValue(event.diff.getNewValue());
 								}
 							};
 							
-							data.addTax1ChangeListener(listener);
+							data.tax1().addValueChangeListener(listener);
 							
 							control.addDisposeListener(new DisposeListener() {
 								public void widgetDisposed(DisposeEvent e) {
-									data.removeTax1ChangeListener(listener);
+									data.tax1().removeValueChangeListener(listener);
 								}
 							});
 						}
@@ -743,17 +747,17 @@ public class EntriesSection extends SectionPart implements IEntriesContent {
 							setControlValue(data.getTax2Amount() == 0 ? null : data.getTax2Amount());
 
 							// Listen for changes in the amount
-							final IPropertyChangeListener<Long> listener = new IPropertyChangeListener<Long>() {
-								public void propertyChanged(Long newValue) {
-									setControlValue(newValue);
+							final IValueChangeListener<Long> listener = new IValueChangeListener<Long>() {
+								public void handleValueChange(ValueChangeEvent<Long> event) {
+									setControlValue(event.diff.getNewValue());
 								}
 							};
 							
-							data.addTax2ChangeListener(listener);
+							data.tax2().addValueChangeListener(listener);
 							
 							control.addDisposeListener(new DisposeListener() {
 								public void widgetDisposed(DisposeEvent e) {
-									data.removeTax2ChangeListener(listener);
+									data.tax2().removeValueChangeListener(listener);
 								}
 							});
 						}

@@ -1,5 +1,8 @@
 package net.sf.jmoney.qif.wizards;
 
+import java.text.MessageFormat;
+
+import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.qif.QIFPlugin;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -28,14 +31,17 @@ public class QifImportWizardPage extends WizardPage  {
 
 	private IWorkbenchWindow window;
 	
+	private CapitalAccount destinationAccount;
+	
 	private Text filePathText;
 	
 	/**
 	 * Create an instance of this class
 	 */
-	protected QifImportWizardPage(IWorkbenchWindow window) {
+	protected QifImportWizardPage(IWorkbenchWindow window, CapitalAccount destinationAccount) {
 		super(QIF_IMPORT_WIZARD_PAGE);
 		this.window = window;
+		this.destinationAccount = destinationAccount;
 		setTitle("Choose File");
 		setDescription("Choose the QIF file to import");
 	}
@@ -65,12 +71,19 @@ public class QifImportWizardPage extends WizardPage  {
 		});
 		
 		Label label = new Label(composite, SWT.WRAP);
-		label.setText(
-				"The selected QIF file will be imported.  As you have not selected an account into which the import is to be made, " +
-				"you must select a QIF file in the 'full' format.  This means the account details must be provided in the QIF file before the transactions. " +
-				"Multiple accounts in a single QIF file are supported.  Accounts will be matched against existing accounts based on the name.  If an account " +
-				"does not already exist then it will be created.  You can thus import QIF data from multiple files and still have transfers " +
-				"and categories correctly matched (just don't rename any accounts until you have imported everything).");
+		if (destinationAccount == null) {
+			label.setText(
+					"The selected QIF file will be imported.  As you have not selected an account into which the import is to be made, " +
+					"you must select a QIF file in the 'full' format.  This means the account details must be provided in the QIF file before the transactions. " +
+					"Multiple accounts in a single QIF file are supported.  Accounts will be matched against existing accounts based on the name.  If an account " +
+					"does not already exist then it will be created.  You can thus import QIF data from multiple files and still have transfers " +
+					"and categories correctly matched (just don't rename any accounts until you have imported everything).");
+		} else {
+			label.setText(MessageFormat.format(
+					"The selected QIF file will be imported into the {0} account.  The QIF file should be in the form that contains only entries, " +
+					"i.e. no account list etc.  This is the form of the QIF files typically exported by online banking sites.",
+					destinationAccount.getName()));
+		}
 		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gd.horizontalSpan = 2;
 		gd.widthHint = 600;

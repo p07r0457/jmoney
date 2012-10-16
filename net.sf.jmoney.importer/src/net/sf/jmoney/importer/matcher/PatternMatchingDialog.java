@@ -20,7 +20,7 @@
  *
  */
 
-package net.sf.jmoney.reconciliation.reconcilePage;
+package net.sf.jmoney.importer.matcher;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -33,8 +33,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import net.sf.jmoney.fields.AccountControl;
-import net.sf.jmoney.importer.matcher.EntryData;
-import net.sf.jmoney.importer.matcher.ImportMatcher;
+import net.sf.jmoney.importer.Activator;
 import net.sf.jmoney.importer.model.MemoPattern;
 import net.sf.jmoney.importer.model.MemoPatternInfo;
 import net.sf.jmoney.importer.model.PatternMatcherAccount;
@@ -47,7 +46,6 @@ import net.sf.jmoney.model2.IncomeExpenseAccount;
 import net.sf.jmoney.model2.ObjectCollection;
 import net.sf.jmoney.model2.ReferenceViolationException;
 import net.sf.jmoney.model2.ScalarPropertyAccessor;
-import net.sf.jmoney.reconciliation.ReconciliationPlugin;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.DialogMessageArea;
@@ -164,7 +162,7 @@ public class PatternMatchingDialog extends Dialog {
 		this.account = accountInTransaction.getExtension(PatternMatcherAccountInfo.getPropertySet(), true);
 
 		// Load the error indicator
-		URL installURL = ReconciliationPlugin.getDefault().getBundle().getEntry("/icons/error.gif");
+		URL installURL = Activator.getDefault().getBundle().getEntry("/icons/error.gif");
 		errorImage = ImageDescriptor.createFromURL(installURL).createImage();
 
 		// Find an ordering index that is greater than all existing ordering indexes,

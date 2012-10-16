@@ -61,9 +61,14 @@
             </or>
          </triggerPoints>
          <possibleChildren>
+            <or>
                <instanceof
-                     value="net.sf.jmoney.stocks.model.Stock">
+                     value="net.sf.jmoney.views.IDynamicTreeNode">
                </instanceof>
+               <instanceof
+                     value="net.sf.jmoney.stocks.model.Security">
+               </instanceof>
+            </or>
          </possibleChildren>
       <actionProvider
             class="net.sf.jmoney.stocks.navigator.SecuritiesActionProvider"

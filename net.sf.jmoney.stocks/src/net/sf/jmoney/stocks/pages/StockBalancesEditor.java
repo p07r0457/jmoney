@@ -346,7 +346,7 @@ public class StockBalancesEditor extends EditorPart {
 		balancesViewer.getTable().setHeaderVisible(true);
 		balancesViewer.getTable().setLinesVisible(true);
 
-		balancesViewer.setContentProvider(new ArrayContentProvider());
+		balancesViewer.setContentProvider(ArrayContentProvider.getInstance());
 		
 		// Sort by stock name
 		balancesViewer.setComparator(new ViewerComparator() {

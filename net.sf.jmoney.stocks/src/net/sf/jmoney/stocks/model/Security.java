@@ -24,6 +24,7 @@ package net.sf.jmoney.stocks.model;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.util.regex.Pattern;
 
 import net.sf.jmoney.model2.Commodity;
 import net.sf.jmoney.model2.IObjectKey;
@@ -31,7 +32,7 @@ import net.sf.jmoney.model2.IValues;
 import net.sf.jmoney.model2.ListKey;
 
 public abstract class Security extends Commodity {
-	
+
 	// This implementation formats all quantities as numbers with three decimal places.
 	private int SCALE_FACTOR = 1000;
 
@@ -40,14 +41,14 @@ public abstract class Security extends Commodity {
 		numberFormat.setMaximumFractionDigits(3);
 		numberFormat.setMinimumFractionDigits(0);
 	}
-	
+
 	private String cusip;
 	private String symbol;
-	
-    /**
-     * Constructor used by datastore plug-ins to create
-     * a stock object.
-     */
+
+	/**
+	 * Constructor used by datastore plug-ins to create
+	 * a stock object.
+	 */
 	public Security(
 			IObjectKey objectKey,
 			ListKey parentKey,
@@ -61,15 +62,15 @@ public abstract class Security extends Commodity {
 		this.symbol = symbol;
 	}
 
-    /**
-     * Constructor used by datastore plug-ins to create
-     * a stock object.
-     */
+	/**
+	 * Constructor used by datastore plug-ins to create
+	 * a stock object.
+	 */
 	public Security(
 			IObjectKey objectKey,
 			ListKey parentKey) {
 		super(objectKey, parentKey);
-		
+
 		this.cusip = null;
 		this.symbol = null;
 	}
@@ -78,19 +79,46 @@ public abstract class Security extends Commodity {
 	protected String getExtendablePropertySetId() {
 		return "net.sf.jmoney.stocks.security";
 	}
-	
+
 	/**
+	 * If 12 characters, this is assumed to be an ISIN.
+	 * 
 	 * @return the 9 digit CUSIP if a US security or the CINS (one letter
 	 *         followed by 8 digits) if a non-US security
 	 */
 	public String getCusip() {
 		return cusip;
 	}
+
+	public String getISIN() {
+		return cusip;
+	}
+
+	/**
+	 * This is a helper method.
+	 * 
+	 * @return
+	 */
+	public String getSedol() {
+		if (cusip != null && cusip.length() == 12 && cusip.startsWith("GB00")) {
+			return cusip.substring(4, 7);
+		} else {
+			return null;
+		}
+	}
+	
+	public static String convertSedolToIsin(String sedol) {
+		return appendIsinCheckDigit("GB00" + sedol);
+	}
+	
+	private static String appendIsinCheckDigit(String isin) {
+		return isin + calculateIsinCheckDigit(isin);
+	}
 	
 	public String getSymbol() {
 		return symbol;
 	}
-	
+
 	/**
 	 * @param cusip
 	 *            the 9 digit CUSIP if a US security or the CINS (one letter
@@ -123,13 +151,13 @@ public abstract class Security extends Commodity {
 		}
 		return Math.round(amount.doubleValue() * SCALE_FACTOR);
 	}
-	
+
 	@Override
 	public String format(long amount) {
 		double a = ((double) amount) / SCALE_FACTOR;
 		return numberFormat.format(a);
 	}
-	
+
 	/**
 	 * @return The scale factor.  Always 1000 for stock for the time being.
 	 */
@@ -138,5 +166,48 @@ public abstract class Security extends Commodity {
 	public short getScaleFactor() {
 		return 1000;
 	}
+
+
+	private static final Pattern ISIN_PATTERN = Pattern.compile("[A-Z]{2}([A-Z0-9]){9}[0-9]");
+
+	/**
+	 * This is a helper method that checks that an ISIN is valid.
+	 * 
+	 * @param isin the ISIN to be validated
+	 * @return true if a valid ISIN, false otherwise
+	 */
+	public static boolean checkIsinCode(final String isin) {
+		if (isin == null) {
+			return false;
+		}
+
+		if (!ISIN_PATTERN.matcher(isin).matches()) {
+			return false;
+		}
+
+		char calculatedValue = calculateIsinCheckDigit(isin);
+		return isin.charAt(11) == calculatedValue;
+	}
+
+	private static char calculateIsinCheckDigit(final String isin) {
+		StringBuilder digits = new StringBuilder();
+		for (int i = 0; i < 11; ++i) {
+			digits.append(Character.digit(isin.charAt(i), 36));
+		}
+		digits.reverse();
+
+		int sum = 0;
+		for (int i = 0; i < digits.length(); ++i) {
+			int digit = Character.digit(digits.charAt(i), 36);
+			if (i % 2 == 0) {
+				digit *= 2;
+			}
+			sum += digit / 10;
+			sum += digit % 10;
+		}
+		int tensComplement = (sum % 10 == 0) ? 0 : ((sum / 10) + 1) * 10 - sum;
+		return Character.forDigit(tensComplement, 36);
+	}
+
 }
 

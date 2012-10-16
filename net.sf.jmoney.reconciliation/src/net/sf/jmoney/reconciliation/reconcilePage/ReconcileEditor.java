@@ -17,11 +17,9 @@ import net.sf.jmoney.entrytable.PropertyBlock;
 import net.sf.jmoney.entrytable.RowControl;
 import net.sf.jmoney.entrytable.RowSelectionTracker;
 import net.sf.jmoney.importer.matcher.ImportMatcher;
-import net.sf.jmoney.importer.model.ImportAccount;
-import net.sf.jmoney.importer.model.ImportAccountInfo;
+import net.sf.jmoney.importer.matcher.PatternMatchingDialog;
 import net.sf.jmoney.importer.model.PatternMatcherAccount;
 import net.sf.jmoney.importer.model.PatternMatcherAccountInfo;
-import net.sf.jmoney.importer.wizards.IAccountImportWizard;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.CurrencyAccount;
 import net.sf.jmoney.model2.DatastoreManager;
@@ -588,12 +586,12 @@ public class ReconcileEditor extends EditorPart {
 		 * This wizard is the same wizard that is used when the user selects
 		 * import from the 'Import Tabular Data...' item on the file menu.  
 		 */
-		ImportAccount accountImporterExtension = account.getExtension(ImportAccountInfo.getPropertySet(), true);
-		IAccountImportWizard wizard = accountImporterExtension.getImportWizard();
-		if (wizard == null) {
-			MessageDialog.openError(getSite().getShell(), "Import not Available", "In order to import here, you must set up an import method for this account.  This is done by setting the table structure property of the account.");
-			return;
-		}
+//		ImportAccount accountImporterExtension = account.getExtension(ImportAccountInfo.getPropertySet(), true);
+//		IAccountImportWizard wizard = accountImporterExtension.getImportWizard();
+//		if (wizard == null) {
+//			MessageDialog.openError(getSite().getShell(), "Import not Available", "In order to import here, you must set up an import method for this account.  This is done by setting the table structure property of the account.");
+//			return;
+//		}
 
 		/*
 		 * We listen for entries that have been added to the account and we
@@ -606,27 +604,35 @@ public class ReconcileEditor extends EditorPart {
 		Collection<net.sf.jmoney.importer.matcher.EntryData> importedEntries = statementSource.importEntries(getSite().getShell(), getAccount(), defaultStartDate, defaultEndDate);
 		if (importedEntries != null) {
 			/*
-			 * Create a transaction to be used to import the entries.  This allows the entries to
-			 * be more efficiently written to the back-end datastore and it also groups
-			 * the entire import as a single change for undo/redo purposes.
+			 * Open a dialog that allows the user to interactively review and edit the pattern matching
+			 * rules, seeing how they apply against these imported entries.
 			 */
-			TransactionManager transactionManager = new TransactionManager(account.getDataManager());
-			CurrencyAccount accountInTransaction = transactionManager.getCopyInTransaction((account));
-			Session sessionInTransaction = accountInTransaction.getSession();
+			PatternMatcherAccount matcherAccount = account.getExtension(PatternMatcherAccountInfo.getPropertySet(), true);
+			Dialog dialog = new PatternMatchingDialog(this.getSite().getShell(), matcherAccount, importedEntries);
+			if (dialog.open() == Dialog.OK) {
+				/*
+				 * Create a transaction to be used to import the entries.  This allows the entries to
+				 * be more efficiently written to the back-end datastore and it also groups
+				 * the entire import as a single change for undo/redo purposes.
+				 */
+				TransactionManager transactionManager = new TransactionManager(account.getDataManager());
+				CurrencyAccount accountInTransaction = transactionManager.getCopyInTransaction((account));
+				Session sessionInTransaction = accountInTransaction.getSession();
 
-			ImportMatcher matcher = new ImportMatcher(accountInTransaction.getExtension(PatternMatcherAccountInfo.getPropertySet(), true));
-			
-			for (net.sf.jmoney.importer.matcher.EntryData entryData: importedEntries) {
-				Entry entry = matcher.process(entryData, sessionInTransaction);
-		   		entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), statement);
+				ImportMatcher matcher = new ImportMatcher(accountInTransaction.getExtension(PatternMatcherAccountInfo.getPropertySet(), true));
+
+				for (net.sf.jmoney.importer.matcher.EntryData entryData: importedEntries) {
+					Entry entry = matcher.process(entryData, sessionInTransaction);
+					entry.setPropertyValue(ReconciliationEntryInfo.getStatementAccessor(), statement);
+				}
+
+				/*
+				 * All entries have been imported and all the properties
+				 * have been set and should be in a valid state, so we
+				 * can now commit the imported entries to the datastore.
+				 */
+				transactionManager.commit("Import Entries");
 			}
-			
-			/*
-			 * All entries have been imported and all the properties
-			 * have been set and should be in a valid state, so we
-			 * can now commit the imported entries to the datastore.
-			 */
-			transactionManager.commit("Import Entries");									
 		}
 	}
 }

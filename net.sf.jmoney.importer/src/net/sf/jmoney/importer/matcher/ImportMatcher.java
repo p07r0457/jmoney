@@ -1,20 +1,17 @@
 package net.sf.jmoney.importer.matcher;
 
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.regex.Matcher;
 
+import net.sf.jmoney.importer.MatchingEntryFinder;
 import net.sf.jmoney.importer.model.MemoPattern;
 import net.sf.jmoney.importer.model.MemoPatternInfo;
 import net.sf.jmoney.importer.model.PatternMatcherAccount;
 import net.sf.jmoney.importer.model.ReconciliationEntryInfo;
-import net.sf.jmoney.model2.CapitalAccount;
 import net.sf.jmoney.model2.Entry;
 import net.sf.jmoney.model2.Session;
 import net.sf.jmoney.model2.Transaction;
@@ -163,7 +160,24 @@ public class ImportMatcher {
 		 * transaction at all. We just update a few properties in the
 		 * existing entry.
 		 */
-		autoMatch(account.getBaseObject(), entryData);
+		Date importedDate = (entryData.valueDate != null)
+		? entryData.valueDate
+				: entryData.clearedDate;
+
+		MatchingEntryFinder matchFinder = new MatchingEntryFinder() {
+			@Override
+			protected boolean alreadyMatched(Entry entry) {
+				return entry.getPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor()) != null;
+			}
+		};
+		Entry matchedEntry = matchFinder.findMatch(account.getBaseObject(), entryData.amount, importedDate, entryData.check);
+		if (matchedEntry != null) {
+			matchedEntry.setValuta(importedDate);
+			matchedEntry.setCheck(entryData.check);
+			// TODO is this line correct?
+			matchedEntry.setPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor(), entryData.uniqueId);
+			return matchedEntry;
+		}
 		
    		Transaction transaction = session.createTransaction();
    		Entry entry1 = transaction.createEntry();
@@ -180,105 +194,5 @@ public class ImportMatcher {
    		entryData.assignPropertyValues(transaction, entry1, entry2);
    		
    		return entry1;
-	}
-
-	/**
-	 * An entry auto-matches if:
-	 * <UL>
-	 *  <LI>The amount exactly matches</LI>
-	 *  <LI>The entry has no unique id set</LI>
-	 *  <LI>If a check number is specified in the existing entry then
-	 * it must match a check number in the import (but if no check
-	 * number is in the existing entry, that is ok)</LI>
-	 * <LI>The date must be either exactly equal,
-	 * or it can be up to 10 days in the future but it can only be
-	 * in the future if there is a check number match. This allows,
-	 * say, a check to match that is likely not going to appear till
-	 * a few days later.</LI>
-	 * <UL>
-	 * <P>
-	 * or it can be up to 1 day in the future but only if there
-	 * are no other entries that match. This restriction prevents a
-	 * false match when there are lots of charges for the same
-	 * amount very close together (e.g. consider a cup of coffee
-	 * charged every day or two)
-	 */
-	public static Entry autoMatch(CapitalAccount account, net.sf.jmoney.importer.matcher.EntryData entryData) {
-		Collection<Entry> possibleMatches = new ArrayList<Entry>();
-		for (Entry entry : account.getEntries()) {
-			if (entry.getPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor()) == null
-					&& entry.getAmount() == entryData.amount) {
-				System.out.println("amount: " + entryData.amount);
-				Date importedDate = (entryData.valueDate != null)
-				? entryData.valueDate
-						: entryData.clearedDate;
-				if (entry.getCheck() == null) {
-					if (entry.getTransaction().getDate().equals(importedDate)) {
-						// Auto-reconcile
-						possibleMatches.add(entry);
-						
-						/*
-						 * Date exactly matched - so we can quit
-						 * searching for other matches. (If user entered
-						 * multiple entries with same check number then
-						 * the user will not be surprised to see an
-						 * arbitrary one being used for the match).
-						 */
-						break;
-					} else {
-						Calendar fiveDaysLater = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-						fiveDaysLater.setTime(entry.getTransaction().getDate());
-						fiveDaysLater.add(Calendar.DAY_OF_MONTH, 5);
-						
-						if ((entryData.check == null || entryData.check.length() == 0) 
-								&& (importedDate.equals(entry.getTransaction().getDate())
-								 || importedDate.after(entry.getTransaction().getDate()))
-								 && importedDate.before(fiveDaysLater.getTime())) {
-							// Auto-reconcile
-							possibleMatches.add(entry);
-						}
-					}
-				} else {
-					// A check number is present
-					Calendar twentyDaysLater = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-					twentyDaysLater.setTime(entry.getTransaction().getDate());
-					twentyDaysLater.add(Calendar.DAY_OF_MONTH, 20);
-					
-					if (entry.getCheck().equals(entryData.check)
-							&& (importedDate.equals(entry.getTransaction().getDate())
-							 || importedDate.after(entry.getTransaction().getDate()))
-							 && importedDate.before(twentyDaysLater.getTime())) {
-						// Auto-reconcile
-						possibleMatches.add(entry);
-						
-						/*
-						 * Check number matched - so we can quit
-						 * searching for other matches. (If user entered
-						 * multiple entries with same check number then
-						 * the user will not be surprised to see an
-						 * arbitrary one being used for the match).
-						 */
-						break;
-					}
-				}
-			}
-		}
-
-		if (possibleMatches.size() == 1) {
-			Entry match = possibleMatches.iterator().next();
-			
-			if (entryData.valueDate == null) {
-				match.setValuta(entryData.clearedDate);
-			} else {
-				match.setValuta(entryData.valueDate);
-			}
-
-			match.setCheck(entryData.check);
-			match.setPropertyValue(ReconciliationEntryInfo.getUniqueIdAccessor(), entryData.uniqueId);
-
-			return match;
-		} else {
-			return null;
-		}
 	}
 }

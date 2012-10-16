@@ -36,5 +36,11 @@ public enum QifDateFormat {
 	 * Look to see what is in the file. If there are dates but none with a day
 	 * of month of more than 12 then throw an exception.
 	 */
-	DetermineFromFile
+	DetermineFromFile,
+
+	/**
+	 * Look to see what is in the file as though DetermineFromFile was set.  However
+	 * if that cannot determine the date order then use the system date.
+	 */
+	DetermineFromFileAndSystem
 }

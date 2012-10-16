@@ -2,9 +2,7 @@ package net.sf.jmoney.stocks.pages;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import net.sf.jmoney.entrytable.EntryData;
 import net.sf.jmoney.entrytable.InvalidUserEntryException;
@@ -27,13 +25,21 @@ import net.sf.jmoney.stocks.model.StockAccount;
 import net.sf.jmoney.stocks.model.StockEntryInfo;
 import net.sf.jmoney.stocks.pages.StockEntryRowControl.TransactionType;
 
+import org.eclipse.core.databinding.observable.Diffs;
+import org.eclipse.core.databinding.observable.value.AbstractObservableValue;
+import org.eclipse.core.databinding.observable.value.IObservableValue;
+import org.eclipse.core.databinding.observable.value.IValueChangeListener;
+import org.eclipse.core.databinding.observable.value.ValueChangeEvent;
+import org.eclipse.core.databinding.observable.value.ValueDiff;
+import org.eclipse.core.databinding.observable.value.WritableValue;
+import org.eclipse.core.internal.databinding.observable.Util;
 import org.eclipse.core.runtime.Assert;
 
 public class StockEntryData extends EntryData {
 
 	private StockAccount account;
 	
-	private TransactionType transactionType;
+	private final IObservableValue<TransactionType> transactionType = new WritableValue<TransactionType>();
 
 	private Entry dividendEntry;
 	private Entry withholdingTaxEntry;
@@ -54,10 +60,39 @@ public class StockEntryData extends EntryData {
 
 	private boolean unknownTransactionType;
 
-	private List<IPropertyChangeListener<Long>> withholdingTaxChangeListeners = new ArrayList<IPropertyChangeListener<Long>>();
-	private List<IPropertyChangeListener<Long>> commissionChangeListeners = new ArrayList<IPropertyChangeListener<Long>>();
-	private List<IPropertyChangeListener<Long>> tax1ChangeListeners = new ArrayList<IPropertyChangeListener<Long>>();
-	private List<IPropertyChangeListener<Long>> tax2ChangeListeners = new ArrayList<IPropertyChangeListener<Long>>();
+//	private List<IPropertyChangeListener<Long>> withholdingTaxChangeListeners = new ArrayList<IPropertyChangeListener<Long>>();
+//	private List<IPropertyChangeListener<Long>> commissionChangeListeners = new ArrayList<IPropertyChangeListener<Long>>();
+//	private List<IPropertyChangeListener<Long>> tax1ChangeListeners = new ArrayList<IPropertyChangeListener<Long>>();
+//	private List<IPropertyChangeListener<Long>> tax2ChangeListeners = new ArrayList<IPropertyChangeListener<Long>>();
+
+	// bound to getPurchaseOrSaleEntry().getAmount() except this is always positive whereas
+	// getPurchaseOrSaleEntry().getAmount() would be negative for a sale
+	private IObservableValue<Long> quantity = new WritableValue<Long>();
+
+	// bould to entry.getAmount()
+	private IObservableValue<Long> netAmount = new WritableValue<Long>();
+
+	private IObservableValue<Long> withholdingTax = new WritableValue<Long>();
+
+	private IObservableValue<BigDecimal> sharePrice = new WritableValue<BigDecimal>();
+
+	/**
+	 * The amount in the commission entry, or null if there is no commission entry,
+	 * but never zero and this observable should never be set to zero
+	 */
+	private IObservableValue<Long> commission = new WritableValue<Long>();
+
+	/**
+	 * The amount in the tax 1 entry, or null if there is no tax 1 entry,
+	 * but never zero and this observable should never be set to zero
+	 */
+	private IObservableValue<Long> tax1 = new WritableValue<Long>();
+
+	/**
+	 * The amount in the tax 2 entry, or null if there is no tax 2 entry,
+	 * but never zero and this observable should never be set to zero
+	 */
+	private IObservableValue<Long> tax2 = new WritableValue<Long>();
 
 	public StockEntryData(Entry entry, DataManager dataManager) {
 		super(entry, dataManager);
@@ -75,6 +110,7 @@ public class StockEntryData extends EntryData {
 		// TODO Call this on-demand.
 		if (entry != null) {
 			account = (StockAccount)entry.getAccount();
+			
 			analyzeTransaction();
 
 			/*
@@ -92,19 +128,19 @@ public class StockEntryData extends EntryData {
 									throw new RuntimeException("already has a commission entry!");
 								}
 								commissionEntry = newEntry;
-								fireCommmissionChangedEvent(newEntry.getAmount());
+								commission.setValue(newEntry.getAmount());
 							} else if (newEntry.getAccount() == account.getTax1Account()) {
 								if (tax1Entry != null) {
 									throw new RuntimeException("already has a tax 1 entry!");
 								}
 								tax1Entry = newEntry;
-								fireTax1ChangedEvent(newEntry.getAmount());
+								tax1.setValue(newEntry.getAmount());
 							} else if (newEntry.getAccount() == account.getTax2Account()) {
 								if (tax2Entry != null) {
 									throw new RuntimeException("already has a tax 2 entry!");
 								}
 								tax2Entry = newEntry;
-								fireTax2ChangedEvent(newEntry.getAmount());
+								tax2.setValue(newEntry.getAmount());
 							}
 						}
 					}
@@ -124,19 +160,19 @@ public class StockEntryData extends EntryData {
 									throw new RuntimeException("but no commission entry was set!");
 								}
 								commissionEntry = null;
-								fireCommmissionChangedEvent(0L);
+								commission.setValue(null);
 							} else if (deletedEntry.getAccount() == account.getTax1Account()) {
 								if (tax1Entry == null) {
 									throw new RuntimeException("but no tax 1 entry was set!");
 								}
 								tax1Entry = null;
-								fireTax1ChangedEvent(0L);
+								tax1.setValue(null);
 							} else if (deletedEntry.getAccount() == account.getTax2Account()) {
 								if (tax2Entry == null) {
 									throw new RuntimeException("but no tax 1 entry was set!");
 								}
 								tax2Entry = null;
-								fireTax2ChangedEvent(0L);
+								tax2.setValue(null);
 							}
 						}
 					}
@@ -160,17 +196,17 @@ public class StockEntryData extends EntryData {
 									if (commissionEntry == null) {
 										throw new RuntimeException("but no commission entry was set!");
 									}
-									fireCommmissionChangedEvent(newAmount);
+									commission.setValue(newAmount);
 								} else if (changedEntry.getAccount() == account.getTax1Account()) {
 									if (tax1Entry == null) {
 										throw new RuntimeException("but no tax 1 entry was set!");
 									}
-									fireTax1ChangedEvent(newAmount);
+									tax1.setValue(newAmount);
 								} else if (changedEntry.getAccount() == account.getTax2Account()) {
 									if (tax2Entry == null) {
 										throw new RuntimeException("but no tax 1 entry was set!");
 									}
-									fireTax2ChangedEvent(newAmount);
+									tax2.setValue(newAmount);
 								}
 							}
 						}
@@ -191,22 +227,136 @@ public class StockEntryData extends EntryData {
 
 				}
 
-				private void fireCommmissionChangedEvent(Long newValue) {
-					for (IPropertyChangeListener<Long> listener  : commissionChangeListeners) {
-						listener.propertyChanged(newValue);
-					}				
-				}
+//				private void fireCommmissionChangedEvent(Long newValue) {
+//					for (IPropertyChangeListener<Long> listener  : commissionChangeListeners) {
+//						listener.propertyChanged(newValue);
+//					}				
+//				}
+//
+//				private void fireTax1ChangedEvent(Long newValue) {
+//					for (IPropertyChangeListener<Long> listener  : tax1ChangeListeners) {
+//						listener.propertyChanged(newValue);
+//					}				
+//				}
+//
+//				private void fireTax2ChangedEvent(Long newValue) {
+//					for (IPropertyChangeListener<Long> listener  : tax2ChangeListeners) {
+//						listener.propertyChanged(newValue);
+//					}				
+//				}
+			});
 
-				private void fireTax1ChangedEvent(Long newValue) {
-					for (IPropertyChangeListener<Long> listener  : tax1ChangeListeners) {
-						listener.propertyChanged(newValue);
-					}				
+			quantity.addValueChangeListener(new IValueChangeListener<Long>() {
+				public void handleValueChange(ValueChangeEvent<Long> event) {
+					assert(event.diff.getNewValue() != null);
+					assert(isPurchaseOrSale());
+					if (getTransactionType() == TransactionType.Buy) {
+						purchaseOrSaleEntry.setAmount(event.diff.getNewValue());
+					} else {
+						purchaseOrSaleEntry.setAmount(-event.diff.getNewValue());
+					}
 				}
+			});
 
-				private void fireTax2ChangedEvent(Long newValue) {
-					for (IPropertyChangeListener<Long> listener  : tax2ChangeListeners) {
-						listener.propertyChanged(newValue);
-					}				
+			commission.addValueChangeListener(new IValueChangeListener<Long>() {
+				public void handleValueChange(ValueChangeEvent<Long> event) {
+					if (event.diff.getNewValue() == null) {
+						if (commissionEntry != null) {
+							try {
+								getEntry().getTransaction().getEntryCollection().deleteElement(commissionEntry);
+							} catch (ReferenceViolationException e) {
+								// This should not happen because entries are never referenced
+								throw new RuntimeException("Internal error", e);
+							}
+							commissionEntry = null;
+						}
+					} else {
+						if (commissionEntry == null) {
+							commissionEntry = getEntry().getTransaction().createEntry();
+							commissionEntry.setAccount(account.getCommissionAccount());
+							commissionEntry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), (Security)purchaseOrSaleEntry.getCommodity());
+						}
+						commissionEntry.setAmount(event.diff.getNewValue());
+					}
+				}
+			});
+
+			tax1.addValueChangeListener(new IValueChangeListener<Long>() {
+				public void handleValueChange(ValueChangeEvent<Long> event) {
+					if (event.diff.getNewValue() == null) {
+						if (tax1Entry != null) {
+							try {
+								getEntry().getTransaction().getEntryCollection().deleteElement(tax1Entry);
+							} catch (ReferenceViolationException e) {
+								// This should not happen because entries are never referenced
+								throw new RuntimeException("Internal error", e);
+							}
+							tax1Entry = null;
+						}
+					} else {
+						if (tax1Entry == null) {
+							tax1Entry = getEntry().getTransaction().createEntry();
+							tax1Entry.setAccount(account.getTax1Account());
+							tax1Entry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), (Security)purchaseOrSaleEntry.getCommodity());
+						}
+						tax1Entry.setAmount(event.diff.getNewValue());
+					}
+				}
+			});
+
+			tax2.addValueChangeListener(new IValueChangeListener<Long>() {
+				public void handleValueChange(ValueChangeEvent<Long> event) {
+					if (event.diff.getNewValue() == null) {
+						if (tax2Entry != null) {
+							try {
+								getEntry().getTransaction().getEntryCollection().deleteElement(tax2Entry);
+							} catch (ReferenceViolationException e) {
+								// This should not happen because entries are never referenced
+								throw new RuntimeException("Internal error", e);
+							}
+							tax2Entry = null;
+						}
+					} else {
+						if (tax2Entry == null) {
+							tax2Entry = getEntry().getTransaction().createEntry();
+							tax2Entry.setAccount(account.getTax2Account());
+							tax2Entry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), (Security)purchaseOrSaleEntry.getCommodity());
+						}
+						tax2Entry.setAmount(event.diff.getNewValue());
+					}
+				}
+			});
+
+			withholdingTax.addValueChangeListener(new IValueChangeListener<Long>() {
+				public void handleValueChange(ValueChangeEvent<Long> event) {
+					if (event.diff.getNewValue() == null) {
+						if (withholdingTaxEntry != null) {
+							try {
+								getEntry().getTransaction().getEntryCollection().deleteElement(withholdingTaxEntry);
+							} catch (ReferenceViolationException e) {
+								// This should not happen because entries are never referenced
+								throw new RuntimeException("Internal error", e);
+							}
+							withholdingTaxEntry = null;
+						}
+					} else {
+						if (withholdingTaxEntry == null) {
+							withholdingTaxEntry = getEntry().getTransaction().createEntry();
+							withholdingTaxEntry.setAccount(account.getWithholdingTaxAccount());
+							withholdingTaxEntry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), dividendEntry.getPropertyValue(StockEntryInfo.getSecurityAccessor()));
+						}
+						withholdingTaxEntry.setAmount(event.diff.getNewValue());
+					}
+				}
+			});
+
+			netAmount.addValueChangeListener(new IValueChangeListener<Long>() {
+				public void handleValueChange(ValueChangeEvent<Long> event) {
+					if (event.diff.getNewValue() == null) {
+						getEntry().setAmount(0);
+					} else {
+						getEntry().setAmount(event.diff.getNewValue());
+					}
 				}
 			});
 		}
@@ -223,7 +373,7 @@ public class StockEntryData extends EntryData {
 		 * no selection will be set in the transaction type combo.
 		 */
 		if (getEntry().getTransaction().getEntryCollection().size() == 1) {
-			transactionType = null;
+			transactionType.setValue(null);
 		} else {
 
 			for (Entry entry: getEntry().getTransaction().getEntryCollection()) {
@@ -237,27 +387,32 @@ public class StockEntryData extends EntryData {
 						unknownTransactionType = true;
 					}
 					withholdingTaxEntry = entry;
+					withholdingTax.setValue(entry.getAmount());
 				} else if (entry.getAccount() == account.getCommissionAccount()) {
 					if (commissionEntry != null) {
 						unknownTransactionType = true;
 					}
 					commissionEntry = entry;
+					commission.setValue(entry.getAmount());
 				} else if (entry.getAccount() == account.getTax1Account()) {
 					if (tax1Entry != null) {
 						unknownTransactionType = true;
 					}
 					tax1Entry = entry;
+					tax1.setValue(entry.getAmount());
 				} else if (entry.getAccount() == account.getTax2Account()) {
 					if (tax2Entry != null) {
 						unknownTransactionType = true;
 					}
 					tax2Entry = entry;
+					tax2.setValue(entry.getAmount());
 				} else if (entry.getAccount() == account) {
 					if (entry.getCommodityInternal() instanceof Security) {
 						if (purchaseOrSaleEntry != null) {
 							unknownTransactionType = true;
 						}
 						purchaseOrSaleEntry = entry;
+						quantity.setValue(entry.getAmount());
 					} else if (entry.getCommodityInternal() instanceof Currency) {  //TODO: check for actual currency of account.
 						// The only entry affecting the currency balance in this account
 						// should be the main entry.
@@ -278,22 +433,22 @@ public class StockEntryData extends EntryData {
 			}
 
 			if (unknownTransactionType) {
-				transactionType = TransactionType.Other;
+				transactionType.setValue(TransactionType.Other);
 			} else if (dividendEntry != null
 					&& commissionEntry == null
 					&& tax1Entry == null
 					&& tax2Entry == null
 					&& purchaseOrSaleEntry == null
 					&& transferEntry == null) {
-				transactionType = TransactionType.Dividend;
+				transactionType.setValue(TransactionType.Dividend);
 			} else if (dividendEntry == null
 					&& withholdingTaxEntry == null
 					&& purchaseOrSaleEntry != null
 					&& transferEntry == null) {
 				if (purchaseOrSaleEntry.getAmount() >= 0) {
-					transactionType = TransactionType.Buy;
+					transactionType.setValue(TransactionType.Buy);
 				} else {
-					transactionType = TransactionType.Sell;
+					transactionType.setValue(TransactionType.Sell);
 				}
 			} else if (dividendEntry == null
 					&& withholdingTaxEntry == null
@@ -302,9 +457,9 @@ public class StockEntryData extends EntryData {
 					&& tax2Entry == null
 					&& purchaseOrSaleEntry == null
 					&& transferEntry != null) {
-				transactionType = TransactionType.Transfer;
+				transactionType.setValue(TransactionType.Transfer);
 			} else {
-				transactionType = TransactionType.Other;
+				transactionType.setValue(TransactionType.Other);
 			}
 		}
 	}
@@ -314,7 +469,7 @@ public class StockEntryData extends EntryData {
 		// before we start messing with this transaction.
 		Security security = getSecurityFromTransaction();
 		
-		transactionType = TransactionType.Dividend;
+		transactionType.setValue(TransactionType.Dividend);
 
 		EntryCollection entries = getEntry().getTransaction().getEntryCollection();
 		for (Iterator<Entry> iter = entries.iterator(); iter.hasNext(); ) {
@@ -376,7 +531,7 @@ public class StockEntryData extends EntryData {
 	private void forceTransactionToBuyOrSell(TransactionType transactionType) {
 		Security security = getSecurityFromTransaction();
 
-		this.transactionType = transactionType;
+		this.transactionType.setValue(transactionType);
 			
 		EntryCollection entries = getEntry().getTransaction().getEntryCollection();
 		for (Iterator<Entry> iter = entries.iterator(); iter.hasNext(); ) {
@@ -412,7 +567,7 @@ public class StockEntryData extends EntryData {
 	}
 
 	public void forceTransactionToTransfer() {
-		transactionType = TransactionType.Transfer;
+		transactionType.setValue(TransactionType.Transfer);
 
 		EntryCollection entries = getEntry().getTransaction().getEntryCollection();
 		for (Iterator<Entry> iter = entries.iterator(); iter.hasNext(); ) {
@@ -437,7 +592,7 @@ public class StockEntryData extends EntryData {
 	}
 
 	public void forceTransactionToCustom() {
-		transactionType = TransactionType.Other;
+		transactionType.setValue(TransactionType.Other);
 
 		/*
 		 * This method is not so much a 'force' as a 'set'.  The other 'force' methods
@@ -474,16 +629,20 @@ public class StockEntryData extends EntryData {
 	}
 
 	public TransactionType getTransactionType() {
+		return transactionType.getValue();
+	}
+
+	public IObservableValue<TransactionType> transactionType() {
 		return transactionType;
 	}
 
 	public boolean isPurchaseOrSale() {
-		return transactionType == TransactionType.Buy
-		|| transactionType == TransactionType.Sell;
+		return transactionType.getValue() == TransactionType.Buy
+		|| transactionType.getValue() == TransactionType.Sell;
 	}
 
 	public boolean isDividend() {
-		return transactionType == TransactionType.Dividend;
+		return transactionType.getValue() == TransactionType.Dividend;
 	}
 
 	public Entry getDividendEntry() {
@@ -499,46 +658,14 @@ public class StockEntryData extends EntryData {
 	public long getWithholdingTax() {
 		assert(isDividend());
 		assert(account.getWithholdingTaxAccount() != null);
-		
-		if (withholdingTaxEntry == null) {
-			return 0;
-		} else {
-			return withholdingTaxEntry.getAmount();
-		}
+		return (withholdingTax.getValue() == null ? 0 : withholdingTax.getValue());
 	}
 
-	public void setWithholdingTax(long withholdingTax) {
+	public void setWithholdingTax(long withholdingTaxAmount) {
 		assert(isDividend());
 		assert(account.getWithholdingTaxAccount() != null);
-		
-		if (withholdingTax == 0) {
-			if (withholdingTaxEntry != null) {
-				try {
-					getEntry().getTransaction().getEntryCollection().deleteElement(withholdingTaxEntry);
-				} catch (ReferenceViolationException e) {
-					// This should not happen because entries are never referenced
-					throw new RuntimeException("Internal error", e);
-				}
-				withholdingTaxEntry = null;
-			}
-		} else {
-			if (withholdingTaxEntry == null) {
-				withholdingTaxEntry = getEntry().getTransaction().createEntry();
-				withholdingTaxEntry.setAccount(account.getWithholdingTaxAccount());
-				withholdingTaxEntry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), dividendEntry.getPropertyValue(StockEntryInfo.getSecurityAccessor()));
-			}
-			withholdingTaxEntry.setAmount(withholdingTax);
-		}
+		withholdingTax.setValue(withholdingTaxAmount == 0 ? null : withholdingTaxAmount);
 	}
-
-	public void addWithholdingTaxChangeListener(IPropertyChangeListener<Long> listener) {
-		withholdingTaxChangeListeners.add(listener);
-	}
-
-	public void removeWithholdingTaxChangeListener(IPropertyChangeListener<Long> listener) {
-		withholdingTaxChangeListeners.remove(listener);
-	}
-
 
 	/**
 	 * @return the entry in the transaction that represents the gain or loss in
@@ -556,45 +683,13 @@ public class StockEntryData extends EntryData {
 	 */
 	public long getCommission() {
 		assert(isPurchaseOrSale());
-		assert(account.getCommissionAccount() != null);
-		
-		if (commissionEntry == null) {
-			return 0;
-		} else {
-			return commissionEntry.getAmount();
-		}
+		return commission.getValue() == null ? 0 : commission.getValue();
 	}
 
-	public void setCommission(long commission) {
+	public void setCommission(long commissionAmount) {
 		assert(isPurchaseOrSale());
-		assert(account.getTax1Account() != null);
-		
-		if (commission == 0) {
-			if (commissionEntry != null) {
-				try {
-					getEntry().getTransaction().getEntryCollection().deleteElement(commissionEntry);
-				} catch (ReferenceViolationException e) {
-					// This should not happen because entries are never referenced
-					throw new RuntimeException("Internal error", e);
-				}
-				commissionEntry = null;
-			}
-		} else {
-			if (commissionEntry == null) {
-				commissionEntry = getEntry().getTransaction().createEntry();
-				commissionEntry.setAccount(account.getCommissionAccount());
-				commissionEntry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), (Security)purchaseOrSaleEntry.getCommodity());
-			}
-			commissionEntry.setAmount(commission);
-		}
-	}
-
-	public void addCommissionChangeListener(IPropertyChangeListener<Long> listener) {
-		commissionChangeListeners.add(listener);
-	}
-
-	public void removeCommissionChangeListener(IPropertyChangeListener<Long> listener) {
-		commissionChangeListeners.remove(listener);
+		assert(account.getCommissionAccount() != null);
+		commission.setValue(commissionAmount == 0 ? null : commissionAmount);
 	}
 
 	/**
@@ -602,95 +697,16 @@ public class StockEntryData extends EntryData {
 	 *         configured for the account, being zero if no entry exists in the
 	 *         transaction in the tax 1 account
 	 */
-	public long getTax1Amount() {
-		assert(isPurchaseOrSale());
-		assert(account.getTax1Account() != null);
-		
-		if (tax1Entry == null) {
-			return 0;
-		} else {
-			return tax1Entry.getAmount();
-		}
-	}
-
 	public void setTax1Amount(long tax1Amount) {
 		assert(isPurchaseOrSale());
 		assert(account.getTax1Account() != null);
-		
-		if (tax1Amount == 0) {
-			if (tax1Entry != null) {
-				try {
-					getEntry().getTransaction().getEntryCollection().deleteElement(tax1Entry);
-				} catch (ReferenceViolationException e) {
-					// This should not happen because entries are never referenced
-					throw new RuntimeException("Internal error", e);
-				}
-				tax1Entry = null;
-			}
-		} else {
-			if (tax1Entry == null) {
-				tax1Entry = getEntry().getTransaction().createEntry();
-				tax1Entry.setAccount(account.getTax1Account());
-				tax1Entry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), (Security)purchaseOrSaleEntry.getCommodity());
-			}
-			tax1Entry.setAmount(tax1Amount);
-		}
-	}
-
-	public void addTax1ChangeListener(IPropertyChangeListener<Long> listener) {
-		tax1ChangeListeners.add(listener);
-	}
-
-	public void removeTax1ChangeListener(IPropertyChangeListener<Long> listener) {
-		tax1ChangeListeners.remove(listener);
-	}
-
-	/**
-	 * @return the tax 2 amount in a purchase or sale transaction if a tax 2 is
-	 *         configured for the account, being zero if no entry exists in the
-	 *         transaction in the tax 2 account
-	 */
-	public long getTax2Amount() {
-		assert(isPurchaseOrSale());
-		assert(account.getTax2Account() != null);
-		
-		if (tax2Entry == null) {
-			return 0;
-		} else {
-			return tax2Entry.getAmount();
-		}
+		tax1.setValue(tax1Amount == 0 ? null : tax1Amount);
 	}
 
 	public void setTax2Amount(long tax2Amount) {
 		assert(isPurchaseOrSale());
 		assert(account.getTax2Account() != null);
-		
-		if (tax2Amount == 0) {
-			if (tax2Entry != null) {
-				try {
-					getEntry().getTransaction().getEntryCollection().deleteElement(tax2Entry);
-				} catch (ReferenceViolationException e) {
-					// This should not happen because entries are never referenced
-					throw new RuntimeException("Internal error", e);
-				}
-				tax2Entry = null;
-			}
-		} else {
-			if (tax2Entry == null) {
-				tax2Entry = getEntry().getTransaction().createEntry();
-				tax2Entry.setAccount(account.getTax2Account());
-				tax2Entry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), (Security)purchaseOrSaleEntry.getCommodity());
-			}
-			tax2Entry.setAmount(tax2Amount);
-		}
-	}
-
-	public void addTax2ChangeListener(IPropertyChangeListener<Long> listener) {
-		tax2ChangeListeners.add(listener);
-	}
-
-	public void removeTax2ChangeListener(IPropertyChangeListener<Long> listener) {
-		tax2ChangeListeners.remove(listener);
+		tax2.setValue(tax2Amount == 0 ? null : tax2Amount);
 	}
 
 	/**
@@ -756,7 +772,7 @@ public class StockEntryData extends EntryData {
 		 * price.  It is probably good that the transaction still shows up in
 		 * the cash entries list for the account.
 		 */
-		switch (transactionType) {
+		switch (transactionType.getValue()) {
 		case Buy:
 		case Sell:
 			if (purchaseOrSaleEntry.getAmount() == 0) {
@@ -823,6 +839,7 @@ public class StockEntryData extends EntryData {
 	 * only when duplicating a transaction.  This object will be the object for the 'new entry'
 	 * row that appears at the bottom on the transaction table.
 	 */
+	@Override
 	public void copyFrom(EntryData sourceEntryData) {
 //		StockEntryData sourceEntryData = ()sourceEntryData2;
 		
@@ -920,5 +937,62 @@ public class StockEntryData extends EntryData {
 				withholdingTaxEntry.setPropertyValue(StockEntryInfo.getSecurityAccessor(), security);
 			}
 		}
+	}
+
+	public IObservableValue<Long> commission() {
+		return commission;
+	}
+
+	public IObservableValue<BigDecimal> sharePrice() {
+		return sharePrice;
+	}
+
+	public IObservableValue<Long> tax1() {
+		return tax1;
+	}
+
+	public IObservableValue<Long> tax2() {
+		return tax2;
+	}
+
+	public IObservableValue<Long> withholdingTax() {
+		return withholdingTax;
+	}
+
+	/**
+	 * 
+	 * @return the quantity of shares being bought or sold, always being a
+	 *         positive number, or undefined if the transaction is not a
+	 *         purchase or sale transaction
+	 */
+	public long getQuantity() {
+		return quantity.getValue() == null ? 0 : quantity.getValue();
+	}
+
+	public long getTax1Amount() {
+		assert(isPurchaseOrSale());
+		return tax1.getValue() == null ? 0 : tax1.getValue();
+	}
+
+	/**
+	 * @return the tax 2 amount in a purchase or sale transaction if a tax 2 is
+	 *         configured for the account, being zero if no entry exists in the
+	 *         transaction in the tax 2 account
+	 */
+	public long getTax2Amount() {
+		assert(isPurchaseOrSale());
+		return tax2.getValue() == null ? 0 : tax2.getValue();
+	}
+
+	public long getNetAmount() {
+		return netAmount.getValue() == null ? 0 : netAmount.getValue();
+	}
+
+	public void setQuantity(long quantityAmount) {
+		this.quantity.setValue(quantityAmount == 0 ? null : quantityAmount);
+	}
+
+	public IObservableValue<Long> netAmount() {
+		return netAmount;
 	}
 }

@@ -9,11 +9,19 @@
 	</extension>
    
 	<extension point="org.eclipse.ui.importWizards">
-		<wizard id="net.sf.jmoney.qif.ImportWizard"
-			name="QIF Import"
-			class="net.sf.jmoney.qif.wizards.QifImportWizard">
+		<wizard id="net.sf.jmoney.qif.FullImportWizard"
+			name="QIF Full Import"
+			class="net.sf.jmoney.qif.wizards.QifFullImportWizard">
 			<description>
-				Import data from a QIF (Quicken Import) file. 
+				Import data from a QIF (Quicken Import) file that has been exported from another accounting program. 
+			</description>
+		</wizard>
+
+		<wizard id="net.sf.jmoney.qif.BankDownloadImportWizard"
+			name="QIF Bank Download Import"
+			class="net.sf.jmoney.qif.wizards.QifBankDownloadImportWizard">
+			<description>
+				Import data from a QIF (Quicken Import) file that has been downloaded from a banking site. 
 			</description>
 		</wizard>
 	</extension>

@@ -25,12 +25,12 @@ package net.sf.jmoney.qif.wizards;
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
 import net.sf.jmoney.isolation.TransactionManager;
-import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.DatastoreManager;
 import net.sf.jmoney.model2.MalformedPluginException;
 import net.sf.jmoney.model2.Session;
@@ -61,20 +61,14 @@ import org.eclipse.ui.IWorkbenchWindow;
  * This feature is implemented as a wizard because the Eclipse workbench import
  * action requires all import implementations to be wizards.
  */
-public class QifImportWizard extends Wizard implements IImportWizard {
+public class QifFullImportWizard extends Wizard implements IImportWizard {
 	private IWorkbenchWindow window;
 
 	private QifImportWizardPage mainPage;
 
 	private Session session;
 
-	/**
-	 * The account selected when the import wizard was started, or null if either no
-	 * account was selected or multiple objects were selected
-	 */
-	private Account account;
-
-	public QifImportWizard() {
+	public QifFullImportWizard() {
 		IDialogSettings workbenchSettings = QIFPlugin.getDefault().getDialogSettings();
 		IDialogSettings section = workbenchSettings.getSection("QifImportWizard");//$NON-NLS-1$
 		if (section == null) {
@@ -90,19 +84,6 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 	public void init(IWorkbench workbench, IStructuredSelection selection) {
 		this.window = workbench.getActiveWorkbenchWindow();
 
-		/*
-		 * If the selection is a single account, save the account.  This may be needed
-		 * later because if the QIF file has no account information then the data are
-		 * imported into the selected account.
-		 */
-		account = null;
-		if (selection.size() == 1) {
-			Object selectedElement = selection.getFirstElement();
-			if (selectedElement instanceof Account) {
-				account = (Account)selectedElement;
-			}
-		}
-		
 		// Original JMoney disabled the import menu items when no
 		// session was open. I don't know how to do that in Eclipse,
 		// so we display a message instead.
@@ -117,7 +98,7 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 
 		session = sessionManager.getSession();
 		
-		mainPage = new QifImportWizardPage(window);
+		mainPage = new QifImportWizardPage(window, null);
 		addPage(mainPage);
 	}
 
@@ -135,37 +116,7 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 
 	public void importFile(File file) {
 		try {
-
-			QifFile qifFile;
-			try {
-				qifFile = new QifFile(file, QifDateFormat.DetermineFromFile);
-			} catch (AmbiguousDateException e) {
-				// The file contains dates but none have a day more
-				// than 12.  So look to the locale.
-
-				// Is there a more direct way of getting the date order
-				// from the default locale?
-
-				DateFormat localFormatter = DateFormat.getDateInstance(DateFormat.SHORT);
-				Calendar calendar = Calendar.getInstance(localFormatter.getTimeZone());
-				calendar.clear();
-				calendar.set(2008, Calendar.NOVEMBER, 23);
-				String formatted = localFormatter.format(calendar.getTime());
-
-				QifDateFormat qifDateFormat;
-				if (formatted.startsWith("11")) {
-					// Month first
-					qifDateFormat = QifDateFormat.UsDateOrder;
-				} else if (formatted.startsWith("23")) {
-					// Day first
-					qifDateFormat = QifDateFormat.EuDateOrder;
-				} else {
-					// Some other order, Asian perhaps?
-					throw e;
-				}
-
-				qifFile = new QifFile(file, qifDateFormat);
-			}
+			QifFile qifFile = new QifFile(file, QifDateFormat.DetermineFromFileAndSystem);
 
 			List<String> results = new ArrayList<String>();
 
@@ -176,11 +127,6 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 			 */
 			TransactionManager transactionManager = new TransactionManager(session.getDataManager());
 			Session sessionInTransaction = transactionManager.getSession();
-			
-			Account accountInTransaction = null;
-			if (account != null) {
-				accountInTransaction = transactionManager.getCopyInTransaction(account);
-			}
 			
 			IExtensionRegistry registry = Platform.getExtensionRegistry();
 			for (IConfigurationElement element: registry.getConfigurationElementsFor("net.sf.jmoney.qif.importers")) {
@@ -200,7 +146,7 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 
 						IQifImporter importer = (IQifImporter)listener;
 
-						String result = importer.importData(qifFile, sessionInTransaction, accountInTransaction);
+						String result = importer.importData(qifFile, sessionInTransaction, null);
 						if (result != null) {
 							results.add(result);
 						}
@@ -226,7 +172,7 @@ public class QifImportWizard extends Wizard implements IImportWizard {
 			 * have been set and should be in a valid state, so we
 			 * can now commit the imported entries to the datastore.
 			 */
-			String transactionDescription = String.format("Import {0}", file.getName());
+			String transactionDescription = MessageFormat.format("Import {0}", file.getName());
 			transactionManager.commit(transactionDescription);									
 
 			if (!results.isEmpty()) {

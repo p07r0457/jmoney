@@ -25,9 +25,11 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
@@ -156,17 +158,51 @@ public class QifFile {
 			}
 			
 			/*
-			 * No month or day above 12, but if the dates are in order only when we
-			 * assume EU format then indicate EU format, otherwise assume US format.
+			 * No month or day above 12, but if the dates are in order only when
+			 * interpreted as EU or in order only when interpreted as US then assume the date order
+			 * that puts the dates in order.
 			 */
-			if (this.dateFormat == QifDateFormat.DetermineFromFile && !euDatesInOrder) {
-				this.dateFormat = QifDateFormat.UsDateOrder;
+			if (this.dateFormat == QifDateFormat.DetermineFromFile || dateFormat == QifDateFormat.DetermineFromFileAndSystem) {
+				if (usDatesInOrder && !euDatesInOrder) {
+					this.dateFormat = QifDateFormat.UsDateOrder;
+				}
+
+				if (euDatesInOrder && !usDatesInOrder) {
+					this.dateFormat = QifDateFormat.EuDateOrder;
+				}
 			}
 
-			if (this.dateFormat == QifDateFormat.DetermineFromFile && euDatesInOrder && !usDatesInOrder) {
-				this.dateFormat = QifDateFormat.EuDateOrder;
-			}
+			// TODO better than looking to the locale, get the currency of the account
+			// and find a locale that uses that currency.  I don't know if we can use
+			// the Java currency and locale data or if we need to just hard-code a few
+			// currencies and date formats.
+			
+			if (this.dateFormat == QifDateFormat.DetermineFromFileAndSystem) {
+				// The file contains dates but none have a day more
+				// than 12.  So look to the locale.
 
+				// Is there a more direct way of getting the date order
+				// from the default locale?
+
+				DateFormat localFormatter = DateFormat.getDateInstance(DateFormat.SHORT);
+				Calendar calendar = Calendar.getInstance(localFormatter.getTimeZone());
+				calendar.clear();
+				calendar.set(2008, Calendar.NOVEMBER, 23);
+				String formatted = localFormatter.format(calendar.getTime());
+
+				QifDateFormat qifDateFormat;
+				if (formatted.startsWith("11")) {
+					// Month first
+					this.dateFormat = QifDateFormat.UsDateOrder;
+				} else if (formatted.startsWith("23")) {
+					// Day first
+					this.dateFormat = QifDateFormat.EuDateOrder;
+				} else {
+					// Some other order, Asian perhaps?
+					throw new AmbiguousDateException();
+				}
+			}
+			
 			/*
 			 * If we have not by now determined the date order then we throw
 			 * an exception.
@@ -369,7 +405,7 @@ public class QifFile {
 		 * assumed US date format? Would they be in order if we assumed EU
 		 * format?
 		 */
-		if (dateFormat == QifDateFormat.DetermineFromFile) {
+		if (dateFormat == QifDateFormat.DetermineFromFile || dateFormat == QifDateFormat.DetermineFromFileAndSystem) {
 			int year = Integer.parseInt(st.nextToken().trim());
 
 			int dateIfUS = number1*100 + number2 + year*10000;
@@ -429,6 +465,8 @@ public class QifFile {
     			year = Integer.parseInt(chunks[2].trim());
     			break;
     		case DetermineFromFile:
+    			throw new RuntimeException("should not happen");
+    		case DetermineFromFileAndSystem:
     			throw new RuntimeException("should not happen");
     		}
     	} catch (NumberFormatException e) {

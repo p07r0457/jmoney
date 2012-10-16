@@ -13,6 +13,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.views.properties.tabbed
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Export-Package: net.sf.jmoney.importer.matcher,
+Export-Package: net.sf.jmoney.importer,
+ net.sf.jmoney.importer.matcher,
  net.sf.jmoney.importer.model,
  net.sf.jmoney.importer.wizards

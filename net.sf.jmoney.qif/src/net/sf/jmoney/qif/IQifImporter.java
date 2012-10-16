@@ -12,11 +12,11 @@ public interface IQifImporter {
 	 * an object that contains the complete contents of the QIF file.
 	 * This object is then passed to all extensions that know how to import
 	 * a part of the QIF file.
-	 * 
+	 * <P>
 	 * For example, if a plug-in is written to implement memorized transactions
 	 * then that plug-in should provide an implementation of this interface
 	 * that imports the memorized transactions.
-	 * 
+	 * <P>
 	 * A string is then returned to indicate what was imported.  For example, the
 	 * memorized transaction plug-in may return something like "6 memorized transactions".
 	 * The messages from all extensions are combined into a list and used to confirm

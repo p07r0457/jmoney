@@ -10,8 +10,10 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.forms,
  net.sf.jmoney,
  org.eclipse.ui.navigator,
- org.eclipse.core.expressions
+ org.eclipse.core.expressions,
+ org.eclipse.core.databinding.observable;bundle-version="1.3.0"
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: JMoney.sf.net
 Export-Package: net.sf.jmoney.stocks.model
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Import-Package: org.eclipse.core.databinding

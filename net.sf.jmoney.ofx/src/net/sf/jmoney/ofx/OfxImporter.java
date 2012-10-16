@@ -41,8 +41,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import net.sf.jmoney.importer.MatchingEntryFinder;
 import net.sf.jmoney.importer.matcher.ImportMatcher;
 import net.sf.jmoney.importer.model.PatternMatcherAccountInfo;
+import net.sf.jmoney.importer.model.ReconciliationEntryInfo;
 import net.sf.jmoney.isolation.TransactionManager;
 import net.sf.jmoney.model2.Account;
 import net.sf.jmoney.model2.BankAccount;
@@ -115,22 +117,28 @@ public class OfxImporter {
 
 			Session sessionOutsideTransaction = sessionManager.getSession();
 
-			
+
 			SimpleElement statementResultElement = rootElement.getDescendant("BANKMSGSRSV1", "STMTTRNRS", "STMTRS");
 			if (statementResultElement != null) {
 				importBankStatement(transactionManager, rootElement, session,
-						sessionOutsideTransaction, statementResultElement);
+						sessionOutsideTransaction, statementResultElement, false);
 			} else {
-				statementResultElement = rootElement.getDescendant("INVSTMTMSGSRSV1", "INVSTMTTRNRS", "INVSTMTRS");
+				statementResultElement = rootElement.getDescendant("CREDITCARDMSGSRSV1", "CCSTMTTRNRS", "CCSTMTRS");
 				if (statementResultElement != null) {
-					importStockStatement(transactionManager, rootElement, session,
-							sessionOutsideTransaction, statementResultElement);
+					importBankStatement(transactionManager, rootElement, session,
+							sessionOutsideTransaction, statementResultElement, true);
 				} else {
-					MessageDialog.openWarning(window.getShell(), "OFX file not imported", 
-							MessageFormat.format(
-									"{0} did not contain expected nodes for either a bank or a stock account.", 
-									file.getName()));
-					return;
+					statementResultElement = rootElement.getDescendant("INVSTMTMSGSRSV1", "INVSTMTTRNRS", "INVSTMTRS");
+					if (statementResultElement != null) {
+						importStockStatement(transactionManager, rootElement, session,
+								sessionOutsideTransaction, statementResultElement);
+					} else {
+						MessageDialog.openWarning(window.getShell(), "OFX file not imported", 
+								MessageFormat.format(
+										"{0} did not contain expected nodes for either a bank or a stock account.", 
+										file.getName()));
+						return;
+					}
 				}
 			}
 			
@@ -165,8 +173,11 @@ public class OfxImporter {
 	private void importBankStatement(TransactionManager transactionManager,
 			SimpleElement rootElement, Session session,
 			Session sessionOutsideTransaction,
-			SimpleElement statementResultElement) throws TagNotFoundException {
-		SimpleElement accountFromElement = statementResultElement.getDescendant("BANKACCTFROM");
+			SimpleElement statementResultElement,
+			boolean isCreditCard) throws TagNotFoundException {
+		
+		SimpleElement accountFromElement = 
+				statementResultElement.getDescendant(isCreditCard ? "CCACCTFROM" : "BANKACCTFROM");
 		String accountNumber = accountFromElement.getString("ACCTID");
 		
 		BankAccount account = null;
@@ -253,7 +264,7 @@ public class OfxImporter {
 
 				// Hack - Citibank is hardcoded here
 				String memo = null;
-				if (account.getBank().equals("Citibank UK")) {
+				if (account.getBank() != null && account.getBank().equals("Citibank UK")) {
 					String name = stmtTrnElement.getString("NAME");
 					if (name.equals("PURCHASE")) {
 						memo = stmtTrnElement.getString("MEMO");
@@ -292,6 +303,12 @@ public class OfxImporter {
 					} else {
 						memo = stmtTrnElement.getString("MEMO");
 					}
+				} else if (account.getBank() != null && account.getBank().equals("Nationwide")) {
+					String name = stmtTrnElement.getString("NAME");
+//					if (name.startsWith("DIRECTDEBIT: ")) {
+//						memo = 
+//					}
+					memo = name;
 				} else {
 					memo = stmtTrnElement.getString("NAME");
 				}
@@ -308,91 +325,18 @@ public class OfxImporter {
 				 * If we have an auto-match then we don't have to create a new
 				 * transaction at all. We just update a few properties in the
 				 * existing entry.
-				 * 
-				 * An entry auto-matches if:
-				 *  - The amount exactly matches
-				 *  - The entry has no FITID set
-				 *  - If a check number is specified in the existing entry then
-				 * it must match a check number in the import (but if no check
-				 * number is in the existing entry, that is ok)
-				 *  - The date must be either exactly equal,
-
-				 * or it can be up to 10 days in the future but it can only be
-				 * in the future if there is a check number match. This allows,
-				 * say, a check to match that is likely not going to appear till
-				 * a few days later.
-				 * 
-				 * or it can be up to 1 day in the future but only if there
-				 * are no other entries that match. This restriction prevents a
-				 * false match when there are lots of charges for the same
-				 * amount very close together (e.g. consider a cup of coffee
-				 * charged every day or two)
 				 */
-				Collection<Entry> possibleMatches = new ArrayList<Entry>();
-				for (Entry entry : accountOutsideTransaction.getEntries()) {
-					if (entry.getPropertyValue(OfxEntryInfo.getFitidAccessor()) == null
-							&& entry.getAmount() == amount) {
-						System.out.println("amount: " + amount);
-						if (entry.getCheck() == null) {
-							if (entry.getTransaction().getDate().equals(postedDate)) {
-								// Auto-reconcile
-								possibleMatches.add(entry);
-
-								/*
-								 * Date exactly matched - so we can quit
-								 * searching for other matches. (If user entered
-								 * multiple entries with same check number then
-								 * the user will not be surprised to see an
-								 * arbitrary one being used for the match).
-								 */
-								break;
-							} else {
-								Calendar fiveDaysLater = Calendar.getInstance();
-								fiveDaysLater.setTime(entry.getTransaction().getDate());
-								fiveDaysLater.add(Calendar.DAY_OF_MONTH, 5);
-
-								if ((checkNumber == null || checkNumber.length() == 0) 
-										&& (postedDate.equals(entry.getTransaction().getDate())
-												|| postedDate.after(entry.getTransaction().getDate()))
-												&& postedDate.before(fiveDaysLater.getTime())) {
-									// Auto-reconcile
-									possibleMatches.add(entry);
-								}
-							}
-						} else {
-							// A check number is present
-							Calendar twentyDaysLater = Calendar.getInstance();
-							twentyDaysLater.setTime(entry.getTransaction().getDate());
-							twentyDaysLater.add(Calendar.DAY_OF_MONTH, 20);
-
-							if (entry.getCheck().equals(checkNumber)
-									&& (postedDate.equals(entry.getTransaction().getDate())
-											|| postedDate.after(entry.getTransaction().getDate()))
-											&& postedDate.before(twentyDaysLater.getTime())) {
-								// Auto-reconcile
-								possibleMatches.add(entry);
-
-								/*
-								 * Check number matched - so we can quit
-								 * searching for other matches. (If user entered
-								 * multiple entries with same check number then
-								 * the user will not be surprised to see an
-								 * arbitrary one being used for the match).
-								 */
-								break;
-							}
-						}
+				MatchingEntryFinder matchFinder = new MatchingEntryFinder() {
+					@Override
+					protected boolean alreadyMatched(Entry entry) {
+						return entry.getPropertyValue(OfxEntryInfo.getFitidAccessor()) != null;
 					}
-				}
-
-				if (possibleMatches.size() == 1) {
-					Entry match = possibleMatches.iterator().next();
-
-					Entry entryInTrans = transactionManager.getCopyInTransaction(match);
-					entryInTrans.setValuta(postedDate);
-					entryInTrans.setCheck(checkNumber);
-					entryInTrans.setPropertyValue(OfxEntryInfo.getFitidAccessor(), fitid);
-
+				};
+				Entry match = matchFinder.findMatch(account, amount, postedDate, checkNumber);
+				if (match != null) {
+					match.setValuta(postedDate);
+					match.setCheck(checkNumber);
+					match.setPropertyValue(OfxEntryInfo.getFitidAccessor(), fitid);
 					continue;
 				}
 
@@ -623,6 +567,7 @@ public class OfxImporter {
 					continue;
 				}
 
+				
 				/*
 				 * First we try auto-matching.
 				 * 
@@ -630,90 +575,19 @@ public class OfxImporter {
 				 * transaction at all. We just update a few properties in the
 				 * existing entry.
 				 * 
-				 * An entry auto-matches if:
-				 *  - The amount exactly matches
-				 *  - The entry has no FITID set
-				 *  - If a check number is specified in the existing entry then
-				 * it must match a check number in the import (but if no check
-				 * number is in the existing entry, that is ok)
-				 *  - The date must be either exactly equal,
-
-				 * or it can be up to 10 days in the future but it can only be
-				 * in the future if there is a check number match. This allows,
-				 * say, a check to match that is likely not going to appear till
-				 * a few days later.
-				 * 
-				 * or it can be up to 1 day in the future but only if there
-				 * are no other entries that match. This restriction prevents a
-				 * false match when there are lots of charges for the same
-				 * amount very close together (e.g. consider a cup of coffee
-				 * charged every day or two)
 				 */
-				Collection<Entry> possibleMatches = new ArrayList<Entry>();
-				for (Entry entry : accountOutsideTransaction.getEntries()) {
-					if (entry.getPropertyValue(OfxEntryInfo.getFitidAccessor()) == null
-							&& entry.getAmount() == amount) {
-						System.out.println("amount: " + amount);
-						if (entry.getCheck() == null) {
-							if (entry.getTransaction().getDate().equals(postedDate)) {
-								// Auto-reconcile
-								possibleMatches.add(entry);
-
-								/*
-								 * Date exactly matched - so we can quit
-								 * searching for other matches. (If user entered
-								 * multiple entries with same check number then
-								 * the user will not be surprised to see an
-								 * arbitrary one being used for the match).
-								 */
-								break;
-							} else {
-								Calendar fiveDaysLater = Calendar.getInstance();
-								fiveDaysLater.setTime(entry.getTransaction().getDate());
-								fiveDaysLater.add(Calendar.DAY_OF_MONTH, 5);
-
-								if ((checkNumber == null || checkNumber.length() == 0) 
-										&& (postedDate.equals(entry.getTransaction().getDate())
-												|| postedDate.after(entry.getTransaction().getDate()))
-												&& postedDate.before(fiveDaysLater.getTime())) {
-									// Auto-reconcile
-									possibleMatches.add(entry);
-								}
-							}
-						} else {
-							// A check number is present
-							Calendar twentyDaysLater = Calendar.getInstance();
-							twentyDaysLater.setTime(entry.getTransaction().getDate());
-							twentyDaysLater.add(Calendar.DAY_OF_MONTH, 20);
-
-							if (entry.getCheck().equals(checkNumber)
-									&& (postedDate.equals(entry.getTransaction().getDate())
-											|| postedDate.after(entry.getTransaction().getDate()))
-											&& postedDate.before(twentyDaysLater.getTime())) {
-								// Auto-reconcile
-								possibleMatches.add(entry);
-
-								/*
-								 * Check number matched - so we can quit
-								 * searching for other matches. (If user entered
-								 * multiple entries with same check number then
-								 * the user will not be surprised to see an
-								 * arbitrary one being used for the match).
-								 */
-								break;
-							}
-						}
+				MatchingEntryFinder matchFinder = new MatchingEntryFinder() {
+					@Override
+					protected boolean alreadyMatched(Entry entry) {
+						return entry.getPropertyValue(OfxEntryInfo.getFitidAccessor()) != null;
 					}
-				}
-
-				if (possibleMatches.size() == 1) {
-					Entry match = possibleMatches.iterator().next();
-
-					Entry entryInTrans = transactionManager.getCopyInTransaction(match);
-					entryInTrans.setValuta(postedDate);
-					entryInTrans.setCheck(checkNumber);
-					entryInTrans.setPropertyValue(OfxEntryInfo.getFitidAccessor(), fitid);
-
+				};
+				Entry matchedEntryOutsideTransaction = matchFinder.findMatch(accountOutsideTransaction, amount, postedDate, checkNumber);
+				if (matchedEntryOutsideTransaction != null) {
+					Entry matchedEntry = transactionManager.getCopyInTransaction(matchedEntryOutsideTransaction);
+					matchedEntry.setValuta(postedDate);
+					matchedEntry.setCheck(checkNumber);
+					matchedEntry.setPropertyValue(OfxEntryInfo.getFitidAccessor(), fitid);
 					continue;
 				}
 

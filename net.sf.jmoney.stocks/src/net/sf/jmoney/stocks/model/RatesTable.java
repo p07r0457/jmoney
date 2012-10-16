@@ -46,29 +46,44 @@ public class RatesTable {
 		}
 	}
 	
-	private long fixedAmount = 0;
+	private final long fixedAmount;
 	
-	private ArrayList<Band> bands;
+	private final List<Band> bands;
+
+	/**
+	 * the string value that was used to construct this rates table
+	 * (cannot be null as a null string value equates to a null RatesTable)
+	 */
+	private final String stringValue;
 	
 	/*
 	 * Default constructor constructs a rates table that returns zero
 	 * for all amounts.
 	 */
 	public RatesTable() {
-		bands = new ArrayList<Band>();
-		bands.add(new Band(0, BigDecimal.ZERO));
+		this(0, Collections.singletonList(new Band(0, BigDecimal.ZERO)));
 	}
 	
-	// Construct a rates table from a String object.
-	// All classes created by plug-ins to contain JMoney properties 
-	// must have both a toString() method and a constructor from
-	// String that re-constructs an object from the string.
+	/**
+	 * Construct a rates table from a String object. All classes created by
+	 * plug-ins to contain JMoney properties must have both a toString() method
+	 * and a constructor from String that re-constructs an object from the
+	 * string.
+	 */
 	public RatesTable(String stringValue) {
-		bands = new ArrayList<Band>();
-
+		/*
+		 * We save the original string value so if we convert to a string and we
+		 * have not made any changes then we return exactly the same string.
+		 * This is really important because otherwise database layers can't get
+		 * the original value to check for conflicting updates.
+		 */
+		this.stringValue = stringValue;
+		
 		String[] numbers = stringValue.split(";");
         
         fixedAmount = new Long(numbers[0]).longValue();
+
+		bands = new ArrayList<Band>();
 
         int i = 1;
         while (i < numbers.length) {
@@ -76,30 +91,32 @@ public class RatesTable {
         		System.out.println("");
         	}
         	long bandStart = new Long(numbers[i++]).longValue();
-        	BigDecimal proportion = new BigDecimal(numbers[i++]).movePointLeft(2);
+        	BigDecimal proportion = new BigDecimal(numbers[i++]);
         	Band band = new Band(bandStart, proportion);
         	bands.add(band);
         }
 	}
 	
-	public RatesTable(long fixedAmount, ArrayList<Band> bands) {
+	public RatesTable(long fixedAmount, List<Band> bands) {
 		this.fixedAmount = fixedAmount;
 		this.bands = bands;
-	}
-
-	@Override
-	public String toString() {
+		
 		String result = new Long(fixedAmount).toString();
 		for (int i = 0; i < bands.size(); i++) {
 			Band band = bands.get(i);
 			result += ";" + band.bandStart;
 			result += ";" + band.proportion;
 		}
-		return result;
+		stringValue = result;
+	}
+
+	@Override
+	public String toString() {
+		return stringValue;
 	}
 	
 	public long calculateRate(long amount) {
-		BigDecimal total = new BigDecimal(fixedAmount);
+		BigDecimal total = new BigDecimal(fixedAmount).movePointLeft(2);
 		int i = 1;
 		while (i < bands.size() && amount > bands.get(i).getBandStart()) {
 			BigDecimal bandRange = new BigDecimal(bands.get(i).getBandStart() - bands.get(i-1).getBandStart()).movePointLeft(2);

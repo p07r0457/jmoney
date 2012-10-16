@@ -19,7 +19,8 @@ public class SimpleDOMParser {
 	private Reader reader;
 	private Stack<SimpleElement> elements;
 	private SimpleElement currentElement;
-
+	private String peekedTag = null;
+	
 	public SimpleDOMParser() {
 		elements = new Stack<SimpleElement>();
 		currentElement = null;
@@ -147,8 +148,22 @@ public class SimpleDOMParser {
 				// read the text between the open and close tag
 				if (!isTagClosed) {
 					element.setText(readText());
-					if (!element.isEmptyText())
+					if (!element.isEmptyText()) {
+						/*
+						 * There may or may not be a close tag.  This is optional in OFX
+						 * when there is data in the element.
+						 */
+						String nextTag = peekTag().trim();
+						if (nextTag.startsWith("</")) {
+							// close tag as well
+							String nextTagName = nextTag.substring(2, nextTag.length()-1);
+
+							if (nextTagName.equals(element.getTagName())) {
+								readTag();
+							}
+						}
 						isTagClosed=true;
+					}
 				}
 
 				// add new element as a child element of
@@ -233,7 +248,18 @@ public class SimpleDOMParser {
 		}
 	}
 
+	private String peekTag() throws IOException {
+		peekedTag = readTag();
+		return peekedTag;
+	}
+
 	private String readTag() throws IOException {
+		if (peekedTag != null) {
+			String result = peekedTag; 
+			peekedTag = null;
+			return result;
+		}
+
 		skipWhitespace();
 
 		StringBuffer sb = new StringBuffer();

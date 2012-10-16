@@ -185,7 +185,7 @@ public class QifTransaction {
 	}
 
 	public QifCategoryLine getCategory() {
-		return new QifCategoryLine(category);
+		return (category == null) ? null : new QifCategoryLine(category);
 	}
 
 	public String getU() {
